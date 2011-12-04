@@ -1,4 +1,5 @@
 Version 1.1
 ===========
 
+	* Catch CTRL-C before init the screen (Bug #2)
 	* Check if mem.total = 0 before division (Bug #1)
