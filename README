@@ -21,6 +21,7 @@ Glances use a standard GNU style installer:
 	$ sudo make install
 
 Pre-requisites:
+
 * Python 2.6+ (not tested with Python 3)
 * python-statgrab 0.5+ (did not work with python-statgrab 0.5)
 
@@ -48,19 +49,23 @@ use the -t option. For exemple to set the refrech rate to 5 seconds:
 	$ glances.py -t 5
 
 Importants stats are colored:
-- GREEN:   stat counter is < 50%
-- BLUE:    stat counter is > 50% and < 70%
-- MAGENTA: stat counter is > 70% and < 90%
-- RED:     stat counter is > 90%
+
+* GREEN:   stat counter is < 50%
+* BLUE:    stat counter is > 50% and < 70%
+* MAGENTA: stat counter is > 70% and < 90%
+* RED:     stat counter is > 90%
 
 When Glances is running, you can press:
 
-- 'a' to set the automatic mode. The process list is sorted automatically
+* 'a' to set the automatic mode. The process list is sorted automatically
+
     If CPU > 70%, sort by process CPU consomption
+
     If MEM > 70%, sort by process size
-- 'c' the processes list is sorted by CPU consomption
-- 'm' the processes list is sorted by process size
-- 'q' Exit
+
+* 'c' the processes list is sorted by CPU consomption
+* 'm' the processes list is sorted by process size
+* 'q' Exit
 
 ## Limitation
 
