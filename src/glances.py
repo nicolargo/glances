@@ -33,7 +33,7 @@ import statgrab
 #==================
 
 # The glances version id
-__version__ = "1.0"		
+__version__ = "1.1"		
 
 # Class
 #======
@@ -124,10 +124,10 @@ class glancesStats():
 		if sortedby == 'auto':
 			# If global Mem > 70% sort by process size
 			# Else sort by cpu comsoption
-			if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > 70):
-				sortedby = 'proc_size'
-			else:				
-				sortedby = 'cpu_percent'
+			sortedby = 'cpu_percent'
+			if ( self.mem['total'] != 0):
+				if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > 70):
+					sortedby = 'proc_size'
 		return sorted(self.process, key=lambda process: process[sortedby], reverse=True)
 
 		
@@ -183,6 +183,7 @@ class glancesScreen():
 
 			# Text colors/styles
 			self.title_color = curses.A_BOLD|curses.A_UNDERLINE
+			self.no_color = curses.color_pair(1)
 			self.default_color = curses.color_pair(3)|curses.A_BOLD
 			self.if50pc_color = curses.color_pair(4)|curses.A_BOLD
 			self.if70pc_color = curses.color_pair(5)|curses.A_BOLD
@@ -212,7 +213,14 @@ class glancesScreen():
 		# If current > 70% of max then color = self.if70pc_color / A_BOLD
 		# If current > 90% of max then color = self.if90pc_color / A_REVERSE
 		# By default: color = self.default_color / 0
+		max = 0
+		try:
+			(current * 100) / max
+		except ZeroDivisionError:
+			return self.no_color
+
 		variable = (current * 100) / max
+
 		if variable > 90:
 			if self.hascolors:
 				return self.if90pc_color

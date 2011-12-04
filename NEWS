@@ -1,0 +1,4 @@
+Version 1.1
+===========
+
+	* Check if mem.total = 0 before division (Bug #1)
