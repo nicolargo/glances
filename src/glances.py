@@ -213,7 +213,6 @@ class glancesScreen():
 		# If current > 70% of max then color = self.if70pc_color / A_BOLD
 		# If current > 90% of max then color = self.if90pc_color / A_REVERSE
 		# By default: color = self.default_color / 0
-		max = 0
 		try:
 			(current * 100) / max
 		except ZeroDivisionError:
@@ -271,8 +270,11 @@ class glancesScreen():
 	def update(self):
 		# Refresh the screen
 		self.term_window.refresh()
+
 		# Sleep
-		curses.napms(self.__refresh_time*1000)
+		#curses.napms(self.__refresh_time*1000)
+		time.sleep(self.__refresh_time)
+
 		# Getkey
 		self.__catchKey()
 
@@ -432,14 +434,15 @@ def init():
 			printSyntax()
 			sys.exit(0)
 	
+	# Catch CTRL-C
+	signal.signal(signal.SIGINT, signal_handler)	
+
 	# Init stats
 	stats = glancesStats()
 	
 	# Init screen
 	screen = glancesScreen(refresh_time)
 
-	# Catch CTRL-C
-	signal.signal(signal.SIGINT, signal_handler)	
 
 def main():
 	# Init stuff
