@@ -67,10 +67,11 @@ class glancesStats():
 		self.mem = statgrab.sg_get_mem_stats()
 		self.memswap = statgrab.sg_get_swap_stats()
 		self.network = statgrab.sg_get_network_io_stats_diff()
-		self.processcount = statgrab.sg_get_process_count()
-		self.process = statgrab.sg_get_process_stats()
+		self.diskio = statgrab.sg_get_disk_io_stats_diff()
 		# BUG: https://bugs.launchpad.net/ubuntu/+source/libstatgrab/+bug/886783
 		# TODO: self.fs = statgrab.sg_get_fs_stats()
+		self.processcount = statgrab.sg_get_process_count()
+		self.process = statgrab.sg_get_process_stats()
 		self.now = datetime.datetime.now()		
 
 		
@@ -110,6 +111,10 @@ class glancesStats():
 		
 	def getNetwork(self):
 		return self.network
+
+		
+	def getDiskIO(self):
+		return self.diskio
 
 		
 	def getProcessCount(self):
@@ -157,8 +162,10 @@ class glancesScreen():
 		self.load_x = 		20; 		self.load_y = 		3
 		self.mem_x = 		41; 		self.mem_y = 		3
 		self.network_x = 	0 ; 		self.network_y = 	9
-		self.process_x = 	30;		self.process_y = 	9
-		self.now_x = 		0 ;		self.now_y = 		23
+		self.diskio_x = 	0 ; 		self.diskio_y = 	16
+		self.process_x = 	30;			self.process_y = 	9
+		self.now_x = 		79;			self.now_y = 		23	 # Align right
+		self.caption_x = 	0 ;			self.caption_y = 	23
 
 		# Init the curses screen
 		self.screen = curses.initscr() 
@@ -345,13 +352,29 @@ class glancesScreen():
 		
 	def displayNetwork(self, network):
 		# Network interfaces bitrate
-		self.term_window.addnstr(self.network_y, self.network_x,    "Net Kbps", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.network_y, self.network_x+10, "Rx", 8)
-		self.term_window.addnstr(self.network_y, self.network_x+20, "Tx", 8)
-		for interface in range(0, len(network)):
+		self.term_window.addnstr(self.network_y, self.network_x,    "Net rate", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+		self.term_window.addnstr(self.network_y, self.network_x+10, "Rx Kbps", 8)
+		self.term_window.addnstr(self.network_y, self.network_x+20, "Tx Kbps", 8)
+		# A maximum of 5 interfaces could be monitored
+		for interface in range(0, min(4, len(network))):
+			elapsed_time = max (1, network[interface]['systime'])
 			self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/1000), 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/1000), 8)
+			self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000), 8)
+			self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000), 8)
+
+			
+	def displayDiskIO(self, diskio):
+		# Disk input/output rate
+		self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+		self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In KBps", 8)
+		self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out KBps", 8)
+		# A maximum of 5 disks could be monitored
+		for disk in range(0, min(4, len(diskio))):
+			elapsed_time = max(1, diskio[disk]['systime'])			
+			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
+			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, str(diskio[disk]['read_bytes']/elapsed_time/1000), 8)
+			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, str(diskio[disk]['write_bytes']/elapsed_time/1000), 8)
+			
 
 	def displayProcess(self, processcount, processlist):
 		# Process
@@ -384,11 +407,19 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
 			self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20)
 
+
+	def displayCaption(self):
+		# Caption
+		self.term_window.addnstr(self.caption_y, self.caption_x, "<50%", 4, self.default_color)
+		self.term_window.addnstr(self.caption_y, self.caption_x+4, ">50%", 4, self.if50pc_color)
+		self.term_window.addnstr(self.caption_y, self.caption_x+8, ">70%", 4, self.if70pc_color)
+		self.term_window.addnstr(self.caption_y, self.caption_x+12, ">90%", 4, self.if90pc_color)
+
 			
 	def displayNow(self, now):
-		# Display the current date and time (now...)
+		# Display the current date and time (now...) - Center
 		now_msg = now.strftime("%Y-%m-%d %H:%M:%S")
-		self.term_window.addnstr(self.now_y, self.now_x+40-len(now_msg)/2, now_msg, 80)
+		self.term_window.addnstr(self.now_y, self.now_x-len(now_msg), now_msg, len(now_msg))
 
 		
 # Global def
@@ -464,7 +495,9 @@ def main():
 		screen.displayLoad(stats.getLoad())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
 		screen.displayNetwork(stats.getNetwork())
+		screen.displayDiskIO(stats.getDiskIO())		
 		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
+		screen.displayCaption()
 		screen.displayNow(stats.getNow())
 	
 		# Update and sleep... bzzz... bzzz...
