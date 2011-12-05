@@ -11,7 +11,7 @@ def read(fname):
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(  name='Glances',
-	version='1.1.1',
+	version='1.1.2',
 	description='CLI curses-based monitoring tools',
 	author='Nicolas Hennion',
 	author_email='nicolas@nicolargo.com',
