@@ -149,14 +149,6 @@ class glancesScreen():
 		# Global information to display
 		self.__version = __version__
 
-		# Init the curses screen
-		self.screen = curses.initscr() 
-		if not self.screen:
-			print "Error: Can not init the curses library.\n"
-		curses.start_color()
-		curses.use_default_colors()
-		curses.noecho() ; curses.cbreak() ; curses.curs_set(0)
-		
 		# Init windows positions
 		self.term_h = 		24 ; 		self.term_w = 		80
 		self.host_x = 		0 ; 		self.host_y = 		0
@@ -165,9 +157,18 @@ class glancesScreen():
 		self.load_x = 		20; 		self.load_y = 		3
 		self.mem_x = 		41; 		self.mem_y = 		3
 		self.network_x = 	0 ; 		self.network_y = 	9
-		self.process_x = 	30;			self.process_y = 	9
-		self.now_x = 		0 ;			self.now_y = 		23
+		self.process_x = 	30;		self.process_y = 	9
+		self.now_x = 		0 ;		self.now_y = 		23
 
+		# Init the curses screen
+		self.screen = curses.initscr() 
+		if not self.screen:
+			print "Error: Can not init the curses library.\n"
+		curses.resizeterm( self.term_h, self.term_w )
+		curses.start_color()
+		curses.use_default_colors()
+		curses.noecho() ; curses.cbreak() ; curses.curs_set(0)
+		
 		# Init colors
 		self.hascolors = False
 		if curses.has_colors():
