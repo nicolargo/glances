@@ -39,9 +39,17 @@ You had to install the version 0.5 using the following commands:
 	$ ./setup.py build
 	$ sudo ./setup.py install
 
-Notes: Ubuntu 10.04 and 10.10 users report that universe repos includes the 
-python-statgrab 0.4. If you successfull compile the version 0.5 please send 
-me an email or log a new issue on the GitHub.
+Notes: Ubuntu 10.10 repos only include the python-statgrab 0.4.
+You had to install the version 0.5 using the following commands:
+
+	$ sudo apt-get install git-core build-essential autoconf automake python python-statgrab libstatgrab-dev
+	$ wget http://ftp.uk.i-scream.org/sites/ftp.i-scream.org/pub/i-scream/pystatgrab/pystatgrab-0.5.tar.gz
+	$ tar zxvf pystatgrab-0.5.tar.gz
+	$ cd pystatgrab-0.5/
+	$ ./setup.py build
+	$ sudo ./setup.py install
+
+Notes: There is an issue with Ubuntu 10.04 (https://github.com/nicolargo/glances/issues/5)
 
 ## Running
 
