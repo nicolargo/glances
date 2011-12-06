@@ -26,8 +26,8 @@ Glances use a standard GNU style installer:
 
 Pre-requisites:
 
-* Python 2.6+ (not tested with Python 3)
-* python-statgrab 0.5+ (did not work with python-statgrab 0.5)
+* Python 2.6+ (not tested with Python 3+)
+* python-statgrab 0.5+ (did not work with python-statgrab 0.4)
 
 Notes: The Debian Squeeze repos only include the python-statgrab 0.4.
 You had to install the version 0.5 using the following commands:
@@ -38,6 +38,10 @@ You had to install the version 0.5 using the following commands:
 	$ cd pystatgrab-0.5/
 	$ ./setup.py build
 	$ sudo ./setup.py install
+
+Notes: Ubuntu 10.04 and 10.10 users report that universe repos includes the 
+python-statgrab 0.4. If you successfull compile the version 0.5 please send 
+me an email or log a new issue on the GitHub.
 
 ## Running
 
