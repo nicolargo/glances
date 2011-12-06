@@ -33,7 +33,7 @@ import statgrab
 #==================
 
 # The glances version id
-__version__ = "1.1.2"		
+__version__ = "1.1.3"		
 
 # Class
 #======
@@ -359,8 +359,8 @@ class glancesScreen():
 		for interface in range(0, min(4, len(network))):
 			elapsed_time = max (1, network[interface]['systime'])
 			self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000), 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000), 8)
+			self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000*8), 8)
+			self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000*8), 8)
 
 			
 	def displayDiskIO(self, diskio):

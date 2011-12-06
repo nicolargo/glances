@@ -3,7 +3,7 @@ Glances -- Eye on your system
 
 ## Description
 
-Glances is a CLI curses based monitoring tools for both GNU/Linux and BSD.
+Glances is a CLI curses based monitoring tool for both GNU/Linux and BSD.
 
 Glances uses the libstatgrab library to get information from your system.
 Glances is developed in Python and uses the python-statgrab lib.
