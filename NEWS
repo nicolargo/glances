@@ -1,3 +1,9 @@
+Version 1.2.x
+=============
+
+	* Resize the terminal and the windows are adapted dynamicaly
+	* Refresh screen instantanetly when a key is pressed
+
 Version 1.1.x
 =============
 

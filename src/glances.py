@@ -33,10 +33,22 @@ import statgrab
 #==================
 
 # The glances version id
-__version__ = "1.1.3"		
+__version__ = "1.2"		
 
 # Class
 #======
+
+class Timer():
+	"""
+	The timer class
+	"""
+	
+	def __init__(self, duration):
+		self.target = time.time() + duration
+	
+	def finished(self):
+		return time.time() > self.target
+
 
 class glancesStats():
 	"""
@@ -61,6 +73,7 @@ class glancesStats():
 
 		# Get informations from libstatgrab and others...
 		self.host = statgrab.sg_get_host_info()
+		# TODO: platform.platform(True) instead of statgrab.sg_get_host_info()
 		self.system = statgrab.sg_get_host_info()
 		self.cpu = statgrab.sg_get_cpu_percents()
 		self.load = statgrab.sg_get_load_stats()
@@ -164,14 +177,13 @@ class glancesScreen():
 		self.network_x = 	0 ; 		self.network_y = 	9
 		self.diskio_x = 	0 ; 		self.diskio_y = 	16
 		self.process_x = 	30;			self.process_y = 	9
-		self.now_x = 		79;			self.now_y = 		23	 # Align right
-		self.caption_x = 	0 ;			self.caption_y = 	23
+		self.now_x = 		79;			self.now_y = 		3
+		self.caption_x = 	0 ;			self.caption_y = 	3
 
 		# Init the curses screen
 		self.screen = curses.initscr() 
 		if not self.screen:
 			print "Error: Can not init the curses library.\n"
-		curses.resizeterm( self.term_h, self.term_w )
 		curses.start_color()
 		curses.use_default_colors()
 		curses.noecho() ; curses.cbreak() ; curses.curs_set(0)
@@ -198,7 +210,8 @@ class glancesScreen():
 			self.if90pc_color = curses.color_pair(2)|curses.A_BOLD
 
 		# Init window		
-		self.term_window = curses.newwin(self.term_h, self.term_w, 0, 0)
+		#self.term_window = self.screen.subwin(self.term_h, self.term_w, 0, 0)
+		self.term_window = self.screen.subwin(0, 0)
 
 		# Init refresh time
 		self.__refresh_time = refresh_time
@@ -258,6 +271,8 @@ class glancesScreen():
 		if (self.pressedkey == 27) or (self.pressedkey == 113):
 			# 'ESC'|'q' > Exit
 			end()
+		#elif (self.pressedkey == curses.KEY_RESIZE):
+			# Resize event
 		elif (self.pressedkey == 97):
 			# 'a' > Sort process list automaticaly
 			self.setProcessSortedBy('auto')
@@ -267,159 +282,227 @@ class glancesScreen():
 		elif (self.pressedkey == 109):
 			# 'm' > Sort process list by Mem usage
 			self.setProcessSortedBy('proc_size')
+		
+		# Return the key code
+		return self.pressedkey
 
 			
 	def end(self):
 		# Shutdown the curses window
 		curses.echo() ; curses.nocbreak() ; curses.curs_set(1)
 		curses.endwin()
-
 		
-	def update(self):
-		# Refresh the screen
-		self.term_window.refresh()
 
-		# Sleep
-		#curses.napms(self.__refresh_time*1000)
-		time.sleep(self.__refresh_time)
-
-		# Getkey
-		self.__catchKey()
-
+	def display(self, stats):
+		# Display all
+		screen.displayHost(stats.getHost())
+		screen.displaySystem(stats.getSystem())	
+		screen.displayCpu(stats.getCpu())
+		screen.displayLoad(stats.getLoad())
+		screen.displayMem(stats.getMem(), stats.getMemSwap())
+		screen.displayNetwork(stats.getNetwork())
+		screen.displayDiskIO(stats.getDiskIO())		
+		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
+		screen.displayCaption()
+		screen.displayNow(stats.getNow())
+		
 		
 	def erase(self):
 		# Erase the content of the screen
 		self.term_window.erase()
 
+
+	def update(self, stats):		
+		# Erase and display
+		self.erase()
+		self.display(stats) 
+		
+		# Wait
+		countdown = Timer(self.__refresh_time)
+		while (not countdown.finished()):
+			# Refresh the screen
+			self.term_window.refresh()
+			# Getkey
+			if (self.__catchKey() > -1):
+				# Erase and display
+				self.erase()
+				self.display(stats) 				
+			# Wait 100ms...
+			curses.napms(100)
+		
 		
 	def displayHost(self, host):
 		# Host information
-		host_msg = "Glances v"+self.__version+" running on "+host['hostname'] #+" "+str(pressed_key)
-		self.term_window.addnstr(self.host_y, self.host_x+40-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.host_y) 
+			and (screen_x > self.host_x+79)):
+			host_msg = "Glances v"+self.__version+" running on "+host['hostname'] #+" "+str(pressed_key)
+			self.term_window.addnstr(self.host_y, self.host_x+40-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
 
 		
 	def displaySystem(self, system):
 		# System information
-		system_msg = system['os_name']+" "+system['platform']+" "+system['os_version']
-		self.term_window.addnstr(self.system_y, self.system_x+40-len(system_msg)/2, system_msg, 80)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.system_y) 
+			and (screen_x > self.system_x+79)):
+			system_msg = system['os_name']+" "+system['platform']+" "+system['os_version']
+			self.term_window.addnstr(self.system_y, self.system_x+40-len(system_msg)/2, system_msg, 80)
 
 		
-	def displayCpu(self, cpu):
+	def displayCpu(self, cpu):		
 		# CPU %
-		self.term_window.addnstr(self.cpu_y, self.cpu_x, 	"Cpu", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.cpu_y, self.cpu_x+10,"%", 8)
-		self.term_window.addnstr(self.cpu_y+1, self.cpu_x, "User:", 8)
-		self.term_window.addnstr(self.cpu_y+2, self.cpu_x, "Kernel:", 8)
-		self.term_window.addnstr(self.cpu_y+3, self.cpu_x, "Nice:", 8)
-		self.term_window.addnstr(self.cpu_y+4, self.cpu_x, "Idle:", 8)
-		self.term_window.addnstr(self.cpu_y+1, self.cpu_x+10, "%.1f" % cpu['user'], 8, self.__getColor(cpu['user']))
-		self.term_window.addnstr(self.cpu_y+2, self.cpu_x+10, "%.1f" % cpu['kernel'], 8, self.__getColor(cpu['kernel']))
-		self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__getColor(cpu['nice']))
-		self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.cpu_y+6) 
+			and (screen_x > self.cpu_x+18)):
+			self.term_window.addnstr(self.cpu_y, self.cpu_x, 	"Cpu", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.cpu_y, self.cpu_x+10,"%", 8)
+			self.term_window.addnstr(self.cpu_y+1, self.cpu_x, "User:", 8)
+			self.term_window.addnstr(self.cpu_y+2, self.cpu_x, "Kernel:", 8)
+			self.term_window.addnstr(self.cpu_y+3, self.cpu_x, "Nice:", 8)
+			self.term_window.addnstr(self.cpu_y+4, self.cpu_x, "Idle:", 8)
+			self.term_window.addnstr(self.cpu_y+1, self.cpu_x+10, "%.1f" % cpu['user'], 8, self.__getColor(cpu['user']))
+			self.term_window.addnstr(self.cpu_y+2, self.cpu_x+10, "%.1f" % cpu['kernel'], 8, self.__getColor(cpu['kernel']))
+			self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__getColor(cpu['nice']))
+			self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
 
 		
 	def displayLoad(self, load):
 		# Load %
-		self.term_window.addnstr(self.load_y, self.load_x, 	"Load", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.load_y, self.load_x+10,"%", 8)
-		self.term_window.addnstr(self.load_y+1, self.load_x, "1 min:", 8)
-		self.term_window.addnstr(self.load_y+2, self.load_x, "5 mins:", 8)
-		self.term_window.addnstr(self.load_y+3, self.load_x, "15 mins:", 8)
-		self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8, self.__getColor(load['min1']))
-		self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__getColor(load['min5']))
-		self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__getColor(load['min15']))
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.load_y+5) 
+			and (screen_x > self.load_x+18)):
+			self.term_window.addnstr(self.load_y, self.load_x, 	"Load", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.load_y, self.load_x+10,"%", 8)
+			self.term_window.addnstr(self.load_y+1, self.load_x, "1 min:", 8)
+			self.term_window.addnstr(self.load_y+2, self.load_x, "5 mins:", 8)
+			self.term_window.addnstr(self.load_y+3, self.load_x, "15 mins:", 8)
+			self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8, self.__getColor(load['min1']))
+			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__getColor(load['min5']))
+			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__getColor(load['min15']))
 
 		
 	def displayMem(self, mem, memswap):
 		# MEM
-		self.term_window.addnstr(self.mem_y, self.mem_x, 	"Mem MB", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.mem_y, self.mem_x+10,"Mem", 8)
-		self.term_window.addnstr(self.mem_y, self.mem_x+20,"Swap", 8)
-		self.term_window.addnstr(self.mem_y, self.mem_x+30,"Real", 8)
-		self.term_window.addnstr(self.mem_y+1, self.mem_x, "Total:", 8)
-		self.term_window.addnstr(self.mem_y+2, self.mem_x, "Used:", 8)
-		self.term_window.addnstr(self.mem_y+3, self.mem_x, "Free:", 8)
-		self.term_window.addnstr(self.mem_y+1, self.mem_x+10, str(mem['total']/1048576), 8)
-		self.term_window.addnstr(self.mem_y+2, self.mem_x+10, str(mem['used']/1048576), 8)
-		self.term_window.addnstr(self.mem_y+3, self.mem_x+10, str(mem['free']/1048576), 8)
-		self.term_window.addnstr(self.mem_y+1, self.mem_x+20, str(memswap['total']/1048576), 8)
-		self.term_window.addnstr(self.mem_y+2, self.mem_x+20, str(memswap['used']/1048576), 8, self.__getColor(memswap['used'], memswap['total']))
-		self.term_window.addnstr(self.mem_y+3, self.mem_x+20, str(memswap['free']/1048576), 8)
-		self.term_window.addnstr(self.mem_y+1, self.mem_x+30, "-", 8)
-		self.term_window.addnstr(self.mem_y+2, self.mem_x+30, str((mem['used']-mem['cache'])/1048576), 8, self.__getColor(mem['used']-mem['cache'], mem['total']))
-		self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.mem_y+5) 
+			and (screen_x > self.mem_x+38)):
+			self.term_window.addnstr(self.mem_y, self.mem_x, 	"Mem MB", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.mem_y, self.mem_x+10,"Mem", 8)
+			self.term_window.addnstr(self.mem_y, self.mem_x+20,"Swap", 8)
+			self.term_window.addnstr(self.mem_y, self.mem_x+30,"Real", 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x, "Total:", 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x, "Used:", 8)
+			self.term_window.addnstr(self.mem_y+3, self.mem_x, "Free:", 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x+10, str(mem['total']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+10, str(mem['used']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+10, str(mem['free']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x+20, str(memswap['total']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+20, str(memswap['used']/1048576), 8, self.__getColor(memswap['used'], memswap['total']))
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+20, str(memswap['free']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x+30, "-", 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+30, str((mem['used']-mem['cache'])/1048576), 8, self.__getColor(mem['used']-mem['cache'], mem['total']))
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
 
 		
 	def displayNetwork(self, network):
 		# Network interfaces bitrate
-		self.term_window.addnstr(self.network_y, self.network_x,    "Net rate", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.network_y, self.network_x+10, "Rx Kbps", 8)
-		self.term_window.addnstr(self.network_y, self.network_x+20, "Tx Kbps", 8)
-		# A maximum of 5 interfaces could be monitored
-		for interface in range(0, min(4, len(network))):
-			elapsed_time = max (1, network[interface]['systime'])
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000*8), 8)
-			self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000*8), 8)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.network_y+3) 
+			and (screen_x > self.network_x+28)):
+			# Network interfaces bitrate
+			self.term_window.addnstr(self.network_y, self.network_x,    "Net rate", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.network_y, self.network_x+10, "Rx Kbps", 8)
+			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx Kbps", 8)
+			# Adapt the maximum interface to the screen
+			for interface in range(0, min(12+(screen_y-self.term_h), len(network))):
+				elapsed_time = max (1, network[interface]['systime'])
+				self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
+				self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000*8), 8)
+				self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000*8), 8)
 
 			
 	def displayDiskIO(self, diskio):
 		# Disk input/output rate
-		self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In KBps", 8)
-		self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out KBps", 8)
-		# A maximum of 5 disks could be monitored
-		for disk in range(0, min(4, len(diskio))):
-			elapsed_time = max(1, diskio[disk]['systime'])			
-			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
-			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, str(diskio[disk]['read_bytes']/elapsed_time/1000), 8)
-			self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, str(diskio[disk]['write_bytes']/elapsed_time/1000), 8)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.diskio_y+4) 
+			and (screen_x > self.diskio_x+28)):
+			self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In KBps", 8)
+			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out KBps", 8)
+			# Adapt the maximum disk to the screen
+			for disk in range(0, min(4+(screen_y-self.term_h), len(diskio))):
+				elapsed_time = max(1, diskio[disk]['systime'])			
+				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
+				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, str(diskio[disk]['read_bytes']/elapsed_time/1000), 8)
+				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, str(diskio[disk]['write_bytes']/elapsed_time/1000), 8)
 			
 
 	def displayProcess(self, processcount, processlist):
 		# Process
-		self.term_window.addnstr(self.process_y, self.process_x, "Process", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-		self.term_window.addnstr(self.process_y, self.process_x+10,"Total", 8)
-		self.term_window.addnstr(self.process_y, self.process_x+20,"Running", 8)
-		self.term_window.addnstr(self.process_y, self.process_x+30,"Sleeping", 8)
-		self.term_window.addnstr(self.process_y, self.process_x+40,"Other", 8)
-		self.term_window.addnstr(self.process_y+1, self.process_x, "Number:", 8)
-		self.term_window.addnstr(self.process_y+1, self.process_x+10,str(processcount['total']), 8)
-		self.term_window.addnstr(self.process_y+1, self.process_x+20,str(processcount['running']), 8)
-		self.term_window.addnstr(self.process_y+1, self.process_x+30,str(processcount['sleeping']), 8)
-		self.term_window.addnstr(self.process_y+1, self.process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
-		#term_window.addnstr(process_y+2, process_x,"List:", 8)
-		if (self.getProcessSortedBy() == 'cpu_percent'):
-			sortchar = '^'
-		else:
-			sortchar = ' '
-		self.term_window.addnstr(self.process_y+3, self.process_x,"Cpu %"+sortchar, 8)
-		if (self.getProcessSortedBy() == 'proc_size'):
-			sortchar = '^'
-		else:
-			sortchar = ' '
-		self.term_window.addnstr(self.process_y+3, self.process_x+10,"Size MB"+sortchar, 8)
-		self.term_window.addnstr(self.process_y+3, self.process_x+20,"Res MB", 8)
-		self.term_window.addnstr(self.process_y+3, self.process_x+30,"Name", 8)
-		for processes in range(0, min(9, len(processlist))):
-			self.term_window.addnstr(self.process_y+4+processes, self.process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
-			self.term_window.addnstr(self.process_y+4+processes, self.process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
-			self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
-			self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20)
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.process_y+3) 
+			and (screen_x > self.process_x+48)):
+			# Processes sumary
+			self.term_window.addnstr(self.process_y, self.process_x, "Process", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.process_y, self.process_x+10,"Total", 8)
+			self.term_window.addnstr(self.process_y, self.process_x+20,"Running", 8)
+			self.term_window.addnstr(self.process_y, self.process_x+30,"Sleeping", 8)
+			self.term_window.addnstr(self.process_y, self.process_x+40,"Other", 8)
+			self.term_window.addnstr(self.process_y+1, self.process_x, "Number:", 8)
+			self.term_window.addnstr(self.process_y+1, self.process_x+10,str(processcount['total']), 8)
+			self.term_window.addnstr(self.process_y+1, self.process_x+20,str(processcount['running']), 8)
+			self.term_window.addnstr(self.process_y+1, self.process_x+30,str(processcount['sleeping']), 8)
+			self.term_window.addnstr(self.process_y+1, self.process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
+		if ((screen_y > self.process_y+6) 
+			and (screen_x > self.process_x+50)):
+			# Processes detail
+			if (self.getProcessSortedBy() == 'cpu_percent'):
+				sortchar = '^'
+			else:
+				sortchar = ' '
+			self.term_window.addnstr(self.process_y+3, self.process_x,"Cpu %"+sortchar, 8)
+			if (self.getProcessSortedBy() == 'proc_size'):
+				sortchar = '^'
+			else:
+				sortchar = ' '
+			self.term_window.addnstr(self.process_y+3, self.process_x+10,"Size MB"+sortchar, 8)
+			self.term_window.addnstr(self.process_y+3, self.process_x+20,"Res MB", 8)
+			self.term_window.addnstr(self.process_y+3, self.process_x+30,"Name", 8)
+			for processes in range(0, min(9+(screen_y-self.term_h), len(processlist))):
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20)
 
 
 	def displayCaption(self):
 		# Caption
-		self.term_window.addnstr(self.caption_y, self.caption_x, "<50%", 4, self.default_color)
-		self.term_window.addnstr(self.caption_y, self.caption_x+4, ">50%", 4, self.if50pc_color)
-		self.term_window.addnstr(self.caption_y, self.caption_x+8, ">70%", 4, self.if70pc_color)
-		self.term_window.addnstr(self.caption_y, self.caption_x+12, ">90%", 4, self.if90pc_color)
-
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.caption_y) 
+			and (screen_x > self.caption_x+16)):
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x, "<50%", 4, self.default_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+4, ">50%", 4, self.if50pc_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8, ">70%", 4, self.if70pc_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+12, ">90%", 4, self.if90pc_color)
+	
 			
 	def displayNow(self, now):
 		# Display the current date and time (now...) - Center
-		now_msg = now.strftime("%Y-%m-%d %H:%M:%S")
-		self.term_window.addnstr(self.now_y, self.now_x-len(now_msg), now_msg, len(now_msg))
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.now_y)
+			and (screen_x > self.now_x)):
+			now_msg = now.strftime("%Y-%m-%d %H:%M:%S")+" "+str(screen_y)
+			self.term_window.addnstr(max(self.now_y, screen_y-1), self.now_x-len(now_msg), now_msg, len(now_msg))
 
 		
 # Global def
@@ -484,24 +567,9 @@ def main():
 	while True:
 		# Get informations from libstatgrab and others...
 		stats.update()
-
-		# Clean the screen
-		screen.erase()
 	
-		# Display stats
-		screen.displayHost(stats.getHost())
-		screen.displaySystem(stats.getSystem())	
-		screen.displayCpu(stats.getCpu())
-		screen.displayLoad(stats.getLoad())
-		screen.displayMem(stats.getMem(), stats.getMemSwap())
-		screen.displayNetwork(stats.getNetwork())
-		screen.displayDiskIO(stats.getDiskIO())		
-		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
-		screen.displayCaption()
-		screen.displayNow(stats.getNow())
-	
-		# Update and sleep... bzzz... bzzz...
-		screen.update()
+		# Update the screen
+		screen.update(stats)
 
 		
 def end():
