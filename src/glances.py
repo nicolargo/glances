@@ -462,7 +462,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+1, self.process_x+30,str(processcount['sleeping']), 8)
 			self.term_window.addnstr(self.process_y+1, self.process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
 		if ((screen_y > self.process_y+6) 
-			and (screen_x > self.process_x+50)):
+			and (screen_x > self.process_x+49)):
 			# Processes detail
 			if (self.getProcessSortedBy() == 'cpu_percent'):
 				sortchar = '^'
