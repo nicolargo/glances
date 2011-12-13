@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-AC_INIT(Glances, 1.2, , glances)
+AC_INIT(Glances, 1.3, , glances)
 
 AC_CONFIG_HEADERS([config.h])
 
@@ -22,5 +22,6 @@ dnl AX_PYTHON_MODULE([statgrab],[needed])
 AC_OUTPUT([
 Makefile
 src/Makefile
+man/Makefile
 
 ])

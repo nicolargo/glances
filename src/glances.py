@@ -33,7 +33,7 @@ import statgrab
 #==================
 
 # The glances version id
-__version__ = "1.2"		
+__version__ = "1.3"		
 
 # Class
 #======
@@ -50,6 +50,65 @@ class Timer():
 		return time.time() > self.target
 
 
+class glancesGrabFs():
+	"""
+	Get FS stats: idem as structure http://www.i-scream.org/libstatgrab/docs/sg_get_fs_stats.3.html
+	"""
+
+	def __init__(self):
+		self.__update__()
+	
+	
+	def __update__(self):
+		"""
+		Update the stats
+		"""
+		
+		# Reset the list
+		self.fs_list = []
+		
+		# Ignore the following fs
+		ignore_fsname = ('none', 'gvfs-fuse-daemon', 'fusectl')
+		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs')
+		
+		# Open the current mounted FS
+		mtab = open("/etc/mtab", "r")
+		for line in mtab.readlines():
+			if line.split()[0] in ignore_fsname: continue
+			if line.split()[2] in ignore_fstype: continue
+			# Get FS stats
+			fs_current = {}
+			fs_name = self.__getmount__(line.split()[1])
+			fs_stats = os.statvfs(fs_name)
+			# Build the list
+			fs_current['device_name'] = str(line.split()[0])
+			fs_current['fs_type'] = str(line.split()[2])
+			fs_current['mnt_point'] = str(fs_name)
+			fs_current['size'] = float(fs_stats.f_blocks) * long(fs_stats.f_frsize)
+			fs_current['used'] = float(fs_stats.f_blocks - fs_stats.f_bfree) * long(fs_stats.f_frsize)
+			fs_current['avail'] = float(fs_stats.f_bfree) * long(fs_stats.f_frsize)
+			self.fs_list.append(fs_current)
+		mtab.close()
+		
+		
+	def __getmount__(self, path):
+		"""
+		Return the real root path of a file
+		Exemple: /home/nicolargo can return /home or /
+		"""
+		path = os.path.realpath(os.path.abspath(path))
+		while path != os.path.sep:
+			if os.path.ismount(path):
+				return path
+			path = os.path.abspath(os.path.join(path, os.pardir))
+		return path		
+
+
+	def get(self):
+		self.__update__()
+		return self.fs_list
+
+
 class glancesStats():
 	"""
 	This class store, update and give the libstatgrab stats
@@ -63,6 +122,10 @@ class glancesStats():
 		# Init libstatgrab
 		if not statgrab.sg_init():
 			print "Error: Can not init the libstatgrab library.\n"
+		
+		# Init the interfac fs stats
+		self.glancesgrabfs = glancesGrabFs()
+			
 		# Do the first update
 		self.__update__()
 
@@ -81,8 +144,8 @@ class glancesStats():
 		self.memswap = statgrab.sg_get_swap_stats()
 		self.network = statgrab.sg_get_network_io_stats_diff()
 		self.diskio = statgrab.sg_get_disk_io_stats_diff()
-		# BUG: https://bugs.launchpad.net/ubuntu/+source/libstatgrab/+bug/886783
-		# TODO: self.fs = statgrab.sg_get_fs_stats()
+		# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
+		self.fs = self.glancesgrabfs.get()
 		self.processcount = statgrab.sg_get_process_count()
 		self.process = statgrab.sg_get_process_stats()
 		self.now = datetime.datetime.now()		
@@ -128,6 +191,10 @@ class glancesStats():
 		
 	def getDiskIO(self):
 		return self.diskio
+
+
+	def getFs(self):
+		return self.fs
 
 		
 	def getProcessCount(self):
@@ -175,7 +242,8 @@ class glancesScreen():
 		self.load_x = 		20; 		self.load_y = 		3
 		self.mem_x = 		41; 		self.mem_y = 		3
 		self.network_x = 	0 ; 		self.network_y = 	9
-		self.diskio_x = 	0 ; 		self.diskio_y = 	16
+		self.diskio_x = 	0 ; 		self.diskio_y = 	-1
+		self.fs_x = 		0 ; 		self.fs_y = 		-1
 		self.process_x = 	30;			self.process_y = 	9
 		self.now_x = 		79;			self.now_y = 		3
 		self.caption_x = 	0 ;			self.caption_y = 	3
@@ -210,7 +278,6 @@ class glancesScreen():
 			self.if90pc_color = curses.color_pair(2)|curses.A_BOLD
 
 		# Init window		
-		#self.term_window = self.screen.subwin(self.term_h, self.term_w, 0, 0)
 		self.term_window = self.screen.subwin(0, 0)
 
 		# Init refresh time
@@ -228,6 +295,24 @@ class glancesScreen():
 	def getProcessSortedBy(self):
 		return self.__process_sortedby
 
+
+	def __autoUnit(self, val):
+		"""
+		Convert val to string and concatenate the good unit
+		Exemples:
+			960 -> 960
+			142948 -> 143K
+			560745673 -> 561M
+			...
+		"""
+		if val >= 1073741824L:
+			return "%.1fG" % (val / 1073741824L)
+		elif val >= 1048576L:
+			return "%.1fM" % (val / 1048576L)
+		elif val >= 1024:
+			return "%.1fK" % (val / 1024)
+		else:
+			return str(int(val))
 		
 	def __getColor(self, current = 0, max = 100):
 		# If current > 50% of max then color = self.if50pc_color / A_DIM
@@ -300,8 +385,9 @@ class glancesScreen():
 		screen.displayCpu(stats.getCpu())
 		screen.displayLoad(stats.getLoad())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
-		screen.displayNetwork(stats.getNetwork())
-		screen.displayDiskIO(stats.getDiskIO())		
+		net_count = screen.displayNetwork(stats.getNetwork())
+		disk_count = screen.displayDiskIO(stats.getDiskIO(), net_count)
+		screen.displayFs(stats.getFs(), net_count + disk_count)		
 		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
 		screen.displayCaption()
 		screen.displayNow(stats.getNow())
@@ -376,13 +462,13 @@ class glancesScreen():
 		if ((screen_y > self.load_y+5) 
 			and (screen_x > self.load_x+18)):
 			self.term_window.addnstr(self.load_y, self.load_x, 	"Load", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.load_y, self.load_x+10,"%", 8)
+			self.term_window.addnstr(self.load_y, self.load_x+10,"", 8)
 			self.term_window.addnstr(self.load_y+1, self.load_x, "1 min:", 8)
 			self.term_window.addnstr(self.load_y+2, self.load_x, "5 mins:", 8)
 			self.term_window.addnstr(self.load_y+3, self.load_x, "15 mins:", 8)
-			self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8, self.__getColor(load['min1']))
-			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__getColor(load['min5']))
-			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__getColor(load['min15']))
+			self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8)
+			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8)
+			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8)
 
 		
 	def displayMem(self, mem, memswap):
@@ -410,6 +496,10 @@ class glancesScreen():
 
 		
 	def displayNetwork(self, network):
+		"""
+		Display the network interface bitrate
+		Return the number of interfaces
+		"""
 		# Network interfaces bitrate
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
@@ -417,32 +507,58 @@ class glancesScreen():
 			and (screen_x > self.network_x+28)):
 			# Network interfaces bitrate
 			self.term_window.addnstr(self.network_y, self.network_x,    "Net rate", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.network_y, self.network_x+10, "Rx Kbps", 8)
-			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx Kbps", 8)
+			self.term_window.addnstr(self.network_y, self.network_x+10, "Rx/ps", 8)
+			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx/ps", 8)
 			# Adapt the maximum interface to the screen
+			interface = 0
 			for interface in range(0, min(12+(screen_y-self.term_h), len(network))):
 				elapsed_time = max (1, network[interface]['systime'])
 				self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
-				self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, str(network[interface]['rx']/elapsed_time/1000*8), 8)
-				self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, str(network[interface]['tx']/elapsed_time/1000*8), 8)
+				self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, self.__autoUnit(network[interface]['rx']/elapsed_time*8) + "b", 8)
+				self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, self.__autoUnit(network[interface]['tx']/elapsed_time*8) + "b", 8)
+			return interface
+		return 0
 
 			
-	def displayDiskIO(self, diskio):
+	def displayDiskIO(self, diskio, offset_y = 0):
 		# Disk input/output rate
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > self.diskio_y+4) 
+		self.diskio_y = offset_y + 12
+		if ((screen_y > self.diskio_y+3) 
 			and (screen_x > self.diskio_x+28)):
 			self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In KBps", 8)
-			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out KBps", 8)
+			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In/ps", 8)
+			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out/ps", 8)
 			# Adapt the maximum disk to the screen
-			for disk in range(0, min(4+(screen_y-self.term_h), len(diskio))):
+			disk = 0
+			for disk in range(0, min(11+(screen_y-self.term_h), len(diskio))):
 				elapsed_time = max(1, diskio[disk]['systime'])			
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
-				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, str(diskio[disk]['read_bytes']/elapsed_time/1000), 8)
-				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, str(diskio[disk]['write_bytes']/elapsed_time/1000), 8)
-			
+				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
+				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, self.__autoUnit(diskio[disk]['read_bytes']/elapsed_time) + "B", 8)
+			return disk
+		return 0
+
+
+	def displayFs(self, fs, offset_y = 0):
+		# Filesystem stats
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		self.fs_y = offset_y + 15
+		if ((screen_y > self.fs_y+5) 
+			and (screen_x > self.fs_x+28)):
+			self.term_window.addnstr(self.fs_y, self.fs_x,    "Mount", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.fs_y, self.fs_x+10, "Total", 8)
+			self.term_window.addnstr(self.fs_y, self.fs_x+20, "Used", 8)
+			# Adapt the maximum disk to the screen
+			mounted = 0
+			for mounted in range(0, min(11+(screen_y-self.term_h), len(fs))):
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
+			return mounted
+		return 0			
 
 	def displayProcess(self, processcount, processlist):
 		# Process
@@ -480,7 +596,7 @@ class glancesScreen():
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20)
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20+(screen_x-self.process_x))
 
 
 	def displayCaption(self):
@@ -501,7 +617,7 @@ class glancesScreen():
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.now_y)
 			and (screen_x > self.now_x)):
-			now_msg = now.strftime("%Y-%m-%d %H:%M:%S")+" "+str(screen_y)
+			now_msg = now.strftime("%Y-%m-%d %H:%M:%S")
 			self.term_window.addnstr(max(self.now_y, screen_y-1), self.now_x-len(now_msg), now_msg, len(now_msg))
 
 		

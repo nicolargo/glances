@@ -211,7 +211,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = src 
+SUBDIRS = src man
 glancesdocdir = ${prefix}/doc/glances
 glancesdoc_DATA = \
 	README\
