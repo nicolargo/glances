@@ -74,12 +74,6 @@ When Glances is running, you can press:
 * 'm' the processes list is sorted by process size
 * 'q' Exit
 
-## Limitation
-
-The current version of the python-statgrab API can not retrieve the file 
-system statistics.
-https://bugs.launchpad.net/ubuntu/+source/libstatgrab/+bug/886783
-
 ## Todo
 
 You are welcome to contribute to this software.
