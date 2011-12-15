@@ -70,7 +70,7 @@ When Glances is running, you can press:
 
     If MEM > 70%, sort by process size
 
-* 'c' the processes list is sorted by CPU consomption
+* 'c' the processes list is sorted by CPU consumption
 * 'm' the processes list is sorted by process size
 * 'q' Exit
 
