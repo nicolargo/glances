@@ -27,13 +27,14 @@ import time
 import datetime
 import curses
 import statgrab
+import multiprocessing
 
 
 # Globals variables
 #==================
 
 # The glances version id
-__version__ = "1.3"		
+__version__ = "1.3.1"		
 
 # Class
 #======
@@ -68,7 +69,7 @@ class glancesGrabFs():
 		self.fs_list = []
 		
 		# Ignore the following fs
-		ignore_fsname = ('none', 'gvfs-fuse-daemon', 'fusectl')
+		ignore_fsname = ('none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
 		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs')
 		
 		# Open the current mounted FS
@@ -89,7 +90,7 @@ class glancesGrabFs():
 			fs_current['avail'] = float(fs_stats.f_bfree) * long(fs_stats.f_frsize)
 			self.fs_list.append(fs_current)
 		mtab.close()
-		
+				
 		
 	def __getmount__(self, path):
 		"""
@@ -148,7 +149,11 @@ class glancesStats():
 		self.fs = self.glancesgrabfs.get()
 		self.processcount = statgrab.sg_get_process_count()
 		self.process = statgrab.sg_get_process_stats()
-		self.now = datetime.datetime.now()		
+		self.now = datetime.datetime.now()
+				
+		# Get the number of core (CPU)
+		# Used to display load alerts
+		self.core_number = multiprocessing.cpu_count()
 
 		
 	def end(self):
@@ -172,6 +177,10 @@ class glancesStats():
 	def getCpu(self):
 		return self.cpu
 
+
+	def getCore(self):
+		return self.core_number
+		
 		
 	def getLoad(self):
 		return self.load
@@ -347,6 +356,35 @@ class glancesScreen():
 			else:
 				return 0
 
+
+	def __getLoadColor(self, current = 0, core = 1):
+		# core is the number of CPU core
+		# If current > 0.7*core then color = self.if50pc_color / A_DIM
+		# If current > 1.0*core then color = self.if70pc_color / A_BOLD
+		# If current > 5.0*core then color = self.if90pc_color / A_REVERSE
+		# By default: color = self.default_color / 0
+
+		if current > (5.0 * core):
+			if self.hascolors:
+				return self.if90pc_color
+			else:
+				return curses.A_REVERSE
+		elif current > (1.0 * core):
+			if self.hascolors:
+				return self.if70pc_color
+			else:
+				return curses.A_BOLD
+		elif current > (0.7 * core):
+			if self.hascolors:
+				return self.if50pc_color
+			else:
+				return curses.A_DIM
+		else:
+			if self.hascolors:
+				return self.default_color
+			else:
+				return 0
+
 				
 	def __catchKey(self):
 		# Get key
@@ -383,7 +421,7 @@ class glancesScreen():
 		screen.displayHost(stats.getHost())
 		screen.displaySystem(stats.getSystem())	
 		screen.displayCpu(stats.getCpu())
-		screen.displayLoad(stats.getLoad())
+		screen.displayLoad(stats.getLoad(), stats.getCore())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
 		net_count = screen.displayNetwork(stats.getNetwork())
 		disk_count = screen.displayDiskIO(stats.getDiskIO(), net_count)
@@ -455,20 +493,20 @@ class glancesScreen():
 			self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
 
 		
-	def displayLoad(self, load):
+	def displayLoad(self, load, core):
 		# Load %
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.load_y+5) 
 			and (screen_x > self.load_x+18)):
-			self.term_window.addnstr(self.load_y, self.load_x, 	"Load", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.load_y, self.load_x+10,"", 8)
+			self.term_window.addnstr(self.load_y, self.load_x, "Load", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.load_y, self.load_x+10, str(core)+"-Core", 8)
 			self.term_window.addnstr(self.load_y+1, self.load_x, "1 min:", 8)
 			self.term_window.addnstr(self.load_y+2, self.load_x, "5 mins:", 8)
 			self.term_window.addnstr(self.load_y+3, self.load_x, "15 mins:", 8)
 			self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8)
-			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8)
-			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8)
+			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__getLoadColor(load['min5'], core))
+			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__getLoadColor(load['min15'], core))
 
 		
 	def displayMem(self, mem, memswap):
@@ -511,7 +549,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx/ps", 8)
 			# Adapt the maximum interface to the screen
 			interface = 0
-			for interface in range(0, min(12+(screen_y-self.term_h), len(network))):
+			for interface in range(0, min(screen_y-self.term_h, len(network))):
 				elapsed_time = max (1, network[interface]['systime'])
 				self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
 				self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, self.__autoUnit(network[interface]['rx']/elapsed_time*8) + "b", 8)
@@ -532,7 +570,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out/ps", 8)
 			# Adapt the maximum disk to the screen
 			disk = 0
-			for disk in range(0, min(11+(screen_y-self.term_h), len(diskio))):
+			for disk in range(0, min(screen_y-self.term_h, len(diskio))):
 				elapsed_time = max(1, diskio[disk]['systime'])			
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
@@ -553,7 +591,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.fs_y, self.fs_x+20, "Used", 8)
 			# Adapt the maximum disk to the screen
 			mounted = 0
-			for mounted in range(0, min(11+(screen_y-self.term_h), len(fs))):
+			for mounted in range(0, min(screen_y-self.term_h, len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
