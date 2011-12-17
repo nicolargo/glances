@@ -1,3 +1,13 @@
+Version 1.3.2
+=============
+
+	* Add alert for network bit rate°
+	* Change the caption
+	* Optimised net, disk IO and fs display (share the space)
+
+° Disable on Ubuntu because the libstatgrab return a zero value
+  for the network interface speed.
+
 Version 1.3.1
 =============
 

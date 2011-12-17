@@ -34,7 +34,7 @@ import multiprocessing
 #==================
 
 # The glances version id
-__version__ = "1.3.1"		
+__version__ = "1.3.2"		
 
 # Class
 #======
@@ -143,6 +143,7 @@ class glancesStats():
 		self.load = statgrab.sg_get_load_stats()
 		self.mem = statgrab.sg_get_mem_stats()
 		self.memswap = statgrab.sg_get_swap_stats()
+		self.networkinterface = statgrab.sg_get_network_iface_stats()
 		self.network = statgrab.sg_get_network_io_stats_diff()
 		self.diskio = statgrab.sg_get_disk_io_stats_diff()
 		# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
@@ -193,6 +194,10 @@ class glancesStats():
 	def getMemSwap(self):
 		return self.memswap
 
+
+	def getNetworkInterface(self):
+		return self.networkinterface
+		
 		
 	def getNetwork(self):
 		return self.network
@@ -331,7 +336,7 @@ class glancesScreen():
 		try:
 			(current * 100) / max
 		except ZeroDivisionError:
-			return self.no_color
+			return 0
 
 		variable = (current * 100) / max
 
@@ -423,7 +428,7 @@ class glancesScreen():
 		screen.displayCpu(stats.getCpu())
 		screen.displayLoad(stats.getLoad(), stats.getCore())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
-		net_count = screen.displayNetwork(stats.getNetwork())
+		net_count = screen.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
 		disk_count = screen.displayDiskIO(stats.getDiskIO(), net_count)
 		screen.displayFs(stats.getFs(), net_count + disk_count)		
 		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
@@ -533,7 +538,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
 
 		
-	def displayNetwork(self, network):
+	def displayNetwork(self, network, networkinterface):
 		"""
 		Display the network interface bitrate
 		Return the number of interfaces
@@ -543,18 +548,26 @@ class glancesScreen():
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.network_y+3) 
 			and (screen_x > self.network_x+28)):
+			# Get the speed of the network interface
+			# TODO: optimize...
+			speed = {}
+			for i in range(0, len(networkinterface)):
+				# Strange think, on Ubuntu, libstatgrab return 65525 for my ethernet card...
+				if networkinterface[i]['speed'] == 65535:
+					speed[networkinterface[i]['interface_name']] = 0
+				else:
+					speed[networkinterface[i]['interface_name']] = networkinterface[i]['speed']*1000000
 			# Network interfaces bitrate
 			self.term_window.addnstr(self.network_y, self.network_x,    "Net rate", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.network_y, self.network_x+10, "Rx/ps", 8)
 			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx/ps", 8)
 			# Adapt the maximum interface to the screen
-			interface = 0
-			for interface in range(0, min(screen_y-self.term_h, len(network))):
-				elapsed_time = max (1, network[interface]['systime'])
-				self.term_window.addnstr(self.network_y+1+interface, self.network_x, network[interface]['interface_name']+':', 8)
-				self.term_window.addnstr(self.network_y+1+interface, self.network_x+10, self.__autoUnit(network[interface]['rx']/elapsed_time*8) + "b", 8)
-				self.term_window.addnstr(self.network_y+1+interface, self.network_x+20, self.__autoUnit(network[interface]['tx']/elapsed_time*8) + "b", 8)
-			return interface
+			for i in range(0, min(6+(screen_y-self.term_h)/3, len(network))):
+				elapsed_time = max (1, network[i]['systime'])
+				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
+			return i
 		return 0
 
 			
@@ -570,7 +583,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out/ps", 8)
 			# Adapt the maximum disk to the screen
 			disk = 0
-			for disk in range(0, min(screen_y-self.term_h, len(diskio))):
+			for disk in range(0, min(int(8+(screen_y-self.term_h)/3), len(diskio))):
 				elapsed_time = max(1, diskio[disk]['systime'])			
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
@@ -591,7 +604,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.fs_y, self.fs_x+20, "Used", 8)
 			# Adapt the maximum disk to the screen
 			mounted = 0
-			for mounted in range(0, min(screen_y-self.term_h, len(fs))):
+			for mounted in range(0, min(int(8+(screen_y-self.term_h)/3), len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
@@ -642,11 +655,11 @@ class glancesScreen():
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.caption_y) 
-			and (screen_x > self.caption_x+16)):
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x, "<50%", 4, self.default_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+4, ">50%", 4, self.if50pc_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8, ">70%", 4, self.if70pc_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+12, ">90%", 4, self.if90pc_color)
+			and (screen_x > self.caption_x+32)):
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x,    "   OK   ", 8, self.default_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8,  "CAREFUL ", 8, self.if50pc_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+16,  "WARNING ", 8, self.if70pc_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+24, "CRITICAL", 8, self.if90pc_color)
 	
 			
 	def displayNow(self, now):
