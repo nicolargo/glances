@@ -11,14 +11,15 @@ def read(fname):
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(  name='Glances',
-	version='1.3.1',
+	version='1.3.2',
+	download_url='https://github.com/downloads/nicolargo/glances/glances-1.3.2.tar.gz',
+	url='https://github.com/nicolargo/glances',
 	description='CLI curses-based monitoring tool',
 	author='Nicolas Hennion',
 	author_email='nicolas@nicolargo.com',
 	license = "LGPL",
 	keywords = "cli curse monitoring system",
 	long_description=read('README'),
-	url='https://github.com/nicolargo/glances',
 	packages=['src'],
- 	install_requires=['statgrab>=0.5']
+ 	install_requires=['pystatgrab>=0.5']
 )
