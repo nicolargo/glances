@@ -20,12 +20,12 @@ Packages exist for Arch, Fedora, Redhat ...
 
 Get the latest version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.2.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.3.tar.gz
 
 Glances use a standard GNU style installer:
 
-	$ tar zxvf glances-1.3.2.tar.gz
-	$ cd glances-1.3.2
+	$ tar zxvf glances-1.3.3.tar.gz
+	$ cd glances-1.3.3
 	$ ./configure
 	$ make
 	$ sudo make install

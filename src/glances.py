@@ -34,7 +34,7 @@ import multiprocessing
 #==================
 
 # The glances version id
-__version__ = "1.3.2"		
+__version__ = "1.3.3"		
 
 # Class
 #======
@@ -136,20 +136,54 @@ class glancesStats():
 		"""
 
 		# Get informations from libstatgrab and others...
-		self.host = statgrab.sg_get_host_info()
-		# TODO: platform.platform(True) instead of statgrab.sg_get_host_info()
-		self.system = statgrab.sg_get_host_info()
-		self.cpu = statgrab.sg_get_cpu_percents()
-		self.load = statgrab.sg_get_load_stats()
-		self.mem = statgrab.sg_get_mem_stats()
-		self.memswap = statgrab.sg_get_swap_stats()
-		self.networkinterface = statgrab.sg_get_network_iface_stats()
-		self.network = statgrab.sg_get_network_io_stats_diff()
-		self.diskio = statgrab.sg_get_disk_io_stats_diff()
-		# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
-		self.fs = self.glancesgrabfs.get()
-		self.processcount = statgrab.sg_get_process_count()
-		self.process = statgrab.sg_get_process_stats()
+		try:
+			self.host = statgrab.sg_get_host_info()
+		except:
+			self.host = {}
+		self.system = self.host
+		try:
+			self.cpu = statgrab.sg_get_cpu_percents()
+		except:
+			self.cpu = {}
+		try:
+			self.load = statgrab.sg_get_load_stats()
+		except:
+			self.load = {}
+		try:
+			self.mem = statgrab.sg_get_mem_stats()
+		except:
+			self.mem = {}
+		try:
+			self.memswap = statgrab.sg_get_swap_stats()
+		except:
+			self.memswap = {}
+		try:
+			self.networkinterface = statgrab.sg_get_network_iface_stats()
+		except:
+			self.networkinterface = {}
+		try:
+			self.network = statgrab.sg_get_network_io_stats_diff()
+		except:
+			self.network = {}
+		try:
+			self.diskio = statgrab.sg_get_disk_io_stats_diff()
+		except:
+			self.diskio = {}
+		try:
+			self.fs = statgrab.sg_get_fs_stats()
+		except:
+			# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
+			self.fs = self.glancesgrabfs.get()
+		try:
+			self.processcount = statgrab.sg_get_process_count()
+		except:
+			self.processcount = {}
+		try:
+			self.process = statgrab.sg_get_process_stats()
+		except:
+			self.process = {}
+
+		# Get the current date/time
 		self.now = datetime.datetime.now()
 				
 		# Get the number of core (CPU)
@@ -428,9 +462,9 @@ class glancesScreen():
 		screen.displayCpu(stats.getCpu())
 		screen.displayLoad(stats.getLoad(), stats.getCore())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
-		net_count = screen.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
-		disk_count = screen.displayDiskIO(stats.getDiskIO(), net_count)
-		screen.displayFs(stats.getFs(), net_count + disk_count)		
+		network_count = screen.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
+		diskio_count = screen.displayDiskIO(stats.getDiskIO(), self.network_y + network_count + 3)
+		screen.displayFs(stats.getFs(), self.network_y + network_count + diskio_count + 6)		
 		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
 		screen.displayCaption()
 		screen.displayNow(stats.getNow())
@@ -462,26 +496,32 @@ class glancesScreen():
 		
 	def displayHost(self, host):
 		# Host information
+		if (not host):
+			return 0
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.host_y) 
 			and (screen_x > self.host_x+79)):
 			host_msg = "Glances v"+self.__version+" running on "+host['hostname'] #+" "+str(pressed_key)
-			self.term_window.addnstr(self.host_y, self.host_x+40-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
+			self.term_window.addnstr(self.host_y, self.host_x+int(screen_x/2)-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
 
 		
 	def displaySystem(self, system):
 		# System information
+		if (not system):
+			return 0		
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.system_y) 
 			and (screen_x > self.system_x+79)):
 			system_msg = system['os_name']+" "+system['platform']+" "+system['os_version']
-			self.term_window.addnstr(self.system_y, self.system_x+40-len(system_msg)/2, system_msg, 80)
+			self.term_window.addnstr(self.system_y, self.system_x+int(screen_x/2)-len(system_msg)/2, system_msg, 80)
 
 		
 	def displayCpu(self, cpu):		
 		# CPU %
+		if (not cpu):
+			return 0
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.cpu_y+6) 
@@ -500,6 +540,8 @@ class glancesScreen():
 		
 	def displayLoad(self, load, core):
 		# Load %
+		if (not load):
+			return 0		
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.load_y+5) 
@@ -516,6 +558,8 @@ class glancesScreen():
 		
 	def displayMem(self, mem, memswap):
 		# MEM
+		if (not mem or not memswap):
+			return 0		
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.mem_y+5) 
@@ -544,9 +588,11 @@ class glancesScreen():
 		Return the number of interfaces
 		"""
 		# Network interfaces bitrate
+		if (not network or not networkinterface):
+			return 0				
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > self.network_y+3) 
+		if ((screen_y > self.network_y+len(network)+2) 
 			and (screen_x > self.network_x+28)):
 			# Get the speed of the network interface
 			# TODO: optimize...
@@ -562,7 +608,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.network_y, self.network_x+10, "Rx/ps", 8)
 			self.term_window.addnstr(self.network_y, self.network_x+20, "Tx/ps", 8)
 			# Adapt the maximum interface to the screen
-			for i in range(0, min(6+(screen_y-self.term_h)/3, len(network))):
+			for i in range(0, min(screen_y-self.network_y-3, len(network))):
 				elapsed_time = max (1, network[i]['systime'])
 				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
 				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
@@ -573,17 +619,19 @@ class glancesScreen():
 			
 	def displayDiskIO(self, diskio, offset_y = 0):
 		# Disk input/output rate
+		if (not diskio):
+			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		self.diskio_y = offset_y + 12
-		if ((screen_y > self.diskio_y+3) 
+		self.diskio_y = offset_y
+		if ((screen_y > self.diskio_y+len(diskio)+2) 
 			and (screen_x > self.diskio_x+28)):
 			self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In/ps", 8)
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, "Out/ps", 8)
 			# Adapt the maximum disk to the screen
 			disk = 0
-			for disk in range(0, min(int(8+(screen_y-self.term_h)/3), len(diskio))):
+			for disk in range(0, min(screen_y-self.diskio_y-3, len(diskio))):
 				elapsed_time = max(1, diskio[disk]['systime'])			
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
@@ -594,25 +642,30 @@ class glancesScreen():
 
 	def displayFs(self, fs, offset_y = 0):
 		# Filesystem stats
+		if (not fs):
+			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		self.fs_y = offset_y + 15
-		if ((screen_y > self.fs_y+5) 
+		self.fs_y = offset_y
+		if ((screen_y > self.fs_y+len(fs)+2) 
 			and (screen_x > self.fs_x+28)):
 			self.term_window.addnstr(self.fs_y, self.fs_x,    "Mount", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.fs_y, self.fs_x+10, "Total", 8)
 			self.term_window.addnstr(self.fs_y, self.fs_x+20, "Used", 8)
 			# Adapt the maximum disk to the screen
 			mounted = 0
-			for mounted in range(0, min(int(8+(screen_y-self.term_h)/3), len(fs))):
+			for mounted in range(0, min(screen_y-self.fs_y-3, len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
 			return mounted
 		return 0			
 
+
 	def displayProcess(self, processcount, processlist):
 		# Process
+		if (not processcount or not processlist):
+			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.process_y+3) 
@@ -643,11 +696,18 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+3, self.process_x+10,"Size MB"+sortchar, 8)
 			self.term_window.addnstr(self.process_y+3, self.process_x+20,"Res MB", 8)
 			self.term_window.addnstr(self.process_y+3, self.process_x+30,"Name", 8)
-			for processes in range(0, min(9+(screen_y-self.term_h), len(processlist))):
+			for processes in range(0, min(screen_y-self.term_h+self.process_y, len(processlist))):
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
 				self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processlist[processes]['process_name'], 20+(screen_x-self.process_x))
+				maxprocessname = screen_x-self.process_x-30
+				# If screen space is available then display long name
+				if ((len(processlist[processes]['proctitle']) > maxprocessname) 
+				   or (len(processlist[processes]['proctitle']) == 0)):
+					processname = processlist[processes]['process_name']
+				else:	
+					processname = processlist[processes]['proctitle']		
+				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processname, maxprocessname)
 
 
 	def displayCaption(self):
@@ -664,12 +724,14 @@ class glancesScreen():
 			
 	def displayNow(self, now):
 		# Display the current date and time (now...) - Center
+		if (not now):
+			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.now_y)
 			and (screen_x > self.now_x)):
 			now_msg = now.strftime("%Y-%m-%d %H:%M:%S")
-			self.term_window.addnstr(max(self.now_y, screen_y-1), self.now_x-len(now_msg), now_msg, len(now_msg))
+			self.term_window.addnstr(max(self.now_y, screen_y-1), max(self.now_x, screen_x-1)-len(now_msg), now_msg, len(now_msg))
 
 		
 # Global def
