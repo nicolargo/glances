@@ -516,7 +516,7 @@ class glancesScreen():
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.host_y) 
 			and (screen_x > self.host_x+79)):
-			host_msg = "Glances v"+self.__version+" running on "+host['hostname']+" "+str(self.pressedkey) 
+			host_msg = "Glances v"+self.__version+" running on "+host['hostname'] # +" "+str(self.pressedkey) 
 			self.term_window.addnstr(self.host_y, self.host_x+int(screen_x/2)-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
 
 		
