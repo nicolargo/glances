@@ -27,14 +27,14 @@ Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
 Pour l'installer, il suffit de suivre les instructions suivantes depuis un 
 terminal.
 
-Récupération de la dernière version (1.3.3):
+Récupération de la dernière version (1.3.4):
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.3.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.4.tar.gz
 
 Procédez ensuite à l'installation:
 
-	$ tar zxvf glances-1.3.3.tar.gz
-	$ cd glances-1.3.3
+	$ tar zxvf glances-1.3.4.tar.gz
+	$ cd glances-1.3.4
 	$ ./configure
 	$ make
 	$ sudo make install
@@ -102,7 +102,10 @@ Quand Glances est lancé, il est possible d'utiliser les touches suivantes:
     si la mémoire total > 70% alors le tri se fait pas consommation MEMOIRE
 
 * 'c' pour forcer le tri par consommation CPU
+* 'd' pour desactiver ou activer l'affichage des entrées/sorties disques
+* 'f' pour desactiver ou activer l'affichage de l'occupation des FS
 * 'm' pour forcer le tri par consommation MEMOIRE
+* 'n' pour desactiver ou activer l'affichage des interfaces réseau
 * 'q' sortir de Glances (il est également possible d'utiliser CTRL-C)
 
 Passons ensuite à la description de la fenêtre de Glances:

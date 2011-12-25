@@ -1,3 +1,12 @@
+Version 1.3.4
+=============
+
+	* New key: 'n' to enable/disable network stats
+	* New key: 'd' to enable/disable disk IO stats	
+	* New key: 'f' to enable/disable FS stats	
+	* Reorganised the screen when stat are not available|disable
+	* Force Glances to use the enmbeded fs stats (issue #16)
+
 Version 1.3.3
 =============
 

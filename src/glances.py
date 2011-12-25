@@ -34,7 +34,7 @@ import multiprocessing
 #==================
 
 # The glances version id
-__version__ = "1.3.3"		
+__version__ = "1.3.4"		
 
 # Class
 #======
@@ -170,10 +170,10 @@ class glancesStats():
 		except:
 			self.diskio = {}
 		try:
-			self.fs = statgrab.sg_get_fs_stats()
-		except:
 			# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
 			self.fs = self.glancesgrabfs.get()
+		except:
+			self.fs = {}
 		try:
 			self.processcount = statgrab.sg_get_process_count()
 		except:
@@ -325,6 +325,11 @@ class glancesScreen():
 			self.if70pc_color = curses.color_pair(5)|curses.A_BOLD
 			self.if90pc_color = curses.color_pair(2)|curses.A_BOLD
 
+		# By default all the stats are displayed
+		self.network_tag = True
+		self.diskio_tag = True
+		self.fs_tag = True
+
 		# Init window		
 		self.term_window = self.screen.subwin(0, 0)
 
@@ -441,9 +446,18 @@ class glancesScreen():
 		elif (self.pressedkey == 99):
 			# 'c' > Sort process list by Cpu usage
 			self.setProcessSortedBy('cpu_percent')
+		elif (self.pressedkey == 100):
+			# 'n' > Enable/Disable diskio stats
+			self.diskio_tag = not self.diskio_tag
+		elif (self.pressedkey == 102):
+			# 'n' > Enable/Disable fs stats
+			self.fs_tag = not self.fs_tag
 		elif (self.pressedkey == 109):
 			# 'm' > Sort process list by Mem usage
 			self.setProcessSortedBy('proc_size')
+		elif (self.pressedkey == 110):
+			# 'n' > Enable/Disable network stats
+			self.network_tag = not self.network_tag
 		
 		# Return the key code
 		return self.pressedkey
@@ -463,8 +477,8 @@ class glancesScreen():
 		screen.displayLoad(stats.getLoad(), stats.getCore())
 		screen.displayMem(stats.getMem(), stats.getMemSwap())
 		network_count = screen.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
-		diskio_count = screen.displayDiskIO(stats.getDiskIO(), self.network_y + network_count + 3)
-		screen.displayFs(stats.getFs(), self.network_y + network_count + diskio_count + 6)		
+		diskio_count = screen.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
+		screen.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
 		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
 		screen.displayCaption()
 		screen.displayNow(stats.getNow())
@@ -502,7 +516,7 @@ class glancesScreen():
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.host_y) 
 			and (screen_x > self.host_x+79)):
-			host_msg = "Glances v"+self.__version+" running on "+host['hostname'] #+" "+str(pressed_key)
+			host_msg = "Glances v"+self.__version+" running on "+host['hostname']+" "+str(self.pressedkey) 
 			self.term_window.addnstr(self.host_y, self.host_x+int(screen_x/2)-len(host_msg)/2, host_msg, 80, self.title_color if self.hascolors else 0)
 
 		
@@ -588,11 +602,11 @@ class glancesScreen():
 		Return the number of interfaces
 		"""
 		# Network interfaces bitrate
-		if (not network or not networkinterface):
+		if (not network or not networkinterface or not self.network_tag):
 			return 0				
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > self.network_y+len(network)+2) 
+		if ((screen_y > self.network_y+3) 
 			and (screen_x > self.network_x+28)):
 			# Get the speed of the network interface
 			# TODO: optimize...
@@ -613,18 +627,18 @@ class glancesScreen():
 				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
 				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
 				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
-			return i
+			return i+3
 		return 0
 
 			
 	def displayDiskIO(self, diskio, offset_y = 0):
 		# Disk input/output rate
-		if (not diskio):
+		if (not diskio or not self.diskio_tag):
 			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		self.diskio_y = offset_y
-		if ((screen_y > self.diskio_y+len(diskio)+2) 
+		if ((screen_y > self.diskio_y+3) 
 			and (screen_x > self.diskio_x+28)):
 			self.term_window.addnstr(self.diskio_y, self.diskio_x,    "Disk I/O", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, "In/ps", 8)
@@ -636,18 +650,18 @@ class glancesScreen():
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, self.__autoUnit(diskio[disk]['read_bytes']/elapsed_time) + "B", 8)
-			return disk
+			return disk+3
 		return 0
 
 
 	def displayFs(self, fs, offset_y = 0):
 		# Filesystem stats
-		if (not fs):
+		if (not fs or not self.fs_tag):
 			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		self.fs_y = offset_y
-		if ((screen_y > self.fs_y+len(fs)+2) 
+		if ((screen_y > self.fs_y+3) 
 			and (screen_x > self.fs_x+28)):
 			self.term_window.addnstr(self.fs_y, self.fs_x,    "Mount", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.fs_y, self.fs_x+10, "Total", 8)
@@ -658,7 +672,7 @@ class glancesScreen():
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
-			return mounted
+			return mounted+3
 		return 0			
 
 
@@ -668,46 +682,54 @@ class glancesScreen():
 			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
+		# If there is no (network&diskio&fs) stats
+		# then increase process window
+		if (not self.network_tag and not self.diskio_tag and not self.fs_tag):
+			process_x = 0
+		else:
+			process_x = self.process_x
+		# Display the process summary
 		if ((screen_y > self.process_y+3) 
-			and (screen_x > self.process_x+48)):
+			and (screen_x > process_x+48)):
 			# Processes sumary
-			self.term_window.addnstr(self.process_y, self.process_x, "Process", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.process_y, self.process_x+10,"Total", 8)
-			self.term_window.addnstr(self.process_y, self.process_x+20,"Running", 8)
-			self.term_window.addnstr(self.process_y, self.process_x+30,"Sleeping", 8)
-			self.term_window.addnstr(self.process_y, self.process_x+40,"Other", 8)
-			self.term_window.addnstr(self.process_y+1, self.process_x, "Number:", 8)
-			self.term_window.addnstr(self.process_y+1, self.process_x+10,str(processcount['total']), 8)
-			self.term_window.addnstr(self.process_y+1, self.process_x+20,str(processcount['running']), 8)
-			self.term_window.addnstr(self.process_y+1, self.process_x+30,str(processcount['sleeping']), 8)
-			self.term_window.addnstr(self.process_y+1, self.process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
+			self.term_window.addnstr(self.process_y, process_x, "Process", 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.process_y, process_x+10,"Total", 8)
+			self.term_window.addnstr(self.process_y, process_x+20,"Running", 8)
+			self.term_window.addnstr(self.process_y, process_x+30,"Sleeping", 8)
+			self.term_window.addnstr(self.process_y, process_x+40,"Other", 8)
+			self.term_window.addnstr(self.process_y+1, process_x, "Number:", 8)
+			self.term_window.addnstr(self.process_y+1, process_x+10,str(processcount['total']), 8)
+			self.term_window.addnstr(self.process_y+1, process_x+20,str(processcount['running']), 8)
+			self.term_window.addnstr(self.process_y+1, process_x+30,str(processcount['sleeping']), 8)
+			self.term_window.addnstr(self.process_y+1, process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
+		# Display the process detail
 		if ((screen_y > self.process_y+6) 
-			and (screen_x > self.process_x+49)):
+			and (screen_x > process_x+49)):
 			# Processes detail
 			if (self.getProcessSortedBy() == 'cpu_percent'):
 				sortchar = '^'
 			else:
 				sortchar = ' '
-			self.term_window.addnstr(self.process_y+3, self.process_x,"Cpu %"+sortchar, 8)
+			self.term_window.addnstr(self.process_y+3, process_x,"Cpu %"+sortchar, 8)
 			if (self.getProcessSortedBy() == 'proc_size'):
 				sortchar = '^'
 			else:
 				sortchar = ' '
-			self.term_window.addnstr(self.process_y+3, self.process_x+10,"Size MB"+sortchar, 8)
-			self.term_window.addnstr(self.process_y+3, self.process_x+20,"Res MB", 8)
-			self.term_window.addnstr(self.process_y+3, self.process_x+30,"Name", 8)
+			self.term_window.addnstr(self.process_y+3, process_x+10,"Size MB"+sortchar, 8)
+			self.term_window.addnstr(self.process_y+3, process_x+20,"Res MB", 8)
+			self.term_window.addnstr(self.process_y+3, process_x+30,"Name", 8)
 			for processes in range(0, min(screen_y-self.term_h+self.process_y, len(processlist))):
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
-				maxprocessname = screen_x-self.process_x-30
+				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
+				self.term_window.addnstr(self.process_y+4+processes, process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
+				self.term_window.addnstr(self.process_y+4+processes, process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
+				maxprocessname = screen_x-process_x-30
 				# If screen space is available then display long name
 				if ((len(processlist[processes]['proctitle']) > maxprocessname) 
 				   or (len(processlist[processes]['proctitle']) == 0)):
 					processname = processlist[processes]['process_name']
 				else:	
 					processname = processlist[processes]['proctitle']		
-				self.term_window.addnstr(self.process_y+4+processes, self.process_x+30, processname, maxprocessname)
+				self.term_window.addnstr(self.process_y+4+processes, process_x+30, processname, maxprocessname)
 
 
 	def displayCaption(self):
