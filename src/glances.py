@@ -770,6 +770,15 @@ def printSyntax():
 	print "\t-h:\tDisplay the syntax and exit"
 	print "\t-t sec:\tSet the refresh time in second default is 1"
 	print "\t-v:\tDisplay the version and exit"
+	print ""
+	print "When Glances is running, you can press:"
+	print "'a' to set the automatic mode. The processes are sorted automatically"
+	print "'c' to sort the processes list by CPU consumption"
+	print "'d' to disable or enable the disk IO stats"
+	print "'f' to disable or enable the file system stats"
+	print "'m' to sort the processes list by process size"
+	print "'n' to disable or enable the network interfaces stats"
+	print "'q' to exit"
 
 	
 def init():

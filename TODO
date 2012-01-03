@@ -1,1 +1,3 @@
-- Packaging for Linux / BSD distribution (need contributors)
+- Packaging for .deb Linux distributions (contributors are welcome)
+- Test/coding for xBSD
+- Help (with a curses.paneli object)
