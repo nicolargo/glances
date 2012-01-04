@@ -25,16 +25,22 @@ import sys
 import signal
 import time
 import datetime
-import curses
 import statgrab
 import multiprocessing
 
+try:
+	import curses
+	import curses.panel
+except:
+    print 'Textmode GUI initialization failed, Glances cannot start.'
+    print
+    sys.exit(1)
 
 # Globals variables
 #==================
 
 # The glances version id
-__version__ = "1.3.4"		
+__version__ = "1.3.5"		
 
 # Class
 #======
@@ -283,7 +289,7 @@ class glancesScreen():
 		self.__version = __version__
 
 		# Init windows positions
-		self.term_h = 		24 ; 		self.term_w = 		80
+		self.term_w = 		80 ; 		self.term_h = 		24
 		self.host_x = 		0 ; 		self.host_y = 		0
 		self.system_x = 	0 ; 		self.system_y = 	1
 		self.cpu_x = 		0 ; 		self.cpu_y = 		3
@@ -293,6 +299,7 @@ class glancesScreen():
 		self.diskio_x = 	0 ; 		self.diskio_y = 	-1
 		self.fs_x = 		0 ; 		self.fs_y = 		-1
 		self.process_x = 	30;			self.process_y = 	9
+		self.help_x = 		30;			self.help_y = 		12
 		self.now_x = 		79;			self.now_y = 		3
 		self.caption_x = 	0 ;			self.caption_y = 	3
 
@@ -308,8 +315,8 @@ class glancesScreen():
 		self.hascolors = False
 		if curses.has_colors():
 			self.hascolors = True
-			#Init				FG color				BG color
-			curses.init_pair(1, curses.COLOR_WHITE, 	curses.COLOR_BLACK)
+			# Init				FG color				BG color
+			curses.init_pair(1, curses.COLOR_WHITE, 	-1)
 			curses.init_pair(2, curses.COLOR_WHITE, 	curses.COLOR_RED)
 			curses.init_pair(3, curses.COLOR_WHITE, 	curses.COLOR_GREEN)
 			curses.init_pair(4, curses.COLOR_WHITE, 	curses.COLOR_BLUE)
@@ -318,7 +325,8 @@ class glancesScreen():
 			curses.init_pair(7, curses.COLOR_BLACK, 	curses.COLOR_YELLOW)
 
 			# Text colors/styles
-			self.title_color = curses.A_BOLD|curses.A_UNDERLINE
+			self.title_color = curses.A_BOLD|curses.A_UNDERLINE			
+			self.help_color = curses.A_BOLD
 			self.no_color = curses.color_pair(1)
 			self.default_color = curses.color_pair(3)|curses.A_BOLD
 			self.if50pc_color = curses.color_pair(4)|curses.A_BOLD
@@ -330,8 +338,13 @@ class glancesScreen():
 		self.diskio_tag = True
 		self.fs_tag = True
 
-		# Init window		
+		# Init main window		
 		self.term_window = self.screen.subwin(0, 0)
+
+		# Init help panel
+		term_help = self.screen.subwin(self.term_h-self.help_y-2, self.term_w-self.help_x, self.help_y, self.help_x)		
+		self.panel_help = curses.panel.new_panel(term_help)
+		self.hideHelp()
 
 		# Init refresh time
 		self.__refresh_time = refresh_time
@@ -452,6 +465,12 @@ class glancesScreen():
 		elif (self.pressedkey == 102):
 			# 'n' > Enable/Disable fs stats
 			self.fs_tag = not self.fs_tag
+		elif (self.pressedkey == 104):
+			# 'h' > Enable/Disable help
+			if (self.panel_help.hidden()):
+				self.showHelp()
+			else:
+				self.hideHelp()
 		elif (self.pressedkey == 109):
 			# 'm' > Sort process list by Mem usage
 			self.setProcessSortedBy('proc_size')
@@ -467,32 +486,41 @@ class glancesScreen():
 		# Shutdown the curses window
 		curses.echo() ; curses.nocbreak() ; curses.curs_set(1)
 		curses.endwin()
-		
+
 
 	def display(self, stats):
-		# Display all
-		screen.displayHost(stats.getHost())
-		screen.displaySystem(stats.getSystem())	
-		screen.displayCpu(stats.getCpu())
-		screen.displayLoad(stats.getLoad(), stats.getCore())
-		screen.displayMem(stats.getMem(), stats.getMemSwap())
-		network_count = screen.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
-		diskio_count = screen.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
-		screen.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
-		screen.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
-		screen.displayCaption()
-		screen.displayNow(stats.getNow())
+		# Display stats
+		self.displayHost(stats.getHost())
+		self.displaySystem(stats.getSystem())	
+		self.displayCpu(stats.getCpu())
+		self.displayLoad(stats.getLoad(), stats.getCore())
+		self.displayMem(stats.getMem(), stats.getMemSwap())
+		network_count = self.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
+		diskio_count = self.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
+		self.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
+		self.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
+		self.displayCaption()
+		self.displayNow(stats.getNow())
 		
+		# Display help panel
+		if (not self.panel_help.hidden()):
+			self.displayHelp()
 		
 	def erase(self):
 		# Erase the content of the screen
 		self.term_window.erase()
 
 
-	def update(self, stats):		
-		# Erase and display
+	def flush(self, stats):
+		# Flush display
 		self.erase()
 		self.display(stats) 
+		#curses.panel.update_panels()
+		#curses.doupdate()
+
+	def update(self, stats):
+		# flush display		
+		self.flush(stats)
 		
 		# Wait
 		countdown = Timer(self.__refresh_time)
@@ -501,11 +529,47 @@ class glancesScreen():
 			self.term_window.refresh()
 			# Getkey
 			if (self.__catchKey() > -1):
-				# Erase and display
-				self.erase()
-				self.display(stats) 				
+				# flush display
+				self.flush(stats)
 			# Wait 100ms...
 			curses.napms(100)
+
+
+	def displayHelp(self):
+		"""
+		Display the help panel (active| desactive with the 'h' key) 
+		"""
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > 23) 
+			and (screen_x > 79)):		
+			helpWindow = self.panel_help.window()
+			helpWindow.resize(self.term_h-self.help_y-2, self.term_w-self.help_x)
+			helpWindow.clear()
+			msg = "Glances help (press 'h' to hide)"
+			helpWindow.addnstr(1, 2, "'h'\tto display|hide this help message", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(2, 2, "'a'\tto sort processes automatically", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(3, 2, "'c'\tto sort processes by CPU consumption", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(4, 2, "'d'\tto disable|enable the disk IO stats", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(5, 2, "'f'\tto disable|enable the file system stats", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+ 			helpWindow.addnstr(6, 2, "'m'\tto sort processes by process size", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+ 			helpWindow.addnstr(7, 2, "'n'\tto disable|enable the network interfaces stats", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+ 			helpWindow.addnstr(8, 2, "'q'\tto exit Glances", self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.box()
+		
+		
+	def showHelp(self):
+		"""
+		Show the help panel
+		"""	
+		self.panel_help.show()
+		
+
+	def hideHelp(self):
+		"""
+		Hide the help panel
+		"""	
+		self.panel_help.hide()
 		
 		
 	def displayHost(self, host):
@@ -776,9 +840,11 @@ def printSyntax():
 	print "'c' to sort the processes list by CPU consumption"
 	print "'d' to disable or enable the disk IO stats"
 	print "'f' to disable or enable the file system stats"
+	print "'h' to hide or show the help message"
 	print "'m' to sort the processes list by process size"
 	print "'n' to disable or enable the network interfaces stats"
 	print "'q' to exit"
+	print ""
 
 	
 def init():

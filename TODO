@@ -1,3 +1,2 @@
-- Packaging for .deb Linux distributions (contributors are welcome)
+- Packaging for .deb (Debian|Ubuntu|Mint) Linux distributions (contributors are welcomes)
 - Test/coding for xBSD
-- Help (with a curses.paneli object)

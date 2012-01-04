@@ -1,3 +1,9 @@
+Version 1.3.5
+=============
+
+	* Add an help panel when Glances is running (key: 'h')
+	* Add keys descriptions in the syntax (--help | -h)
+
 Version 1.3.4
 =============
 

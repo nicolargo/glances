@@ -20,12 +20,12 @@ Packages exist for Arch, Fedora, Redhat ...
 
 Get the latest version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.4.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.5.tar.gz
 
 Glances use a standard GNU style installer:
 
-	$ tar zxvf glances-1.3.4.tar.gz
-	$ cd glances-1.3.4
+	$ tar zxvf glances-1.3.5.tar.gz
+	$ cd glances-1.3.5
 	$ ./configure
 	$ make
 	$ sudo make install
@@ -72,6 +72,7 @@ Importants stats are colored:
 
 When Glances is running, you can press:
 
+* 'h' to display an help message whith the keys you can press
 * 'a' to set the automatic mode. The processes are sorted automatically
 
     If CPU > 70%, sort by process "CPU consumption"
