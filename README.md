@@ -218,4 +218,3 @@ You are welcome to contribute to this software.
 * Packaging for Debian, Ubuntu, BSD...
 * Check the needed Python library in the configure.ac
 * Add file system stats when the python-statgrab is corrected
-* Add a user guide window
