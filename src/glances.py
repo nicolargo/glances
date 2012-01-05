@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Glances is a simple CLI monitoring tool based on libstatgrab
 #

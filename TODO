@@ -1,2 +1,3 @@
 - Packaging for .deb (Debian|Ubuntu|Mint) Linux distributions (contributors are welcomes)
 - Test/coding for xBSD
+- Add control to check the libstatgrab version in the script
