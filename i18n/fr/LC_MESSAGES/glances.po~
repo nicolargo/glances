@@ -1,0 +1,290 @@
+# French translations for PACKAGE package
+# Traductions françaises du paquet PACKAGE.
+# Copyright (C) 2012 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Peter Fontaine <jeanbob@jeanbob.eu>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-01-06 15:20+0100\n"
+"PO-Revision-Date: 2012-01-06 15:23+0100\n"
+"Last-Translator: Peter Fontaine <jeanbob@jeanbob.eu>\n"
+"Language-Team: French\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/glances.py:42
+msgid "Textmode GUI initialization failed, Glances cannot start."
+msgstr "Initialisation de l'interface utilisateur textuel impossible, Glances ne peut être démaré"
+
+#: src/glances.py:138
+msgid "Error: Can not init the libstatgrab library.\n"
+msgstr "Erreur: Impossible d'initialiser la bibliothèques libstatgrab.\n"
+
+#: src/glances.py:316
+msgid "Error: Can not init the curses library.\n"
+msgstr "Erreur: Impossible d'initialiser la bibliothèques curses"
+
+#: src/glances.py:556
+msgid "Glances help (press 'h' to hide)"
+msgstr "Aide Glances (appuyer sur 'h' pour cacher)"
+
+#: src/glances.py:557
+msgid "'h'\tto display|hide this help message"
+msgstr "'h'\tpour afficher|cacher ce message d'aide"
+
+#: src/glances.py:558
+msgid "'a'\tto sort processes automatically"
+msgstr "'a'\tpour trier les processus automatiquement"
+
+#: src/glances.py:559
+msgid "'c'\tto sort processes by CPU consumption"
+msgstr "'c'\tpour trier les processus par consomation du CPU"
+
+#: src/glances.py:560
+msgid "'d'\tto disable|enable the disk IO stats"
+msgstr "'d'\tpour désactiver|activer les statistiques E/S disque"
+
+#: src/glances.py:561
+msgid "'f'\tto disable|enable the file system stats"
+msgstr "'f'\tpour désactiver|activer les statistiques du système de fichiers"
+
+#: src/glances.py:562
+msgid "'m'\tto sort processes by process size"
+msgstr "'m'\tpour trier les processus pas taille"
+
+#: src/glances.py:563
+msgid "'n'\tto disable|enable the network interfaces stats"
+msgstr "'n'\tpour désactiver|activer les statistiques des interfaces réseaux"
+
+#: src/glances.py:564
+msgid "'q'\tto exit Glances"
+msgstr "'q'\tpour quitter Glances"
+
+#: src/glances.py:590
+msgid "Glances v"
+msgstr "Glances v"
+
+#: src/glances.py:590
+msgid " running on "
+msgstr " en fonction sur  "
+
+#: src/glances.py:614
+msgid "Cpu"
+msgstr "Cpu"
+
+#: src/glances.py:616
+msgid "User:"
+msgstr "Utilisateur:"
+
+#: src/glances.py:617
+msgid "Kernel:"
+msgstr "Noyau:"
+
+#: src/glances.py:618
+msgid "Nice:"
+msgstr ""
+
+#: src/glances.py:619
+msgid "Idle:"
+msgstr "Repos:"
+
+#: src/glances.py:634
+msgid "Load"
+msgstr "Charge"
+
+#: src/glances.py:635
+msgid "-Core"
+msgstr "-Coeurs"
+
+#: src/glances.py:636
+msgid "1 min:"
+msgstr "1 min:"
+
+#: src/glances.py:637
+msgid "5 mins:"
+msgstr "5 mins:"
+
+#: src/glances.py:638
+msgid "15 mins:"
+msgstr "15 mins"
+
+#: src/glances.py:652
+msgid "Mem MB"
+msgstr "Mem MB"
+
+#: src/glances.py:653
+msgid "Mem"
+msgstr "Mem"
+
+#: src/glances.py:654
+msgid "Swap"
+msgstr "Swap"
+
+#: src/glances.py:655
+msgid "Real"
+msgstr "Réel"
+
+#: src/glances.py:656
+msgid "Total:"
+msgstr "Total:"
+
+#: src/glances.py:657
+msgid "Used:"
+msgstr "Utilisé:"
+
+#: src/glances.py:658
+msgid "Free:"
+msgstr "Libre:"
+
+#: src/glances.py:692
+msgid "Net rate"
+msgstr "Ratio net"
+
+#: src/glances.py:693
+msgid "Rx/ps"
+msgstr "Px/ps"
+
+#: src/glances.py:694
+msgid "Tx/ps"
+msgstr "Tx/ps"
+
+#: src/glances.py:714
+msgid "Disk I/O"
+msgstr "E/S Disque"
+
+#: src/glances.py:715
+msgid "In/ps"
+msgstr "In/ps"
+
+#: src/glances.py:716
+msgid "Out/ps"
+msgstr "Out/ps"
+
+#: src/glances.py:737
+msgid "Mount"
+msgstr "Montage"
+
+#: src/glances.py:738 src/glances.py:767
+msgid "Total"
+msgstr "Total"
+
+#: src/glances.py:739
+msgid "Used"
+msgstr "Utilisé"
+
+#: src/glances.py:766
+msgid "Process"
+msgstr "Processus"
+
+#: src/glances.py:768
+msgid "Running"
+msgstr "En marche"
+
+#: src/glances.py:769
+msgid "Sleeping"
+msgstr "En sommeil"
+
+#: src/glances.py:770
+msgid "Other"
+msgstr "Autre"
+
+#: src/glances.py:771
+msgid "Number:"
+msgstr "Nombre:"
+
+#: src/glances.py:789
+msgid "Size MB"
+msgstr "Taille MB"
+
+#: src/glances.py:790
+msgid "Res MB"
+msgstr "Res MB"
+
+#: src/glances.py:791
+msgid "Name"
+msgstr "Nom"
+
+#: src/glances.py:812
+msgid "   OK   "
+msgstr "   OK   "
+
+#: src/glances.py:813
+msgid "CAREFUL "
+msgstr "CALME  "
+
+#: src/glances.py:814
+msgid "WARNING "
+msgstr "DANGER  "
+
+#: src/glances.py:815
+msgid "CRITICAL"
+msgstr "CRITIQUE"
+
+#: src/glances.py:826
+msgid "%Y-%m-%d %H:%M:%S"
+msgstr "%d/%m/%Y %H:%M:%S"
+
+#: src/glances.py:834
+msgid "Glances version "
+msgstr "Version Glances"
+
+#: src/glances.py:839
+msgid "Usage: glances.py [-t|--time sec] [-h|--help] [-v|--version]"
+msgstr "Utilisation : glances.py [-t|--time sec] [-h|--help] [-v|--version]"
+
+#: src/glances.py:841
+msgid "\t-h:\tDisplay the syntax and exit"
+msgstr "\t-h:\tAffiche la syntaxe et quitte"
+
+#: src/glances.py:842
+msgid "\t-t sec:\tSet the refresh time in second default is 1"
+msgstr "\t-t sec:\tFixe le temps de raffraichissement en seconde, 1s par défaut"
+
+#: src/glances.py:843
+msgid "\t-v:\tDisplay the version and exit"
+msgstr "\t-v:\tAffiche la version et quitte"
+
+#: src/glances.py:845
+msgid "When Glances is running, you can press:"
+msgstr "Quand Glances fonctionne, vous pouvez appuyer:"
+
+#: src/glances.py:846
+msgid "'a' to set the automatic mode. The processes are sorted automatically"
+msgstr "'a' pour activer le mode auto. Les processus sont trié automatiquement"
+
+#: src/glances.py:847
+msgid "'c' to sort the processes list by CPU consumption"
+msgstr "'c' pour trier les processus par consomation CPU"
+
+#: src/glances.py:848
+msgid "'d' to disable or enable the disk IO stats"
+msgstr "'d' pour désactiver ou activer les statistiques E/S disque"
+
+#: src/glances.py:849
+msgid "'f' to disable or enable the file system stats"
+msgstr "'f' pour désactiver ou activer les statistiques du système de fichier"
+
+#: src/glances.py:850
+msgid "'h' to hide or show the help message"
+msgstr "'h' pour cacher ou afficher le message d'aide"
+
+#: src/glances.py:851
+msgid "'m' to sort the processes list by process size"
+msgstr "'m' pour trier les processus par taille"
+
+#: src/glances.py:852
+msgid "'n' to disable or enable the network interfaces stats"
+msgstr "'n' pour désactiver ou activer les statistiques réseaux"
+
+#: src/glances.py:853
+msgid "'q' to exit"
+msgstr "'q' pour quitter"
+
+#: src/glances.py:879
+msgid "Error: Refresh time should be a positive non-null integer"
+msgstr "Erreur: Le temps de raffraichissement doit être un entier positif non nul"
