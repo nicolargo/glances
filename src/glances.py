@@ -25,15 +25,21 @@ import sys
 import signal
 import time
 import datetime
-import statgrab
 import multiprocessing
+
+try:
+	import statgrab
+except:
+	print 'Statgrab initialization failed, Glances cannot start.'
+	print ''
+	sys.exit(1)	
 
 try:
 	import curses
 	import curses.panel
 except:
-    print 'Textmode GUI initialization failed, Glances cannot start.'
-    print
+    print 'Curses initialization failed, Glances cannot start.'
+    print ''
     sys.exit(1)
 
 # Globals variables
@@ -130,8 +136,11 @@ class glancesStats():
 		if not statgrab.sg_init():
 			print "Error: Can not init the libstatgrab library.\n"
 		
-		# Init the interfac fs stats
-		self.glancesgrabfs = glancesGrabFs()
+		# Init the fs stats
+		try:
+			self.glancesgrabfs = glancesGrabFs()
+		except:
+			self.glancesgrabfs = {}
 			
 		# Do the first update
 		self.__update__()
