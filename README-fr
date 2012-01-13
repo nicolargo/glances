@@ -236,6 +236,16 @@ Le nombre des processus affichés est adapté à la taille de la fenêtre.
 Glances y affiche la légende (rappel des codes des couleurs) ainsi que la
 date et l'heure courante.
 
+## Traduction
+
+Pour générer et installer la traduction française executer le script suivant
+sous l'utilisateur root ou sudo :
+i18n_francais_generate.sh
+
+Pour générer et installer la traduction espagnol executer le script suivant
+sous l'utilisateur root ou sudo
+i18n_espanol_generate.sh
+
 ## A faire...
 
 J'ai besoin de contributeurs pour faire évoluer Glances.

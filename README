@@ -211,6 +211,14 @@ The number of processes in the list is adapted to the screen size.
 
 Glances displays a caption and the current time/date.
 
+## Localisation
+
+To generate french locale execute as root or sudo :
+i18n_francais_generate.sh
+
+To generate spanish locale execute as root or sudo :
+i18n_espanol_generate.sh
+
 ## Todo
 
 You are welcome to contribute to this software.
