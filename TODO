@@ -1,3 +1,4 @@
-- Packaging for .deb (Debian|Ubuntu|Mint) Linux distributions (contributors are welcomes)
+- Packaging for .deb (Debian|Ubuntu|Mint) Linux distributions (contributors needed)
 - Test/coding for xBSD
 - Add control to check the libstatgrab version in the script
+- Add thermal information for CPU (issue #26)
