@@ -27,14 +27,14 @@ Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
 Pour l'installer, il suffit de suivre les instructions suivantes depuis un 
 terminal.
 
-Récupération de la dernière version (1.3.5):
+Récupération de la dernière version (1.3.6):
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.5.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.6.tar.gz
 
 Procédez ensuite à l'installation:
 
-	$ tar zxvf glances-1.3.5.tar.gz
-	$ cd glances-1.3.5
+	$ tar zxvf glances-1.3.6.tar.gz
+	$ cd glances-1.3.6
 	$ ./configure
 	$ make
 	$ sudo make install

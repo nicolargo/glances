@@ -4,7 +4,7 @@
 #
 # Pre-requisites: python-statgrab 0.5 or >
 #
-# Copyright (C) Nicolargo 2011 <nicolas@nicolargo.com>
+# Copyright (C) Nicolargo 2012 <nicolas@nicolargo.com>
 # 
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -53,7 +53,7 @@ except:
 #==================
 
 # The glances version id
-__version__ = "1.3.5"		
+__version__ = "1.3.6"		
 
 # Class
 #======
@@ -702,12 +702,18 @@ class glancesScreen():
 			self.term_window.addnstr(self.network_y, self.network_x+10, _("Rx/ps"), 8)
 			self.term_window.addnstr(self.network_y, self.network_x+20, _("Tx/ps"), 8)
 			# Adapt the maximum interface to the screen
+			ret = 2
 			for i in range(0, min(screen_y-self.network_y-3, len(network))):
+				try:
+					speed[network[i]['interface_name']]
+				except:
+					break
 				elapsed_time = max (1, network[i]['systime'])
 				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
 				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
 				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
-			return i+3
+				ret = ret + 1
+			return ret
 		return 0
 
 			
