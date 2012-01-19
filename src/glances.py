@@ -325,7 +325,11 @@ class glancesScreen():
 			print _("Error: Can not init the curses library.\n")
 		curses.start_color()
 		curses.use_default_colors()
-		curses.noecho() ; curses.cbreak() ; curses.curs_set(0)
+		curses.noecho() ; curses.cbreak() ; 
+                try:
+                        curses.curs_set(0)
+                except:
+			print _("Warning: Can not set the cursor appearance.\n")
 		
 		# Init colors
 		self.hascolors = False
@@ -656,7 +660,7 @@ class glancesScreen():
 			return 0		
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > self.mem_y+5) 
+		if ((screen_y > self.mem_y+5)
 			and (screen_x > self.mem_x+38)):
 			self.term_window.addnstr(self.mem_y, self.mem_x, 	_("Mem MB"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.mem_y, self.mem_x+10,_("Mem"), 8)
