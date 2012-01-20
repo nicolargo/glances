@@ -1,3 +1,6 @@
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=nicolargo&url=https://github.com/nicolargo/glances&title=Glances&language=&tags=github&category=software)
+
+=============================
 Glances -- Eye on your system
 =============================
 
