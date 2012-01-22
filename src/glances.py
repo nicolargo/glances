@@ -323,14 +323,15 @@ class glancesScreen():
 		self.screen = curses.initscr() 
 		if not self.screen:
 			print _("Error: Can not init the curses library.\n")
-		curses.start_color()
-		curses.use_default_colors()
-		curses.noecho() ; curses.cbreak() ; 
-                try:
-                        curses.curs_set(0)
-                except:
-			print _("Warning: Can not set the cursor appearance.\n")
-		
+		try:
+			curses.start_color()
+			curses.use_default_colors()
+			curses.noecho()
+			curses.cbreak() 
+			curses.curs_set(0)
+		except:
+			print _("Warning: Can not set the cursor color appearance.\n")
+
 		# Init colors
 		self.hascolors = False
 		if curses.has_colors():
