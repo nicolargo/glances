@@ -323,14 +323,16 @@ class glancesScreen():
 		self.screen = curses.initscr() 
 		if not self.screen:
 			print _("Error: Can not init the curses library.\n")
-		try:
-			curses.start_color()
+		
+		curses.start_color()
+		if hasattr(curses, 'use_default_colors'):
 			curses.use_default_colors()
+		if hasattr(curses, 'noecho'):
 			curses.noecho()
+		if hasattr(curses, 'cbreak'):
 			curses.cbreak() 
+		if hasattr(curses, 'curs_set'):
 			curses.curs_set(0)
-		except:
-			print _("Warning: Can not set the cursor color appearance.\n")
 
 		# Init colors
 		self.hascolors = False
@@ -344,15 +346,25 @@ class glancesScreen():
 			curses.init_pair(5, curses.COLOR_WHITE, 	curses.COLOR_MAGENTA)
 			curses.init_pair(6, curses.COLOR_WHITE, 	curses.COLOR_CYAN)
 			curses.init_pair(7, curses.COLOR_BLACK, 	curses.COLOR_YELLOW)
-
-			# Text colors/styles
-			self.title_color = curses.A_BOLD|curses.A_UNDERLINE			
-			self.help_color = curses.A_BOLD
+		else:
+			self.hascolors = False
+			
+		self.title_color = curses.A_BOLD|curses.A_UNDERLINE			
+		self.help_color = curses.A_BOLD
+		if self.hascolors:			
+			# Colors text styles
 			self.no_color = curses.color_pair(1)
 			self.default_color = curses.color_pair(3)|curses.A_BOLD
 			self.if50pc_color = curses.color_pair(4)|curses.A_BOLD
 			self.if70pc_color = curses.color_pair(5)|curses.A_BOLD
 			self.if90pc_color = curses.color_pair(2)|curses.A_BOLD
+		else:
+			# B&W text styles
+			self.no_color = curses.A_NORMAL
+			self.default_color = curses.A_NORMAL
+			self.if50pc_color = curses.A_UNDERLINE
+			self.if70pc_color = curses.A_BOLD
+			self.if90pc_color = curses.A_REVERSE
 
 		# By default all the stats are displayed
 		self.network_tag = True
