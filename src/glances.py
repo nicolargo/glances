@@ -10,7 +10,7 @@
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# glances is distributed in the hope that it will be useful, but
+# Glances is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
@@ -19,26 +19,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
-import os
-import getopt
-import sys
-import signal
-import time
-import datetime
-import multiprocessing
-import gettext
+from __future__ import generators
 
-#i18n
-#====
+try:
+	import os
+	import getopt
+	import sys
+	import signal
+	import time
+	import datetime
+	import multiprocessing
+	import gettext
+except KeyboardInterrupt:
+	pass
+
+
+# i18n
+#=====
 
 application = 'glances'
+__version__ = "1.3.7"		
 gettext.install(application)
 
 try:
 	import statgrab
 except:
-	print 'Statgrab initialization failed, Glances cannot start.'
-	print ''
+	print _('Statgrab initialization failed, Glances cannot start.')
+	print
 	sys.exit(1)	
 
 try:
@@ -49,14 +56,9 @@ except:
     print
     sys.exit(1)
 
-# Globals variables
-#==================
 
-# The glances version id
-__version__ = "1.3.6"		
-
-# Class
-#======
+# Classes
+#========
 
 class Timer():
 	"""
@@ -64,10 +66,145 @@ class Timer():
 	"""
 	
 	def __init__(self, duration):
+		self.started(duration)
+	
+	def started(self, duration):
 		self.target = time.time() + duration
 	
 	def finished(self):
 		return time.time() > self.target
+
+
+class glancesLimits():
+	"""
+	Manage the limit OK,CAREFUL,WARNING,CRITICAL for each stats
+	"""
+	
+	# The limit list is stored in an hash table:
+	#  limits_list[STAT] = [ CAREFUL , WARNING , CRITICAL ]
+	# Exemple:
+	#  limits_list['STD'] = [ 50, 70 , 90 ]
+	
+	__limits_list = {   # 		CAREFUL WARNING CRITICAL
+						'STD': 	[50, 	70, 	90],
+						'LOAD':	[0.7, 	1.0, 	5.0]
+					}
+
+	def getSTDCareful(self):
+		return self.__limits_list['STD'][0]
+	
+	def getSTDWarning(self):
+		return self.__limits_list['STD'][1]
+
+	def getSTDCritical(self):
+		return self.__limits_list['STD'][2]
+
+	def getLOADCareful(self, core = 1):
+		return self.__limits_list['LOAD'][0] * core
+		
+	def getLOADWarning(self, core = 1):
+		return self.__limits_list['LOAD'][1] * core
+
+	def getLOADCritical(self, core = 1):
+		return self.__limits_list['LOAD'][2] * core
+	
+
+class glancesLogs():
+	"""
+	The main class to manage logs inside the Glances software
+	Logs is a list of list:
+	[["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM", MAX, AVG, MIN, SUM, COUNT],...]
+	"""
+	
+	def __init__(self):
+		"""
+		Init the logs classe
+		"""
+		# Maximum size of the logs list
+		self.logs_max = 10
+		
+		# Init the logs list
+		self.logs_list = []
+
+	def get(self):
+		"""
+		Return the logs list (RAW)
+		"""
+		return self.logs_list
+
+	def len(self):
+		"""
+		Return the number of item in the log list
+		"""		
+		return self.logs_list.__len__()
+		
+	def __itemexist__(self, item_type):
+		"""
+		An item exist in the list if:
+		* end is < 0
+		* item_type is matching
+		"""
+		for i in range(self.len()):
+			if ((self.logs_list[i][1] < 0) and
+				(self.logs_list[i][3] ==  item_type)):
+				return i
+		return -1
+		
+	def add(self, item_state, item_type, item_value):
+		"""
+		item_state = "OK|CAREFUL|WARNING|CRITICAL"
+		item_type = "CPU|LOAD|MEM"
+		item_value = value
+		Item is defined by:
+		  ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM", MAX, AVG, MIN, SUM, COUNT]
+		If item is a 'new one':
+		  Add the new item at the beginning of the logs list
+		Else:
+		  Update the existing item
+		"""
+		item_index = self.__itemexist__(item_type)
+		if (item_index < 0):
+			# Item did not exist, add if WARNING or CRITICAL
+			if ((item_state == "WARNING") or
+				(item_state == "CRITICAL")):
+				# Time is stored in Epoch format
+				# Epoch -> DMYHMS = datetime.datetime.fromtimestamp(epoch)
+				item = []
+				item.append(time.mktime(datetime.datetime.now().timetuple()))
+				item.append(-1)
+				item.append(item_state) # STATE: WARNING|CRITICAL
+				item.append(item_type)  # TYPE: CPU, LOAD, MEM...
+				item.append(item_value) # MAX
+				item.append(item_value) # AVG
+				item.append(item_value)	# MIN
+				item.append(item_value)	# SUM
+				item.append(1)			# COUNT
+				self.logs_list.insert(0, item)
+				if (self.len() > self.logs_max):
+					self.logs_list.pop()
+		else:
+			# Item exist, update
+			if ((item_state == "OK") or
+				(item_state == "CAREFUL")):
+				# Close the item
+				self.logs_list[item_index][1] = time.mktime(datetime.datetime.now().timetuple())
+			else:
+				# Update the item
+				# State
+				if (item_state == "CRITICAL"):
+					self.logs_list[item_index][2] = item_state
+				# Value
+				if (item_value > self.logs_list[item_index][4]):
+					# MAX
+					self.logs_list[item_index][4] = item_value
+				elif (item_value < self.logs_list[item_index][6]):
+					# MIN
+					self.logs_list[item_index][6] = item_value
+				# AVG
+				self.logs_list[item_index][7] += item_value
+				self.logs_list[item_index][8] += 1
+				self.logs_list[item_index][5] = self.logs_list[item_index][7] / self.logs_list[item_index][8]
+		return self.len()
 
 
 class glancesGrabFs():
@@ -281,7 +418,7 @@ class glancesStats():
 			# Else sort by cpu comsoption
 			sortedby = 'cpu_percent'
 			if ( self.mem['total'] != 0):
-				if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > 70):
+				if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > limits.getSTDWarning()):
 					sortedby = 'proc_size'
 		return sorted(self.process, key=lambda process: process[sortedby], reverse=True)
 
@@ -296,8 +433,8 @@ class glancesScreen():
 	"""
 
 	# By default the process list is automaticaly sorted
-	# If global CPU > 75% 		=> Sorted by process Cpu consomption
-	# If global used MEM > 75% 	=> Sorted by process size 
+	# If global CPU > WANRING 		=> Sorted by process Cpu consomption
+	# If global used MEM > WARINING => Sorted by process size 
 	__process_sortedby = 'auto'
 	
 	def __init__(self, refresh_time = 1):
@@ -315,6 +452,7 @@ class glancesScreen():
 		self.diskio_x = 	0 ; 		self.diskio_y = 	-1
 		self.fs_x = 		0 ; 		self.fs_y = 		-1
 		self.process_x = 	30;			self.process_y = 	9
+		self.log_x =		0 ;			self.log_y = 		-1
 		self.help_x = 		30;			self.help_y = 		12
 		self.now_x = 		79;			self.now_y = 		3
 		self.caption_x = 	0 ;			self.caption_y = 	3
@@ -355,29 +493,45 @@ class glancesScreen():
 			# Colors text styles
 			self.no_color = curses.color_pair(1)
 			self.default_color = curses.color_pair(3)|curses.A_BOLD
-			self.if50pc_color = curses.color_pair(4)|curses.A_BOLD
-			self.if70pc_color = curses.color_pair(5)|curses.A_BOLD
-			self.if90pc_color = curses.color_pair(2)|curses.A_BOLD
+			self.ifCAREFUL_color = curses.color_pair(4)|curses.A_BOLD
+			self.ifWARNING_color = curses.color_pair(5)|curses.A_BOLD
+			self.ifCRITICAL_color = curses.color_pair(2)|curses.A_BOLD			
 		else:
 			# B&W text styles
 			self.no_color = curses.A_NORMAL
 			self.default_color = curses.A_NORMAL
-			self.if50pc_color = curses.A_UNDERLINE
-			self.if70pc_color = curses.A_BOLD
-			self.if90pc_color = curses.A_REVERSE
+			self.ifCAREFUL_color = curses.A_UNDERLINE
+			self.ifWARNING_color = curses.A_BOLD
+			self.ifCRITICAL_color = curses.A_REVERSE
+		
+		# Define the colors list (hash table)	
+		self.__colors_list = {   
+			# 		CAREFUL WARNING CRITICAL
+			'DEFAULT':	self.no_color,
+			'OK':		self.default_color,
+			'CAREFUL':	self.ifCAREFUL_color,
+			'WARNING':	self.ifWARNING_color,
+			'CRITICAL':	self.ifCRITICAL_color
+		}
 
 		# By default all the stats are displayed
 		self.network_tag = True
 		self.diskio_tag = True
 		self.fs_tag = True
+		self.log_tag = True
 
 		# Init main window		
 		self.term_window = self.screen.subwin(0, 0)
 
 		# Init help panel
-		term_help = self.screen.subwin(self.term_h-self.help_y-2, self.term_w-self.help_x, self.help_y, self.help_x)		
-		self.panel_help = curses.panel.new_panel(term_help)
-		self.hideHelp()
+		# TODO: pb when size of the screen < 22 lines
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if (screen_x > (self.term_w-self.help_x) and 
+			(screen_y > (self.term_h-self.help_y-2))):
+			term_help = self.screen.subwin(self.term_h-self.help_y-2, self.term_w-self.help_x, self.help_y, self.help_x)		
+			self.panel_help = curses.panel.new_panel(term_help)
+			self.hideHelp()
 
 		# Init refresh time
 		self.__refresh_time = refresh_time
@@ -413,69 +567,76 @@ class glancesScreen():
 		else:
 			return str(int(val))
 		
-	def __getColor(self, current = 0, max = 100):
-		# If current > 50% of max then color = self.if50pc_color / A_DIM
-		# If current > 70% of max then color = self.if70pc_color / A_BOLD
-		# If current > 90% of max then color = self.if90pc_color / A_REVERSE
-		# By default: color = self.default_color / 0
+	def __getAlert(self, current = 0, max = 100):
+		# If current < CAREFUL of max then alert = OK
+		# If current > CAREFUL of max then alert = CAREFUL
+		# If current > WARNING of max then alert = WARNING
+		# If current > CRITICAL of max then alert = CRITICAL
 		try:
 			(current * 100) / max
 		except ZeroDivisionError:
-			return 0
+			return 'DEFAULT'
 
 		variable = (current * 100) / max
 
-		if variable > 90:
-			if self.hascolors:
-				return self.if90pc_color
-			else:
-				return curses.A_REVERSE
-		elif variable > 70:
-			if self.hascolors:
-				return self.if70pc_color
-			else:
-				return curses.A_BOLD
-		elif variable > 50:
-			if self.hascolors:
-				return self.if50pc_color
-			else:
-				return curses.A_DIM
-		else:
-			if self.hascolors:
-				return self.default_color
-			else:
-				return 0
+		if variable > limits.getSTDCritical():
+			return 'CRITICAL'
+		elif variable > limits.getSTDWarning():
+			return 'WARNING'
+		elif variable > limits.getSTDCareful():
+			return 'CAREFUL'
+		
+		return 'OK'
+
+
+	def __getColor(self, current = 0, max = 100):
+		return self.__colors_list[self.__getAlert(current, max)]
+		
+
+	def __getCpuAlert(self, current = 0, max = 100):
+		return self.__getAlert(current, max)
+
+
+	def __getCpuColor(self, current = 0, max = 100):
+		return self.__getColor(current, max)
+
+
+	def __getLoadAlert(self, current = 0, core = 1):
+		# If current < CAREFUL*core of max then alert = OK
+		# If current > CAREFUL*core of max then alert = CAREFUL
+		# If current > WARNING*core of max then alert = WARNING
+		# If current > CRITICAL*core of max then alert = CRITICAL
+
+		if current > limits.getLOADCritical(core):
+			return 'CRITICAL'
+		elif current > limits.getLOADWarning(core):
+			return 'WARNING'
+		elif current > limits.getLOADCareful(core):
+			return 'CAREFUL'
+		
+		return 'OK'
 
 
 	def __getLoadColor(self, current = 0, core = 1):
-		# core is the number of CPU core
-		# If current > 0.7*core then color = self.if50pc_color / A_DIM
-		# If current > 1.0*core then color = self.if70pc_color / A_BOLD
-		# If current > 5.0*core then color = self.if90pc_color / A_REVERSE
-		# By default: color = self.default_color / 0
-
-		if current > (5.0 * core):
-			if self.hascolors:
-				return self.if90pc_color
-			else:
-				return curses.A_REVERSE
-		elif current > (1.0 * core):
-			if self.hascolors:
-				return self.if70pc_color
-			else:
-				return curses.A_BOLD
-		elif current > (0.7 * core):
-			if self.hascolors:
-				return self.if50pc_color
-			else:
-				return curses.A_DIM
-		else:
-			if self.hascolors:
-				return self.default_color
-			else:
-				return 0
+		return self.__colors_list[self.__getLoadAlert(current, core)]
 
 				
+	def __getMemAlert(self, current = 0, max = 100):
+		return self.__getAlert(current, max)
+
+
+	def __getMemColor(self, current = 0, max = 100):
+		return self.__getColor(current, max)
+
+
+	def __getNetColor(self, current = 0, max = 100):
+		return self.__getColor(current, max)
+
+
+	def __getFsColor(self, current = 0, max = 100):
+		return self.__getColor(current, max)
+
+
 	def __catchKey(self):
 		# Get key
 		self.pressedkey = self.term_window.getch();
@@ -504,6 +665,9 @@ class glancesScreen():
 				self.showHelp()
 			else:
 				self.hideHelp()
+		elif (self.pressedkey == 108):
+			# 'l' > Enable/Disable logs list
+			self.log_tag = not self.log_tag
 		elif (self.pressedkey == 109):
 			# 'm' > Sort process list by Mem usage
 			self.setProcessSortedBy('proc_size')
@@ -530,8 +694,9 @@ class glancesScreen():
 		self.displayMem(stats.getMem(), stats.getMemSwap())
 		network_count = self.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
 		diskio_count = self.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
-		self.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
-		self.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()))
+		fs_count = self.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
+		log_count = self.displayLog(self.network_y + network_count + diskio_count + fs_count)
+		self.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()), log_count)
 		self.displayCaption()
 		self.displayNow(stats.getNow())
 		
@@ -580,11 +745,11 @@ class glancesScreen():
 			helpWindow.resize(self.term_h-self.help_y-2, self.term_w-self.help_x)
 			helpWindow.clear()
 			msg = _("Glances help (press 'h' to hide)")
-			helpWindow.addnstr(1, 2,_("'h'\tto display|hide this help message"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(2, 2,_("'a'\tto sort processes automatically"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(3, 2, _("'c'\tto sort processes by CPU consumption"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(4, 2, _("'d'\tto disable|enable the disk IO stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(5, 2, _("'f'\tto disable|enable the file system stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(1, 2, _("'a'\tto sort processes automatically"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(2, 2, _("'c'\tto sort processes by CPU consumption"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(3, 2, _("'d'\tto disable|enable the disk IO stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(4, 2, _("'f'\tto disable|enable the file system stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
+			helpWindow.addnstr(5, 2, _("'l'\tto display|hide the logs messages"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
  			helpWindow.addnstr(6, 2, _("'m'\tto sort processes by process size"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
  			helpWindow.addnstr(7, 2, _("'n'\tto disable|enable the network interfaces stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
  			helpWindow.addnstr(8, 2, _("'q'\tto exit Glances"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
@@ -643,9 +808,19 @@ class glancesScreen():
 			self.term_window.addnstr(self.cpu_y+2, self.cpu_x, _("Kernel:"), 8)
 			self.term_window.addnstr(self.cpu_y+3, self.cpu_x, _("Nice:"), 8)
 			self.term_window.addnstr(self.cpu_y+4, self.cpu_x, _("Idle:"), 8)
-			self.term_window.addnstr(self.cpu_y+1, self.cpu_x+10, "%.1f" % cpu['user'], 8, self.__getColor(cpu['user']))
-			self.term_window.addnstr(self.cpu_y+2, self.cpu_x+10, "%.1f" % cpu['kernel'], 8, self.__getColor(cpu['kernel']))
-			self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__getColor(cpu['nice']))
+			
+			alert = self.__getCpuAlert(cpu['user'])
+			logs.add(alert, "CPU user", cpu['user'])
+			self.term_window.addnstr(self.cpu_y+1, self.cpu_x+10, "%.1f" % cpu['user'], 8, self.__colors_list[alert])
+
+			alert = self.__getCpuAlert(cpu['kernel'])			
+			logs.add(alert, "CPU kernel", cpu['kernel'])
+			self.term_window.addnstr(self.cpu_y+2, self.cpu_x+10, "%.1f" % cpu['kernel'], 8, self.__colors_list[alert])
+
+			alert = self.__getCpuAlert(cpu['nice'])			
+			logs.add(alert, "CPU nice", cpu['nice'])
+			self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__colors_list[alert])
+
 			self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
 
 		
@@ -662,9 +837,16 @@ class glancesScreen():
 			self.term_window.addnstr(self.load_y+1, self.load_x, _("1 min:"), 8)
 			self.term_window.addnstr(self.load_y+2, self.load_x, _("5 mins:"), 8)
 			self.term_window.addnstr(self.load_y+3, self.load_x, _("15 mins:"), 8)
+
 			self.term_window.addnstr(self.load_y+1, self.load_x+10, str(load['min1']), 8)
-			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__getLoadColor(load['min5'], core))
-			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__getLoadColor(load['min15'], core))
+
+			alert = self.__getLoadAlert(load['min5'], core)			
+			logs.add(alert, "LOAD 5-mins", load['min5'])
+			self.term_window.addnstr(self.load_y+2, self.load_x+10, str(load['min5']), 8, self.__colors_list[alert])
+
+			alert = self.__getLoadAlert(load['min15'], core)			
+			logs.add(alert, "LOAD 15-mins", load['min15'])
+			self.term_window.addnstr(self.load_y+3, self.load_x+10, str(load['min15']), 8, self.__colors_list[alert])
 
 		
 	def displayMem(self, mem, memswap):
@@ -682,14 +864,21 @@ class glancesScreen():
 			self.term_window.addnstr(self.mem_y+1, self.mem_x, _("Total:"), 8)
 			self.term_window.addnstr(self.mem_y+2, self.mem_x, _("Used:"), 8)
 			self.term_window.addnstr(self.mem_y+3, self.mem_x, _("Free:"), 8)
+
 			self.term_window.addnstr(self.mem_y+1, self.mem_x+10, str(mem['total']/1048576), 8)
 			self.term_window.addnstr(self.mem_y+2, self.mem_x+10, str(mem['used']/1048576), 8)
 			self.term_window.addnstr(self.mem_y+3, self.mem_x+10, str(mem['free']/1048576), 8)
+
+			alert = self.__getMemAlert(memswap['used'], memswap['total'])			
+			logs.add(alert, "MEM swap", memswap['used']/1048576)
 			self.term_window.addnstr(self.mem_y+1, self.mem_x+20, str(memswap['total']/1048576), 8)
-			self.term_window.addnstr(self.mem_y+2, self.mem_x+20, str(memswap['used']/1048576), 8, self.__getColor(memswap['used'], memswap['total']))
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+20, str(memswap['used']/1048576), 8, self.__colors_list[alert])
 			self.term_window.addnstr(self.mem_y+3, self.mem_x+20, str(memswap['free']/1048576), 8)
+
+			alert = self.__getMemAlert(mem['used']-mem['cache'], mem['total'])			
+			logs.add(alert, "MEM real", (mem['used']-mem['cache'])/1048576)
 			self.term_window.addnstr(self.mem_y+1, self.mem_x+30, "-", 8)
-			self.term_window.addnstr(self.mem_y+2, self.mem_x+30, str((mem['used']-mem['cache'])/1048576), 8, self.__getColor(mem['used']-mem['cache'], mem['total']))
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+30, str((mem['used']-mem['cache'])/1048576), 8, self.__colors_list[alert])
 			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
 
 		
@@ -727,8 +916,8 @@ class glancesScreen():
 					break
 				elapsed_time = max (1, network[i]['systime'])
 				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
-				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
-				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getNetColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getNetColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
 				ret = ret + 1
 			return ret
 		return 0
@@ -774,12 +963,47 @@ class glancesScreen():
 			for mounted in range(0, min(screen_y-self.fs_y-3, len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
-				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getColor(fs[mounted]['used'], fs[mounted]['size']))
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getFsColor(fs[mounted]['used'], fs[mounted]['size']))
 			return mounted+3
 		return 0			
 
 
-	def displayProcess(self, processcount, processlist):
+	def displayLog(self, offset_y = 0):
+		# Logs
+		if ((logs.len() == 0) or not self.log_tag):
+			return 0						
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		self.log_y = offset_y
+		if ((screen_y > self.log_y+3) 
+			and (screen_x > self.log_x+79)):
+			self.log_y = max(offset_y, screen_y-3-min(offset_y-3, screen_y-self.log_y, logs.len()))
+			logtodisplay_count = min(screen_y-self.log_y-3, logs.len())
+			logmsg = _("Warning and Critical logs for CPU|LOAD|MEM")
+			if (logtodisplay_count > 1):
+				logmsg += _(" (lasts ") + str(logtodisplay_count) + _(" entries)")
+			else:
+				logmsg += _(" (one entry)")
+			self.term_window.addnstr(self.log_y, self.log_x, logmsg, 79, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			# Adapt the maximum log to the screen
+			logcount = 0
+			log = logs.get()
+			for logcount in range(0, logtodisplay_count):
+				logmsg = "  "+str(datetime.datetime.fromtimestamp(log[logcount][0]))
+				if (log[logcount][1] > 0):
+					logmark = ' '
+					logmsg += " > " +str(datetime.datetime.fromtimestamp(log[logcount][1])) 
+				else:
+					logmark = '~'
+					logmsg += " > " +"%19s" % "___________________"
+				logmsg += " " +log[logcount][3] + " (%.1f/" % log[logcount][6] + "%.1f/" % log[logcount][5] + "%.1f)" % log[logcount][4]
+				self.term_window.addnstr(self.log_y+1+logcount, self.log_x, logmsg, 79)			
+				self.term_window.addnstr(self.log_y+1+logcount, self.log_x, logmark, 1, self.__colors_list[log[logcount][2]])
+			return logcount+3
+		return 0			
+
+
+	def displayProcess(self, processcount, processlist, log_count = 0):
 		# Process
 		if (not processcount or not processlist):
 			return 0						
@@ -821,7 +1045,7 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+3, process_x+10,_("Size MB")+sortchar, 8)
 			self.term_window.addnstr(self.process_y+3, process_x+20,_("Res MB"), 8)
 			self.term_window.addnstr(self.process_y+3, process_x+30,_("Name"), 8)
-			for processes in range(0, min(screen_y-self.term_h+self.process_y, len(processlist))):
+			for processes in range(0, min(screen_y-self.term_h+self.process_y-log_count, len(processlist))):
 				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
 				self.term_window.addnstr(self.process_y+4+processes, process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
 				self.term_window.addnstr(self.process_y+4+processes, process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
@@ -842,9 +1066,9 @@ class glancesScreen():
 		if ((screen_y > self.caption_y) 
 			and (screen_x > self.caption_x+32)):
 			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x,    _("   OK   "), 8, self.default_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8,  _("CAREFUL "), 8, self.if50pc_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+16,  _("WARNING "), 8, self.if70pc_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+24, _("CRITICAL"), 8, self.if90pc_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8,  _("CAREFUL "), 8, self.ifCAREFUL_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+16,  _("WARNING "), 8, self.ifWARNING_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+24, _("CRITICAL"), 8, self.ifCRITICAL_color)
 	
 			
 	def displayNow(self, now):
@@ -880,6 +1104,7 @@ def printSyntax():
 	print _("'d' to disable or enable the disk IO stats")
 	print _("'f' to disable or enable the file system stats")
 	print _("'h' to hide or show the help message")
+	print _("'l' to hide or show the logs messages")
 	print _("'m' to sort the processes list by process size")
 	print _("'n' to disable or enable the network interfaces stats")
 	print _("'q' to exit")
@@ -887,7 +1112,7 @@ def printSyntax():
 
 	
 def init():
-	global stats, screen
+	global limits, logs, stats, screen
 	global refresh_time
 
 	refresh_time = 1
@@ -917,6 +1142,12 @@ def init():
 	# Catch CTRL-C
 	signal.signal(signal.SIGINT, signal_handler)	
 
+	# Init Limits
+	limits = glancesLimits()
+
+	# Init Logs
+	logs = glancesLogs()
+
 	# Init stats
 	stats = glancesStats()
 	
@@ -925,6 +1156,7 @@ def init():
 
 
 def main():
+	
 	# Init stuff
 	init()
 
@@ -940,6 +1172,7 @@ def main():
 def end():
 	stats.end()
 	screen.end()
+		
 	sys.exit(0)
 
 	

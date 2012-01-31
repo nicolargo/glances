@@ -23,12 +23,12 @@ Packages exist for Arch, Fedora, Redhat ...
 
 Get the latest version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.6.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.7.tar.gz
 
 Glances use a standard GNU style installer:
 
-	$ tar zxvf glances-1.3.6.tar.gz
-	$ cd glances-1.3.6
+	$ tar zxvf glances-1.3.7.tar.gz
+	$ cd glances-1.3.7
 	$ ./configure
 	$ make
 	$ sudo make install
@@ -85,6 +85,7 @@ When Glances is running, you can press:
 * 'c' to sort the processes list by CPU consumption
 * 'd' Disable or enable the disk IO stats
 * 'f' Disable or enable the file system stats
+* 'l' Disable or enable the logs
 * 'm' to sort the processes list by process size
 * 'n' Disable or enable the network interfaces stats
 * 'q' Exit
@@ -207,6 +208,22 @@ By default (or if you hit the 'a' key) the process list is automaticaly
 sorted by CPU of memory consumption.
 
 The number of processes in the list is adapted to the screen size.
+
+### Logs
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/logs.png)
+
+A logs list is displayed in the bottom of the screen if (an only if):
+
+* at least one WARNING or CRITICAL alert was occured.
+* space is available in the bottom of the console/terminal
+
+There is one line per alert with the following information:
+
+* start date
+* end date
+* alert name
+* (min/avg/max) values 
 
 ### Footer
 

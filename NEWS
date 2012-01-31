@@ -1,6 +1,8 @@
 Version 1.3.7
 =============
 
+	* Display (if terminal space is available) an alerts history (logs)
+	* Add a limits classe to manage stats limits
 	* Manage black and white console (issue #31)
 
 Version 1.3.6
