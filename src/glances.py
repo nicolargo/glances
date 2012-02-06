@@ -38,8 +38,17 @@ except KeyboardInterrupt:
 #=====
 
 application = 'glances'
-__version__ = "1.3.7"		
+__version__ = "1.4.0a"		
 gettext.install(application)
+
+try:
+	import psutil
+except:
+	print _('PsUtil library initialization failed, Glances cannot start.')
+	print
+	sys.exit(1)	
+
+# TODO: test PsUtil psutil.__version__
 
 try:
 	import statgrab
@@ -294,28 +303,68 @@ class glancesStats():
 		Update the stats
 		"""
 
-		# Get informations from libstatgrab and others...
+		# Get system informations
+		
+		# Host and OS informations
 		try:
 			self.host = statgrab.sg_get_host_info()
 		except:
 			self.host = {}
 		self.system = self.host
+		
+		# CPU
 		try:
-			self.cpu = statgrab.sg_get_cpu_percents()
+			self.cputime_old
 		except:
+			self.cputime_old = psutil.cpu_times()
+			self.cputime_total_old = self.cputime_old.user+self.cputime_old.nice+self.cputime_old.system+self.cputime_old.idle+self.cputime_old.iowait+self.cputime_old.irq+self.cputime_old.softirq
 			self.cpu = {}
+		else:
+			try:
+				self.cputime_new = psutil.cpu_times()
+				self.cputime_total_new = self.cputime_new.user+self.cputime_new.nice+self.cputime_new.system+self.cputime_new.idle+self.cputime_new.iowait+self.cputime_new.irq+self.cputime_new.softirq
+				percent = 100/(self.cputime_total_new-self.cputime_total_old)
+				self.cpu = { 'kernel': (self.cputime_new.system-self.cputime_old.system)*percent,
+							 'user': (self.cputime_new.user-self.cputime_old.user)*percent,
+							 'idle': (self.cputime_new.idle-self.cputime_old.idle)*percent,
+							 'nice': (self.cputime_new.nice-self.cputime_old.nice)*percent }
+				self.cputime_old = self.cputime_new
+				self.cputime_total_old = self.cputime_total_new
+			except:
+				self.cpu = {}
+
+		# LOAD
 		try:
-			self.load = statgrab.sg_get_load_stats()
+			getload = os.getloadavg()
+			self.load = { 'min1': getload[0], 
+						  'min5': getload[1], 
+						  'min15': getload[2] }
 		except:
 			self.load = {}
+
+		# MEM
 		try:
-			self.mem = statgrab.sg_get_mem_stats()
+			# Only for Linux
+			cachemem = psutil.cached_phymem()+psutil.phymem_buffers()
+		except:
+			cachemem = 0
+		try:
+			phymem = psutil.phymem_usage()
+			self.mem = { 'cache': cachemem, 
+						 'total': phymem.total, 
+						 'free': phymem.free, 
+						 'used': phymem.used }
 		except:
 			self.mem = {}
 		try:
-			self.memswap = statgrab.sg_get_swap_stats()
+			virtmem = psutil.virtmem_usage()
+			self.memswap = { 'total': virtmem.total, 
+							 'free': virtmem.free, 
+							 'used': virtmem.used }
 		except:
 			self.memswap = {}
+
+		# NET
 		try:
 			self.networkinterface = statgrab.sg_get_network_iface_stats()
 		except:
@@ -324,15 +373,21 @@ class glancesStats():
 			self.network = statgrab.sg_get_network_io_stats_diff()
 		except:
 			self.network = {}
+
+		# DISK IO
 		try:
 			self.diskio = statgrab.sg_get_disk_io_stats_diff()
 		except:
 			self.diskio = {}
+
+		# FILE SYSTEM
 		try:
 			# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
 			self.fs = self.glancesgrabfs.get()
 		except:
 			self.fs = {}
+
+		# PROCESS
 		try:
 			self.processcount = statgrab.sg_get_process_count()
 		except:
@@ -345,9 +400,8 @@ class glancesStats():
 		# Get the current date/time
 		self.now = datetime.datetime.now()
 				
-		# Get the number of core (CPU)
-		# Used to display load alerts
-		self.core_number = multiprocessing.cpu_count()
+		# Get the number of core (CPU) (Used to display load alerts)
+		self.core_number = psutil.NUM_CPUS
 
 		
 	def end(self):
