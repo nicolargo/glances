@@ -376,9 +376,23 @@ class glancesStats():
 
 		# DISK IO
 		try:
-			self.diskio = statgrab.sg_get_disk_io_stats_diff()
+			self.diskio_old
 		except:
-			self.diskio = {}
+			self.diskio_old = psutil.disk_io_counters(True)
+			self.diskio = []
+		else:
+			try:
+				self.diskio_new = psutil.disk_io_counters(True)
+				self.diskio = []
+				for disk in self.diskio_new:
+					diskstat = {}
+					diskstat['disk_name'] = disk
+					diskstat['read_bytes'] = self.diskio_new[disk].read_bytes - self.diskio_old[disk].read_bytes
+					diskstat['write_bytes'] = self.diskio_new[disk].write_bytes - self.diskio_old[disk].write_bytes					
+					self.diskio.append(diskstat)
+				self.diskio_old = self.diskio_new
+			except:
+				self.diskio = []
 
 		# FILE SYSTEM
 		try:
@@ -992,7 +1006,7 @@ class glancesScreen():
 			# Adapt the maximum disk to the screen
 			disk = 0
 			for disk in range(0, min(screen_y-self.diskio_y-3, len(diskio))):
-				elapsed_time = max(1, diskio[disk]['systime'])			
+				elapsed_time = max(1, self.__refresh_time)			
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x, diskio[disk]['disk_name']+':', 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+10, self.__autoUnit(diskio[disk]['write_bytes']/elapsed_time) + "B", 8)
 				self.term_window.addnstr(self.diskio_y+1+disk, self.diskio_x+20, self.__autoUnit(diskio[disk]['read_bytes']/elapsed_time) + "B", 8)
