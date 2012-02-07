@@ -218,7 +218,7 @@ class glancesLogs():
 
 class glancesGrabFs():
 	"""
-	Get FS stats: idem as structure http://www.i-scream.org/libstatgrab/docs/sg_get_fs_stats.3.html
+	Get FS stats
 	"""
 
 	def __init__(self):
@@ -229,45 +229,28 @@ class glancesGrabFs():
 		"""
 		Update the stats
 		"""
-		
+				
+		# Ignore the following fs
+		ignore_fsname = ('', 'none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
+		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs')
+
 		# Reset the list
 		self.fs_list = []
 		
-		# Ignore the following fs
-		ignore_fsname = ('none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
-		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs')
-		
 		# Open the current mounted FS
-		mtab = open("/etc/mtab", "r")
-		for line in mtab.readlines():
-			if line.split()[0] in ignore_fsname: continue
-			if line.split()[2] in ignore_fstype: continue
-			# Get FS stats
+		fs_stat = psutil.disk_partitions(True)
+		for fs in range(len(fs_stat)):
 			fs_current = {}
-			fs_name = self.__getmount__(line.split()[1])
-			fs_stats = os.statvfs(fs_name)
-			# Build the list
-			fs_current['device_name'] = str(line.split()[0])
-			fs_current['fs_type'] = str(line.split()[2])
-			fs_current['mnt_point'] = str(fs_name)
-			fs_current['size'] = float(fs_stats.f_blocks) * long(fs_stats.f_frsize)
-			fs_current['used'] = float(fs_stats.f_blocks - fs_stats.f_bfree) * long(fs_stats.f_frsize)
-			fs_current['avail'] = float(fs_stats.f_bfree) * long(fs_stats.f_frsize)
-			self.fs_list.append(fs_current)
-		mtab.close()
-				
-		
-	def __getmount__(self, path):
-		"""
-		Return the real root path of a file
-		Exemple: /home/nicolargo can return /home or /
-		"""
-		path = os.path.realpath(os.path.abspath(path))
-		while path != os.path.sep:
-			if os.path.ismount(path):
-				return path
-			path = os.path.abspath(os.path.join(path, os.pardir))
-		return path		
+			fs_current['device_name'] = fs_stat[fs].device
+			if fs_current['device_name'] in ignore_fsname: continue
+			fs_current['fs_type'] = fs_stat[fs].fstype
+			if fs_current['fs_type'] in ignore_fstype: continue
+			fs_current['mnt_point'] = fs_stat[fs].mountpoint
+			fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+			fs_current['size'] = fs_usage.total
+			fs_current['used'] = fs_usage.used
+			fs_current['avail'] = fs_usage.free
+			self.fs_list.append(fs_current)			
 
 
 	def get(self):
@@ -366,13 +349,23 @@ class glancesStats():
 
 		# NET
 		try:
-			self.networkinterface = statgrab.sg_get_network_iface_stats()
+			self.network_old
 		except:
-			self.networkinterface = {}
-		try:
-			self.network = statgrab.sg_get_network_io_stats_diff()
-		except:
-			self.network = {}
+			self.network_old = psutil.network_io_counters(True)
+			self.network = []
+		else:
+			try:
+				self.network_new = psutil.network_io_counters(True)
+				self.network = []
+				for net in self.network_new:
+					netstat = {}
+					netstat['interface_name'] = net
+					netstat['rx'] = self.network_new[net].bytes_recv - self.network_old[net].bytes_recv
+					netstat['tx'] = self.network_new[net].bytes_sent - self.network_old[net].bytes_sent
+					self.network.append(netstat)
+				self.network_old = self.network_new
+			except:
+				self.network = []
 
 		# DISK IO
 		try:
@@ -454,11 +447,7 @@ class glancesStats():
 		
 	def getMemSwap(self):
 		return self.memswap
-
-
-	def getNetworkInterface(self):
-		return self.networkinterface
-		
+				
 		
 	def getNetwork(self):
 		return self.network
@@ -626,14 +615,23 @@ class glancesScreen():
 			560745673 -> 561M
 			...
 		"""
-		if val >= 1073741824L:
-			return "%.1fG" % (val / 1073741824L)
-		elif val >= 1048576L:
-			return "%.1fM" % (val / 1048576L)
-		elif val >= 1024:
-			return "%.1fK" % (val / 1024)
-		else:
-			return str(int(val))
+		symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+		prefix = {
+					'Y': 1208925819614629174706176L, 
+					'Z': 1180591620717411303424L,
+					'E': 1152921504606846976L, 
+					'P': 1125899906842624L, 
+					'T': 1099511627776L, 
+					'G': 1073741824, 
+					'M': 1048576, 
+					'K': 1024
+					}
+		for key in reversed(symbols):
+			if val >= prefix[key]:
+				value = float(val) / prefix[key]
+				return '%.1f%s' % (value, key)
+		return "%s" % val			
+			
 		
 	def __getAlert(self, current = 0, max = 100):
 		# If current < CAREFUL of max then alert = OK
@@ -760,7 +758,7 @@ class glancesScreen():
 		self.displayCpu(stats.getCpu())
 		self.displayLoad(stats.getLoad(), stats.getCore())
 		self.displayMem(stats.getMem(), stats.getMemSwap())
-		network_count = self.displayNetwork(stats.getNetwork(), stats.getNetworkInterface())
+		network_count = self.displayNetwork(stats.getNetwork())
 		diskio_count = self.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
 		fs_count = self.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
 		log_count = self.displayLog(self.network_y + network_count + diskio_count + fs_count)
@@ -950,27 +948,18 @@ class glancesScreen():
 			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
 
 		
-	def displayNetwork(self, network, networkinterface):
+	def displayNetwork(self, network):
 		"""
 		Display the network interface bitrate
 		Return the number of interfaces
 		"""
 		# Network interfaces bitrate
-		if (not network or not networkinterface or not self.network_tag):
+		if (not network or not self.network_tag):
 			return 0				
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.network_y+3) 
 			and (screen_x > self.network_x+28)):
-			# Get the speed of the network interface
-			# TODO: optimize...
-			speed = {}
-			for i in range(0, len(networkinterface)):
-				# Strange think, on Ubuntu, libstatgrab return 65525 for my ethernet card...
-				if networkinterface[i]['speed'] == 65535:
-					speed[networkinterface[i]['interface_name']] = 0
-				else:
-					speed[networkinterface[i]['interface_name']] = networkinterface[i]['speed']*1000000
 			# Network interfaces bitrate
 			self.term_window.addnstr(self.network_y, self.network_x,    _("Net rate"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.network_y, self.network_x+10, _("Rx/ps"), 8)
@@ -978,14 +967,10 @@ class glancesScreen():
 			# Adapt the maximum interface to the screen
 			ret = 2
 			for i in range(0, min(screen_y-self.network_y-3, len(network))):
-				try:
-					speed[network[i]['interface_name']]
-				except:
-					break
-				elapsed_time = max (1, network[i]['systime'])
+				elapsed_time = max (1, self.__refresh_time)
 				self.term_window.addnstr(self.network_y+1+i, self.network_x, network[i]['interface_name']+':', 8)
-				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8, self.__getNetColor(network[i]['rx']/elapsed_time*8, speed[network[i]['interface_name']]))
-				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8, self.__getNetColor(network[i]['tx']/elapsed_time*8, speed[network[i]['interface_name']]))
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+10, self.__autoUnit(network[i]['rx']/elapsed_time*8) + "b", 8)
+				self.term_window.addnstr(self.network_y+1+i, self.network_x+20, self.__autoUnit(network[i]['tx']/elapsed_time*8) + "b", 8)
 				ret = ret + 1
 			return ret
 		return 0
