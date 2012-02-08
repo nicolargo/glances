@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# Glances is a simple CLI monitoring tool based on libstatgrab
+# Glances is a simple textual monitoring tool
 #
-# Pre-requisites: python-statgrab 0.5 or >
+# Pre-requisites: Python 2.6+ and PsUtil 0.4.0+
 #
 # Copyright (C) Nicolargo 2012 <nicolas@nicolargo.com>
 # 
@@ -23,6 +23,7 @@ from __future__ import generators
 
 try:
 	import os
+	import platform
 	import getopt
 	import sys
 	import signal
@@ -45,10 +46,24 @@ try:
 	import psutil
 except:
 	print _('PsUtil library initialization failed, Glances cannot start.')
+	print _('On Debian/Ubuntu, you can try (as root):')
+	print _('# apt-get install python-dev python-pip')
+	print _('# pip install psutil')
 	print
 	sys.exit(1)	
-
-# TODO: test PsUtil psutil.__version__
+	
+try:
+	# This function is available in the 0.4.0+ version of PsUtil 
+	psutil.disk_io_counters()
+except:
+	print _('PsUtil version 0.4.0 or higher is needed.')
+	print _('On Debian/Ubuntu, you can try (as root):')
+	print _('# apt-get install python-dev python-pip')
+	print _('# pip install --upgrade psutil')
+	print
+	sys.exit(1)	
+	
+# TODO: Remove after test PsUtil psutil.__version__
 
 try:
 	import statgrab
@@ -222,7 +237,7 @@ class glancesGrabFs():
 	"""
 
 	def __init__(self):
-		self.__update__()
+		pass	
 	
 	
 	def __update__(self):
@@ -276,10 +291,8 @@ class glancesStats():
 		try:
 			self.glancesgrabfs = glancesGrabFs()
 		except:
-			self.glancesgrabfs = {}
-			
-		# Do the first update
-		self.__update__()
+			self.glancesgrabfs = {}			
+
 
 	def __update__(self):
 		"""
@@ -289,13 +302,28 @@ class glancesStats():
 		# Get system informations
 		
 		# Host and OS informations
+		self.host = {}
+		self.host['hostname'] = platform.node()
+		self.host['platform'] = platform.architecture()[0]
+		self.host['processor'] = platform.processor()
+		self.host['os_name'] = platform.system()
 		try:
-			self.host = statgrab.sg_get_host_info()
+			if (self.host['os_name'] == "Linux" or self.host['os_name'] == "FreeBSD"):
+				os_version = platform.linux_distribution()
+				self.host['os_version'] = os_version[0]+" "+os_version[1]+" ("+os_version[2]+")"
+			elif (self.host['os_name'] == "Windows"):
+				os_version = platform.win32_ver()
+				self.host['os_version'] = os_version[0]+" "+os_version[2]
+			elif (self.host['os_name'] == "Darwin"):
+				os_version = platform.mac_ver()
+				self.host['os_version'] = os_version[0]
+			else:
+				self.host['os_version'] = ""
 		except:
-			self.host = {}
-		self.system = self.host
+			self.host['os_version'] = ""
 		
 		# CPU
+		percent = 0
 		try:
 			self.cputime_old
 		except:
@@ -389,20 +417,61 @@ class glancesStats():
 
 		# FILE SYSTEM
 		try:
-			# Replace the bugged self.fs = statgrab.sg_get_fs_stats()
 			self.fs = self.glancesgrabfs.get()
 		except:
 			self.fs = {}
 
 		# PROCESS
+		# Initialiation of the processes list
+		self.processcount = {'zombie': 0, 'running': 0, 'total': 0, 'stopped': 0, 'sleeping': 0, 'disk sleep': 0}
 		try:
-			self.processcount = statgrab.sg_get_process_count()
+			self.process
 		except:
-			self.processcount = {}
+			self.process = []
+		
 		try:
-			self.process = statgrab.sg_get_process_stats()
+			self.process_all
 		except:
-			self.process = {}
+			self.process_all = [proc for proc in psutil.process_iter()]
+			for proc in self.process_all[:]:
+				# Global stats
+				try:
+					self.processcount[str(proc.status)]
+				except:
+					pass
+				else:
+					self.processcount[str(proc.status)] += 1
+					self.processcount['total'] += 1
+				# A first value is needed to compute the CPU percent
+				try:
+					proc.get_cpu_percent(interval=0)
+				except:
+					pass
+				else:
+					proc._before = proc
+		else:
+			self.process = []
+			for proc in self.process_all[:]:
+				# Global stats
+				try:
+					self.processcount[str(proc.status)]
+				except:
+					pass
+				else:
+					self.processcount[str(proc.status)] += 1
+					self.processcount['total'] += 1
+				# Per process stats
+				try:
+					procstat = {}
+					procstat['process_name'] = proc.name
+					procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
+					procstat['proc_size'] = proc.get_memory_info().vms
+					procstat['proc_resident'] = proc.get_memory_info().rss
+					procstat['cpu_percent'] = proc._before.get_cpu_percent(interval=0)
+					self.process.append(procstat)			
+				except:
+					pass				
+			del(self.process_all)
 
 		# Get the current date/time
 		self.now = datetime.datetime.now()
@@ -426,7 +495,7 @@ class glancesStats():
 
 		
 	def getSystem(self):
-		return self.system
+		return self.host
 
 		
 	def getCpu(self):
@@ -1015,8 +1084,8 @@ class glancesScreen():
 			mounted = 0
 			for mounted in range(0, min(screen_y-self.fs_y-3, len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
-				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
-				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getFsColor(fs[mounted]['used'], fs[mounted]['size']))
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']) + "B", 8)
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']) + "B", 8, self.__getFsColor(fs[mounted]['used'], fs[mounted]['size']))
 			return mounted+3
 		return 0			
 
@@ -1058,7 +1127,7 @@ class glancesScreen():
 
 	def displayProcess(self, processcount, processlist, log_count = 0):
 		# Process
-		if (not processcount or not processlist):
+		if (not processcount):
 			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
@@ -1083,6 +1152,8 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+1, process_x+30,str(processcount['sleeping']), 8)
 			self.term_window.addnstr(self.process_y+1, process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
 		# Display the process detail
+		if (not processlist):
+			return 3						
 		if ((screen_y > self.process_y+6) 
 			and (screen_x > process_x+49)):
 			# Processes detail
