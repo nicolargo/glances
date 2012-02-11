@@ -39,7 +39,7 @@ except KeyboardInterrupt:
 #=====
 
 application = 'glances'
-__version__ = "1.4.0a"		
+__version__ = "1.4a"		
 gettext.install(application)
 
 try:
@@ -442,8 +442,9 @@ class glancesStats():
 				else:
 					self.processcount[str(proc.status)] += 1
 					self.processcount['total'] += 1
-				# A first value is needed to compute the CPU percent
+				# Per process stats	
 				try:
+					# A first value is needed to compute the CPU percent
 					proc.get_cpu_percent(interval=0)
 				except:
 					pass
@@ -468,6 +469,8 @@ class glancesStats():
 					procstat['proc_size'] = proc.get_memory_info().vms
 					procstat['proc_resident'] = proc.get_memory_info().rss
 					procstat['cpu_percent'] = proc._before.get_cpu_percent(interval=0)
+					procstat['diskio_read'] = proc.get_io_counters().read_bytes - proc._before.get_io_counters().read_bytes
+					procstat['diskio_write'] = proc.get_io_counters().write_bytes - proc._before.get_io_counters().write_bytes
 					self.process.append(procstat)			
 				except:
 					pass				
@@ -519,15 +522,15 @@ class glancesStats():
 				
 		
 	def getNetwork(self):
-		return self.network
+		return sorted(self.network, key=lambda network: network['interface_name'])
 
 		
 	def getDiskIO(self):
-		return self.diskio
+		return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
 
 
 	def getFs(self):
-		return self.fs
+		return sorted(self.fs, key=lambda fs: fs['mnt_point'])
 
 		
 	def getProcessCount(self):
@@ -539,6 +542,7 @@ class glancesStats():
 		Return the sorted process list		
 		"""
 		
+		sortedReverse = True
 		if sortedby == 'auto':
 			# If global Mem > 70% sort by process size
 			# Else sort by cpu comsoption
@@ -546,7 +550,10 @@ class glancesStats():
 			if ( self.mem['total'] != 0):
 				if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > limits.getSTDWarning()):
 					sortedby = 'proc_size'
-		return sorted(self.process, key=lambda process: process[sortedby], reverse=True)
+		elif sortedby == 'process_name':
+			sortedReverse = False
+			
+		return sorted(self.process, key=lambda process: process[sortedby], reverse = sortedReverse)
 
 		
 	def getNow(self):
@@ -579,7 +586,7 @@ class glancesScreen():
 		self.fs_x = 		0 ; 		self.fs_y = 		-1
 		self.process_x = 	30;			self.process_y = 	9
 		self.log_x =		0 ;			self.log_y = 		-1
-		self.help_x = 		30;			self.help_y = 		12
+		self.help_x = 		0;			self.help_y = 		0
 		self.now_x = 		79;			self.now_y = 		3
 		self.caption_x = 	0 ;			self.caption_y = 	3
 
@@ -600,7 +607,7 @@ class glancesScreen():
 
 		# Init colors
 		self.hascolors = False
-		if curses.has_colors():
+		if (curses.has_colors() and curses.COLOR_PAIRS > 8):
 			self.hascolors = True
 			# Init				FG color				BG color
 			curses.init_pair(1, curses.COLOR_WHITE, 	-1)
@@ -608,8 +615,10 @@ class glancesScreen():
 			curses.init_pair(3, curses.COLOR_WHITE, 	curses.COLOR_GREEN)
 			curses.init_pair(4, curses.COLOR_WHITE, 	curses.COLOR_BLUE)
 			curses.init_pair(5, curses.COLOR_WHITE, 	curses.COLOR_MAGENTA)
-			curses.init_pair(6, curses.COLOR_WHITE, 	curses.COLOR_CYAN)
-			curses.init_pair(7, curses.COLOR_BLACK, 	curses.COLOR_YELLOW)
+			curses.init_pair(6,   curses.COLOR_RED,		-1)
+			curses.init_pair(7, curses.COLOR_GREEN,		-1)
+			curses.init_pair(8,  curses.COLOR_BLUE,		-1)
+			curses.init_pair(9, curses.COLOR_MAGENTA,   -1)
 		else:
 			self.hascolors = False
 			
@@ -622,6 +631,10 @@ class glancesScreen():
 			self.ifCAREFUL_color = curses.color_pair(4)|curses.A_BOLD
 			self.ifWARNING_color = curses.color_pair(5)|curses.A_BOLD
 			self.ifCRITICAL_color = curses.color_pair(2)|curses.A_BOLD			
+			self.default_color2 = curses.color_pair(7)|curses.A_BOLD
+			self.ifCAREFUL_color2 = curses.color_pair(8)|curses.A_BOLD
+			self.ifWARNING_color2 = curses.color_pair(9)|curses.A_BOLD
+			self.ifCRITICAL_color2 = curses.color_pair(6)|curses.A_BOLD			
 		else:
 			# B&W text styles
 			self.no_color = curses.A_NORMAL
@@ -629,8 +642,12 @@ class glancesScreen():
 			self.ifCAREFUL_color = curses.A_UNDERLINE
 			self.ifWARNING_color = curses.A_BOLD
 			self.ifCRITICAL_color = curses.A_REVERSE
+			self.default_color2 = curses.A_NORMAL
+			self.ifCAREFUL_color2 = curses.A_UNDERLINE
+			self.ifWARNING_color2 = curses.A_BOLD
+			self.ifCRITICAL_color2 = curses.A_REVERSE			
 		
-		# Define the colors list (hash table)	
+		# Define the colors list (hash table) for logged stats	
 		self.__colors_list = {   
 			# 		CAREFUL WARNING CRITICAL
 			'DEFAULT':	self.no_color,
@@ -640,24 +657,25 @@ class glancesScreen():
 			'CRITICAL':	self.ifCRITICAL_color
 		}
 
+		# Define the colors list (hash table) for non logged stats
+		self.__colors_list2 = {   
+			# 		CAREFUL WARNING CRITICAL
+			'DEFAULT':	self.no_color,
+			'OK':		self.default_color2,
+			'CAREFUL':	self.ifCAREFUL_color2,
+			'WARNING':	self.ifWARNING_color2,
+			'CRITICAL':	self.ifCRITICAL_color2
+		}
+
 		# By default all the stats are displayed
 		self.network_tag = True
 		self.diskio_tag = True
 		self.fs_tag = True
 		self.log_tag = True
+		self.help_tag = False
 
 		# Init main window		
 		self.term_window = self.screen.subwin(0, 0)
-
-		# Init help panel
-		# TODO: pb when size of the screen < 22 lines
-		screen_x = self.screen.getmaxyx()[1]
-		screen_y = self.screen.getmaxyx()[0]
-		if (screen_x > (self.term_w-self.help_x) and 
-			(screen_y > (self.term_h-self.help_y-2))):
-			term_help = self.screen.subwin(self.term_h-self.help_y-2, self.term_w-self.help_x, self.help_y, self.help_x)		
-			self.panel_help = curses.panel.new_panel(term_help)
-			self.hideHelp()
 
 		# Init refresh time
 		self.__refresh_time = refresh_time
@@ -725,8 +743,18 @@ class glancesScreen():
 
 
 	def __getColor(self, current = 0, max = 100):
+		"""
+		Return colors for logged stats
+		"""
 		return self.__colors_list[self.__getAlert(current, max)]
+
 		
+	def __getColor2(self, current = 0, max = 100):
+		"""
+		Return colors for non logged stats
+		"""
+		return self.__colors_list2[self.__getAlert(current, max)]
+
 
 	def __getCpuAlert(self, current = 0, max = 100):
 		return self.__getAlert(current, max)
@@ -765,11 +793,15 @@ class glancesScreen():
 
 
 	def __getNetColor(self, current = 0, max = 100):
-		return self.__getColor(current, max)
+		return self.__getColor2(current, max)
 
 
 	def __getFsColor(self, current = 0, max = 100):
-		return self.__getColor(current, max)
+		return self.__getColor2(current, max)
+
+
+	def __getProcessColor(self, current = 0, max = 100):
+		return self.__getColor2(current, max)
 
 
 	def __catchKey(self):
@@ -796,10 +828,7 @@ class glancesScreen():
 			self.fs_tag = not self.fs_tag
 		elif (self.pressedkey == 104):
 			# 'h' > Enable/Disable help
-			if (self.panel_help.hidden()):
-				self.showHelp()
-			else:
-				self.hideHelp()
+			self.help_tag = not self.help_tag
 		elif (self.pressedkey == 108):
 			# 'l' > Enable/Disable logs list
 			self.log_tag = not self.log_tag
@@ -809,6 +838,9 @@ class glancesScreen():
 		elif (self.pressedkey == 110):
 			# 'n' > Enable/Disable network stats
 			self.network_tag = not self.network_tag
+		elif (self.pressedkey == 112):
+			# 'p' > Sort process list by Process name
+			self.setProcessSortedBy('process_name')
 		
 		# Return the key code
 		return self.pressedkey
@@ -834,10 +866,8 @@ class glancesScreen():
 		self.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()), log_count)
 		self.displayCaption()
 		self.displayNow(stats.getNow())
+		self.displayHelp()
 		
-		# Display help panel
-		if (not self.panel_help.hidden()):
-			self.displayHelp()
 		
 	def erase(self):
 		# Erase the content of the screen
@@ -868,43 +898,6 @@ class glancesScreen():
 			curses.napms(100)
 
 
-	def displayHelp(self):
-		"""
-		Display the help panel (active| desactive with the 'h' key) 
-		"""
-		screen_x = self.screen.getmaxyx()[1]
-		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > 23) 
-			and (screen_x > 79)):		
-			helpWindow = self.panel_help.window()
-			helpWindow.resize(self.term_h-self.help_y-2, self.term_w-self.help_x)
-			helpWindow.clear()
-			msg = _("Glances help (press 'h' to hide)")
-			helpWindow.addnstr(1, 2, _("'a'\tto sort processes automatically"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(2, 2, _("'c'\tto sort processes by CPU consumption"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(3, 2, _("'d'\tto disable|enable the disk IO stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(4, 2, _("'f'\tto disable|enable the file system stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.addnstr(5, 2, _("'l'\tto display|hide the logs messages"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
- 			helpWindow.addnstr(6, 2, _("'m'\tto sort processes by process size"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
- 			helpWindow.addnstr(7, 2, _("'n'\tto disable|enable the network interfaces stats"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
- 			helpWindow.addnstr(8, 2, _("'q'\tto exit Glances"), self.term_w-self.help_x-4, self.help_color if self.hascolors else 0)
-			helpWindow.box()
-		
-		
-	def showHelp(self):
-		"""
-		Show the help panel
-		"""	
-		self.panel_help.show()
-		
-
-	def hideHelp(self):
-		"""
-		Hide the help panel
-		"""	
-		self.panel_help.hide()
-		
-		
 	def displayHost(self, host):
 		# Host information
 		if (not host):
@@ -931,14 +924,17 @@ class glancesScreen():
 		
 	def displayCpu(self, cpu):		
 		# CPU %
-		if (not cpu):
-			return 0
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.cpu_y+6) 
 			and (screen_x > self.cpu_x+18)):
 			self.term_window.addnstr(self.cpu_y, self.cpu_x, 	_("Cpu"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.cpu_y, self.cpu_x+10,"%", 8)
+			
+			if (not cpu):
+				self.term_window.addnstr(self.cpu_y+1, self.cpu_x, _("Compute data..."), 15)						
+				return 0
+
 			self.term_window.addnstr(self.cpu_y+1, self.cpu_x, _("User:"), 8)
 			self.term_window.addnstr(self.cpu_y+2, self.cpu_x, _("Kernel:"), 8)
 			self.term_window.addnstr(self.cpu_y+3, self.cpu_x, _("Nice:"), 8)
@@ -992,7 +988,7 @@ class glancesScreen():
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.mem_y+5)
 			and (screen_x > self.mem_x+38)):
-			self.term_window.addnstr(self.mem_y, self.mem_x, 	_("Mem MB"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.mem_y, self.mem_x, 	_("Mem B"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.mem_y, self.mem_x+10,_("Mem"), 8)
 			self.term_window.addnstr(self.mem_y, self.mem_x+20,_("Swap"), 8)
 			self.term_window.addnstr(self.mem_y, self.mem_x+30,_("Real"), 8)
@@ -1000,21 +996,21 @@ class glancesScreen():
 			self.term_window.addnstr(self.mem_y+2, self.mem_x, _("Used:"), 8)
 			self.term_window.addnstr(self.mem_y+3, self.mem_x, _("Free:"), 8)
 
-			self.term_window.addnstr(self.mem_y+1, self.mem_x+10, str(mem['total']/1048576), 8)
-			self.term_window.addnstr(self.mem_y+2, self.mem_x+10, str(mem['used']/1048576), 8)
-			self.term_window.addnstr(self.mem_y+3, self.mem_x+10, str(mem['free']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x+10, self.__autoUnit(mem['total']), 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+10, self.__autoUnit(mem['used']), 8)
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+10, self.__autoUnit(mem['free']), 8)
 
 			alert = self.__getMemAlert(memswap['used'], memswap['total'])			
 			logs.add(alert, "MEM swap", memswap['used']/1048576)
-			self.term_window.addnstr(self.mem_y+1, self.mem_x+20, str(memswap['total']/1048576), 8)
-			self.term_window.addnstr(self.mem_y+2, self.mem_x+20, str(memswap['used']/1048576), 8, self.__colors_list[alert])
-			self.term_window.addnstr(self.mem_y+3, self.mem_x+20, str(memswap['free']/1048576), 8)
+			self.term_window.addnstr(self.mem_y+1, self.mem_x+20, self.__autoUnit(memswap['total']), 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+20, self.__autoUnit(memswap['used']), 8, self.__colors_list[alert])
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+20, self.__autoUnit(memswap['free']), 8)
 
 			alert = self.__getMemAlert(mem['used']-mem['cache'], mem['total'])			
 			logs.add(alert, "MEM real", (mem['used']-mem['cache'])/1048576)
 			self.term_window.addnstr(self.mem_y+1, self.mem_x+30, "-", 8)
-			self.term_window.addnstr(self.mem_y+2, self.mem_x+30, str((mem['used']-mem['cache'])/1048576), 8, self.__colors_list[alert])
-			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, str((mem['free']+mem['cache'])/1048576), 8)
+			self.term_window.addnstr(self.mem_y+2, self.mem_x+30, self.__autoUnit((mem['used']-mem['cache'])), 8, self.__colors_list[alert])
+			self.term_window.addnstr(self.mem_y+3, self.mem_x+30, self.__autoUnit((mem['free']+mem['cache'])), 8)
 
 		
 	def displayNetwork(self, network):
@@ -1023,8 +1019,8 @@ class glancesScreen():
 		Return the number of interfaces
 		"""
 		# Network interfaces bitrate
-		if (not network or not self.network_tag):
-			return 0				
+		if (not self.network_tag):
+			return 0
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.network_y+3) 
@@ -1033,6 +1029,12 @@ class glancesScreen():
 			self.term_window.addnstr(self.network_y, self.network_x,    _("Net rate"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.network_y, self.network_x+10, _("Rx/ps"), 8)
 			self.term_window.addnstr(self.network_y, self.network_x+20, _("Tx/ps"), 8)
+
+			# If there is no data to display...
+			if (not network):
+				self.term_window.addnstr(self.network_y+1, self.network_x, _("Compute data..."), 15)		
+				return 3
+
 			# Adapt the maximum interface to the screen
 			ret = 2
 			for i in range(0, min(screen_y-self.network_y-3, len(network))):
@@ -1047,7 +1049,7 @@ class glancesScreen():
 			
 	def displayDiskIO(self, diskio, offset_y = 0):
 		# Disk input/output rate
-		if (not diskio or not self.diskio_tag):
+		if (not self.diskio_tag):
 			return 0						
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
@@ -1057,6 +1059,12 @@ class glancesScreen():
 			self.term_window.addnstr(self.diskio_y, self.diskio_x,    _("Disk I/O"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+10, _("In/ps"), 8)
 			self.term_window.addnstr(self.diskio_y, self.diskio_x+20, _("Out/ps"), 8)
+
+			# If there is no data to display...
+			if (not diskio):
+				self.term_window.addnstr(self.diskio_y+1, self.diskio_x, _("Compute data..."), 15)		
+				return 3
+
 			# Adapt the maximum disk to the screen
 			disk = 0
 			for disk in range(0, min(screen_y-self.diskio_y-3, len(diskio))):
@@ -1077,15 +1085,15 @@ class glancesScreen():
 		self.fs_y = offset_y
 		if ((screen_y > self.fs_y+3) 
 			and (screen_x > self.fs_x+28)):
-			self.term_window.addnstr(self.fs_y, self.fs_x,    _("Mount"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
+			self.term_window.addnstr(self.fs_y, self.fs_x,    _("Mount B"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
 			self.term_window.addnstr(self.fs_y, self.fs_x+10, _("Total"), 8)
 			self.term_window.addnstr(self.fs_y, self.fs_x+20, _("Used"), 8)
 			# Adapt the maximum disk to the screen
 			mounted = 0
 			for mounted in range(0, min(screen_y-self.fs_y-3, len(fs))):
 				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x, fs[mounted]['mnt_point'], 8)
-				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']) + "B", 8)
-				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']) + "B", 8, self.__getFsColor(fs[mounted]['used'], fs[mounted]['size']))
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+10, self.__autoUnit(fs[mounted]['size']), 8)
+				self.term_window.addnstr(self.fs_y+1+mounted, self.fs_x+20, self.__autoUnit(fs[mounted]['used']), 8, self.__getFsColor(fs[mounted]['used'], fs[mounted]['size']))
 			return mounted+3
 		return 0			
 
@@ -1152,27 +1160,23 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+1, process_x+30,str(processcount['sleeping']), 8)
 			self.term_window.addnstr(self.process_y+1, process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
 		# Display the process detail
-		if (not processlist):
-			return 3						
 		if ((screen_y > self.process_y+6) 
 			and (screen_x > process_x+49)):
 			# Processes detail
-			if (self.getProcessSortedBy() == 'cpu_percent'):
-				sortchar = '^'
-			else:
-				sortchar = ' '
-			self.term_window.addnstr(self.process_y+3, process_x,"Cpu %"+sortchar, 8)
-			if (self.getProcessSortedBy() == 'proc_size'):
-				sortchar = '^'
-			else:
-				sortchar = ' '
-			self.term_window.addnstr(self.process_y+3, process_x+10,_("Size MB")+sortchar, 8)
-			self.term_window.addnstr(self.process_y+3, process_x+20,_("Res MB"), 8)
-			self.term_window.addnstr(self.process_y+3, process_x+30,_("Name"), 8)
+			self.term_window.addnstr(self.process_y+3, process_x, _("Cpu %"), 5, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'cpu_percent') else 0)
+			self.term_window.addnstr(self.process_y+3, process_x+7,  _("Mem virt."), 9, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'proc_size') else 0)
+			self.term_window.addnstr(self.process_y+3, process_x+18, _("Mem resi."), 9)
+			self.term_window.addnstr(self.process_y+3, process_x+30, _("Process name"), 12, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'process_name') else 0)
+
+			# If there is no data to display...
+			if (not processlist):
+				self.term_window.addnstr(self.process_y+4, self.process_x, _("Compute data..."), 15)		
+				return 6
+			
 			for processes in range(0, min(screen_y-self.term_h+self.process_y-log_count, len(processlist))):
-				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getColor(processlist[processes]['cpu_percent']))
-				self.term_window.addnstr(self.process_y+4+processes, process_x+10, str((processlist[processes]['proc_size'])/1048576), 8)
-				self.term_window.addnstr(self.process_y+4+processes, process_x+20, str((processlist[processes]['proc_resident'])/1048576), 8)
+				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getProcessColor(processlist[processes]['cpu_percent']))
+				self.term_window.addnstr(self.process_y+4+processes, process_x+7, self.__autoUnit(processlist[processes]['proc_size']), 9)
+				self.term_window.addnstr(self.process_y+4+processes, process_x+18, self.__autoUnit(processlist[processes]['proc_resident']), 9)
 				maxprocessname = screen_x-process_x-30
 				# If screen space is available then display long name
 				if ((len(processlist[processes]['proctitle']) > maxprocessname) 
@@ -1187,13 +1191,47 @@ class glancesScreen():
 		# Caption
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_x < 80) or (screen_y < 24)):
+			# Help can only be displayed on a 80x24 console
+			return 0
 		if ((screen_y > self.caption_y) 
 			and (screen_x > self.caption_x+32)):
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x,    _("   OK   "), 8, self.default_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+8,  _("CAREFUL "), 8, self.ifCAREFUL_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+16,  _("WARNING "), 8, self.ifWARNING_color)
-			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x+24, _("CRITICAL"), 8, self.ifCRITICAL_color)
+			self.term_window.addnstr(max(self.caption_y, screen_y-1), self.caption_x, _("Press 'h' for help"), self.default_color)
+
 	
+	def displayHelp(self):
+		"""
+		Show the help panel
+		"""	
+		if (not self.help_tag):
+			return 0
+		screen_x = self.screen.getmaxyx()[1]
+		screen_y = self.screen.getmaxyx()[0]
+		if ((screen_y > self.help_y+23) 
+			and (screen_x > self.help_x+79)):
+			# Console 80x24 is mandatory to display teh help message
+			self.erase()
+
+			self.term_window.addnstr(self.help_y, self.help_x, _("Glances v")+self.__version+_(" user guide"), 79, self.title_color if self.hascolors else 0)		
+
+			self.term_window.addnstr(self.help_y+2, self.help_x, 	 _("Captions: "), 79)
+			self.term_window.addnstr(self.help_y+2, self.help_x+10,	 _("   OK   "), 8, self.default_color)
+			self.term_window.addnstr(self.help_y+2, self.help_x+18,  _("CAREFUL "), 8, self.ifCAREFUL_color)
+			self.term_window.addnstr(self.help_y+2, self.help_x+26,  _("WARNING "), 8, self.ifWARNING_color)
+			self.term_window.addnstr(self.help_y+2, self.help_x+34,  _("CRITICAL"), 8, self.ifCRITICAL_color)
+
+			self.term_window.addnstr(self.help_y+4 , self.help_x, _("Key") + "\t" + _("Function"), 79, self.title_color if self.hascolors else 0)
+			self.term_window.addnstr(self.help_y+5 , self.help_x, _("a") + "\t" + _("Sort process list automaticaly"), 79)
+			self.term_window.addnstr(self.help_y+6 , self.help_x, _("c") + "\t" + _("Sort process list by CPU usage"), 79)
+			self.term_window.addnstr(self.help_y+7 , self.help_x, _("m") + "\t" + _("Sort process list by virtual memory usage"), 79)
+			self.term_window.addnstr(self.help_y+8 , self.help_x, _("p") + "\t" + _("Sort process list by name"), 79)
+			self.term_window.addnstr(self.help_y+9 , self.help_x, _("d") + "\t" + _("Enable/Disable disk IO stats"), 79)
+			self.term_window.addnstr(self.help_y+10, self.help_x, _("f") + "\t" + _("Enable/Disable file system stats"), 79)
+			self.term_window.addnstr(self.help_y+11, self.help_x, _("n") + "\t" + _("Enable/Disable network stats"), 79)
+			self.term_window.addnstr(self.help_y+12, self.help_x, _("l") + "\t" + _("Enable/Disable log list (only available if display > 24 lines)"), 79)
+			self.term_window.addnstr(self.help_y+13, self.help_x, _("h") + "\t" + _("Display/Hide help message"), 79)
+			self.term_window.addnstr(self.help_y+14, self.help_x, _("q") + "\t" + _("Exit from Glances (ESC key and CRTL-C also work...)"), 79)			
+		
 			
 	def displayNow(self, now):
 		# Display the current date and time (now...) - Center
@@ -1302,6 +1340,7 @@ def end():
 	
 def signal_handler(signal, frame):
 	end()
+
 
 # Main
 #=====

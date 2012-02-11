@@ -1,3 +1,11 @@
+Version 1.4
+===========
+
+	* No more StatGrab, welcome to the PsUtil library !
+	* Sort by Process name ('p' key)
+	* Only major stats (CPU, Load and memory) use background colors
+	* Improve operating system name
+
 Version 1.3.7
 =============
 
