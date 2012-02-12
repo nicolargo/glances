@@ -38,7 +38,7 @@ except KeyboardInterrupt:
 #=====
 
 application = 'glances'
-__version__ = "1.4b"		
+__version__ = "1.4b2"		
 gettext.install(application)
 
 try:
@@ -454,8 +454,8 @@ class glancesStats():
 					procstat['proc_size'] = proc.get_memory_info().vms
 					procstat['proc_resident'] = proc.get_memory_info().rss
 					procstat['cpu_percent'] = proc._before.get_cpu_percent(interval=0)
-					procstat['diskio_read'] = proc.get_io_counters().read_bytes - proc._before.get_io_counters().read_bytes
-					procstat['diskio_write'] = proc.get_io_counters().write_bytes - proc._before.get_io_counters().write_bytes
+					#~ procstat['diskio_read'] = proc.get_io_counters().read_bytes - proc._before.get_io_counters().read_bytes
+					#~ procstat['diskio_write'] = proc.get_io_counters().write_bytes - proc._before.get_io_counters().write_bytes
 					self.process.append(procstat)			
 				except:
 					pass				
