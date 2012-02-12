@@ -34,12 +34,11 @@ try:
 except KeyboardInterrupt:
 	pass
 
-
 # i18n
 #=====
 
 application = 'glances'
-__version__ = "1.4a"		
+__version__ = "1.4b"		
 gettext.install(application)
 
 try:
@@ -63,20 +62,12 @@ except:
 	print
 	sys.exit(1)	
 	
-# TODO: Remove after test PsUtil psutil.__version__
-
-try:
-	import statgrab
-except:
-	print _('Statgrab initialization failed, Glances cannot start.')
-	print
-	sys.exit(1)	
-
 try:
 	import curses
 	import curses.panel
 except:
     print _('Textmode GUI initialization failed, Glances cannot start.')
+    print _('Use Python 2.6 or higher')
     print
     sys.exit(1)
 
@@ -275,18 +266,14 @@ class glancesGrabFs():
 
 class glancesStats():
 	"""
-	This class store, update and give the libstatgrab stats
+	This class store, update and give stats
 	"""
 
 	def __init__(self):
 		"""
-		Init the libstatgrab and process to the first update
+		Init the stats
 		"""
-		
-		# Init libstatgrab
-		if not statgrab.sg_init():
-			print _("Error: Can not init the libstatgrab library.\n")
-		
+				
 		# Init the fs stats
 		try:
 			self.glancesgrabfs = glancesGrabFs()
@@ -298,8 +285,6 @@ class glancesStats():
 		"""
 		Update the stats
 		"""
-
-		# Get system informations
 		
 		# Host and OS informations
 		self.host = {}
@@ -310,7 +295,7 @@ class glancesStats():
 		try:
 			if (self.host['os_name'] == "Linux" or self.host['os_name'] == "FreeBSD"):
 				os_version = platform.linux_distribution()
-				self.host['os_version'] = os_version[0]+" "+os_version[1]+" ("+os_version[2]+")"
+				self.host['os_version'] = os_version[0]+" "+os_version[2]+" "+os_version[1]
 			elif (self.host['os_name'] == "Windows"):
 				os_version = platform.win32_ver()
 				self.host['os_version'] = os_version[0]+" "+os_version[2]
@@ -481,12 +466,7 @@ class glancesStats():
 				
 		# Get the number of core (CPU) (Used to display load alerts)
 		self.core_number = psutil.NUM_CPUS
-
 		
-	def end(self):
-		# Shutdown the libstatgrab
-		statgrab.sg_shutdown()
-
 		
 	def update(self):
 		# Update the stats
@@ -917,7 +897,7 @@ class glancesScreen():
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
 		if ((screen_y > self.system_y) 
-			and (screen_x > self.system_x+79)):
+			and (screen_x > self.system_x+79)):	
 			system_msg = system['os_name']+" "+system['platform']+" "+system['os_version']
 			self.term_window.addnstr(self.system_y, self.system_x+int(screen_x/2)-len(system_msg)/2, system_msg, 80)
 
@@ -1332,7 +1312,6 @@ def main():
 
 		
 def end():
-	stats.end()
 	screen.end()
 		
 	sys.exit(0)
