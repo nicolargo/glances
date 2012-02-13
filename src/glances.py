@@ -38,7 +38,7 @@ except KeyboardInterrupt:
 #=====
 
 application = 'glances'
-__version__ = "1.4b2"		
+__version__ = "1.4b3"
 gettext.install(application)
 
 try:
@@ -279,7 +279,7 @@ class glancesStats():
 			self.glancesgrabfs = glancesGrabFs()
 		except:
 			self.glancesgrabfs = {}			
-
+		
 
 	def __update__(self):
 		"""
@@ -407,45 +407,30 @@ class glancesStats():
 			self.fs = {}
 
 		# PROCESS
-		# Initialiation of the processes list
-		self.processcount = {'zombie': 0, 'running': 0, 'total': 0, 'stopped': 0, 'sleeping': 0, 'disk sleep': 0}
-		try:
-			self.process
-		except:
-			self.process = []
-		
+		# Initialiation of the running processes list		            
+		process_first_grab = False
 		try:
 			self.process_all
 		except:
 			self.process_all = [proc for proc in psutil.process_iter()]
-			for proc in self.process_all[:]:
+			process_first_grab = True
+		self.process = []
+		self.processcount = { 'total': 0 , 'running': 0, 'sleeping': 0 }
+		# Manage new processes
+		process_new = [proc.pid for proc in self.process_all]
+		for proc in psutil.process_iter():
+			if proc.pid not in process_new:
+				self.process_all.append(proc)
+		# Grab stats from process list
+		for proc in self.process_all[:]:
+			if (proc.is_running()):
 				# Global stats
 				try:
-					self.processcount[str(proc.status)]
-				except:
-					pass
-				else:
 					self.processcount[str(proc.status)] += 1
-					self.processcount['total'] += 1
-				# Per process stats	
-				try:
-					# A first value is needed to compute the CPU percent
-					proc.get_cpu_percent(interval=0)
 				except:
-					pass
-				else:
-					proc._before = proc
-		else:
-			self.process = []
-			for proc in self.process_all[:]:
-				# Global stats
-				try:
-					self.processcount[str(proc.status)]
-				except:
-					pass
-				else:
-					self.processcount[str(proc.status)] += 1
-					self.processcount['total'] += 1
+					self.processcount[str(proc.status)] = 1
+				finally:
+					self.processcount['total'] += 1					
 				# Per process stats
 				try:
 					procstat = {}
@@ -453,13 +438,65 @@ class glancesStats():
 					procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
 					procstat['proc_size'] = proc.get_memory_info().vms
 					procstat['proc_resident'] = proc.get_memory_info().rss
-					procstat['cpu_percent'] = proc._before.get_cpu_percent(interval=0)
-					#~ procstat['diskio_read'] = proc.get_io_counters().read_bytes - proc._before.get_io_counters().read_bytes
-					#~ procstat['diskio_write'] = proc.get_io_counters().write_bytes - proc._before.get_io_counters().write_bytes
+					procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
 					self.process.append(procstat)			
 				except:
-					pass				
-			del(self.process_all)
+					pass
+			else:
+				self.process_all.remove(proc)
+		# If it is the first grab then empty process list
+		if (process_first_grab):
+			self.process = []
+
+		#~ self.processcount = {'zombie': 0, 'running': 0, 'total': 0, 'stopped': 0, 'sleeping': 0, 'disk sleep': 0}
+		#~ try:
+			#~ self.process
+		#~ except:
+			#~ self.process = []
+		#~ 
+		#~ try:
+			#~ self.process_all
+		#~ except:
+			#~ self.process_all = [proc for proc in psutil.process_iter()]			
+			#~ for proc in self.process_all[:]:
+				#~ # Global stats
+				#~ try:
+					#~ self.processcount[str(proc.status)]
+				#~ except:
+					#~ pass
+				#~ else:
+					#~ self.processcount[str(proc.status)] += 1
+					#~ self.processcount['total'] += 1
+				#~ self.processcount == []
+				#~ # Per process stats	
+				#~ try:
+					#~ # A first value is needed to compute the CPU percent
+					#~ proc.get_cpu_percent(interval=0)
+				#~ except:
+					#~ pass
+		#~ else:
+			#~ self.process = []
+			#~ for proc in self.process_all[:]:
+				#~ # Global stats
+				#~ try:
+					#~ self.processcount[str(proc.status)]
+				#~ except:
+					#~ pass
+				#~ else:
+					#~ self.processcount[str(proc.status)] += 1
+					#~ self.processcount['total'] += 1					
+				#~ # Per process stats
+				#~ try:
+					#~ procstat = {}
+					#~ procstat['process_name'] = proc.name
+					#~ procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
+					#~ procstat['proc_size'] = proc.get_memory_info().vms
+					#~ procstat['proc_resident'] = proc.get_memory_info().rss
+					#~ procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+					#~ self.process.append(procstat)			
+				#~ except:
+					#~ pass				
+			#~ del(self.process_all)
 
 		# Get the current date/time
 		self.now = datetime.datetime.now()
@@ -527,8 +564,12 @@ class glancesStats():
 			# If global Mem > 70% sort by process size
 			# Else sort by cpu comsoption
 			sortedby = 'cpu_percent'
-			if ( self.mem['total'] != 0):
-				if ( ( (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']) > limits.getSTDWarning()):
+			try:
+				memtotal = (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']
+			except:
+				pass
+			else:
+				if (memtotal > limits.getSTDWarning()):
 					sortedby = 'proc_size'
 		elif sortedby == 'process_name':
 			sortedReverse = False
@@ -561,10 +602,10 @@ class glancesScreen():
 		self.cpu_x = 		0 ; 		self.cpu_y = 		3
 		self.load_x = 		20; 		self.load_y = 		3
 		self.mem_x = 		41; 		self.mem_y = 		3
-		self.network_x = 	0 ; 		self.network_y = 	9
+		self.network_x = 	0 ; 		self.network_y = 	8
 		self.diskio_x = 	0 ; 		self.diskio_y = 	-1
 		self.fs_x = 		0 ; 		self.fs_y = 		-1
-		self.process_x = 	30;			self.process_y = 	9
+		self.process_x = 	30;			self.process_y = 	8
 		self.log_x =		0 ;			self.log_y = 		-1
 		self.help_x = 		0;			self.help_y = 		0
 		self.now_x = 		79;			self.now_y = 		3
@@ -906,19 +947,19 @@ class glancesScreen():
 		# CPU %
 		screen_x = self.screen.getmaxyx()[1]
 		screen_y = self.screen.getmaxyx()[0]
-		if ((screen_y > self.cpu_y+6) 
+		if ((screen_y > self.cpu_y+5) 
 			and (screen_x > self.cpu_x+18)):
 			self.term_window.addnstr(self.cpu_y, self.cpu_x, 	_("Cpu"), 8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-			self.term_window.addnstr(self.cpu_y, self.cpu_x+10,"%", 8)
 			
 			if (not cpu):
 				self.term_window.addnstr(self.cpu_y+1, self.cpu_x, _("Compute data..."), 15)						
 				return 0
-
+				
+			self.term_window.addnstr(self.cpu_y, self.cpu_x+10, "%.1f%%" % (100-cpu['idle']), 8)
 			self.term_window.addnstr(self.cpu_y+1, self.cpu_x, _("User:"), 8)
 			self.term_window.addnstr(self.cpu_y+2, self.cpu_x, _("Kernel:"), 8)
 			self.term_window.addnstr(self.cpu_y+3, self.cpu_x, _("Nice:"), 8)
-			self.term_window.addnstr(self.cpu_y+4, self.cpu_x, _("Idle:"), 8)
+			#~ self.term_window.addnstr(self.cpu_y+4, self.cpu_x, _("Idle:"), 8)
 			
 			alert = self.__getCpuAlert(cpu['user'])
 			logs.add(alert, "CPU user", cpu['user'])
@@ -932,7 +973,7 @@ class glancesScreen():
 			logs.add(alert, "CPU nice", cpu['nice'])
 			self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__colors_list[alert])
 
-			self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
+			#~ self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
 
 		
 	def displayLoad(self, load, core):
@@ -1138,9 +1179,9 @@ class glancesScreen():
 			self.term_window.addnstr(self.process_y+1, process_x+10,str(processcount['total']), 8)
 			self.term_window.addnstr(self.process_y+1, process_x+20,str(processcount['running']), 8)
 			self.term_window.addnstr(self.process_y+1, process_x+30,str(processcount['sleeping']), 8)
-			self.term_window.addnstr(self.process_y+1, process_x+40,str(processcount['stopped']+stats.getProcessCount()['zombie']), 8)
+			self.term_window.addnstr(self.process_y+1, process_x+40,str(processcount['total']-stats.getProcessCount()['running']-stats.getProcessCount()['sleeping']), 8)
 		# Display the process detail
-		if ((screen_y > self.process_y+6) 
+		if ((screen_y > self.process_y+7) 
 			and (screen_x > process_x+49)):
 			# Processes detail
 			self.term_window.addnstr(self.process_y+3, process_x, _("Cpu %"), 5, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'cpu_percent') else 0)
@@ -1153,7 +1194,7 @@ class glancesScreen():
 				self.term_window.addnstr(self.process_y+4, self.process_x, _("Compute data..."), 15)		
 				return 6
 			
-			for processes in range(0, min(screen_y-self.term_h+self.process_y-log_count, len(processlist))):
+			for processes in range(0, min(screen_y-self.term_h+self.process_y-log_count+2, len(processlist))):
 				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getProcessColor(processlist[processes]['cpu_percent']))
 				self.term_window.addnstr(self.process_y+4+processes, process_x+7, self.__autoUnit(processlist[processes]['proc_size']), 9)
 				self.term_window.addnstr(self.process_y+4+processes, process_x+18, self.__autoUnit(processlist[processes]['proc_resident']), 9)
@@ -1297,8 +1338,7 @@ def init():
 	screen = glancesScreen(refresh_time)
 
 
-def main():
-	
+def main():	
 	# Init stuff
 	init()
 
