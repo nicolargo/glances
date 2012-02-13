@@ -19,6 +19,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
+# Libraries
+#==========
+
 from __future__ import generators
 
 try:
@@ -34,12 +37,14 @@ try:
 except KeyboardInterrupt:
 	pass
 
-# i18n
-#=====
-
-application = 'glances'
-__version__ = "1.4b3"
-gettext.install(application)
+try:
+	import curses
+	import curses.panel
+except:
+    print _('Textmode GUI initialization failed, Glances cannot start.')
+    print _('Use Python 2.6 or higher')
+    print
+    sys.exit(1)
 
 try:
 	import psutil
@@ -52,25 +57,53 @@ except:
 	sys.exit(1)	
 	
 try:
-	# This function is available in the 0.4.0+ version of PsUtil 
-	psutil.disk_io_counters()
+	# get_cpu_percent method only available with PsUtil 0.2.0 or +
+	psutil.Process(os.getpid()).get_cpu_percent(interval=0)
 except:
-	print _('PsUtil version 0.4.0 or higher is needed.')
-	print _('On Debian/Ubuntu, you can try (as root):')
-	print _('# apt-get install python-dev python-pip')
-	print _('# pip install --upgrade psutil')
-	print
-	sys.exit(1)	
+	psutil_get_cpu_percent_tag = False
+else:
+	psutil_get_cpu_percent_tag = True
+
+try:
+	# (phy|virt)mem_usage methods only available with PsUtil 0.3.0 or +
+	psutil.phymem_usage()
+	psutil.virtmem_usage()
+except:
+	psutil_mem_usage_tag = False
+else:
+	psutil_mem_usage_tag = True
 	
 try:
-	import curses
-	import curses.panel
+	# disk_(partitions|usage) methods only available with PsUtil 0.3.0 or +
+	psutil.disk_partitions()
+	psutil.disk_usage('/')
 except:
-    print _('Textmode GUI initialization failed, Glances cannot start.')
-    print _('Use Python 2.6 or higher')
-    print
-    sys.exit(1)
+	psutil_fs_usage_tag = False
+else:
+	psutil_fs_usage_tag = True
 
+try:
+	# disk_io_counters method only available with PsUtil 0.4.0 or +
+	psutil.disk_io_counters()
+except:
+	psutil_disk_io_tag = False
+else:
+	psutil_disk_io_tag = True
+
+try:
+	# network_io_counters method only available with PsUtil 0.4.0 or +
+	psutil.network_io_counters()
+except:
+	psutil_network_io_tag = False
+else:
+	psutil_network_io_tag = True
+
+# Application informations
+#=========================
+	
+application = 'glances'
+__version__ = "1.4b4"
+gettext.install(application)
 
 # Classes
 #========
@@ -364,7 +397,8 @@ class glancesStats():
 		try:
 			self.network_old
 		except:
-			self.network_old = psutil.network_io_counters(True)
+			if (psutil_network_io_tag):
+				self.network_old = psutil.network_io_counters(True)
 			self.network = []
 		else:
 			try:
@@ -384,7 +418,8 @@ class glancesStats():
 		try:
 			self.diskio_old
 		except:
-			self.diskio_old = psutil.disk_io_counters(True)
+			if (psutil_disk_io_tag):
+				self.diskio_old = psutil.disk_io_counters(True)
 			self.diskio = []
 		else:
 			try:
@@ -438,7 +473,8 @@ class glancesStats():
 					procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
 					procstat['proc_size'] = proc.get_memory_info().vms
 					procstat['proc_resident'] = proc.get_memory_info().rss
-					procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+					if (psutil_get_cpu_percent_tag):
+						procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
 					self.process.append(procstat)			
 				except:
 					pass
@@ -447,56 +483,6 @@ class glancesStats():
 		# If it is the first grab then empty process list
 		if (process_first_grab):
 			self.process = []
-
-		#~ self.processcount = {'zombie': 0, 'running': 0, 'total': 0, 'stopped': 0, 'sleeping': 0, 'disk sleep': 0}
-		#~ try:
-			#~ self.process
-		#~ except:
-			#~ self.process = []
-		#~ 
-		#~ try:
-			#~ self.process_all
-		#~ except:
-			#~ self.process_all = [proc for proc in psutil.process_iter()]			
-			#~ for proc in self.process_all[:]:
-				#~ # Global stats
-				#~ try:
-					#~ self.processcount[str(proc.status)]
-				#~ except:
-					#~ pass
-				#~ else:
-					#~ self.processcount[str(proc.status)] += 1
-					#~ self.processcount['total'] += 1
-				#~ self.processcount == []
-				#~ # Per process stats	
-				#~ try:
-					#~ # A first value is needed to compute the CPU percent
-					#~ proc.get_cpu_percent(interval=0)
-				#~ except:
-					#~ pass
-		#~ else:
-			#~ self.process = []
-			#~ for proc in self.process_all[:]:
-				#~ # Global stats
-				#~ try:
-					#~ self.processcount[str(proc.status)]
-				#~ except:
-					#~ pass
-				#~ else:
-					#~ self.processcount[str(proc.status)] += 1
-					#~ self.processcount['total'] += 1					
-				#~ # Per process stats
-				#~ try:
-					#~ procstat = {}
-					#~ procstat['process_name'] = proc.name
-					#~ procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
-					#~ procstat['proc_size'] = proc.get_memory_info().vms
-					#~ procstat['proc_resident'] = proc.get_memory_info().rss
-					#~ procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
-					#~ self.process.append(procstat)			
-				#~ except:
-					#~ pass				
-			#~ del(self.process_all)
 
 		# Get the current date/time
 		self.now = datetime.datetime.now()
@@ -561,9 +547,13 @@ class glancesStats():
 		
 		sortedReverse = True
 		if sortedby == 'auto':
+			if (psutil_get_cpu_percent_tag):
+				sortedby = 'cpu_percent'
+			else:
+				sortedby = 'proc_size'
+			# Auto selection
 			# If global Mem > 70% sort by process size
 			# Else sort by cpu comsoption
-			sortedby = 'cpu_percent'
 			try:
 				memtotal = (self.mem['used'] - self.mem['cache']) * 100 / self.mem['total']
 			except:
@@ -688,10 +678,10 @@ class glancesScreen():
 			'CRITICAL':	self.ifCRITICAL_color2
 		}
 
-		# By default all the stats are displayed
-		self.network_tag = True
-		self.diskio_tag = True
-		self.fs_tag = True
+		# What are we going to display
+		self.network_tag = psutil_network_io_tag
+		self.diskio_tag = psutil_disk_io_tag
+		self.fs_tag = psutil_fs_usage_tag
 		self.log_tag = True
 		self.help_tag = False
 
@@ -833,18 +823,16 @@ class glancesScreen():
 		if (self.pressedkey == 27) or (self.pressedkey == 113):
 			# 'ESC'|'q' > Exit
 			end()
-		#elif (self.pressedkey == curses.KEY_RESIZE):
-			# Resize event
 		elif (self.pressedkey == 97):
 			# 'a' > Sort process list automaticaly
 			self.setProcessSortedBy('auto')
-		elif (self.pressedkey == 99):
+		elif ((self.pressedkey == 99) and psutil_get_cpu_percent_tag):
 			# 'c' > Sort process list by Cpu usage
 			self.setProcessSortedBy('cpu_percent')
-		elif (self.pressedkey == 100):
+		elif ((self.pressedkey == 100) and psutil_disk_io_tag):
 			# 'n' > Enable/Disable diskio stats
 			self.diskio_tag = not self.diskio_tag
-		elif (self.pressedkey == 102):
+		elif ((self.pressedkey == 102) and psutil_fs_usage_tag):
 			# 'n' > Enable/Disable fs stats
 			self.fs_tag = not self.fs_tag
 		elif (self.pressedkey == 104):
@@ -856,7 +844,7 @@ class glancesScreen():
 		elif (self.pressedkey == 109):
 			# 'm' > Sort process list by Mem usage
 			self.setProcessSortedBy('proc_size')
-		elif (self.pressedkey == 110):
+		elif ((self.pressedkey == 110) and psutil_network_io_tag):
 			# 'n' > Enable/Disable network stats
 			self.network_tag = not self.network_tag
 		elif (self.pressedkey == 112):
@@ -972,8 +960,6 @@ class glancesScreen():
 			alert = self.__getCpuAlert(cpu['nice'])			
 			logs.add(alert, "CPU nice", cpu['nice'])
 			self.term_window.addnstr(self.cpu_y+3, self.cpu_x+10, "%.1f" % cpu['nice'], 8, self.__colors_list[alert])
-
-			#~ self.term_window.addnstr(self.cpu_y+4, self.cpu_x+10, "%.1f" % cpu['idle'], 8)
 
 		
 	def displayLoad(self, load, core):
@@ -1184,7 +1170,7 @@ class glancesScreen():
 		if ((screen_y > self.process_y+7) 
 			and (screen_x > process_x+49)):
 			# Processes detail
-			self.term_window.addnstr(self.process_y+3, process_x, _("Cpu %"), 5, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'cpu_percent') else 0)
+			self.term_window.addnstr(self.process_y+3, process_x, _("Cpu %"), 5, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'cpu_percent') else 0)					
 			self.term_window.addnstr(self.process_y+3, process_x+7,  _("Mem virt."), 9, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'proc_size') else 0)
 			self.term_window.addnstr(self.process_y+3, process_x+18, _("Mem resi."), 9)
 			self.term_window.addnstr(self.process_y+3, process_x+30, _("Process name"), 12, curses.A_UNDERLINE if (self.getProcessSortedBy() == 'process_name') else 0)
@@ -1195,7 +1181,10 @@ class glancesScreen():
 				return 6
 			
 			for processes in range(0, min(screen_y-self.term_h+self.process_y-log_count+2, len(processlist))):
-				self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getProcessColor(processlist[processes]['cpu_percent']))
+				if (psutil_get_cpu_percent_tag):
+					self.term_window.addnstr(self.process_y+4+processes, process_x, "%.1f" % processlist[processes]['cpu_percent'], 8, self.__getProcessColor(processlist[processes]['cpu_percent']))
+				else:
+					self.term_window.addnstr(self.process_y+4+processes, process_x, "N/A", 8)					
 				self.term_window.addnstr(self.process_y+4+processes, process_x+7, self.__autoUnit(processlist[processes]['proc_size']), 9)
 				self.term_window.addnstr(self.process_y+4+processes, process_x+18, self.__autoUnit(processlist[processes]['proc_resident']), 9)
 				maxprocessname = screen_x-process_x-30
@@ -1235,23 +1224,25 @@ class glancesScreen():
 
 			self.term_window.addnstr(self.help_y, self.help_x, _("Glances v")+self.__version+_(" user guide"), 79, self.title_color if self.hascolors else 0)		
 
-			self.term_window.addnstr(self.help_y+2, self.help_x, 	 _("Captions: "), 79)
-			self.term_window.addnstr(self.help_y+2, self.help_x+10,	 _("   OK   "), 8, self.default_color)
-			self.term_window.addnstr(self.help_y+2, self.help_x+18,  _("CAREFUL "), 8, self.ifCAREFUL_color)
-			self.term_window.addnstr(self.help_y+2, self.help_x+26,  _("WARNING "), 8, self.ifWARNING_color)
-			self.term_window.addnstr(self.help_y+2, self.help_x+34,  _("CRITICAL"), 8, self.ifCRITICAL_color)
+			self.term_window.addnstr(self.help_y+2, self.help_x, 	 _("PsUtil version: ") + psutil.__version__, 79)			
 
-			self.term_window.addnstr(self.help_y+4 , self.help_x, _("Key") + "\t" + _("Function"), 79, self.title_color if self.hascolors else 0)
-			self.term_window.addnstr(self.help_y+5 , self.help_x, _("a") + "\t" + _("Sort process list automaticaly"), 79)
-			self.term_window.addnstr(self.help_y+6 , self.help_x, _("c") + "\t" + _("Sort process list by CPU usage"), 79)
-			self.term_window.addnstr(self.help_y+7 , self.help_x, _("m") + "\t" + _("Sort process list by virtual memory usage"), 79)
-			self.term_window.addnstr(self.help_y+8 , self.help_x, _("p") + "\t" + _("Sort process list by name"), 79)
-			self.term_window.addnstr(self.help_y+9 , self.help_x, _("d") + "\t" + _("Enable/Disable disk IO stats"), 79)
-			self.term_window.addnstr(self.help_y+10, self.help_x, _("f") + "\t" + _("Enable/Disable file system stats"), 79)
-			self.term_window.addnstr(self.help_y+11, self.help_x, _("n") + "\t" + _("Enable/Disable network stats"), 79)
-			self.term_window.addnstr(self.help_y+12, self.help_x, _("l") + "\t" + _("Enable/Disable log list (only available if display > 24 lines)"), 79)
-			self.term_window.addnstr(self.help_y+13, self.help_x, _("h") + "\t" + _("Display/Hide help message"), 79)
-			self.term_window.addnstr(self.help_y+14, self.help_x, _("q") + "\t" + _("Exit from Glances (ESC key and CRTL-C also work...)"), 79)			
+			self.term_window.addnstr(self.help_y+4, self.help_x, 	 _("Captions: "), 79)
+			self.term_window.addnstr(self.help_y+4, self.help_x+10,	 _("   OK   "), 8, self.default_color)
+			self.term_window.addnstr(self.help_y+4, self.help_x+18,  _("CAREFUL "), 8, self.ifCAREFUL_color)
+			self.term_window.addnstr(self.help_y+4, self.help_x+26,  _("WARNING "), 8, self.ifWARNING_color)
+			self.term_window.addnstr(self.help_y+4, self.help_x+34,  _("CRITICAL"), 8, self.ifCRITICAL_color)
+
+			self.term_window.addnstr(self.help_y+6 , self.help_x, _("Key") + "\t" + _("Function"), 79, self.title_color if self.hascolors else 0)
+			self.term_window.addnstr(self.help_y+7 , self.help_x, _("a") + "\t" + _("Sort process list automaticaly (need PsUtil v0.2.0 or higher)"), 79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag else 0)
+			self.term_window.addnstr(self.help_y+8 , self.help_x, _("c") + "\t" + _("Sort process list by CPU usage (need PsUtil v0.2.0 or higher)"), 79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag else 0)
+			self.term_window.addnstr(self.help_y+9 , self.help_x, _("m") + "\t" + _("Sort process list by virtual memory usage"), 79)
+			self.term_window.addnstr(self.help_y+10, self.help_x, _("p") + "\t" + _("Sort process list by name"), 79)
+			self.term_window.addnstr(self.help_y+11, self.help_x, _("d") + "\t" + _("Enable/Disable disk IO stats (need PsUtil v0.4.0 or higher)"), 79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
+			self.term_window.addnstr(self.help_y+12, self.help_x, _("f") + "\t" + _("Enable/Disable file system stats (need PsUtil v0.3.0 or higher)"), 79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
+			self.term_window.addnstr(self.help_y+13, self.help_x, _("n") + "\t" + _("Enable/Disable network stats (need PsUtil v0.3.0 or higher)"), 79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+			self.term_window.addnstr(self.help_y+14, self.help_x, _("l") + "\t" + _("Enable/Disable log list (only available if display > 24 lines)"), 79)
+			self.term_window.addnstr(self.help_y+15, self.help_x, _("h") + "\t" + _("Display/Hide help message"), 79)
+			self.term_window.addnstr(self.help_y+16, self.help_x, _("q") + "\t" + _("Exit from Glances (ESC key and CRTL-C also work...)"), 79)			
 		
 			
 	def displayNow(self, now):
@@ -1290,6 +1281,7 @@ def printSyntax():
 	print _("'l' to hide or show the logs messages")
 	print _("'m' to sort the processes list by process size")
 	print _("'n' to disable or enable the network interfaces stats")
+	print _("'p' to sort the processes list by name")
 	print _("'q' to exit")
 	print ""
 
