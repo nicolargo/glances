@@ -37,6 +37,16 @@ try:
 except KeyboardInterrupt:
 	pass
 
+# Application informations
+#=========================
+	
+application = 'glances'
+__version__ = "1.4b5"
+gettext.install(application)
+
+# Test methods
+#=============
+
 try:
 	import curses
 	import curses.panel
@@ -97,13 +107,6 @@ except:
 	psutil_network_io_tag = False
 else:
 	psutil_network_io_tag = True
-
-# Application informations
-#=========================
-	
-application = 'glances'
-__version__ = "1.4b4"
-gettext.install(application)
 
 # Classes
 #========

@@ -11,8 +11,8 @@ def read(fname):
 	return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(  name='Glances',
-	version='1.3.7',
-	download_url='https://github.com/downloads/nicolargo/glances/glances-1.3.7.tar.gz',
+	version='1.4',
+	download_url='https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz',
 	url='https://github.com/nicolargo/glances',
 	description='CLI curses-based monitoring tool',
 	author='Nicolas Hennion',
@@ -21,5 +21,5 @@ setup(  name='Glances',
 	keywords = "cli curse monitoring system",
 	long_description=read('README'),
 	packages=['src'],
- 	install_requires=['pystatgrab>=0.5']
+ 	install_requires=['psutil>=0.4.1']
 )
