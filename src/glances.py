@@ -24,24 +24,27 @@
 
 from __future__ import generators
 
+import sys
+
 try:
 	import os
 	import platform
 	import getopt
-	import sys
 	import signal
 	import time
 	import datetime
 	import multiprocessing
 	import gettext
-except KeyboardInterrupt:
-	pass
+except:
+        print "Error during Python libraries import:", sys.exc_info()[1]
+        sys.exit(1)
+
 
 # Application informations
 #=========================
 	
 application = 'glances'
-__version__ = "1.4b5"
+__version__ = "1.4b6"
 gettext.install(application)
 
 # Test methods
