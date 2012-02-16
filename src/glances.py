@@ -19,10 +19,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
+from __future__ import generators
+
+__appname__ = 'glances'
+__version__ = "1.4b9"
+__author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
+__licence__ = "LGPL"
+
 # Libraries
 #==========
-
-from __future__ import generators
 
 import sys
 
@@ -36,16 +41,14 @@ try:
 	import multiprocessing
 	import gettext
 except:
-        print "Error during Python libraries import:", sys.exc_info()[1]
+        print("Error during Python libraries import: "+str(sys.exc_info()[1]))
         sys.exit(1)
 
 
-# Application informations
-#=========================
+# International
+#==============
 	
-application = 'glances'
-__version__ = "1.4b6"
-gettext.install(application)
+gettext.install(__appname__)
 
 # Test methods
 #=============
@@ -267,8 +270,7 @@ class glancesGrabFs():
 	"""
 
 	def __init__(self):
-		pass	
-	
+		pass
 	
 	def __update__(self):
 		"""
@@ -318,6 +320,9 @@ class glancesStats():
 			self.glancesgrabfs = glancesGrabFs()
 		except:
 			self.glancesgrabfs = {}			
+		
+		# Process list refresh
+		self.process_list_refresh = True
 		
 
 	def __update__(self):
@@ -448,47 +453,51 @@ class glancesStats():
 			self.fs = {}
 
 		# PROCESS
-		# Initialiation of the running processes list		            
-		process_first_grab = False
-		try:
-			self.process_all
-		except:
-			self.process_all = [proc for proc in psutil.process_iter()]
-			process_first_grab = True
-		self.process = []
-		self.processcount = { 'total': 0 , 'running': 0, 'sleeping': 0 }
-		# Manage new processes
-		process_new = [proc.pid for proc in self.process_all]
-		for proc in psutil.process_iter():
-			if proc.pid not in process_new:
-				self.process_all.append(proc)
-		# Grab stats from process list
-		for proc in self.process_all[:]:
-			if (proc.is_running()):
-				# Global stats
-				try:
-					self.processcount[str(proc.status)] += 1
-				except:
-					self.processcount[str(proc.status)] = 1
-				finally:
-					self.processcount['total'] += 1					
-				# Per process stats
-				try:
-					procstat = {}
-					procstat['process_name'] = proc.name
-					procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
-					procstat['proc_size'] = proc.get_memory_info().vms
-					procstat['proc_resident'] = proc.get_memory_info().rss
-					if (psutil_get_cpu_percent_tag):
-						procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
-					self.process.append(procstat)			
-				except:
-					pass
-			else:
-				self.process_all.remove(proc)
-		# If it is the first grab then empty process list
-		if (process_first_grab):
+		# Initialiation of the running processes list	
+		# Data are refreshed every two cycle (refresh_time * 2)
+		if (self.process_list_refresh):
+			self.process_first_grab = False
+			try:
+				self.process_all
+			except:
+				self.process_all = [proc for proc in psutil.process_iter()]
+				self.process_first_grab = True
 			self.process = []
+			self.processcount = { 'total': 0 , 'running': 0, 'sleeping': 0 }
+			# Manage new processes
+			process_new = [proc.pid for proc in self.process_all]
+			for proc in psutil.process_iter():
+				if proc.pid not in process_new:
+					self.process_all.append(proc)
+			# Grab stats from process list
+			for proc in self.process_all[:]:
+				if (proc.is_running()):
+					# Global stats
+					try:
+						self.processcount[str(proc.status)] += 1
+					except:
+						self.processcount[str(proc.status)] = 1
+					finally:
+						self.processcount['total'] += 1					
+					# Per process stats
+					try:
+						procstat = {}
+						procstat['process_name'] = proc.name
+						procstat['proctitle'] = " ".join(str(i) for i in proc.cmdline)
+						procstat['proc_size'] = proc.get_memory_info().vms
+						procstat['proc_resident'] = proc.get_memory_info().rss
+						if (psutil_get_cpu_percent_tag):
+							procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+						self.process.append(procstat)			
+					except:
+						pass
+				else:
+					self.process_all.remove(proc)
+			# If it is the first grab then empty process list
+			if (self.process_first_grab):
+				self.process = []
+
+		self.process_list_refresh = not self.process_list_refresh
 
 		# Get the current date/time
 		self.now = datetime.datetime.now()
@@ -893,8 +902,7 @@ class glancesScreen():
 		# Flush display
 		self.erase()
 		self.display(stats) 
-		#curses.panel.update_panels()
-		#curses.doupdate()
+
 
 	def update(self, stats):
 		# flush display		
@@ -903,8 +911,6 @@ class glancesScreen():
 		# Wait
 		countdown = Timer(self.__refresh_time)
 		while (not countdown.finished()):
-			# Refresh the screen
-			self.term_window.refresh()
 			# Getkey
 			if (self.__catchKey() > -1):
 				# flush display

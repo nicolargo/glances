@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-AC_INIT(Glances, 1.4, , glances)
+AC_INIT(Glances, 1.4b, , glances)
 
 AC_CONFIG_HEADERS([config.h])
 
