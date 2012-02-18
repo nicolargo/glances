@@ -2,7 +2,7 @@
 #
 # Glances is a simple textual monitoring tool
 #
-# Pre-requisites: Python 2.6+ and PsUtil 0.4.0+
+# Pre-requisites: Python 2.6+ and PsUtil 0.4.0+ (for full functions)
 #
 # Copyright (C) Nicolargo 2012 <nicolas@nicolargo.com>
 # 
@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b9"
+__version__ = "1.4b10"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -492,7 +492,10 @@ class glancesStats():
 					except:
 						pass
 				else:
-					self.process_all.remove(proc)
+					try:
+						self.process_all.remove(proc)
+					except:
+						pass
 			# If it is the first grab then empty process list
 			if (self.process_first_grab):
 				self.process = []
