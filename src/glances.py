@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b11"
+__version__ = "1.4b12"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -270,17 +270,20 @@ class glancesGrabFs():
 	"""
 
 	def __init__(self):
-		pass
+		"""
+		Init FS stats
+		"""
+
+		# Ignore the following FS
+		self.ignore_fsname = ('', 'none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
+		self.ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs')
+
 	
 	def __update__(self):
 		"""
 		Update the stats
 		"""
 				
-		# Ignore the following fs
-		ignore_fsname = ('', 'none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
-		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs')
-
 		# Reset the list
 		self.fs_list = []
 		
@@ -289,11 +292,14 @@ class glancesGrabFs():
 		for fs in range(len(fs_stat)):
 			fs_current = {}
 			fs_current['device_name'] = fs_stat[fs].device
-			if fs_current['device_name'] in ignore_fsname: continue
+			if fs_current['device_name'] in self.ignore_fsname: continue
 			fs_current['fs_type'] = fs_stat[fs].fstype
-			if fs_current['fs_type'] in ignore_fstype: continue
+			if fs_current['fs_type'] in self.ignore_fstype: continue
 			fs_current['mnt_point'] = fs_stat[fs].mountpoint
-			fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+			try:
+				fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+			except:
+				continue
 			fs_current['size'] = fs_usage.total
 			fs_current['used'] = fs_usage.used
 			fs_current['avail'] = fs_usage.free
@@ -405,46 +411,54 @@ class glancesStats():
 			self.memswap = {}
 
 		# NET
+		self.network = []
 		try:
 			self.network_old
 		except:
 			if (psutil_network_io_tag):
 				self.network_old = psutil.network_io_counters(True)
-			self.network = []
 		else:
 			try:
 				self.network_new = psutil.network_io_counters(True)
-				self.network = []
-				for net in self.network_new:
-					netstat = {}
-					netstat['interface_name'] = net
-					netstat['rx'] = self.network_new[net].bytes_recv - self.network_old[net].bytes_recv
-					netstat['tx'] = self.network_new[net].bytes_sent - self.network_old[net].bytes_sent
-					self.network.append(netstat)
-				self.network_old = self.network_new
 			except:
-				self.network = []
+				pass
+			else:
+				for net in self.network_new:
+					try:
+						netstat = {}
+						netstat['interface_name'] = net
+						netstat['rx'] = self.network_new[net].bytes_recv - self.network_old[net].bytes_recv
+						netstat['tx'] = self.network_new[net].bytes_sent - self.network_old[net].bytes_sent
+					except:
+						continue
+					else:
+						self.network.append(netstat)
+				self.network_old = self.network_new
 
 		# DISK IO
+		self.diskio = []
 		try:
 			self.diskio_old
 		except:
 			if (psutil_disk_io_tag):
 				self.diskio_old = psutil.disk_io_counters(True)
-			self.diskio = []
 		else:
 			try:
 				self.diskio_new = psutil.disk_io_counters(True)
-				self.diskio = []
-				for disk in self.diskio_new:
-					diskstat = {}
-					diskstat['disk_name'] = disk
-					diskstat['read_bytes'] = self.diskio_new[disk].read_bytes - self.diskio_old[disk].read_bytes
-					diskstat['write_bytes'] = self.diskio_new[disk].write_bytes - self.diskio_old[disk].write_bytes					
-					self.diskio.append(diskstat)
-				self.diskio_old = self.diskio_new
 			except:
-				self.diskio = []
+				pass
+			else:
+				for disk in self.diskio_new:
+					try:
+						diskstat = {}
+						diskstat['disk_name'] = disk
+						diskstat['read_bytes'] = self.diskio_new[disk].read_bytes - self.diskio_old[disk].read_bytes
+						diskstat['write_bytes'] = self.diskio_new[disk].write_bytes - self.diskio_old[disk].write_bytes					
+					except:
+						continue
+					else:
+						self.diskio.append(diskstat)
+				self.diskio_old = self.diskio_new
 
 		# FILE SYSTEM
 		try:
