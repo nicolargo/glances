@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b10"
+__version__ = "1.4b11"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -279,7 +279,7 @@ class glancesGrabFs():
 				
 		# Ignore the following fs
 		ignore_fsname = ('', 'none', 'gvfs-fuse-daemon', 'fusectl', 'cgroup')
-		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs')
+		ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', 'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs')
 
 		# Reset the list
 		self.fs_list = []

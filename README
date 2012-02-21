@@ -9,6 +9,7 @@ Glances -- Eye on your system
 Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
 
 Glances uses the PsUtil library to get information from your system.
+
 It is developed in Python.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
