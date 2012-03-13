@@ -19,6 +19,18 @@ It is developed in Python and uses the python-statgrab lib.
 
 Packages exist for Arch, Fedora, Redhat ...
 
+### From PPA (Ubuntu/Mint)
+
+Thanks to Arnaud Hartmann, a PPA is available for the stable branch.
+
+To install it on your Ubuntu system:
+
+	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
+	$ sudo apt-get update
+	$ sudo apt-get install glances
+
+The PPA is available for Ubuntu version 9.10 to 12.04.
+
 ### From source
 
 Get the latest version:

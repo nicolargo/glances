@@ -20,6 +20,18 @@ Le processus de packaging est actuellement en cours sur d'autres distribs, je
 vous conseille donc de rechercher Glances sur votre gestionnaire de package 
 avant de faire une installation depuis les sources.
 
+### Depuis le PPA (Ubuntu/Mint)
+
+Arnaud Hartmann maintient un PPA avec la version stable de Glances.
+
+Pour installer Glances à partir de ce PPA, il suffit de saisir:
+
+	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
+	$ sudo apt-get update
+	$ sudo apt-get install glances
+
+Le PPA propose les paquets pour les versions Ubuntu 9.10 jusqu'à 12.04.
+
 ### Depuis les sources
 
 Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
