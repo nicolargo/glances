@@ -1,8 +1,23 @@
 #!/usr/bin/env python
 
 from glob import glob
+from os.path import dirname
 
 from setuptools import setup
+
+data_files = [
+    ('share/man/man1', ['man/glances.1']),
+    ('share/doc/glances', ['README',
+        'README-fr',
+        'COPYING',
+        'AUTHORS',
+        'ChangeLog',
+        'NEWS',
+        'screenshot.png']),
+    ('share/doc/glances/doc', glob('doc/*.png')),
+]
+for mo in glob('i18n/*/LC_MESSAGES/*.mo'):
+    data_files.append((dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 setup(name='Glances',
     version='1.4b',
@@ -17,16 +32,6 @@ setup(name='Glances',
     install_requires=['psutil>=0.4.1'],
     packages=['glances'],
     include_package_data=True,
-    data_files=[
-        ('share/man/man1', ['man/glances.1']),
-        ('share/doc/glances', ['README',
-            'README-fr',
-            'COPYING',
-            'AUTHORS',
-            'ChangeLog',
-            'NEWS',
-            'screenshot.png']),
-        ('share/doc/glances/doc', glob('doc/*.png')),
-    ],
+    data_files=data_files,
     entry_points={"console_scripts": ["glances = glances.glances:main"]},
 )

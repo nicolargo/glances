@@ -7,3 +7,4 @@ include NEWS
 include screenshot.png
 recursive-include doc *.png
 recursive-include man *.1
+recursive-include i18n *.mo
