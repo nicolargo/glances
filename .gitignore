@@ -1,0 +1,6 @@
+*.pyc
+# python packaging artifacts
+*.egg-info
+/build/
+/dist/
+
