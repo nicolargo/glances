@@ -9,6 +9,7 @@ Glances -- Eye on your system
 Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
 
 Glances uses the PsUtil library to get information from your system.
+
 It is developed in Python.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
@@ -17,7 +18,20 @@ It is developed in Python.
 
 ### From package manager (very easy way)
 
-Packages exist for Arch, Fedora, Redhat, Ubuntu (with PPA), FreeBSD...
+Packages exist for Arch, Fedora, Redhat, FreeBSD...
+
+### From PPA (easy way for Ubuntu/Mint...)
+
+Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
+
+To install the PPA just enter:
+
+        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-dev
+        $ sudo apt-get update
+
+Then install Glances:
+
+        $ sudo apt-get install glances
 
 ### From PyPi (easy way)
 
@@ -55,7 +69,7 @@ The officials repos only include the psutil version 0.2.1.
 You had to install the version 0.4.1 using the following commands:
 
         $ sudo apt-get install python-dev python-pip
-        $ sudo pip install psutil
+        $ sudo pip install --upgrade psutil
 
 ## Running
 

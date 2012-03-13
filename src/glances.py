@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b12"
+__version__ = "1.4b13"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -113,6 +113,14 @@ except:
 	psutil_network_io_tag = False
 else:
 	psutil_network_io_tag = True
+
+try:
+	# HTML output
+	import jinja2
+except:
+	jinja_tag = False
+else:
+	jinja_tag = True
 
 # Classes
 #========
@@ -1285,6 +1293,140 @@ class glancesScreen():
 			now_msg = now.strftime(_("%Y-%m-%d %H:%M:%S"))
 			self.term_window.addnstr(max(self.now_y, screen_y-1), max(self.now_x, screen_x-1)-len(now_msg), now_msg, len(now_msg))
 
+
+class glancesHtml():
+	"""
+	This class manages the HTML output
+	"""
+		
+	def __init__(self, refresh_time = 1):
+		# Global information to display
+		
+		# Init refresh time
+		self.__refresh_time = refresh_time
+
+		# Set the templates path
+		environment = jinja2.Environment(loader=jinja2.FileSystemLoader('html'))
+
+		# Open the template
+		self.template = environment.get_template('default.html')
+		
+		# Define the colors list (hash table) for logged stats	
+		self.__colors_list = {   
+			# 		CAREFUL WARNING CRITICAL
+			'DEFAULT':	"bgcdefault fgdefault",
+			'OK':		"bgcok fgok",
+			'CAREFUL':	"bgccareful fgcareful",
+			'WARNING':	"bgcwarning fgcwarning",
+			'CRITICAL':	"bgcritical fgcritical"
+		}
+
+	def __getAlert(self, current = 0, max = 100):
+		# If current < CAREFUL of max then alert = OK
+		# If current > CAREFUL of max then alert = CAREFUL
+		# If current > WARNING of max then alert = WARNING
+		# If current > CRITICAL of max then alert = CRITICAL
+		try:
+			(current * 100) / max
+		except ZeroDivisionError:
+			return 'DEFAULT'
+
+		variable = (current * 100) / max
+
+		if variable > limits.getSTDCritical():
+			return 'CRITICAL'
+		elif variable > limits.getSTDWarning():
+			return 'WARNING'
+		elif variable > limits.getSTDCareful():
+			return 'CAREFUL'
+		
+		return 'OK'
+
+
+	def __getColor(self, current = 0, max = 100):
+		"""
+		Return colors for logged stats
+		"""
+		return self.__colors_list[self.__getAlert(current, max)]
+
+
+	def __getCpuColor(self, cpu, max = 100):
+		cpu['user_color'] = self.__getColor(cpu['user'], max)
+		cpu['kernel_color'] = self.__getColor(cpu['kernel'], max)
+		cpu['nice_color'] = self.__getColor(cpu['nice'], max)
+		return cpu
+
+
+	def __getLoadAlert(self, current = 0, core = 1):
+		# If current < CAREFUL*core of max then alert = OK
+		# If current > CAREFUL*core of max then alert = CAREFUL
+		# If current > WARNING*core of max then alert = WARNING
+		# If current > CRITICAL*core of max then alert = CRITICAL
+		if current > limits.getLOADCritical(core):
+			return 'CRITICAL'
+		elif current > limits.getLOADWarning(core):
+			return 'WARNING'
+		elif current > limits.getLOADCareful(core):
+			return 'CAREFUL'	
+		return 'OK'
+
+
+	def __getLoadColor(self, load, core = 1):
+		load['min1_color'] = self.__colors_list[self.__getLoadAlert(load['min1'], core)]
+		load['min5_color'] = self.__colors_list[self.__getLoadAlert(load['min5'], core)]
+		load['min15_color'] = self.__colors_list[self.__getLoadAlert(load['min15'], core)]		
+		return load
+
+
+	def __getMemColor(self, mem):
+		mem['used_color'] = self.__getColor(mem['used']-mem['cache'], mem['total'])
+		return mem
+
+
+	def __getMemSwapColor(self, memswap):
+		memswap['used_color'] = self.__getColor(memswap['used'], memswap['total'])
+		return memswap
+
+
+	def update(self, stats):
+		if (stats.getCpu()):
+			# Open the output file
+			f = open('glances.html', 'w')
+
+			# Process color
+
+			# Render it
+			data = self.template.render(refresh = self.__refresh_time, 
+										host = stats.getHost(),
+										system = stats.getSystem(),
+										cpu = self.__getCpuColor(stats.getCpu()),
+										load = self.__getLoadColor(stats.getLoad(), stats.getCore()),
+										core = stats.getCore(),
+										mem = self.__getMemColor(stats.getMem()),
+										memswap = self.__getMemSwapColor(stats.getMemSwap()) )
+
+			# Write data into the file
+			f.write(data)
+		
+			# Close the file
+			f.close()
+
+			# Display stats
+			#~ self.displayHost(stats.getHost())
+			#~ self.displaySystem(stats.getSystem())	
+			#~ self.displayCpu(stats.getCpu())
+			#~ self.displayLoad(stats.getLoad(), stats.getCore())
+			#~ self.displayMem(stats.getMem(), stats.getMemSwap())
+			#~ network_count = self.displayNetwork(stats.getNetwork())
+			#~ diskio_count = self.displayDiskIO(stats.getDiskIO(), self.network_y + network_count)
+			#~ fs_count = self.displayFs(stats.getFs(), self.network_y + network_count + diskio_count)		
+			#~ log_count = self.displayLog(self.network_y + network_count + diskio_count + fs_count)
+			#~ self.displayProcess(stats.getProcessCount(), stats.getProcessList(screen.getProcessSortedBy()), log_count)
+			#~ self.displayCaption()
+			#~ self.displayNow(stats.getNow())
+			#~ self.displayHelp()
+		
+
 		
 # Global def
 #===========
@@ -1316,7 +1458,7 @@ def printSyntax():
 
 	
 def init():
-	global limits, logs, stats, screen
+	global limits, logs, stats, screen, html
 	global refresh_time
 
 	refresh_time = 1
@@ -1357,6 +1499,9 @@ def init():
 	
 	# Init screen
 	screen = glancesScreen(refresh_time)
+	
+	# Init HTML output
+	html = glancesHtml(refresh_time)
 
 
 def main():	
@@ -1370,6 +1515,9 @@ def main():
 	
 		# Update the screen
 		screen.update(stats)
+		
+		# Update the HTML output
+		html.update(stats)
 
 		
 def end():
