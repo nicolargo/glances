@@ -20,6 +20,32 @@ Le processus de packaging est actuellement en cours sur d'autres distribs, je
 vous conseille donc de rechercher Glances sur votre gestionnaire de package 
 avant de faire une installation depuis les sources.
 
+### Depuis le PPA (pour les systèmes Ubuntu/Mint...)
+
+Arnaud Hartmann (thanks to him !) maintient un PPA avec la dernière version:
+
+Pour installer le PPA:
+
+        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-dev
+        $ sudo apt-get update
+
+Pour installer Glances à partir de ce PPA:
+
+        $ sudo apt-get install glances
+
+### Depuis PyPi
+
+PyPi est un gestionnaire officiel des paquets Python.
+Il est disponible sous la plupart des distibutions GNU/Linux.
+
+On commence par installer PyPi sur son système (par exemple Debian/Ubuntu):
+
+        $ sudo apt-get install python-pip
+
+Puis on installe la dernière version de Glances:
+
+        $ sudo pip install glances
+
 ### Depuis les sources
 
 Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
@@ -27,47 +53,20 @@ Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
 Pour l'installer, il suffit de suivre les instructions suivantes depuis un 
 terminal.
 
-Récupération de la dernière version (1.3.7):
+Récupération de la dernière version (1.4):
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.7.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz
 
 Procédez ensuite à l'installation:
 
-	$ tar zxvf glances-1.3.7.tar.gz
-	$ cd glances-1.3.7
-	$ ./configure
-	$ make
-	$ sudo make install
+	$ tar zxvf glances-1.4.tar.gz
+	$ cd glances-1.4
+	$ sudo python setup.py install
+
 
 Glances a besoin des dépendances suivantes:
 
 * Python 2.6+ (non testé avec Python 3+)
-* libstatgrab 0.16+
-* python-statgrab 0.5+ (ne marchera PAS avec python-statgrab 0.4)
-
-Notes specifiques pour une installation sous Debian 6.
-Debian Squeeze met à disposition la version 0.4 de python-statgrab.
-Il faut donc installer la version 0.5 à la main:
-
-	$ sudo apt-get install libstatgrab-dev pkg-config python-dev make
-	$ wget http://ftp.uk.i-scream.org/sites/ftp.i-scream.org/pub/i-scream/pystatgrab/pystatgrab-0.5.tar.gz
-	$ tar zxvf pystatgrab-0.5.tar.gz
-	$ cd pystatgrab-0.5/
-	$ ./setup.py build
-	$ sudo ./setup.py install
-
-Notes specifiques pour une installation sous Ubuntu 10.04 et 10.10.
-Ces versions d'Ubuntu mettent à disposition la version 0.4 de python-statgrab.
-Il faut donc installer la version 0.5 à la main:
-
-	$ sudo apt-get update
-	$ sudo apt-get install pkg-config build-essential autoconf automake python libstatgrab-dev python-all-dev
-	$ sudo apt-get remove python-statgrab
-	$ wget http://ftp.uk.i-scream.org/sites/ftp.i-scream.org/pub/i-scream/pystatgrab/pystatgrab-0.5.tar.gz
-	$ tar zxvf pystatgrab-0.5.tar.gz
-	$ cd pystatgrab-0.5/
-	$ ./setup.py build
-	$ sudo ./setup.py install
 
 ## Lancement de Glances
 

@@ -55,25 +55,15 @@ Glances use a standard GNU style installer:
 
 	$ tar zxvf glances-1.4.tar.gz
 	$ cd glances-1.4
-	$ ./configure
-	$ make
-	$ sudo make install
+	$ sudo python setup.py install
 
 Pre-requisites:
 
 * Python 2.6+ (not tested with Python 3+)
-* psutil 0.4.1+ (did NOT work with psutil < 0.2 )
-
-Notes: For Debian and Ubuntu < 12.04 
-The officials repos only include the psutil version 0.2.1.
-You had to install the version 0.4.1 using the following commands:
-
-        $ sudo apt-get install python-dev python-pip
-        $ sudo pip install --upgrade psutil
 
 ## Running
 
-Easy:
+Easy way (that's all folks !):
 
 	$ glances.py
 
