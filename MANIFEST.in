@@ -1,0 +1,10 @@
+include README
+include README-fr
+include COPYING
+include AUTHORS
+include ChangeLog
+include NEWS
+include screenshot.png
+recursive-include doc *.png
+recursive-include man *.1
+recursive-include i18n *.mo
