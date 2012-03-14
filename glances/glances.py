@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b13"
+__version__ = "1.4b14"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -493,7 +493,18 @@ class glancesStats():
 					self.process_all.append(proc)
 			# Grab stats from process list
 			for proc in self.process_all[:]:
-				if (proc.is_running()):
+				try:
+					if (not proc.is_running()):
+						try:
+							self.process_all.remove(proc)
+						except:
+							pass						
+				except psutil.error.NoSuchProcess:
+					try:
+						self.process_all.remove(proc)
+					except:
+						pass
+				else:
 					# Global stats
 					try:
 						self.processcount[str(proc.status)] += 1
@@ -511,11 +522,6 @@ class glancesStats():
 						if (psutil_get_cpu_percent_tag):
 							procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
 						self.process.append(procstat)			
-					except:
-						pass
-				else:
-					try:
-						self.process_all.remove(proc)
 					except:
 						pass
 			# If it is the first grab then empty process list
@@ -1439,9 +1445,10 @@ def printSyntax():
 	printVersion()
 	print _("Usage: glances.py [-t|--time sec] [-h|--help] [-v|--version]")
 	print ""
-	print _("\t-h:\tDisplay the syntax and exit")
-	print _("\t-t sec:\tSet the refresh time in second default is 1")
-	print _("\t-v:\tDisplay the version and exit")
+	print _("\t-h:\t\tDisplay the syntax and exit")
+	print _("\t-o output:\tGenerate output (available: html)")
+	print _("\t-t sec:\t\tSet the refresh time in second default is 1")
+	print _("\t-v:\t\tDisplay the version and exit")
 	print ""
 	print _("When Glances is running, you can press:")
 	print _("'a' to set the automatic mode. The processes are sorted automatically")
@@ -1459,13 +1466,18 @@ def printSyntax():
 	
 def init():
 	global limits, logs, stats, screen, html
+	global html_tag
 	global refresh_time
 
+	# Set default tags
+	html_tag = False
+	
+	# Set the default refresh time
 	refresh_time = 1
 
 	# Manage args
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:v", ["help", "time", "version"])
+		opts, args = getopt.getopt(sys.argv[1:], "ho:t:v", ["help", "output", "time", "version"])
 	except getopt.GetoptError, err:
 		# Print help information and exit:
 		print str(err)
@@ -1475,6 +1487,16 @@ def init():
 		if opt in ("-v", "--version"):
 			printVersion()
 			sys.exit(0)
+		elif opt in ("-o", "--output"):
+			if arg == "html":
+				if (jinja_tag):
+					html_tag = True
+				else:
+					print _("Error: Need the Jinja library to export into HTML")
+					sys.exit(2)										
+			else:
+				print _("Error: Unknown output %s" % arg)
+				sys.exit(2)							
 		elif opt in ("-t", "--time"):
 			if int(arg) >= 1:
 				refresh_time = int(arg)
@@ -1501,7 +1523,8 @@ def init():
 	screen = glancesScreen(refresh_time)
 	
 	# Init HTML output
-	html = glancesHtml(refresh_time)
+	if (html_tag):
+		html = glancesHtml(refresh_time)
 
 
 def main():	
@@ -1517,7 +1540,8 @@ def main():
 		screen.update(stats)
 		
 		# Update the HTML output
-		html.update(stats)
+		if (html_tag):
+			html.update(stats)
 
 		
 def end():
