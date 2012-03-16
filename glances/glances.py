@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b14"
+__version__ = "1.4b15"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -508,7 +508,11 @@ class glancesStats():
 					# Global stats
 					try:
 						self.processcount[str(proc.status)] += 1
-					except:
+					except psutil.error.NoSuchProcess:
+						# Process non longer exist
+						pass
+					except KeyError:	
+						# Key did not exist, create it
 						self.processcount[str(proc.status)] = 1
 					finally:
 						self.processcount['total'] += 1					
