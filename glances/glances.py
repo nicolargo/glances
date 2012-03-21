@@ -1432,6 +1432,14 @@ class glancesHtml():
 		return memswap
 
 
+	def __getFsColor(self, fs):
+		#~ fs['used_color'] = self.__getColor(fs['used'], fs['size'])
+		mounted = 0
+		for mounted in range(0, len(fs)):
+			fs[mounted]['used_color'] = self.__getColor(fs[mounted]['used'], fs[mounted]['size'])
+		return fs
+
+
 	def update(self, stats):
 		if (stats.getCpu()):
 			# Open the output file
@@ -1440,7 +1448,8 @@ class glancesHtml():
 			# Process color
 
 			# Render it
-			data = self.template.render(refresh = self.__refresh_time, 
+			# HTML Refresh is set to 1.5*refresh_time to avoid display while page rendering
+			data = self.template.render(refresh = int(self.__refresh_time*1.5), 
 										host = stats.getHost(),
 										system = stats.getSystem(),
 										cpu = self.__getCpuColor(stats.getCpu()),
@@ -1450,7 +1459,7 @@ class glancesHtml():
 										memswap = self.__getMemSwapColor(stats.getMemSwap()),
 										net = stats.getNetwork(),
 										diskio = stats.getDiskIO(),
-										fs = stats.getFs(),
+										fs = self.__getFsColor(stats.getFs()),
 										proccount = stats.getProcessCount(),
 										proclist = stats.getProcessList() )
 
@@ -1490,7 +1499,7 @@ def printSyntax():
 	print ""
 	print _("\t-h:\t\tDisplay the syntax and exit")
 	print _("\t-o output:\tGenerate output (available: html)")
-	print _("\t-t sec:\t\tSet the refresh time in second default is 1")
+	print _("\t-t sec:\t\tSet the refresh time in second default is %d" % refresh_time)
 	print _("\t-v:\t\tDisplay the version and exit")
 	print ""
 	print _("When Glances is running, you can press:")
@@ -1516,7 +1525,7 @@ def init():
 	html_tag = False
 	
 	# Set the default refresh time
-	refresh_time = 1
+	refresh_time = 2
 
 	# Manage args
 	try:

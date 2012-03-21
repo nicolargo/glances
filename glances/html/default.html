@@ -165,7 +165,7 @@
 				<tr>
 					<td id="item">{{ mount.mnt_point }}</td>	
 					<td>{{ mount.size|filesizeformat(binary = true) }}</td>	
-					<td>{{ mount.used|filesizeformat(binary = true) }}</td>	
+					<td class="{{ mount.used_color }}">{{ mount.used|filesizeformat(binary = true) }}</td>	
 				</tr>
 			{% endfor %}
 		</tbody>	
