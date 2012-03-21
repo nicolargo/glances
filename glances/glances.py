@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b15"
+__version__ = "1.4b16"
 __author__ 	= "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -371,12 +371,46 @@ class glancesStats():
 			self.cputime_old
 		except:
 			self.cputime_old = psutil.cpu_times()
-			self.cputime_total_old = self.cputime_old.user+self.cputime_old.nice+self.cputime_old.system+self.cputime_old.idle+self.cputime_old.iowait+self.cputime_old.irq+self.cputime_old.softirq
+			self.cputime_total_old = self.cputime_old.user+self.cputime_old.system+self.cputime_old.idle
+			# Only available on some OS
+			try:
+				self.cputime_total_old += self.cputime_old.nice
+			except:
+				pass
+			try:
+				self.cputime_total_old += self.cputime_old.iowait
+			except:
+				pass
+			try:
+				self.cputime_total_old += self.cputime_old.irq
+			except:
+				pass
+			try:
+				self.cputime_total_old += self.cputime_old.softirq
+			except:
+				pass
 			self.cpu = {}
 		else:
 			try:
 				self.cputime_new = psutil.cpu_times()
-				self.cputime_total_new = self.cputime_new.user+self.cputime_new.nice+self.cputime_new.system+self.cputime_new.idle+self.cputime_new.iowait+self.cputime_new.irq+self.cputime_new.softirq
+				self.cputime_total_new = self.cputime_new.user+self.cputime_new.system+self.cputime_new.idle
+				# Only available on some OS
+				try:
+					self.cputime_total_new += self.cputime_new.nice
+				except:
+					pass
+				try:
+					self.cputime_total_new += self.cputime_new.iowait
+				except:
+					pass
+				try:
+					self.cputime_total_new += self.cputime_new.irq
+				except:
+					pass
+				try:
+					self.cputime_total_new += self.cputime_new.softirq
+				except:
+					pass
 				percent = 100/(self.cputime_total_new-self.cputime_total_old)
 				self.cpu = { 'kernel': (self.cputime_new.system-self.cputime_old.system)*percent,
 							 'user': (self.cputime_new.user-self.cputime_old.user)*percent,
@@ -1316,7 +1350,7 @@ class glancesHtml():
 		self.__refresh_time = refresh_time
 
 		# Set the templates path
-		environment = jinja2.Environment(loader=jinja2.FileSystemLoader('html'))
+		environment = jinja2.Environment(loader=jinja2.FileSystemLoader('html'), extensions=['jinja2.ext.loopcontrols'])
 
 		# Open the template
 		self.template = environment.get_template('default.html')
@@ -1413,7 +1447,12 @@ class glancesHtml():
 										load = self.__getLoadColor(stats.getLoad(), stats.getCore()),
 										core = stats.getCore(),
 										mem = self.__getMemColor(stats.getMem()),
-										memswap = self.__getMemSwapColor(stats.getMemSwap()) )
+										memswap = self.__getMemSwapColor(stats.getMemSwap()),
+										net = stats.getNetwork(),
+										diskio = stats.getDiskIO(),
+										fs = stats.getFs(),
+										proccount = stats.getProcessCount(),
+										proclist = stats.getProcessList() )
 
 			# Write data into the file
 			f.write(data)

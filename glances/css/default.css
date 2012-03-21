@@ -30,6 +30,18 @@ Colors table
 .bgmem { background: transparent; }
 .fgmem { color: #3C8AAD; }
 
+.bgnet { background: transparent; }
+.fgnet { color: #3C8AAD; }
+
+.bgdiskio { background: transparent; }
+.fgdiskio { color: #3C8AAD; }
+
+.bgfs { background: transparent; }
+.fgfs { color: #3C8AAD; }
+
+.bgproc { background: transparent; }
+.fgproc { color: #3C8AAD; }
+
 .bgcdefault { background: transparent; } 
 .fgcdefault { color: #FFFFFF; }
 .bgcok { background: #60AC39; } 
@@ -65,7 +77,7 @@ table{
 }
 
 thead th{
-    padding:10px;
+    padding:5px;
     border:1px solid #3C8AAD;
     -webkit-border-top-left-radius:5px;
     -webkit-border-top-right-radius:5px;
@@ -89,8 +101,8 @@ tfoot th{
 }
 
 tbody td{
-	width: 80px;
-    padding:10px;
+	width:80px;
+    padding:5px;
     text-align:center;
     border:1px solid #3C8AAD;
     -moz-border-radius:2px;
@@ -98,11 +110,25 @@ tbody td{
     border-radius:2px;
 }
 
+#item{
+	width:60px;
+    border:none;
+    text-align:right;
+    color: #8cf;
+}
+
+#command{
+	width:240px;
+	font-size:11px;
+	text-align:left;
+    color: #8cf;
+}
+
 /* Header */
 
 header { 
 	text-align: center;
-	margin-bottom: 50px; 
+	margin-bottom: 25px; 
 }
 
 /* Main */
@@ -111,19 +137,42 @@ header {
 	text-align: center;
 }
 
-/* First line stats: CLM (CPU, LOAD, MEM) */
-
-#clm {
+#firstline, #secondline {
 	margin: 0 auto;	
 }
 
-#cpu, #load, #mem {
+#secondline {
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 20px;
+}
+
+#sideleft {
+	width: 310px;
+	float: left;
+	margin-right: 25px;
+}
+
+#sideright {
+	width: 550px;
+	float: left;
+}
+
+#cpu, #load, #mem, #net, #diskio, #fs {
 	display: inline-block;
 	vertical-align: middle;
 }
 
 #cpu, #load {
 	margin-right: 50px;
+}
+
+#diskio, #fs {
+	margin-top: 25px;
+}
+
+#proclist {
+	margin-top: 50px;
 }
 
 

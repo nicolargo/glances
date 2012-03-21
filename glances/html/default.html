@@ -96,3 +96,132 @@
 	{% endif %}	
 {% endblock %}
 
+{% block net %}
+	{% if net is defined %}
+	<table >
+		<thead>
+			<tr>
+				<th scope="col" class="bgnet fgnet"></th>
+				<th scope="col" class="bgnet fgnet">Net Rx &darr;</th>
+				<th scope="col" class="bgnet fgnet">Net TX &uarr;</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for interface in net %}
+				<tr>
+					<td id="item">{{ interface.interface_name }}</td>	
+					{% if interface.rx == 0 %}
+						<td>0</td>	
+					{% else %}
+						<td>{{ (interface.rx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>	
+					{% endif %}	
+					{% if interface.tx == 0 %}
+						<td>0</td>	
+					{% else %}
+						<td>{{ (interface.tx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>	
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</tbody>	
+	</table>	
+	{% endif %}	
+{% endblock %}
+
+{% block diskio %}
+	{% if diskio is defined %}
+	<table >
+		<thead>
+			<tr>
+				<th scope="col" class="bgdiskio fgdiskio"></th>
+				<th scope="col" class="bgdiskio fgdiskio">Disk Write &darr;</th>
+				<th scope="col" class="bgdiskio fgdiskio">Disk Read &uarr;</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for disk in diskio %}
+				<tr>
+					<td id="item">{{ disk.disk_name }}</td>	
+					<td>{{ disk.write_bytes|filesizeformat(binary = true) }}</td>	
+					<td>{{ disk.read_bytes|filesizeformat(binary = true) }}</td>	
+				</tr>
+			{% endfor %}
+		</tbody>	
+	</table>	
+	{% endif %}	
+{% endblock %}
+
+{% block fs %}
+	{% if fs is defined %}
+	<table >
+		<thead>
+			<tr>
+				<th scope="col" class="bgdiskio fgdiskio"></th>
+				<th scope="col" class="bgdiskio fgdiskio">FS Size</th>
+				<th scope="col" class="bgdiskio fgdiskio">FS Used</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for mount in fs %}
+				<tr>
+					<td id="item">{{ mount.mnt_point }}</td>	
+					<td>{{ mount.size|filesizeformat(binary = true) }}</td>	
+					<td>{{ mount.used|filesizeformat(binary = true) }}</td>	
+				</tr>
+			{% endfor %}
+		</tbody>	
+	</table>	
+	{% endif %}	
+{% endblock %}
+
+{% block proccount %}
+	{% if (proccount is defined) %}
+	<table>
+		<thead>
+			<tr>
+				<th scope="col" class="bgproc fgproc"></th>
+				<th scope="col" class="bgproc fgproc">Total</th>
+				<th scope="col" class="bgproc fgproc">Running</th>
+				<th scope="col" class="bgproc fgproc">Sleep</th>
+				<th scope="col" class="bgproc fgproc">Other</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td  id="item">Process</td>
+				<td>{{ proccount.total }}</td>
+				<td>{{ proccount.running }}</td>
+				<td>{{ proccount.sleeping }}</td>
+				<td>{{ proccount.total-proccount.running-proccount.sleeping }}</td>
+			</tr>
+		</tbody>	
+	</table>	
+	{% endif %}	
+{% endblock %}
+
+{% block proclist %}
+	{% if proclist is defined %}
+	<table >
+		<thead>
+			<tr>
+				<th scope="col" class="bgproc fgproc">CPU %</th>
+				<th scope="col" class="bgproc fgproc">Mem virt.</th>
+				<th scope="col" class="bgproc fgproc">Mem resi.</th>
+				<th scope="col" class="bgproc fgproc">Command</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for proc in proclist %}
+				{% if loop.index > 10 %}
+					{% break %}
+				{% endif %}	
+				<tr>
+					<td>{{ proc.cpu_percent }}</td>	
+					<td>{{ proc.proc_size|filesizeformat(binary = true) }}</td>	
+					<td>{{ proc.proc_resident|filesizeformat(binary = true) }}</td>	
+					<td id="command">{{ proc.process_name|truncate(40, killwords=True) }}</td>						
+				</tr>
+			{% endfor %}
+		</tbody>	
+	</table>	
+	{% endif %}	
+{% endblock %}
