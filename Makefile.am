@@ -3,7 +3,7 @@
 
 SUBDIRS = src man
 
-glancesdocdir = ${prefix}/doc/glances
+glancesdocdir = ${datadir}/doc/glances
 glancesdoc_DATA = \
 	README\
 	COPYING\
