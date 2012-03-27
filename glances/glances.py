@@ -40,7 +40,7 @@ try:
 	import datetime
 	import multiprocessing
 	import gettext
-except:
+except ImportError:
         print("Error during Python libraries import: "+str(sys.exc_info()[1]))
         sys.exit(1)
 
@@ -56,7 +56,7 @@ gettext.install(__appname__)
 try:
 	import curses
 	import curses.panel
-except:
+except ImportError:
     print _('Textmode GUI initialization failed, Glances cannot start.')
     print _('Use Python 2.6 or higher')
     print
@@ -64,7 +64,7 @@ except:
 
 try:
 	import psutil
-except:
+except ImportError:
 	print _('PsUtil library initialization failed, Glances cannot start.')
 	print _('On Debian/Ubuntu, you can try (as root):')
 	print _('# apt-get install python-dev python-pip')
@@ -117,10 +117,19 @@ else:
 try:
 	# HTML output
 	import jinja2
-except:
+except ImportError:
 	jinja_tag = False
 else:
 	jinja_tag = True
+
+try:
+	# CSV output
+	import csv
+except ImportError:
+	csv_tag = False
+else:
+	csv_tag = True
+
 
 # Classes
 #========
@@ -154,6 +163,9 @@ class glancesLimits():
 						'STD': 	[50, 	70, 	90],
 						'LOAD':	[0.7, 	1.0, 	5.0]
 					}
+
+	def __init__(self, careful = 50, warning = 70, critical = 90):
+		self.__limits_list['STD'] = [careful, warning, critical]
 
 	def getSTDCareful(self):
 		return self.__limits_list['STD'][0]
@@ -1483,7 +1495,33 @@ class glancesHtml():
 			#~ self.displayCaption()
 			#~ self.displayNow(stats.getNow())
 			#~ self.displayHelp()
+
 		
+class glancesCsv():
+	"""
+	This class manages the Csv output
+	"""
+
+		
+	def __init__(self, cvsfile = "./glances.csv", refresh_time = 1):
+		# Global information to display
+		
+		# Init refresh time
+		self.__refresh_time = refresh_time
+
+		# Set the templates path
+		self.__csvfile = csv.writer(open("%s" % cvsfile, "wb"))
+
+
+	def update(self, stats):
+		if (stats.getCpu()):
+			# Update CSV with the CPU stats
+			cpu = stats.getCpu()
+			self.__csvfile.writerow([ "cpu", cpu['user'], cpu['kernel'], cpu['nice']])
+		if (stats.getLoad()):
+			# Update CSV with the LOAD stats
+			load = stats.getLoad()
+			self.__csvfile.writerow([ "load", load['min1'], load['min5'], load['min15']])
 
 		
 # Global def
@@ -1498,7 +1536,7 @@ def printSyntax():
 	print _("Usage: glances.py [-t|--time sec] [-h|--help] [-v|--version]")
 	print ""
 	print _("\t-h:\t\tDisplay the syntax and exit")
-	print _("\t-o output:\tGenerate output (available: html)")
+	print _("\t-o output:\tGenerate output (available: html, csv)")
 	print _("\t-t sec:\t\tSet the refresh time in second default is %d" % refresh_time)
 	print _("\t-v:\t\tDisplay the version and exit")
 	print ""
@@ -1517,7 +1555,8 @@ def printSyntax():
 
 	
 def init():
-	global limits, logs, stats, screen, html
+	global limits, logs, stats, screen
+	global htmloutput, csvoutput
 	global html_tag
 	global refresh_time
 
@@ -1545,7 +1584,11 @@ def init():
 					html_tag = True
 				else:
 					print _("Error: Need the Jinja library to export into HTML")
-					sys.exit(2)										
+					sys.exit(2)
+			elif arg == "csv":
+				if (not csv_tag):
+					print _("Error: Need the CSV library to export to CSV")
+					sys.exit(2)				
 			else:
 				print _("Error: Unknown output %s" % arg)
 				sys.exit(2)							
@@ -1572,12 +1615,15 @@ def init():
 	stats = glancesStats()
 	
 	# Init screen
-	screen = glancesScreen(refresh_time)
+	screen = glancesScreen(refresh_time = refresh_time)
 	
 	# Init HTML output
 	if (html_tag):
-		html = glancesHtml(refresh_time)
+		htmloutput = glancesHtml(refresh_time = refresh_time)
 
+	# Init CSV output
+	if (csv_tag):
+		csvoutput = glancesCsv(refresh_time = refresh_time)
 
 def main():	
 	# Init stuff
@@ -1593,7 +1639,11 @@ def main():
 		
 		# Update the HTML output
 		if (html_tag):
-			html.update(stats)
+			htmloutput.update(stats)
+
+		# Update the CSV output
+		if (csv_tag):
+			csvoutput.update(stats)
 
 		
 def end():

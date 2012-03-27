@@ -2,6 +2,8 @@ Version 1.4
 ===========
 
 	* Goodby StatGrab... Welcome to the PsUtil library !
+	* HTML output
+	* CSV output
 	* No more autotools, use setup.py to install
 	* Sort by Process name ('p' key)
 	* Only major stats (CPU, Load and memory) use background colors
