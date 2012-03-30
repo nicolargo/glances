@@ -1305,7 +1305,7 @@ class glancesScreen():
             and (screen_x > self.log_x + 79)):
             self.log_y = max(offset_y, \
                              screen_y - 3 - min(offset_y - 3, \
-                                                creen_y - self.log_y, \
+                                                screen_y - self.log_y, \
                                                 logs.len()))
             logtodisplay_count = min(screen_y - self.log_y - 3, logs.len())
             logmsg = _("Warning and Critical logs for CPU|LOAD|MEM")
