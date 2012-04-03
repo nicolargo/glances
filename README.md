@@ -6,68 +6,64 @@ Glances -- Eye on your system
 
 ## Description
 
-Glances is a CLI curses based monitoring tool for GNU/Linux or BSD OS.
+Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
 
-Glances uses the libstatgrab library to get information from your system.
-It is developed in Python and uses the python-statgrab lib.
+Glances uses the PsUtil library to get information from your system.
+
+It is developed in Python.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
 
 ## Installation
 
-### From package manager
+### From package manager (very easy way)
 
-Packages exist for Arch, Fedora, Redhat ...
+Packages exist for Arch, Fedora, Redhat, FreeBSD...
 
-### From PPA (Ubuntu/Mint)
+### From PPA (easy way for Ubuntu/Mint...)
 
-Thanks to Arnaud Hartmann, a PPA is available for the stable branch.
+Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
 
-To install it on your Ubuntu system:
+To install the PPA just enter:
 
-	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-	$ sudo apt-get update
-	$ sudo apt-get install glances
+        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-dev
+        $ sudo apt-get update
 
-The PPA is available for Ubuntu version 9.10 to 12.04.
+Then install Glances:
+
+        $ sudo apt-get install glances
+
+### From PyPi (easy way)
+
+PyPi is an official Python package manager.
+
+You first need to install pypi on your system. For exemple on Debian/Ubuntu:
+
+        $ sudo apt-get install python-pip
+
+Then install the latest Glances version:
+
+        $ sudo pip install glances
 
 ### From source
 
 Get the latest version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.3.7.tar.gz
+	$ wget https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz
 
 Glances use a standard GNU style installer:
 
-	$ tar zxvf glances-1.3.7.tar.gz
-	$ cd glances-1.3.7
-	$ ./configure
-	$ make
-	$ sudo make install
+	$ tar zxvf glances-1.4.tar.gz
+	$ cd glances-1.4
+	$ sudo python setup.py install
 
 Pre-requisites:
 
 * Python 2.6+ (not tested with Python 3+)
-* python-statgrab 0.5+ (did NOT work with python-statgrab 0.4)
-
-Notes: For Debian.
-The Debian Squeeze repos only include the python-statgrab 0.4.
-You had to install the version 0.5 using the following commands:
-
-	$ sudo apt-get install libstatgrab-dev pkg-config python-dev make
-	$ wget http://ftp.uk.i-scream.org/sites/ftp.i-scream.org/pub/i-scream/pystatgrab/pystatgrab-0.5.tar.gz
-	$ tar zxvf pystatgrab-0.5.tar.gz
-	$ cd pystatgrab-0.5/
-	$ ./setup.py build
-	$ sudo ./setup.py install
-
-Notes: For Ubuntu 10.04 and 10.10. 
-The instruction to install the version 0.5 are here: 
-https://github.com/nicolargo/glances/issues/5#issuecomment-3033194
 
 ## Running
 
-Easy:
+Easy way (that's all folks !):
 
 	$ glances.py
 
