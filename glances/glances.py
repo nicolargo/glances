@@ -518,7 +518,7 @@ class glancesStats():
                         self.network.append(netstat)
                 self.network_old = self.network_new
 
-        # DISK IO
+        # DISK I/O
         self.diskio = []
         try:
             self.diskio_old
@@ -672,7 +672,7 @@ class glancesStats():
                 sortedby = 'proc_size'
             # Auto selection
             # If global Mem > 70% sort by process size
-            # Else sort by cpu comsoption
+            # Else sort by CPU comsoption
             try:
                 memtotal = (self.mem['used'] - self.mem['cache']) * \
                            100 / self.mem['total']
@@ -697,7 +697,7 @@ class glancesScreen():
     """
 
     # By default the process list is automatically sorted
-    # If global CPU > WANRING         => Sorted by process Cpu consomption
+    # If global CPU > WANRING => Sorted by process CPU consomption
     # If global used MEM > WARINING => Sorted by process size
     __process_sortedby = 'auto'
 
@@ -947,10 +947,10 @@ class glancesScreen():
             # 'a' > Sort process list automatically
             self.setProcessSortedBy('auto')
         elif ((self.pressedkey == 99) and psutil_get_cpu_percent_tag):
-            # 'c' > Sort process list by Cpu usage
+            # 'c' > Sort process list by CPU usage
             self.setProcessSortedBy('cpu_percent')
         elif ((self.pressedkey == 100) and psutil_disk_io_tag):
-            # 'n' > Enable/Disable diskio stats
+            # 'n' > Enable/Disable disk I/O stats
             self.diskio_tag = not self.diskio_tag
         elif ((self.pressedkey == 102) and psutil_fs_usage_tag):
             # 'n' > Enable/Disable fs stats
@@ -1064,7 +1064,7 @@ class glancesScreen():
         screen_y = self.screen.getmaxyx()[0]
         if ((screen_y > self.cpu_y + 5)
             and (screen_x > self.cpu_x + 18)):
-            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("Cpu"), 8, \
+            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 8, \
                     self.title_color if self.hascolors else curses.A_UNDERLINE)
 
             if (not cpu):
@@ -1385,7 +1385,7 @@ class glancesScreen():
             and (screen_x > process_x + 49)):
             # Processes detail
             self.term_window.addnstr(self.process_y + 3, process_x, \
-                _("Cpu %"), 5, \
+                _("CPU %"), 5, \
                 curses.A_UNDERLINE \
                     if (self.getProcessSortedBy() == 'cpu_percent') else 0)
             self.term_window.addnstr(self.process_y + 3, process_x + 7,  \
@@ -1499,7 +1499,7 @@ class glancesScreen():
             self.term_window.addnstr(self.help_y + 10, self.help_x, \
                 _("p") + "\t" + _("Sort process list by name"), 79)
             self.term_window.addnstr(self.help_y + 11, self.help_x, \
-                _("d") + "\t" + _("Enable/Disable disk IO stats \
+                _("d") + "\t" + _("Enable/Disable disk I/O stats \
                                   (need PsUtil v0.4.0 or higher)"), \
                 79, \
                 self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
@@ -1717,7 +1717,7 @@ def printVersion():
 
 def printSyntax():
     printVersion()
-    print _("Usage: glances.py [-f file] [-o output] [-t sec] [-h] [-v]")
+    print _("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]")
     print ""
     print _("\t-f file:\t\tSet the output folder (HTML) or file (CSV)")
     print _("\t-h:\t\tDisplay the syntax and exit")
@@ -1730,7 +1730,7 @@ def printSyntax():
     print _("'a' to set the automatic mode. \
             The processes are sorted automatically")
     print _("'c' to sort the processes list by CPU consumption")
-    print _("'d' to disable or enable the disk IO stats")
+    print _("'d' to disable or enable the disk I/O stats")
     print _("'f' to disable or enable the file system stats")
     print _("'h' to hide or show the help message")
     print _("'l' to hide or show the logs messages")
