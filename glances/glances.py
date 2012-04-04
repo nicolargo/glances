@@ -1711,12 +1711,12 @@ def printSyntax():
     printVersion()
     print _("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]")
     print ""
-    print _("\t-f file:\t\tSet the output folder (HTML) or file (CSV)")
-    print _("\t-h:\t\tDisplay the syntax and exit")
-    print _("\t-o output:\tGenerate output (available: HTML, CSV)")
-    print _("\t-t sec:\t\tSet the refresh time in second default is %d" \
+    print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
+    print _("\t-h\t\tDisplay the syntax and exit")
+    print _("\t-o output\tGenerate output (available: HTML, CSV)")
+    print _("\t-t sec\t\tSet the refresh time in second default is %d" \
             % refresh_time)
-    print _("\t-v:\t\tDisplay the version and exit")
+    print _("\t-v\t\tDisplay the version and exit")
     print ""
     print _("When Glances is running, you can press:")
     print _("'a' to set the automatic mode. " \
