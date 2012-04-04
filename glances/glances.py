@@ -1794,16 +1794,16 @@ def init():
         try:
             output_folder
         except UnboundLocalError:
-            print _("Error: HTML export (-o html) need \
-                     output folder definition (-f <folder>)")
+            print _("Error: HTML export (-o html) need " \
+                    "output folder definition (-f <folder>)")
             sys.exit(2)
 
     if (csv_tag):
         try:
             output_file
         except UnboundLocalError:
-            print _("Error: CSV export (-o csv) need \
-                     output file definition (-f <file>)")
+            print _("Error: CSV export (-o csv) need " \
+                    "output file definition (-f <file>)")
             sys.exit(2)
 
     # Catch CTRL-C
