@@ -696,7 +696,7 @@ class glancesScreen():
     This class manage the screen (display and key pressed)
     """
 
-    # By default the process list is automaticaly sorted
+    # By default the process list is automatically sorted
     # If global CPU > WANRING         => Sorted by process Cpu consomption
     # If global used MEM > WARINING => Sorted by process size
     __process_sortedby = 'auto'
@@ -944,7 +944,7 @@ class glancesScreen():
             # 'ESC'|'q' > Exit
             end()
         elif (self.pressedkey == 97):
-            # 'a' > Sort process list automaticaly
+            # 'a' > Sort process list automatically
             self.setProcessSortedBy('auto')
         elif ((self.pressedkey == 99) and psutil_get_cpu_percent_tag):
             # 'c' > Sort process list by Cpu usage
@@ -1481,7 +1481,7 @@ class glancesScreen():
                 _("Key") + "\t" + _("Function"), 79, \
                 self.title_color if self.hascolors else 0)
             self.term_window.addnstr(self.help_y + 7, self.help_x, \
-                _("a") + "\t" + _("Sort process list automaticaly \
+                _("a") + "\t" + _("Sort process list automatically \
                                   (need PsUtil v0.2.0 or higher)"), \
                 79, \
                 self.ifCRITICAL_color2 \
