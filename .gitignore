@@ -1,6 +1,8 @@
-*.pyc
-# python packaging artifacts
-*.egg-info
-/build/
-/dist/
+*~
+*.py[co]
 
+# Packages
+*.egg
+*.egg-info
+dist
+build
