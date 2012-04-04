@@ -1481,48 +1481,40 @@ class glancesScreen():
                 _("Key") + "\t" + _("Function"), 79, \
                 self.title_color if self.hascolors else 0)
             self.term_window.addnstr(self.help_y + 7, self.help_x, \
-                _("a") + "\t" + _("Sort process list automatically \
-                                  (need PsUtil v0.2.0 or higher)"), \
-                79, \
-                self.ifCRITICAL_color2 \
+                _("a") + "\t" + _("Sort process list automatically " \
+                                  "(need PsUtil v0.2.0 or higher)"), \
+                79, self.ifCRITICAL_color2 \
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(self.help_y + 8, self.help_x, \
-                _("c") + "\t" + _("Sort process list by CPU usage \
-                                  (need PsUtil v0.2.0 or higher)"), \
-                79, \
-                self.ifCRITICAL_color2 \
+                _("c") + "\t" + _("Sort process list by CPU usage " \
+                                  "(need PsUtil v0.2.0 or higher)"), \
+                79, self.ifCRITICAL_color2 \
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(self.help_y + 9, self.help_x, \
                 _("m") + "\t" + \
-                    _("Sort process list by virtual memory usage"), \
-                79)
+                    _("Sort process list by virtual memory usage"), 79)
             self.term_window.addnstr(self.help_y + 10, self.help_x, \
                 _("p") + "\t" + _("Sort process list by name"), 79)
             self.term_window.addnstr(self.help_y + 11, self.help_x, \
-                _("d") + "\t" + _("Enable/Disable disk I/O stats \
-                                  (need PsUtil v0.4.0 or higher)"), \
-                79, \
-                self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
+                _("d") + "\t" + _("Enable/Disable disk I/O stats " \
+                                  "(need PsUtil v0.4.0 or higher)"), \
+                79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
             self.term_window.addnstr(self.help_y + 12, self.help_x, \
-                _("f") + "\t" + _("Enable/Disable file system stats \
-                                  (need PsUtil v0.3.0 or higher)"), \
-                79, \
-                self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
+                _("f") + "\t" + _("Enable/Disable file system stats " \
+                                  "(need PsUtil v0.3.0 or higher)"), \
+                79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
             self.term_window.addnstr(self.help_y + 13, self.help_x, \
-                _("n") + "\t" + _("Enable/Disable network stats \
-                                  (need PsUtil v0.3.0 or higher)"), \
-                79, \
-                self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+                _("n") + "\t" + _("Enable/Disable network stats " \
+                                  "(need PsUtil v0.3.0 or higher)"), \
+                79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
             self.term_window.addnstr(self.help_y + 14, self.help_x, \
-                _("l") + "\t" + _("Enable/Disable log list \
-                                  (only available if display > 24 lines)"), \
-                79)
+                _("l") + "\t" + _("Enable/Disable log list " \
+                                  "(only available if display > 24 lines)"), 79)
             self.term_window.addnstr(self.help_y + 15, self.help_x, \
                 _("h") + "\t" + _("Display/Hide help message"), 79)
             self.term_window.addnstr(self.help_y + 16, self.help_x, \
                 _("q") + "\t" + \
-                    _("Exit from Glances (ESC key and CRTL-C also work...)"), \
-                79)
+                    _("Exit from Glances (ESC key and CRTL-C also work)"), 79)
 
     def displayNow(self, now):
         # Display the current date and time (now...) - Center
@@ -1727,8 +1719,8 @@ def printSyntax():
     print _("\t-v:\t\tDisplay the version and exit")
     print ""
     print _("When Glances is running, you can press:")
-    print _("'a' to set the automatic mode. \
-            The processes are sorted automatically")
+    print _("'a' to set the automatic mode. " \
+            "The processes are sorted automatically")
     print _("'c' to sort the processes list by CPU consumption")
     print _("'d' to disable or enable the disk I/O stats")
     print _("'f' to disable or enable the file system stats")
