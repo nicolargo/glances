@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b16"
+__version__ = "1.4b17"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -134,7 +134,7 @@ else:
 # Classes
 #========
 
-class Timer():
+class Timer:
     """
     The timer class
     """
@@ -149,7 +149,7 @@ class Timer():
         return time.time() > self.target
 
 
-class glancesLimits():
+class glancesLimits:
     """
     Manage the limit OK,CAREFUL,WARNING,CRITICAL for each stats
     """
@@ -187,7 +187,7 @@ class glancesLimits():
         return self.__limits_list['LOAD'][2] * core
 
 
-class glancesLogs():
+class glancesLogs:
     """
     The main class to manage logs inside the Glances software
     Logs is a list of list:
@@ -289,7 +289,7 @@ class glancesLogs():
         return self.len()
 
 
-class glancesGrabFs():
+class glancesGrabFs:
     """
     Get FS stats
     """
@@ -340,7 +340,7 @@ class glancesGrabFs():
         return self.fs_list
 
 
-class glancesStats():
+class glancesStats:
     """
     This class store, update and give stats
     """
@@ -691,7 +691,7 @@ class glancesStats():
         return self.now
 
 
-class glancesScreen():
+class glancesScreen:
     """
     This class manage the screen (display and key pressed)
     """
@@ -742,13 +742,25 @@ class glancesScreen():
 
         curses.start_color()
         if hasattr(curses, 'use_default_colors'):
-            curses.use_default_colors()
+            try:
+                curses.use_default_colors()
+            except:
+                pass
         if hasattr(curses, 'noecho'):
-            curses.noecho()
+            try:
+                curses.noecho()
+            except:
+                pass
         if hasattr(curses, 'cbreak'):
-            curses.cbreak()
+            try:
+                curses.cbreak()
+            except:
+                pass
         if hasattr(curses, 'curs_set'):
-            curses.curs_set(0)
+            try:
+                curses.curs_set(0)
+            except:
+                pass
 
         # Init colors
         self.hascolors = False
@@ -1530,7 +1542,7 @@ class glancesScreen():
                 len(now_msg))
 
 
-class glancesHtml():
+class glancesHtml:
     """
     This class manages the HTML output
     """
@@ -1669,11 +1681,11 @@ class glancesHtml():
             f.close()
 
 
-class glancesCsv():
+class glancesCsv:
     """
     This class manages the Csv output
     """
-
+    
     def __init__(self, cvsfile="./glances.csv", refresh_time=1):
         # Global information to display
 
@@ -1682,10 +1694,14 @@ class glancesCsv():
 
         # Set the ouput (CSV) path
         try:
-            self.__csvfile = csv.writer(open("%s" % cvsfile, "wb"))
+            self.__cvsfile_fd = open("%s" % cvsfile, "wb")
+            self.__csvfile = csv.writer(self.__cvsfile_fd)
         except IOError, error:
             print "Can not create the output CSV file: ", error[1]
             sys.exit(0)
+
+    def exit(self):
+        self.__cvsfile_fd.close()
 
     def update(self, stats):
         if (stats.getCpu()):
@@ -1698,6 +1714,15 @@ class glancesCsv():
             load = stats.getLoad()
             self.__csvfile.writerow(["load", load['min1'], \
                                      load['min5'], load['min15']])
+        if (stats.getMem() and stats.getMemSwap()):
+            # Update CSV with the MEM stats
+            mem = stats.getMem()
+            self.__csvfile.writerow(["mem", mem['total'], \
+                                     mem['used'], mem['free']])
+            memswap = stats.getMemSwap()
+            self.__csvfile.writerow(["swap", memswap['total'], \
+                                     memswap['used'], memswap['free']])
+        self.__cvsfile_fd.flush()
 
 # Global def
 #===========
@@ -1855,7 +1880,10 @@ def main():
 
 def end():
     screen.end()
-
+    
+    if (csv_tag):
+        csvoutput.exit()
+    
     sys.exit(0)
 
 
