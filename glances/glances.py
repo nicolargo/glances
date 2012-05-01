@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b17"
+__version__ = "1.4b18"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -66,7 +66,11 @@ try:
     import psutil
 except ImportError:
     print _('PsUtil library initialization failed, Glances cannot start.')
-    print _('On Debian/Ubuntu, you can try (as root):')
+    print
+    print _('On Ubuntu 12.04+, you can try (as root):')
+    print _('# apt-get install python-psutil')
+    print
+    print _('On Debian/Ubuntu(< 12.04), you can try (as root):')
     print _('# apt-get install python-dev python-pip')
     print _('# pip install psutil')
     print
@@ -606,6 +610,8 @@ class glancesStats:
                         if (psutil_get_cpu_percent_tag):
                             procstat['cpu_percent'] = \
                                 proc.get_cpu_percent(interval=0)
+                        procstat['pid'] = proc.pid
+                        procstat['uid'] = proc.username
                         self.process.append(procstat)
                     except:
                         pass
@@ -708,24 +714,22 @@ class glancesScreen:
         # Init windows positions
         self.term_w = 80
         self.term_h = 24
-        self.host_x = 0
-        self.host_y = 0
         self.system_x = 0
-        self.system_y = 1
+        self.system_y = 0
         self.cpu_x = 0
-        self.cpu_y = 3
+        self.cpu_y = 2
         self.load_x = 20
-        self.load_y = 3
+        self.load_y = 2
         self.mem_x = 41
-        self.mem_y = 3
+        self.mem_y = 2
         self.network_x = 0
-        self.network_y = 8
+        self.network_y = 7
         self.diskio_x = 0
         self.diskio_y = -1
         self.fs_x = 0
         self.fs_y = -1
         self.process_x = 30
-        self.process_y = 8
+        self.process_y = 7
         self.log_x = 0
         self.log_y = -1
         self.help_x = 0
@@ -995,8 +999,7 @@ class glancesScreen:
 
     def display(self, stats):
         # Display stats
-        self.displayHost(stats.getHost())
-        self.displaySystem(stats.getSystem())
+        self.displaySystem(stats.getHost(), stats.getSystem())
         self.displayCpu(stats.getCpu())
         self.displayLoad(stats.getLoad(), stats.getCore())
         self.displayMem(stats.getMem(), stats.getMemSwap())
@@ -1038,32 +1041,18 @@ class glancesScreen:
             # Wait 100ms...
             curses.napms(100)
 
-    def displayHost(self, host):
-        # Host information
-        if (not host):
-            return 0
-        screen_x = self.screen.getmaxyx()[1]
-        screen_y = self.screen.getmaxyx()[0]
-        if ((screen_y > self.host_y)
-            and (screen_x > self.host_x + 79)):
-            host_msg = _("Glances v") + self.__version + _(" running on ") + \
-                       host['hostname']
-            self.term_window.addnstr(self.host_y, \
-                                     self.host_x + int(screen_x / 2) - \
-                                        len(host_msg) / 2, host_msg, \
-                                     80, \
-                                     self.title_color if self.hascolors else 0)
-
-    def displaySystem(self, system):
+    def displaySystem(self, host, system):
         # System information
-        if (not system):
+        if (not host or not system):
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if ((screen_y > self.system_y)
             and (screen_x > self.system_x + 79)):
-            system_msg = system['os_name'] + " " + system['platform'] + " " + \
-                         system['os_version']
+            system_msg = host['hostname'] + " (" + \
+                         system['os_name'] + " " + \
+                         system['platform'] + " " + \
+                         system['os_version'] + ")"
             self.term_window.addnstr(self.system_y, \
                                      self.system_x + int(screen_x / 2) - \
                                         len(system_msg) / 2, \
@@ -1393,7 +1382,12 @@ class glancesScreen:
                     stats.getProcessCount()['sleeping']), \
                 8)
         # Display the process detail
-        if ((screen_y > self.process_y + 7)
+        tag_pid = tag_uid = False
+        if (screen_x > process_x + 55):
+            tag_pid = True
+        if (screen_x > process_x + 64):
+            tag_uid = True
+        if ((screen_y > self.process_y + 8)
             and (screen_x > process_x + 49)):
             # Processes detail
             self.term_window.addnstr(self.process_y + 3, process_x, \
@@ -1406,7 +1400,20 @@ class glancesScreen:
                     if (self.getProcessSortedBy() == 'proc_size') else 0)
             self.term_window.addnstr(self.process_y + 3, process_x + 18, \
                 _("Mem resi."), 9)
-            self.term_window.addnstr(self.process_y + 3, process_x + 30, \
+            process_name_x = 30
+            # If screen space (X) is available then:
+            # 1) Add PID
+            if (tag_pid):
+                self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
+                    _("PID"), 6 )
+                process_name_x = process_name_x + 8
+            # 2) Add UID
+            if (tag_uid):
+                self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
+                    _("UID"), 8 )
+                process_name_x = process_name_x + 10
+            # 3) Process name
+            self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
                 _("Process name"), 12, \
                 curses.A_UNDERLINE \
                     if (self.getProcessSortedBy() == 'process_name') else 0)
@@ -1418,7 +1425,7 @@ class glancesScreen:
                 return 6
 
             for processes in range(0, min(screen_y - self.term_h + \
-                            self.process_y - log_count + 2, len(processlist))):
+                            self.process_y - log_count + 4, len(processlist))):
                 if (psutil_get_cpu_percent_tag):
                     self.term_window.addnstr(self.process_y + 4 + processes, \
                         process_x, \
@@ -1436,27 +1443,39 @@ class glancesScreen:
                     process_x + 18, \
                     self.__autoUnit(\
                         processlist[processes]['proc_resident']), 9)
-                maxprocessname = screen_x - process_x - 30
-                # If screen space is available then display long name
+                # If screen space (X) is available then:
+                # 1) Add PID
+                if (tag_pid):
+                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                        process_x + 30, \
+                        str(processlist[processes]['pid']), 6)                    
+                # 2) Add UID
+                if (tag_uid):
+                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                        process_x + 38, \
+                        str(processlist[processes]['uid']), 8)                    
+                # 3) Display long process command line
+                maxprocessname = screen_x - process_x - process_name_x
                 if ((len(processlist[processes]['proctitle']) > maxprocessname)
                    or (len(processlist[processes]['proctitle']) == 0)):
                     processname = processlist[processes]['process_name']
                 else:
                     processname = processlist[processes]['proctitle']
                 self.term_window.addnstr(self.process_y + 4 + processes, \
-                    process_x + 30, processname, maxprocessname)
+                    process_x + process_name_x, processname, maxprocessname)
 
     def displayCaption(self):
         # Caption
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        if ((screen_x < 80) or (screen_y < 24)):
+        msg = _("Glances ") + __version__
+        if ((screen_x > 79) and (screen_y > 23)):
             # Help can only be displayed on a 80x24 console
-            return 0
+            msg = msg + " - " + _("Press 'h' for help")
         if ((screen_y > self.caption_y)
             and (screen_x > self.caption_x + 32)):
             self.term_window.addnstr(max(self.caption_y, screen_y - 1), \
-                self.caption_x, _("Press 'h' for help"), self.default_color)
+                self.caption_x, msg, self.default_color)
 
     def displayHelp(self):
         """
@@ -1468,7 +1487,7 @@ class glancesScreen:
         screen_y = self.screen.getmaxyx()[0]
         if ((screen_y > self.help_y + 23)
             and (screen_x > self.help_x + 79)):
-            # Console 80x24 is mandatory to display teh help message
+            # Console 80x24 is mandatory to display the help message
             self.erase()
 
             self.term_window.addnstr(self.help_y, self.help_x, \
@@ -1547,15 +1566,15 @@ class glancesHtml:
     This class manages the HTML output
     """
 
-    def __init__(self, htmlfolder="./", refresh_time=1):
+    def __init__(self, htmlfolder="/usr/share", refresh_time=1):
         # Global information to display
 
         # Init refresh time
         self.__refresh_time = refresh_time
 
         # Set the templates path
-        environment = jinja2.Environment(\
-            loader=jinja2.FileSystemLoader('html'), \
+        environment = jinja2.Environment( \
+            loader=jinja2.FileSystemLoader(htmlfolder + '/html'), \
             extensions=['jinja2.ext.loopcontrols'])
 
         # Open the template
@@ -1668,12 +1687,6 @@ class glancesHtml:
                 proccount=stats.getProcessCount(), \
                 proclist=stats.getProcessList())
 
-            # Display stats
-            # Todo:
-            #~ self.displayCaption()
-            #~ self.displayNow(stats.getNow())
-            #~ self.displayHelp()
-
             # Write data into the file
             f.write(data)
 
@@ -1738,7 +1751,7 @@ def printSyntax():
     print ""
     print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
     print _("\t-h\t\tDisplay the syntax and exit")
-    print _("\t-o output\tGenerate output (available: HTML, CSV)")
+    print _("\t-o output\tDefine additional output (available: HTML or CSV)")
     print _("\t-t sec\t\tSet the refresh time in second default is %d" \
             % refresh_time)
     print _("\t-v\t\tDisplay the version and exit")
@@ -1790,7 +1803,9 @@ def init():
                 if (jinja_tag):
                     html_tag = True
                 else:
-                    print _("Error: Need Jinja library to export into HTML")
+                    print _("Error: Need Jinja2 library to export into HTML")
+                    print
+                    print _("Try to install the python-jinja2 package")
                     sys.exit(2)
             elif arg == "csv":
                 if (csvlib_tag):

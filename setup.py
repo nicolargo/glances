@@ -15,6 +15,9 @@ data_files = [
         'NEWS',
         'screenshot.png']),
     ('share/doc/glances/doc', glob('doc/*.png')),
+    ('share/glances/html', glob('glances/html/*.html')),    
+    ('share/glances/html/css', glob('glances/css/*.css')),
+    ('share/glances/html/img', glob('glances/img/*.png')),
 ]
 for mo in glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
@@ -31,6 +34,9 @@ setup(name='Glances',
     long_description=open('README').read(),
     install_requires=['psutil>=0.4.1'],
     packages=['glances'],
+     extras_require = {
+        'HTML':  ['jinja2>=2.0'],
+    },
     include_package_data=True,
     data_files=data_files,
     entry_points={"console_scripts": ["glances = glances.glances:main"]},

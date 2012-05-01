@@ -175,5 +175,14 @@ header {
 	margin-top: 50px;
 }
 
-
 /* Footer */
+
+footer {
+	clear: both;
+	margin: 20px 0px 10px 0px;
+    text-align: center;
+}
+
+footer a {
+    color: white;
+}
