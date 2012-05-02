@@ -9,6 +9,9 @@ Version 1.4
 	* Only major stats (CPU, Load and memory) use background colors
 	* Add optionnal (if space is available): PID, UID
 	* Improve operating system name
+	* Disable Disk IO module from the command line (-d)
+	* Disable Mount module from the command line (-m)
+	* Disable Net rate module from the command line (-n)
 	* Code is now checked with pep8
 
 Version 1.3.7

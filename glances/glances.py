@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b18"
+__version__ = "1.4b19"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -309,7 +309,8 @@ class glancesGrabFs:
 
         # Ignore the following FS type
         self.ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none', \
-                              'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs')
+                              'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs', \
+                              'devtmpfs')
 
     def __update__(self):
         """
@@ -496,66 +497,69 @@ class glancesStats:
             self.memswap = {}
 
         # NET
-        self.network = []
-        try:
-            self.network_old
-        except:
-            if (psutil_network_io_tag):
-                self.network_old = psutil.network_io_counters(True)
-        else:
+        if psutil_network_io_tag:
+            self.network = []
             try:
-                self.network_new = psutil.network_io_counters(True)
+                self.network_old
             except:
-                pass
+                if (psutil_network_io_tag):
+                    self.network_old = psutil.network_io_counters(True)
             else:
-                for net in self.network_new:
-                    try:
-                        netstat = {}
-                        netstat['interface_name'] = net
-                        netstat['rx'] = self.network_new[net].bytes_recv - \
-                                        self.network_old[net].bytes_recv
-                        netstat['tx'] = self.network_new[net].bytes_sent - \
-                                        self.network_old[net].bytes_sent
-                    except:
-                        continue
-                    else:
-                        self.network.append(netstat)
-                self.network_old = self.network_new
+                try:
+                    self.network_new = psutil.network_io_counters(True)
+                except:
+                    pass
+                else:
+                    for net in self.network_new:
+                        try:
+                            netstat = {}
+                            netstat['interface_name'] = net
+                            netstat['rx'] = self.network_new[net].bytes_recv - \
+                                            self.network_old[net].bytes_recv
+                            netstat['tx'] = self.network_new[net].bytes_sent - \
+                                            self.network_old[net].bytes_sent
+                        except:
+                            continue
+                        else:
+                            self.network.append(netstat)
+                    self.network_old = self.network_new
 
         # DISK I/O
-        self.diskio = []
-        try:
-            self.diskio_old
-        except:
-            if (psutil_disk_io_tag):
-                self.diskio_old = psutil.disk_io_counters(True)
-        else:
+        if psutil_disk_io_tag:
+            self.diskio = []
             try:
-                self.diskio_new = psutil.disk_io_counters(True)
+                self.diskio_old
             except:
-                pass
+                if (psutil_disk_io_tag):
+                    self.diskio_old = psutil.disk_io_counters(True)
             else:
-                for disk in self.diskio_new:
-                    try:
-                        diskstat = {}
-                        diskstat['disk_name'] = disk
-                        diskstat['read_bytes'] = \
-                            self.diskio_new[disk].read_bytes - \
-                            self.diskio_old[disk].read_bytes
-                        diskstat['write_bytes'] = \
-                            self.diskio_new[disk].write_bytes - \
-                            self.diskio_old[disk].write_bytes
-                    except:
-                        continue
-                    else:
-                        self.diskio.append(diskstat)
-                self.diskio_old = self.diskio_new
+                try:
+                    self.diskio_new = psutil.disk_io_counters(True)
+                except:
+                    pass
+                else:
+                    for disk in self.diskio_new:
+                        try:
+                            diskstat = {}
+                            diskstat['disk_name'] = disk
+                            diskstat['read_bytes'] = \
+                                self.diskio_new[disk].read_bytes - \
+                                self.diskio_old[disk].read_bytes
+                            diskstat['write_bytes'] = \
+                                self.diskio_new[disk].write_bytes - \
+                                self.diskio_old[disk].write_bytes
+                        except:
+                            continue
+                        else:
+                            self.diskio.append(diskstat)
+                    self.diskio_old = self.diskio_new
 
         # FILE SYSTEM
-        try:
-            self.fs = self.glancesgrabfs.get()
-        except:
-            self.fs = {}
+        if psutil_fs_usage_tag:
+            try:
+                self.fs = self.glancesgrabfs.get()
+            except:
+                self.fs = {}
 
         # PROCESS
         # Initialiation of the running processes list
@@ -653,14 +657,23 @@ class glancesStats:
         return self.memswap
 
     def getNetwork(self):
-        return sorted(self.network, \
-                      key=lambda network: network['interface_name'])
+        if psutil_network_io_tag:
+            return sorted(self.network, \
+                          key=lambda network: network['interface_name'])
+        else:
+            return 0
 
     def getDiskIO(self):
-        return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
+        if psutil_disk_io_tag:
+            return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
+        else:
+            return 0
 
     def getFs(self):
-        return sorted(self.fs, key=lambda fs: fs['mnt_point'])
+        if psutil_fs_usage_tag:
+            return sorted(self.fs, key=lambda fs: fs['mnt_point'])
+        else:
+            return 0
 
     def getProcessCount(self):
         return self.processcount
@@ -1749,8 +1762,11 @@ def printSyntax():
     printVersion()
     print _("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]")
     print ""
+    print _("\t-d\t\tDisable Disk I/O module")
     print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
     print _("\t-h\t\tDisplay the syntax and exit")
+    print _("\t-m\t\tDisable Mount module")    
+    print _("\t-n\t\tDisable Net Rate module")    
     print _("\t-o output\tDefine additional output (available: HTML or CSV)")
     print _("\t-t sec\t\tSet the refresh time in second default is %d" \
             % refresh_time)
@@ -1772,6 +1788,7 @@ def printSyntax():
 
 
 def init():
+    global psutil_disk_io_tag, psutil_fs_usage_tag, psutil_network_io_tag
     global limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag
@@ -1787,7 +1804,7 @@ def init():
     # Manage args
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-                        "ho:f:t:v", \
+                        "dmnho:f:t:v", \
                         ["help", "output", "file", "time", "version"])
     except getopt.GetoptError, err:
         # Print help information and exit:
@@ -1825,10 +1842,16 @@ def init():
             else:
                 print _("Error: Refresh time should be a positive integer")
                 sys.exit(2)
+        elif opt in ("-d", "--diskio"):
+            psutil_disk_io_tag = False
+        elif opt in ("-m", "--mount"):
+            psutil_fs_usage_tag = False
+        elif opt in ("-n", "--netrate"):
+            psutil_network_io_tag = False
         else:
             printSyntax()
             sys.exit(0)
-
+    
     # Check options
     if (html_tag):
         try:
