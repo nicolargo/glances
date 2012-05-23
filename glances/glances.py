@@ -371,22 +371,28 @@ class glancesStats:
 
         # Host and OS informations
         self.host = {}
+        self.host['os_name'] = platform.system()
         self.host['hostname'] = platform.node()
         self.host['platform'] = platform.architecture()[0]
-        self.host['processor'] = platform.processor()
-        self.host['os_name'] = platform.system()
+
+        # check if it's Arch Linux
+        is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
+
         try:
-            if (self.host['os_name'] == "Linux"
-                or self.host['os_name'] == "FreeBSD"):
-                os_version = platform.linux_distribution()
-                self.host['os_version'] = os_version[0] + " " + os_version[2] \
-                                          + " " + os_version[1]
-            elif (self.host['os_name'] == "Windows"):
+            if self.host['os_name'] == "Linux":
+                if is_archlinux:
+                    self.host['linux_distro'] = "Arch Linux"
+                else:
+                    linux_distro = platform.linux_distribution()
+                    self.host['linux_distro'] = " ".join(linux_distro[:2])
+                self.host['os_version'] = platform.release()
+            elif self.host['os_name'] == "FreeBSD":
+                self.host['os_version'] = platform.release()
+            elif self.host['os_name'] == "Darwin":
+                self.host['os_version'] = platform.mac_ver()[0]
+            elif self.host['os_name'] == "Windows":
                 os_version = platform.win32_ver()
-                self.host['os_version'] = os_version[0] + " " + os_version[2]
-            elif (self.host['os_name'] == "Darwin"):
-                os_version = platform.mac_ver()
-                self.host['os_version'] = os_version[0]
+                self.host['os_version'] = " ".join(os_version[::2])
             else:
                 self.host['os_version'] = ""
         except:
@@ -1056,21 +1062,24 @@ class glancesScreen:
 
     def displaySystem(self, host, system):
         # System information
-        if (not host or not system):
+        if not host or not system:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        if ((screen_y > self.system_y)
-            and (screen_x > self.system_x + 79)):
-            system_msg = host['hostname'] + " (" + \
-                         system['os_name'] + " " + \
-                         system['platform'] + " " + \
-                         system['os_version'] + ")"
-            self.term_window.addnstr(self.system_y, \
-                                     self.system_x + int(screen_x / 2) - \
-                                        len(system_msg) / 2, \
-                                     system_msg, \
-                                     80)
+        if (screen_y > self.system_y and
+            screen_x > self.system_x + 79):
+            if host['os_name'] == "Linux":
+                system_msg = _("{0} {1} with {2} {3} on {4}").format(
+                    system['linux_distro'], system['platform'],
+                    system['os_name'], system['os_version'],
+                    host['hostname'])
+            else:
+                system_msg = _("{0} {1} {2} on {3}").format(
+                    system['os_name'], system['os_version'],
+                    system['platform'], host['hostname'])
+            self.term_window.addnstr(self.system_y, self.system_x +
+                                     int(screen_x / 2) - len(system_msg) / 2,
+                                     system_msg, 80, curses.A_UNDERLINE)
 
     def displayCpu(self, cpu):
         # CPU %
