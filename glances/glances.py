@@ -883,20 +883,25 @@ class glancesScreen:
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {
-                    'Y': 1208925819614629174706176L,
-                    'Z': 1180591620717411303424L,
-                    'E': 1152921504606846976L,
-                    'P': 1125899906842624L,
-                    'T': 1099511627776L,
-                    'G': 1073741824,
-                    'M': 1048576,
-                    'K': 1024
-                    }
+            'Y': 1208925819614629174706176L,
+            'Z': 1180591620717411303424L,
+            'E': 1152921504606846976L,
+            'P': 1125899906842624L,
+            'T': 1099511627776L,
+            'G': 1073741824,
+            'M': 1048576,
+            'K': 1024
+            }
+
         for key in reversed(symbols):
             if val >= prefix[key]:
                 value = float(val) / prefix[key]
-                return '%.1f%s' % (value, key)
-        return "%s" % val
+                if key == "M" or key == "K":
+                    return "{0:.0f}{1}".format(value, key)
+                else:
+                    return "{0:.1f}{1}".format(value, key)
+
+        return "{!s}".format(val)
 
     def __getAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
