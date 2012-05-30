@@ -1182,7 +1182,7 @@ class glancesScreen:
                                      self.__autoUnit(mem['free']), 8)
 
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
-            logs.add(alert, "MEM swap", memswap['used'] / 1048576)
+            logs.add(alert, "MEM swap", memswap['used'])
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + 20, \
                                      self.__autoUnit(memswap['total']), 8)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x + 20, \
@@ -1192,7 +1192,7 @@ class glancesScreen:
 
             alert = self.__getMemAlert(mem['used'] - mem['cache'], \
                                        mem['total'])
-            logs.add(alert, "MEM real", (mem['used'] - mem['cache']) / 1048576)
+            logs.add(alert, "MEM real", mem['used'] - mem['cache'])
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + 30, "-", 8)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x + 30, \
                                 self.__autoUnit((mem['used'] - \
@@ -1357,9 +1357,16 @@ class glancesScreen:
                 else:
                     logmark = '~'
                     logmsg += " > " + "%19s" % "___________________"
-                logmsg += " " + log[logcount][3] + \
-                    " (%.1f/" % log[logcount][6] + \
-                    "%.1f/" % log[logcount][5] + "%.1f)" % log[logcount][4]
+                if log[logcount][3][:3] == "MEM":
+                    logmsg += " {0} ({1}/{2}/{3})".format(
+                        log[logcount][3],
+                        self.__autoUnit(log[logcount][6]),
+                        self.__autoUnit(log[logcount][5]),
+                        self.__autoUnit(log[logcount][4]))
+                else:
+                    logmsg += " {0} ({1:.1f}/{2:.1f}/{3:.1f})".format(
+                        log[logcount][3], log[logcount][6],
+                        log[logcount][5], log[logcount][4])
                 self.term_window.addnstr(self.log_y + 1 + logcount, \
                                          self.log_x, logmsg, 79)
                 self.term_window.addnstr(self.log_y + 1 + logcount, \
