@@ -486,19 +486,23 @@ class glancesStats:
             cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
         except:
             cachemem = 0
+
         try:
             phymem = psutil.phymem_usage()
             self.mem = {'cache': cachemem,
                         'total': phymem.total,
+                        'used': phymem.used,
                         'free': phymem.free,
-                        'used': phymem.used}
+                        'percent': phymem.percent}
         except:
             self.mem = {}
+
         try:
             virtmem = psutil.virtmem_usage()
             self.memswap = {'total': virtmem.total,
+                            'used': virtmem.used,
                             'free': virtmem.free,
-                            'used': virtmem.used}
+                            'percent': virtmem.percent}
         except:
             self.memswap = {}
 
@@ -737,9 +741,9 @@ class glancesScreen:
         self.system_y = 0
         self.cpu_x = 0
         self.cpu_y = 2
-        self.load_x = 20
+        self.load_x = 19
         self.load_y = 2
-        self.mem_x = 41
+        self.mem_x = 39
         self.mem_y = 2
         self.network_x = 0
         self.network_y = 7
@@ -747,7 +751,7 @@ class glancesScreen:
         self.diskio_y = -1
         self.fs_x = 0
         self.fs_y = -1
-        self.process_x = 30
+        self.process_x = 29
         self.process_y = 7
         self.log_x = 0
         self.log_y = -1
@@ -1158,50 +1162,65 @@ class glancesScreen:
 
     def displayMem(self, mem, memswap):
         # MEM
-        if (not mem or not memswap):
+        if not mem or not memswap:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        if ((screen_y > self.mem_y + 5)
-            and (screen_x > self.mem_x + 38)):
-            self.term_window.addnstr(self.mem_y, self.mem_x, _("Mem B"), \
-                8, self.title_color if self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.mem_y, self.mem_x + 10, _("Mem"), 8)
-            self.term_window.addnstr(self.mem_y, self.mem_x + 20, _("Swap"), 8)
-            self.term_window.addnstr(self.mem_y, self.mem_x + 30, _("Real"), 8)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x, \
+        if (screen_y > self.mem_y + 5 and
+            screen_x > self.mem_x + 38):
+            self.term_window.addnstr(self.mem_y, self.mem_x, _("Mem"), 8,
+                                     self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            self.term_window.addnstr(self.mem_y + 1, self.mem_x,
                                      _("Total:"), 8)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x, _("Used:"), 8)
             self.term_window.addnstr(self.mem_y + 3, self.mem_x, _("Free:"), 8)
 
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 10, \
+            self.term_window.addnstr(self.mem_y, self.mem_x + 9,
+                                     "{:.1%}".format(mem['percent'] / 100), 8)
+            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 9,
                                      self.__autoUnit(mem['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 10, \
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 9,
                                      self.__autoUnit(mem['used']), 8)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 10, \
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 9,
                                      self.__autoUnit(mem['free']), 8)
 
+            # real memory usage
+            real_used_phymem = mem['used'] - mem['cache']
+            real_free_phymem = mem['free'] + mem['cache']
+            alert = self.__getMemAlert(real_used_phymem, mem['total'])
+            logs.add(alert, "MEM real", real_used_phymem)
+            self.term_window.addnstr(
+                self.mem_y + 2, self.mem_x + 15,
+                "({0})".format(self.__autoUnit(real_used_phymem)), 8,
+                self.__colors_list[alert])
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + 15,
+                "({0})".format(self.__autoUnit(real_free_phymem)), 8)
+
+            # Swap
+            self.term_window.addnstr(self.mem_y, self.mem_x + 25, _("Swap"), 8,
+                                     self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 25,
+                                     _("Total:"), 8)
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 25,
+                                     _("Used:"), 8)
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 25,
+                                     _("Free:"), 8)
+
+            self.term_window.addnstr(self.mem_y, self.mem_x + 34,
+                                     "{:.1%}".format(memswap['percent'] / 100),
+                                     8)
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'])
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 20, \
+            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 34,
                                      self.__autoUnit(memswap['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 20, \
-                self.__autoUnit(memswap['used']), 8, self.__colors_list[alert])
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 20, \
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 34,
+                                     self.__autoUnit(memswap['used']), 8,
+                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 34,
                                      self.__autoUnit(memswap['free']), 8)
-
-            alert = self.__getMemAlert(mem['used'] - mem['cache'], \
-                                       mem['total'])
-            logs.add(alert, "MEM real", mem['used'] - mem['cache'])
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + 30, "-", 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + 30, \
-                                self.__autoUnit((mem['used'] - \
-                                                 mem['cache'])), \
-                                8, self.__colors_list[alert])
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + 30, \
-                                self.__autoUnit((mem['free'] + \
-                                                 mem['cache'])), \
-                                8)
 
     def displayNetwork(self, network):
         """
@@ -1217,11 +1236,11 @@ class glancesScreen:
             and (screen_x > self.network_x + 28)):
             # Network interfaces bitrate
             self.term_window.addnstr(self.network_y, self.network_x, \
-                    _("Net rate"), 8, \
+                    _("Network"), 8, \
                     self.title_color if self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.network_y, self.network_x + 10, \
                     _("Rx/ps"), 8)
-            self.term_window.addnstr(self.network_y, self.network_x + 20, \
+            self.term_window.addnstr(self.network_y, self.network_x + 19, \
                     _("Tx/ps"), 8)
 
             # If there is no data to display...
@@ -1243,7 +1262,7 @@ class glancesScreen:
                                          self.__autoUnit(network[i]['rx'] / \
                                             elapsed_time * 8) + "b", 8)
                 self.term_window.addnstr(self.network_y + 1 + i, \
-                                         self.network_x + 20, \
+                                         self.network_x + 19, \
                                          self.__autoUnit(network[i]['tx'] / \
                                             elapsed_time * 8) + "b", 8)
                 ret = ret + 1
@@ -1265,7 +1284,7 @@ class glancesScreen:
                 self.title_color if self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 10, \
                 _("In/ps"), 8)
-            self.term_window.addnstr(self.diskio_y, self.diskio_x + 20, \
+            self.term_window.addnstr(self.diskio_y, self.diskio_x + 19, \
                 _("Out/ps"), 8)
 
             # If there is no data to display...
@@ -1287,7 +1306,7 @@ class glancesScreen:
                                     elapsed_time) + "B", \
                     8)
                 self.term_window.addnstr(self.diskio_y + 1 + disk, \
-                    self.diskio_x + 20, \
+                    self.diskio_x + 19, \
                     self.__autoUnit(diskio[disk]['read_bytes'] / \
                                     elapsed_time) + "B", \
                     8)
@@ -1304,10 +1323,10 @@ class glancesScreen:
         if ((screen_y > self.fs_y + 3)
             and (screen_x > self.fs_x + 28)):
             self.term_window.addnstr(self.fs_y, self.fs_x, \
-                _("Mount B"), 8, \
+                _("Mount"), 8, \
                 self.title_color if self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.fs_y, self.fs_x + 10, _("Total"), 8)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 20, _("Used"), 8)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 19, _("Used"), 8)
             # Adapt the maximum disk to the screen
             mounted = 0
             for mounted in range(0, min(screen_y - self.fs_y - 3, len(fs))):
@@ -1316,7 +1335,7 @@ class glancesScreen:
                 self.term_window.addnstr(self.fs_y + 1 + mounted, \
                     self.fs_x + 10, self.__autoUnit(fs[mounted]['size']), 8)
                 self.term_window.addnstr(self.fs_y + 1 + mounted, \
-                    self.fs_x + 20, self.__autoUnit(fs[mounted]['used']), 8, \
+                    self.fs_x + 19, self.__autoUnit(fs[mounted]['used']), 8, \
                     self.__getFsColor(fs[mounted]['used'], \
                                       fs[mounted]['size']))
             return mounted + 3
