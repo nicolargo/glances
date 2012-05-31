@@ -1128,37 +1128,38 @@ class glancesScreen:
 
     def displayLoad(self, load, core):
         # Load %
-        if (not load):
+        if not load:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        if ((screen_y > self.load_y + 5)
-            and (screen_x > self.load_x + 18)):
-            self.term_window.addnstr(self.load_y, self.load_x, \
-                                    _("Load"), 8, \
-                                    self.title_color if self.hascolors \
-                                                     else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.load_y, self.load_x + 10, \
+        if (screen_y > self.load_y + 5 and
+            screen_x > self.load_x + 18):
+            self.term_window.addnstr(self.load_y, self.load_x, _("Load"), 8,
+                                     self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            self.term_window.addnstr(self.load_y, self.load_x + 10,
                                      str(core) + _("-Core"), 8)
-            self.term_window.addnstr(self.load_y + 1, self.load_x, \
+            self.term_window.addnstr(self.load_y + 1, self.load_x,
                                      _("1 min:"), 8)
-            self.term_window.addnstr(self.load_y + 2, self.load_x, \
-                                     _("5 mins:"), 8)
-            self.term_window.addnstr(self.load_y + 3, self.load_x, \
-                                     _("15 mins:"), 8)
+            self.term_window.addnstr(self.load_y + 2, self.load_x,
+                                     _("5 min:"), 8)
+            self.term_window.addnstr(self.load_y + 3, self.load_x,
+                                     _("15 min:"), 8)
 
-            self.term_window.addnstr(self.load_y + 1, self.load_x + 10, \
-                                     str(load['min1']), 8)
+            self.term_window.addnstr(self.load_y + 1, self.load_x + 10,
+                                     "{:.2f}".format(load['min1']), 8)
 
             alert = self.__getLoadAlert(load['min5'], core)
-            logs.add(alert, "LOAD 5-mins", load['min5'])
-            self.term_window.addnstr(self.load_y + 2, self.load_x + 10, \
-                            str(load['min5']), 8, self.__colors_list[alert])
+            logs.add(alert, "LOAD 5-min", load['min5'])
+            self.term_window.addnstr(self.load_y + 2, self.load_x + 10,
+                                     "{:.2f}".format(load['min5']), 8,
+                                     self.__colors_list[alert])
 
             alert = self.__getLoadAlert(load['min15'], core)
-            logs.add(alert, "LOAD 15-mins", load['min15'])
-            self.term_window.addnstr(self.load_y + 3, self.load_x + 10, \
-                            str(load['min15']), 8, self.__colors_list[alert])
+            logs.add(alert, "LOAD 15-min", load['min15'])
+            self.term_window.addnstr(self.load_y + 3, self.load_x + 10,
+                                     "{:.2f}".format(load['min15']), 8,
+                                     self.__colors_list[alert])
 
     def displayMem(self, mem, memswap):
         # MEM
