@@ -1397,44 +1397,39 @@ class glancesScreen:
 
     def displayProcess(self, processcount, processlist, log_count=0):
         # Process
-        if (not processcount):
+        if not processcount:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        # If there is no (network&diskio&fs) stats
+        # If there is no network & diskio & fs stats
         # then increase process window
-        if (not self.network_tag and not self.diskio_tag and not self.fs_tag):
+        if (not self.network_tag and
+            not self.diskio_tag and
+            not self.fs_tag):
             process_x = 0
         else:
             process_x = self.process_x
         # Display the process summary
-        if ((screen_y > self.process_y + 3)
-            and (screen_x > process_x + 48)):
+        if (screen_y > self.process_y + 3 and
+            screen_x > process_x + 48):
             # Processes sumary
-            self.term_window.addnstr(self.process_y, process_x, \
-                _("Process"), 8, \
-                self.title_color if self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.process_y, process_x + 10, \
-                _("Total"), 8)
-            self.term_window.addnstr(self.process_y, process_x + 20, \
-                _("Running"), 8)
-            self.term_window.addnstr(self.process_y, process_x + 30, \
-                _("Sleeping"), 8)
-            self.term_window.addnstr(self.process_y, process_x + 40, \
-                _("Other"), 8)
-            self.term_window.addnstr(self.process_y + 1, process_x, \
-                _("Number:"), 8)
-            self.term_window.addnstr(self.process_y + 1, process_x + 10, \
-                str(processcount['total']), 8)
-            self.term_window.addnstr(self.process_y + 1, process_x + 20, \
-                str(processcount['running']), 8)
-            self.term_window.addnstr(self.process_y + 1, process_x + 30, \
-                str(processcount['sleeping']), 8)
-            self.term_window.addnstr(self.process_y + 1, process_x + 40, \
-                str(processcount['total'] - \
-                    stats.getProcessCount()['running'] - \
-                    stats.getProcessCount()['sleeping']), \
-                8)
+            self.term_window.addnstr(self.process_y, process_x, _("Process"),
+                                     8, self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            other = (processcount['total'] -
+                     stats.getProcessCount()['running'] -
+                     stats.getProcessCount()['sleeping'])
+            self.term_window.addnstr(
+                self.process_y, process_x + 8,
+                "{0:>4s}, {1:>2s} {2}, {3:>4s} {4}, {5:>2s} {6}".format(
+                    str(processcount['total']),
+                    str(processcount['running']),
+                    _("running"),
+                    str(processcount['sleeping']),
+                    _("sleeping"),
+                    str(other),
+                    _("other")), 42)
+
         # Display the process detail
         tag_pid = tag_uid = False
         if (screen_x > process_x + 55):
@@ -1444,68 +1439,68 @@ class glancesScreen:
         if ((screen_y > self.process_y + 8)
             and (screen_x > process_x + 49)):
             # Processes detail
-            self.term_window.addnstr(self.process_y + 3, process_x, \
+            self.term_window.addnstr(self.process_y + 2, process_x, \
                 _("CPU %"), 5, \
                 curses.A_UNDERLINE \
                     if (self.getProcessSortedBy() == 'cpu_percent') else 0)
-            self.term_window.addnstr(self.process_y + 3, process_x + 7,  \
+            self.term_window.addnstr(self.process_y + 2, process_x + 7,  \
                 _("Mem virt."), 9, \
                 curses.A_UNDERLINE \
                     if (self.getProcessSortedBy() == 'proc_size') else 0)
-            self.term_window.addnstr(self.process_y + 3, process_x + 18, \
+            self.term_window.addnstr(self.process_y + 2, process_x + 18, \
                 _("Mem resi."), 9)
             process_name_x = 30
             # If screen space (X) is available then:
             # 1) Add PID
             if (tag_pid):
-                self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
+                self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
                     _("PID"), 6 )
                 process_name_x = process_name_x + 8
             # 2) Add UID
             if (tag_uid):
-                self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
+                self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
                     _("UID"), 8 )
                 process_name_x = process_name_x + 10
             # 3) Process name
-            self.term_window.addnstr(self.process_y + 3, process_x + process_name_x, \
+            self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
                 _("Process name"), 12, \
                 curses.A_UNDERLINE \
                     if (self.getProcessSortedBy() == 'process_name') else 0)
 
             # If there is no data to display...
             if (not processlist):
-                self.term_window.addnstr(self.process_y + 4, self.process_x, \
+                self.term_window.addnstr(self.process_y + 3, self.process_x, \
                     _("Compute data..."), 15)
                 return 6
 
             for processes in range(0, min(screen_y - self.term_h + \
-                            self.process_y - log_count + 4, len(processlist))):
+                            self.process_y - log_count + 5, len(processlist))):
                 if (psutil_get_cpu_percent_tag):
-                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                    self.term_window.addnstr(self.process_y + 3 + processes, \
                         process_x, \
                         "%.1f" % processlist[processes]['cpu_percent'], \
                         8, \
                         self.__getProcessColor( \
                             processlist[processes]['cpu_percent']))
                 else:
-                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                    self.term_window.addnstr(self.process_y + 3 + processes, \
                         process_x, "N/A", 8)
-                self.term_window.addnstr(self.process_y + 4 + processes, \
+                self.term_window.addnstr(self.process_y + 3 + processes, \
                     process_x + 7, \
                     self.__autoUnit(processlist[processes]['proc_size']), 9)
-                self.term_window.addnstr(self.process_y + 4 + processes, \
+                self.term_window.addnstr(self.process_y + 3 + processes, \
                     process_x + 18, \
                     self.__autoUnit(\
                         processlist[processes]['proc_resident']), 9)
                 # If screen space (X) is available then:
                 # 1) Add PID
                 if (tag_pid):
-                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                    self.term_window.addnstr(self.process_y + 3 + processes, \
                         process_x + 30, \
                         str(processlist[processes]['pid']), 6)                    
                 # 2) Add UID
                 if (tag_uid):
-                    self.term_window.addnstr(self.process_y + 4 + processes, \
+                    self.term_window.addnstr(self.process_y + 3 + processes, \
                         process_x + 38, \
                         str(processlist[processes]['uid']), 8)                    
                 # 3) Display long process command line
@@ -1515,7 +1510,7 @@ class glancesScreen:
                     processname = processlist[processes]['process_name']
                 else:
                     processname = processlist[processes]['proctitle']
-                self.term_window.addnstr(self.process_y + 4 + processes, \
+                self.term_window.addnstr(self.process_y + 3 + processes, \
                     process_x + process_name_x, processname, maxprocessname)
 
     def displayCaption(self):
