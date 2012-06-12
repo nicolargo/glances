@@ -37,7 +37,7 @@ try:
     import getopt
     import signal
     import time
-    import datetime
+    from datetime import datetime, timedelta
     import multiprocessing
     import gettext
 except ImportError:
@@ -252,9 +252,9 @@ class glancesLogs:
             if ((item_state == "WARNING") or
                 (item_state == "CRITICAL")):
                 # Time is stored in Epoch format
-                # Epoch -> DMYHMS = datetime.datetime.fromtimestamp(epoch)
+                # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
                 item = []
-                item.append(time.mktime(datetime.datetime.now().timetuple()))
+                item.append(time.mktime(datetime.now().timetuple()))
                 item.append(-1)
                 item.append(item_state)     # STATE: WARNING|CRITICAL
                 item.append(item_type)      # TYPE: CPU, LOAD, MEM...
@@ -272,7 +272,7 @@ class glancesLogs:
                 (item_state == "CAREFUL")):
                 # Close the item
                 self.logs_list[item_index][1] = time.mktime(
-                datetime.datetime.now().timetuple())
+                    datetime.now().timetuple())
             else:
                 # Update the item
                 # State
@@ -574,7 +574,7 @@ class glancesStats:
         # PROCESS
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
-        if (self.process_list_refresh):
+        if self.process_list_refresh:
             self.process_first_grab = False
             try:
                 self.process_all
@@ -616,27 +616,31 @@ class glancesStats:
                     # Per process stats
                     try:
                         procstat = {}
-                        procstat['process_name'] = proc.name
-                        procstat['proctitle'] = \
-                            " " . join(str(i) for i in proc.cmdline)
                         procstat['proc_size'] = proc.get_memory_info().vms
                         procstat['proc_resident'] = proc.get_memory_info().rss
-                        if (psutil_get_cpu_percent_tag):
+                        if psutil_get_cpu_percent_tag:
                             procstat['cpu_percent'] = \
                                 proc.get_cpu_percent(interval=0)
+                        procstat['mem_percent'] = proc.get_memory_percent()
                         procstat['pid'] = proc.pid
                         procstat['uid'] = proc.username
+                        procstat['nice'] = proc.nice
+                        procstat['status'] = str(proc.status)[:1].upper()
+                        procstat['proc_time'] = proc.get_cpu_times()
+                        procstat['proc_name'] = proc.name
+                        procstat['proc_cmdline'] = " ".join(proc.cmdline)
                         self.process.append(procstat)
                     except:
                         pass
+
             # If it is the first grab then empty process list
-            if (self.process_first_grab):
+            if self.process_first_grab:
                 self.process = []
 
         self.process_list_refresh = not self.process_list_refresh
 
         # Get the current date/time
-        self.now = datetime.datetime.now()
+        self.now = datetime.now()
 
         # Get the number of core (CPU) (Used to display load alerts)
         self.core_number = psutil.NUM_CPUS
@@ -710,7 +714,7 @@ class glancesStats:
             else:
                 if (memtotal > limits.getSTDWarning()):
                     sortedby = 'proc_size'
-        elif sortedby == 'process_name':
+        elif sortedby == 'proc_name':
             sortedReverse = False
 
         return sorted(self.process, key=lambda process: process[sortedby], \
@@ -1013,7 +1017,7 @@ class glancesScreen:
             self.network_tag = not self.network_tag
         elif (self.pressedkey == 112):
             # 'p' > Sort process list by Process name
-            self.setProcessSortedBy('process_name')
+            self.setProcessSortedBy('proc_name')
 
         # Return the key code
         return self.pressedkey
@@ -1369,11 +1373,11 @@ class glancesScreen:
             log = logs.get()
             for logcount in range(0, logtodisplay_count):
                 logmsg = "  " + \
-                         str(datetime.datetime.fromtimestamp(log[logcount][0]))
+                         str(datetime.fromtimestamp(log[logcount][0]))
                 if (log[logcount][1] > 0):
                     logmark = ' '
                     logmsg += " > " + \
-                        str(datetime.datetime.fromtimestamp(log[logcount][1]))
+                        str(datetime.fromtimestamp(log[logcount][1]))
                 else:
                     logmark = '~'
                     logmsg += " > " + "%19s" % "___________________"
@@ -1431,87 +1435,165 @@ class glancesScreen:
                     _("other")), 42)
 
         # Display the process detail
-        tag_pid = tag_uid = False
-        if (screen_x > process_x + 55):
+        tag_pid = False
+        tag_uid = False
+        tag_nice = False
+        tag_status = False
+        tag_proc_time = False
+        if screen_x > process_x + 55:
             tag_pid = True
-        if (screen_x > process_x + 64):
+        if screen_x > process_x + 64:
             tag_uid = True
-        if ((screen_y > self.process_y + 8)
-            and (screen_x > process_x + 49)):
-            # Processes detail
-            self.term_window.addnstr(self.process_y + 2, process_x, \
-                _("CPU %"), 5, \
-                curses.A_UNDERLINE \
-                    if (self.getProcessSortedBy() == 'cpu_percent') else 0)
-            self.term_window.addnstr(self.process_y + 2, process_x + 7,  \
-                _("Mem virt."), 9, \
-                curses.A_UNDERLINE \
-                    if (self.getProcessSortedBy() == 'proc_size') else 0)
-            self.term_window.addnstr(self.process_y + 2, process_x + 18, \
-                _("Mem resi."), 9)
-            process_name_x = 30
+        if screen_x > process_x + 70:
+            tag_nice = True
+        if screen_x > process_x + 74:
+            tag_status = True
+        if screen_x > process_x + 77:
+            tag_proc_time = True
+
+        # Processes detail
+        if (screen_y > self.process_y + 8 and
+            screen_x > process_x + 49):
+            # VMS
+            self.term_window.addnstr(
+                self.process_y + 2, process_x,
+                _("VIRT"), 5, curses.A_UNDERLINE
+                if self.getProcessSortedBy() == 'proc_size' else 0)
+            # RSS
+            self.term_window.addnstr(
+                self.process_y + 2, process_x + 7,
+                _("RES"), 5)
+            # CPU%
+            self.term_window.addnstr(
+                self.process_y + 2, process_x + 14,
+                _("CPU%"), 5, curses.A_UNDERLINE
+                if self.getProcessSortedBy() == 'cpu_percent' else 0)
+            # MEM%
+            self.term_window.addnstr(
+                self.process_y + 2, process_x + 21,
+                _("MEM%"), 5)
+            process_name_x = 28
             # If screen space (X) is available then:
-            # 1) Add PID
-            if (tag_pid):
-                self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
-                    _("PID"), 6 )
-                process_name_x = process_name_x + 8
-            # 2) Add UID
-            if (tag_uid):
-                self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
-                    _("UID"), 8 )
-                process_name_x = process_name_x + 10
-            # 3) Process name
-            self.term_window.addnstr(self.process_y + 2, process_x + process_name_x, \
-                _("Process name"), 12, \
-                curses.A_UNDERLINE \
-                    if (self.getProcessSortedBy() == 'process_name') else 0)
+            # PID
+            if tag_pid:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("PID"), 6)
+                process_name_x += 7
+            # UID
+            if tag_uid:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("USER"), 8)
+                process_name_x += 10
+            # NICE
+            if tag_nice:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("NI"), 3)
+                process_name_x += 4
+            # STATUS
+            if tag_status:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("S"), 1)
+                process_name_x += 3
+            # TIME+
+            if tag_proc_time:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("TIME+"), 8)
+                process_name_x += 10
+            # PROCESS NAME
+            self.term_window.addnstr(
+                self.process_y + 2, process_x + process_name_x,
+                _("NAME"), 12, curses.A_UNDERLINE
+                if self.getProcessSortedBy() == 'proc_name' else 0)
 
             # If there is no data to display...
-            if (not processlist):
-                self.term_window.addnstr(self.process_y + 3, self.process_x, \
-                    _("Compute data..."), 15)
+            if not processlist:
+                self.term_window.addnstr(self.process_y + 3, self.process_x,
+                                         _("Compute data..."), 15)
                 return 6
 
-            for processes in range(0, min(screen_y - self.term_h + \
-                            self.process_y - log_count + 5, len(processlist))):
-                if (psutil_get_cpu_percent_tag):
-                    self.term_window.addnstr(self.process_y + 3 + processes, \
-                        process_x, \
-                        "%.1f" % processlist[processes]['cpu_percent'], \
-                        8, \
-                        self.__getProcessColor( \
-                            processlist[processes]['cpu_percent']))
+            proc_num = min(screen_y - self.term_h +
+                           self.process_y - log_count + 5,
+                           len(processlist))
+            for processes in xrange(0, proc_num):
+                # VMS
+                process_size = processlist[processes]['proc_size']
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x,
+                    self.__autoUnit(process_size), 5)
+                # RSS
+                process_resident = processlist[processes]['proc_resident']
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x + 7,
+                    self.__autoUnit(process_resident), 5)
+                # CPU%
+                cpu_percent = processlist[processes]['cpu_percent']
+                if psutil_get_cpu_percent_tag:
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 14,
+                        "{:.1f}".format(cpu_percent), 5,
+                        self.__getProcessColor(cpu_percent))
                 else:
-                    self.term_window.addnstr(self.process_y + 3 + processes, \
-                        process_x, "N/A", 8)
-                self.term_window.addnstr(self.process_y + 3 + processes, \
-                    process_x + 7, \
-                    self.__autoUnit(processlist[processes]['proc_size']), 9)
-                self.term_window.addnstr(self.process_y + 3 + processes, \
-                    process_x + 18, \
-                    self.__autoUnit(\
-                        processlist[processes]['proc_resident']), 9)
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x, "N/A", 8)
+                # MEM%
+                mem_percent = processlist[processes]['mem_percent']
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x + 21,
+                    "{:.1f}".format(mem_percent), 5,
+                    self.__getProcessColor(mem_percent))
                 # If screen space (X) is available then:
-                # 1) Add PID
-                if (tag_pid):
-                    self.term_window.addnstr(self.process_y + 3 + processes, \
-                        process_x + 30, \
-                        str(processlist[processes]['pid']), 6)                    
-                # 2) Add UID
-                if (tag_uid):
-                    self.term_window.addnstr(self.process_y + 3 + processes, \
-                        process_x + 38, \
-                        str(processlist[processes]['uid']), 8)                    
-                # 3) Display long process command line
-                maxprocessname = screen_x - process_x - process_name_x
-                if ((len(processlist[processes]['proctitle']) > maxprocessname)
-                   or (len(processlist[processes]['proctitle']) == 0)):
-                    processname = processlist[processes]['process_name']
+                # PID
+                if tag_pid:
+                    pid = processlist[processes]['pid']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 28,
+                        str(pid), 6)
+                # UID
+                if tag_uid:
+                    uid = processlist[processes]['uid']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 35,
+                        str(uid), 8)
+                # NICE
+                if tag_nice:
+                    nice = processlist[processes]['nice']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 45,
+                        str(nice), 3)
+                # STATUS
+                if tag_status:
+                    status = processlist[processes]['status']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 49,
+                        str(status), 1)
+                # TIME+
+                if tag_proc_time:
+                    process_time = processlist[processes]['proc_time']
+                    dtime = timedelta(seconds=sum(process_time))
+                    dtime = "{0}:{1}.{2}".format(
+                                dtime.seconds // 60 % 60,
+                                str(dtime.seconds % 60).zfill(2),
+                                str(dtime.microseconds)[:2])
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 52,
+                        dtime, 8)
+                # display process command line
+                max_process_name = screen_x - process_x - process_name_x
+                process_name = processlist[processes]['proc_name']
+                process_cmdline = processlist[processes]['proc_cmdline']
+                if (len(process_cmdline) > max_process_name or
+                    len(process_cmdline) == 0):
+                    command = process_name
                 else:
-                    processname = processlist[processes]['proctitle']
-                self.term_window.addnstr(self.process_y + 3 + processes, \
-                    process_x + process_name_x, processname, maxprocessname)
+                    command = process_cmdline
+                self.term_window.addnstr(self.process_y + 3 + processes,
+                                         process_x + process_name_x,
+                                         command, max_process_name)
 
     def displayCaption(self):
         # Caption
