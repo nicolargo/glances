@@ -1599,84 +1599,103 @@ class glancesScreen:
         # Caption
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        msg = _("Glances ") + __version__
-        if ((screen_x > 79) and (screen_y > 23)):
-            # Help can only be displayed on a 80x24 console
-            msg = msg + " - " + _("Press 'h' for help")
-        if ((screen_y > self.caption_y)
-            and (screen_x > self.caption_x + 32)):
-            self.term_window.addnstr(max(self.caption_y, screen_y - 1), \
-                self.caption_x, msg, self.default_color)
+        msg = _("Press 'h' for help")
+        if (screen_y > self.caption_y and
+            screen_x > self.caption_x + 32):
+            self.term_window.addnstr(max(self.caption_y, screen_y - 1),
+                                     self.caption_x, msg, self.default_color)
 
     def displayHelp(self):
         """
         Show the help panel
         """
-        if (not self.help_tag):
+        if not self.help_tag:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        if ((screen_y > self.help_y + 23)
-            and (screen_x > self.help_x + 79)):
+        if (screen_y > self.help_y + 23 and
+            screen_x > self.help_x + 79):
             # Console 80x24 is mandatory to display the help message
             self.erase()
 
-            self.term_window.addnstr(self.help_y, self.help_x, \
-                _("Glances v") + self.__version + _(" user guide"), \
+            self.term_window.addnstr(
+                self.help_y, self.help_x,
+                _("Glances {0} with PsUtil {1}").format(
+                    self.__version, psutil.__version__),
                 79, self.title_color if self.hascolors else 0)
 
-            self.term_window.addnstr(self.help_y + 2, self.help_x, \
-                _("PsUtil version: ") + psutil.__version__, 79)
+            self.term_window.addnstr(self.help_y + 2, self.help_x,
+                                     _("Captions: "), 79)
+            self.term_window.addnstr(self.help_y + 2, self.help_x + 10,
+                                     _("   OK   "), 8, self.default_color)
+            self.term_window.addnstr(self.help_y + 2, self.help_x + 18,
+                                     _("CAREFUL "), 8, self.ifCAREFUL_color)
+            self.term_window.addnstr(self.help_y + 2, self.help_x + 26,
+                                     _("WARNING "), 8, self.ifWARNING_color)
+            self.term_window.addnstr(self.help_y + 2, self.help_x + 34,
+                                     _("CRITICAL"), 8, self.ifCRITICAL_color)
 
-            self.term_window.addnstr(self.help_y + 4, self.help_x, \
-                _("Captions: "), 79)
-            self.term_window.addnstr(self.help_y + 4, self.help_x + 10, \
-                _("   OK   "), 8, self.default_color)
-            self.term_window.addnstr(self.help_y + 4, self.help_x + 18, \
-                _("CAREFUL "), 8, self.ifCAREFUL_color)
-            self.term_window.addnstr(self.help_y + 4, self.help_x + 26, \
-                _("WARNING "), 8, self.ifWARNING_color)
-            self.term_window.addnstr(self.help_y + 4, self.help_x + 34, \
-                _("CRITICAL"), 8, self.ifCRITICAL_color)
-
-            self.term_window.addnstr(self.help_y + 6, self.help_x, \
-                _("Key") + "\t" + _("Function"), 79, \
-                self.title_color if self.hascolors else 0)
-            self.term_window.addnstr(self.help_y + 7, self.help_x, \
-                _("a") + "\t" + _("Sort process list automatically " \
-                                  "(need PsUtil v0.2.0 or higher)"), \
-                79, self.ifCRITICAL_color2 \
+            width = 5
+            self.term_window.addnstr(
+                self.help_y + 4, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("Key"), _("Function"), width=width),
+                79, self.title_color if self.hascolors else 0)
+            self.term_window.addnstr(
+                self.help_y + 5, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("a"), _("Sort process list automatically "
+                              "(need PsUtil 0.2.0+)"), width=width),
+                79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
-            self.term_window.addnstr(self.help_y + 8, self.help_x, \
-                _("c") + "\t" + _("Sort process list by CPU usage " \
-                                  "(need PsUtil v0.2.0 or higher)"), \
-                79, self.ifCRITICAL_color2 \
+            self.term_window.addnstr(
+                self.help_y + 6, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("c"), _("Sort process list by CPU% "
+                              "(need PsUtil 0.2.0+)"), width=width),
+                79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
-            self.term_window.addnstr(self.help_y + 9, self.help_x, \
-                _("m") + "\t" + \
-                    _("Sort process list by virtual memory usage"), 79)
-            self.term_window.addnstr(self.help_y + 10, self.help_x, \
-                _("p") + "\t" + _("Sort process list by name"), 79)
-            self.term_window.addnstr(self.help_y + 11, self.help_x, \
-                _("d") + "\t" + _("Enable/Disable disk I/O stats " \
-                                  "(need PsUtil v0.4.0 or higher)"), \
+            self.term_window.addnstr(
+                self.help_y + 7, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("m"), _("Sort process list by "
+                              "virtual memory usage"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 8, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("p"), _("Sort process list by name"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 9, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("d"), _("Show/hide disk I/O stats "
+                              "(need PsUtil 0.4.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
-            self.term_window.addnstr(self.help_y + 12, self.help_x, \
-                _("f") + "\t" + _("Enable/Disable file system stats " \
-                                  "(need PsUtil v0.3.0 or higher)"), \
+            self.term_window.addnstr(
+                self.help_y + 10, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("f"), _("Show/hide file system stats "
+                              "(need PsUtil 0.3.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
-            self.term_window.addnstr(self.help_y + 13, self.help_x, \
-                _("n") + "\t" + _("Enable/Disable network stats " \
-                                  "(need PsUtil v0.3.0 or higher)"), \
+            self.term_window.addnstr(
+                self.help_y + 11, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("n"), _("Show/hide network stats "
+                              "(need PsUtil 0.3.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
-            self.term_window.addnstr(self.help_y + 14, self.help_x, \
-                _("l") + "\t" + _("Enable/Disable log list " \
-                                  "(only available if display > 24 lines)"), 79)
-            self.term_window.addnstr(self.help_y + 15, self.help_x, \
-                _("h") + "\t" + _("Display/Hide help message"), 79)
-            self.term_window.addnstr(self.help_y + 16, self.help_x, \
-                _("q") + "\t" + \
-                    _("Exit from Glances (ESC key and CRTL-C also work)"), 79)
+            self.term_window.addnstr(
+                self.help_y + 12, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("l"), _("Show/hide log list (only available "
+                              "if display > 24 lines)"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 13, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("h"), _("Show/hide this help message"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 14, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
+                79)
 
     def displayNow(self, now):
         # Display the current date and time (now...) - Center
