@@ -1576,7 +1576,7 @@ class glancesScreen:
                     process_time = processlist[processes]['proc_time']
                     dtime = timedelta(seconds=sum(process_time))
                     dtime = "{0}:{1}.{2}".format(
-                                dtime.seconds // 60 % 60,
+                                str(dtime.seconds // 60 % 60).zfill(2),
                                 str(dtime.seconds % 60).zfill(2),
                                 str(dtime.microseconds)[:2])
                     self.term_window.addnstr(
