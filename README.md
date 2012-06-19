@@ -102,14 +102,14 @@ When Glances is running, you can press:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/header.png)
 
-The header shows the Glances version, the host name and the operating 
+The header shows the Glances version, the host name and the operating
 system name, version and architecture.
 
 ### CPU
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu.png)
 
-The CPU states are shown as a percentage and for the configured refresh 
+The CPU states are shown as a percentage and for the configured refresh
 time.
 
 If user|kernel|nice CPU is < 50%, then status is set to "OK".
@@ -124,12 +124,12 @@ If user|kernel|nice CPU is > 90%, then status is set to "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/load.png)
 
-On the Nosheep blog, Zach defines the average load: "In short it is the 
-average sum of the number of processes waiting in the run-queue plus the 
+On the Nosheep blog, Zach defines the average load: "In short it is the
+average sum of the number of processes waiting in the run-queue plus the
 number currently executing over 1, 5, and 15 minute time periods."
 
-Glances gets the number of CPU cores to adapt the alerts. With Glances, 
-alerts on average load are only set on 5 and 15 mins. 
+Glances gets the number of CPU cores to adapt the alerts. With Glances,
+alerts on average load are only set on 5 and 15 mins.
 
 If average load is < O.7*Core, then status is set to "OK".
 
@@ -163,7 +163,7 @@ If memory is > 90%, then status is set to "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/network.png)
 
-Glances display the network interface bit rate. The unit is adapted 
+Glances display the network interface bit rate. The unit is adapted
 dynamicaly (bits per second, Kbits per second, Mbits per second...).
 
 Alerts are set only if the network interface maximum speed is available.
@@ -176,14 +176,14 @@ If bitrate is > 70%, then status is set to "WARNING".
 
 If bitrate is > 90%, then status is set to "CRITICAL".
 
-For exemple, on a 100 Mbps Ethernet interface, the warning status is set 
+For exemple, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.
 
 ### Disk I/O
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/diskio.png)
 
-Glances display the disk I/O throughput. The unit is adapted dynamicaly 
+Glances display the disk I/O throughput. The unit is adapted dynamicaly
 (bytes per second, Kbytes per second, Mbytes per second...).
 
 There is no alert on this information.
@@ -192,8 +192,8 @@ There is no alert on this information.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/fs.png)
 
-Glances display the total and used filesytem disk space. The unit is 
-adapted dynamicaly (bytes per second, Kbytes per second, Mbytes per 
+Glances display the total and used filesytem disk space. The unit is
+adapted dynamicaly (bytes per second, Kbytes per second, Mbytes per
 second...).
 
 Alerts are set for used disk space:
@@ -212,7 +212,7 @@ If disk used is > 90%, then status is set to "CRITICAL".
 
 Glances displays a summary and a list of processes.
 
-By default (or if you hit the 'a' key) the process list is automaticaly 
+By default (or if you hit the 'a' key) the process list is automaticaly
 sorted by CPU of memory consumption.
 
 The number of processes in the list is adapted to the screen size.
@@ -231,7 +231,7 @@ There is one line per alert with the following information:
 * start date
 * end date
 * alert name
-* (min/avg/max) values 
+* (min/avg/max) values
 
 ### Footer
 

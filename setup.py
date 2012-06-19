@@ -15,7 +15,7 @@ data_files = [
         'NEWS',
         'screenshot.png']),
     ('share/doc/glances/doc', glob('doc/*.png')),
-    ('share/glances/html', glob('glances/html/*.html')),    
+    ('share/glances/html', glob('glances/html/*.html')),
     ('share/glances/html/css', glob('glances/css/*.css')),
     ('share/glances/html/img', glob('glances/img/*.png')),
 ]

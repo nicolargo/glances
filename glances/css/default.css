@@ -2,7 +2,7 @@
 Reset the sheet
 */
 
-* { margin: 0; padding: 0; }  
+* { margin: 0; padding: 0; }
 article, aside, details, figcaption, figure, footer, header, hgroup, nav, section { display: block; }
 [hidden] { display: none; }
 
@@ -42,24 +42,24 @@ Colors table
 .bgproc { background: transparent; }
 .fgproc { color: #3C8AAD; }
 
-.bgcdefault { background: transparent; } 
+.bgcdefault { background: transparent; }
 .fgcdefault { color: #FFFFFF; }
-.bgcok { background: #60AC39; } 
+.bgcok { background: #60AC39; }
 .fgcok { color: #FFFFFF; }
-.bgccareful { background: #6039AC; } 
+.bgccareful { background: #6039AC; }
 .fgccareful { color: #FFFFFF; }
-.bgcwarning { background: #FFAA00; } 
+.bgcwarning { background: #FFAA00; }
 .fgcwarning { color: #FFFFFF; }
-.bgcritical { background: #D92626; } 
+.bgcritical { background: #D92626; }
 .fgcritical { color: #FFFFFF; }
 
 /*
 Main
 */
 
-html { 
+html {
 	background-image: url('../img/bg.png');
-	font-size: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; 
+	font-size: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;
 }
 html, button, input, select, textarea { font-family: sans-serif; }
 body { margin: 0; font-size: 1em; line-height: 1.4; }
@@ -126,9 +126,9 @@ tbody td{
 
 /* Header */
 
-header { 
+header {
 	text-align: center;
-	margin-bottom: 25px; 
+	margin-bottom: 25px;
 }
 
 /* Main */
@@ -138,7 +138,7 @@ header {
 }
 
 #firstline, #secondline {
-	margin: 0 auto;	
+	margin: 0 auto;
 }
 
 #secondline {

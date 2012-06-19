@@ -1849,7 +1849,7 @@ class glancesCsv:
     """
     This class manages the Csv output
     """
-    
+
     def __init__(self, cvsfile="./glances.csv", refresh_time=1):
         # Global information to display
 
@@ -1904,8 +1904,8 @@ def printSyntax():
     print _("\t-d\t\tDisable disk I/O module")
     print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
     print _("\t-h\t\tDisplay the syntax and exit")
-    print _("\t-m\t\tDisable mount module")    
-    print _("\t-n\t\tDisable network module")    
+    print _("\t-m\t\tDisable mount module")
+    print _("\t-n\t\tDisable network module")
     print _("\t-o output\tDefine additional output (available: HTML or CSV)")
     print _("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time)
@@ -1990,7 +1990,7 @@ def init():
         else:
             printSyntax()
             sys.exit(0)
-    
+
     # Check options
     if html_tag:
         try:
@@ -2057,10 +2057,10 @@ def main():
 
 def end():
     screen.end()
-    
+
     if csv_tag:
         csvoutput.exit()
-    
+
     sys.exit(0)
 
 
