@@ -218,7 +218,7 @@
 					<td>{{ proc.cpu_percent }}</td>	
 					<td>{{ proc.proc_size|filesizeformat(binary = true) }}</td>	
 					<td>{{ proc.proc_resident|filesizeformat(binary = true) }}</td>	
-					<td id="command">{{ proc.process_name|truncate(40, killwords=True) }}</td>						
+					<td id="command">{{ proc.proc_name|truncate(40, killwords=True) }}</td>						
 				</tr>
 			{% endfor %}
 		</tbody>	
