@@ -71,7 +71,7 @@ except ImportError:
 try:
     # get_cpu_percent method only available with PsUtil 0.2.0+
     psutil.Process(os.getpid()).get_cpu_percent(interval=0)
-except:
+except Exception:
     psutil_get_cpu_percent_tag = False
 else:
     psutil_get_cpu_percent_tag = True
@@ -80,7 +80,7 @@ try:
     # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
     psutil.phymem_usage()
     psutil.virtmem_usage()
-except:
+except Exception:
     psutil_mem_usage_tag = False
 else:
     psutil_mem_usage_tag = True
@@ -89,7 +89,7 @@ try:
     # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
     psutil.disk_partitions()
     psutil.disk_usage('/')
-except:
+except Exception:
     psutil_fs_usage_tag = False
 else:
     psutil_fs_usage_tag = True
@@ -97,7 +97,7 @@ else:
 try:
     # disk_io_counters method only available with PsUtil 0.4.0+
     psutil.disk_io_counters()
-except:
+except Exception:
     psutil_disk_io_tag = False
 else:
     psutil_disk_io_tag = True
@@ -105,7 +105,7 @@ else:
 try:
     # network_io_counters method only available with PsUtil 0.4.0+
     psutil.network_io_counters()
-except:
+except Exception:
     psutil_network_io_tag = False
 else:
     psutil_network_io_tag = True
@@ -325,7 +325,7 @@ class glancesGrabFs:
             fs_current['mnt_point'] = fs_stat[fs].mountpoint
             try:
                 fs_usage = psutil.disk_usage(fs_current['mnt_point'])
-            except:
+            except Exception:
                 continue
             fs_current['size'] = fs_usage.total
             fs_current['used'] = fs_usage.used
@@ -350,7 +350,7 @@ class glancesStats:
         # Init the fs stats
         try:
             self.glancesgrabfs = glancesGrabFs()
-        except:
+        except Exception:
             self.glancesgrabfs = {}
 
         # Process list refresh
@@ -387,14 +387,14 @@ class glancesStats:
                 self.host['os_version'] = " ".join(os_version[::2])
             else:
                 self.host['os_version'] = ""
-        except:
+        except Exception:
             self.host['os_version'] = ""
 
         # CPU
         percent = 0
         try:
             self.cputime_old
-        except:
+        except Exception:
             self.cputime_old = psutil.cpu_times()
             self.cputime_total_old = (self.cputime_old.user +
                                       self.cputime_old.system +
@@ -402,19 +402,19 @@ class glancesStats:
             # Only available on some OS
             try:
                 self.cputime_total_old += self.cputime_old.nice
-            except:
+            except Exception:
                 pass
             try:
                 self.cputime_total_old += self.cputime_old.iowait
-            except:
+            except Exception:
                 pass
             try:
                 self.cputime_total_old += self.cputime_old.irq
-            except:
+            except Exception:
                 pass
             try:
                 self.cputime_total_old += self.cputime_old.softirq
-            except:
+            except Exception:
                 pass
             self.cpu = {}
         else:
@@ -426,19 +426,19 @@ class glancesStats:
                 # Only available on some OS
                 try:
                     self.cputime_total_new += self.cputime_new.nice
-                except:
+                except Exception:
                     pass
                 try:
                     self.cputime_total_new += self.cputime_new.iowait
-                except:
+                except Exception:
                     pass
                 try:
                     self.cputime_total_new += self.cputime_new.irq
-                except:
+                except Exception:
                     pass
                 try:
                     self.cputime_total_new += self.cputime_new.softirq
-                except:
+                except Exception:
                     pass
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
@@ -456,7 +456,7 @@ class glancesStats:
                                  self.cputime_old.nice) * percent}
                 self.cputime_old = self.cputime_new
                 self.cputime_total_old = self.cputime_total_new
-            except:
+            except Exception:
                 self.cpu = {}
 
         # LOAD
@@ -465,14 +465,14 @@ class glancesStats:
             self.load = {'min1': getload[0],
                          'min5': getload[1],
                          'min15': getload[2]}
-        except:
+        except Exception:
             self.load = {}
 
         # MEM
         try:
             # Only for Linux
             cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-        except:
+        except Exception:
             cachemem = 0
 
         try:
@@ -482,7 +482,7 @@ class glancesStats:
                         'used': phymem.used,
                         'free': phymem.free,
                         'percent': phymem.percent}
-        except:
+        except Exception:
             self.mem = {}
 
         try:
@@ -491,7 +491,7 @@ class glancesStats:
                             'used': virtmem.used,
                             'free': virtmem.free,
                             'percent': virtmem.percent}
-        except:
+        except Exception:
             self.memswap = {}
 
         # NET
@@ -499,13 +499,13 @@ class glancesStats:
             self.network = []
             try:
                 self.network_old
-            except:
+            except Exception:
                 if psutil_network_io_tag:
                     self.network_old = psutil.network_io_counters(True)
             else:
                 try:
                     self.network_new = psutil.network_io_counters(True)
-                except:
+                except Exception:
                     pass
                 else:
                     for net in self.network_new:
@@ -516,7 +516,7 @@ class glancesStats:
                                              self.network_old[net].bytes_recv)
                             netstat['tx'] = (self.network_new[net].bytes_sent -
                                              self.network_old[net].bytes_sent)
-                        except:
+                        except Exception:
                             continue
                         else:
                             self.network.append(netstat)
@@ -527,13 +527,13 @@ class glancesStats:
             self.diskio = []
             try:
                 self.diskio_old
-            except:
+            except Exception:
                 if psutil_disk_io_tag:
                     self.diskio_old = psutil.disk_io_counters(True)
             else:
                 try:
                     self.diskio_new = psutil.disk_io_counters(True)
-                except:
+                except Exception:
                     pass
                 else:
                     for disk in self.diskio_new:
@@ -546,7 +546,7 @@ class glancesStats:
                             diskstat['write_bytes'] = (
                                 self.diskio_new[disk].write_bytes -
                                 self.diskio_old[disk].write_bytes)
-                        except:
+                        except Exception:
                             continue
                         else:
                             self.diskio.append(diskstat)
@@ -556,7 +556,7 @@ class glancesStats:
         if psutil_fs_usage_tag:
             try:
                 self.fs = self.glancesgrabfs.get()
-            except:
+            except Exception:
                 self.fs = {}
 
         # PROCESS
@@ -566,7 +566,7 @@ class glancesStats:
             self.process_first_grab = False
             try:
                 self.process_all
-            except:
+            except Exception:
                 self.process_all = [proc for proc in psutil.process_iter()]
                 self.process_first_grab = True
             self.process = []
@@ -582,12 +582,12 @@ class glancesStats:
                     if not proc.is_running():
                         try:
                             self.process_all.remove(proc)
-                        except:
+                        except Exception:
                             pass
                 except psutil.error.NoSuchProcess:
                     try:
                         self.process_all.remove(proc)
-                    except:
+                    except Exception:
                         pass
                 else:
                     # Global stats
@@ -618,7 +618,7 @@ class glancesStats:
                         procstat['proc_name'] = proc.name
                         procstat['proc_cmdline'] = " ".join(proc.cmdline)
                         self.process.append(procstat)
-                    except:
+                    except Exception:
                         pass
 
             # If it is the first grab then empty process list
@@ -697,7 +697,7 @@ class glancesStats:
             real_used_phymem = self.mem['used'] - self.mem['cache']
             try:
                 memtotal = (real_used_phymem * 100) / self.mem['total']
-            except:
+            except Exception:
                 pass
             else:
                 if memtotal > limits.getSTDWarning():
@@ -763,22 +763,22 @@ class glancesScreen:
         if hasattr(curses, 'use_default_colors'):
             try:
                 curses.use_default_colors()
-            except:
+            except Exception:
                 pass
         if hasattr(curses, 'noecho'):
             try:
                 curses.noecho()
-            except:
+            except Exception:
                 pass
         if hasattr(curses, 'cbreak'):
             try:
                 curses.cbreak()
-            except:
+            except Exception:
                 pass
         if hasattr(curses, 'curs_set'):
             try:
                 curses.curs_set(0)
-            except:
+            except Exception:
                 pass
 
         # Init colors
