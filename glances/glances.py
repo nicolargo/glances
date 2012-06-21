@@ -690,10 +690,10 @@ class glancesStats:
             if psutil_get_cpu_percent_tag:
                 sortedby = 'cpu_percent'
             else:
-                sortedby = 'proc_size'
+                sortedby = 'mem_percent'
             # Auto selection
-            # If global Mem > 70% sort by process size
-            # Else sort by CPU comsoption
+            # If global MEM > 70% sort by MEM usage
+            # else sort by CPU usage
             real_used_phymem = self.mem['used'] - self.mem['cache']
             try:
                 memtotal = (real_used_phymem * 100) / self.mem['total']
@@ -701,7 +701,7 @@ class glancesStats:
                 pass
             else:
                 if memtotal > limits.getSTDWarning():
-                    sortedby = 'proc_size'
+                    sortedby = 'mem_percent'
         elif sortedby == 'proc_name':
             sortedReverse = False
 
@@ -718,8 +718,8 @@ class glancesScreen:
     """
 
     # By default the process list is automatically sorted
-    # If global CPU > WANRING => Sorted by process CPU consomption
-    # If global used MEM > WARINING => Sorted by process size
+    # If global CPU > WANRING => Sorted by CPU usage
+    # If global used MEM > WARINING => Sorted by MEM usage
     __process_sortedby = 'auto'
 
     def __init__(self, refresh_time=1):
@@ -978,34 +978,34 @@ class glancesScreen:
         # Actions...
         if (self.pressedkey == 27 or
             self.pressedkey == 113):
-            # 'ESC'|'q' > Exit
+            # 'ESC'|'q' > Quit
             end()
         elif self.pressedkey == 97:
-            # 'a' > Sort process list automatically
+            # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
         elif self.pressedkey == 99 and psutil_get_cpu_percent_tag:
-            # 'c' > Sort process list by CPU usage
+            # 'c' > Sort processes by CPU usage
             self.setProcessSortedBy('cpu_percent')
         elif self.pressedkey == 100 and psutil_disk_io_tag:
-            # 'n' > Enable/Disable disk I/O stats
+            # 'd' > Show/hide disk I/O stats
             self.diskio_tag = not self.diskio_tag
         elif self.pressedkey == 102 and psutil_fs_usage_tag:
-            # 'n' > Enable/Disable fs stats
+            # 'f' > Show/hide fs stats
             self.fs_tag = not self.fs_tag
         elif self.pressedkey == 104:
-            # 'h' > Enable/Disable help
+            # 'h' > Show/hide help
             self.help_tag = not self.help_tag
         elif self.pressedkey == 108:
-            # 'l' > Enable/Disable logs list
+            # 'l' > Show/hide log messages
             self.log_tag = not self.log_tag
         elif self.pressedkey == 109:
-            # 'm' > Sort process list by Mem usage
-            self.setProcessSortedBy('proc_size')
+            # 'm' > Sort processes by MEM usage
+            self.setProcessSortedBy('mem_percent')
         elif self.pressedkey == 110 and psutil_network_io_tag:
-            # 'n' > Enable/Disable network stats
+            # 'n' > Show/hide network stats
             self.network_tag = not self.network_tag
         elif self.pressedkey == 112:
-            # 'p' > Sort process list by Process name
+            # 'p' > Sort processes by name
             self.setProcessSortedBy('proc_name')
 
         # Return the key code
@@ -1416,15 +1416,15 @@ class glancesScreen:
         if (screen_y > self.process_y + 3 and
             screen_x > process_x + 48):
             # Processes sumary
-            self.term_window.addnstr(self.process_y, process_x, _("Process"),
-                                     8, self.title_color if self.hascolors else
+            self.term_window.addnstr(self.process_y, process_x, _("Processes"),
+                                     9, self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             other = (processcount['total'] -
                      stats.getProcessCount()['running'] -
                      stats.getProcessCount()['sleeping'])
             self.term_window.addnstr(
-                self.process_y, process_x + 8,
-                "{0:>4s}, {1:>2s} {2}, {3:>4s} {4}, {5:>2s} {6}".format(
+                self.process_y, process_x + 10,
+                "{0}, {1} {2}, {3} {4}, {5} {6}".format(
                     str(processcount['total']),
                     str(processcount['running']),
                     _("running"),
@@ -1456,8 +1456,7 @@ class glancesScreen:
             # VMS
             self.term_window.addnstr(
                 self.process_y + 2, process_x,
-                _("VIRT"), 5, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'proc_size' else 0)
+                _("VIRT"), 5)
             # RSS
             self.term_window.addnstr(
                 self.process_y + 2, process_x + 7,
@@ -1470,7 +1469,8 @@ class glancesScreen:
             # MEM%
             self.term_window.addnstr(
                 self.process_y + 2, process_x + 21,
-                _("MEM%"), 5)
+                _("MEM%"), 5, curses.A_UNDERLINE
+                if self.getProcessSortedBy() == 'mem_percent' else 0)
             process_name_x = 28
             # If screen space (X) is available then:
             # PID
@@ -1643,26 +1643,25 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 5, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("a"), _("Sort process list automatically "
+                    _("a"), _("Sort processes automatically "
                               "(need PsUtil 0.2.0+)"), width=width),
                 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 6, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("c"), _("Sort process list by CPU% "
+                    _("c"), _("Sort processes by CPU% "
                               "(need PsUtil 0.2.0+)"), width=width),
                 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 7, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("m"), _("Sort process list by "
-                              "virtual memory usage"), width=width), 79)
+                    _("m"), _("Sort processes by MEM%"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 8, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("p"), _("Sort process list by name"), width=width), 79)
+                    _("p"), _("Sort processes by name"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 9, self.help_x,
                 "{0:^{width}} {1}".format(
@@ -1684,7 +1683,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 12, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("l"), _("Show/hide log list (only available "
+                    _("l"), _("Show/hide log messages (only available "
                               "if display > 24 lines)"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 13, self.help_x,
@@ -1910,20 +1909,6 @@ def printSyntax():
     print _("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time)
     print _("\t-v\t\tDisplay the version and exit")
-    print ""
-    print _("When Glances is running, you can press:")
-    print _("'a' to set the automatic mode. "
-            "The processes are sorted automatically")
-    print _("'c' to sort the processes list by CPU consumption")
-    print _("'d' to disable or enable the disk I/O stats")
-    print _("'f' to disable or enable the file system stats")
-    print _("'h' to hide or show the help message")
-    print _("'l' to hide or show the logs messages")
-    print _("'m' to sort the processes list by process size")
-    print _("'n' to disable or enable the network interfaces stats")
-    print _("'p' to sort the processes list by name")
-    print _("'q' to exit")
-    print ""
 
 
 def init():
