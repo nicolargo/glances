@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4b19"
+__version__ = "1.4b20"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
