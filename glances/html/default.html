@@ -29,9 +29,9 @@
 				<td class="bgcpu fgcpu">Nice</td>
 				<td class="{{ cpu.nice_color }}">{{ cpu.nice|round(1) }}</td>
 			</tr>
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block load %}
@@ -56,9 +56,9 @@
 				<td class="bgload fgload">15 mins</td>
 				<td class="{{ load.min15_color }}">{{ load.min15|round(2) }}</td>
 			</tr>
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block mem %}
@@ -91,9 +91,9 @@
 				<td>{{ memswap.free|filesizeformat(binary = true) }}</td>
 				<td>{{ (mem.free+mem.cache)|filesizeformat(binary = true) }}</td>
 			</tr>
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block net %}
@@ -109,22 +109,22 @@
 		<tbody>
 			{% for interface in net %}
 				<tr>
-					<td id="item">{{ interface.interface_name }}</td>	
+					<td id="item">{{ interface.interface_name }}</td>
 					{% if interface.rx == 0 %}
-						<td>0</td>	
+						<td>0</td>
 					{% else %}
-						<td>{{ (interface.rx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>	
-					{% endif %}	
+						<td>{{ (interface.rx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>
+					{% endif %}
 					{% if interface.tx == 0 %}
-						<td>0</td>	
+						<td>0</td>
 					{% else %}
-						<td>{{ (interface.tx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>	
+						<td>{{ (interface.tx*8)|filesizeformat(binary = true)|replace("Bytes", "bps")|replace("Byte", "bps")|replace("iB", "bps") }}</td>
 					{% endif %}
 				</tr>
 			{% endfor %}
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block diskio %}
@@ -140,14 +140,14 @@
 		<tbody>
 			{% for disk in diskio %}
 				<tr>
-					<td id="item">{{ disk.disk_name }}</td>	
-					<td>{{ disk.write_bytes|filesizeformat(binary = true) }}</td>	
-					<td>{{ disk.read_bytes|filesizeformat(binary = true) }}</td>	
+					<td id="item">{{ disk.disk_name }}</td>
+					<td>{{ disk.write_bytes|filesizeformat(binary = true) }}</td>
+					<td>{{ disk.read_bytes|filesizeformat(binary = true) }}</td>
 				</tr>
 			{% endfor %}
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block fs %}
@@ -163,14 +163,14 @@
 		<tbody>
 			{% for mount in fs %}
 				<tr>
-					<td id="item">{{ mount.mnt_point }}</td>	
-					<td>{{ mount.size|filesizeformat(binary = true) }}</td>	
-					<td class="{{ mount.used_color }}">{{ mount.used|filesizeformat(binary = true) }}</td>	
+					<td id="item">{{ mount.mnt_point }}</td>
+					<td>{{ mount.size|filesizeformat(binary = true) }}</td>
+					<td class="{{ mount.used_color }}">{{ mount.used|filesizeformat(binary = true) }}</td>
 				</tr>
 			{% endfor %}
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block proccount %}
@@ -193,9 +193,9 @@
 				<td>{{ proccount.sleeping }}</td>
 				<td>{{ proccount.total-proccount.running-proccount.sleeping }}</td>
 			</tr>
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block proclist %}
@@ -213,17 +213,17 @@
 			{% for proc in proclist %}
 				{% if loop.index > 10 %}
 					{% break %}
-				{% endif %}	
+				{% endif %}
 				<tr>
-					<td>{{ proc.cpu_percent }}</td>	
-					<td>{{ proc.proc_size|filesizeformat(binary = true) }}</td>	
-					<td>{{ proc.proc_resident|filesizeformat(binary = true) }}</td>	
-					<td id="command">{{ proc.process_name|truncate(40, killwords=True) }}</td>						
+					<td>{{ proc.cpu_percent }}</td>
+					<td>{{ proc.proc_size|filesizeformat(binary = true) }}</td>
+					<td>{{ proc.proc_resident|filesizeformat(binary = true) }}</td>
+					<td id="command">{{ proc.proc_name|truncate(40, killwords=True) }}</td>
 				</tr>
 			{% endfor %}
-		</tbody>	
-	</table>	
-	{% endif %}	
+		</tbody>
+	</table>
+	{% endif %}
 {% endblock %}
 
 {% block footer %}

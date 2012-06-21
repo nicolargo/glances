@@ -3,10 +3,10 @@ Glances -- Votre système en un coups d'oeil
 
 ## Description
 
-Glances est un logiciel libre (licence LGPL) permettant de surveiller votre 
+Glances est un logiciel libre (licence LGPL) permettant de surveiller votre
 système d'exploitation GNU/Linux ou BSD à partir d'une interface texte.
 
-Glances utilise la librairie libstatgrab pour récupérer les informations de 
+Glances utilise la librairie libstatgrab pour récupérer les informations de
 votre système. Il est développé en Python.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
@@ -17,7 +17,7 @@ votre système. Il est développé en Python.
 
 Des paquets existent pour plusieurs distributions: Arch, Fedora/Redhat...
 Le processus de packaging est actuellement en cours sur d'autres distribs, je
-vous conseille donc de rechercher Glances sur votre gestionnaire de package 
+vous conseille donc de rechercher Glances sur votre gestionnaire de package
 avant de faire une installation depuis les sources.
 
 ### Depuis le PPA (pour les systèmes Ubuntu/Mint...)
@@ -50,7 +50,7 @@ Puis on installe la dernière version de Glances:
 
 Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
 
-Pour l'installer, il suffit de suivre les instructions suivantes depuis un 
+Pour l'installer, il suffit de suivre les instructions suivantes depuis un
 terminal.
 
 Récupération de la dernière version (1.4):
@@ -74,7 +74,7 @@ Il suffit de saisir la commande suivante dans une console ou un terminal:
 
 	$ glances.py
 
-Note: sur certaines distributions, il faut saisir glances en lieu et place 
+Note: sur certaines distributions, il faut saisir glances en lieu et place
 de glances.py.
 
 ## Guide d'utilisation
@@ -114,7 +114,7 @@ Passons ensuite à la description de la fenêtre de Glances:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/header.png)
 
-L'en-tête montre la version de Glances, le nom de la machine (FQND) ainsi 
+L'en-tête montre la version de Glances, le nom de la machine (FQND) ainsi
 qu'une information sur le système d'exploitation (nom, version).
 
 ### CPU
@@ -135,14 +135,14 @@ Si user|kernel|nice CPU est > 90%, alors le status est "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/load.png)
 
-Il est assez difficile de donner une définition claire de la charge d'une 
+Il est assez difficile de donner une définition claire de la charge d'une
 machine (load average). Sur le blog Nosheep, Zach en donne la définition
 suivante: " C'est la somme moyenne du nombre de processus en attente dans
 la queue d'execution plus le nombre de processus actuellement en train
 d'être executés sur une période de temps de 1, 5 et 15 minutes."
 
 Glances permet d'afficher les alertes en tenant compte du nombre de coeurs de
-votre processeur. Par exemple, le seuil WARNING sera de 2 pour un processeur 
+votre processeur. Par exemple, le seuil WARNING sera de 2 pour un processeur
 Bi-Core alors qu'il sera de 4 sur un Quad-Core.
 
 Si la charge moyenne est < O.7*Core, alors le status est "OK".
@@ -177,10 +177,10 @@ Si la mémoire est > 90%, alors le status "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/network.png)
 
-Glances affiche les débits des interfaces réseau en adaptant dynamiquement 
+Glances affiche les débits des interfaces réseau en adaptant dynamiquement
 l'unité à utiliser (bits par seconde).
 
-Les alertes ne sont affichées que pour les interfaces dont les informations 
+Les alertes ne sont affichées que pour les interfaces dont les informations
 sur la vitesse maximale sont disponibles (cela dépend des distributions):
 
 Si le débit < 50%, alors le status est "OK".
@@ -191,14 +191,14 @@ Si le débit > 70%, alors le status est "WARNING".
 
 Si le débit > 90%, alors le status est "CRITICAL".
 
-Par exemple, sur une interface Ethernet Fast Ethernet (100 Mbps), le status 
+Par exemple, sur une interface Ethernet Fast Ethernet (100 Mbps), le status
 passera à WARNING si le débit dépasse les 70 Mbps.
 
 ### Entrées/Sorties disque
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/diskio.png)
 
-Glances permet d'afficher les débits en lecture et écriture sur les disques 
+Glances permet d'afficher les débits en lecture et écriture sur les disques
 en adaptant dynamiquement l'unité à utiliser (octets par seconde).
 
 Il n'y a pas d'alerte remontée pour ce type d'information.
@@ -224,7 +224,7 @@ Si l'espace disque utilisé est > 90%, alors le status est "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/processlist.png)
 
-Glances affiche un résumé sur l'état des processus ainsi qu'une liste 
+Glances affiche un résumé sur l'état des processus ainsi qu'une liste
 détaillée.
 
 Le nombre des processus affichés est adapté à la taille de la fenêtre.

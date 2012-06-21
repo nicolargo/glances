@@ -1,6 +1,6 @@
 <!doctype html>
 <html>
-	
+
 	<head>
 		{% block head %}
 		<meta charset="utf-8">
@@ -8,14 +8,14 @@
 		<link rel="stylesheet" href="{% block css %}css/base.css{% endblock %}">
 		{% endblock %}
 		<meta http-equiv="refresh" content="{{ refresh }}" />
-	</head>		
-	
+	</head>
+
 	<body class="bgmain fgmain">
-		
+
 		<header>
 			{% block header %}{% endblock %}
 		</header>
-		
+
 		<section id="main">
 			<section id="firstline">
 				<article id="cpu">
@@ -47,14 +47,14 @@
 					<article id="proclist">
 						{% block proclist %}{% endblock %}
 					</article>
-				</section>				
-			</section>				
+				</section>
+			</section>
 		</section>
-		
+
 		<footer>
-			{% block footer %}{% endblock %}			
+			{% block footer %}{% endblock %}
 		</footer>
-		
+
 	</body>
-	
+
 </html>
