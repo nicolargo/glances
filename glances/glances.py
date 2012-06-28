@@ -612,7 +612,12 @@ class glancesStats:
                         procstat['mem_percent'] = proc.get_memory_percent()
                         procstat['pid'] = proc.pid
                         procstat['uid'] = proc.username
-                        procstat['nice'] = proc.nice
+                        try:
+                            # Deprecated in PsUtil 0.5.0
+                            procstat['nice'] = proc.nice
+                        except:
+                            # Specific for PsUtil 0.5.0
+                            procstat['nice'] = proc.get_nice()
                         procstat['status'] = str(proc.status)[:1].upper()
                         procstat['proc_time'] = proc.get_cpu_times()
                         procstat['proc_name'] = proc.name
