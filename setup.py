@@ -11,7 +11,6 @@ data_files = [
         'README-fr',
         'COPYING',
         'AUTHORS',
-        'ChangeLog',
         'NEWS',
         'screenshot.png']),
     ('share/doc/glances/doc', glob('doc/*.png')),

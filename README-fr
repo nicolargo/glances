@@ -71,7 +71,7 @@ Glances a besoin des dépendances suivantes:
 
 Il suffit de saisir la commande suivante dans une console ou un terminal:
 
-	$ glances.py
+	$ glances
 
 Note: sur certaines distributions, il faut saisir glances en lieu et place
 de glances.py.
@@ -82,7 +82,7 @@ Par défaut, l'affichage des statistiques est rafraichi toute les secondes.
 Il est possible de changer cette valeur en utilisant l'option -t.
 Par exemple pour fixer un taux de rafraichissement à 5 secondes:
 
-	$ glances.py -t 5
+	$ glances -t 5
 
 Les statistiques jugées importantes sont affichées en couleur:
 
