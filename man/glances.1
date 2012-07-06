@@ -2,14 +2,14 @@
 .SH NAME
 glances \- CLI curses based monitoring tool
 .SH SYNOPSIS
-.B glances 
+.B glances
 [\-h] [\-t refresh] [\-v]
 .SH DESCRIPTION
 Glances is a free (LGPL) curses-based  monitoring tool which aims to present a maximum of information
 in a minimum of space, ideally to fit in a classical 80x24 terminal. Glances can adapt dynamicaly the
 displayed informations depending on the terminal size.
 .PP
-This tool is written in Python and uses pystatgrab to fetch the statistical values from key elements.
+This tool is written in Python and uses PsUtil to fetch the statistical values from key elements.
 .PP
 You can use the following keys to sort the processesi list:
 .PP
@@ -31,7 +31,7 @@ You can use the following keys to sort the processesi list:
 .PP
 	'q' Exit
 .PP
-The current version grab the following stats: CPU, Load, Memory, Network rate, Disk IO, file system, 
+The current version grab the following stats: CPU, Load, Memory, Network rate, Disk IO, file system,
 process number and details.
 .SH OPTIONS
 .TP
@@ -53,6 +53,6 @@ Refresh information every 5 seconds:
 .SH EXIT STATUS
 glances returns a zero exit status if it succeeds to print/grab information.
 .PP
-It returns 2 if it fails to parse its options (missing arguments, invalid value, etc). 
+It returns 2 if it fails to parse its options (missing arguments, invalid value, etc).
 .SH AUTHOR
 Glances is written by Nicolargo (contact@nicolargo.com).
