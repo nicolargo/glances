@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+
+	<head>
+		{% block head %}
+		<meta charset="utf-8">
+		<title>{% block title %}Glances{% endblock %}</title>
+		<link rel="stylesheet" href="{% block css %}css/base.css{% endblock %}">
+		{% endblock %}
+		<meta http-equiv="refresh" content="{{ refresh }}" />
+	</head>
+
+	<body class="bgmain fgmain">
+
+		<header>
+			{% block header %}{% endblock %}
+		</header>
+
+		<section id="main">
+			<section id="firstline">
+				<article id="cpu">
+					{% block cpu %}{% endblock %}
+				</article>
+				<article id="load">
+					{% block load %}{% endblock %}
+				</article>
+				<article id="mem">
+					{% block mem %}{% endblock %}
+				</article>
+			</section>
+			<section id="secondline">
+				<section id="sideleft">
+					<article id="net">
+						{% block net %}{% endblock %}
+					</article>
+					<article id="diskio">
+						{% block diskio %}{% endblock %}
+					</article>
+					<article id="fs">
+						{% block fs %}{% endblock %}
+					</article>
+				</section>
+				<section id="sideright">
+					<article id="proccount">
+						{% block proccount %}{% endblock %}
+					</article>
+					<article id="proclist">
+						{% block proclist %}{% endblock %}
+					</article>
+				</section>
+			</section>
+		</section>
+
+		<footer>
+			{% block footer %}{% endblock %}
+		</footer>
+
+	</body>
+
+</html>
