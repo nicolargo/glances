@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4"
+__version__ = "1.4.1"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -902,7 +902,7 @@ class glancesScreen:
                 else:
                     return "{0:.1f}{1}".format(value, key)
 
-        return "{!s}".format(val)
+        return "{0!s}".format(val)
 
     def __getAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
@@ -1149,18 +1149,18 @@ class glancesScreen:
                                      _("15 min:"), 8)
 
             self.term_window.addnstr(self.load_y + 1, self.load_x + 10,
-                                     "{:.2f}".format(load['min1']), 8)
+                                     "{0:.2f}".format(load['min1']), 8)
 
             alert = self.__getLoadAlert(load['min5'], core)
             logs.add(alert, "LOAD 5-min", load['min5'])
             self.term_window.addnstr(self.load_y + 2, self.load_x + 10,
-                                     "{:.2f}".format(load['min5']), 8,
+                                     "{0:.2f}".format(load['min5']), 8,
                                      self.__colors_list[alert])
 
             alert = self.__getLoadAlert(load['min15'], core)
             logs.add(alert, "LOAD 15-min", load['min15'])
             self.term_window.addnstr(self.load_y + 3, self.load_x + 10,
-                                     "{:.2f}".format(load['min15']), 8,
+                                     "{0:.2f}".format(load['min15']), 8,
                                      self.__colors_list[alert])
 
     def displayMem(self, mem, memswap):
@@ -1180,7 +1180,7 @@ class glancesScreen:
             self.term_window.addnstr(self.mem_y + 3, self.mem_x, _("Free:"), 8)
 
             self.term_window.addnstr(self.mem_y, self.mem_x + 9,
-                                     "{:.1%}".format(mem['percent'] / 100), 8)
+                                     "{0:.1%}".format(mem['percent'] / 100), 8)
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + 9,
                                      self.__autoUnit(mem['total']), 8)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x + 9,
@@ -1213,7 +1213,7 @@ class glancesScreen:
                                      _("Free:"), 8)
 
             self.term_window.addnstr(self.mem_y, self.mem_x + 34,
-                                     "{:.1%}".format(memswap['percent'] / 100),
+                                     "{0:.1%}".format(memswap['percent'] / 100),
                                      8)
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'])
@@ -1539,7 +1539,7 @@ class glancesScreen:
                 if psutil_get_cpu_percent_tag:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 14,
-                        "{:.1f}".format(cpu_percent), 5,
+                        "{0:.1f}".format(cpu_percent), 5,
                         self.__getProcessColor(cpu_percent))
                 else:
                     self.term_window.addnstr(
@@ -1548,7 +1548,7 @@ class glancesScreen:
                 mem_percent = processlist[processes]['mem_percent']
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 21,
-                    "{:.1f}".format(mem_percent), 5,
+                    "{0:.1f}".format(mem_percent), 5,
                     self.__getProcessColor(mem_percent))
                 # If screen space (X) is available then:
                 # PID
