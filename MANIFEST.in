@@ -8,4 +8,4 @@ include screenshot.png
 recursive-include doc *.png
 recursive-include man *.1
 recursive-include i18n *.mo
-recursive-include src *.html *.css *.png
+recursive-include glances *.html *.css *.png
