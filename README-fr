@@ -13,6 +13,13 @@ votre système. Il est développé en Python.
 
 ## Installation
 
+Glances a besoin des dépendances suivantes:
+
+* Python 2.6+ (non testé avec Python 3+)
+* python-setuptools (pour l'installation via setup.py)
+* python-psutil 0.4.1+ (remplace la librairie libstatgrab)
+* python-jinja2 2.0+ (optionnel seulement pour le module export HTML)
+
 ### Depuis le gestionnaire de paquet de votre système
 
 Des paquets existent pour plusieurs distributions: Arch, Fedora/Redhat...
@@ -61,12 +68,6 @@ Procédez ensuite à l'installation:
 	$ tar zxvf glances-1.4.tar.gz
 	$ cd glances-1.4
 	$ sudo python setup.py install
-
-
-Glances a besoin des dépendances suivantes:
-
-* Python 2.6+ (non testé avec Python 3+)
-* python-setuptools
 
 ## Lancement de Glances
 

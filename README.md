@@ -16,6 +16,13 @@ It is developed in Python.
 
 ## Installation
 
+Pre-requisites (information for packagers):
+
+* Python 2.6+ (not tested with Python 3+)
+* python-setuptools (fo the installation via setup.py)
+* python-psutil 0.4.1+ (replace the old libstatgrab's lib)
+* python-jinja2 2.0+ (optional for HTML export)
+
 ### From package manager (very easy way)
 
 Packages exist for Arch, Fedora, Redhat, FreeBSD...
@@ -68,11 +75,6 @@ Glances use a standard GNU style installer:
 	$ tar zxvf glances-1.4.tar.gz
 	$ cd glances-1.4
 	$ sudo python setup.py install
-
-Pre-requisites:
-
-* Python 2.6+ (not tested with Python 3+)
-* python-setuptools
 
 ## Running
 
