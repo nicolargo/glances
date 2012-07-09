@@ -72,6 +72,7 @@ Glances use a standard GNU style installer:
 Pre-requisites:
 
 * Python 2.6+ (not tested with Python 3+)
+* python-setuptools
 
 ## Running
 

@@ -66,6 +66,7 @@ Procédez ensuite à l'installation:
 Glances a besoin des dépendances suivantes:
 
 * Python 2.6+ (non testé avec Python 3+)
+* python-setuptools
 
 ## Lancement de Glances
 

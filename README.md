@@ -72,19 +72,20 @@ Glances use a standard GNU style installer:
 Pre-requisites:
 
 * Python 2.6+ (not tested with Python 3+)
+* python-setuptools
 
 ## Running
 
 Easy way (that's all folks !):
 
-	$ glances.py
+	$ glances
 
 ## User guide
 
 By default, stats are refreshed every second, to change this setting, you can
 use the -t option. For exemple to set the refrech rate to 5 seconds:
 
-	$ glances.py -t 5
+	$ glances -t 5
 
 Importants stats are colored:
 
