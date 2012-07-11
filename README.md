@@ -19,7 +19,9 @@ It is developed in Python.
 Pre-requisites (information for packagers):
 
 * Python 2.6+ (not tested with Python 3+)
-* python-setuptools (fo the installation via setup.py)
+* build-essential (fo installation via Pypi and setup.py)
+* python-dev (for installation via Pypi)
+* python-setuptools (for the installation via setup.py)
 * python-psutil 0.4.1+ (replace the old libstatgrab's lib)
 * python-jinja2 2.0+ (optional for HTML export)
 
@@ -38,7 +40,7 @@ To install the PPA just enter:
 
 Then install Glances:
 
-        $ sudo apt-get install glances
+        $ sudo apt-get install glances build-essential python-dev
 
 ### From PyPi (easy way)
 
@@ -72,6 +74,7 @@ Get the latest version:
 
 Glances use a standard GNU style installer:
 
+    $ sudo apt-get install python-setuptools build-essential python-dev
 	$ tar zxvf glances-1.4.tar.gz
 	$ cd glances-1.4
 	$ sudo python setup.py install

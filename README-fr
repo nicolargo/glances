@@ -16,6 +16,8 @@ votre système. Il est développé en Python.
 Glances a besoin des dépendances suivantes:
 
 * Python 2.6+ (non testé avec Python 3+)
+* build-essential (pour installation depuis Pypi et setup.py)
+* python-dev (pour installation depuis Pypi)
 * python-setuptools (pour l'installation via setup.py)
 * python-psutil 0.4.1+ (remplace la librairie libstatgrab)
 * python-jinja2 2.0+ (optionnel seulement pour le module export HTML)
@@ -45,8 +47,8 @@ PyPi est un gestionnaire officiel des paquets Python.
 Il est disponible sous la plupart des distibutions GNU/Linux.
 
 On commence par installer PyPi sur son système (par exemple Debian/Ubuntu):
-
-        $ sudo apt-get install python-pip
+        
+        $ sudo apt-get install python-pip build-essential python-dev
 
 Puis on installe la dernière version de Glances:
 
@@ -65,7 +67,8 @@ Récupération de la dernière version (1.4):
 
 Procédez ensuite à l'installation:
 
-	$ tar zxvf glances-1.4.tar.gz
+	$ sudo apt-get install python-setuptools build-essential python-dev
+    $ tar zxvf glances-1.4.tar.gz
 	$ cd glances-1.4
 	$ sudo python setup.py install
 
