@@ -49,6 +49,8 @@
 <p></p>Pre-requisites (information for packagers):</p>
 <ul>
 <li>Python 2.6+ (not tested with Python 3+)</li>
+<li>build-essential (fo installation via Pypi and setup.py)</li>
+<li>python-dev (for installation via Pypi)</li>
 <li>python-setuptools (fo the installation via setup.py)</li>
 <li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
 <li>python-jinja2 2.0+ (optional for HTML export)</li>
@@ -79,7 +81,7 @@
 
 <p>You first need to install pypi on your system. For exemple on Debian/Ubuntu:</p>
 
-<pre><code>    $ sudo apt-get install python-pip
+<pre><code>    $ sudo apt-get install python-pip build-essential python-dev
 </code></pre>
 
 <p>Then install the latest Glances version:</p>
@@ -109,7 +111,8 @@ $ sudo apt-get install glances
 
 <p>Glances use a standard GNU style installer:</p>
 
-<pre><code>$ tar zxvf glances-1.4.tar.gz
+<pre><code>$ sudo apt-get install python-setuptools build-essential python-dev
+$ tar zxvf glances-1.4.tar.gz
 $ cd glances-1.4
 $ sudo python setup.py install
 </code></pre>
