@@ -40,7 +40,7 @@ To install the PPA just enter:
 
 Then install Glances:
 
-        $ sudo apt-get install glances build-essential python-dev
+        $ sudo apt-get install glances
 
 ### From PyPi (easy way)
 
@@ -48,7 +48,7 @@ PyPi is an official Python package manager.
 
 You first need to install pypi on your system. For exemple on Debian/Ubuntu:
 
-        $ sudo apt-get install python-pip
+        $ sudo apt-get install python-pip build-essential python-dev
 
 Then install the latest Glances version:
 
