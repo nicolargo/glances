@@ -475,12 +475,12 @@ class glancesStats:
             except Exception:
                 pass
             try:
-               for i in range(len(self.percputime_old)):                
+                for i in range(len(self.percputime_old)):                
                     self.percputime_total_old[i] += self.percputime_old[i].iowait
             except Exception:
                 pass
             try:
-               for i in range(len(self.percputime_old)):                                
+                for i in range(len(self.percputime_old)):                                
                     self.percputime_total_old[i] += self.percputime_old[i].irq
             except Exception:
                 pass
