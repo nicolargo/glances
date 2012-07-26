@@ -127,6 +127,13 @@ qu'une information sur le système d'exploitation (nom, version).
 
 L'état de la CPU est affiché par un pourcentage de l'utilisation globale.
 
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
+
+Si la taille de la fenêtre est suffisante, Glances affiche les informations 
+de CPU par coeur.
+
+Les codes couleurs suivant sont utilisés:
+
 Si user|kernel|nice CPU est < 50%, alors le status est "OK".
 
 Si user|kernel|nice CPU est > 50%, alors le status est "CAREFUL".

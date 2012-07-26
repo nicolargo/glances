@@ -552,6 +552,11 @@ class glancesStats:
             self.load = {}
 
         # MEM
+        # !!! TODO
+        # Mem functions Pending deprecation warning in PsUtil 0.5.1
+        # See the forum: http://bit.ly/LPMXMP
+        # !!!
+        #
         try:
             # Only for Linux
             cachemem = psutil.cached_phymem() + psutil.phymem_buffers()

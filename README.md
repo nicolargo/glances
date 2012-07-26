@@ -130,6 +130,12 @@ The header shows the host name and the operating system name, version and archit
 The CPU states are shown as a percentage and for the configured refresh
 time. The total CPU usage is displayed on the first line.
 
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
+
+If horizontal space is available, per core CPU infomations are displayed. 
+
+Color code used:
+
 If user|kernel|nice CPU is < 50%, then status is set to "OK".
 
 If user|kernel|nice CPU is > 50%, then status is set to "CAREFUL".
