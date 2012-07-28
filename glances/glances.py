@@ -945,6 +945,7 @@ class glancesScreen:
         self.fs_tag = psutil_fs_usage_tag
         self.log_tag = True
         self.help_tag = False
+        self.percpu_tag = True
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
@@ -1076,6 +1077,9 @@ class glancesScreen:
             self.pressedkey == 113):
             # 'ESC'|'q' > Quit
             end()
+        elif self.pressedkey == 49:
+            # '1' > Switch between CPU and PerCPU information
+            self.percpu_tag = not self.percpu_tag
         elif self.pressedkey == 97:
             # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
@@ -1189,6 +1193,11 @@ class glancesScreen:
         if screen_x >  self.cpu_x + 79 + (len(percpu)-1)*10:
             tag_percpu = True
             offset_x = (len(percpu)-1)*10
+        
+        # If space id available (tag_percpu)
+        # and global Per CPU tag (percpu_tag)
+        # then display detailled informations for CPU
+        tag_percpu = tag_percpu and self.percpu_tag
         
         if (screen_y > self.cpu_y + 5 and tag_percpu):
             # Display extended information whenspace is available (perCpu)
@@ -1832,9 +1841,13 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 13, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("h"), _("Show/hide this help message"), width=width), 79)
+                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 14, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("h"), _("Show/hide this help message"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 15, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
                 79)
@@ -2065,7 +2078,7 @@ def init():
     # Set default tags
     html_tag = False
     csv_tag = False
-
+    
     # Set the default refresh time
     refresh_time = 2
 
@@ -2162,44 +2175,8 @@ def init():
     # Init screen
     screen = glancesScreen(refresh_time=refresh_time)
 
-def unitest():
-    # Unitaries tests
-    # for debug only
-
-    # Init Limits
-    limits = glancesLimits()
-
-    # Init Logs
-    logs = glancesLogs()
-
-    # Init stats
-    stats = glancesStats()
-
-    # Iterations tests
-    while True:    
-        stats.update()
-
-        print
-        print "CPU Core: ",
-        print stats.getCore()
-        print "CPU: ",
-        print stats.getCpu()
-        print "PerCpu: ",
-        print stats.getPerCpu()
-        print "Load: ",
-        print stats.getLoad()
-        print "Mem: ",
-        print stats.getMem()
-        print "Swap: ",
-        print stats.getMemSwap()
-
-        countdown = Timer(3)
-        while (not countdown.finished()):
-            # Getkey
-            pass
 
 def main():
-    #~ unitest()
     
     # Init stuff
     init()
