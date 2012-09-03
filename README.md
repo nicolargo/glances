@@ -54,6 +54,12 @@ Then install the latest Glances version:
 
         $ sudo pip install glances
 
+### From [Homebrew](http://mxcl.github.com/homebrew/) via PyPi (OS X)
+
+	$ brew install brew-pip
+	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+	$ brew pip Glances
+
 ### From PPA (Ubuntu/Mint)
 
 Thanks to Arnaud Hartmann, a PPA is available for the stable branch.
