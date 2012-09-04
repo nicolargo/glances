@@ -33,9 +33,11 @@ Packages exist for Arch, Fedora, Redhat, FreeBSD...
 
 Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
 
+The PPA is available for Ubuntu version 9.10 to 12.04.
+
 To install the PPA just enter:
 
-        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-dev
+        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
         $ sudo apt-get update
 
 Then install Glances:
@@ -59,18 +61,6 @@ Then install the latest Glances version:
 	$ brew install brew-pip
 	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 	$ brew pip Glances
-
-### From PPA (Ubuntu/Mint)
-
-Thanks to Arnaud Hartmann, a PPA is available for the stable branch.
-
-To install it on your Ubuntu system:
-
-	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-	$ sudo apt-get update
-	$ sudo apt-get install glances
-
-The PPA is available for Ubuntu version 9.10 to 12.04.
 
 ### From source
 
