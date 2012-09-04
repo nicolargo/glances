@@ -19,7 +19,7 @@ It is developed in Python.
 Pre-requisites (information for packagers):
 
 * Python 2.6+ (not tested with Python 3+)
-* build-essential (fo installation via Pypi and setup.py)
+* build-essential (for installation via Pypi and setup.py)
 * python-dev (for installation via Pypi)
 * python-setuptools (for the installation via setup.py)
 * python-psutil 0.4.1+ (replace the old libstatgrab's lib)
@@ -84,7 +84,7 @@ Easy way (that's all folks !):
 ## User guide
 
 By default, stats are refreshed every second, to change this setting, you can
-use the -t option. For example to set the refrech rate to 5 seconds:
+use the -t option. For example to set the refresh rate to 5 seconds:
 
 	$ glances -t 5
 
@@ -97,7 +97,7 @@ Importants stats are colored:
 
 When Glances is running, you can press:
 
-* 'h' to display an help message whith the keys you can press
+* 'h' to display a help message with the keys you can press
 * 'a' to set the automatic mode. The processes are sorted automatically
 
     If CPU > 70%, sort by process "CPU consumption"
@@ -123,7 +123,7 @@ The header shows the host name and the operating system name, version and archit
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu.png)
 
-The CPU states are shown as a percentage and for the configured refresh
+The CPU stats are shown as a percentage and for the configured refresh
 time. The total CPU usage is displayed on the first line.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
@@ -144,7 +144,7 @@ If user|kernel|nice CPU is > 90%, then status is set to "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/load.png)
 
-On the Nosheep blog, Zach defines the average load: "In short it is the
+On the Nosheep blog, Zach defines average load: "In short it is the
 average sum of the number of processes waiting in the run-queue plus the
 number currently executing over 1, 5, and 15 minute time periods."
 
@@ -164,7 +164,7 @@ If average load is > 5*Core, then status is set to "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/mem.png)
 
-Glances uses tree columns: memory (RAM), "real" and swap.
+Glances uses three columns: memory (RAM), "real" and swap.
 
 Real used memory is: used - cache.
 
@@ -189,13 +189,13 @@ dynamicaly (bits per second, Kbits per second, Mbits per second...).
 
 Alerts are set only if the network interface maximum speed is available.
 
-If bitrate is < 50%, then status is set to "OK".
+If bit rate is < 50%, then status is set to "OK".
 
-If bitrate is > 50%, then status is set to "CAREFUL".
+If bit rate is > 50%, then status is set to "CAREFUL".
 
-If bitrate is > 70%, then status is set to "WARNING".
+If bit rate is > 70%, then status is set to "WARNING".
 
-If bitrate is > 90%, then status is set to "CRITICAL".
+If bit rate is > 90%, then status is set to "CRITICAL".
 
 For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.
@@ -204,7 +204,7 @@ if the bit rate is higher than 70 Mbps.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/diskio.png)
 
-Glances display the disk I/O throughput. The unit is adapted dynamicaly
+Glances display the disk I/O throughput. The unit is adapted dynamically
 (bytes per second, Kbytes per second, Mbytes per second...).
 
 There is no alert on this information.
@@ -214,7 +214,7 @@ There is no alert on this information.
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/fs.png)
 
 Glances display the total and used filesytem disk space. The unit is
-adapted dynamicaly (bytes per second, Kbytes per second, Mbytes per
+adapted dynamically (bytes per second, Kbytes per second, Mbytes per
 second...).
 
 Alerts are set for used disk space:
@@ -233,7 +233,7 @@ If disk used is > 90%, then status is set to "CRITICAL".
 
 Glances displays a summary and a list of processes.
 
-By default (or if you hit the 'a' key) the process list is automaticaly
+By default (or if you hit the 'a' key) the process list is automatically
 sorted by CPU of memory consumption.
 
 The number of processes in the list is adapted to the screen size.
@@ -277,7 +277,7 @@ There is one line per alert with the following information:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/footer.png)
 
-Glances displays the current time/date and access to the embeded help screen.
+Glances displays the current time/date and access to the embedded help screen.
 
 ## Localisation
 
