@@ -261,7 +261,7 @@ The number of processes in the list is adapted to the screen size.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/logs.png)
 
-A logs list is displayed in the bottom of the screen if (an only if):
+A logs list is displayed in the bottom of the screen if (and only if):
 
 * at least one WARNING or CRITICAL alert was occured.
 * space is available in the bottom of the console/terminal
