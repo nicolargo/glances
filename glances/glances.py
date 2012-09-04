@@ -77,6 +77,14 @@ else:
     psutil_get_cpu_percent_tag = True
 
 try:
+    # get_io_counter only available on Linux and FreeBSD
+    psutil.Process(os.getpid()).get_io_counters()
+except Exception:
+    psutil_get_io_counter_tag = False
+else:
+    psutil_get_io_counter_tag = True
+
+try:
     # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
     psutil.phymem_usage()
     psutil.virtmem_usage()
@@ -223,14 +231,15 @@ class glancesLogs:
                 return i
         return -1
 
-    def add(self, item_state, item_type, item_value):
+    def add(self, item_state, item_type, item_value, proc_list = []):
         """
         item_state = "OK|CAREFUL|WARNING|CRITICAL"
         item_type = "CPU|LOAD|MEM"
         item_value = value
         Item is defined by:
           ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
-           MAX, AVG, MIN, SUM, COUNT]
+           MAX, AVG, MIN, SUM, COUNT,
+           [top3 process list]]
         If item is a 'new one':
           Add the new item at the beginning of the logs list
         Else:
@@ -253,6 +262,7 @@ class glancesLogs:
                 item.append(item_value)     # MIN
                 item.append(item_value)     # SUM
                 item.append(1)              # COUNT
+                item.append([])             # TOP3 PROCESS LIST
                 self.logs_list.insert(0, item)
                 if self.len() > self.logs_max:
                     self.logs_list.pop()
@@ -281,6 +291,9 @@ class glancesLogs:
                 self.logs_list[item_index][5] = (
                     self.logs_list[item_index][7] /
                     self.logs_list[item_index][8])
+                # TOP3 PROCESS LIST
+                # TODO
+                self.logs_list[item_index][9] = []
 
         return self.len()
 
@@ -553,8 +566,8 @@ class glancesStats:
 
         # MEM
         # !!! TODO
-        # Mem functions Pending deprecation warning in PsUtil 0.5.1
-        # See the forum: http://bit.ly/LPMXMP
+        # To be replaced by: psutil.virtual_memory() et psutil.swap_memory()
+        # In the PsUtil version 0.6 or higher
         # !!!
         #
         try:
@@ -588,8 +601,7 @@ class glancesStats:
             try:
                 self.network_old
             except Exception:
-                if psutil_network_io_tag:
-                    self.network_old = psutil.network_io_counters(True)
+                self.network_old = psutil.network_io_counters(True)
             else:
                 try:
                     self.network_new = psutil.network_io_counters(True)
@@ -694,18 +706,38 @@ class glancesStats:
                         procstat = {}
                         procstat['proc_size'] = proc.get_memory_info().vms
                         procstat['proc_resident'] = proc.get_memory_info().rss
+
                         if psutil_get_cpu_percent_tag:
                             procstat['cpu_percent'] = \
                                 proc.get_cpu_percent(interval=0)
+
                         procstat['mem_percent'] = proc.get_memory_percent()
+
+                        ###
+                        # !!! DID NOT WORK...
+                        # Uncomment the following line to test:
+                        # tag_io = True (in DisplayProcess)
+                        ###
+                        if psutil_get_io_counter_tag:
+                            self.proc_io_new = proc.get_io_counters()
+                            try:
+                                # Compute delta
+                                procstat['read_bytes']  = self.proc_io_new.read_bytes  - self.proc_io_old.read_bytes
+                                procstat['write_bytes'] = self.proc_io_new.write_bytes - self.proc_io_old.write_bytes  
+                            except Exception:
+                                pass
+                            self.proc_io_old = self.proc_io_new
+
                         procstat['pid'] = proc.pid
                         procstat['uid'] = proc.username
+
                         try:
                             # Deprecated in PsUtil 0.5.0
                             procstat['nice'] = proc.nice
                         except:
                             # Specific for PsUtil 0.5.0
                             procstat['nice'] = proc.get_nice()
+
                         procstat['status'] = str(proc.status)[:1].upper()
                         procstat['proc_time'] = proc.get_cpu_times()
                         procstat['proc_name'] = proc.name
@@ -1566,7 +1598,7 @@ class glancesScreen:
         else:
             process_x = self.process_x
         # Display the process summary
-        if (screen_y > self.process_y + 3 and
+        if (screen_y > self.process_y + 4 and
             screen_x > process_x + 48):
             # Processes sumary
             self.term_window.addnstr(self.process_y, process_x, _("Processes"),
@@ -1586,26 +1618,32 @@ class glancesScreen:
                     str(other),
                     _("other")), 42)
 
-        # Display the process detail
-        tag_pid = False
-        tag_uid = False
-        tag_nice = False
-        tag_status = False
-        tag_proc_time = False
-        if screen_x > process_x + 55:
-            tag_pid = True
-        if screen_x > process_x + 64:
-            tag_uid = True
-        if screen_x > process_x + 70:
-            tag_nice = True
-        if screen_x > process_x + 74:
-            tag_status = True
-        if screen_x > process_x + 77:
-            tag_proc_time = True
-
         # Processes detail
-        if (screen_y > self.process_y + 8 and
+        if (screen_y > self.process_y + 4 and
             screen_x > process_x + 49):
+
+            # Display the process detail
+            tag_pid = False
+            tag_uid = False
+            tag_nice = False
+            tag_status = False
+            tag_proc_time = False
+            tag_io = False
+            if screen_x > process_x + 55:
+                tag_pid = True
+            if screen_x > process_x + 64:
+                tag_uid = True
+            if screen_x > process_x + 70:
+                tag_nice = True
+            if screen_x > process_x + 74:
+                tag_status = True
+            if screen_x > process_x + 77:
+                tag_proc_time = True
+            if screen_x > process_x + 97:
+                # !!! Did not work yet...
+                #~ tag_io = True
+                tag_io = False
+                
             # VMS
             self.term_window.addnstr(
                 self.process_y + 2, process_x,
@@ -1656,6 +1694,16 @@ class glancesScreen:
                     self.process_y + 2, process_x + process_name_x,
                     _("TIME+"), 8)
                 process_name_x += 10
+            # IO
+            if tag_io:
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("IO Read"), 8)
+                process_name_x += 10
+                self.term_window.addnstr(
+                    self.process_y + 2, process_x + process_name_x,
+                    _("IO Write"), 8)
+                process_name_x += 10               
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -1734,6 +1782,20 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 52,
                         dtime, 8)
+                # IO
+                if tag_io:
+                    # Processes are only refresh every 2 refresh_time
+                    elapsed_time = max(1, self.__refresh_time) * 2
+                    io_read = processlist[processes]['read_bytes']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 62,
+                        self.__autoUnit(io_read / elapsed_time) + "B", 
+                        8)
+                    io_write = processlist[processes]['write_bytes']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 72,
+                        self.__autoUnit(io_write / elapsed_time) + "B", 
+                        8)
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
                 process_name = processlist[processes]['proc_name']
