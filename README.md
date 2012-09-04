@@ -48,7 +48,7 @@ Then install Glances:
 
 PyPi is an official Python package manager.
 
-You first need to install pypi on your system. For exemple on Debian/Ubuntu:
+You first need to install pypi on your system. For example on Debian/Ubuntu:
 
         $ sudo apt-get install python-pip build-essential python-dev
 
@@ -84,7 +84,7 @@ Easy way (that's all folks !):
 ## User guide
 
 By default, stats are refreshed every second, to change this setting, you can
-use the -t option. For exemple to set the refrech rate to 5 seconds:
+use the -t option. For example to set the refrech rate to 5 seconds:
 
 	$ glances -t 5
 
@@ -197,14 +197,14 @@ If bitrate is > 70%, then status is set to "WARNING".
 
 If bitrate is > 90%, then status is set to "CRITICAL".
 
-For exemple, on a 100 Mbps Ethernet interface, the warning status is set
+For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.
 
 ### Disk I/O
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/diskio.png)
 
-Glances display the disk I/O throughput. The unit is adapted dynamicaly
+Glances displays the disk I/O throughput. The unit is adapted dynamicaly
 (bytes per second, Kbytes per second, Mbytes per second...).
 
 There is no alert on this information.
