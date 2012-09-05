@@ -2,6 +2,7 @@ Version 1.4.1
 =============
 
 	* Per core CPU stats (if space is available)
+	* Add Process IO Read/Write information (if space is available)
 
 Version 1.4
 ===========
