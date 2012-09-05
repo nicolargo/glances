@@ -1430,14 +1430,16 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
                     network[i]['interface_name'] + ':', 8)
+                if (network_bytepersec_tag):
+                    rx = self.__autoUnit(network[i]['rx'] / elapsed_time)
+                    tx = self.__autoUnit(network[i]['tx'] / elapsed_time)
+                else:
+                    rx = self.__autoUnit(network[i]['rx'] / elapsed_time * 8) + "b"
+                    tx = self.__autoUnit(network[i]['tx'] / elapsed_time * 8) + "b"
                 self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 10,
-                    self.__autoUnit(network[i]['rx'] / elapsed_time * 8) +
-                    "b", 8)
+                    self.network_y + 1 + i, self.network_x + 10, rx, 8)
                 self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 19,
-                    self.__autoUnit(network[i]['tx'] / elapsed_time * 8) +
-                    "b", 8)
+                    self.network_y + 1 + i, self.network_x + 19, tx, 8)
                 ret = ret + 1
             return ret
         return 0
@@ -2103,6 +2105,7 @@ def printSyntax():
     printVersion()
     print _("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]")
     print ""
+    print _("\t-b\t\tDisplay network rate in Byte per second")
     print _("\t-d\t\tDisable disk I/O module")
     print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
     print _("\t-h\t\tDisplay the syntax and exit")
@@ -2116,12 +2119,14 @@ def printSyntax():
 
 def init():
     global psutil_disk_io_tag, psutil_fs_usage_tag, psutil_network_io_tag
+    global network_bytepersec_tag
     global limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag
     global refresh_time
 
     # Set default tags
+    network_bytepersec_tag = False
     html_tag = False
     csv_tag = False
     
@@ -2130,7 +2135,7 @@ def init():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dmnho:f:t:v",
+        opts, args = getopt.getopt(sys.argv[1:], "bdmnho:f:t:v",
                                    ["help", "output", "file",
                                     "time", "version"])
     except getopt.GetoptError, err:
@@ -2175,6 +2180,8 @@ def init():
             psutil_fs_usage_tag = False
         elif opt in ("-n", "--netrate"):
             psutil_network_io_tag = False
+        elif opt in ("-b", "--bytepersec"):
+            network_bytepersec_tag = True
         else:
             printSyntax()
             sys.exit(0)
