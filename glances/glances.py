@@ -713,20 +713,10 @@ class glancesStats:
 
                         procstat['mem_percent'] = proc.get_memory_percent()
 
-                        ###
-                        # !!! DID NOT WORK...
-                        # Uncomment the following line to test:
-                        # tag_io = True (in DisplayProcess)
-                        ###
                         if psutil_get_io_counter_tag:
                             self.proc_io_new = proc.get_io_counters()
-                            try:
-                                # Compute delta
-                                procstat['read_bytes']  = self.proc_io_new.read_bytes  - self.proc_io_old.read_bytes
-                                procstat['write_bytes'] = self.proc_io_new.write_bytes - self.proc_io_old.write_bytes  
-                            except Exception:
-                                pass
-                            self.proc_io_old = self.proc_io_new
+                            procstat['read_bytes']  = self.proc_io_new.read_bytes
+                            procstat['write_bytes'] = self.proc_io_new.write_bytes
 
                         procstat['pid'] = proc.pid
                         procstat['uid'] = proc.username
@@ -1487,13 +1477,11 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 10,
                     self.__autoUnit(
-                        diskio[disk]['write_bytes'] / elapsed_time) +
-                    "B", 8)
+                        diskio[disk]['write_bytes'] / elapsed_time), 8)
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 19,
                     self.__autoUnit(
-                        diskio[disk]['read_bytes'] / elapsed_time) +
-                    "B", 8)
+                        diskio[disk]['read_bytes'] / elapsed_time), 8)
             return disk + 3
         return 0
 
@@ -1640,9 +1628,7 @@ class glancesScreen:
             if screen_x > process_x + 77:
                 tag_proc_time = True
             if screen_x > process_x + 97:
-                # !!! Did not work yet...
-                #~ tag_io = True
-                tag_io = False
+                tag_io = True
                 
             # VMS
             self.term_window.addnstr(
@@ -1789,13 +1775,11 @@ class glancesScreen:
                     io_read = processlist[processes]['read_bytes']
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 62,
-                        self.__autoUnit(io_read / elapsed_time) + "B", 
-                        8)
+                        self.__autoUnit(io_read), 8)
                     io_write = processlist[processes]['write_bytes']
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 72,
-                        self.__autoUnit(io_write / elapsed_time) + "B", 
-                        8)
+                        self.__autoUnit(io_write), 8)
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
                 process_name = processlist[processes]['proc_name']
