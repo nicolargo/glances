@@ -28,7 +28,7 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-          <p><a href="https://flattr.com/submit/auto?user_id=nicolargo&amp;url=https://github.com/nicolargo/glances&amp;title=Glances&amp;language=&amp;tags=github&amp;category=software"><img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this git repo"></a></p>
+          <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this git repo"></a></p>
 
 <h1></h1>
 
@@ -42,65 +42,86 @@
 
 <p>It is developed in Python.</p>
 
+<p>Console (80x24) screenshot:</p>
+
 <p><img src="https://github.com/nicolargo/glances/raw/master/screenshot.png" alt="screenshot"></p>
+
+<p>Wide terminal (&gt; 90x24) screenshot:</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/screenshot-wide.png" alt="screenshot"></p>
 
 <h2>Installation</h2>
 
-<p></p>Pre-requisites (information for packagers):</p>
+<p>Pre-requisites (information for packagers):</p>
+
 <ul>
 <li>Python 2.6+ (not tested with Python 3+)</li>
-<li>build-essential (fo installation via Pypi and setup.py)</li>
+<li>build-essential (for installation via Pypi and setup.py)</li>
 <li>python-dev (for installation via Pypi)</li>
-<li>python-setuptools (fo the installation via setup.py)</li>
+<li>python-setuptools (for the installation via setup.py)</li>
 <li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
 <li>python-jinja2 2.0+ (optional for HTML export)</li>
-</ul>
-
-<h3>From package manager (very easy way)</h3>
+</ul><h3>From package manager (very easy way)</h3>
 
 <p>Packages exist for Arch, Fedora, Redhat, FreeBSD...</p>
+
+<h3>From PyPi (easy and cross platform way)</h3>
+
+<p>PyPi is an official Python package manager.</p>
+
+<p>You first need to install pypi on your system. For example on Debian/Ubuntu:</p>
+
+<pre><code>$ sudo apt-get install python-pip build-essential python-dev
+</code></pre>
+
+<p>Then install the latest Glances version:</p>
+
+<pre><code>$ sudo pip install glances
+</code></pre>
+
+<p>Note: if you are behind an HTTP Proxy, you should use</p>
+
+<pre><code>$ sudo pip install --proxy=user:password@url:port glances
+</code></pre>
 
 <h3>From PPA (easy way for Ubuntu/Mint...)</h3>
 
 <p>Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:</p>
 
+<p>The PPA is available for Ubuntu version 9.10 to 12.04.</p>
+
 <p>To install the PPA just enter:</p>
 
-<pre><code>    $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-    $ sudo apt-get update
+<pre><code>$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
+$ sudo apt-get update
 </code></pre>
 
 <p>Then install Glances:</p>
 
-<pre><code>    $ sudo apt-get install glances
+<pre><code>$ sudo apt-get install glances
 </code></pre>
 
-<h3>From PyPi (easy way)</h3>
+<h3>From <a href="http://mxcl.github.com/homebrew/">Homebrew</a> via PyPi (OS X)</h3>
 
-<p>PyPi is an official Python package manager.</p>
-
-<p>You first need to install pypi on your system. For exemple on Debian/Ubuntu:</p>
-
-<pre><code>    $ sudo apt-get install python-pip build-essential python-dev
-</code></pre>
-
-<p>Then install the latest Glances version:</p>
-
-<pre><code>    $ sudo pip install glances
+<pre><code>$ brew install brew-pip
+$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+$ brew pip Glances
 </code></pre>
 
 <h3>From source</h3>
 
 <p>Get the latest version:</p>
 
-<pre><code>$ wget https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz
+<pre><code>$ rm -rf /tm/nicolargo-glances-* 
+$ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 </code></pre>
 
-<p>Glances use a standard GNU style installer:</p>
+<p>Glances use a standard GNU style installer (for a Debian like system):</p>
 
 <pre><code>$ sudo apt-get install python-setuptools build-essential python-dev
-$ tar zxvf glances-1.4.tar.gz
-$ cd glances-1.4
+$ cd /tmp
+$ tar zxvf glances-last.tgz
+$ cd nicolargo-glances-*
 $ sudo python setup.py install
 </code></pre>
 
@@ -108,15 +129,15 @@ $ sudo python setup.py install
 
 <p>Easy way (that's all folks !):</p>
 
-<pre><code>$ glances.py
+<pre><code>$ glances
 </code></pre>
 
 <h2>User guide</h2>
 
 <p>By default, stats are refreshed every second, to change this setting, you can
-use the -t option. For exemple to set the refrech rate to 5 seconds:</p>
+use the -t option. For example to set the refresh rate to 5 seconds:</p>
 
-<pre><code>$ glances.py -t 5
+<pre><code>$ glances -t 5
 </code></pre>
 
 <p>Importants stats are colored:</p>
@@ -129,7 +150,7 @@ use the -t option. For exemple to set the refrech rate to 5 seconds:</p>
 </ul><p>When Glances is running, you can press:</p>
 
 <ul>
-<li>'h' to display an help message whith the keys you can press</li>
+<li>'h' to display a help message with the keys you can press</li>
 <li>
 <p>'a' to set the automatic mode. The processes are sorted automatically</p>
 
@@ -153,14 +174,20 @@ use the -t option. For exemple to set the refrech rate to 5 seconds:</p>
 
 <h3>CPU</h3>
 
+<p>Short view:</p>
+
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu.png" alt="screenshot"></p>
 
-<p>The CPU states are shown as a percentage and for the configured refresh
+<p>Long view (only available if your terminal is wide enough)</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png" alt="screenshot"></p>
+
+<p>The CPU stats are shown as a percentage and for the configured refresh
 time. The total CPU usage is displayed on the first line.</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/percpu.png" alt="screenshot"></p>
 
-<p>If horizontal space is available, per core CPU infomations are displayed.</p>
+<p>If horizontal space is available, per core CPU infomations are displayed. </p>
 
 <p>Color code used:</p>
 
@@ -176,7 +203,7 @@ time. The total CPU usage is displayed on the first line.</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/load.png" alt="screenshot"></p>
 
-<p>On the Nosheep blog, Zach defines the average load: "In short it is the
+<p>On the Nosheep blog, Zach defines average load: "In short it is the
 average sum of the number of processes waiting in the run-queue plus the
 number currently executing over 1, 5, and 15 minute time periods."</p>
 
@@ -196,7 +223,7 @@ also display the number of CPU core.</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/mem.png" alt="screenshot"></p>
 
-<p>Glances uses tree columns: memory (RAM), "real" and swap.</p>
+<p>Glances uses three columns: memory (RAM), "real" and swap.</p>
 
 <p>Real used memory is: used - cache.</p>
 
@@ -221,22 +248,22 @@ dynamicaly (bits per second, Kbits per second, Mbits per second...).</p>
 
 <p>Alerts are set only if the network interface maximum speed is available.</p>
 
-<p>If bitrate is &lt; 50%, then status is set to "OK".</p>
+<p>If bit rate is &lt; 50%, then status is set to "OK".</p>
 
-<p>If bitrate is &gt; 50%, then status is set to "CAREFUL".</p>
+<p>If bit rate is &gt; 50%, then status is set to "CAREFUL".</p>
 
-<p>If bitrate is &gt; 70%, then status is set to "WARNING".</p>
+<p>If bit rate is &gt; 70%, then status is set to "WARNING".</p>
 
-<p>If bitrate is &gt; 90%, then status is set to "CRITICAL".</p>
+<p>If bit rate is &gt; 90%, then status is set to "CRITICAL".</p>
 
-<p>For exemple, on a 100 Mbps Ethernet interface, the warning status is set
+<p>For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.</p>
 
 <h3>Disk I/O</h3>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/diskio.png" alt="screenshot"></p>
 
-<p>Glances display the disk I/O throughput. The unit is adapted dynamicaly
+<p>Glances displays the disk I/O throughput. The unit is adapted dynamically
 (bytes per second, Kbytes per second, Mbytes per second...).</p>
 
 <p>There is no alert on this information.</p>
@@ -245,8 +272,8 @@ if the bit rate is higher than 70 Mbps.</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/fs.png" alt="screenshot"></p>
 
-<p>Glances display the total and used filesytem disk space. The unit is
-adapted dynamicaly (bytes per second, Kbytes per second, Mbytes per
+<p>Glances displays the total and used filesytem disk space. The unit is
+adapted dynamically (bytes per second, Kbytes per second, Mbytes per
 second...).</p>
 
 <p>Alerts are set for used disk space:</p>
@@ -261,11 +288,17 @@ second...).</p>
 
 <h3>Processes</h3>
 
+<p>Short view:</p>
+
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/processlist.png" alt="screenshot"></p>
+
+<p>Long view (only available if your terminal is wide enough)</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/processlist-wide.png" alt="screenshot"></p>
 
 <p>Glances displays a summary and a list of processes.</p>
 
-<p>By default (or if you hit the 'a' key) the process list is automaticaly
+<p>By default (or if you hit the 'a' key) the process list is automatically
 sorted by CPU of memory consumption.</p>
 
 <p>The number of processes in the list is adapted to the screen size.</p>
@@ -287,13 +320,14 @@ S - Sleeping (may be interrupted)
 T - Traced or stopped
 Z - Zombie or "hung" process</p>
 </li>
+<li><p>IO READ and WRITE: Per process IO read and write</p></li>
 <li><p>TIME+:  Cumulative CPU time used</p></li>
 <li><p>NAME: Process name or command line</p></li>
 </ul><h3>Logs</h3>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/logs.png" alt="screenshot"></p>
 
-<p>A logs list is displayed in the bottom of the screen if (an only if):</p>
+<p>A logs list is displayed in the bottom of the screen if (and only if):</p>
 
 <ul>
 <li>at least one WARNING or CRITICAL alert was occured.</li>
@@ -309,7 +343,7 @@ Z - Zombie or "hung" process</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/footer.png" alt="screenshot"></p>
 
-<p>Glances displays the current time/date and access to the embeded help screen.</p>
+<p>Glances displays the current time/date and access to the embedded help screen.</p>
 
 <h2>Localisation</h2>
 
@@ -318,16 +352,6 @@ i18n_francais_generate.sh</p>
 
 <p>To generate spanish locale execute as root or sudo :
 i18n_espanol_generate.sh</p>
-
-<h2>Todo</h2>
-
-<p>You are welcome to contribute to this software.</p>
-
-<ul>
-<li>Code optimization</li>
-<li>Port to FreeBSD and Mac OS X</li>
-<li>Documentation for HTML and CVS export option</li>
-</ul>
         </section>
 
         <aside id="sidebar">
@@ -347,19 +371,16 @@ i18n_espanol_generate.sh</p>
       </div>
     </div>
 
-<script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-115490-11']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA–115490–11");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
 
   </body>
 </html>
