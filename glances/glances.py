@@ -22,7 +22,7 @@
 from __future__ import generators
 
 __appname__ = 'glances'
-__version__ = "1.4.1"
+__version__ = "1.4.1.1"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -1631,6 +1631,9 @@ class glancesScreen:
                 tag_proc_time = True
             if screen_x > process_x + 97:
                 tag_io = True
+
+            if not psutil_get_io_counter_tag:
+                tag_io = False
                 
             # VMS
             self.term_window.addnstr(
