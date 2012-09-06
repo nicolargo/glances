@@ -85,9 +85,9 @@ else:
     psutil_get_io_counter_tag = True
 
 try:
-    # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-    psutil.phymem_usage()
-    psutil.virtmem_usage()
+    # (virt|swap)mem_usage methods only available with PsUtil 0.3.0+
+    psutil.virtual_memory()
+    psutil.swap_memory()
 except Exception:
     psutil_mem_usage_tag = False
 else:
