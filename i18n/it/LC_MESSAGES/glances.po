@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: GLANCES 1.4,1\n"
+"Project-Id-Version: GLANCES 1.4.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-09-07 01:30+0100\n"
 "PO-Revision-Date: 2012-09-07 01:21+0100\n"
