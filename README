@@ -12,7 +12,13 @@ Glances uses the PsUtil library to get information from your system.
 
 It is developed in Python.
 
+Console (80x24) screenshot:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
+
+Wide terminal (> 90x24) screenshot:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot-wide.png)
 
 ## Installation
 
@@ -29,6 +35,22 @@ Pre-requisites (information for packagers):
 
 Packages exist for Arch, Fedora, Redhat, FreeBSD...
 
+### From PyPi (easy and cross platform way)
+
+PyPi is an official Python package manager.
+
+You first need to install pypi on your system. For example on Debian/Ubuntu:
+
+    $ sudo apt-get install python-pip build-essential python-dev
+
+Then install the latest Glances version:
+
+    $ sudo pip install glances
+        
+Note: if you are behind an HTTP Proxy, you should use
+
+    $ sudo pip install --proxy=user:password@url:port glances
+
 ### From PPA (easy way for Ubuntu/Mint...)
 
 Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
@@ -37,28 +59,16 @@ The PPA is available for Ubuntu version 9.10 to 12.04.
 
 To install the PPA just enter:
 
-        $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-        $ sudo apt-get update
+    $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
+    $ sudo apt-get update
 
 Then install Glances:
 
-        $ sudo apt-get install glances
-
-### From PyPi (easy way)
-
-PyPi is an official Python package manager.
-
-You first need to install pypi on your system. For example on Debian/Ubuntu:
-
-        $ sudo apt-get install python-pip build-essential python-dev
-
-Then install the latest Glances version:
-
-        $ sudo pip install glances
+    $ sudo apt-get install glances
 
 ### From [Homebrew](http://mxcl.github.com/homebrew/) via PyPi (OS X)
 
-	$ brew install brew-pip
+    $ brew install brew-pip
 	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 	$ brew pip Glances
 
@@ -66,13 +76,15 @@ Then install the latest Glances version:
 
 Get the latest version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz
+	$ rm -rf /tm/nicolargo-glances-* 
+    $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 
-Glances use a standard GNU style installer:
+Glances use a standard GNU style installer (for a Debian like system):
 
     $ sudo apt-get install python-setuptools build-essential python-dev
-	$ tar zxvf glances-1.4.tar.gz
-	$ cd glances-1.4
+    $ cd /tmp
+	$ tar zxvf glances-last.tgz
+	$ cd nicolargo-glances-*
 	$ sudo python setup.py install
 
 ## Running
@@ -121,7 +133,13 @@ The header shows the host name and the operating system name, version and archit
 
 ### CPU
 
+Short view:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu.png)
+
+Long view (only available if your terminal is wide enough)
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png)
 
 The CPU stats are shown as a percentage and for the configured refresh
 time. The total CPU usage is displayed on the first line.
@@ -184,7 +202,7 @@ If memory is > 90%, then status is set to "CRITICAL".
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/network.png)
 
-Glances displays the network interface bit rate. The unit is adapted
+Glances display the network interface bit rate. The unit is adapted
 dynamicaly (bits per second, Kbits per second, Mbits per second...).
 
 Alerts are set only if the network interface maximum speed is available.
@@ -204,7 +222,7 @@ if the bit rate is higher than 70 Mbps.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/diskio.png)
 
-Glances display the disk I/O throughput. The unit is adapted dynamically
+Glances displays the disk I/O throughput. The unit is adapted dynamically
 (bytes per second, Kbytes per second, Mbytes per second...).
 
 There is no alert on this information.
@@ -213,7 +231,7 @@ There is no alert on this information.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/fs.png)
 
-Glances display the total and used filesytem disk space. The unit is
+Glances displays the total and used filesytem disk space. The unit is
 adapted dynamically (bytes per second, Kbytes per second, Mbytes per
 second...).
 
@@ -229,7 +247,13 @@ If disk used is > 90%, then status is set to "CRITICAL".
 
 ### Processes
 
+Short view:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/processlist.png)
+
+Long view (only available if your terminal is wide enough)
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/processlist-wide.png)
 
 Glances displays a summary and a list of processes.
 
@@ -253,6 +277,7 @@ The number of processes in the list is adapted to the screen size.
    T - Traced or stopped
    Z - Zombie or "hung" process
 
+* IO READ and WRITE: Per process IO read and write
 * TIME+:  Cumulative CPU time used
 * NAME: Process name or command line
 
@@ -286,11 +311,3 @@ i18n_francais_generate.sh
 
 To generate spanish locale execute as root or sudo :
 i18n_espanol_generate.sh
-
-## Todo
-
-You are welcome to contribute to this software.
-
-* Code optimization
-* Port to FreeBSD and Mac OS X
-* Documentation for HTML and CVS export option

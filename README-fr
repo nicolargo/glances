@@ -12,7 +12,13 @@ système d'exploitation GNU/Linux ou BSD à partir d'une interface texte.
 Glances utilise la librairie PsUtil pour récupérer les informations de
 votre système. Il est développé en Python.
 
+Copie d'écran sur une console:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
+
+Copie d'écran sur un terminal avec une taille importante:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot-wide.png)
 
 ## Installation
 
@@ -32,18 +38,6 @@ Le processus de packaging est actuellement en cours sur d'autres distribs, je
 vous conseille donc de rechercher Glances sur votre gestionnaire de package
 avant de faire une installation depuis les sources.
 
-### Depuis le PPA (Ubuntu/Mint)
-
-Arnaud Hartmann maintient un PPA avec la version stable de Glances.
-
-Pour installer Glances à partir de ce PPA, il suffit de saisir:
-
-	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-	$ sudo apt-get update
-	$ sudo apt-get install glances
-
-Le PPA propose les paquets pour les versions Ubuntu 9.10 jusqu'à 12.04.
-
 ### Depuis PyPi
 
 PyPi est un gestionnaire officiel des paquets Python.
@@ -56,6 +50,22 @@ On commence par installer PyPi sur son système (par exemple Debian/Ubuntu):
 Puis on installe la dernière version de Glances:
 
         $ sudo pip install glances
+
+Note: si vous êtes derrière un Proxy alors il faut utiliser
+
+    $ sudo pip install --proxy=user:password@url:port glances
+
+### Depuis le PPA (Ubuntu/Mint)
+
+Arnaud Hartmann maintient un PPA avec la version stable de Glances.
+
+Pour installer Glances à partir de ce PPA, il suffit de saisir:
+
+	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
+	$ sudo apt-get update
+	$ sudo apt-get install glances
+
+Le PPA propose les paquets pour les versions Ubuntu 9.10 jusqu'à 12.04.
 
 ### Depuis [Homebrew](http://mxcl.github.com/homebrew/) et pat PyPi (pour OS X)
 
@@ -70,15 +80,17 @@ Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
 Pour l'installer, il suffit de suivre les instructions suivantes depuis un
 terminal.
 
-Récupération de la dernière version (1.4):
+Récupération de la dernière version:
 
-	$ wget https://github.com/downloads/nicolargo/glances/glances-1.4.tar.gz
+	$ rm -rf /tm/nicolargo-glances-* 
+    $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 
-Procédez ensuite à l'installation:
+Procédez ensuite à l'installation (exemple pour un system Debian):
 
-	$ sudo apt-get install python-setuptools build-essential python-dev
-    $ tar zxvf glances-1.4.tar.gz
-	$ cd glances-1.4
+    $ sudo apt-get install python-setuptools build-essential python-dev
+    $ cd /tmp
+	$ tar zxvf glances-last.tgz
+	$ cd nicolargo-glances-*
 	$ sudo python setup.py install
 
 ## Lancement de Glances
@@ -132,7 +144,13 @@ qu'une information sur le système d'exploitation (nom, version).
 
 ### CPU
 
+Vue par défaut:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu.png)
+
+Vue si la taille du terminal est suffisante:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png)
 
 L'état de la CPU est affiché par un pourcentage de l'utilisation globale.
 
@@ -242,7 +260,13 @@ Si l'espace disque utilisé est > 90%, alors le status est "CRITICAL".
 
 ### Les processus
 
+Vue par défaut:
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/processlist.png)
+
+Vue sur grand écran:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/processlist-wide.png)
 
 Glances affiche un résumé sur l'état des processus ainsi qu'une liste
 détaillée.
