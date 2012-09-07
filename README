@@ -4,6 +4,8 @@
 Glances -- Eye on your system
 =============================
 
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png.png)
+
 ## Description
 
 Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
