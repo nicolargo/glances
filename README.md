@@ -4,7 +4,7 @@
 Glances -- Eye on your system
 =============================
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png.png)
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png)
 
 ## Description
 
