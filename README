@@ -78,7 +78,7 @@ Then install Glances:
 
 Get the latest version:
 
-	$ rm -rf /tm/nicolargo-glances-* 
+    $ rm -rf /tmp/nicolargo-glances-* 
     $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 
 Glances use a standard GNU style installer (for a Debian like system):
