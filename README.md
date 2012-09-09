@@ -4,8 +4,6 @@
 Glances -- Eye on your system
 =============================
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png)
-
 ## Description
 
 Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
@@ -306,10 +304,6 @@ There is one line per alert with the following information:
 
 Glances displays the current time/date and access to the embedded help screen.
 
-## Localisation
+### Logo
 
-To generate french locale execute as root or sudo :
-i18n_francais_generate.sh
-
-To generate spanish locale execute as root or sudo :
-i18n_espanol_generate.sh
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png)
