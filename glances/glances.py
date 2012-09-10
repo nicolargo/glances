@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
-from __future__ import generators
+
 
 __appname__ = 'glances'
 __version__ = "1.4.1.1"
@@ -50,22 +50,22 @@ try:
     import curses
     import curses.panel
 except ImportError:
-    print _('Curses module not found. Glances cannot start.')
-    print _('Glances requires at least Python 2.6 or higher.')
-    print
+    print(_('Curses module not found. Glances cannot start.'))
+    print(_('Glances requires at least Python 2.6 or higher.'))
+    print()
     sys.exit(1)
 
 try:
     import psutil
 except ImportError:
-    print _('PsUtil module not found. Glances cannot start.')
-    print
-    print _('On Ubuntu 12.04 or higher:')
-    print _('$ sudo apt-get install python-psutil')
-    print
-    print _('To install PsUtil using pip (as root):')
-    print _('# pip install psutil')
-    print
+    print(_('PsUtil module not found. Glances cannot start.'))
+    print()
+    print(_('On Ubuntu 12.04 or higher:'))
+    print(_('$ sudo apt-get install python-psutil'))
+    print()
+    print(_('To install PsUtil using pip (as root):'))
+    print(_('# pip install psutil'))
+    print()
     sys.exit(1)
 
 try:
@@ -225,7 +225,7 @@ class glancesLogs:
         * end is < 0
         * item_type is matching
         """
-        for i in xrange(self.len()):
+        for i in range(self.len()):
             if (self.logs_list[i][1] < 0 and
                 self.logs_list[i][3] == item_type):
                 return i
@@ -327,7 +327,7 @@ class glancesGrabFs:
 
         # Open the current mounted FS
         fs_stat = psutil.disk_partitions(True)
-        for fs in xrange(len(fs_stat)):
+        for fs in range(len(fs_stat)):
             fs_current = {}
             fs_current['device_name'] = fs_stat[fs].device
             if fs_current['device_name'] in self.ignore_fsname:
@@ -875,7 +875,7 @@ class glancesScreen:
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            print _("Error: Cannot init the curses library.\n")
+            print(_("Error: Cannot init the curses library.\n"))
 
         curses.start_color()
         if hasattr(curses, 'use_default_colors'):
@@ -998,11 +998,11 @@ class glancesScreen:
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {
-            'Y': 1208925819614629174706176L,
-            'Z': 1180591620717411303424L,
-            'E': 1152921504606846976L,
-            'P': 1125899906842624L,
-            'T': 1099511627776L,
+            'Y': 1208925819614629174706176,
+            'Z': 1180591620717411303424,
+            'E': 1152921504606846976,
+            'P': 1125899906842624,
+            'T': 1099511627776,
             'G': 1073741824,
             'M': 1048576,
             'K': 1024
@@ -1425,7 +1425,7 @@ class glancesScreen:
             # Adapt the maximum interface to the screen
             ret = 2
             net_num = min(screen_y - self.network_y - 3, len(network))
-            for i in xrange(0, net_num):
+            for i in range(0, net_num):
                 elapsed_time = max(1, self.__refresh_time)
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
@@ -1471,7 +1471,7 @@ class glancesScreen:
             # Adapt the maximum disk to the screen
             disk = 0
             disk_num = min(screen_y - self.diskio_y - 3, len(diskio))
-            for disk in xrange(0, disk_num):
+            for disk in range(0, disk_num):
                 elapsed_time = max(1, self.__refresh_time)
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x,
@@ -1505,7 +1505,7 @@ class glancesScreen:
             # Adapt the maximum disk to the screen
             mounted = 0
             fs_num = min(screen_y - self.fs_y - 3, len(fs))
-            for mounted in xrange(0, fs_num):
+            for mounted in range(0, fs_num):
                 self.term_window.addnstr(
                     self.fs_y + 1 + mounted,
                     self.fs_x, fs[mounted]['mnt_point'], 8)
@@ -1546,7 +1546,7 @@ class glancesScreen:
             # Adapt the maximum log to the screen
             logcount = 0
             log = logs.get()
-            for logcount in xrange(0, logtodisplay_count):
+            for logcount in range(0, logtodisplay_count):
                 logmsg = "  " + str(datetime.fromtimestamp(log[logcount][0]))
                 if (log[logcount][1] > 0):
                     logmark = ' '
@@ -1710,7 +1710,7 @@ class glancesScreen:
             proc_num = min(screen_y - self.term_h +
                            self.process_y - log_count + 5,
                            len(processlist))
-            for processes in xrange(0, proc_num):
+            for processes in range(0, proc_num):
                 # VMS
                 process_size = processlist[processes]['proc_size']
                 self.term_window.addnstr(
@@ -2015,7 +2015,7 @@ class glancesHtml:
 
     def __getFsColor(self, fs):
         mounted = 0
-        for mounted in xrange(0, len(fs)):
+        for mounted in range(0, len(fs)):
             fs[mounted]['used_color'] = self.__getColor(fs[mounted]['used'],
                                                         fs[mounted]['size'])
         return fs
@@ -2067,8 +2067,8 @@ class glancesCsv:
         try:
             self.__cvsfile_fd = open("%s" % cvsfile, "wb")
             self.__csvfile = csv.writer(self.__cvsfile_fd)
-        except IOError, error:
-            print "Can not create the output CSV file: ", error[1]
+        except IOError as error:
+            print("Can not create the output CSV file: ", error[1])
             sys.exit(0)
 
     def exit(self):
@@ -2101,23 +2101,23 @@ class glancesCsv:
 
 
 def printVersion():
-    print _("Glances version ") + __version__
+    print(_("Glances version ") + __version__)
 
 
 def printSyntax():
     printVersion()
-    print _("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]")
-    print ""
-    print _("\t-b\t\tDisplay network rate in Byte per second")
-    print _("\t-d\t\tDisable disk I/O module")
-    print _("\t-f file\t\tSet the output folder (HTML) or file (CSV)")
-    print _("\t-h\t\tDisplay the syntax and exit")
-    print _("\t-m\t\tDisable mount module")
-    print _("\t-n\t\tDisable network module")
-    print _("\t-o output\tDefine additional output (available: HTML or CSV)")
-    print _("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
-            refresh_time)
-    print _("\t-v\t\tDisplay the version and exit")
+    print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]"))
+    print("")
+    print(_("\t-b\t\tDisplay network rate in Byte per second"))
+    print(_("\t-d\t\tDisable disk I/O module"))
+    print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
+    print(_("\t-h\t\tDisplay the syntax and exit"))
+    print(_("\t-m\t\tDisable mount module"))
+    print(_("\t-n\t\tDisable network module"))
+    print(_("\t-o output\tDefine additional output (available: HTML or CSV)"))
+    print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
+            refresh_time))
+    print(_("\t-v\t\tDisplay the version and exit"))
 
 
 def init():
@@ -2141,9 +2141,9 @@ def init():
         opts, args = getopt.getopt(sys.argv[1:], "bdmnho:f:t:v",
                                    ["help", "output", "file",
                                     "time", "version"])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         # Print help information and exit:
-        print str(err)
+        print(str(err))
         printSyntax()
         sys.exit(2)
     for opt, arg in opts:
@@ -2155,18 +2155,18 @@ def init():
                 if jinja_tag:
                     html_tag = True
                 else:
-                    print _("Error: Need Jinja2 library to export into HTML")
-                    print
-                    print _("Try to install the python-jinja2 package")
+                    print(_("Error: Need Jinja2 library to export into HTML"))
+                    print()
+                    print(_("Try to install the python-jinja2 package"))
                     sys.exit(2)
             elif arg == "csv":
                 if csvlib_tag:
                     csv_tag = True
                 else:
-                    print _("Error: Need CSV library to export to CSV")
+                    print(_("Error: Need CSV library to export to CSV"))
                     sys.exit(2)
             else:
-                print _("Error: Unknown output %s" % arg)
+                print(_("Error: Unknown output %s" % arg))
                 sys.exit(2)
         elif opt in ("-f", "--file"):
             output_file = arg
@@ -2175,7 +2175,7 @@ def init():
             if int(arg) >= 1:
                 refresh_time = int(arg)
             else:
-                print _("Error: Refresh time should be a positive integer")
+                print(_("Error: Refresh time should be a positive integer"))
                 sys.exit(2)
         elif opt in ("-d", "--diskio"):
             psutil_disk_io_tag = False
@@ -2194,16 +2194,16 @@ def init():
         try:
             output_folder
         except UnboundLocalError:
-            print _("Error: HTML export (-o html) need"
-                    "output folder definition (-f <folder>)")
+            print(_("Error: HTML export (-o html) need"
+                    "output folder definition (-f <folder>)"))
             sys.exit(2)
 
     if csv_tag:
         try:
             output_file
         except UnboundLocalError:
-            print _("Error: CSV export (-o csv) need "
-                    "output file definition (-f <file>)")
+            print(_("Error: CSV export (-o csv) need "
+                    "output file definition (-f <file>)"))
             sys.exit(2)
 
     # Catch CTRL-C
