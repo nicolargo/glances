@@ -47,11 +47,11 @@ You first need to install pypi on your system. For example on Debian/Ubuntu:
 
 Then install the latest Glances version:
 
-    $ sudo pip install glances
+    $ sudo pip install Glances
         
 Note: if you are behind an HTTP Proxy, you should use
 
-    $ sudo pip install --proxy=user:password@url:port glances
+    $ sudo pip install --proxy=user:password@url:port Glances
 
 ### From PPA (easy way for Ubuntu/Mint...)
 
