@@ -52,18 +52,16 @@
 
 <h2>Installation</h2>
 
-<p>Pre-requisites (information for packagers):</p>
+<p>Packages exist for:</p>
 
 <ul>
-<li>Python 2.6+ (not tested with Python 3+)</li>
-<li>build-essential (for installation via Pypi and setup.py)</li>
-<li>python-dev (for installation via Pypi)</li>
-<li>python-setuptools (for the installation via setup.py)</li>
-<li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
-<li>python-jinja2 2.0+ (optional for HTML export)</li>
-</ul><h3>From package manager (very easy way)</h3>
-
-<p>Packages exist for Arch, Fedora, Redhat, FreeBSD, Gentoo...</p>
+<li>ArchLinux: <a href="http://aur.archlinux.org/packages.php?ID=54666">In the AUR repository</a></li>
+<li><a href="https://apps.fedoraproject.org/packages/glances">Fedora</a></li>
+<li><a href="http://www.freebsd.org/cgi/query-pr.cgi?pr=171517">FreeBSD</a></li>
+<li><a href="http://packages.gentoo.org/package/sys-process/glances">Gentoo</a></li>
+<li><a href="http://rpm.pbone.net/">Redhat</a></li>
+<li><a href="https://launchpad.net/~arnaud-hartmann/+archive/glances-stable">Ubuntu (see instructions bellow)</a></li>
+</ul>
 
 <h3>From PyPi (easy and cross platform way)</h3>
 
@@ -126,6 +124,17 @@ $ tar zxvf glances-last.tgz
 $ cd nicolargo-glances-*
 $ sudo python setup.py install
 </code></pre>
+
+<p>Pre-requisites (information for packagers):</p>
+
+<ul>
+<li>Python 2.6+ (not tested with Python 3+)</li>
+<li>build-essential (for installation via Pypi and setup.py)</li>
+<li>python-dev (for installation via Pypi)</li>
+<li>python-setuptools (for the installation via setup.py)</li>
+<li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
+<li>python-jinja2 2.0+ (optional for HTML export)</li>
+</ul><h3>From package manager (very easy way)</h3>
 
 <h2>Running</h2>
 
