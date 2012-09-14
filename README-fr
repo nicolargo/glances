@@ -45,6 +45,7 @@ Il est disponible sous la plupart des distibutions GNU/Linux.
 
 On commence par installer PyPi sur son système (par exemple Debian/Ubuntu):
         
+        $ sudo apt-get update
         $ sudo apt-get install python-pip build-essential python-dev
 
 Puis on installe la dernière version de Glances:
@@ -87,6 +88,7 @@ Récupération de la dernière version:
 
 Procédez ensuite à l'installation (exemple pour un system Debian):
 
+    $ sudo apt-get update
     $ sudo apt-get install python-setuptools build-essential python-dev
     $ cd /tmp
 	$ tar zxvf glances-last.tgz

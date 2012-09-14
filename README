@@ -43,6 +43,7 @@ PyPi is an official Python package manager.
 
 You first need to install pypi on your system. For example on Debian/Ubuntu:
 
+    $ sudo apt-get update
     $ sudo apt-get install python-pip build-essential python-dev
 
 Then install the latest Glances version:
@@ -83,6 +84,7 @@ Get the latest version:
 
 Glances use a standard GNU style installer (for a Debian like system):
 
+    $ sudo apt-get update
     $ sudo apt-get install python-setuptools build-essential python-dev
     $ cd /tmp
 	$ tar zxvf glances-last.tgz

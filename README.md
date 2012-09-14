@@ -4,6 +4,8 @@
 Glances -- Eye on your system
 =============================
 
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png)
+
 ## Description
 
 Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.
@@ -41,15 +43,16 @@ PyPi is an official Python package manager.
 
 You first need to install pypi on your system. For example on Debian/Ubuntu:
 
+    $ sudo apt-get update
     $ sudo apt-get install python-pip build-essential python-dev
 
 Then install the latest Glances version:
 
-    $ sudo pip install glances
+    $ sudo pip install Glances
         
 Note: if you are behind an HTTP Proxy, you should use
 
-    $ sudo pip install --proxy=user:password@url:port glances
+    $ sudo pip install --proxy=user:password@url:port Glances
 
 ### From PPA (easy way for Ubuntu/Mint...)
 
@@ -76,11 +79,12 @@ Then install Glances:
 
 Get the latest version:
 
-	$ rm -rf /tm/nicolargo-glances-* 
+    $ rm -rf /tmp/nicolargo-glances-* 
     $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 
 Glances use a standard GNU style installer (for a Debian like system):
 
+    $ sudo apt-get update
     $ sudo apt-get install python-setuptools build-essential python-dev
     $ cd /tmp
 	$ tar zxvf glances-last.tgz
@@ -304,6 +308,10 @@ There is one line per alert with the following information:
 
 Glances displays the current time/date and access to the embedded help screen.
 
-### Logo
+## Localisation
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png)
+To generate french locale execute as root or sudo :
+i18n_francais_generate.sh
+
+To generate spanish locale execute as root or sudo :
+i18n_espanol_generate.sh
