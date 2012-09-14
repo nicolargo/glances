@@ -1412,9 +1412,9 @@ class glancesScreen:
                                      _("Network"), 8, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                     _("Rx/ps"), 8)
+                                     _("Rx/s"), 8)
             self.term_window.addnstr(self.network_y, self.network_x + 19,
-                                     _("Tx/ps"), 8)
+                                     _("Tx/s"), 8)
 
             # If there is no data to display...
             if not network:
@@ -1458,9 +1458,9 @@ class glancesScreen:
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 10,
-                                     _("In/ps"), 8)
+                                     _("In/s"), 8)
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 19,
-                                     _("Out/ps"), 8)
+                                     _("Out/s"), 8)
 
             # If there is no data to display...
             if not diskio:
