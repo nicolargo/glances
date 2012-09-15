@@ -19,10 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.";
 #
 
-
-
 __appname__ = 'glances'
-__version__ = "1.4.1.1"
+__version__ = "1.4.2b"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -85,13 +83,21 @@ else:
     psutil_get_io_counter_tag = True
 
 try:
-    # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-    psutil.phymem_usage()
-    psutil.virtmem_usage()
-except Exception:
-    psutil_mem_usage_tag = False
+    # virtual_memory() is only available with PsUtil 0.6+
+    psutil.virtual_memory()
+except:    
+    try:
+        # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
+        psutil.phymem_usage()
+        psutil.virtmem_usage()
+    except Exception:
+        psutil_mem_usage_tag = False
+    else:
+        psutil_mem_usage_tag = True
+        psutil_mem_vm = False
 else:
     psutil_mem_usage_tag = True
+    psutil_mem_vm = True
 
 try:
     # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
@@ -565,35 +571,43 @@ class glancesStats:
             self.load = {}
 
         # MEM
-        # !!! TODO
-        # To be replaced by: psutil.virtual_memory() et psutil.swap_memory()
-        # In the PsUtil version 0.6 or higher
-        # !!!
-        #
-        try:
-            # Only for Linux
-            cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-        except Exception:
-            cachemem = 0
-
-        try:
-            phymem = psutil.phymem_usage()
-            self.mem = {'cache': cachemem,
+        if psutil_mem_vm:
+            # If PsUtil 0.6+
+            phymem = psutil.virtual_memory()
+            self.mem = {'cache': phymem.cached + phymem.buffers,
                         'total': phymem.total,
                         'used': phymem.used,
                         'free': phymem.free,
                         'percent': phymem.percent}
-        except Exception:
-            self.mem = {}
-
-        try:
-            virtmem = psutil.virtmem_usage()
+            virtmem = psutil.swap_memory()
             self.memswap = {'total': virtmem.total,
                             'used': virtmem.used,
                             'free': virtmem.free,
-                            'percent': virtmem.percent}
-        except Exception:
-            self.memswap = {}
+                            'percent': virtmem.percent}            
+        else:
+            # For olders PsUtil version
+            try:
+                phymem = psutil.phymem_usage()
+                try:
+                    # Cache stat only available for Linux
+                    cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
+                except Exception:
+                    cachemem = 0
+                self.mem = {'cache': cachemem,
+                            'total': phymem.total,
+                            'used': phymem.used,
+                            'free': phymem.free,
+                            'percent': phymem.percent}
+            except Exception:
+                self.mem = {}
+            try:
+                virtmem = psutil.virtmem_usage()
+                self.memswap = {'total': virtmem.total,
+                                'used': virtmem.used,
+                                'free': virtmem.free,
+                                'percent': virtmem.percent}
+            except Exception:
+                self.memswap = {}
 
         # NET
         if psutil_network_io_tag:
@@ -1345,9 +1359,9 @@ class glancesScreen:
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x,
-                                     _("Total:"), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x, _("Used:"), 8)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x, _("Free:"), 8)
+                                     _("Total:"), 6)
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x, _("Used:"), 6)
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x, _("Free:"), 6)
 
             self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 9,
                                      "{0:.1%}".format(mem['percent'] / 100), 8)
@@ -1376,11 +1390,11 @@ class glancesScreen:
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 25,
-                                     _("Total:"), 8)
+                                     _("Total:"), 6)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 25,
-                                     _("Used:"), 8)
+                                     _("Used:"), 6)
             self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 25,
-                                     _("Free:"), 8)
+                                     _("Free:"), 6)
 
             self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 34,
                                      "{0:.1%}".format(memswap['percent'] / 100),
