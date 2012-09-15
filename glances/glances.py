@@ -85,9 +85,9 @@ else:
     psutil_get_io_counter_tag = True
 
 try:
-    # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-    psutil.phymem_usage()
-    psutil.virtmem_usage()
+    # (virt|swap)mem_usage methods only available with PsUtil 0.3.0+
+    psutil.virtual_memory()
+    psutil.swap_memory()
 except Exception:
     psutil_mem_usage_tag = False
 else:
@@ -565,11 +565,6 @@ class glancesStats:
             self.load = {}
 
         # MEM
-        # !!! TODO
-        # To be replaced by: psutil.virtual_memory() et psutil.swap_memory()
-        # In the PsUtil version 0.6 or higher
-        # !!!
-        #
         try:
             # Only for Linux
             cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
@@ -577,7 +572,7 @@ class glancesStats:
             cachemem = 0
 
         try:
-            phymem = psutil.phymem_usage()
+            phymem = psutil.virtual_memory()
             self.mem = {'cache': cachemem,
                         'total': phymem.total,
                         'used': phymem.used,
