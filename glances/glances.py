@@ -728,9 +728,27 @@ class glancesStats:
                         procstat['mem_percent'] = proc.get_memory_percent()
 
                         if psutil_get_io_counter_tag:
-                            self.proc_io_new = proc.get_io_counters()
-                            procstat['read_bytes']  = self.proc_io_new.read_bytes
-                            procstat['write_bytes'] = self.proc_io_new.write_bytes
+                            self.proc_io = proc.get_io_counters()
+                            procstat['read_bytes']  = self.proc_io.read_bytes
+                            procstat['write_bytes'] = self.proc_io.write_bytes
+                            #~ try:
+                                #~ self.procstatbkp
+                            #~ except Exception:
+                                #~ self.procstatbkp = []
+                            #~ try:
+                                #~ self.procstatbkp[str(proc.pid)]
+                            #~ except Exception:
+                                #~ self.procstatbkp[str(proc.pid)] = []
+                            #~ try:
+                                #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']
+                                #~ self.procstatbkp[str(proc.pid)]['write_bytes_old']
+                            #~ except Exception:
+                                #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']  = procstat['read_bytes']
+                                #~ self.procstatbkp[str(proc.pid)]['write_bytes_old'] = procstat['write_bytes']
+                            #~ procstat['read_bytes_ps']  = procstat['read_bytes'] - self.procstatbkp[str(proc.pid)]['read_bytes_old']
+                            #~ procstat['write_bytes_ps'] = procstat['write_bytes'] - self.procstatbkp[str(proc.pid)]['write_bytes_old']
+                            #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']  = procstat['read_bytes']
+                            #~ self.procstatbkp[str(proc.pid)]['write_bytes_old'] = procstat['write_bytes']                                                        
 
                         procstat['pid'] = proc.pid
                         procstat['uid'] = proc.username
@@ -1790,7 +1808,7 @@ class glancesScreen:
                 # IO
                 if tag_io:
                     # Processes are only refresh every 2 refresh_time
-                    elapsed_time = max(1, self.__refresh_time) * 2
+                    #~ elapsed_time = max(1, self.__refresh_time) * 2
                     io_read = processlist[processes]['read_bytes']
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 62,
@@ -1799,6 +1817,7 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 72,
                         self.__autoUnit(io_write), 8)
+                        
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
                 process_name = processlist[processes]['proc_name']
