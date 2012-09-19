@@ -240,7 +240,7 @@ class glancesLogs:
     def add(self, item_state, item_type, item_value, proc_list = []):
         """
         item_state = "OK|CAREFUL|WARNING|CRITICAL"
-        item_type = "CPU|LOAD|MEM"
+        item_type = "CPU*|LOAD|MEM"
         item_value = value
         Item is defined by:
           ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
@@ -251,6 +251,17 @@ class glancesLogs:
         Else:
           Update the existing item
         """
+        
+        # Add Top process sort depending on alert type
+        if (item_type.startswith("MEM")):
+            # MEM
+            sortby = 'mem_percent'
+        else:
+            # CPU* and LOAD
+            sortby = 'cpu_percent'
+        topprocess = sorted(proc_list, key=lambda process: process[sortby], reverse=True)
+
+        # Add or update the log
         item_index = self.__itemexist__(item_type)
         if item_index < 0:
             # Item did not exist, add if WARNING or CRITICAL
@@ -268,7 +279,7 @@ class glancesLogs:
                 item.append(item_value)     # MIN
                 item.append(item_value)     # SUM
                 item.append(1)              # COUNT
-                item.append([])             # TOP3 PROCESS LIST
+                item.append(topprocess[0:3]) # TOP 3 PROCESS LIST
                 self.logs_list.insert(0, item)
                 if self.len() > self.logs_max:
                     self.logs_list.pop()
@@ -279,6 +290,8 @@ class glancesLogs:
                 # Close the item
                 self.logs_list[item_index][1] = time.mktime(
                     datetime.now().timetuple())
+                # TOP PROCESS LIST
+                self.logs_list[item_index][9] = []
             else:
                 # Update the item
                 # State
@@ -297,9 +310,8 @@ class glancesLogs:
                 self.logs_list[item_index][5] = (
                     self.logs_list[item_index][7] /
                     self.logs_list[item_index][8])
-                # TOP3 PROCESS LIST
-                # TODO
-                self.logs_list[item_index][9] = []
+                # TOP PROCESS LIST
+                self.logs_list[item_index][9] = topprocess[0:3]
 
         return self.len()
 
@@ -1173,11 +1185,14 @@ class glancesScreen:
         curses.endwin()
 
     def display(self, stats):
+        # Get stats for processes (used in another functions for logs)
+        processcount = stats.getProcessCount()
+        processlist = stats.getProcessList(screen.getProcessSortedBy())
         # Display stats
         self.displaySystem(stats.getHost(), stats.getSystem())
-        cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu())
-        self.displayLoad(stats.getLoad(), stats.getCore(), cpu_offset)
-        self.displayMem(stats.getMem(), stats.getMemSwap(), cpu_offset)
+        cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
+        self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
+        self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
         network_count = self.displayNetwork(stats.getNetwork())
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
                                           self.network_y + network_count)
@@ -1186,9 +1201,7 @@ class glancesScreen:
                                   diskio_count)
         log_count = self.displayLog(self.network_y + network_count +
                                     diskio_count + fs_count)
-        self.displayProcess(stats.getProcessCount(),
-                            stats.getProcessList(screen.getProcessSortedBy()),
-                            log_count)
+        self.displayProcess(processcount, processlist, log_count)
         self.displayCaption()
         self.displayNow(stats.getNow())
         self.displayHelp()
@@ -1237,7 +1250,7 @@ class glancesScreen:
                                      int(screen_x / 2) - len(system_msg) / 2,
                                      system_msg, 80, curses.A_UNDERLINE)
 
-    def displayCpu(self, cpu, percpu):
+    def displayCpu(self, cpu, percpu, proclist):
         # CPU %
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
@@ -1273,19 +1286,19 @@ class glancesScreen:
                                          "%.1f%%" % (100 - percpu[i]['idle']), 8)
 
                 alert = self.__getCpuAlert(percpu[i]['user'])
-                logs.add(alert, "CPU-%d user" % i, percpu[i]['user'])
+                logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
                 self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10 + i*10,
                                          "%.1f" % percpu[i]['user'], 8,
                                          self.__colors_list[alert])
 
                 alert = self.__getCpuAlert(percpu[i]['kernel'])
-                logs.add(alert, "CPU-%d kernel" % i, percpu[i]['kernel'])
+                logs.add(alert, "CPU-%d kernel" % i, percpu[i]['kernel'], proclist)
                 self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10 + i*10,
                                          "%.1f" % percpu[i]['kernel'], 8,
                                          self.__colors_list[alert])
 
                 alert = self.__getCpuAlert(percpu[i]['nice'])
-                logs.add(alert, "CPU-%d nice" % i, percpu[i]['nice'])
+                logs.add(alert, "CPU-%d nice" % i, percpu[i]['nice'], proclist)
                 self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
                                          "%.1f" % percpu[i]['nice'], 8,
                                          self.__colors_list[alert])
@@ -1310,19 +1323,19 @@ class glancesScreen:
             self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Nice:"), 8)
 
             alert = self.__getCpuAlert(cpu['user'])
-            logs.add(alert, "CPU user", cpu['user'])
+            logs.add(alert, "CPU user", cpu['user'], proclist)
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10,
                                      "%.1f" % cpu['user'], 8,
                                      self.__colors_list[alert])
 
             alert = self.__getCpuAlert(cpu['kernel'])
-            logs.add(alert, "CPU kernel", cpu['kernel'])
+            logs.add(alert, "CPU kernel", cpu['kernel'], proclist)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10,
                                      "%.1f" % cpu['kernel'], 8,
                                      self.__colors_list[alert])
 
             alert = self.__getCpuAlert(cpu['nice'])
-            logs.add(alert, "CPU nice", cpu['nice'])
+            logs.add(alert, "CPU nice", cpu['nice'], proclist)
             self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
                                      "%.1f" % cpu['nice'], 8,
                                      self.__colors_list[alert])
@@ -1330,7 +1343,7 @@ class glancesScreen:
         # Return the X offset to display Load and Mem
         return offset_x
 
-    def displayLoad(self, load, core, offset_x=0):
+    def displayLoad(self, load, core, proclist, offset_x=0):
         # Load %
         if not load:
             return 0
@@ -1354,18 +1367,18 @@ class glancesScreen:
                                      "{0:.2f}".format(load['min1']), 8)
 
             alert = self.__getLoadAlert(load['min5'], core)
-            logs.add(alert, "LOAD 5-min", load['min5'])
+            logs.add(alert, "LOAD 5-min", load['min5'], proclist)
             self.term_window.addnstr(self.load_y + 2, self.load_x + offset_x + 10,
                                      "{0:.2f}".format(load['min5']), 8,
                                      self.__colors_list[alert])
 
             alert = self.__getLoadAlert(load['min15'], core)
-            logs.add(alert, "LOAD 15-min", load['min15'])
+            logs.add(alert, "LOAD 15-min", load['min15'], proclist)
             self.term_window.addnstr(self.load_y + 3, self.load_x + offset_x + 10,
                                      "{0:.2f}".format(load['min15']), 8,
                                      self.__colors_list[alert])
 
-    def displayMem(self, mem, memswap, offset_x=0):
+    def displayMem(self, mem, memswap, proclist, offset_x=0):
         # MEM
         if not mem or not memswap:
             return 0
@@ -1394,7 +1407,7 @@ class glancesScreen:
             real_used_phymem = mem['used'] - mem['cache']
             real_free_phymem = mem['free'] + mem['cache']
             alert = self.__getMemAlert(real_used_phymem, mem['total'])
-            logs.add(alert, "MEM real", real_used_phymem)
+            logs.add(alert, "MEM real", real_used_phymem, proclist)
             self.term_window.addnstr(
                 self.mem_y + 2, self.mem_x + offset_x + 15,
                 "({0})".format(self.__autoUnit(real_used_phymem)), 8,
@@ -1418,7 +1431,7 @@ class glancesScreen:
                                      "{0:.1%}".format(memswap['percent'] / 100),
                                      8)
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
-            logs.add(alert, "MEM swap", memswap['used'])
+            logs.add(alert, "MEM swap", memswap['used'], proclist)
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 34,
                                      self.__autoUnit(memswap['total']), 8)
             self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 34,
@@ -1531,8 +1544,8 @@ class glancesScreen:
             self.term_window.addnstr(self.fs_y, self.fs_x, _("Mount"), 8,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 10, _("Total"), 8)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 19, _("Used"), 8)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 10, _("Total"), 7)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 19, _("Used"), 7)
 
             # Adapt the maximum disk to the screen
             mounted = 0
@@ -1597,8 +1610,13 @@ class glancesScreen:
                     logmsg += " {0} ({1:.1f}/{2:.1f}/{3:.1f})".format(
                         log[logcount][3], log[logcount][6],
                         log[logcount][5], log[logcount][4])
+                # Add top process
+                if (log[logcount][9] != []):
+                    logmsg += " - Top process: {0}".format(
+                            log[logcount][9][0]['proc_name'])
+                # Display the log
                 self.term_window.addnstr(self.log_y + 1 + logcount,
-                                         self.log_x, logmsg, 79)
+                                         self.log_x, logmsg, len(logmsg))
                 self.term_window.addnstr(self.log_y + 1 + logcount,
                                          self.log_x, logmark, 1,
                                          self.__colors_list[log[logcount][2]])

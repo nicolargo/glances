@@ -2,6 +2,7 @@ Version 1.4.2
 =============
 
         * Use the news virtual_memory() and virtual_swap() fct (PsUtil)
+        * Display "Top process" in logs
 
 Version 1.4.1.1
 ===============
