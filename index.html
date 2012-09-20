@@ -52,7 +52,9 @@
 
 <h2>Installation</h2>
 
-<h3>From packets manager</h3>
+<h3>From packets manager (clean and easy way)</h3>
+
+<p>Note: Packets are maintained by contibutors. It's not sure to have the latest Glances version.</p>
 
 <ul>
 <li>ArchLinux: <a href="http://aur.archlinux.org/packages.php?ID=54666">In the AUR repository</a></li>
@@ -68,10 +70,19 @@
 
 <p>PyPi is an official Python package manager.</p>
 
-<p>You first need to install pypi on your system. For example on Debian/Ubuntu:</p>
+<p>You first need to install pypi on your system.</p>
+
+<p>For example on Debian/Ubuntu:</p>
 
 <pre><code>$ sudo apt-get update
 $ sudo apt-get install python-pip build-essential python-dev
+</code></pre>
+
+<p>or for CentOS/Fedora/RH:</p>
+
+<pre><code>
+$ sudo rpm -ivh http://fr2.rpmfind.net/linux/epel/6/x86_64/epel-release-6-7.noarch.rpm
+$ sudo yum install python-pip python-dev
 </code></pre>
 
 <p>Then install the latest Glances version:</p>
@@ -140,7 +151,7 @@ $ sudo python setup.py install
 <li>python-setuptools (for the installation via setup.py)</li>
 <li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
 <li>python-jinja2 2.0+ (optional for HTML export)</li>
-</ul><h3>From package manager (very easy way)</h3>
+</ul>
 
 <h2>Running</h2>
 
