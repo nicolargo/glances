@@ -386,40 +386,37 @@ class glancesStats:
 
         # Process list refresh
         self.process_list_refresh = True
-
-    def __update__(self):
-        """
-        Update the stats
-        """
+        
+        # Cached informations (no need to be refreshed)
 
         # Host and OS informations
         self.host = {}
         self.host['os_name'] = platform.system()
         self.host['hostname'] = platform.node()
         self.host['platform'] = platform.architecture()[0]
-
-        # check if it's Arch Linux
         is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
-
-        try:
-            if self.host['os_name'] == "Linux":
-                if is_archlinux:
-                    self.host['linux_distro'] = "Arch Linux"
-                else:
-                    linux_distro = platform.linux_distribution()
-                    self.host['linux_distro'] = " ".join(linux_distro[:2])
-                self.host['os_version'] = platform.release()
-            elif self.host['os_name'] == "FreeBSD":
-                self.host['os_version'] = platform.release()
-            elif self.host['os_name'] == "Darwin":
-                self.host['os_version'] = platform.mac_ver()[0]
-            elif self.host['os_name'] == "Windows":
-                os_version = platform.win32_ver()
-                self.host['os_version'] = " ".join(os_version[::2])
+        if self.host['os_name'] == "Linux":
+            if is_archlinux:
+                self.host['linux_distro'] = "Arch Linux"
             else:
-                self.host['os_version'] = ""
-        except Exception:
+                linux_distro = platform.linux_distribution()
+                self.host['linux_distro'] = " ".join(linux_distro[:2])
+            self.host['os_version'] = platform.release()
+        elif self.host['os_name'] == "FreeBSD":
+            self.host['os_version'] = platform.release()
+        elif self.host['os_name'] == "Darwin":
+            self.host['os_version'] = platform.mac_ver()[0]
+        elif self.host['os_name'] == "Windows":
+            os_version = platform.win32_ver()
+            self.host['os_version'] = " ".join(os_version[::2])
+        else:
             self.host['os_version'] = ""
+
+
+    def __update__(self):
+        """
+        Update the stats
+        """
 
         # CPU
         try:
@@ -769,7 +766,7 @@ class glancesStats:
                             # Deprecated in PsUtil 0.5.0
                             procstat['nice'] = proc.nice
                         except:
-                            # Specific for PsUtil 0.5.0
+                            # Specific for PsUtil 0.5.0+
                             procstat['nice'] = proc.get_nice()
 
                         procstat['status'] = str(proc.status)[:1].upper()
@@ -2202,7 +2199,8 @@ def init():
             printVersion()
             sys.exit(0)
         elif opt in ("-o", "--output"):
-            if arg == "html":
+            if arg.lower() == "html":
+                # Test if the Jinja lib is available
                 if jinja_tag:
                     html_tag = True
                 else:
@@ -2210,7 +2208,8 @@ def init():
                     print()
                     print(_("Try to install the python-jinja2 package"))
                     sys.exit(2)
-            elif arg == "csv":
+            elif arg.lower() == "csv":
+                # Test if the Cvs lib is available
                 if csvlib_tag:
                     csv_tag = True
                 else:
@@ -2218,6 +2217,7 @@ def init():
                     sys.exit(2)
             else:
                 print(_("Error: Unknown output %s" % arg))
+                printSyntax()
                 sys.exit(2)
         elif opt in ("-f", "--file"):
             output_file = arg
@@ -2316,6 +2316,7 @@ def end():
 
 def signal_handler(signal, frame):
     end()
+
 
 # Main
 #=====
