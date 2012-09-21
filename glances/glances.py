@@ -255,7 +255,7 @@ class glancesLogs:
         # Add Top process sort depending on alert type
         if (item_type.startswith("MEM")):
             # MEM
-            sortby = 'mem_percent'
+            sortby = 'memory_percent'
         else:
             # CPU* and LOAD
             sortby = 'cpu_percent'
@@ -411,6 +411,57 @@ class glancesStats:
             self.host['os_version'] = " ".join(os_version[::2])
         else:
             self.host['os_version'] = ""
+
+    def __get_process_statsNEW__(self, proc):
+        """
+        Get process (proc) statistics
+        !!! Waiting PATCH for PsUtil
+        !!! http://code.google.com/p/psutil/issues/detail?id=329
+        !!! Performance ?
+        """
+        procstat = proc.as_dict(['memory_info', 'cpu_percent', 'memory_percent',
+                                 'io_counters', 'pid', 'username', 'nice',
+                                 'cpu_times', 'name', 'status', 'cmdline'])
+      
+        procstat['status'] = str(procstat['status'])[:1].upper()
+        procstat['cmdline'] = " ".join(procstat['cmdline'])
+        
+        return procstat
+
+        
+    def __get_process_stats__(self, proc):
+        """
+        Get process (proc) statistics
+        """
+        procstat = {}
+        
+        procstat['memory_info'] = proc.get_memory_info()
+        
+        if psutil_get_cpu_percent_tag:
+            procstat['cpu_percent'] = \
+                proc.get_cpu_percent(interval=0)
+
+        procstat['memory_percent'] = proc.get_memory_percent()
+
+        if psutil_get_io_counter_tag:
+            procstat['io_counters']  = proc.get_io_counters()
+
+        procstat['pid'] = proc.pid
+        procstat['username'] = proc.username
+
+        try:
+            # Deprecated in PsUtil 0.5.0
+            procstat['nice'] = proc.nice
+        except:
+            # Specific for PsUtil 0.5.0+
+            procstat['nice'] = proc.get_nice()
+
+        procstat['status'] = str(proc.status)[:1].upper()
+        procstat['cpu_times'] = proc.get_cpu_times()
+        procstat['name'] = proc.name
+        procstat['cmdline'] = " ".join(proc.cmdline)
+        
+        return procstat
 
 
     def __update__(self):
@@ -726,57 +777,10 @@ class glancesStats:
                         self.processcount['total'] += 1
                     # Per process stats
                     try:
-                        procstat = {}
-                        procstat['proc_size'] = proc.get_memory_info().vms
-                        procstat['proc_resident'] = proc.get_memory_info().rss
-
-                        if psutil_get_cpu_percent_tag:
-                            procstat['cpu_percent'] = \
-                                proc.get_cpu_percent(interval=0)
-
-                        procstat['mem_percent'] = proc.get_memory_percent()
-
-                        if psutil_get_io_counter_tag:
-                            self.proc_io = proc.get_io_counters()
-                            procstat['read_bytes']  = self.proc_io.read_bytes
-                            procstat['write_bytes'] = self.proc_io.write_bytes
-                            #~ try:
-                                #~ self.procstatbkp
-                            #~ except Exception:
-                                #~ self.procstatbkp = []
-                            #~ try:
-                                #~ self.procstatbkp[str(proc.pid)]
-                            #~ except Exception:
-                                #~ self.procstatbkp[str(proc.pid)] = []
-                            #~ try:
-                                #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']
-                                #~ self.procstatbkp[str(proc.pid)]['write_bytes_old']
-                            #~ except Exception:
-                                #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']  = procstat['read_bytes']
-                                #~ self.procstatbkp[str(proc.pid)]['write_bytes_old'] = procstat['write_bytes']
-                            #~ procstat['read_bytes_ps']  = procstat['read_bytes'] - self.procstatbkp[str(proc.pid)]['read_bytes_old']
-                            #~ procstat['write_bytes_ps'] = procstat['write_bytes'] - self.procstatbkp[str(proc.pid)]['write_bytes_old']
-                            #~ self.procstatbkp[str(proc.pid)]['read_bytes_old']  = procstat['read_bytes']
-                            #~ self.procstatbkp[str(proc.pid)]['write_bytes_old'] = procstat['write_bytes']                                                        
-
-                        procstat['pid'] = proc.pid
-                        procstat['uid'] = proc.username
-
-                        try:
-                            # Deprecated in PsUtil 0.5.0
-                            procstat['nice'] = proc.nice
-                        except:
-                            # Specific for PsUtil 0.5.0+
-                            procstat['nice'] = proc.get_nice()
-
-                        procstat['status'] = str(proc.status)[:1].upper()
-                        procstat['proc_time'] = proc.get_cpu_times()
-                        procstat['proc_name'] = proc.name
-                        procstat['proc_cmdline'] = " ".join(proc.cmdline)
-                        self.process.append(procstat)
+                        self.process.append(self.__get_process_stats__(proc))
                     except Exception:
                         pass
-
+                        
             # If it is the first grab then empty process list
             if self.process_first_grab:
                 self.process = []
@@ -849,7 +853,7 @@ class glancesStats:
             if psutil_get_cpu_percent_tag:
                 sortedby = 'cpu_percent'
             else:
-                sortedby = 'mem_percent'
+                sortedby = 'memory_percent'
             # Auto selection
             # If global MEM > 70% sort by MEM usage
             # else sort by CPU usage
@@ -860,8 +864,8 @@ class glancesStats:
                 pass
             else:
                 if memtotal > limits.getSTDWarning():
-                    sortedby = 'mem_percent'
-        elif sortedby == 'proc_name':
+                    sortedby = 'memory_percent'
+        elif sortedby == 'name':
             sortedReverse = False
 
         return sorted(self.process, key=lambda process: process[sortedby],
@@ -1163,13 +1167,13 @@ class glancesScreen:
             self.log_tag = not self.log_tag
         elif self.pressedkey == 109:
             # 'm' > Sort processes by MEM usage
-            self.setProcessSortedBy('mem_percent')
+            self.setProcessSortedBy('memory_percent')
         elif self.pressedkey == 110 and psutil_network_io_tag:
             # 'n' > Show/hide network stats
             self.network_tag = not self.network_tag
         elif self.pressedkey == 112:
             # 'p' > Sort processes by name
-            self.setProcessSortedBy('proc_name')
+            self.setProcessSortedBy('name')
 
         # Return the key code
         return self.pressedkey
@@ -1610,7 +1614,7 @@ class glancesScreen:
                 # Add top process
                 if (log[logcount][9] != []):
                     logmsg += " - Top process: {0}".format(
-                            log[logcount][9][0]['proc_name'])
+                            log[logcount][9][0]['name'])
                 # Display the log
                 self.term_window.addnstr(self.log_y + 1 + logcount,
                                          self.log_x, logmsg, len(logmsg))
@@ -1699,7 +1703,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.process_y + 2, process_x + 21,
                 _("MEM%"), 5, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'mem_percent' else 0)
+                if self.getProcessSortedBy() == 'memory_percent' else 0)
             process_name_x = 28
             # If screen space (X) is available then:
             # PID
@@ -1746,7 +1750,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
                 _("NAME"), 12, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'proc_name' else 0)
+                if self.getProcessSortedBy() == 'name' else 0)
 
             # If there is no data to display...
             if not processlist:
@@ -1759,12 +1763,12 @@ class glancesScreen:
                            len(processlist))
             for processes in range(0, proc_num):
                 # VMS
-                process_size = processlist[processes]['proc_size']
+                process_size = processlist[processes]['memory_info'].vms
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
                     self.__autoUnit(process_size), 5)
                 # RSS
-                process_resident = processlist[processes]['proc_resident']
+                process_resident = processlist[processes]['memory_info'].rss
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 7,
                     self.__autoUnit(process_resident), 5)
@@ -1779,11 +1783,11 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x, "N/A", 8)
                 # MEM%
-                mem_percent = processlist[processes]['mem_percent']
+                memory_percent = processlist[processes]['memory_percent']
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 21,
-                    "{0:.1f}".format(mem_percent), 5,
-                    self.__getProcessColor(mem_percent))
+                    "{0:.1f}".format(memory_percent), 5,
+                    self.__getProcessColor(memory_percent))
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
@@ -1793,7 +1797,7 @@ class glancesScreen:
                         str(pid), 6)
                 # UID
                 if tag_uid:
-                    uid = processlist[processes]['uid']
+                    uid = processlist[processes]['username']
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 35,
                         str(uid), 8)
@@ -1811,7 +1815,7 @@ class glancesScreen:
                         str(status), 1)
                 # TIME+
                 if tag_proc_time:
-                    process_time = processlist[processes]['proc_time']
+                    process_time = processlist[processes]['cpu_times']
                     dtime = timedelta(seconds=sum(process_time))
                     dtime = "{0}:{1}.{2}".format(
                                 str(dtime.seconds // 60 % 60).zfill(2),
@@ -1824,19 +1828,19 @@ class glancesScreen:
                 if tag_io:
                     # Processes are only refresh every 2 refresh_time
                     #~ elapsed_time = max(1, self.__refresh_time) * 2
-                    io_read = processlist[processes]['read_bytes']
+                    io_read = processlist[processes]['io_counters'].read_bytes
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 62,
                         self.__autoUnit(io_read), 8)
-                    io_write = processlist[processes]['write_bytes']
+                    io_write = processlist[processes]['io_counters'].write_bytes
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 72,
                         self.__autoUnit(io_write), 8)
                         
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
-                process_name = processlist[processes]['proc_name']
-                process_cmdline = processlist[processes]['proc_cmdline']
+                process_name = processlist[processes]['name']
+                process_cmdline = processlist[processes]['cmdline']
                 if (len(process_cmdline) > max_process_name or
                     len(process_cmdline) == 0):
                     command = process_name
