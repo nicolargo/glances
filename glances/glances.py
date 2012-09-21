@@ -417,7 +417,7 @@ class glancesStats:
         Get process (proc) statistics
         !!! Waiting PATCH for PsUtil
         !!! http://code.google.com/p/psutil/issues/detail?id=329
-        !!! Performance ?
+        !!! Performance gap ???
         """
         procstat = proc.as_dict(['memory_info', 'cpu_percent', 'memory_percent',
                                  'io_counters', 'pid', 'username', 'nice',
