@@ -449,12 +449,15 @@ class glancesStats:
         procstat['pid'] = proc.pid
         procstat['username'] = proc.username
 
-        try:
+        if hasattr(proc, 'nice'):
             # Deprecated in PsUtil 0.5.0
             procstat['nice'] = proc.nice
-        except:
+        elif hasattr(proc, 'get_nice'):
             # Specific for PsUtil 0.5.0+
             procstat['nice'] = proc.get_nice()
+        else:
+            # Never here...
+            procstat['nice'] = 0
 
         procstat['status'] = str(proc.status)[:1].upper()
         procstat['cpu_times'] = proc.get_cpu_times()
@@ -470,30 +473,20 @@ class glancesStats:
         """
 
         # CPU
-        try:
-            self.cputime_old
-        except Exception:
+        if not hasattr(self, 'cputime_old'):            
             self.cputime_old = psutil.cpu_times()
             self.cputime_total_old = (self.cputime_old.user +
                                       self.cputime_old.system +
                                       self.cputime_old.idle)
             # Only available on some OS
-            try:
+            if hasattr(self.cputime_old, 'nice'):
                 self.cputime_total_old += self.cputime_old.nice
-            except Exception:
-                pass
-            try:
+            if hasattr(self.cputime_old, 'iowait'):
                 self.cputime_total_old += self.cputime_old.iowait
-            except Exception:
-                pass
-            try:
+            if hasattr(self.cputime_old, 'irq'):
                 self.cputime_total_old += self.cputime_old.irq
-            except Exception:
-                pass
-            try:
+            if hasattr(self.cputime_old, 'softirq'):
                 self.cputime_total_old += self.cputime_old.softirq
-            except Exception:
-                pass
             self.cpu = {}
         else:
             try:
@@ -502,22 +495,14 @@ class glancesStats:
                                           self.cputime_new.system +
                                           self.cputime_new.idle)
                 # Only available on some OS
-                try:
+                if hasattr(self.cputime_new, 'nice'):
                     self.cputime_total_new += self.cputime_new.nice
-                except Exception:
-                    pass
-                try:
+                if hasattr(self.cputime_new, 'iowait'):
                     self.cputime_total_new += self.cputime_new.iowait
-                except Exception:
-                    pass
-                try:
+                if hasattr(self.cputime_new, 'irq'):
                     self.cputime_total_new += self.cputime_new.irq
-                except Exception:
-                    pass
-                try:
+                if hasattr(self.cputime_new, 'softirq'):
                     self.cputime_total_new += self.cputime_new.softirq
-                except Exception:
-                    pass
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
                 self.cpu = {'kernel':
@@ -538,9 +523,7 @@ class glancesStats:
                 self.cpu = {}
 
         # PerCPU
-        try:
-            self.percputime_old
-        except Exception:
+        if not hasattr(self, 'percputime_old'):            
             self.percputime_old = psutil.cpu_times(percpu = True)
             self.percputime_total_old = []
             for i in range(len(self.percputime_old)):                
@@ -548,26 +531,18 @@ class glancesStats:
                                                  self.percputime_old[i].system +
                                                  self.percputime_old[i].idle)
             # Only available on some OS
-            try:
-                for i in range(len(self.percputime_old)):                
+            for i in range(len(self.percputime_old)):
+                if hasattr(self.percputime_old[i], 'nice'):
                     self.percputime_total_old[i] += self.percputime_old[i].nice
-            except Exception:
-                pass
-            try:
-                for i in range(len(self.percputime_old)):                
+            for i in range(len(self.percputime_old)):                
+                if hasattr(self.percputime_old[i], 'iowait'):
                     self.percputime_total_old[i] += self.percputime_old[i].iowait
-            except Exception:
-                pass
-            try:
-                for i in range(len(self.percputime_old)):                                
+            for i in range(len(self.percputime_old)):                                
+                if hasattr(self.percputime_old[i], 'irq'):
                     self.percputime_total_old[i] += self.percputime_old[i].irq
-            except Exception:
-                pass
-            try:
-               for i in range(len(self.percputime_old)):                                
+            for i in range(len(self.percputime_old)):                                
+                if hasattr(self.percputime_old[i], 'softirq'):
                     self.percputime_total_old[i] += self.percputime_old[i].softirq
-            except Exception:
-                pass
             self.percpu = []
         else:
             try:
@@ -578,26 +553,18 @@ class glancesStats:
                                                      self.percputime_new[i].system +
                                                      self.percputime_new[i].idle)                    
                 # Only available on some OS
-                try:
-                    for i in range(len(self.percputime_new)):                
+                for i in range(len(self.percputime_new)):
+                    if hasattr(self.percputime_new[i], 'nice'):          
                         self.percputime_total_new[i] += self.percputime_new[i].nice
-                except Exception:
-                    pass
-                try:
-                    for i in range(len(self.percputime_new)):                
+                for i in range(len(self.percputime_new)):                
+                    if hasattr(self.percputime_new[i], 'iowait'):          
                         self.percputime_total_new[i] += self.percputime_new[i].iowait
-                except Exception:
-                    pass
-                try:
-                    for i in range(len(self.percputime_new)):                
+                for i in range(len(self.percputime_new)):                
+                    if hasattr(self.percputime_new[i], 'irq'):          
                         self.percputime_total_new[i] += self.percputime_new[i].irq
-                except Exception:
-                    pass
-                try:
-                    for i in range(len(self.percputime_new)):                
+                for i in range(len(self.percputime_new)):                
+                    if hasattr(self.percputime_new[i], 'softirq'):          
                         self.percputime_total_new[i] += self.percputime_new[i].softirq
-                except Exception:
-                    pass
                 perpercent = []
                 self.percpu = []
                 for i in range(len(self.percputime_new)):                
@@ -622,12 +589,12 @@ class glancesStats:
                 self.percpu = []
 
         # LOAD
-        try:
+        if hasattr(os, 'getloadavg'): 
             getload = os.getloadavg()
             self.load = {'min1': getload[0],
                          'min5': getload[1],
                          'min15': getload[2]}
-        except Exception:
+        else:
             self.load = {}
 
         # MEM
@@ -646,27 +613,29 @@ class glancesStats:
                             'percent': virtmem.percent}            
         else:
             # For olders PsUtil version
-            try:
+            # Physical memory (RAM)
+            if hasattr(psutil, 'phymem_usage'): 
                 phymem = psutil.phymem_usage()
-                try:
+                if hasattr(psutil, 'cached_usage') and hasattr(psutil, 'phymem_buffers'): 
                     # Cache stat only available for Linux
                     cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-                except Exception:
+                else:
                     cachemem = 0
                 self.mem = {'cache': cachemem,
                             'total': phymem.total,
                             'used': phymem.used,
                             'free': phymem.free,
                             'percent': phymem.percent}
-            except Exception:
+            else:
                 self.mem = {}
-            try:
+            # Virtual memory (SWAP)
+            if hasattr(psutil, 'virtmem_usage'): 
                 virtmem = psutil.virtmem_usage()
                 self.memswap = {'total': virtmem.total,
                                 'used': virtmem.used,
                                 'free': virtmem.free,
                                 'percent': virtmem.percent}
-            except Exception:
+            else:
                 self.memswap = {}
 
         # NET
