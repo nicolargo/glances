@@ -1,4 +1,4 @@
-.TH glances 1  "January, 2012" "version 1.3.7" "USER COMMANDS"
+.TH glances 1  "September, 2012" "version 1.4.2" "USER COMMANDS"
 .SH NAME
 glances \- CLI curses based monitoring tool
 .SH SYNOPSIS
@@ -7,7 +7,7 @@ glances \- CLI curses based monitoring tool
 .SH DESCRIPTION
 Glances is a free (LGPL) curses-based  monitoring tool which aims to present a maximum of information
 in a minimum of space, ideally to fit in a classical 80x24 terminal. Glances can adapt dynamicaly the
-displayed informations depending on the terminal size.
+displayed information depending on the terminal size.
 .PP
 This tool is written in Python and uses PsUtil to fetch the statistical values from key elements.
 .PP
@@ -36,13 +36,31 @@ process number and details.
 .SH OPTIONS
 .TP
 .TP
+\-b
+Display network rate in Byte per second
+.TP
+\-d
+Disable disk I/O module
+.TP
+\-f file
+Set the output folder (HTML) or file (CSV)
+.TP
 \-h
 Display the syntax and exit
 .TP
-\-t
-Set the refresh time in second default is 1
+\-m
+Disable mount module
 .TP
--v
+\-n
+Disable network module
+.TP
+\-o output
+Define additional output (available: HTML or CSV)
+.TP
+\-t sec
+Set the refresh time in seconds (default: 2)
+.TP
+\-v
 Display the version and exit
 .SH EXAMPLES
 .TP
