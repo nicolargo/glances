@@ -641,18 +641,14 @@ class glancesStats:
         # NET
         if psutil_network_io_tag:
             self.network = []
-            try:
-                self.network_old
-            except Exception:
-                self.network_old = psutil.network_io_counters(True)
-            else:
-                try:
-                    self.network_new = psutil.network_io_counters(True)
-                except Exception:
-                    pass
+            if hasattr(psutil, 'network_io_counters'): 
+                if not hasattr(self, 'network_old'): 
+                    self.network_old = psutil.network_io_counters(True)
                 else:
+                    self.network_new = psutil.network_io_counters(True)
                     for net in self.network_new:
                         try:
+                            # Try necessary to manage dynamic network interface
                             netstat = {}
                             netstat['interface_name'] = net
                             netstat['rx'] = (self.network_new[net].bytes_recv -
@@ -668,19 +664,14 @@ class glancesStats:
         # DISK I/O
         if psutil_disk_io_tag:
             self.diskio = []
-            try:
-                self.diskio_old
-            except Exception:
-                if psutil_disk_io_tag:
+            if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'): 
+                if not hasattr(self, 'diskio_old'): 
                     self.diskio_old = psutil.disk_io_counters(True)
-            else:
-                try:
-                    self.diskio_new = psutil.disk_io_counters(True)
-                except Exception:
-                    pass
                 else:
+                    self.diskio_new = psutil.disk_io_counters(True)
                     for disk in self.diskio_new:
                         try:
+                            # Try necessary to manage dynamic disk creation/del
                             diskstat = {}
                             diskstat['disk_name'] = disk
                             diskstat['read_bytes'] = (
@@ -697,19 +688,14 @@ class glancesStats:
 
         # FILE SYSTEM
         if psutil_fs_usage_tag:
-            try:
-                self.fs = self.glancesgrabfs.get()
-            except Exception:
-                self.fs = {}
+            self.fs = self.glancesgrabfs.get()
 
         # PROCESS
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
         if self.process_list_refresh:
             self.process_first_grab = False
-            try:
-                self.process_all
-            except Exception:
+            if not hasattr(self, 'process_all'): 
                 self.process_all = [proc for proc in psutil.process_iter()]
                 self.process_first_grab = True
             self.process = []
@@ -826,12 +812,8 @@ class glancesStats:
             # Auto selection
             # If global MEM > 70% sort by MEM usage
             # else sort by CPU usage
-            real_used_phymem = self.mem['used'] - self.mem['cache']
-            try:
-                memtotal = (real_used_phymem * 100) / self.mem['total']
-            except Exception:
-                pass
-            else:
+            if (self.mem['total'] != 0):
+                memtotal = ((self.mem['used'] - self.mem['cache']) * 100) / self.mem['total']
                 if memtotal > limits.getSTDWarning():
                     sortedby = 'memory_percent'
         elif sortedby == 'name':
@@ -891,27 +873,17 @@ class glancesScreen:
         if not self.screen:
             print(_("Error: Cannot init the curses library.\n"))
 
-        curses.start_color()
+        # Set curses options
+        if hasattr(curses, 'start_color'):
+            curses.start_color()
         if hasattr(curses, 'use_default_colors'):
-            try:
-                curses.use_default_colors()
-            except Exception:
-                pass
+            curses.use_default_colors()
         if hasattr(curses, 'noecho'):
-            try:
-                curses.noecho()
-            except Exception:
-                pass
+            curses.noecho()
         if hasattr(curses, 'cbreak'):
-            try:
-                curses.cbreak()
-            except Exception:
-                pass
+            curses.cbreak()
         if hasattr(curses, 'curs_set'):
-            try:
-                curses.curs_set(0)
-            except Exception:
-                pass
+            curses.curs_set(0)
 
         # Init colors
         self.hascolors = False
@@ -1973,9 +1945,9 @@ class glancesHtml:
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
-        try:
+        if max != 0:
             (current * 100) / max
-        except ZeroDivisionError:
+        else:
             return 'DEFAULT'
 
         variable = (current * 100) / max
