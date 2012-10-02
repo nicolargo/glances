@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'glances'
-__version__ = "1.4.2"
+__version__ = "1.4.2.1"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -603,7 +603,11 @@ class glancesStats:
         if psutil_mem_vm:
             # If PsUtil 0.6+
             phymem = psutil.virtual_memory()
-            self.mem = {'cache': phymem.cached + phymem.buffers,
+            if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
+               cachemem = phymem.cached + phymem.buffers
+            else:
+               cachemem = 0
+            self.mem = {'cache': cachemem,
                         'total': phymem.total,
                         'used': phymem.used,
                         'free': phymem.free,
