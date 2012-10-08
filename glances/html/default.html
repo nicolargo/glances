@@ -216,9 +216,9 @@
 				{% endif %}
 				<tr>
 					<td>{{ proc.cpu_percent }}</td>
-					<td>{{ proc.proc_size|filesizeformat(binary = true) }}</td>
-					<td>{{ proc.proc_resident|filesizeformat(binary = true) }}</td>
-					<td id="command">{{ proc.proc_name|truncate(40, killwords=True) }}</td>
+					<td>{{ proc.memory_info.vms|filesizeformat(binary = true) }}</td>
+					<td>{{ proc.memory_info.rss|filesizeformat(binary = true) }}</td>
+					<td id="command">{{ proc.name|truncate(40, killwords=True) }}</td>
 				</tr>
 			{% endfor %}
 		</tbody>
