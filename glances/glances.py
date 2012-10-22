@@ -20,7 +20,7 @@
 #
 
 __appname__ = 'glances'
-__version__ = "1.4.2.1"
+__version__ = "1.4.2.2b"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -960,6 +960,7 @@ class glancesScreen:
         self.log_tag = True
         self.help_tag = False
         self.percpu_tag = True
+        self.net_byteps_tag = network_bytepersec_tag
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
@@ -1097,6 +1098,9 @@ class glancesScreen:
         elif self.pressedkey == 97:
             # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
+        elif self.pressedkey == 98:
+            # 'b' > Switch between bit/s and byte/s for network IO
+            self.net_byteps_tag = not self.net_byteps_tag
         elif self.pressedkey == 99 and psutil_get_cpu_percent_tag:
             # 'c' > Sort processes by CPU usage
             self.setProcessSortedBy('cpu_percent')
@@ -1423,7 +1427,7 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
                     network[i]['interface_name'] + ':', 8)
-                if (network_bytepersec_tag):
+                if (self.net_byteps_tag):
                     rx = self.__autoUnit(network[i]['rx'] / elapsed_time)
                     tx = self.__autoUnit(network[i]['tx'] / elapsed_time)
                 else:
@@ -1853,51 +1857,57 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 6, self.help_x,
                 "{0:^{width}} {1}".format(
+                    _("b"), _("Switch between bit/s or byte/s for network IO "),
+                              width=width), 79, self.ifCRITICAL_color2
+                    if not psutil_get_cpu_percent_tag else 0)
+            self.term_window.addnstr(
+                self.help_y + 7, self.help_x,
+                "{0:^{width}} {1}".format(
                     _("c"), _("Sort processes by CPU% "
                               "(need PsUtil 0.2.0+)"), width=width),
                 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
-                self.help_y + 7, self.help_x,
+                self.help_y + 8, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("m"), _("Sort processes by MEM%"), width=width), 79)
             self.term_window.addnstr(
-                self.help_y + 8, self.help_x,
+                self.help_y + 9, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("p"), _("Sort processes by name"), width=width), 79)
             self.term_window.addnstr(
-                self.help_y + 9, self.help_x,
+                self.help_y + 10, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("d"), _("Show/hide disk I/O stats "
                               "(need PsUtil 0.4.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
             self.term_window.addnstr(
-                self.help_y + 10, self.help_x,
+                self.help_y + 11, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("f"), _("Show/hide file system stats "
                               "(need PsUtil 0.3.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
             self.term_window.addnstr(
-                self.help_y + 11, self.help_x,
+                self.help_y + 12, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("n"), _("Show/hide network stats "
                               "(need PsUtil 0.3.0+)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
             self.term_window.addnstr(
-                self.help_y + 12, self.help_x,
+                self.help_y + 13, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("l"), _("Show/hide log messages (only available "
                               "if display > 24 lines)"), width=width), 79)
             self.term_window.addnstr(
-                self.help_y + 13, self.help_x,
+                self.help_y + 14, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
             self.term_window.addnstr(
-                self.help_y + 14, self.help_x,
+                self.help_y + 15, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("h"), _("Show/hide this help message"), width=width), 79)
             self.term_window.addnstr(
-                self.help_y + 15, self.help_x,
+                self.help_y + 16, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
                 79)
