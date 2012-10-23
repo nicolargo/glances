@@ -300,10 +300,5 @@ date et l'heure courante.
 
 ## Traduction
 
-Pour générer et installer la traduction française executer le script suivant
-sous l'utilisateur root ou sudo :
-i18n_francais_generate.sh
+Glances existe en Anglais, Francais, Espagnol, Portugais.
 
-Pour générer et installer la traduction espagnol executer le script suivant
-sous l'utilisateur root ou sudo
-i18n_espanol_generate.sh

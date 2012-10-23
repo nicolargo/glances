@@ -310,8 +310,11 @@ Glances displays the current time/date and access to the embedded help screen.
 
 ## Localisation
 
-To generate french locale execute as root or sudo :
-i18n_francais_generate.sh
+Glances localization files exist for:
 
-To generate spanish locale execute as root or sudo :
-i18n_espanol_generate.sh
+* English (default langage)
+* French
+* Spanish
+* Portugal
+
+Feel free to contribute !
