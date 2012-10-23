@@ -1937,10 +1937,13 @@ class glancesHtml:
 
         # Init refresh time
         self.__refresh_time = refresh_time
+        
+        # Set the root path
+        self.root_path = htmlfolder + '/'
 
         # Set the templates path
         environment = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(htmlfolder + '/html'),
+            loader=jinja2.FileSystemLoader(self.root_path + 'html'),
             extensions=['jinja2.ext.loopcontrols'])
 
         # Open the template
@@ -1999,7 +2002,7 @@ class glancesHtml:
         elif current > limits.getLOADWarning(core):
             return 'WARNING'
         elif current > limits.getLOADCareful(core):
-            return 'CAREFUL'
+            return 'CAREFUL'    
         return 'OK'
 
     def __getLoadColor(self, load, core=1):
@@ -2032,7 +2035,7 @@ class glancesHtml:
     def update(self, stats):
         if stats.getCpu():
             # Open the output file
-            f = open('glances.html', 'w')
+            f = open(self.root_path + 'glances.html', 'w')
 
             # Process color
 
