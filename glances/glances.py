@@ -35,6 +35,11 @@ import signal
 import time
 from datetime import datetime, timedelta
 import gettext
+import SocketServer
+import socket
+import json
+import zlib
+import collections
 
 # International
 #==============
@@ -373,10 +378,14 @@ class glancesStats:
     This class store, update and give stats
     """
 
-    def __init__(self):
+
+    def __init__(self, server_tag = False, client_tag = False):
         """
         Init the stats
         """
+
+        self.server_tag = server_tag
+        self.client_tag = client_tag
 
         # Init the fs stats
         try:
@@ -387,30 +396,37 @@ class glancesStats:
         # Process list refresh
         self.process_list_refresh = True
         
+        # Init the all_stats used by the server
+        # all_stats is a dict of dicts filled by the server
+        if (self.server_tag):
+            self.all_stats = collections.defaultdict(dict)
+        
         # Cached informations (no need to be refreshed)
-
         # Host and OS informations
-        self.host = {}
-        self.host['os_name'] = platform.system()
-        self.host['hostname'] = platform.node()
-        self.host['platform'] = platform.architecture()[0]
-        is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
-        if self.host['os_name'] == "Linux":
-            if is_archlinux:
-                self.host['linux_distro'] = "Arch Linux"
+        if (not self.client_tag):
+            self.host = {}
+            self.host['os_name'] = platform.system()
+            self.host['hostname'] = platform.node()
+            self.host['platform'] = platform.architecture()[0]
+            is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
+            if self.host['os_name'] == "Linux":
+                if is_archlinux:
+                    self.host['linux_distro'] = "Arch Linux"
+                else:
+                    linux_distro = platform.linux_distribution()
+                    self.host['linux_distro'] = " ".join(linux_distro[:2])
+                self.host['os_version'] = platform.release()
+            elif self.host['os_name'] == "FreeBSD":
+                self.host['os_version'] = platform.release()
+            elif self.host['os_name'] == "Darwin":
+                self.host['os_version'] = platform.mac_ver()[0]
+            elif self.host['os_name'] == "Windows":
+                os_version = platform.win32_ver()
+                self.host['os_version'] = " ".join(os_version[::2])
             else:
-                linux_distro = platform.linux_distribution()
-                self.host['linux_distro'] = " ".join(linux_distro[:2])
-            self.host['os_version'] = platform.release()
-        elif self.host['os_name'] == "FreeBSD":
-            self.host['os_version'] = platform.release()
-        elif self.host['os_name'] == "Darwin":
-            self.host['os_version'] = platform.mac_ver()[0]
-        elif self.host['os_name'] == "Windows":
-            os_version = platform.win32_ver()
-            self.host['os_version'] = " ".join(os_version[::2])
-        else:
-            self.host['os_version'] = ""
+                self.host['os_version'] = ""
+            if (self.server_tag):
+                self.all_stats["host"] = self.host
 
     def __get_process_stats_NEW__(self, proc):
         """
@@ -469,294 +485,350 @@ class glancesStats:
         return procstat
 
 
-    def __update__(self):
+    def __update__(self, input_stats):
         """
         Update the stats
         """
 
+        # Host information
+        # Only for client
+        if (self.client_tag):
+            self.host = input_stats["host"]
+
         # CPU
-        if not hasattr(self, 'cputime_old'):            
-            self.cputime_old = psutil.cpu_times()
-            self.cputime_total_old = (self.cputime_old.user +
-                                      self.cputime_old.system +
-                                      self.cputime_old.idle)
-            # Only available on some OS
-            if hasattr(self.cputime_old, 'nice'):
-                self.cputime_total_old += self.cputime_old.nice
-            if hasattr(self.cputime_old, 'iowait'):
-                self.cputime_total_old += self.cputime_old.iowait
-            if hasattr(self.cputime_old, 'irq'):
-                self.cputime_total_old += self.cputime_old.irq
-            if hasattr(self.cputime_old, 'softirq'):
-                self.cputime_total_old += self.cputime_old.softirq
-            self.cpu = {}
+        if (self.client_tag):
+            self.cpu = input_stats["cpu"]
         else:
-            try:
-                self.cputime_new = psutil.cpu_times()
-                self.cputime_total_new = (self.cputime_new.user +
-                                          self.cputime_new.system +
-                                          self.cputime_new.idle)
+            if not hasattr(self, 'cputime_old'):            
+                self.cputime_old = psutil.cpu_times()
+                self.cputime_total_old = (self.cputime_old.user +
+                                          self.cputime_old.system +
+                                          self.cputime_old.idle)
                 # Only available on some OS
-                if hasattr(self.cputime_new, 'nice'):
-                    self.cputime_total_new += self.cputime_new.nice
-                if hasattr(self.cputime_new, 'iowait'):
-                    self.cputime_total_new += self.cputime_new.iowait
-                if hasattr(self.cputime_new, 'irq'):
-                    self.cputime_total_new += self.cputime_new.irq
-                if hasattr(self.cputime_new, 'softirq'):
-                    self.cputime_total_new += self.cputime_new.softirq
-                percent = 100 / (self.cputime_total_new -
-                                 self.cputime_total_old)
-                self.cpu = {'kernel':
-                                (self.cputime_new.system -
-                                 self.cputime_old.system) * percent,
-                            'user':
-                                (self.cputime_new.user -
-                                 self.cputime_old.user) * percent,
-                            'idle':
-                                (self.cputime_new.idle -
-                                 self.cputime_old.idle) * percent,
-                            'nice':
-                                (self.cputime_new.nice -
-                                 self.cputime_old.nice) * percent}
-                self.cputime_old = self.cputime_new
-                self.cputime_total_old = self.cputime_total_new
-            except Exception:
+                if hasattr(self.cputime_old, 'nice'):
+                    self.cputime_total_old += self.cputime_old.nice
+                if hasattr(self.cputime_old, 'iowait'):
+                    self.cputime_total_old += self.cputime_old.iowait
+                if hasattr(self.cputime_old, 'irq'):
+                    self.cputime_total_old += self.cputime_old.irq
+                if hasattr(self.cputime_old, 'softirq'):
+                    self.cputime_total_old += self.cputime_old.softirq
                 self.cpu = {}
+            else:
+                try:
+                    self.cputime_new = psutil.cpu_times()
+                    self.cputime_total_new = (self.cputime_new.user +
+                                              self.cputime_new.system +
+                                              self.cputime_new.idle)
+                    # Only available on some OS
+                    if hasattr(self.cputime_new, 'nice'):
+                        self.cputime_total_new += self.cputime_new.nice
+                    if hasattr(self.cputime_new, 'iowait'):
+                        self.cputime_total_new += self.cputime_new.iowait
+                    if hasattr(self.cputime_new, 'irq'):
+                        self.cputime_total_new += self.cputime_new.irq
+                    if hasattr(self.cputime_new, 'softirq'):
+                        self.cputime_total_new += self.cputime_new.softirq
+                    percent = 100 / (self.cputime_total_new -
+                                     self.cputime_total_old)
+                    self.cpu = {'kernel':
+                                    (self.cputime_new.system -
+                                     self.cputime_old.system) * percent,
+                                'user':
+                                    (self.cputime_new.user -
+                                     self.cputime_old.user) * percent,
+                                'idle':
+                                    (self.cputime_new.idle -
+                                     self.cputime_old.idle) * percent,
+                                'nice':
+                                    (self.cputime_new.nice -
+                                     self.cputime_old.nice) * percent}
+                    self.cputime_old = self.cputime_new
+                    self.cputime_total_old = self.cputime_total_new
+                except Exception:
+                    self.cpu = {}
+            if (self.server_tag):
+                self.all_stats["cpu"] = self.cpu
 
         # PerCPU
-        if not hasattr(self, 'percputime_old'):            
-            self.percputime_old = psutil.cpu_times(percpu = True)
-            self.percputime_total_old = []
-            for i in range(len(self.percputime_old)):                
-                self.percputime_total_old.append(self.percputime_old[i].user +
-                                                 self.percputime_old[i].system +
-                                                 self.percputime_old[i].idle)
-            # Only available on some OS
-            for i in range(len(self.percputime_old)):
-                if hasattr(self.percputime_old[i], 'nice'):
-                    self.percputime_total_old[i] += self.percputime_old[i].nice
-            for i in range(len(self.percputime_old)):                
-                if hasattr(self.percputime_old[i], 'iowait'):
-                    self.percputime_total_old[i] += self.percputime_old[i].iowait
-            for i in range(len(self.percputime_old)):                                
-                if hasattr(self.percputime_old[i], 'irq'):
-                    self.percputime_total_old[i] += self.percputime_old[i].irq
-            for i in range(len(self.percputime_old)):                                
-                if hasattr(self.percputime_old[i], 'softirq'):
-                    self.percputime_total_old[i] += self.percputime_old[i].softirq
-            self.percpu = []
+        if (self.client_tag):
+            self.percpu = input_stats["percpu"]
         else:
-            try:
-                self.percputime_new = psutil.cpu_times(percpu = True)
-                self.percputime_total_new = []
-                for i in range(len(self.percputime_new)):                
-                    self.percputime_total_new.append(self.percputime_new[i].user +
-                                                     self.percputime_new[i].system +
-                                                     self.percputime_new[i].idle)                    
+            if not hasattr(self, 'percputime_old'):            
+                self.percputime_old = psutil.cpu_times(percpu = True)
+                self.percputime_total_old = []
+                for i in range(len(self.percputime_old)):                
+                    self.percputime_total_old.append(self.percputime_old[i].user +
+                                                     self.percputime_old[i].system +
+                                                     self.percputime_old[i].idle)
                 # Only available on some OS
-                for i in range(len(self.percputime_new)):
-                    if hasattr(self.percputime_new[i], 'nice'):          
-                        self.percputime_total_new[i] += self.percputime_new[i].nice
-                for i in range(len(self.percputime_new)):                
-                    if hasattr(self.percputime_new[i], 'iowait'):          
-                        self.percputime_total_new[i] += self.percputime_new[i].iowait
-                for i in range(len(self.percputime_new)):                
-                    if hasattr(self.percputime_new[i], 'irq'):          
-                        self.percputime_total_new[i] += self.percputime_new[i].irq
-                for i in range(len(self.percputime_new)):                
-                    if hasattr(self.percputime_new[i], 'softirq'):          
-                        self.percputime_total_new[i] += self.percputime_new[i].softirq
-                perpercent = []
+                for i in range(len(self.percputime_old)):
+                    if hasattr(self.percputime_old[i], 'nice'):
+                        self.percputime_total_old[i] += self.percputime_old[i].nice
+                for i in range(len(self.percputime_old)):                
+                    if hasattr(self.percputime_old[i], 'iowait'):
+                        self.percputime_total_old[i] += self.percputime_old[i].iowait
+                for i in range(len(self.percputime_old)):                                
+                    if hasattr(self.percputime_old[i], 'irq'):
+                        self.percputime_total_old[i] += self.percputime_old[i].irq
+                for i in range(len(self.percputime_old)):                                
+                    if hasattr(self.percputime_old[i], 'softirq'):
+                        self.percputime_total_old[i] += self.percputime_old[i].softirq
                 self.percpu = []
-                for i in range(len(self.percputime_new)):                
-                    perpercent.append(100 / (self.percputime_total_new[i] -
-                                             self.percputime_total_old[i]))
-                    self.percpu.append(
-                               {'kernel':
-                                    (self.percputime_new[i].system -
-                                     self.percputime_old[i].system) * perpercent[i],
-                                'user':
-                                    (self.percputime_new[i].user -
-                                     self.percputime_old[i].user) * perpercent[i],
-                                'idle':
-                                    (self.percputime_new[i].idle -
-                                     self.percputime_old[i].idle) * perpercent[i],
-                                'nice':
-                                    (self.percputime_new[i].nice -
-                                     self.percputime_old[i].nice) * perpercent[i]} )                
-                self.percputime_old = self.percputime_new
-                self.percputime_total_old = self.percputime_total_new
-            except Exception:
-                self.percpu = []
+            else:
+                try:
+                    self.percputime_new = psutil.cpu_times(percpu = True)
+                    self.percputime_total_new = []
+                    for i in range(len(self.percputime_new)):                
+                        self.percputime_total_new.append(self.percputime_new[i].user +
+                                                         self.percputime_new[i].system +
+                                                         self.percputime_new[i].idle)                    
+                    # Only available on some OS
+                    for i in range(len(self.percputime_new)):
+                        if hasattr(self.percputime_new[i], 'nice'):          
+                            self.percputime_total_new[i] += self.percputime_new[i].nice
+                    for i in range(len(self.percputime_new)):                
+                        if hasattr(self.percputime_new[i], 'iowait'):          
+                            self.percputime_total_new[i] += self.percputime_new[i].iowait
+                    for i in range(len(self.percputime_new)):                
+                        if hasattr(self.percputime_new[i], 'irq'):          
+                            self.percputime_total_new[i] += self.percputime_new[i].irq
+                    for i in range(len(self.percputime_new)):                
+                        if hasattr(self.percputime_new[i], 'softirq'):          
+                            self.percputime_total_new[i] += self.percputime_new[i].softirq
+                    perpercent = []
+                    self.percpu = []
+                    for i in range(len(self.percputime_new)):                
+                        perpercent.append(100 / (self.percputime_total_new[i] -
+                                                 self.percputime_total_old[i]))
+                        self.percpu.append(
+                                   {'kernel':
+                                        (self.percputime_new[i].system -
+                                         self.percputime_old[i].system) * perpercent[i],
+                                    'user':
+                                        (self.percputime_new[i].user -
+                                         self.percputime_old[i].user) * perpercent[i],
+                                    'idle':
+                                        (self.percputime_new[i].idle -
+                                         self.percputime_old[i].idle) * perpercent[i],
+                                    'nice':
+                                        (self.percputime_new[i].nice -
+                                         self.percputime_old[i].nice) * perpercent[i]} )                
+                    self.percputime_old = self.percputime_new
+                    self.percputime_total_old = self.percputime_total_new
+                except Exception:
+                    self.percpu = []
+            if (self.server_tag):
+                self.all_stats["percpu"] = self.percpu
 
         # LOAD
-        if hasattr(os, 'getloadavg'): 
-            getload = os.getloadavg()
-            self.load = {'min1': getload[0],
-                         'min5': getload[1],
-                         'min15': getload[2]}
+        if (self.client_tag):
+            self.load = input_stats["load"]
         else:
-            self.load = {}
+            if hasattr(os, 'getloadavg'): 
+                getload = os.getloadavg()
+                self.load = {'min1': getload[0],
+                             'min5': getload[1],
+                             'min15': getload[2]}
+            else:
+                self.load = {}
+            if (self.server_tag):
+                self.all_stats["load"] = self.load
 
         # MEM
-        if psutil_mem_vm:
-            # If PsUtil 0.6+
-            phymem = psutil.virtual_memory()
-            if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
-               cachemem = phymem.cached + phymem.buffers
-            else:
-               cachemem = 0
-            self.mem = {'cache': cachemem,
-                        'total': phymem.total,
-                        'used': phymem.used,
-                        'free': phymem.free,
-                        'percent': phymem.percent}
-            virtmem = psutil.swap_memory()
-            self.memswap = {'total': virtmem.total,
-                            'used': virtmem.used,
-                            'free': virtmem.free,
-                            'percent': virtmem.percent}            
+        if (self.client_tag):
+            self.mem = input_stats["mem"]
+            self.memswap = input_stats["memswap"]
         else:
-            # For olders PsUtil version
-            # Physical memory (RAM)
-            if hasattr(psutil, 'phymem_usage'): 
-                phymem = psutil.phymem_usage()
-                if hasattr(psutil, 'cached_usage') and hasattr(psutil, 'phymem_buffers'): 
-                    # Cache stat only available for Linux
-                    cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
+            if psutil_mem_vm:
+                # If PsUtil 0.6+
+                phymem = psutil.virtual_memory()
+                if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
+                   cachemem = phymem.cached + phymem.buffers
                 else:
-                    cachemem = 0
+                   cachemem = 0
                 self.mem = {'cache': cachemem,
                             'total': phymem.total,
                             'used': phymem.used,
                             'free': phymem.free,
                             'percent': phymem.percent}
-            else:
-                self.mem = {}
-            # Virtual memory (SWAP)
-            if hasattr(psutil, 'virtmem_usage'): 
-                virtmem = psutil.virtmem_usage()
+                virtmem = psutil.swap_memory()
                 self.memswap = {'total': virtmem.total,
                                 'used': virtmem.used,
                                 'free': virtmem.free,
-                                'percent': virtmem.percent}
+                                'percent': virtmem.percent}            
             else:
-                self.memswap = {}
+                # For olders PsUtil version
+                # Physical memory (RAM)
+                if hasattr(psutil, 'phymem_usage'): 
+                    phymem = psutil.phymem_usage()
+                    if hasattr(psutil, 'cached_usage') and hasattr(psutil, 'phymem_buffers'): 
+                        # Cache stat only available for Linux
+                        cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
+                    else:
+                        cachemem = 0
+                    self.mem = {'cache': cachemem,
+                                'total': phymem.total,
+                                'used': phymem.used,
+                                'free': phymem.free,
+                                'percent': phymem.percent}
+                else:
+                    self.mem = {}
+                # Virtual memory (SWAP)
+                if hasattr(psutil, 'virtmem_usage'): 
+                    virtmem = psutil.virtmem_usage()
+                    self.memswap = {'total': virtmem.total,
+                                    'used': virtmem.used,
+                                    'free': virtmem.free,
+                                    'percent': virtmem.percent}
+                else:
+                    self.memswap = {}
+            if (self.server_tag):
+                self.all_stats["mem"] = self.mem
+                self.all_stats["memswap"] = self.memswap
 
         # NET
-        if psutil_network_io_tag:
-            self.network = []
-            if hasattr(psutil, 'network_io_counters'): 
-                if not hasattr(self, 'network_old'): 
-                    self.network_old = psutil.network_io_counters(True)
-                else:
-                    self.network_new = psutil.network_io_counters(True)
-                    for net in self.network_new:
-                        try:
-                            # Try necessary to manage dynamic network interface
-                            netstat = {}
-                            netstat['interface_name'] = net
-                            netstat['rx'] = (self.network_new[net].bytes_recv -
-                                             self.network_old[net].bytes_recv)
-                            netstat['tx'] = (self.network_new[net].bytes_sent -
-                                             self.network_old[net].bytes_sent)
-                        except Exception:
-                            continue
-                        else:
-                            self.network.append(netstat)
-                    self.network_old = self.network_new
+        if (self.client_tag):
+            self.network = input_stats["network"]
+        else:
+            if psutil_network_io_tag:
+                self.network = []
+                if hasattr(psutil, 'network_io_counters'): 
+                    if not hasattr(self, 'network_old'): 
+                        self.network_old = psutil.network_io_counters(True)
+                    else:
+                        self.network_new = psutil.network_io_counters(True)
+                        for net in self.network_new:
+                            try:
+                                # Try necessary to manage dynamic network interface
+                                netstat = {}
+                                netstat['interface_name'] = net
+                                netstat['rx'] = (self.network_new[net].bytes_recv -
+                                                 self.network_old[net].bytes_recv)
+                                netstat['tx'] = (self.network_new[net].bytes_sent -
+                                                 self.network_old[net].bytes_sent)
+                            except Exception:
+                                continue
+                            else:
+                                self.network.append(netstat)
+                        self.network_old = self.network_new
+            if (self.server_tag):
+                self.all_stats["network"] = self.network
 
         # DISK I/O
-        if psutil_disk_io_tag:
-            self.diskio = []
-            if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'): 
-                if not hasattr(self, 'diskio_old'): 
-                    self.diskio_old = psutil.disk_io_counters(True)
-                else:
-                    self.diskio_new = psutil.disk_io_counters(True)
-                    for disk in self.diskio_new:
-                        try:
-                            # Try necessary to manage dynamic disk creation/del
-                            diskstat = {}
-                            diskstat['disk_name'] = disk
-                            diskstat['read_bytes'] = (
-                                self.diskio_new[disk].read_bytes -
-                                self.diskio_old[disk].read_bytes)
-                            diskstat['write_bytes'] = (
-                                self.diskio_new[disk].write_bytes -
-                                self.diskio_old[disk].write_bytes)
-                        except Exception:
-                            continue
-                        else:
-                            self.diskio.append(diskstat)
-                    self.diskio_old = self.diskio_new
+        if (self.client_tag):
+            self.diskio = input_stats["diskio"]
+        else:
+            if psutil_disk_io_tag:
+                self.diskio = []
+                if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'): 
+                    if not hasattr(self, 'diskio_old'): 
+                        self.diskio_old = psutil.disk_io_counters(True)
+                    else:
+                        self.diskio_new = psutil.disk_io_counters(True)
+                        for disk in self.diskio_new:
+                            try:
+                                # Try necessary to manage dynamic disk creation/del
+                                diskstat = {}
+                                diskstat['disk_name'] = disk
+                                diskstat['read_bytes'] = (
+                                    self.diskio_new[disk].read_bytes -
+                                    self.diskio_old[disk].read_bytes)
+                                diskstat['write_bytes'] = (
+                                    self.diskio_new[disk].write_bytes -
+                                    self.diskio_old[disk].write_bytes)
+                            except Exception:
+                                continue
+                            else:
+                                self.diskio.append(diskstat)
+                        self.diskio_old = self.diskio_new
+            if (self.server_tag):
+                self.all_stats["diskio"] = self.diskio
 
         # FILE SYSTEM
-        if psutil_fs_usage_tag:
-            self.fs = self.glancesgrabfs.get()
+        if (self.client_tag):
+            self.fs = input_stats["fs"]
+        else:
+            if psutil_fs_usage_tag:
+                self.fs = self.glancesgrabfs.get()
+            if (self.server_tag):
+                self.all_stats["fs"] = self.fs
 
         # PROCESS
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
-        if self.process_list_refresh:
-            self.process_first_grab = False
-            if not hasattr(self, 'process_all'): 
-                self.process_all = [proc for proc in psutil.process_iter()]
-                self.process_first_grab = True
-            self.process = []
-            self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-            # Manage new processes
-            process_new = [proc.pid for proc in self.process_all]
-            for proc in psutil.process_iter():
-                if proc.pid not in process_new:
-                    self.process_all.append(proc)
-            # Grab stats from process list
-            for proc in self.process_all[:]:
-                try:
-                    if not proc.is_running():
+        if (self.client_tag):
+            self.processcount = input_stats["processcount"]
+            self.process = input_stats["process"]
+            self.process_list_refresh = True
+        else:
+            if self.process_list_refresh:
+                self.process_first_grab = False
+                if not hasattr(self, 'process_all'): 
+                    self.process_all = [proc for proc in psutil.process_iter()]
+                    self.process_first_grab = True
+                self.process = []
+                self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
+                # Manage new processes
+                process_new = [proc.pid for proc in self.process_all]
+                for proc in psutil.process_iter():
+                    if proc.pid not in process_new:
+                        self.process_all.append(proc)
+                # Grab stats from process list
+                for proc in self.process_all[:]:
+                    try:
+                        if not proc.is_running():
+                            try:
+                                self.process_all.remove(proc)
+                            except Exception:
+                                pass
+                    except psutil.error.NoSuchProcess:
                         try:
                             self.process_all.remove(proc)
                         except Exception:
                             pass
-                except psutil.error.NoSuchProcess:
-                    try:
-                        self.process_all.remove(proc)
-                    except Exception:
-                        pass
-                else:
-                    # Global stats
-                    try:
-                        self.processcount[str(proc.status)] += 1
-                    except psutil.error.NoSuchProcess:
-                        # Process non longer exist
-                        pass
-                    except KeyError:
-                        # Key did not exist, create it
-                        self.processcount[str(proc.status)] = 1
-                    finally:
-                        self.processcount['total'] += 1
-                    # Per process stats
-                    try:
-                        self.process.append(self.__get_process_stats__(proc))
-                    except Exception:
-                        pass
-                        
-            # If it is the first grab then empty process list
-            if self.process_first_grab:
-                self.process = []
-
-        self.process_list_refresh = not self.process_list_refresh
+                    else:
+                        # Global stats
+                        try:
+                            self.processcount[str(proc.status)] += 1
+                        except psutil.error.NoSuchProcess:
+                            # Process non longer exist
+                            pass
+                        except KeyError:
+                            # Key did not exist, create it
+                            self.processcount[str(proc.status)] = 1
+                        finally:
+                            self.processcount['total'] += 1
+                        # Per process stats
+                        try:
+                            self.process.append(self.__get_process_stats__(proc))
+                        except Exception:
+                            pass
+                # If it is the first grab then empty process list
+                if self.process_first_grab:
+                    self.process = []
+            self.process_list_refresh = not self.process_list_refresh
+            if (self.server_tag):
+                self.all_stats["processcount"] = self.processcount
+                self.all_stats["process"] = self.process
 
         # Get the current date/time
         self.now = datetime.now()
 
         # Get the number of core (CPU) (Used to display load alerts)
-        self.core_number = psutil.NUM_CPUS
+        if (self.client_tag):
+            self.core_number = input_stats["core_number"]
+        else:
+            self.core_number = psutil.NUM_CPUS
+            if (self.server_tag):
+                self.all_stats["core_number"] = self.core_number
 
-    def update(self):
+    def update(self, input_stats = {}):
         # Update the stats
-        self.__update__()
+        self.__update__(input_stats)
+
+    def getAll(self):
+        return self.all_stats
 
     def getHost(self):
         return self.host
@@ -1714,12 +1786,12 @@ class glancesScreen:
                            len(processlist))
             for processes in range(0, proc_num):
                 # VMS
-                process_size = processlist[processes]['memory_info'].vms
+                process_size = processlist[processes]['memory_info'][1]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
                     self.__autoUnit(process_size), 5)
                 # RSS
-                process_resident = processlist[processes]['memory_info'].rss
+                process_resident = processlist[processes]['memory_info'][0]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 7,
                     self.__autoUnit(process_resident), 5)
@@ -2108,12 +2180,34 @@ class glancesCsv:
                                      memswap['free']])
         self.__cvsfile_fd.flush()
 
+
+class GlancesHandler(SocketServer.BaseRequestHandler):
+    """
+    This class manages the TCP server
+    """
+
+    def handle(self):
+        # Get command from the Glances client
+        self.datarecv = self.request.recv(1024).strip()
+        print "Receive the command %s from %s" % (format(self.datarecv), format(self.client_address[0]))
+        if (self.datarecv == "GET"):
+            # Send data to the Glances client
+            stats.update()
+            # To be replaced when version 2.2.0 of the JSON will be available
+            #~ self.datasend = zlib.compress(json.dumps(stats.getAll(), namedtuple_as_object = True))
+            self.datasend = zlib.compress(json.dumps(stats.getAll()))
+            self.request.sendall(self.datasend)
+        else:
+            print "Unknown command received"
+        return
+
+
 # Global def
 #===========
 
 
 def printVersion():
-    print(_("Glances version ") + __version__)
+    print(_("Glances version") + (" ") + __version__)
 
 
 def printSyntax():
@@ -2121,12 +2215,16 @@ def printSyntax():
     print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]"))
     print("")
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
+    print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
     print(_("\t-h\t\tDisplay the syntax and exit"))
     print(_("\t-m\t\tDisable mount module"))
     print(_("\t-n\t\tDisable network module"))
     print(_("\t-o output\tDefine additional output (available: HTML or CSV)"))
+    print(_("\t-p PORT\t\tDefine the client or server TCP port (default: %d)" %
+            server_port))
+    print(_("\t-s\t\tRun Glances in server mode"))
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
@@ -2137,22 +2235,28 @@ def init():
     global network_bytepersec_tag
     global limits, logs, stats, screen
     global htmloutput, csvoutput
-    global html_tag, csv_tag
-    global refresh_time
+    global html_tag, csv_tag, server_tag, client_tag
+    global refresh_time, client, server, server_port, server_ip
 
     # Set default tags
     network_bytepersec_tag = False
     html_tag = False
     csv_tag = False
+    server_tag = False
+    client_tag = False
     
     # Set the default refresh time
     refresh_time = 2
+    
+    # Set the default TCP port for client and server
+    server_port = 61209
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "bdmnho:f:t:v",
+        opts, args = getopt.getopt(sys.argv[1:], "bdmnho:f:t:vsc:p:",
                                    ["help", "output", "file",
-                                    "time", "version"])
+                                    "time", "version", "server",
+                                    "client", "port"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -2162,6 +2266,18 @@ def init():
         if opt in ("-v", "--version"):
             printVersion()
             sys.exit(0)
+        elif opt in ("-s", "--server"):
+            server_tag = True
+        elif opt in ("-c", "--client"):
+            client_tag = True
+            try:
+                arg
+            except NameError:
+                print(_("Error: -c flag need an argument"))
+                sys.exit(2)
+            server_ip = arg
+        elif opt in ("-p", "--port"):
+            server_port = arg
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
                 # Test if the Jinja lib is available
@@ -2205,6 +2321,19 @@ def init():
             sys.exit(0)
 
     # Check options
+    if server_tag:
+        if client_tag:
+            print(_("Error: Can not use both -s and -c flag"))
+            sys.exit(2)
+        if html_tag or csv_tag:
+            print(_("Error: Can not use both -s and -o flag"))
+            sys.exit(2)
+
+    if client_tag:
+        if html_tag or csv_tag:
+            print(_("Error: Can not use both -c and -o flag"))
+            sys.exit(2)
+    
     if html_tag:
         try:
             output_folder
@@ -2224,27 +2353,51 @@ def init():
     # Catch CTRL-C
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Init Limits
-    limits = glancesLimits()
+    if server_tag:
+        # Init the server
+        print(_("Start Glances as a server"))
+        server = SocketServer.TCPServer(("0.0.0.0", server_port), GlancesHandler)
 
-    # Init Logs
-    logs = glancesLogs()
+        # Init stats
+        stats = glancesStats(server_tag = True) 
+    elif client_tag:
+        # Init the client (displaying server stat in the CLI)
+        
+        # Init Limits
+        limits = glancesLimits()
 
-    # Init stats
-    stats = glancesStats()
+        # Init Logs
+        logs = glancesLogs()
 
-    # Init HTML output
-    if html_tag:
-        htmloutput = glancesHtml(htmlfolder=output_folder,
-                                 refresh_time=refresh_time)
+        # Init stats
+        stats = glancesStats(client_tag = True)
 
-    # Init CSV output
-    if csv_tag:
-        csvoutput = glancesCsv(cvsfile=output_file,
-                               refresh_time=refresh_time)
+        # Init screen
+        screen = glancesScreen(refresh_time=refresh_time)            
+    else:
+        # Init the classical CLI
+        
+        # Init Limits
+        limits = glancesLimits()
 
-    # Init screen
-    screen = glancesScreen(refresh_time=refresh_time)
+        # Init Logs
+        logs = glancesLogs()
+
+        # Init stats
+        stats = glancesStats()
+
+        # Init HTML output
+        if html_tag:
+            htmloutput = glancesHtml(htmlfolder=output_folder,
+                                     refresh_time=refresh_time)
+
+        # Init CSV output
+        if csv_tag:
+            csvoutput = glancesCsv(cvsfile=output_file,
+                                   refresh_time=refresh_time)
+
+        # Init screen
+        screen = glancesScreen(refresh_time=refresh_time)
 
 
 def main():
@@ -2252,28 +2405,77 @@ def main():
     # Init stuff
     init()
 
-    # Main loop
-    while True:
-        # Get informations from libstatgrab and others...
-        stats.update()
+    if server_tag:
+        # Start the server loop
+        # !!! TODO: Use http://www.doughellmann.com/PyMOTW/SocketServer/
+        server.serve_forever()
+    elif client_tag:
+        # Start the client loop
+        while True:
+            # Create a socket (SOCK_STREAM means a TCP socket)
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # Update the screen
-        screen.update(stats)
+            # Connect to server and send data
+            client.connect((server_ip, server_port))
 
-        # Update the HTML output
-        if html_tag:
-            htmloutput.update(stats)
+            # Send command
+            client.sendall("GET\n")
 
-        # Update the CSV output
-        if csv_tag:
-            csvoutput.update(stats)
+            # Receive data from the server and shut down
+            buff_received = ''
+            while True:
+                # !!! TODO: Test with higher buffer size
+                buff = client.recv(1024)
+                if not buff: break
+                buff_received += buff
+            client_stats = json.loads(zlib.decompress(buff_received))
+
+            # Close
+            client.close()
+            
+            # Get system informations
+            stats.update(client_stats)
+
+            # Update the screen
+            screen.update(stats)
+
+            # Update the HTML output
+            if html_tag:
+                htmloutput.update(stats)
+
+            # Update the CSV output
+            if csv_tag:
+                csvoutput.update(stats)        
+    else:
+        # Start the classical CLI loop
+        while True:
+            # Get system informations
+            stats.update()
+
+            # Update the screen
+            screen.update(stats)
+
+            # Update the HTML output
+            if html_tag:
+                htmloutput.update(stats)
+
+            # Update the CSV output
+            if csv_tag:
+                csvoutput.update(stats)
 
 
 def end():
-    screen.end()
+    if server_tag:
+        # Stop the server loop
+        print(_("Stop Glances server"))
+    else:
+        # !!! TODO: something special to dor with client_tag ?
+        
+        # Stop the classical CLI loop
+        screen.end()
 
-    if csv_tag:
-        csvoutput.exit()
+        if csv_tag:
+            csvoutput.exit()
 
     sys.exit(0)
 
