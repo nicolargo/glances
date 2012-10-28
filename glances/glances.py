@@ -1851,11 +1851,11 @@ class glancesScreen:
                 if tag_io:
                     # Processes are only refresh every 2 refresh_time
                     #~ elapsed_time = max(1, self.__refresh_time) * 2
-                    io_read = processlist[processes]['io_counters'].read_bytes
+                    io_read = processlist[processes]['io_counters'][2]
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 62,
                         self.__autoUnit(io_read), 8)
-                    io_write = processlist[processes]['io_counters'].write_bytes
+                    io_write = processlist[processes]['io_counters'][3]
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 72,
                         self.__autoUnit(io_write), 8)
