@@ -1877,12 +1877,23 @@ class glancesScreen:
         # Caption
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        msg = _("Press 'h' for help")
-        if (screen_y > self.caption_y and
-            screen_x > self.caption_x + 32):
+        if (client_tag):
+            msg_client = _("Connected to:")+" "+format(server_ip)
+        msg_help = _("Press 'h' for help")
+        if (client_tag):        
+            if (screen_y > self.caption_y and
+                screen_x > self.caption_x + len(msg_client)):
+                self.term_window.addnstr(max(self.caption_y, screen_y - 1),
+                                        self.caption_x, msg_client, len(msg_client),
+                                        self.title_color if self.hascolors else
+                                        curses.A_UNDERLINE)
+            if (screen_x > self.caption_x + len(msg_client)+3+len(msg_help)):
+                self.term_window.addnstr(max(self.caption_y, screen_y - 1),
+                                        self.caption_x+len(msg_client), " | "+msg_help, 3+len(msg_help))                
+        else:
             self.term_window.addnstr(max(self.caption_y, screen_y - 1),
-                                     self.caption_x, msg, self.default_color)
-
+                                    self.caption_x, msg_help, len(msg_help))
+                
     def displayHelp(self):
         """
         Show the help panel
@@ -2183,24 +2194,108 @@ class glancesCsv:
 
 class GlancesHandler(SocketServer.BaseRequestHandler):
     """
-    This class manages the TCP server
+    This class manages the TCP request
+    Return:
+    0: GET Command success
+    1: command unknown
+    2: INIT Command success
+    3: QUIT Command success
     """
 
     def handle(self):
         # Get command from the Glances client
-        self.datarecv = self.request.recv(1024).strip()
+        self.datarecv = self.request.recv(1024)
         print "Receive the command %s from %s" % (format(self.datarecv), format(self.client_address[0]))
         if (self.datarecv == "GET"):
             # Send data to the Glances client
             stats.update()
+            # JSONify and ZIP stats
             # To be replaced when version 2.2.0 of the JSON will be available
             #~ self.datasend = zlib.compress(json.dumps(stats.getAll(), namedtuple_as_object = True))
             self.datasend = zlib.compress(json.dumps(stats.getAll()))
             self.request.sendall(self.datasend)
+            return 0
+        elif (self.datarecv == "INIT"):
+            # Send Glances version to the client
+            self.datasend = __version__
+            self.request.sendall(self.datasend)
+            return 2
+        elif (self.datarecv == "QUIT"):
+            # Send Glances version to the client
+            self.datasend = "BYE"
+            self.request.sendall(self.datasend)
+            return 3
         else:
             print "Unknown command received"
+            return 1
+
+
+class GlancesServer(SocketServer.TCPServer):
+    """
+    This class creates and manages the TCP server
+    """    
+    
+    def __init__(self, server_address, handler_class = GlancesHandler):
+        SocketServer.TCPServer.__init__(self, server_address, handler_class)
         return
 
+    def serve_forever(self):
+        """
+        Main loop for the TCP server
+        """
+        while True:
+            self.handle_request()
+        return
+
+
+class GlancesClient():
+    """
+    This class creates and manages the TCP client
+    """    
+
+    def __init__(self, server_address, server_port = 61209):
+        self.server_address = server_address
+        self.server_port = server_port
+        return
+
+    def __sendandrecv__(self, command, jsonzip = True):
+        # Create a socket (SOCK_STREAM means a TCP socket)
+        SocketClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Connect to server and send data
+        SocketClient.connect((self.server_address, self.server_port))
+
+        # Send command
+        SocketClient.sendall(command)
+
+        # Receive data from the server and shut down
+        buff_received = ''
+        while True:
+            buff = SocketClient.recv(8192)
+            if not buff: break
+            buff_received += buff
+        
+        # Close the socket
+        SocketClient.close()
+
+        # Return the data sent by the server
+        if jsonzip:
+            # If asked: deJSONify and decompress
+            return json.loads(zlib.decompress(buff_received))
+        else:
+            return buff_received
+            
+    def client_init(self):        
+        if self.__sendandrecv__("INIT", jsonzip = False) != __version__:
+            return 1
+        else:
+            return 0
+
+    def client_get(self):        
+        return self.__sendandrecv__("GET")
+
+    def client_quit(self):        
+        return self.__sendandrecv__("QUIT", jsonzip = False)
 
 # Global def
 #===========
@@ -2355,13 +2450,20 @@ def init():
 
     if server_tag:
         # Init the server
+
         print(_("Start Glances as a server"))
-        server = SocketServer.TCPServer(("0.0.0.0", server_port), GlancesHandler)
+        server = GlancesServer(("0.0.0.0", server_port), GlancesHandler)
 
         # Init stats
         stats = glancesStats(server_tag = True) 
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
+        
+        client = GlancesClient(server_ip, server_port)
+        
+        if client.client_init() != 0:
+            print(_("Error: The server version is not compatible"))
+            sys.exit(2)
         
         # Init Limits
         limits = glancesLimits()
@@ -2407,45 +2509,15 @@ def main():
 
     if server_tag:
         # Start the server loop
-        # !!! TODO: Use http://www.doughellmann.com/PyMOTW/SocketServer/
         server.serve_forever()
     elif client_tag:
         # Start the client loop
-        while True:
-            # Create a socket (SOCK_STREAM means a TCP socket)
-            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            # Connect to server and send data
-            client.connect((server_ip, server_port))
-
-            # Send command
-            client.sendall("GET\n")
-
-            # Receive data from the server and shut down
-            buff_received = ''
-            while True:
-                # !!! TODO: Test with higher buffer size
-                buff = client.recv(1024)
-                if not buff: break
-                buff_received += buff
-            client_stats = json.loads(zlib.decompress(buff_received))
-
-            # Close
-            client.close()
-            
-            # Get system informations
-            stats.update(client_stats)
+        while True:           
+            # Get server system informations            
+            stats.update(client.client_get())
 
             # Update the screen
             screen.update(stats)
-
-            # Update the HTML output
-            if html_tag:
-                htmloutput.update(stats)
-
-            # Update the CSV output
-            if csv_tag:
-                csvoutput.update(stats)        
     else:
         # Start the classical CLI loop
         while True:
@@ -2468,8 +2540,11 @@ def end():
     if server_tag:
         # Stop the server loop
         print(_("Stop Glances server"))
+        server.server_close()
     else:
-        # !!! TODO: something special to dor with client_tag ?
+        if client_tag:
+            # Stop the client loop
+            client.client_quit()
         
         # Stop the classical CLI loop
         screen.end()
