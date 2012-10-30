@@ -36,115 +36,11 @@ import time
 from datetime import datetime, timedelta
 import gettext
 import SocketServer
-import socket
-import json
-import zlib
-import collections
 
 # International
 #==============
 
 gettext.install(__appname__)
-
-# Test methods
-#=============
-
-try:
-    import curses
-    import curses.panel
-except ImportError:
-    print(_('Curses module not found. Glances cannot start.'))
-    print(_('Glances requires at least Python 2.6 or higher.'))
-    print()
-    sys.exit(1)
-
-try:
-    import psutil
-except ImportError:
-    print(_('PsUtil module not found. Glances cannot start.'))
-    print()
-    print(_('On Ubuntu 12.04 or higher:'))
-    print(_('$ sudo apt-get install python-psutil'))
-    print()
-    print(_('To install PsUtil using pip (as root):'))
-    print(_('# pip install psutil'))
-    print()
-    sys.exit(1)
-
-try:
-    # get_cpu_percent method only available with PsUtil 0.2.0+
-    psutil.Process(os.getpid()).get_cpu_percent(interval=0)
-except Exception:
-    psutil_get_cpu_percent_tag = False
-else:
-    psutil_get_cpu_percent_tag = True
-
-try:
-    # get_io_counter only available on Linux and FreeBSD
-    psutil.Process(os.getpid()).get_io_counters()
-except Exception:
-    psutil_get_io_counter_tag = False
-else:
-    psutil_get_io_counter_tag = True
-
-try:
-    # virtual_memory() is only available with PsUtil 0.6+
-    psutil.virtual_memory()
-except:    
-    try:
-        # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-        psutil.phymem_usage()
-        psutil.virtmem_usage()
-    except Exception:
-        psutil_mem_usage_tag = False
-    else:
-        psutil_mem_usage_tag = True
-        psutil_mem_vm = False
-else:
-    psutil_mem_usage_tag = True
-    psutil_mem_vm = True
-
-try:
-    # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
-    psutil.disk_partitions()
-    psutil.disk_usage('/')
-except Exception:
-    psutil_fs_usage_tag = False
-else:
-    psutil_fs_usage_tag = True
-
-try:
-    # disk_io_counters method only available with PsUtil 0.4.0+
-    psutil.disk_io_counters()
-except Exception:
-    psutil_disk_io_tag = False
-else:
-    psutil_disk_io_tag = True
-
-try:
-    # network_io_counters method only available with PsUtil 0.4.0+
-    psutil.network_io_counters()
-except Exception:
-    psutil_network_io_tag = False
-else:
-    psutil_network_io_tag = True
-
-try:
-    # HTML output
-    import jinja2
-except ImportError:
-    jinja_tag = False
-else:
-    jinja_tag = True
-
-try:
-    # CSV output
-    import csv
-except ImportError:
-    csvlib_tag = False
-else:
-    csvlib_tag = True
-
 
 # Classes
 #========
@@ -2205,7 +2101,7 @@ class GlancesHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         # Get command from the Glances client
         self.datarecv = self.request.recv(1024)
-        print "Receive the command %s from %s" % (format(self.datarecv), format(self.client_address[0]))
+        #~ print "Receive the command %s from %s" % (format(self.datarecv), format(self.client_address[0]))
         if (self.datarecv == "GET"):
             # Send data to the Glances client
             stats.update()
@@ -2226,26 +2122,8 @@ class GlancesHandler(SocketServer.BaseRequestHandler):
             self.request.sendall(self.datasend)
             return 3
         else:
-            print "Unknown command received"
+            print "Error: Unknown command received by Glances server"
             return 1
-
-
-class GlancesServer(SocketServer.TCPServer):
-    """
-    This class creates and manages the TCP server
-    """    
-    
-    def __init__(self, server_address, handler_class = GlancesHandler):
-        SocketServer.TCPServer.__init__(self, server_address, handler_class)
-        return
-
-    def serve_forever(self):
-        """
-        Main loop for the TCP server
-        """
-        while True:
-            self.handle_request()
-        return
 
 
 class GlancesClient():
@@ -2310,6 +2188,7 @@ def printSyntax():
     print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]"))
     print("")
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
+    print(_("\t -B IP|NAME\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
@@ -2325,8 +2204,37 @@ def printSyntax():
     print(_("\t-v\t\tDisplay the version and exit"))
 
 
-def init():
-    global psutil_disk_io_tag, psutil_fs_usage_tag, psutil_network_io_tag
+def end():
+    if server_tag:
+        # Stop the server loop
+        #~ print(_("Stop Glances server"))
+        server.server_close()
+    else:
+        if client_tag:
+            # Stop the client loop
+            client.client_quit()
+        
+        # Stop the classical CLI loop
+        screen.end()
+
+        if csv_tag:
+            csvoutput.exit()
+
+    sys.exit(0)
+
+
+def signal_handler(signal, frame):
+    end()
+
+
+# Main
+#=====
+
+if __name__ == "__main__":
+
+    # Glances - Init stuff
+    ######################
+
     global network_bytepersec_tag
     global limits, logs, stats, screen
     global htmloutput, csvoutput
@@ -2345,11 +2253,13 @@ def init():
     
     # Set the default TCP port for client and server
     server_port = 61209
+    bind_ip = "0.0.0.0"
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "bdmnho:f:t:vsc:p:",
-                                   ["help", "output", "file",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdmnho:f:t:vsc:p:",
+                                   ["bind", "bytepersec", "diskio", "mount", 
+                                    "netrate", "help", "output", "file",
                                     "time", "version", "server",
                                     "client", "port"])
     except getopt.GetoptError as err:
@@ -2363,33 +2273,44 @@ def init():
             sys.exit(0)
         elif opt in ("-s", "--server"):
             server_tag = True
+        elif opt in ("-B", "--bind"):
+            try:
+                arg
+            except NameError:
+                print(_("Error: -B flag need an argument (bind IP address)"))
+                sys.exit(2)
+            bind_ip = arg
         elif opt in ("-c", "--client"):
             client_tag = True
             try:
                 arg
             except NameError:
-                print(_("Error: -c flag need an argument"))
+                print(_("Error: -c flag need an argument (server IP address/name"))
                 sys.exit(2)
             server_ip = arg
         elif opt in ("-p", "--port"):
             server_port = arg
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
-                # Test if the Jinja lib is available
-                if jinja_tag:
-                    html_tag = True
-                else:
+                try:
+                    # HTML output
+                    import jinja2
+                except ImportError:
                     print(_("Error: Need Jinja2 library to export into HTML"))
                     print()
                     print(_("Try to install the python-jinja2 package"))
                     sys.exit(2)
-            elif arg.lower() == "csv":
-                # Test if the Cvs lib is available
-                if csvlib_tag:
-                    csv_tag = True
                 else:
+                    html_tag = True
+            elif arg.lower() == "csv":
+                try:
+                    # CSV output
+                    import csv
+                except ImportError:
                     print(_("Error: Need CSV library to export to CSV"))
                     sys.exit(2)
+                else:
+                    csv_tag = True
             else:
                 print(_("Error: Unknown output %s" % arg))
                 printSyntax()
@@ -2448,15 +2369,118 @@ def init():
     # Catch CTRL-C
     signal.signal(signal.SIGINT, signal_handler)
 
-    if server_tag:
-        # Init the server
+    # Optimization of the import step
+    # Only usefull lib are imported in order to reduce the memory print
+    if not server_tag:
+        # Do not load curses lib for server
+        try:
+            import curses
+            import curses.panel
+        except ImportError:
+            print(_('Curses module not found. Glances cannot start.'))
+            print(_('Glances requires at least Python 2.6 or higher.'))
+            print()
+            sys.exit(1)
 
-        print(_("Start Glances as a server"))
-        server = GlancesServer(("0.0.0.0", server_port), GlancesHandler)
+    if client_tag:
+        psutil_get_cpu_percent_tag = True
+        psutil_get_io_counter_tag = True
+        psutil_mem_usage_tag = True
+        psutil_mem_vm = True
+        psutil_fs_usage_tag = True
+        psutil_disk_io_tag = True
+        psutil_network_io_tag = True
+    else:
+        # Do not load psutil lib for client
+        try:
+            import psutil
+        except ImportError:
+            print(_('PsUtil module not found. Glances cannot start.'))
+            print()
+            print(_('On Ubuntu 12.04 or higher:'))
+            print(_('$ sudo apt-get install python-psutil'))
+            print()
+            print(_('To install PsUtil using pip (as root):'))
+            print(_('# pip install psutil'))
+            print()
+            sys.exit(1)
+
+        try:
+            # get_cpu_percent method only available with PsUtil 0.2.0+
+            psutil.Process(os.getpid()).get_cpu_percent(interval=0)
+        except Exception:
+            psutil_get_cpu_percent_tag = False
+        else:
+            psutil_get_cpu_percent_tag = True
+
+        try:
+            # get_io_counter only available on Linux and FreeBSD
+            psutil.Process(os.getpid()).get_io_counters()
+        except Exception:
+            psutil_get_io_counter_tag = False
+        else:
+            psutil_get_io_counter_tag = True
+
+        try:
+            # virtual_memory() is only available with PsUtil 0.6+
+            psutil.virtual_memory()
+        except:    
+            try:
+                # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
+                psutil.phymem_usage()
+                psutil.virtmem_usage()
+            except Exception:
+                psutil_mem_usage_tag = False
+            else:
+                psutil_mem_usage_tag = True
+                psutil_mem_vm = False
+        else:
+            psutil_mem_usage_tag = True
+            psutil_mem_vm = True
+
+        try:
+            # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
+            psutil.disk_partitions()
+            psutil.disk_usage('/')
+        except Exception:
+            psutil_fs_usage_tag = False
+        else:
+            psutil_fs_usage_tag = True
+
+        try:
+            # disk_io_counters method only available with PsUtil 0.4.0+
+            psutil.disk_io_counters()
+        except Exception:
+            psutil_disk_io_tag = False
+        else:
+            psutil_disk_io_tag = True
+
+        try:
+            # network_io_counters method only available with PsUtil 0.4.0+
+            psutil.network_io_counters()
+        except Exception:
+            psutil_network_io_tag = False
+        else:
+            psutil_network_io_tag = True
+        
+    # Init Glances depending of the mode (standalone, client, server)    
+    if server_tag:
+        import json
+        import zlib
+        import collections
+
+        # Init the server
+        print(_("Glances is listenning on %s:%s") % (bind_ip, server_port))
+        server = SocketServer.TCPServer((bind_ip, server_port), GlancesHandler)
 
         # Init stats
         stats = glancesStats(server_tag = True) 
     elif client_tag:
+        import socket
+        import json
+        import zlib
+        import collections
+
         # Init the client (displaying server stat in the CLI)
         
         client = GlancesClient(server_ip, server_port)
@@ -2501,17 +2525,14 @@ def init():
         # Init screen
         screen = glancesScreen(refresh_time=refresh_time)
 
-
-def main():
+    # Glances - Main loop
+    #####################
     
-    # Init stuff
-    init()
-
     if server_tag:
         # Start the server loop
         server.serve_forever()
     elif client_tag:
-        # Start the client loop
+        # Start the client (CLI) loop
         while True:           
             # Get server system informations            
             stats.update(client.client_get())
@@ -2519,7 +2540,7 @@ def main():
             # Update the screen
             screen.update(stats)
     else:
-        # Start the classical CLI loop
+        # Start the standalone (CLI) loop
         while True:
             # Get system informations
             stats.update()
@@ -2534,35 +2555,5 @@ def main():
             # Update the CSV output
             if csv_tag:
                 csvoutput.update(stats)
-
-
-def end():
-    if server_tag:
-        # Stop the server loop
-        print(_("Stop Glances server"))
-        server.server_close()
-    else:
-        if client_tag:
-            # Stop the client loop
-            client.client_quit()
-        
-        # Stop the classical CLI loop
-        screen.end()
-
-        if csv_tag:
-            csvoutput.exit()
-
-    sys.exit(0)
-
-
-def signal_handler(signal, frame):
-    end()
-
-
-# Main
-#=====
-
-if __name__ == "__main__":
-    main()
 
 # The end...
