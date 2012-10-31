@@ -1216,12 +1216,18 @@ class glancesScreen:
                 self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10 + i*10,
                                          "%.1f" % percpu[i]['kernel'], 8,
                                          self.__colors_list[alert])
-
-                alert = self.__getCpuAlert(percpu[i]['nice'])
-                logs.add(alert, "CPU-%d nice" % i, percpu[i]['nice'], proclist)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['nice'], 8,
-                                         self.__colors_list[alert])
+                try:
+                    alert = self.__getCpuAlert(percpu[i]['nice'])
+                    logs.add(alert, "CPU-%d nice" % i, percpu[i]['nice'], proclist)
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
+                                             "%.1f" % percpu[i]['nice'], 8,
+                                             self.__colors_list[alert])
+                except:
+                    #~ alert = self.__getCpuAlert(percpu[i]['idle'])
+                    logs.add(alert, "CPU-%d idle" % i, percpu[i]['idle'], proclist)
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
+                                             "%.1f" % percpu[i]['idle'], 8)
+                    
 
         elif (screen_y > self.cpu_y + 5 and
               screen_x > self.cpu_x + 18):
@@ -1253,12 +1259,18 @@ class glancesScreen:
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10,
                                      "%.1f" % cpu['kernel'], 8,
                                      self.__colors_list[alert])
-
-            alert = self.__getCpuAlert(cpu['nice'])
-            logs.add(alert, "CPU nice", cpu['nice'], proclist)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
-                                     "%.1f" % cpu['nice'], 8,
-                                     self.__colors_list[alert])
+            try:
+                alert = self.__getCpuAlert(cpu['nice'])
+                logs.add(alert, "CPU nice", cpu['nice'], proclist)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
+                                         "%.1f" % cpu['nice'], 8,
+                                         self.__colors_list[alert])
+            except:
+                #~ alert = self.__getCpuAlert(cpu['idle'])
+                logs.add(alert, "CPU idle", cpu['idle'], proclist)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
+                                         "%.1f" % cpu['idle'], 8)
+                
 
         # Return the X offset to display Load and Mem
         return offset_x
