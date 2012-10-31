@@ -435,10 +435,10 @@ class glancesStats:
                                      self.cputime_old.user) * percent,
                                 'idle':
                                     (self.cputime_new.idle -
-                                     self.cputime_old.idle) * percent,
-                                'nice':
-                                    (self.cputime_new.nice -
-                                     self.cputime_old.nice) * percent}
+                                     self.cputime_old.idle) * percent}
+                    if hasattr(self.cputime_new, 'nice'):
+                        self.cpu['nice'] = (self.cputime_new.nice -
+                                            self.cputime_old.nice) * percent
                     self.cputime_old = self.cputime_new
                     self.cputime_total_old = self.cputime_total_new
                 except Exception:
@@ -497,19 +497,19 @@ class glancesStats:
                     for i in range(len(self.percputime_new)):                
                         perpercent.append(100 / (self.percputime_total_new[i] -
                                                  self.percputime_total_old[i]))
-                        self.percpu.append(
-                                   {'kernel':
-                                        (self.percputime_new[i].system -
-                                         self.percputime_old[i].system) * perpercent[i],
-                                    'user':
-                                        (self.percputime_new[i].user -
-                                         self.percputime_old[i].user) * perpercent[i],
-                                    'idle':
-                                        (self.percputime_new[i].idle -
-                                         self.percputime_old[i].idle) * perpercent[i],
-                                    'nice':
-                                        (self.percputime_new[i].nice -
-                                         self.percputime_old[i].nice) * perpercent[i]} )                
+                        cpu =  {'kernel':
+                                    (self.percputime_new[i].system -
+                                     self.percputime_old[i].system) * perpercent[i],
+                                'user':
+                                    (self.percputime_new[i].user -
+                                     self.percputime_old[i].user) * perpercent[i],
+                                'idle':
+                                    (self.percputime_new[i].idle -
+                                     self.percputime_old[i].idle) * perpercent[i]}
+                        if hasattr(self.percputime_new[i], 'nice'):
+                            cpu['nice'] = (self.percputime_new[i].nice -
+                                           self.percputime_old[i].nice) * perpercent[i]
+                        self.percpu.append(cpu)                                         
                     self.percputime_old = self.percputime_new
                     self.percputime_total_old = self.percputime_total_new
                 except Exception:
@@ -2090,6 +2090,9 @@ class glancesCsv:
 
 class GlancesHandler(SocketServer.BaseRequestHandler):
     """
+    !!!
+    !!! TODO : To be replaced by http://docs.python.org/2/library/simplexmlrpcserver.html
+    !!!
     This class manages the TCP request
     Return:
     0: GET Command success
