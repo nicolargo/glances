@@ -2245,8 +2245,12 @@ if __name__ == "__main__":
     network_bytepersec_tag = False
     html_tag = False
     csv_tag = False
-    server_tag = False
     client_tag = False
+    if os.name == "nt":
+        # Force server mode for Windows operating system
+        server_tag = True
+    else:
+        server_tag = False
     
     # Set the default refresh time
     refresh_time = 2
