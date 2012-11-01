@@ -2,10 +2,9 @@
 #
 # Glances is a simple textual monitoring tool
 #
-# Pre-requisites: Python 2.6+ and PsUtil 0.4.0+ (for full functions)
-#
 # Copyright (C) Nicolargo 2012 <nicolas@nicolargo.com>
 #
+# Glances is distributed
 # under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -20,7 +19,7 @@
 #
 
 __appname__ = 'glances'
-__version__ = "1.4.2.2b"
+__version__ = "1.5b"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -341,7 +340,6 @@ class glancesStats:
         procstat['cmdline'] = " ".join(procstat['cmdline'])
         
         return procstat
-
         
     def __get_process_stats__(self, proc):
         """
@@ -1227,7 +1225,7 @@ class glancesScreen:
                                              self.__colors_list[alert])
                 except:
                     #~ alert = self.__getCpuAlert(percpu[i]['idle'])
-                    logs.add(alert, "CPU-%d idle" % i, percpu[i]['idle'], proclist)
+                    #~ logs.add(alert, "CPU-%d idle" % i, percpu[i]['idle'], proclist)
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
                                              "%.1f" % percpu[i]['idle'], 8)
                     
@@ -1270,11 +1268,10 @@ class glancesScreen:
                                          self.__colors_list[alert])
             except:
                 #~ alert = self.__getCpuAlert(cpu['idle'])
-                logs.add(alert, "CPU idle", cpu['idle'], proclist)
+                #~ logs.add(alert, "CPU idle", cpu['idle'], proclist)
                 self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
                                          "%.1f" % cpu['idle'], 8)
                 
-
         # Return the X offset to display Load and Mem
         return offset_x
 
@@ -1761,7 +1758,12 @@ class glancesScreen:
                 # IO
                 if tag_io:
                     if processlist[processes]['io_counters'] == {}:
-                        pass
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 62,
+                            _("A_DENY"), 8)
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 72,
+                            _("A_DENY"), 8)
                     else:
                         # Processes are only refresh every 2 refresh_time
                         #~ elapsed_time = max(1, self.__refresh_time) * 2
@@ -1812,6 +1814,7 @@ class glancesScreen:
         """
         Show the help panel
         """
+        
         if not self.help_tag:
             return 0
         screen_x = self.screen.getmaxyx()[1]
@@ -1821,11 +1824,17 @@ class glancesScreen:
             # Console 80x24 is mandatory to display the help message
             self.erase()
 
-            self.term_window.addnstr(
-                self.help_y, self.help_x,
-                _("Glances {0} with PsUtil {1}").format(
-                    self.__version, psutil.__version__),
-                79, self.title_color if self.hascolors else 0)
+            try:
+                self.term_window.addnstr(
+                    self.help_y, self.help_x,
+                    _("Glances {0} with PsUtil {1}").format(
+                        self.__version, psutil.__version__),
+                    79, self.title_color if self.hascolors else 0)
+            except:
+                self.term_window.addnstr(
+                    self.help_y, self.help_x,
+                    _("Glances {0}").format(self.__version),
+                    79, self.title_color if self.hascolors else 0)
 
             self.term_window.addnstr(self.help_y + 2, self.help_x,
                                      _("Captions: "), 79)
@@ -1847,21 +1856,19 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 5, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("a"), _("Sort processes automatically "
-                              "(need PsUtil 0.2.0+)"), width=width),
+                    _("a"), _("Sort processes automatically"), width=width),
                 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 6, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("b"), _("Switch between bit/s or byte/s for network IO "),
+                    _("b"), _("Switch between bit/s or byte/s for network IO"),
                               width=width), 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 7, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("c"), _("Sort processes by CPU% "
-                              "(need PsUtil 0.2.0+)"), width=width),
+                    _("c"), _("Sort processes by CPU%"), width=width),
                 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
@@ -1875,26 +1882,22 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 10, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("d"), _("Show/hide disk I/O stats "
-                              "(need PsUtil 0.4.0+)"), width=width),
+                    _("d"), _("Show/hide disk I/O stats"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 11, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("f"), _("Show/hide file system stats "
-                              "(need PsUtil 0.3.0+)"), width=width),
+                    _("f"), _("Show/hide file system stats"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 12, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("n"), _("Show/hide network stats "
-                              "(need PsUtil 0.3.0+)"), width=width),
+                    _("n"), _("Show/hide network stats"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 13, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("l"), _("Show/hide log messages (only available "
-                              "if display > 24 lines)"), width=width), 79)
+                    _("l"), _("Show/hide log messages"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 14, self.help_x,
                 "{0:^{width}} {1}".format(
@@ -2119,13 +2122,34 @@ class GlancesInstance():
     """
     
     def init(self):
+        # Return the Glances version
         return __version__ 
     
-    def get(self):
+    def getAll(self):
         # Update and return all the stats
         stats.update()
         return json.dumps(stats.getAll())
     
+    def getCpu(self):
+        # Update and return CPU stats
+        stats.update()
+        return json.dumps(stats.getCpu())
+
+    def getLoad(self):
+        # Update and return LOAD stats
+        stats.update()
+        return json.dumps(stats.getLoad())
+
+    def getMem(self):
+        # Update and return MEM stats
+        stats.update()
+        return json.dumps(stats.getMem())
+
+    def getMemSwap(self):
+        # Update and return MEMSWAP stats
+        stats.update()
+        return json.dumps(stats.getMemSwap())
+
 
 class GlancesServer():
     """
@@ -2134,7 +2158,7 @@ class GlancesServer():
 
     def __init__(self, bind_address, bind_port = 61209, RequestHandler = GlancesHandler):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
-                                    requestHandler=RequestHandler)
+                                    requestHandler = RequestHandler)
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance())
         return
@@ -2159,7 +2183,7 @@ class GlancesClient():
         return __version__[:3] == self.client.init()[:3]
 
     def client_get(self):
-        return json.loads(self.client.get())
+        return json.loads(self.client.getAll())
 
 
 # Global def
