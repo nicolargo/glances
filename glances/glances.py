@@ -357,8 +357,11 @@ class glancesStats:
 
         procstat['memory_percent'] = proc.get_memory_percent()
 
-        if psutil_get_io_counter_tag:
-            procstat['io_counters']  = proc.get_io_counters()
+        try:
+            if psutil_get_io_counter_tag:
+                procstat['io_counters']  = proc.get_io_counters()
+        except:
+            procstat['io_counters'] = {}
 
         procstat['pid'] = proc.pid
         procstat['username'] = proc.username
@@ -1757,16 +1760,19 @@ class glancesScreen:
                         dtime, 8)
                 # IO
                 if tag_io:
-                    # Processes are only refresh every 2 refresh_time
-                    #~ elapsed_time = max(1, self.__refresh_time) * 2
-                    io_read = processlist[processes]['io_counters'][2]
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 62,
-                        self.__autoUnit(io_read), 8)
-                    io_write = processlist[processes]['io_counters'][3]
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 72,
-                        self.__autoUnit(io_write), 8)
+                    if processlist[processes]['io_counters'] == {}:
+                        pass
+                    else:
+                        # Processes are only refresh every 2 refresh_time
+                        #~ elapsed_time = max(1, self.__refresh_time) * 2
+                        io_read = processlist[processes]['io_counters'][2]
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 62,
+                            self.__autoUnit(io_read), 8)
+                        io_write = processlist[processes]['io_counters'][3]
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 72,
+                            self.__autoUnit(io_write), 8)
                         
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
@@ -2433,12 +2439,16 @@ if __name__ == "__main__":
             psutil_get_cpu_percent_tag = True
 
         try:
-            # get_io_counter only available on Linux and FreeBSD
+            # get_io_counter method only available with PsUtil 0.2.1+
             psutil.Process(os.getpid()).get_io_counters()
         except Exception:
             psutil_get_io_counter_tag = False
         else:
-            psutil_get_io_counter_tag = True
+            # get_io_counter only available on Linux
+            if sys.platform.startswith("linux"):
+                psutil_get_io_counter_tag = True
+            else:
+                psutil_get_io_counter_tag = False
 
         try:
             # virtual_memory() is only available with PsUtil 0.6+
