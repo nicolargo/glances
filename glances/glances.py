@@ -35,7 +35,7 @@ import signal
 import time
 from datetime import datetime, timedelta
 import gettext
-import SocketServer
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler        
 
 # International
 #==============
@@ -2106,45 +2106,44 @@ class glancesCsv:
         self.__cvsfile_fd.flush()
 
 
-class GlancesHandler(SocketServer.BaseRequestHandler):
+class GlancesHandler(SimpleXMLRPCRequestHandler):
     """
-    !!!
-    !!! TODO : To be replaced by http://docs.python.org/2/library/simplexmlrpcserver.html
-    !!!
-    This class manages the TCP request
-    Return:
-    0: GET Command success
-    1: command unknown
-    2: INIT Command success
-    3: QUIT Command success
+    Main XMLRPC handler
     """
+    rpc_paths = ('/RPC2',)
 
-    def handle(self):
-        # Get command from the Glances client
-        self.datarecv = self.request.recv(1024)
-        #~ print "Receive the command %s from %s" % (format(self.datarecv), format(self.client_address[0]))
-        if (self.datarecv == "GET"):
-            # Send data to the Glances client
-            stats.update()
-            # JSONify and ZIP stats
-            # To be replaced when version 2.2.0 of the JSON will be available
-            #~ self.datasend = zlib.compress(json.dumps(stats.getAll(), namedtuple_as_object = True))
-            self.datasend = zlib.compress(json.dumps(stats.getAll()))
-            self.request.sendall(self.datasend)
-            return 0
-        elif (self.datarecv == "INIT"):
-            # Send Glances version to the client
-            self.datasend = __version__
-            self.request.sendall(self.datasend)
-            return 2
-        elif (self.datarecv == "QUIT"):
-            # Send Glances version to the client
-            self.datasend = "BYE"
-            self.request.sendall(self.datasend)
-            return 3
-        else:
-            print "Error: Unknown command received by Glances server"
-            return 1
+
+class GlancesInstance():
+    """
+    All the methods of this class are published as XML RPC methods
+    """
+    
+    def init(self):
+        return __version__ 
+    
+    def get(self):
+        # Update and return all the stats
+        stats.update()
+        return json.dumps(stats.getAll())
+    
+
+class GlancesServer():
+    """
+    This class creates and manages the TCP client
+    """    
+
+    def __init__(self, bind_address, bind_port = 61209, RequestHandler = GlancesHandler):
+        self.server = SimpleXMLRPCServer((bind_address, bind_port),
+                                    requestHandler=RequestHandler)
+        self.server.register_introspection_functions()
+        self.server.register_instance(GlancesInstance())
+        return
+    
+    def serve_forever(self):
+        self.server.serve_forever()
+        
+    def server_close(self):
+        self.server.server_close()
 
 
 class GlancesClient():
@@ -2153,48 +2152,15 @@ class GlancesClient():
     """    
 
     def __init__(self, server_address, server_port = 61209):
-        self.server_address = server_address
-        self.server_port = server_port
+        self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
         return
-
-    def __sendandrecv__(self, command, jsonzip = True):
-        # Create a socket (SOCK_STREAM means a TCP socket)
-        SocketClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # Connect to server and send data
-        SocketClient.connect((self.server_address, self.server_port))
-
-        # Send command
-        SocketClient.sendall(command)
-
-        # Receive data from the server and shut down
-        buff_received = ''
-        while True:
-            buff = SocketClient.recv(8192)
-            if not buff: break
-            buff_received += buff
-        
-        # Close the socket
-        SocketClient.close()
-
-        # Return the data sent by the server
-        if jsonzip:
-            # If asked: deJSONify and decompress
-            return json.loads(zlib.decompress(buff_received))
-        else:
-            return buff_received
             
-    def client_init(self):        
-        if self.__sendandrecv__("INIT", jsonzip = False) != __version__:
-            return 1
-        else:
-            return 0
+    def client_init(self):
+        return __version__[:3] == self.client.init()[:3]
 
-    def client_get(self):        
-        return self.__sendandrecv__("GET")
+    def client_get(self):
+        return json.loads(self.client.get())
 
-    def client_quit(self):        
-        return self.__sendandrecv__("QUIT", jsonzip = False)
 
 # Global def
 #===========
@@ -2233,7 +2199,8 @@ def end():
     else:
         if client_tag:
             # Stop the client loop
-            client.client_quit()
+            #~ client.client_quit()
+            pass
         
         # Stop the classical CLI loop
         screen.end()
@@ -2250,6 +2217,7 @@ def signal_handler(signal, frame):
 
 # Main
 #=====
+
 
 if __name__ == "__main__":
 
@@ -2494,27 +2462,27 @@ if __name__ == "__main__":
         
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
+        from SimpleXMLRPCServer import SimpleXMLRPCServer
         import json
-        import zlib
         import collections
 
         # Init the server
         print(_("Glances is listenning on %s:%s") % (bind_ip, server_port))
-        server = SocketServer.TCPServer((bind_ip, server_port), GlancesHandler)
+        server = GlancesServer(bind_ip, server_port, GlancesHandler)
 
         # Init stats
         stats = glancesStats(server_tag = True) 
     elif client_tag:
-        import socket
+        import xmlrpclib
         import json
-        import zlib
         import collections
 
         # Init the client (displaying server stat in the CLI)
         
         client = GlancesClient(server_ip, server_port)
-        
-        if client.client_init() != 0:
+
+        # Test if client and server are in the same major version
+        if not client.client_init():
             print(_("Error: The server version is not compatible"))
             sys.exit(2)
         
