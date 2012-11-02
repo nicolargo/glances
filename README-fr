@@ -1,5 +1,3 @@
-[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/484466/nicolargoglances-on-GitHub)
-
 ===========================================
 Glances -- Votre système en un coups d'oeil
 ===========================================
@@ -7,7 +5,7 @@ Glances -- Votre système en un coups d'oeil
 ## Description
 
 Glances est un logiciel libre (licence LGPL) permettant de surveiller votre
-système d'exploitation GNU/Linux ou BSD à partir d'une interface texte.
+système d'exploitation GNU/Linux ou BSD à partir d'une interface texte (CLI).
 
 Glances utilise la librairie PsUtil pour récupérer les informations de
 votre système. Il est développé en Python.
@@ -33,7 +31,7 @@ Glances a besoin des dépendances suivantes:
 
 ### Depuis le gestionnaire de paquet de votre système
 
-Des paquets existent pour plusieurs distributions: Arch, Fedora/Redhat...
+Des paquets existent pour plusieurs distributions: Debian (SID) Arch, Fedora/Redhat...
 Le processus de packaging est actuellement en cours sur d'autres distribs, je
 vous conseille donc de rechercher Glances sur votre gestionnaire de package
 avant de faire une installation depuis les sources.
@@ -74,9 +72,32 @@ Le PPA propose les paquets pour les versions Ubuntu 9.10 jusqu'à 12.04.
         $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
         $ brew pip Glances
 
+Si vous rencontrez l'erreur suivante:
+
+    Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
+    This link will help resolve the above errors:
+    https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
+    
+Essayez de finaliser l'installation avec les commandes:
+
+    $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
+    $ brew link Glances
+
+### Egalement sur les système Windows
+
+Les systèmes Windows sont uniquement supportés en mode serveur. Donc si vous lancez Glances sur une machine Windows, il sera automatiquement lancé en mode serveur. 
+
+Pour installer Glances sous Windows:
+
+    * Installer [Python pour Windows](http://www.python.org/getit/)
+    * Installer la librairie [PsUtil](https://code.google.com/p/psutil/downloads/list)
+    * Télécharger la dernière version de [Glances](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
+
+Je cherche des contributeurs pouvant packager Glances pour Windows. Notamment à l'aide de [PyInstaller](http://www.pyinstaller.org/).
+
 ### Depuis les sources
 
-Le projet Glances est hébergé sur GitHUB: https://github.com/nicolargo/glances
+Le projet Glances est hébergé sur [GitHub](https://github.com/nicolargo/glances)
 
 Pour l'installer, il suffit de suivre les instructions suivantes depuis un
 terminal.
@@ -101,8 +122,24 @@ Il suffit de saisir la commande suivante dans une console ou un terminal:
 
 	$ glances
 
-Note: sur certaines distributions, il faut saisir glances en lieu et place
-de glances.py.
+Note: sur certaines distributions, il faut saisir glances.py en lieu et place
+de glances.
+
+### En mode client/server mode
+
+Si vous souhaitez surveiller à distance une machine depuis une autre machine.
+
+Il suffit de commencer par lancer Glances en mode serveur sur la machine distante:
+
+    server$ glances -s
+    
+Puis de lancer la commande suivante sur votre autre machine:
+
+    client$ glances -c @server
+
+ou @server est l'adresse IP ou le nom d'hôte de la machine distante.
+
+Glances utilise un serveur de type [XML/RPC](http://docs.python.org/2/library/simplexmlrpcserver.html) et peut donc être interrogé par des applications tierces.
 
 ## Guide d'utilisation
 
@@ -121,18 +158,24 @@ Les statistiques jugées importantes sont affichées en couleur:
 
 Quand Glances est lancé, il est possible d'utiliser les touches suivantes:
 
-* 'a' pour trier la liste des processus de manière automatique:
+* 'h' afficher l'aide en ligne
+* 'a' trier la liste des processus de manière automatique:
 
     Si la CPU totale > 70% alors le tri se fait pas consommation CPU
 
     si la mémoire total > 70% alors le tri se fait pas consommation MEMOIRE
 
-* 'c' pour forcer le tri par consommation CPU
-* 'd' pour desactiver ou activer l'affichage des entrées/sorties disques
-* 'f' pour desactiver ou activer l'affichage de l'occupation des FS
-* 'l' pour desactiver ou activer l'affichage des logs
-* 'm' pour forcer le tri par consommation MEMOIRE
-* 'n' pour desactiver ou activer l'affichage des interfaces réseau
+* 'b' passer le débit des interfaces réseaux de bit par sec à octet par sec
+* 'c' forcer le tri par consommation CPU
+* 'd' desactiver ou activer l'affichage des entrées/sorties disques
+* 'f' desactiver ou activer l'affichage de l'occupation des FS
+* 'l' desactiver ou activer l'affichage des logs
+* 'm' forcer le tri par consommation MEMOIRE
+* 'n' desactiver ou activer l'affichage des interfaces réseau
+* 'p' forcer le tri par nom de processus
+* 'w' supprimer les alertes finies de type WARNING
+* 'x' supprimer les alertes finies de type WARNING et CRITICAL
+* '1' passer des stats CPU globale à CPU détaillé
 * 'q' sortir de Glances (il est également possible d'utiliser CTRL-C)
 
 Passons ensuite à la description de la fenêtre de Glances:
@@ -301,4 +344,3 @@ date et l'heure courante.
 ## Traduction
 
 Glances existe en Anglais, Francais, Espagnol, Portugais.
-

@@ -86,9 +86,21 @@ Try to runs:
     $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
     $ brew link Glances
 
+### Concerning Windows operating system
+
+Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode. 
+
+To install Glances on you system:
+
+    * Install [Python for Windows](http://www.python.org/getit/)
+    * Install the [PsUtil lib](https://code.google.com/p/psutil/downloads/list)
+    * Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
+
+I need contributors to package Glances for Windows (for exemple using [PyInstaller](http://www.pyinstaller.org/)).
+
 ### From source
 
-Get the latest version:
+Get the latest version (form GitHub):
 
     $ rm -rf /tmp/nicolargo-glances-* 
     $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
@@ -124,6 +136,8 @@ and this one on the client:
 
 where @server is the IP address or hostname of the server
 
+Glances uses a [XML/RPC](http://docs.python.org/2/library/simplexmlrpcserver.html) server and can be used by another client software.
+
 ## User guide
 
 By default, stats are refreshed every second, to change this setting, you can
@@ -155,8 +169,8 @@ When Glances is running, you can press:
 * 'm' sort the processes list by process MEM
 * 'n' disable or enable the network interfaces stats
 * 'p' sort by process name
-* 'w' delete warning logs messages
-* 'x' delete warning and critical logs messages
+* 'w' delete finished warning logs messages
+* 'x' delete finished warning and critical logs messages
 * '1' switch between global CPU and per core stats
 * 'q' Exit
 
@@ -323,7 +337,6 @@ The number of processes in the list is adapted to the screen size.
 * TIME+:  Cumulative CPU time used
 * NAME: Process name or command line
 
-
 ### Logs
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/logs.png)
@@ -345,6 +358,8 @@ There is one line per alert with the following information:
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/footer.png)
 
 Glances displays the current time/date and access to the embedded help screen.
+
+On the left, you can easely seen if you are connected to a Glances server.
 
 ## Localisation
 

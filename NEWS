@@ -3,6 +3,8 @@ Version 1.5
 
     * Add a client/server mode (XMLRPC) for remote monitoring 
     * Correct a bug on process IO with non root users
+    * Add 'w' shortkey to delete finished warning message
+    * Add 'x' shortkey to delete finished warning/critical message
     * Code and memory print optimization
 
 Version 1.4.2.2
