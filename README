@@ -75,6 +75,17 @@ Then install Glances:
 	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 	$ brew pip Glances
 
+If you have the following error:
+
+    Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
+    This link will help resolve the above errors:
+    https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
+    
+Try to runs:
+
+    $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
+    $ brew link Glances
+
 ### From source
 
 Get the latest version:
@@ -137,14 +148,16 @@ When Glances is running, you can press:
     If MEM > 70%, sort by process "memory size"
 
 * 'b' switch between bit/s or byte/s for network IO
-* 'c' to sort the processes list by CPU consumption
-* 'd' Disable or enable the disk IO stats
-* 'f' Disable or enable the file system stats
-* 'l' Disable or enable the logs
-* 'm' to sort the processes list by process MEM
-* 'n' Disable or enable the network interfaces stats
-* 'p' to sort by process name
-* '1' Switch between global CPU and per core stats
+* 'c' sort the processes list by CPU consumption
+* 'd' disable or enable the disk IO stats
+* 'f' disable or enable the file system stats
+* 'l' disable or enable the logs
+* 'm' sort the processes list by process MEM
+* 'n' disable or enable the network interfaces stats
+* 'p' sort by process name
+* 'w' delete warning logs messages
+* 'x' delete warning and critical logs messages
+* '1' switch between global CPU and per core stats
 * 'q' Exit
 
 In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).

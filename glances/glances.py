@@ -98,7 +98,7 @@ class glancesLimits:
 class glancesLogs:
     """
     The main class to manage logs inside the Glances software
-    Logs is a list of list:
+    Logs is a list of list (stored in the self.logs_list var):
     [["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
       MAX, AVG, MIN, SUM, COUNT],...]
     """
@@ -215,6 +215,22 @@ class glancesLogs:
 
         return self.len()
 
+    def clean(self, critical = False):
+        """
+        Clean the log list by deleting finished item
+        By default, only delete WARNING message
+        If critical = True, also delete CRITICAL message
+        """
+        # Create a new clean list
+        clean_logs_list = []
+        while (self.len() > 0):
+            item = self.logs_list.pop()
+            if ((item[1] < 0)
+                or (not critical and item[2] == "CRITICAL")):
+                clean_logs_list.insert(0, item)
+        # The list is now the clean one
+        self.logs_list = clean_logs_list
+        return self.len()
 
 class glancesGrabFs:
     """
@@ -1094,6 +1110,12 @@ class glancesScreen:
         elif self.pressedkey == 112:
             # 'p' > Sort processes by name
             self.setProcessSortedBy('name')
+        elif self.pressedkey == 119:
+            # 'w' > Delete finished warning logs
+            logs.clean()
+        elif self.pressedkey == 120:
+            # 'x' > Delete finished warning and critical logs
+            logs.clean(critical = True)
 
         # Return the key code
         return self.pressedkey
@@ -1901,13 +1923,21 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 14, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
+                    _("w"), _("Delete finished warning logs messages"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 15, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("h"), _("Show/hide this help message"), width=width), 79)
+                    _("x"), _("Delete finished warning and critical logs"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 16, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 17, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("h"), _("Show/hide this help message"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 18, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
                 79)
