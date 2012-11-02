@@ -35,7 +35,7 @@ Pre-requisites (information for packagers):
 
 ### From package manager (very easy way)
 
-Packages exist for Arch, Fedora, Redhat, FreeBSD...
+Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...
 
 ### From PyPi (easy and cross platform way)
 
@@ -93,9 +93,25 @@ Glances use a standard GNU style installer (for a Debian like system):
 
 ## Running
 
-Easy way (that's all folks !):
+### In standalone mode
+
+If you want to monitor your local machine, just run:
 
 	$ glances
+    
+### In client/server mode
+
+If you want to remotely monitor a machine (called server) from another one (called client).
+
+Run this command on the server:
+
+    server$ glances -s
+    
+and this one on the client:
+
+    client$ glances -c @server
+
+where @server is the IP address or hostname of the server
 
 ## User guide
 
@@ -120,6 +136,7 @@ When Glances is running, you can press:
 
     If MEM > 70%, sort by process "memory size"
 
+* 'b' switch between bit/s or byte/s for network IO
 * 'c' to sort the processes list by CPU consumption
 * 'd' Disable or enable the disk IO stats
 * 'f' Disable or enable the file system stats
@@ -127,7 +144,15 @@ When Glances is running, you can press:
 * 'm' to sort the processes list by process MEM
 * 'n' Disable or enable the network interfaces stats
 * 'p' to sort by process name
+* '1' Switch between global CPU and per core stats
 * 'q' Exit
+
+In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).
+
+In client mode, you can set the TCP port of the server (-p port).
+
+Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
+        TCP port is 61209.
 
 ### Header
 
@@ -281,7 +306,7 @@ The number of processes in the list is adapted to the screen size.
    T - Traced or stopped
    Z - Zombie or "hung" process
 
-* IO READ and WRITE: Per process IO read and write
+* IO_R and IO_W: Per process IO read and write
 * TIME+:  Cumulative CPU time used
 * NAME: Process name or command line
 

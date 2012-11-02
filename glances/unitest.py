@@ -50,7 +50,6 @@ class TestGlancesStat(unittest.TestCase):
     def test_Glances_getMemSwap(self):
         self.stats.update()        
         self.assertTrue(len(self.stats.getMemSwap()) > 2)
-
         
 if __name__ == '__main__':
     unittest.main()
