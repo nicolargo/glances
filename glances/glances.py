@@ -406,11 +406,13 @@ class glancesStats:
         # Host information
         # Only for client
         if (self.client_tag):
-            self.host = input_stats["host"]
+            if input_stats != {}:
+                self.host = input_stats["host"]
 
         # CPU
         if (self.client_tag):
-            self.cpu = input_stats["cpu"]
+            if input_stats != {}:
+                self.cpu = input_stats["cpu"]
         else:
             if not hasattr(self, 'cputime_old'):            
                 self.cputime_old = psutil.cpu_times()
@@ -465,7 +467,8 @@ class glancesStats:
 
         # PerCPU
         if (self.client_tag):
-            self.percpu = input_stats["percpu"]
+            if input_stats != {}:
+                self.percpu = input_stats["percpu"]
         else:
             if not hasattr(self, 'percputime_old'):            
                 self.percputime_old = psutil.cpu_times(percpu = True)
@@ -536,7 +539,8 @@ class glancesStats:
 
         # LOAD
         if (self.client_tag):
-            self.load = input_stats["load"]
+            if input_stats != {}:
+                self.load = input_stats["load"]
         else:
             if hasattr(os, 'getloadavg'): 
                 getload = os.getloadavg()
@@ -550,8 +554,9 @@ class glancesStats:
 
         # MEM
         if (self.client_tag):
-            self.mem = input_stats["mem"]
-            self.memswap = input_stats["memswap"]
+            if input_stats != {}:
+                self.mem = input_stats["mem"]
+                self.memswap = input_stats["memswap"]
         else:
             if psutil_mem_vm:
                 # If PsUtil 0.6+
@@ -602,7 +607,8 @@ class glancesStats:
 
         # NET
         if (self.client_tag):
-            self.network = input_stats["network"]
+            if input_stats != {}:
+                self.network = input_stats["network"]
         else:
             if psutil_network_io_tag:
                 self.network = []
@@ -630,7 +636,8 @@ class glancesStats:
 
         # DISK I/O
         if (self.client_tag):
-            self.diskio = input_stats["diskio"]
+            if input_stats != {}:
+                self.diskio = input_stats["diskio"]
         else:
             if psutil_disk_io_tag:
                 self.diskio = []
@@ -660,7 +667,8 @@ class glancesStats:
 
         # FILE SYSTEM
         if (self.client_tag):
-            self.fs = input_stats["fs"]
+            if input_stats != {}:
+                self.fs = input_stats["fs"]
         else:
             if psutil_fs_usage_tag:
                 self.fs = self.glancesgrabfs.get()
@@ -671,8 +679,9 @@ class glancesStats:
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
         if (self.client_tag):
-            self.processcount = input_stats["processcount"]
-            self.process = input_stats["process"]
+            if input_stats != {}:
+                self.processcount = input_stats["processcount"]
+                self.process = input_stats["process"]
             self.process_list_refresh = True
         else:
             if self.process_list_refresh:
@@ -730,7 +739,8 @@ class glancesStats:
 
         # Get the number of core (CPU) (Used to display load alerts)
         if (self.client_tag):
-            self.core_number = input_stats["core_number"]
+            if input_stats != {}:
+                self.core_number = input_stats["core_number"]
         else:
             self.core_number = psutil.NUM_CPUS
             if (self.server_tag):
@@ -793,6 +803,9 @@ class glancesStats:
         """
         Return the sorted process list
         """
+
+        if self.process == {}:
+            return self.process
 
         sortedReverse = True
         if sortedby == 'auto':
@@ -1816,7 +1829,7 @@ class glancesScreen:
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (client_tag):
-            msg_client = _("Connected to:")+" "+format(server_ip)
+            msg_client = _("Connected to")+" "+format(server_ip)
         msg_help = _("Press 'h' for help")
         if (client_tag):        
             if (screen_y > self.caption_y and
@@ -2206,14 +2219,28 @@ class GlancesClient():
     """    
 
     def __init__(self, server_address, server_port = 61209):
-        self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
+        try:
+            self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
+        except:
+            print _("Error: creating client socket http://%s:%d") % (server_address, server_port)
         return
             
     def client_init(self):
-        return __version__[:3] == self.client.init()[:3]
+        try:
+            client_version = self.client.init()[:3]
+        except:
+            print _("Error: Init / Connection to server failed")
+            sys.exit(-1)
+        else:
+            return __version__[:3] == client_version
 
     def client_get(self):
-        return json.loads(self.client.getAll())
+        try:
+            stats = json.loads(self.client.getAll())
+        except:
+            return {}
+        else:
+            return stats 
 
 
 # Global def
