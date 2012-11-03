@@ -1,9 +1,9 @@
-.TH glances 1  "October, 2012" "version 1.4.2.1" "USER COMMANDS"
+.TH glances 1  "November, 2012" "version 1.5" "USER COMMANDS"
 .SH NAME
 glances \- CLI curses based monitoring tool
 .SH SYNOPSIS
 .B glances
-[\-h] [\-t refresh] [\-v]
+[\-bdhmnsv] [\-t refresh] [\-B bind] [\-c server] [\-p port] [\-o output] [\-f file]
 .SH DESCRIPTION
 Glances is a free (LGPL) curses-based  monitoring tool which aims to present a maximum of information
 in a minimum of space, ideally to fit in a classical 80x24 terminal. Glances can adapt dynamicaly the
@@ -14,6 +14,8 @@ This tool is written in Python and uses PsUtil to fetch the statistical values f
 You can use the following keys to sort the processesi list:
 .PP
 	'a' to set the automatic mode. The process list is sorted automatically
+.PP
+	'b' to switch between bit/s or byte/s for network IO
 .PP
 	'c' the processes list is sorted by CPU consomption
 .PP
@@ -29,7 +31,15 @@ You can use the following keys to sort the processesi list:
 .PP
 	'n' Disable or enable the network interfaces stats
 .PP
+	'p' The processes list is sorted by process name
+.PP
+	'w' Delete finished warning logs messages
+.PP
+	'x' Delete finished warning and critical logs
+.PP
 	'q' Exit
+.PP
+	'1' Switch between global CPU and per core stats
 .PP
 The current version grab the following stats: CPU, Load, Memory, Network rate, Disk IO, file system,
 process number and details.
@@ -38,6 +48,12 @@ process number and details.
 .TP
 \-b
 Display network rate in Byte per second
+.TP
+\-B bind
+Bind server to the given IP or host NAME
+.TP
+\-c server
+Connect to a Glances server (IP address or hostname)
 .TP
 \-d
 Disable disk I/O module
@@ -56,6 +72,12 @@ Disable network module
 .TP
 \-o output
 Define additional output (available: HTML or CSV)
+.TP
+\-p port
+Define the client or server TCP port (default: 61209)
+.TP
+\-s
+Run Glances in server mode
 .TP
 \-t sec
 Set the refresh time in seconds (default: 2)

@@ -2256,7 +2256,7 @@ def printSyntax():
     print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]"))
     print("")
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
-    print(_("\t -B IP|NAME\tBind server to the given IP or host NAME"))
+    print(_("\t-B IP|NAME\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
