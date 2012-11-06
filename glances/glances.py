@@ -34,7 +34,13 @@ import signal
 import time
 from datetime import datetime, timedelta
 import gettext
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler        
+try:
+    # For Python v2.x
+    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+except:
+    # For Python v3.x
+    from xmlrpc.server import SimpleXMLRPCRequestHandler
+        
 
 # International
 #==============
@@ -2273,14 +2279,15 @@ class GlancesClient():
         try:
             self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
         except:
-            print _("Error: creating client socket http://%s:%d") % (server_address, server_port)        
+            print(_("Error: creating client socket http://%s:%d") % (server_address, server_port))
+            pass
         return
             
     def client_init(self):
         try:
             client_version = self.client.init()[:3]
         except:
-            print _("Error: Connection to server failed")
+            print(_("Error: Connection to server failed"))
             sys.exit(-1)
         else:
             return __version__[:3] == client_version
@@ -2594,7 +2601,12 @@ if __name__ == "__main__":
         
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
-        from SimpleXMLRPCServer import SimpleXMLRPCServer
+        try:
+            # For Python v2.x
+            from SimpleXMLRPCServer import SimpleXMLRPCServer
+        except:
+            # For Python v3.x
+            from xmlrpc.server import SimpleXMLRPCServer
         import json
         import collections
 
