@@ -2192,40 +2192,54 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
     Main XMLRPC handler
     """
     rpc_paths = ('/RPC2',)
+        
+    def log_message(self, format, *args):
+        # No message displayed on the server side
+        pass
 
 
 class GlancesInstance():
     """
     All the methods of this class are published as XML RPC methods
-    """
+    """    
+
+    def __init__(self, refresh_time = 1):
+        self.timer = Timer(0)
+        self.refresh_time = refresh_time
+    
+    def __update__(self):
+        # Never update more than 1 time per refresh_time
+        if self.timer.finished():
+            stats.update() 
+        self.timer = Timer(self.refresh_time)
     
     def init(self):
-        # Return the Glances version
+        # Return the Glances version        
         return __version__ 
-    
+            
     def getAll(self):
         # Update and return all the stats
-        stats.update()
+        self.__update__()
         return json.dumps(stats.getAll())
     
     def getCpu(self):
         # Update and return CPU stats
-        stats.update()
+        self.__update__()
         return json.dumps(stats.getCpu())
 
     def getLoad(self):
         # Update and return LOAD stats
-        stats.update()
+        self.__update__()
         return json.dumps(stats.getLoad())
 
     def getMem(self):
         # Update and return MEM stats
-        stats.update()
+        self.__update__()
         return json.dumps(stats.getMem())
 
     def getMemSwap(self):
         # Update and return MEMSWAP stats
-        stats.update()
+        self.__update__()
         return json.dumps(stats.getMemSwap())
 
 
@@ -2234,11 +2248,13 @@ class GlancesServer():
     This class creates and manages the TCP client
     """    
 
-    def __init__(self, bind_address, bind_port = 61209, RequestHandler = GlancesHandler):
+    def __init__(self, bind_address, bind_port = 61209, 
+                 RequestHandler = GlancesHandler, 
+                 refresh_time = 1):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
                                     requestHandler = RequestHandler)
         self.server.register_introspection_functions()
-        self.server.register_instance(GlancesInstance())
+        self.server.register_instance(GlancesInstance(refresh_time))
         return
     
     def serve_forever(self):
@@ -2257,7 +2273,7 @@ class GlancesClient():
         try:
             self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
         except:
-            print _("Error: creating client socket http://%s:%d") % (server_address, server_port)
+            print _("Error: creating client socket http://%s:%d") % (server_address, server_port)        
         return
             
     def client_init(self):
@@ -2583,8 +2599,8 @@ if __name__ == "__main__":
         import collections
 
         # Init the server
-        print(_("Glances is listenning on %s:%s") % (bind_ip, server_port))
-        server = GlancesServer(bind_ip, server_port, GlancesHandler)
+        print(_("Glances server is running on %s:%s") % (bind_ip, server_port))
+        server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
         # Init stats
         stats = glancesStats(server_tag = True) 
