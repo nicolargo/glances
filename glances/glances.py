@@ -1140,7 +1140,15 @@ class glancesScreen:
         curses.curs_set(1)
         curses.endwin()
 
-    def display(self, stats):
+    def display(self, stats, cs_status = "None"):
+        """
+        Display stats on the screen
+        cs_status:
+            "None": standalone or server mode
+            "Connected": Client is connected to the server
+            "Disconnected": Client is disconnected from the server 
+        """
+             
         # Get stats for processes (used in another functions for logs)
         processcount = stats.getProcessCount()
         processlist = stats.getProcessList(screen.getProcessSortedBy())
@@ -1158,7 +1166,7 @@ class glancesScreen:
         log_count = self.displayLog(self.network_y + network_count +
                                     diskio_count + fs_count)
         self.displayProcess(processcount, processlist, log_count)
-        self.displayCaption()
+        self.displayCaption(cs_status = cs_status)
         self.displayNow(stats.getNow())
         self.displayHelp()
 
@@ -1166,14 +1174,29 @@ class glancesScreen:
         # Erase the content of the screen
         self.term_window.erase()
 
-    def flush(self, stats):
-        # Flush display
+    def flush(self, stats, cs_status = "None"):
+        """
+        Clear and update screen
+        cs_status:
+            "None": standalone or server mode
+            "Connected": Client is connected to the server
+            "Disconnected": Client is disconnected from the server 
+        """
+             # Flush display
         self.erase()
-        self.display(stats)
+        self.display(stats, cs_status = cs_status)
 
-    def update(self, stats):
+    def update(self, stats, cs_status = "None"):
+        """
+        Update the screen and wait __refresh_time sec / catch key every 100 ms
+        cs_status:
+            "None": standalone or server mode
+            "Connected": Client is connected to the server
+            "Disconnected": Client is disconnected from the server 
+        """
+        
         # flush display
-        self.flush(stats)
+        self.flush(stats, cs_status = cs_status)
 
         # Wait
         countdown = Timer(self.__refresh_time)
@@ -1181,7 +1204,7 @@ class glancesScreen:
             # Getkey
             if self.__catchKey() > -1:
                 # flush display
-                self.flush(stats)
+                self.flush(stats, cs_status = cs_status)
             # Wait 100ms...
             curses.napms(100)
 
@@ -1824,20 +1847,32 @@ class glancesScreen:
                                          process_x + process_name_x,
                                          command, max_process_name)
 
-    def displayCaption(self):
+    def displayCaption(self, cs_status = "None"):
+        """
+        Display the caption (bottom left)
+        cs_status:
+            "None": standalone or server mode
+            "Connected": Client is connected to the server
+            "Disconnected": Client is disconnected from the server 
+        """
+
         # Caption
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (client_tag):
-            msg_client = _("Connected to")+" "+format(server_ip)
+            if (cs_status.lower() == "connected"):
+                msg_client = _("Connected to")+" "+format(server_ip)
+                msg_client_style = self.default_color2 if self.hascolors else curses.A_UNDERLINE
+            elif (cs_status.lower() == "disconnected"):
+                msg_client = _("Disconnected from")+" "+format(server_ip)
+                msg_client_style = self.ifCRITICAL_color2 if self.hascolors else curses.A_UNDERLINE
         msg_help = _("Press 'h' for help")
         if (client_tag):        
             if (screen_y > self.caption_y and
                 screen_x > self.caption_x + len(msg_client)):
                 self.term_window.addnstr(max(self.caption_y, screen_y - 1),
                                         self.caption_x, msg_client, len(msg_client),
-                                        self.title_color if self.hascolors else
-                                        curses.A_UNDERLINE)
+                                        msg_client_style)
             if (screen_x > self.caption_x + len(msg_client)+3+len(msg_help)):
                 self.term_window.addnstr(max(self.caption_y, screen_y - 1),
                                         self.caption_x+len(msg_client), " | "+msg_help, 3+len(msg_help))                
@@ -2229,7 +2264,7 @@ class GlancesClient():
         try:
             client_version = self.client.init()[:3]
         except:
-            print _("Error: Init / Connection to server failed")
+            print _("Error: Connection to server failed")
             sys.exit(-1)
         else:
             return __version__[:3] == client_version
@@ -2612,11 +2647,16 @@ if __name__ == "__main__":
     elif client_tag:
         # Start the client (CLI) loop
         while True:           
-            # Get server system informations            
-            stats.update(client.client_get())
+            # Get server system informations
+            server_stats = client.client_get()
+            if server_stats == {}:
+                server_status = "Disconnected"
+            else:
+                server_status = "Connected"
+                stats.update(server_stats)
 
             # Update the screen
-            screen.update(stats)
+            screen.update(stats, cs_status = server_status)
     else:
         # Start the standalone (CLI) loop
         while True:
