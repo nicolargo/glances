@@ -26,6 +26,8 @@ __licence__ = "LGPL"
 # Libraries
 #==========
 
+# Standard lib
+
 import os
 import sys
 import platform
@@ -34,18 +36,51 @@ import signal
 import time
 from datetime import datetime, timedelta
 import gettext
+
+# Selective lib
+
 try:
     # For Python v2.x
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
 except:
     # For Python v3.x
     from xmlrpc.server import SimpleXMLRPCRequestHandler
-        
+    from xmlrpc.server import SimpleXMLRPCServer
+import json
+import collections
+import xmlrpclib
+
+if platform.system() != 'Windows':
+    # Only import curses for non Windows OS
+    # Curses did not exist on Windows OS (shame on it)
+    try:
+        import curses
+        import curses.panel
+    except ImportError:
+        print(_('Curses module not found. Glances cannot start.'))
+        print()
+        sys.exit(1)        
+
+try:
+    import psutil
+except ImportError:
+    print(_('PsUtil module not found. Glances cannot start.'))
+    print()
+    print(_('On Ubuntu 12.04 or higher:'))
+    print(_('$ sudo apt-get install python-psutil'))
+    print()
+    print(_('To install PsUtil using pip (as root):'))
+    print(_('# pip install psutil'))
+    print()
+    sys.exit(1)
+
 
 # International
 #==============
 
 gettext.install(__appname__)
+
 
 # Classes
 #========
@@ -2354,12 +2389,7 @@ def signal_handler(signal, frame):
     end()
 
 
-# Main
-#=====
-
-
-if __name__ == "__main__":
-
+def main():
     # Glances - Init stuff
     ######################
 
@@ -2367,6 +2397,8 @@ if __name__ == "__main__":
     global limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
+    global psutil_get_cpu_percent_tag, psutil_get_io_counter_tag, psutil_mem_usage_tag
+    global psutil_mem_vm, psutil_fs_usage_tag, psutil_disk_io_tag, psutil_network_io_tag
     global refresh_time, client, server, server_port, server_ip
 
     # Set default tags
@@ -2501,19 +2533,6 @@ if __name__ == "__main__":
     # Catch CTRL-C
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Optimization of the import step
-    # Only usefull lib are imported in order to reduce the memory print
-    if not server_tag:
-        # Do not load curses lib for server
-        try:
-            import curses
-            import curses.panel
-        except ImportError:
-            print(_('Curses module not found. Glances cannot start.'))
-            print(_('Glances requires at least Python 2.6 or higher.'))
-            print()
-            sys.exit(1)
-
     if client_tag:
         psutil_get_cpu_percent_tag = True
         psutil_get_io_counter_tag = True
@@ -2523,20 +2542,6 @@ if __name__ == "__main__":
         psutil_disk_io_tag = True
         psutil_network_io_tag = True
     else:
-        # Do not load psutil lib for client
-        try:
-            import psutil
-        except ImportError:
-            print(_('PsUtil module not found. Glances cannot start.'))
-            print()
-            print(_('On Ubuntu 12.04 or higher:'))
-            print(_('$ sudo apt-get install python-psutil'))
-            print()
-            print(_('To install PsUtil using pip (as root):'))
-            print(_('# pip install psutil'))
-            print()
-            sys.exit(1)
-
         try:
             # get_cpu_percent method only available with PsUtil 0.2.0+
             psutil.Process(os.getpid()).get_cpu_percent(interval=0)
@@ -2601,15 +2606,6 @@ if __name__ == "__main__":
         
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
-        try:
-            # For Python v2.x
-            from SimpleXMLRPCServer import SimpleXMLRPCServer
-        except:
-            # For Python v3.x
-            from xmlrpc.server import SimpleXMLRPCServer
-        import json
-        import collections
-
         # Init the server
         print(_("Glances server is running on %s:%s") % (bind_ip, server_port))
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
@@ -2617,10 +2613,6 @@ if __name__ == "__main__":
         # Init stats
         stats = glancesStats(server_tag = True) 
     elif client_tag:
-        import xmlrpclib
-        import json
-        import collections
-
         # Init the client (displaying server stat in the CLI)
         
         client = GlancesClient(server_ip, server_port)
@@ -2701,5 +2693,12 @@ if __name__ == "__main__":
             # Update the CSV output
             if csv_tag:
                 csvoutput.update(stats)
+
+# Main
+#=====
+
+if __name__ == "__main__":
+    main()
+
 
 # The end...
