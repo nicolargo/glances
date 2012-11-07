@@ -66,7 +66,7 @@
 <li>python-jinja2 2.0+ (optional for HTML export)</li>
 </ul><h3>From package manager (very easy way)</h3>
 
-<p>Packages exist for Arch, Fedora, Redhat, FreeBSD...</p>
+<p>Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...</p>
 
 <h3>From PyPi (easy and cross platform way)</h3>
 
@@ -74,17 +74,18 @@
 
 <p>You first need to install pypi on your system. For example on Debian/Ubuntu:</p>
 
-<pre><code>$ sudo apt-get install python-pip build-essential python-dev
+<pre><code>$ sudo apt-get update
+$ sudo apt-get install python-pip build-essential python-dev
 </code></pre>
 
 <p>Then install the latest Glances version:</p>
 
-<pre><code>$ sudo pip install glances
+<pre><code>$ sudo pip install Glances
 </code></pre>
 
 <p>Note: if you are behind an HTTP Proxy, you should use</p>
 
-<pre><code>$ sudo pip install --proxy=user:password@url:port glances
+<pre><code>$ sudo pip install --proxy=user:password@url:port Glances
 </code></pre>
 
 <h3>From PPA (easy way for Ubuntu/Mint...)</h3>
@@ -111,17 +112,44 @@ $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 $ brew pip Glances
 </code></pre>
 
+<p>If you have the following error:</p>
+
+<pre><code>Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
+This link will help resolve the above errors:
+https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
+</code></pre>
+
+<p>Try to runs:</p>
+
+<pre><code>$ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
+$ brew link Glances
+</code></pre>
+
+<h3>Concerning Windows operating system</h3>
+
+<p>Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode. </p>
+
+<p>To install Glances on you system:</p>
+
+<pre><code>* Install [Python for Windows](http://www.python.org/getit/)
+* Install the [PsUtil lib](https://code.google.com/p/psutil/downloads/list)
+* Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
+</code></pre>
+
+<p>I need contributors to package Glances for Windows (for exemple using <a href="http://www.pyinstaller.org/">PyInstaller</a>).</p>
+
 <h3>From source</h3>
 
-<p>Get the latest version:</p>
+<p>Get the latest version (form GitHub):</p>
 
-<pre><code>$ rm -rf /tm/nicolargo-glances-* 
+<pre><code>$ rm -rf /tmp/nicolargo-glances-* 
 $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 </code></pre>
 
 <p>Glances use a standard GNU style installer (for a Debian like system):</p>
 
-<pre><code>$ sudo apt-get install python-setuptools build-essential python-dev
+<pre><code>$ sudo apt-get update
+$ sudo apt-get install python-setuptools build-essential python-dev
 $ cd /tmp
 $ tar zxvf glances-last.tgz
 $ cd nicolargo-glances-*
@@ -130,10 +158,30 @@ $ sudo python setup.py install
 
 <h2>Running</h2>
 
-<p>Easy way (that's all folks !):</p>
+<h3>In standalone mode</h3>
+
+<p>If you want to monitor your local machine, just run:</p>
 
 <pre><code>$ glances
 </code></pre>
+
+<h3>In client/server mode</h3>
+
+<p>If you want to remotely monitor a machine (called server) from another one (called client).</p>
+
+<p>Run this command on the server:</p>
+
+<pre><code>server$ glances -s
+</code></pre>
+
+<p>and this one on the client:</p>
+
+<pre><code>client$ glances -c @server
+</code></pre>
+
+<p>where <a href="https://github.com/server" class="user-mention">@server</a> is the IP address or hostname of the server</p>
+
+<p>Glances uses a <a href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML/RPC</a> server and can be used by another client software.</p>
 
 <h2>User guide</h2>
 
@@ -161,15 +209,26 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 
 <p>If MEM &gt; 70%, sort by process "memory size"</p>
 </li>
-<li><p>'c' to sort the processes list by CPU consumption</p></li>
-<li><p>'d' Disable or enable the disk IO stats</p></li>
-<li><p>'f' Disable or enable the file system stats</p></li>
-<li><p>'l' Disable or enable the logs</p></li>
-<li><p>'m' to sort the processes list by process MEM</p></li>
-<li><p>'n' Disable or enable the network interfaces stats</p></li>
-<li><p>'p' to sort by process name</p></li>
+<li><p>'b' switch between bit/s or byte/s for network IO</p></li>
+<li><p>'c' sort the processes list by CPU consumption</p></li>
+<li><p>'d' disable or enable the disk IO stats</p></li>
+<li><p>'f' disable or enable the file system stats</p></li>
+<li><p>'l' disable or enable the logs</p></li>
+<li><p>'m' sort the processes list by process MEM</p></li>
+<li><p>'n' disable or enable the network interfaces stats</p></li>
+<li><p>'p' sort by process name</p></li>
+<li><p>'w' delete finished warning logs messages</p></li>
+<li><p>'x' delete finished warning and critical logs messages</p></li>
+<li><p>'1' switch between global CPU and per core stats</p></li>
 <li><p>'q' Exit</p></li>
-</ul><h3>Header</h3>
+</ul><p>In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).</p>
+
+<p>In client mode, you can set the TCP port of the server (-p port).</p>
+
+<p>Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
+        TCP port is 61209.</p>
+
+<h3>Header</h3>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/header.png" alt="screenshot"></p>
 
@@ -323,7 +382,7 @@ S - Sleeping (may be interrupted)
 T - Traced or stopped
 Z - Zombie or "hung" process</p>
 </li>
-<li><p>IO READ and WRITE: Per process IO read and write</p></li>
+<li><p>IO_R and IO_W: Per process IO read and write</p></li>
 <li><p>TIME+:  Cumulative CPU time used</p></li>
 <li><p>NAME: Process name or command line</p></li>
 </ul><h3>Logs</h3>
@@ -348,13 +407,30 @@ Z - Zombie or "hung" process</p>
 
 <p>Glances displays the current time/date and access to the embedded help screen.</p>
 
+<p>If you have ran Glances in client mode (-c), you can also see if the client is connected to the server.</p>
+
+<p>If client is connected:</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/client-connected.png" alt="screenshot"></p>
+
+<p>else:</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/client-disconnected.png" alt="screenshot"></p>
+
+<p>On the left, you can easely seen if you are connected to a Glances server.</p>
+
 <h2>Localisation</h2>
 
-<p>To generate french locale execute as root or sudo :
-i18n_francais_generate.sh</p>
+<p>Glances localization files exist for:</p>
 
-<p>To generate spanish locale execute as root or sudo :
-i18n_espanol_generate.sh</p>
+<ul>
+<li>English (default langage)</li>
+<li>French</li>
+<li>Spanish</li>
+<li>Portugal</li>
+</ul><p>Feel free to contribute !</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png" alt="screenshot"></p>
         </section>
 
         <footer>
