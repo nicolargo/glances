@@ -1851,14 +1851,20 @@ class glancesScreen:
                 # TIME+
                 if tag_proc_time:
                     process_time = processlist[processes]['cpu_times']
-                    dtime = timedelta(seconds=sum(process_time))
-                    dtime = "{0}:{1}.{2}".format(
-                                str(dtime.seconds // 60 % 60).zfill(2),
-                                str(dtime.seconds % 60).zfill(2),
-                                str(dtime.microseconds)[:2])
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 52,
-                        dtime, 8)
+                    try:                        
+                        dtime = timedelta(seconds=sum(process_time))
+                    except:
+                        # Catched on some Amazon EC2 server
+                        # See https://github.com/nicolargo/glances/issues/87
+                        tag_proc_time = False
+                    else:
+                        dtime = "{0}:{1}.{2}".format(
+                                    str(dtime.seconds // 60 % 60).zfill(2),
+                                    str(dtime.seconds % 60).zfill(2),
+                                    str(dtime.microseconds)[:2])
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 52,
+                            dtime, 8)
                 # IO
                 if tag_io:
                     if processlist[processes]['io_counters'] == {}:
