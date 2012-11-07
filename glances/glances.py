@@ -1867,24 +1867,27 @@ class glancesScreen:
                             dtime, 8)
                 # IO
                 if tag_io:
-                    if processlist[processes]['io_counters'] == {}:
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 62,
-                            _("A_DENY"), 6)
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 70,
-                            _("A_DENY"), 6)
-                    else:
-                        # Processes are only refresh every 2 refresh_time
-                        #~ elapsed_time = max(1, self.__refresh_time) * 2
-                        io_read = processlist[processes]['io_counters'][2]
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 62,
-                            self.__autoUnit(io_read), 6)
-                        io_write = processlist[processes]['io_counters'][3]
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 70,
-                            self.__autoUnit(io_write), 6)
+                    try:
+                        if  processlist[processes]['io_counters'] == {}:
+                            self.term_window.addnstr(
+                                self.process_y + 3 + processes, process_x + 62,
+                                _("A_DENY"), 6)
+                            self.term_window.addnstr(
+                                self.process_y + 3 + processes, process_x + 70,
+                                _("A_DENY"), 6)
+                        else:
+                            # Processes are only refresh every 2 refresh_time
+                            #~ elapsed_time = max(1, self.__refresh_time) * 2
+                            io_read = processlist[processes]['io_counters'][2]
+                            self.term_window.addnstr(
+                                self.process_y + 3 + processes, process_x + 62,
+                                self.__autoUnit(io_read), 6)
+                            io_write = processlist[processes]['io_counters'][3]
+                            self.term_window.addnstr(
+                                self.process_y + 3 + processes, process_x + 70,
+                                self.__autoUnit(io_write), 6)
+                    except:
+                        pass
                         
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
