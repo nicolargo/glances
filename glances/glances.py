@@ -74,7 +74,20 @@ except ImportError:
     print(_('# pip install psutil'))
     print()
     sys.exit(1)
-
+    
+try:
+    psutil.disk_io_counters()
+except:
+    print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
+    print()
+    print(_('On Ubuntu 12.04 or higher:'))
+    print(_('$ sudo apt-get install python-psutil'))
+    print()
+    print(_('To install PsUtil using pip (as root):'))
+    print(_('# pip install psutil'))
+    print()
+    sys.exit(1)
+    
 
 # International
 #==============
