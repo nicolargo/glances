@@ -421,12 +421,12 @@ class glancesStats:
         procstat['pid'] = proc.pid
         procstat['username'] = proc.username
 
-        if hasattr(proc, 'nice'):
-            # Deprecated in PsUtil 0.5.0
-            procstat['nice'] = proc.nice
-        elif hasattr(proc, 'get_nice'):
-            # Specific for PsUtil 0.5.0+
+        if hasattr(proc, 'get_nice'):
+            # Deprecated in PsUtil 0.5.0+
             procstat['nice'] = proc.get_nice()
+        elif hasattr(proc, 'nice'):
+            # Else
+            procstat['nice'] = proc.nice()
         else:
             # Never here...
             procstat['nice'] = 0
