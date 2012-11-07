@@ -1582,9 +1582,14 @@ class glancesScreen:
             mounted = 0
             fs_num = min(screen_y - self.fs_y - 3, len(fs))
             for mounted in range(0, fs_num):
-                self.term_window.addnstr(
-                    self.fs_y + 1 + mounted,
-                    self.fs_x, fs[mounted]['mnt_point'], 8)
+                if len(fs[mounted]['mnt_point']) > 8:
+                    self.term_window.addnstr(
+                        self.fs_y + 1 + mounted,
+                        self.fs_x, '_'+fs[mounted]['mnt_point'][-7:], 8)
+                else:
+                    self.term_window.addnstr(
+                        self.fs_y + 1 + mounted,
+                        self.fs_x, fs[mounted]['mnt_point'], 8)
                 self.term_window.addnstr(
                     self.fs_y + 1 + mounted,
                     self.fs_x + 10, self.__autoUnit(fs[mounted]['size']), 8)
