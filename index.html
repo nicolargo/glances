@@ -3,32 +3,37 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-
     <title>Glances by nicolargo</title>
   </head>
 
   <body>
-    <header>
+    <div id="container">
       <div class="inner">
-        <h1>Glances</h1>
-        <h2>Glances an Eye on your system</h2>
-        <a href="https://github.com/nicolargo/glances" class="button"><small>View project on</small>GitHub</a>
-      </div>
-    </header>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
+        <header>
+          <h1>Glances</h1>
+          <h2>Glances an Eye on your system</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/nicolargo/glances/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/nicolargo/glances/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/nicolargo/glances" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
           <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this git repo"></a></p>
+
+<h1></h1>
 
 <h1>Glances -- Eye on your system</h1>
 
@@ -50,38 +55,26 @@
 
 <h2>Installation</h2>
 
-<h3>From packets manager (clean and easy way)</h3>
+<p>Pre-requisites (information for packagers):</p>
 
 <ul>
-<li>ArchLinux: <a href="http://aur.archlinux.org/packages.php?ID=54666">In the AUR repository</a></li>
-<li>CentOS: <a href="https://github.com/nicolargo/glances/wiki/Install:-On-CentOS-6.x-with-EPEL-repository">Using EPEL and Pip</a></li>
-<li><a href="http://packages.qa.debian.org/g/glances.html">Debian Sid</a></li>
-<li><a href="https://apps.fedoraproject.org/packages/glances">Fedora</a></li>
-<li><a href="http://www.freebsd.org/cgi/query-pr.cgi?pr=171517">FreeBSD</a></li>
-<li><a href="http://packages.gentoo.org/package/sys-process/glances">Gentoo</a></li>
-<li><a href="http://rpm.pbone.net/">Redhat</a></li>
-<li><a href="https://launchpad.net/~arnaud-hartmann/+archive/glances-stable">Ubuntu (see instructions bellow)</a></li>
-</ul>
+<li>Python 2.6+ (not tested with Python 3+)</li>
+<li>build-essential (for installation via Pypi and setup.py)</li>
+<li>python-dev (for installation via Pypi)</li>
+<li>python-setuptools (for the installation via setup.py)</li>
+<li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
+<li>python-jinja2 2.0+ (optional for HTML export)</li>
+</ul><h3>From package manager (very easy way)</h3>
 
-<p>Note: Packets are maintained by contibutors. It's not sure to have the latest Glances version.</p>
+<p>Packages exist for Arch, Fedora, Redhat, FreeBSD...</p>
 
 <h3>From PyPi (easy and cross platform way)</h3>
 
 <p>PyPi is an official Python package manager.</p>
 
-<p>You first need to install pypi on your system.</p>
+<p>You first need to install pypi on your system. For example on Debian/Ubuntu:</p>
 
-<p>For example on Debian/Ubuntu:</p>
-
-<pre><code>$ sudo apt-get update
-$ sudo apt-get install python-pip build-essential python-dev
-</code></pre>
-
-<p>or for CentOS/Fedora/RH:</p>
-
-<pre><code>
-$ sudo rpm -ivh http://fr2.rpmfind.net/linux/epel/6/x86_64/epel-release-6-7.noarch.rpm
-$ sudo yum install python-pip python-dev
+<pre><code>$ sudo apt-get install python-pip build-essential python-dev
 </code></pre>
 
 <p>Then install the latest Glances version:</p>
@@ -92,11 +85,6 @@ $ sudo yum install python-pip python-dev
 <p>Note: if you are behind an HTTP Proxy, you should use</p>
 
 <pre><code>$ sudo pip install --proxy=user:password@url:port glances
-</code></pre>
-
-<p>If you want to upgrade Glances to the latest version:</p>
-
-<pre><code>$ sudo pip install --upgrade glances
 </code></pre>
 
 <h3>From PPA (easy way for Ubuntu/Mint...)</h3>
@@ -116,10 +104,6 @@ $ sudo apt-get update
 <pre><code>$ sudo apt-get install glances
 </code></pre>
 
-<h3>From our Puppet Master</h3>
-
-<p>Remi Verchere has created <a href="https://github.com/rverchere/puppet-glances">a Glances module for Puppet</href>.</p>
-
 <h3>From <a href="http://mxcl.github.com/homebrew/">Homebrew</a> via PyPi (OS X)</h3>
 
 <pre><code>$ brew install brew-pip
@@ -131,30 +115,18 @@ $ brew pip Glances
 
 <p>Get the latest version:</p>
 
-<pre><code>$ rm -rf /tmp/nicolargo-glances-* 
+<pre><code>$ rm -rf /tm/nicolargo-glances-* 
 $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 </code></pre>
 
 <p>Glances use a standard GNU style installer (for a Debian like system):</p>
 
-<pre><code>$ sudo apt-get update
-$ sudo apt-get install python-setuptools build-essential python-dev
+<pre><code>$ sudo apt-get install python-setuptools build-essential python-dev
 $ cd /tmp
 $ tar zxvf glances-last.tgz
 $ cd nicolargo-glances-*
 $ sudo python setup.py install
 </code></pre>
-
-<p>Pre-requisites (information for packagers):</p>
-
-<ul>
-<li>Python 2.6+ (not tested with Python 3+)</li>
-<li>build-essential (for installation via Pypi and setup.py)</li>
-<li>python-dev (for installation via Pypi)</li>
-<li>python-setuptools (for the installation via setup.py)</li>
-<li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
-<li>python-jinja2 2.0+ (optional for HTML export)</li>
-</ul>
 
 <h2>Running</h2>
 
@@ -209,7 +181,11 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu.png" alt="screenshot"></p>
 
-<p>Long view (only available if your terminal is wide enough). The CPU stats are shown as a percentage and for the configured refresh
+<p>Long view (only available if your terminal is wide enough)</p>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png" alt="screenshot"></p>
+
+<p>The CPU stats are shown as a percentage and for the configured refresh
 time. The total CPU usage is displayed on the first line.</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/percpu.png" alt="screenshot"></p>
@@ -372,29 +348,21 @@ Z - Zombie or "hung" process</p>
 
 <p>Glances displays the current time/date and access to the embedded help screen.</p>
 
-<center>
-  <p><img src="https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png" alt="screenshot"></p>
-</center>
+<h2>Localisation</h2>
+
+<p>To generate french locale execute as root or sudo :
+i18n_francais_generate.sh</p>
+
+<p>To generate spanish locale execute as root or sudo :
+i18n_espanol_generate.sh</p>
         </section>
 
-        <aside id="sidebar">
-          <a href="https://github.com/nicolargo/glances/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/nicolargo/glances/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+        <footer>
+          Glances is maintained by <a href="https://github.com/nicolargo">nicolargo</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
 
-          <p class="repo-owner"><a href="https://github.com/nicolargo/glances"></a> is maintained by <a href="https://github.com/nicolargo">nicolargo</a>.</p>
-
-          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
-    </div>
-
-            <script type="text/javascript">
+                  <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -405,5 +373,7 @@ Z - Zombie or "hung" process</p>
             } catch(err) {}
           </script>
 
+      </div>
+    </div>
   </body>
 </html>
