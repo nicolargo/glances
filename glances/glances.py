@@ -19,7 +19,7 @@
 #
 
 __appname__ = 'glances'
-__version__ = "1.5b"
+__version__ = "1.5"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 

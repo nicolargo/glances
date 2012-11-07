@@ -1,7 +1,9 @@
 
-n.n.n / 2012-11-07 
-==================
+1.5 / 2012-11-07 
+================
 
+  * Check PsUtil > 0.4.0
+  * Corect a bug on Windows and IO
   * Catch timedelta issue on Amazon EC2 server / related to issue #87
   * Manage Fs name > 8 chars
   * Invert get_nice and nice
@@ -39,6 +41,10 @@ n.n.n / 2012-11-07
   * Fixed Portuguese locale name
   * Merge pull request #98 from mxjeff/html_issue
   * Fixed broken HTML output (issue #97)
+
+1.4
+===
+
   * version 1.4.2.1
   * Test as_dict()...
   * version 1.4.2
@@ -171,6 +177,10 @@ n.n.n / 2012-11-07
   * Replace FsGrab by PsUtil
   * DISK IO
   * First version of the experimental BRANCH PSUtil replace StatGrab for CPU, LOAD and MEM
+
+  1.3
+  ===
+
   * version 1.3.7
   * B&W console
   * Try for all the init color sequence
@@ -207,11 +217,19 @@ n.n.n / 2012-11-07
   * version 1.3
   * Docs
   * Change the REAME for the 1.2 version
+
+  1.2
+  ===
+
   * version 1.2
   * Instructions to install on Ubuntu 10.04 and 10.10
   * Ubuntu 10.04 note
   * Ubuntu < 11.04 notes
   * Change installation procedure
+
+  1.1
+  ===
+
   * version 1.1.3
   * v1.1.2
   * version 1.1.1

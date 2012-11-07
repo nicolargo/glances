@@ -35,7 +35,7 @@ Pre-requisites (information for packagers):
 
 ### From package manager (very easy way)
 
-Packages exist for Arch, Fedora, Redhat, FreeBSD...
+Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...
 
 ### From PyPi (easy and cross platform way)
 
@@ -75,9 +75,32 @@ Then install Glances:
 	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 	$ brew pip Glances
 
+If you have the following error:
+
+    Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
+    This link will help resolve the above errors:
+    https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
+    
+Try to runs:
+
+    $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
+    $ brew link Glances
+
+### Concerning Windows operating system
+
+Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode. 
+
+To install Glances on you system:
+
+    * Install [Python for Windows](http://www.python.org/getit/)
+    * Install the [PsUtil lib](https://code.google.com/p/psutil/downloads/list)
+    * Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
+
+I need contributors to package Glances for Windows (for exemple using [PyInstaller](http://www.pyinstaller.org/)).
+
 ### From source
 
-Get the latest version:
+Get the latest version (form GitHub):
 
     $ rm -rf /tmp/nicolargo-glances-* 
     $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
@@ -93,9 +116,27 @@ Glances use a standard GNU style installer (for a Debian like system):
 
 ## Running
 
-Easy way (that's all folks !):
+### In standalone mode
+
+If you want to monitor your local machine, just run:
 
 	$ glances
+    
+### In client/server mode
+
+If you want to remotely monitor a machine (called server) from another one (called client).
+
+Run this command on the server:
+
+    server$ glances -s
+    
+and this one on the client:
+
+    client$ glances -c @server
+
+where @server is the IP address or hostname of the server
+
+Glances uses a [XML/RPC](http://docs.python.org/2/library/simplexmlrpcserver.html) server and can be used by another client software.
 
 ## User guide
 
@@ -120,14 +161,25 @@ When Glances is running, you can press:
 
     If MEM > 70%, sort by process "memory size"
 
-* 'c' to sort the processes list by CPU consumption
-* 'd' Disable or enable the disk IO stats
-* 'f' Disable or enable the file system stats
-* 'l' Disable or enable the logs
-* 'm' to sort the processes list by process MEM
-* 'n' Disable or enable the network interfaces stats
-* 'p' to sort by process name
+* 'b' switch between bit/s or byte/s for network IO
+* 'c' sort the processes list by CPU consumption
+* 'd' disable or enable the disk IO stats
+* 'f' disable or enable the file system stats
+* 'l' disable or enable the logs
+* 'm' sort the processes list by process MEM
+* 'n' disable or enable the network interfaces stats
+* 'p' sort by process name
+* 'w' delete finished warning logs messages
+* 'x' delete finished warning and critical logs messages
+* '1' switch between global CPU and per core stats
 * 'q' Exit
+
+In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).
+
+In client mode, you can set the TCP port of the server (-p port).
+
+Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
+        TCP port is 61209.
 
 ### Header
 
@@ -281,10 +333,9 @@ The number of processes in the list is adapted to the screen size.
    T - Traced or stopped
    Z - Zombie or "hung" process
 
-* IO READ and WRITE: Per process IO read and write
+* IO_R and IO_W: Per process IO read and write
 * TIME+:  Cumulative CPU time used
 * NAME: Process name or command line
-
 
 ### Logs
 
@@ -307,6 +358,18 @@ There is one line per alert with the following information:
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/footer.png)
 
 Glances displays the current time/date and access to the embedded help screen.
+
+If you have ran Glances in client mode (-c), you can also see if the client is connected to the server.
+
+If client is connected:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/client-connected.png)
+
+else:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/client-disconnected.png)
+
+On the left, you can easely seen if you are connected to a Glances server.
 
 ## Localisation
 

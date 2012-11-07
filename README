@@ -359,6 +359,16 @@ There is one line per alert with the following information:
 
 Glances displays the current time/date and access to the embedded help screen.
 
+If you have ran Glances in client mode (-c), you can also see if the client is connected to the server.
+
+If client is connected:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/client-connected.png)
+
+else:
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/client-disconnected.png)
+
 On the left, you can easely seen if you are connected to a Glances server.
 
 ## Localisation
