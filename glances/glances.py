@@ -36,6 +36,7 @@ import signal
 import time
 from datetime import datetime, timedelta
 import gettext
+gettext.install(__appname__)
 
 # Selective lib
 
@@ -88,12 +89,6 @@ except:
     print()
     sys.exit(1)
     
-
-# International
-#==============
-
-gettext.install(__appname__)
-
 
 # Classes
 #========
