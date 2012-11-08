@@ -434,7 +434,7 @@ class glancesStats:
             procstat['nice'] = proc.get_nice()
         elif hasattr(proc, 'nice'):
             # Else
-            procstat['nice'] = proc.nice()
+            procstat['nice'] = proc.nice
         else:
             # Never here...
             procstat['nice'] = 0
@@ -627,9 +627,10 @@ class glancesStats:
             else:
                 # For olders PsUtil version
                 # Physical memory (RAM)
-                if hasattr(psutil, 'phymem_usage'): 
+                if hasattr(psutil, 'phymem_usage'):
                     phymem = psutil.phymem_usage()
-                    if hasattr(psutil, 'cached_usage') and hasattr(psutil, 'phymem_buffers'): 
+                    if (hasattr(psutil, 'cached_phymem') and
+                        hasattr(psutil, 'phymem_buffers')):
                         # Cache stat only available for Linux
                         cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
                     else:
