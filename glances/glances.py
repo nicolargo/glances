@@ -94,6 +94,22 @@ except Exception:
     print()
     sys.exit(1)
 
+try:
+    # HTML output
+    import jinja2
+except ImportError:
+    html_lib_tag = False
+else:
+    html_lib_tag = True
+
+try:
+    # CSV output
+    import csv
+except ImportError:
+    cvs_lib_tag = False
+else:
+    csv_lib_tag = True
+
 
 # Classes
 #========
@@ -2484,25 +2500,9 @@ def main():
             server_port = arg
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
-                try:
-                    # HTML output
-                    import jinja2
-                except ImportError:
-                    print(_("Error: Need Jinja2 library to export into HTML"))
-                    print()
-                    print(_("Try to install the python-jinja2 package"))
-                    sys.exit(2)
-                else:
-                    html_tag = True
+                html_tag = True
             elif arg.lower() == "csv":
-                try:
-                    # CSV output
-                    import csv
-                except ImportError:
-                    print(_("Error: Need CSV library to export to CSV"))
-                    sys.exit(2)
-                else:
-                    csv_tag = True
+                csv_tag = True
             else:
                 print(_("Error: Unknown output %s" % arg))
                 printSyntax()
@@ -2543,6 +2543,11 @@ def main():
             sys.exit(2)
     
     if html_tag:
+        if not html_lib_tag:
+            print(_("Error: Need Jinja2 library to export into HTML"))
+            print()
+            print(_("Try to install the python-jinja2 package"))
+            sys.exit(2)
         try:
             output_folder
         except UnboundLocalError:
@@ -2551,6 +2556,9 @@ def main():
             sys.exit(2)
 
     if csv_tag:
+        if not csv_lib_tag:
+            print(_("Error: Need CSV library to export into CSV"))
+            sys.exit(2)
         try:
             output_file
         except UnboundLocalError:
