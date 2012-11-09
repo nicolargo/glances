@@ -27,7 +27,6 @@ __licence__ = "LGPL"
 #==========
 
 # Standard lib
-
 import os
 import sys
 import platform
@@ -39,18 +38,24 @@ import gettext
 gettext.install(__appname__)
 
 # Selective lib
+import json
+import collections
 
 try:
     # For Python v2.x
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
     from SimpleXMLRPCServer import SimpleXMLRPCServer
-except:
+except ImportError:
     # For Python v3.x
     from xmlrpc.server import SimpleXMLRPCRequestHandler
     from xmlrpc.server import SimpleXMLRPCServer
-import json
-import collections
-import xmlrpclib
+
+try:
+    # python2
+    from xmlrpclib import ServerProxy
+except ImportError:
+    # python3
+    from xmlrpc.client import ServerProxy
 
 if platform.system() != 'Windows':
     # Only import curses for non Windows OS
@@ -61,7 +66,7 @@ if platform.system() != 'Windows':
     except ImportError:
         print(_('Curses module not found. Glances cannot start.'))
         print()
-        sys.exit(1)        
+        sys.exit(1)
 
 try:
     import psutil
@@ -75,10 +80,10 @@ except ImportError:
     print(_('# pip install psutil'))
     print()
     sys.exit(1)
-    
+
 try:
     psutil.disk_io_counters()
-except:
+except Exception:
     print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
     print()
     print(_('On Ubuntu 12.04 or higher:'))
@@ -88,7 +93,7 @@ except:
     print(_('# pip install psutil'))
     print()
     sys.exit(1)
-    
+
 
 # Classes
 #========
@@ -1275,8 +1280,8 @@ class glancesScreen:
                 system_msg = _("{0} {1} {2} on {3}").format(
                     system['os_name'], system['os_version'],
                     system['platform'], host['hostname'])
-            self.term_window.addnstr(self.system_y, self.system_x +
-                                     int(screen_x / 2) - len(system_msg) / 2,
+            center = (screen_x // 2) - len(system_msg) // 2
+            self.term_window.addnstr(self.system_y, self.system_x + center,
                                      system_msg, 80, curses.A_UNDERLINE)
 
     def displayCpu(self, cpu, percpu, proclist):
@@ -1516,11 +1521,11 @@ class glancesScreen:
                     self.network_y + 1 + i, self.network_x,
                     network[i]['interface_name'] + ':', 8)
                 if (self.net_byteps_tag):
-                    rx = self.__autoUnit(network[i]['rx'] / elapsed_time)
-                    tx = self.__autoUnit(network[i]['tx'] / elapsed_time)
+                    rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
+                    tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
                 else:
-                    rx = self.__autoUnit(network[i]['rx'] / elapsed_time * 8) + "b"
-                    tx = self.__autoUnit(network[i]['tx'] / elapsed_time * 8) + "b"
+                    rx = self.__autoUnit(network[i]['rx'] // elapsed_time * 8) + "b"
+                    tx = self.__autoUnit(network[i]['tx'] // elapsed_time * 8) + "b"
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x + 10, rx, 8)
                 self.term_window.addnstr(
@@ -1564,11 +1569,11 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 10,
                     self.__autoUnit(
-                        diskio[disk]['write_bytes'] / elapsed_time), 8)
+                        diskio[disk]['write_bytes'] // elapsed_time), 8)
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 19,
                     self.__autoUnit(
-                        diskio[disk]['read_bytes'] / elapsed_time), 8)
+                        diskio[disk]['read_bytes'] // elapsed_time), 8)
             return disk + 3
         return 0
 
@@ -2331,16 +2336,16 @@ class GlancesServer():
 class GlancesClient():
     """
     This class creates and manages the TCP client
-    """    
+    """
 
     def __init__(self, server_address, server_port = 61209):
         try:
-            self.client = xmlrpclib.ServerProxy('http://%s:%d' % (server_address, server_port))
+            self.client = ServerProxy('http://%s:%d' % (server_address, server_port))
         except:
             print(_("Error: creating client socket http://%s:%d") % (server_address, server_port))
             pass
         return
-            
+
     def client_init(self):
         try:
             client_version = self.client.init()[:3]
@@ -2356,7 +2361,7 @@ class GlancesClient():
         except:
             return {}
         else:
-            return stats 
+            return stats
 
 
 # Global def
