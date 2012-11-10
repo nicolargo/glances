@@ -2106,7 +2106,7 @@ class glancesHtml:
 
         # Set the templates path
         environment = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(self.root_path + 'html'),
+            loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + '/html'),
             extensions=['jinja2.ext.loopcontrols'])
 
         # Open the template
