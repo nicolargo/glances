@@ -313,13 +313,17 @@ class glancesGrabFs:
         """
 
         # Ignore the following FS name
-        self.ignore_fsname = ('', 'none', 'gvfs-fuse-daemon', 'fusectl',
-                              'cgroup')
+        self.ignore_fsname = ('', 'cgroup', 'fusectl', 'gvfs-fuse-daemon',
+                              'gvfsd-fuse', 'none')
 
         # Ignore the following FS type
-        self.ignore_fstype = ('binfmt_misc', 'devpts', 'iso9660', 'none',
-                              'proc', 'sysfs', 'usbfs', 'rootfs', 'autofs',
-                              'devtmpfs')
+        self.ignore_fstype = ('autofs', 'binfmt_misc', 'debugfs', 'devpts',
+                              'devtmpfs', 'hugetlbfs', 'iso9660', 'mqueue',
+                              'none', 'proc', 'rootfs', 'securityfs', 'sysfs',
+                              'usbfs')
+
+        # ignore fs by mount point
+        self.ignore_mntpoint = ('', '/dev/shm', '/sys/fs/cgroup')
 
     def __update__(self):
         """
@@ -340,6 +344,8 @@ class glancesGrabFs:
             if fs_current['fs_type'] in self.ignore_fstype:
                 continue
             fs_current['mnt_point'] = fs_stat[fs].mountpoint
+            if fs_current['mnt_point'] in self.ignore_mntpoint:
+                continue
             try:
                 fs_usage = psutil.disk_usage(fs_current['mnt_point'])
             except Exception:
