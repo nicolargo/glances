@@ -2364,7 +2364,7 @@ class GlancesClient():
         try:
             self.client = ServerProxy('http://%s:%d' % (server_address, server_port))
         except:
-            print(_("Error: creating client socket http://%s:%d") % (server_address, server_port))
+            print(_("Error: creating client socket")+" http://%s:%d" % (server_address, server_port))
             pass
         return
 
@@ -2649,7 +2649,7 @@ def main():
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
         # Init the server
-        print(_("Glances server is running on %s:%s") % (bind_ip, server_port))
+        print(_("Glances server is running on")+ " %s:%s" % (bind_ip, server_port))
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
         # Init stats
