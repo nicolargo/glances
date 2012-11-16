@@ -81,9 +81,8 @@ except ImportError:
     print()
     sys.exit(1)
 
-try:
-    psutil.disk_io_counters()
-except Exception:
+if (int(psutil.__version__.split('.')[0]) == 0) 
+    and (int(psutil.__version__.split('.')[1]) < 4):
     print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
     print()
     print(_('On Ubuntu 12.04 or higher:'))
