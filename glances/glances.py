@@ -19,7 +19,7 @@
 #
 
 __appname__ = 'glances'
-__version__ = "1.5.1"
+__version__ = "1.5.2b"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -81,7 +81,7 @@ except ImportError:
     print()
     sys.exit(1)
 
-if (int(psutil.__version__.split('.')[0]) == 0) 
+if (int(psutil.__version__.split('.')[0]) == 0) \
     and (int(psutil.__version__.split('.')[1]) < 4):
     print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
     print()
@@ -94,7 +94,15 @@ if (int(psutil.__version__.split('.')[0]) == 0)
     sys.exit(1)
 
 try:
-    # HTML output
+    # Sensors (optionnal)
+    import sensors
+except ImportError:
+    sensors_lib_tag = False
+else:
+    sensors_lib_tag = True
+
+try:
+    # HTML output (optionnal)
     import jinja2
 except ImportError:
     html_lib_tag = False
@@ -102,7 +110,7 @@ else:
     html_lib_tag = True
 
 try:
-    # CSV output
+    # CSV output (optionnal)
     import csv
 except ImportError:
     cvs_lib_tag = False
@@ -301,6 +309,7 @@ class glancesLogs:
         self.logs_list = clean_logs_list
         return self.len()
 
+
 class glancesGrabFs:
     """
     Get FS stats
@@ -359,6 +368,41 @@ class glancesGrabFs:
         return self.fs_list
 
 
+class glancesGrabSensors:
+    """
+    Get Sensors stats using the PySensors lib
+    """
+
+    def __init__(self):
+        """
+        Init sensors stats
+        """
+        sensors.init()
+
+    def __update__(self):
+        """
+        Update the stats
+        """
+        # Reset the list
+        self.sensors_list = []
+
+        # Open the current mounted FS
+        for chip in sensors.iter_detected_chips():
+            for feature in chip:
+                sensors_current = {}
+                sensors_current['label'] = chip.prefix+" "+feature.label
+                sensors_current['label'] = sensors_current['label'][-20:]
+                sensors_current['value'] = feature.get_value()
+                self.sensors_list.append(sensors_current)
+
+    def get(self):
+        self.__update__()
+        return self.sensors_list
+
+    def quit(self):
+        sensors.cleanup()
+
+
 class glancesStats:
     """
     This class store, update and give stats
@@ -372,12 +416,20 @@ class glancesStats:
 
         self.server_tag = server_tag
         self.client_tag = client_tag
+        self.sensors_tag = sensors_tag
 
         # Init the fs stats
         try:
             self.glancesgrabfs = glancesGrabFs()
         except Exception:
             self.glancesgrabfs = {}
+        
+        # Init the sensors stats (optionnal)
+        if self.sensors_tag:
+            try:
+                self.glancesgrabsensors = glancesGrabSensors()
+            except:
+                self.sensors_tag = False
 
         # Process list refresh
         self.process_list_refresh = True
@@ -710,6 +762,19 @@ class glancesStats:
             if (self.server_tag):
                 self.all_stats["network"] = self.network
 
+        # SENSORS
+        if (self.client_tag):
+            if hasattr(input_stats, "sensors"):
+                if input_stats != {}:
+                    self.sensors = input_stats["sensors"]
+            else:
+                self.sensors_tag = False
+        else:
+            if (self.sensors_tag):
+                self.sensors = self.glancesgrabsensors.get()
+            if (self.server_tag):
+                self.all_stats["sensors"] = self.sensors
+
         # DISK I/O
         if (self.client_tag):
             if input_stats != {}:
@@ -853,6 +918,12 @@ class glancesStats:
     def getMemSwap(self):
         return self.memswap
 
+    def getSensors(self):
+        if self.sensors_tag:
+            return self.sensors
+        else:
+            return 0
+
     def getNetwork(self):
         if psutil_network_io_tag:
             return sorted(self.network,
@@ -933,6 +1004,8 @@ class glancesScreen:
         self.mem_y = 2
         self.network_x = 0
         self.network_y = 7
+        self.sensors_x = 0
+        self.sensors_y = -1
         self.diskio_x = 0
         self.diskio_y = -1
         self.fs_x = 0
@@ -1029,6 +1102,7 @@ class glancesScreen:
 
         # What are we going to display
         self.network_tag = psutil_network_io_tag
+        self.sensors_tag = sensors_tag
         self.diskio_tag = psutil_disk_io_tag
         self.fs_tag = psutil_fs_usage_tag
         self.log_tag = True
@@ -1151,6 +1225,9 @@ class glancesScreen:
     def __getNetColor(self, current=0, max=100):
         return self.__getColor2(current, max)
 
+    def __getSensorsColor(self, current=0, max=100):
+        return self.__getColor2(current, max)
+
     def __getFsColor(self, current=0, max=100):
         return self.__getColor2(current, max)
 
@@ -1199,6 +1276,9 @@ class glancesScreen:
         elif self.pressedkey == 112:
             # 'p' > Sort processes by name
             self.setProcessSortedBy('name')
+        elif self.pressedkey == 115:
+            # 's' > Show/Hide Sensors stats
+            self.sensors_tag = not self.sensors_tag
         elif self.pressedkey == 119:
             # 'w' > Delete finished warning logs
             logs.clean()
@@ -1234,12 +1314,14 @@ class glancesScreen:
         self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
         self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
         network_count = self.displayNetwork(stats.getNetwork())
+        sensors_count = self.displaySensors(stats.getSensors(), 
+                                            self.network_y + network_count)
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
-                                          self.network_y + network_count)
+                                          self.network_y + sensors_count + network_count)
         fs_count = self.displayFs(stats.getFs(),
-                                  self.network_y + network_count +
-                                  diskio_count)
-        log_count = self.displayLog(self.network_y + network_count +
+                                  self.network_y + sensors_count + 
+                                  network_count + diskio_count)
+        log_count = self.displayLog(self.network_y + sensors_count + network_count +
                                     diskio_count + fs_count)
         self.displayProcess(processcount, processlist, log_count)
         self.displayCaption(cs_status = cs_status)
@@ -1551,6 +1633,43 @@ class glancesScreen:
                     self.network_y + 1 + i, self.network_x + 10, rx, 8)
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x + 19, tx, 8)
+                ret = ret + 1
+            return ret
+        return 0
+
+    def displaySensors(self, sensors, offset_y=0):
+        """
+        Display the Sensors stats
+        Return the number of sensors stats
+        """
+        if not self.sensors_tag:
+            return 0
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+        self.sensors_y = offset_y
+        if (screen_y > self.sensors_y + 3 and
+            screen_x > self.sensors_x + 28):
+            # Sensors header
+            self.term_window.addnstr(self.sensors_y, self.sensors_x,
+                                     _("Sensors"), 8, self.title_color 
+                                     if self.hascolors else curses.A_UNDERLINE)
+
+            # If there is no data to display...
+            if not sensors:
+                self.term_window.addnstr(self.sensors_y + 1, self.sensors_x,
+                                         _("Compute data..."), 15)
+                return 3
+
+            # Adapt the maximum interface to the screen
+            ret = 2
+            sensors_num = min(screen_y - self.sensors_y - 3, len(sensors))
+            for i in range(0, sensors_num):
+                self.term_window.addnstr(
+                    self.sensors_y + 1 + i, self.sensors_x,
+                    sensors[i]['label'] + ':', 21)
+                self.term_window.addnstr(
+                    self.sensors_y + 1 + i, self.sensors_x + 22,
+                    format(int(sensors[i]['value'])), 3)
                 ret = ret + 1
             return ret
         return 0
@@ -2448,6 +2567,7 @@ def main():
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_cpu_percent_tag, psutil_get_io_counter_tag, psutil_mem_usage_tag
     global psutil_mem_vm, psutil_fs_usage_tag, psutil_disk_io_tag, psutil_network_io_tag
+    global sensors_tag
     global refresh_time, client, server, server_port, server_ip
 
     # Set default tags
@@ -2582,6 +2702,7 @@ def main():
         psutil_fs_usage_tag = True
         psutil_disk_io_tag = True
         psutil_network_io_tag = True
+        sensors_tag = True
     else:
         try:
             # get_cpu_percent method only available with PsUtil 0.2.0+
@@ -2644,6 +2765,12 @@ def main():
             psutil_network_io_tag = False
         else:
             psutil_network_io_tag = True
+            
+        if sensors_lib_tag == True:
+            # Sensors lib is available
+            sensors_tag = True
+        else:
+            sensors_tag = False            
         
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
