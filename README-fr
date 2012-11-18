@@ -28,6 +28,7 @@ Glances a besoin des dépendances suivantes:
 * python-setuptools (pour l'installation via setup.py)
 * python-psutil 0.4.1+ (remplace la librairie libstatgrab)
 * python-jinja2 2.0+ (optionnel seulement pour le module export HTML)
+* pysensors (librairie optionnelle pour les capteurs)
 
 ### Depuis le gestionnaire de paquet de votre système
 
@@ -168,6 +169,7 @@ Quand Glances est lancé, il est possible d'utiliser les touches suivantes:
 * 'b' passer le débit des interfaces réseaux de bit par sec à octet par sec
 * 'c' forcer le tri par consommation CPU
 * 'd' desactiver ou activer l'affichage des entrées/sorties disques
+* 'e' activer ou desactiver l'affichage des capteurs
 * 'f' desactiver ou activer l'affichage de l'occupation des FS
 * 'l' desactiver ou activer l'affichage des logs
 * 'm' forcer le tri par consommation MEMOIRE
@@ -276,6 +278,18 @@ Si le débit > 90%, alors le status est "CRITICAL".
 
 Par exemple, sur une interface Ethernet Fast Ethernet (100 Mbps), le status
 passera à WARNING si le débit dépasse les 70 Mbps.
+
+### Capteur (en option)
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/sensors.png)
+
+Glances peut afficher les informations sur les capteurs (lm-sensors).
+
+Ce module est optionnel et doit être activé avec l'option:
+
+    glances -e
+
+IL nécessite l'installation de la librairie Python pysensors.
 
 ### Entrées/Sorties disque
 
