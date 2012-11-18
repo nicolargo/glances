@@ -32,6 +32,7 @@ Pre-requisites (information for packagers):
 * python-setuptools (for the installation via setup.py)
 * python-psutil 0.4.1+ (replace the old libstatgrab's lib)
 * python-jinja2 2.0+ (optional for HTML export)
+* pysensors (Python lib for sensors stats)
 
 ### From package manager (very easy way)
 
@@ -164,6 +165,7 @@ When Glances is running, you can press:
 * 'b' switch between bit/s or byte/s for network IO
 * 'c' sort the processes list by CPU consumption
 * 'd' disable or enable the disk IO stats
+* 'e' enable the sensors module (PySensors lib is needed)
 * 'f' disable or enable the file system stats
 * 'l' disable or enable the logs
 * 'm' sort the processes list by process MEM
@@ -273,6 +275,18 @@ If bit rate is > 90%, then status is set to "CRITICAL".
 
 For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.
+
+### Sensors (optional)
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/sensors.png)
+
+Optinaly, Glances displays the sensors informations (lm-sensors).
+
+You should enable this module using the following command line:
+
+    glances -e
+
+There is no alert on this information.
 
 ### Disk I/O
 
