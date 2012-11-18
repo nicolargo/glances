@@ -26,7 +26,7 @@ __licence__ = "LGPL"
 # Libraries
 #==========
 
-# Standard lib
+# Standards libs
 import os
 import sys
 import platform
@@ -37,7 +37,7 @@ from datetime import datetime, timedelta
 import gettext
 gettext.install(__appname__)
 
-# Selective lib
+# Specifics libs
 import json
 import collections
 
@@ -69,37 +69,92 @@ if platform.system() != 'Windows':
         sys.exit(1)
 
 try:
+    # PSUtil is the main lib used to grab stats
     import psutil
 except ImportError:
     print(_('PsUtil module not found. Glances cannot start.'))
-    print()
-    print(_('On Ubuntu 12.04 or higher:'))
-    print(_('$ sudo apt-get install python-psutil'))
-    print()
-    print(_('To install PsUtil using pip (as root):'))
-    print(_('# pip install psutil'))
     print()
     sys.exit(1)
 
 if (int(psutil.__version__.split('.')[0]) == 0) \
     and (int(psutil.__version__.split('.')[1]) < 4):
+    print(_('PsUtil version %s detected') % psutil.__version__)
     print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
     print()
-    print(_('On Ubuntu 12.04 or higher:'))
-    print(_('$ sudo apt-get install python-psutil'))
-    print()
-    print(_('To install PsUtil using pip (as root):'))
-    print(_('# pip install psutil'))
-    print()
     sys.exit(1)
+
+try:
+    # get_cpu_percent method only available with PsUtil 0.2.0+
+    psutil.Process(os.getpid()).get_cpu_percent(interval=0)
+except Exception:
+    psutil_get_cpu_percent_tag = False
+else:
+    psutil_get_cpu_percent_tag = True
+
+try:
+    # get_io_counter method only available with PsUtil 0.2.1+
+    psutil.Process(os.getpid()).get_io_counters()
+except Exception:
+    psutil_get_io_counter_tag = False
+else:
+    # get_io_counter only available on Linux
+    if sys.platform.startswith("linux"):
+        psutil_get_io_counter_tag = True
+    else:
+        psutil_get_io_counter_tag = False
+
+try:
+    # virtual_memory() is only available with PsUtil 0.6+
+    psutil.virtual_memory()
+except:    
+    try:
+        # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
+        psutil.phymem_usage()
+        psutil.virtmem_usage()
+    except Exception:
+        psutil_mem_usage_tag = False
+    else:
+        psutil_mem_usage_tag = True
+        psutil_mem_vm = False
+else:
+    psutil_mem_usage_tag = True
+    psutil_mem_vm = True
+
+try:
+    # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
+    psutil.disk_partitions()
+    psutil.disk_usage('/')
+except Exception:
+    psutil_fs_usage_tag = False
+else:
+    psutil_fs_usage_tag = True
+
+try:
+    # disk_io_counters method only available with PsUtil 0.4.0+
+    psutil.disk_io_counters()
+except Exception:
+    psutil_disk_io_tag = False
+else:
+    psutil_disk_io_tag = True
+
+try:
+    # network_io_counters method only available with PsUtil 0.4.0+
+    psutil.network_io_counters()
+except Exception:
+    psutil_network_io_tag = False
+else:
+    psutil_network_io_tag = True
+
 
 try:
     # Sensors (optionnal)
     import sensors
 except ImportError:
     sensors_lib_tag = False
+    sensors_tag = False
 else:
     sensors_lib_tag = True
+    sensors_tag = True
 
 try:
     # HTML output (optionnal)
@@ -377,7 +432,12 @@ class glancesGrabSensors:
         """
         Init sensors stats
         """
-        sensors.init()
+        try:
+            sensors.init()
+        except:
+            self.initok = False
+        else:
+            self.initok = True
 
     def __update__(self):
         """
@@ -387,20 +447,22 @@ class glancesGrabSensors:
         self.sensors_list = []
 
         # Open the current mounted FS
-        for chip in sensors.iter_detected_chips():
-            for feature in chip:
-                sensors_current = {}
-                sensors_current['label'] = chip.prefix+" "+feature.label
-                sensors_current['label'] = sensors_current['label'][-20:]
-                sensors_current['value'] = feature.get_value()
-                self.sensors_list.append(sensors_current)
+        if self.initok:
+            for chip in sensors.iter_detected_chips():
+                for feature in chip:
+                    sensors_current = {}
+                    sensors_current['label'] = chip.prefix+" "+feature.label
+                    sensors_current['label'] = sensors_current['label'][-20:]
+                    sensors_current['value'] = feature.get_value()
+                    self.sensors_list.append(sensors_current)
 
     def get(self):
         self.__update__()
         return self.sensors_list
 
     def quit(self):
-        sensors.cleanup()
+        if self.initok:
+            sensors.cleanup()
 
 
 class glancesStats:
@@ -416,7 +478,6 @@ class glancesStats:
 
         self.server_tag = server_tag
         self.client_tag = client_tag
-        self.sensors_tag = sensors_tag
 
         # Init the fs stats
         try:
@@ -425,7 +486,7 @@ class glancesStats:
             self.glancesgrabfs = {}
         
         # Init the sensors stats (optionnal)
-        if self.sensors_tag:
+        if sensors_tag:
             try:
                 self.glancesgrabsensors = glancesGrabSensors()
             except:
@@ -764,13 +825,10 @@ class glancesStats:
 
         # SENSORS
         if (self.client_tag):
-            if hasattr(input_stats, "sensors"):
-                if input_stats != {}:
-                    self.sensors = input_stats["sensors"]
-            else:
-                self.sensors_tag = False
+            if input_stats != {}:
+                self.sensors = input_stats["sensors"]
         else:
-            if (self.sensors_tag):
+            if (sensors_tag):
                 self.sensors = self.glancesgrabsensors.get()
             if (self.server_tag):
                 self.all_stats["sensors"] = self.sensors
@@ -919,8 +977,9 @@ class glancesStats:
         return self.memswap
 
     def getSensors(self):
-        if self.sensors_tag:
-            return self.sensors
+        if sensors_tag:
+            return sorted(self.sensors,
+                          key=lambda sensors: sensors['label'])
         else:
             return 0
 
@@ -1642,7 +1701,7 @@ class glancesScreen:
         Display the Sensors stats
         Return the number of sensors stats
         """
-        if not self.sensors_tag:
+        if not self.sensors_tag or not sensors:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
@@ -1653,12 +1712,8 @@ class glancesScreen:
             self.term_window.addnstr(self.sensors_y, self.sensors_x,
                                      _("Sensors"), 8, self.title_color 
                                      if self.hascolors else curses.A_UNDERLINE)
-
-            # If there is no data to display...
-            if not sensors:
-                self.term_window.addnstr(self.sensors_y + 1, self.sensors_x,
-                                         _("Compute data..."), 15)
-                return 3
+            self.term_window.addnstr(self.sensors_y, self.sensors_x+22,
+                                     _("C"), 3)
 
             # Adapt the maximum interface to the screen
             ret = 2
@@ -2176,25 +2231,30 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 13, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("l"), _("Show/hide log messages"), width=width), 79)
+                    _("s"), _("Show/hide sensors stats"), width=width),
+                79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 14, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("w"), _("Delete finished warning logs messages"), width=width), 79)
+                    _("l"), _("Show/hide log messages"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 15, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("x"), _("Delete finished warning and critical logs"), width=width), 79)
+                    _("w"), _("Delete finished warning logs messages"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 16, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
+                    _("x"), _("Delete finished warning and critical logs"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 17, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("h"), _("Show/hide this help message"), width=width), 79)
+                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
             self.term_window.addnstr(
                 self.help_y + 18, self.help_x,
+                "{0:^{width}} {1}".format(
+                    _("h"), _("Show/hide this help message"), width=width), 79)
+            self.term_window.addnstr(
+                self.help_y + 19, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
                 79)
@@ -2520,6 +2580,7 @@ def printSyntax():
     print(_("\t-B IP|NAME\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-d\t\tDisable disk I/O module"))
+    print(_("\t-e\t\tEnable the sensors module"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
     print(_("\t-h\t\tDisplay the syntax and exit"))
     print(_("\t-m\t\tDisable mount module"))
@@ -2561,17 +2622,18 @@ def main():
     # Glances - Init stuff
     ######################
 
-    global network_bytepersec_tag
     global limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_cpu_percent_tag, psutil_get_io_counter_tag, psutil_mem_usage_tag
     global psutil_mem_vm, psutil_fs_usage_tag, psutil_disk_io_tag, psutil_network_io_tag
+    global network_bytepersec_tag
     global sensors_tag
     global refresh_time, client, server, server_port, server_ip
 
     # Set default tags
     network_bytepersec_tag = False
+    sensors_tag = False
     html_tag = False
     csv_tag = False
     client_tag = False
@@ -2590,10 +2652,10 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdmnho:f:t:vsc:p:",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:",
                                    ["bind", "bytepersec", "diskio", "mount", 
-                                    "netrate", "help", "output", "file",
-                                    "time", "version", "server",
+                                    "sensors", "netrate", "help", "output", 
+                                    "file", "time", "version", "server",
                                     "client", "port"])
     except getopt.GetoptError as err:
         # Print help information and exit:
@@ -2632,6 +2694,12 @@ def main():
                 print(_("Error: Unknown output %s" % arg))
                 printSyntax()
                 sys.exit(2)
+        elif opt in ("-e", "--sensors"):
+            if not sensors_lib_tag:
+                print(_("Error: PySensors lib not found"))
+                sys.exit(2)
+            else:
+                sensors_tag = True
         elif opt in ("-f", "--file"):
             output_file = arg
             output_folder = arg
@@ -2703,75 +2771,9 @@ def main():
         psutil_disk_io_tag = True
         psutil_network_io_tag = True
         sensors_tag = True
-    else:
-        try:
-            # get_cpu_percent method only available with PsUtil 0.2.0+
-            psutil.Process(os.getpid()).get_cpu_percent(interval=0)
-        except Exception:
-            psutil_get_cpu_percent_tag = False
-        else:
-            psutil_get_cpu_percent_tag = True
-
-        try:
-            # get_io_counter method only available with PsUtil 0.2.1+
-            psutil.Process(os.getpid()).get_io_counters()
-        except Exception:
-            psutil_get_io_counter_tag = False
-        else:
-            # get_io_counter only available on Linux
-            if sys.platform.startswith("linux"):
-                psutil_get_io_counter_tag = True
-            else:
-                psutil_get_io_counter_tag = False
-
-        try:
-            # virtual_memory() is only available with PsUtil 0.6+
-            psutil.virtual_memory()
-        except:    
-            try:
-                # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-                psutil.phymem_usage()
-                psutil.virtmem_usage()
-            except Exception:
-                psutil_mem_usage_tag = False
-            else:
-                psutil_mem_usage_tag = True
-                psutil_mem_vm = False
-        else:
-            psutil_mem_usage_tag = True
-            psutil_mem_vm = True
-
-        try:
-            # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
-            psutil.disk_partitions()
-            psutil.disk_usage('/')
-        except Exception:
-            psutil_fs_usage_tag = False
-        else:
-            psutil_fs_usage_tag = True
-
-        try:
-            # disk_io_counters method only available with PsUtil 0.4.0+
-            psutil.disk_io_counters()
-        except Exception:
-            psutil_disk_io_tag = False
-        else:
-            psutil_disk_io_tag = True
-
-        try:
-            # network_io_counters method only available with PsUtil 0.4.0+
-            psutil.network_io_counters()
-        except Exception:
-            psutil_network_io_tag = False
-        else:
-            psutil_network_io_tag = True
+    elif server_tag:
+        sensors_tag = True
             
-        if sensors_lib_tag == True:
-            # Sensors lib is available
-            sensors_tag = True
-        else:
-            sensors_tag = False            
-        
     # Init Glances depending of the mode (standalone, client, server)    
     if server_tag:
         # Init the server

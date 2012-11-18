@@ -1,3 +1,8 @@
+Version 1.5.2
+=============
+
+    * Add sensors module (enable it with -e option)
+
 Version 1.5.1
 =============
 
