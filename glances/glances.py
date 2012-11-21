@@ -646,6 +646,12 @@ class glancesStats:
                     if hasattr(self.cputime_new, 'nice'):
                         self.cpu['nice'] = (self.cputime_new.nice -
                                             self.cputime_old.nice) * percent
+                    if hasattr(self.cputime_new, 'iowait'):
+                        self.cpu['iowait'] = (self.cputime_new.iowait -
+                                              self.cputime_old.iowait) * percent
+                    if hasattr(self.cputime_new, 'irq'):
+                        self.cpu['irq'] = (self.cputime_new.irq -
+                                           self.cputime_old.irq) * percent
                     self.cputime_old = self.cputime_new
                     self.cputime_total_old = self.cputime_total_new
                 except Exception:
@@ -1166,7 +1172,7 @@ class glancesScreen:
         self.fs_tag = psutil_fs_usage_tag
         self.log_tag = True
         self.help_tag = False
-        self.percpu_tag = True
+        self.percpu_tag = False
         self.net_byteps_tag = network_bytepersec_tag
 
         # Init main window
@@ -1447,23 +1453,33 @@ class glancesScreen:
                                      system_msg, 80, curses.A_UNDERLINE)
 
     def displayCpu(self, cpu, percpu, proclist):
-        # CPU %
+        # Get screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         
-        tag_percpu = False
-        offset_x = 0
-        if screen_x >  self.cpu_x + 79 + (len(percpu)-1)*10:
-            tag_percpu = True
+        # Is it possible to display extended stats ?
+        # If yes then tag_extendedcpu = True
+        tag_extendedcpu = screen_x >  self.cpu_x + 79 + 17
+
+        # Is it possible to display percpu stats ?
+        # Do you want it ? (percpu_tag)
+        # If yes then tag_percpu = True
+        if (self.percpu_tag):
+            tag_percpu = screen_x >  self.cpu_x + 79 + (len(percpu)-1)*10
+        else:
+            tag_percpu = False
+        
+        # Compute x offset
+        if (tag_percpu):
             offset_x = (len(percpu)-1)*10
-        
-        # If space id available (tag_percpu)
-        # and global Per CPU tag (percpu_tag)
-        # then display detailled informations for CPU
-        tag_percpu = tag_percpu and self.percpu_tag
-        
+        elif (tag_extendedcpu):
+            offset_x = 17            
+        else:
+            offset_x = 0            
+
+        # Display CPU stats
         if (screen_y > self.cpu_y + 5 and tag_percpu):
-            # Display extended information whenspace is available (perCpu)
+            # Display per CPU stats whenspace is available
             self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 8,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
@@ -1504,7 +1520,6 @@ class glancesScreen:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
                                              "%.1f" % percpu[i]['idle'], 8)
                     
-
         elif (screen_y > self.cpu_y + 5 and
               screen_x > self.cpu_x + 18):
             # Display summary information
@@ -1519,10 +1534,12 @@ class glancesScreen:
 
             self.term_window.addnstr(self.cpu_y, self.cpu_x + 10,
                                      "%.1f%%" % (100 - cpu['idle']), 8)
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("User:"), 8)
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, 
+                                     _("User:"), 8)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
                                      _("Kernel:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Nice:"), 8)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, 
+                                     _("Nice:"), 8)
 
             alert = self.__getCpuAlert(cpu['user'])
             logs.add(alert, "CPU user", cpu['user'], proclist)
@@ -1542,10 +1559,32 @@ class glancesScreen:
                                          "%.1f" % cpu['nice'], 8,
                                          self.__colors_list[alert])
             except:
-                #~ alert = self.__getCpuAlert(cpu['idle'])
-                #~ logs.add(alert, "CPU idle", cpu['idle'], proclist)
                 self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
                                          "%.1f" % cpu['idle'], 8)
+            
+            if (screen_y > self.cpu_y + 5 and tag_extendedcpu):
+                # Display extended CPU stats whenspace is available
+                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 17, 
+                                         _("Idle:"), 8)
+                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 17,
+                                         _("IO Wait:"), 8)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 17, 
+                                         _("IRQ:"), 8)
+                
+                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
+                                         "%.1f" % cpu['idle'], 8)
+                try:
+                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
+                                             "%.1f" % cpu['iowait'], 8)
+                except:
+                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
+                                             "N/A", 8)
+                try:
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
+                                            "%.1f" % cpu['irq'], 8)
+                except:
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
+                                             "N/A", 8)
                 
         # Return the X offset to display Load and Mem
         return offset_x

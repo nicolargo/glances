@@ -2,6 +2,7 @@ Version 1.5.2
 =============
 
     * Add sensors module (enable it with -e option)
+    * Improve CPU stats (IO wait, Nice, IRQ)
 
 Version 1.5.1
 =============
