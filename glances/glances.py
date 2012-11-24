@@ -1497,7 +1497,7 @@ class glancesScreen:
 
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("User:"), 8)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x, _("Kernel:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Nice:"), 8)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Idle:"), 8)
 
             for i in range(len(percpu)):
                 self.term_window.addnstr(self.cpu_y, self.cpu_x + 10 + i*10,
@@ -1514,17 +1514,9 @@ class glancesScreen:
                 self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10 + i*10,
                                          "%.1f" % percpu[i]['kernel'], 8,
                                          self.__colors_list[alert])
-                try:
-                    alert = self.__getCpuAlert(percpu[i]['nice'])
-                    logs.add(alert, "CPU-%d nice" % i, percpu[i]['nice'], proclist)
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
-                                             "%.1f" % percpu[i]['nice'], 8,
-                                             self.__colors_list[alert])
-                except:
-                    #~ alert = self.__getCpuAlert(percpu[i]['idle'])
-                    #~ logs.add(alert, "CPU-%d idle" % i, percpu[i]['idle'], proclist)
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
-                                             "%.1f" % percpu[i]['idle'], 8)
+                # No alert for IDLE
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
+                                         "%.1f" % percpu[i]['idle'], 8)
                     
         elif (screen_y > self.cpu_y + 5 and
               screen_x > self.cpu_x + 18):
@@ -1540,60 +1532,55 @@ class glancesScreen:
 
             self.term_window.addnstr(self.cpu_y, self.cpu_x + 10,
                                      "%.1f%%" % (100 - cpu['idle']), 8)
+                                     
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, 
                                      _("User:"), 8)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
-                                     _("Kernel:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, 
-                                     _("Nice:"), 8)
-
             alert = self.__getCpuAlert(cpu['user'])
             logs.add(alert, "CPU user", cpu['user'], proclist)
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10,
                                      "%.1f" % cpu['user'], 8,
                                      self.__colors_list[alert])
 
+            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
+                                     _("Kernel:"), 8)
             alert = self.__getCpuAlert(cpu['kernel'])
             logs.add(alert, "CPU kernel", cpu['kernel'], proclist)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10,
                                      "%.1f" % cpu['kernel'], 8,
                                      self.__colors_list[alert])
-            try:
-                alert = self.__getCpuAlert(cpu['nice'])
-                logs.add(alert, "CPU nice", cpu['nice'], proclist)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
-                                         "%.1f" % cpu['nice'], 8,
-                                         self.__colors_list[alert])
-            except:
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
-                                         "%.1f" % cpu['idle'], 8)
+            # No alert for IDLE
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, 
+                                     _("Idle:"), 8)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
+                                     "%.1f" % cpu['idle'], 8)
             
             if (screen_y > self.cpu_y + 5 and tag_extendedcpu):
-                # Display extended CPU stats whenspace is available
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 17, 
-                                         _("Idle:"), 8)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 17,
+                # Display extended CPU stats whenspace is available                
+                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 17,
                                          _("IO Wait:"), 8)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 17, 
-                                         _("IRQ:"), 8)
-                
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
-                                         "%.1f" % cpu['idle'], 8)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
+                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
                                              "%.1f" % cpu['iowait'], 8,
                                              self.__getExtCpuColor(cpu['iowait']))
                 except:
+                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
+                                             "N/A", 8)
+                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 17, 
+                                         _("IRQ:"), 8)
+                try:
+                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
+                                            "%.1f" % cpu['irq'], 8)
+                except:
                     self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
                                              "N/A", 8)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 17, 
+                                         _("Nice:"), 8)
                 try:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                            "%.1f" % cpu['irq'], 8,
-                                             self.__getExtCpuColor(cpu['irq']))
+                                             "%.1f" % cpu['nice'], 8)
                 except:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
                                              "N/A", 8)
-                
         # Return the X offset to display Load and Mem
         return offset_x
 
