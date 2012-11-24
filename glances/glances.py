@@ -1266,6 +1266,9 @@ class glancesScreen:
     def __getCpuColor(self, current=0, max=100):
         return self.__getColor(current, max)
 
+    def __getExtCpuColor(self, current=0, max=100):
+        return self.__getColor2(current, max)
+
     def __getLoadAlert(self, current=0, core=1):
         # If current < CAREFUL*core of max then alert = OK
         # If current > CAREFUL*core of max then alert = CAREFUL
@@ -1578,13 +1581,15 @@ class glancesScreen:
                                          "%.1f" % cpu['idle'], 8)
                 try:
                     self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
-                                             "%.1f" % cpu['iowait'], 8)
+                                             "%.1f" % cpu['iowait'], 8,
+                                             self.__getExtCpuColor(cpu['iowait']))
                 except:
                     self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
                                              "N/A", 8)
                 try:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                            "%.1f" % cpu['irq'], 8)
+                                            "%.1f" % cpu['irq'], 8,
+                                             self.__getExtCpuColor(cpu['irq']))
                 except:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
                                              "N/A", 8)
@@ -2552,6 +2557,11 @@ class GlancesInstance():
         # Update and return MEMSWAP stats
         self.__update__()
         return json.dumps(stats.getMemSwap())
+
+    def getNow(self):
+        # Update and return current date/hour
+        self.__update__()
+        return json.dumps(stats.getNow())
 
 
 class GlancesServer():
