@@ -832,7 +832,10 @@ class glancesStats:
         # SENSORS
         if (self.client_tag):
             if input_stats != {}:
-                self.sensors = input_stats["sensors"]
+                try:
+                    self.sensors = input_stats["sensors"]
+                except:
+                    self.sensors = {}
         else:
             if (sensors_tag):
                 self.sensors = self.glancesgrabsensors.get()
