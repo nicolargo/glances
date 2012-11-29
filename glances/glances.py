@@ -464,20 +464,18 @@ class glancesGrabSensors:
         if self.initok:
             sensors.cleanup()
 
-
-class glancesStats:
+class GlancesStats:
     """
     This class store, update and give stats
     """
 
 
-    def __init__(self, server_tag = False, client_tag = False):
+    def __init__(self):
         """
         Init the stats
         """
 
-        self.server_tag = server_tag
-        self.client_tag = client_tag
+        self._init_host()
 
         # Init the fs stats
         try:
@@ -495,37 +493,76 @@ class glancesStats:
         # Process list refresh
         self.process_list_refresh = True
 
-        # Init the all_stats used by the server
-        # all_stats is a dict of dicts filled by the server
-        if (self.server_tag):
-            self.all_stats = collections.defaultdict(dict)
-
-        # Cached informations (no need to be refreshed)
-        # Host and OS informations
-        if (not self.client_tag):
-            self.host = {}
-            self.host['os_name'] = platform.system()
-            self.host['hostname'] = platform.node()
-            self.host['platform'] = platform.architecture()[0]
-            is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
-            if self.host['os_name'] == "Linux":
-                if is_archlinux:
-                    self.host['linux_distro'] = "Arch Linux"
+    def _process_list_refresh(self):
+        if self.process_list_refresh:
+            self.process_first_grab = False
+            if not hasattr(self, 'process_all'):
+                self.process_all = [proc for proc in psutil.process_iter()]
+                self.process_first_grab = True
+            self.process = []
+            self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
+            # Manage new processes
+            process_new = [proc.pid for proc in self.process_all]
+            for proc in psutil.process_iter():
+                if proc.pid not in process_new:
+                    self.process_all.append(proc)
+            # Grab stats from process list
+            for proc in self.process_all[:]:
+                try:
+                    if not proc.is_running():
+                        try:
+                            self.process_all.remove(proc)
+                        except Exception:
+                            pass
+                except psutil.error.NoSuchProcess:
+                    try:
+                        self.process_all.remove(proc)
+                    except Exception:
+                        pass
                 else:
-                    linux_distro = platform.linux_distribution()
-                    self.host['linux_distro'] = " ".join(linux_distro[:2])
-                self.host['os_version'] = platform.release()
-            elif self.host['os_name'] == "FreeBSD":
-                self.host['os_version'] = platform.release()
-            elif self.host['os_name'] == "Darwin":
-                self.host['os_version'] = platform.mac_ver()[0]
-            elif self.host['os_name'] == "Windows":
-                os_version = platform.win32_ver()
-                self.host['os_version'] = " ".join(os_version[::2])
+                    # Global stats
+                    try:
+                        self.processcount[str(proc.status)] += 1
+                    except psutil.error.NoSuchProcess:
+                        # Process non longer exist
+                        pass
+                    except KeyError:
+                        # Key did not exist, create it
+                        self.processcount[str(proc.status)] = 1
+                    finally:
+                        self.processcount['total'] += 1
+                    # Per process stats
+                    try:
+                        self.process.append(self.__get_process_stats__(proc))
+                    except Exception:
+                        pass
+            # If it is the first grab then empty process list
+            if self.process_first_grab:
+                self.process = []
+        self.process_list_refresh = not self.process_list_refresh
+
+    def _init_host(self):
+        self.host = {}
+        self.host['os_name'] = platform.system()
+        self.host['hostname'] = platform.node()
+        self.host['platform'] = platform.architecture()[0]
+        is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
+        if self.host['os_name'] == "Linux":
+            if is_archlinux:
+                self.host['linux_distro'] = "Arch Linux"
             else:
-                self.host['os_version'] = ""
-            if (self.server_tag):
-                self.all_stats["host"] = self.host
+                linux_distro = platform.linux_distribution()
+                self.host['linux_distro'] = " ".join(linux_distro[:2])
+            self.host['os_version'] = platform.release()
+        elif self.host['os_name'] == "FreeBSD":
+            self.host['os_version'] = platform.release()
+        elif self.host['os_name'] == "Darwin":
+            self.host['os_version'] = platform.mac_ver()[0]
+        elif self.host['os_name'] == "Windows":
+            os_version = platform.win32_ver()
+            self.host['os_version'] = " ".join(os_version[::2])
+        else:
+            self.host['os_version'] = ""
 
     def __get_process_stats_NEW__(self, proc):
         """
@@ -591,368 +628,249 @@ class glancesStats:
         Update the stats
         """
 
-        # Host information
-        # Only for client
-        if (self.client_tag):
-            if input_stats != {}:
-                self.host = input_stats["host"]
-
         # CPU
-        if (self.client_tag):
-            if input_stats != {}:
-                self.cpu = input_stats["cpu"]
+        if not hasattr(self, 'cputime_old'):
+            self.cputime_old = psutil.cpu_times()
+            self.cputime_total_old = (self.cputime_old.user +
+                                      self.cputime_old.system +
+                                      self.cputime_old.idle)
+            # Only available on some OS
+            if hasattr(self.cputime_old, 'nice'):
+                self.cputime_total_old += self.cputime_old.nice
+            if hasattr(self.cputime_old, 'iowait'):
+                self.cputime_total_old += self.cputime_old.iowait
+            if hasattr(self.cputime_old, 'irq'):
+                self.cputime_total_old += self.cputime_old.irq
+            if hasattr(self.cputime_old, 'softirq'):
+                self.cputime_total_old += self.cputime_old.softirq
+            self.cpu = {}
         else:
-            if not hasattr(self, 'cputime_old'):
-                self.cputime_old = psutil.cpu_times()
-                self.cputime_total_old = (self.cputime_old.user +
-                                          self.cputime_old.system +
-                                          self.cputime_old.idle)
+            try:
+                self.cputime_new = psutil.cpu_times()
+                self.cputime_total_new = (self.cputime_new.user +
+                                          self.cputime_new.system +
+                                          self.cputime_new.idle)
                 # Only available on some OS
-                if hasattr(self.cputime_old, 'nice'):
-                    self.cputime_total_old += self.cputime_old.nice
-                if hasattr(self.cputime_old, 'iowait'):
-                    self.cputime_total_old += self.cputime_old.iowait
-                if hasattr(self.cputime_old, 'irq'):
-                    self.cputime_total_old += self.cputime_old.irq
-                if hasattr(self.cputime_old, 'softirq'):
-                    self.cputime_total_old += self.cputime_old.softirq
+                if hasattr(self.cputime_new, 'nice'):
+                    self.cputime_total_new += self.cputime_new.nice
+                if hasattr(self.cputime_new, 'iowait'):
+                    self.cputime_total_new += self.cputime_new.iowait
+                if hasattr(self.cputime_new, 'irq'):
+                    self.cputime_total_new += self.cputime_new.irq
+                if hasattr(self.cputime_new, 'softirq'):
+                    self.cputime_total_new += self.cputime_new.softirq
+                percent = 100 / (self.cputime_total_new -
+                                 self.cputime_total_old)
+                self.cpu = {'kernel':
+                                (self.cputime_new.system -
+                                 self.cputime_old.system) * percent,
+                            'user':
+                                (self.cputime_new.user -
+                                 self.cputime_old.user) * percent,
+                            'idle':
+                                (self.cputime_new.idle -
+                                 self.cputime_old.idle) * percent}
+                if hasattr(self.cputime_new, 'nice'):
+                    self.cpu['nice'] = (self.cputime_new.nice -
+                                        self.cputime_old.nice) * percent
+                if hasattr(self.cputime_new, 'iowait'):
+                    self.cpu['iowait'] = (self.cputime_new.iowait -
+                                          self.cputime_old.iowait) * percent
+                if hasattr(self.cputime_new, 'irq'):
+                    self.cpu['irq'] = (self.cputime_new.irq -
+                                       self.cputime_old.irq) * percent
+                self.cputime_old = self.cputime_new
+                self.cputime_total_old = self.cputime_total_new
+            except Exception:
                 self.cpu = {}
-            else:
-                try:
-                    self.cputime_new = psutil.cpu_times()
-                    self.cputime_total_new = (self.cputime_new.user +
-                                              self.cputime_new.system +
-                                              self.cputime_new.idle)
-                    # Only available on some OS
-                    if hasattr(self.cputime_new, 'nice'):
-                        self.cputime_total_new += self.cputime_new.nice
-                    if hasattr(self.cputime_new, 'iowait'):
-                        self.cputime_total_new += self.cputime_new.iowait
-                    if hasattr(self.cputime_new, 'irq'):
-                        self.cputime_total_new += self.cputime_new.irq
-                    if hasattr(self.cputime_new, 'softirq'):
-                        self.cputime_total_new += self.cputime_new.softirq
-                    percent = 100 / (self.cputime_total_new -
-                                     self.cputime_total_old)
-                    self.cpu = {'kernel':
-                                    (self.cputime_new.system -
-                                     self.cputime_old.system) * percent,
-                                'user':
-                                    (self.cputime_new.user -
-                                     self.cputime_old.user) * percent,
-                                'idle':
-                                    (self.cputime_new.idle -
-                                     self.cputime_old.idle) * percent}
-                    if hasattr(self.cputime_new, 'nice'):
-                        self.cpu['nice'] = (self.cputime_new.nice -
-                                            self.cputime_old.nice) * percent
-                    if hasattr(self.cputime_new, 'iowait'):
-                        self.cpu['iowait'] = (self.cputime_new.iowait -
-                                              self.cputime_old.iowait) * percent
-                    if hasattr(self.cputime_new, 'irq'):
-                        self.cpu['irq'] = (self.cputime_new.irq -
-                                           self.cputime_old.irq) * percent
-                    self.cputime_old = self.cputime_new
-                    self.cputime_total_old = self.cputime_total_new
-                except Exception:
-                    self.cpu = {}
-            if (self.server_tag):
-                self.all_stats["cpu"] = self.cpu
 
         # PerCPU
-        if (self.client_tag):
-            if input_stats != {}:
-                self.percpu = input_stats["percpu"]
+        if not hasattr(self, 'percputime_old'):
+            self.percputime_old = psutil.cpu_times(percpu = True)
+            self.percputime_total_old = []
+            for i in range(len(self.percputime_old)):
+                self.percputime_total_old.append(self.percputime_old[i].user +
+                                                 self.percputime_old[i].system +
+                                                 self.percputime_old[i].idle)
+            # Only available on some OS
+            for i in range(len(self.percputime_old)):
+                if hasattr(self.percputime_old[i], 'nice'):
+                    self.percputime_total_old[i] += self.percputime_old[i].nice
+            for i in range(len(self.percputime_old)):
+                if hasattr(self.percputime_old[i], 'iowait'):
+                    self.percputime_total_old[i] += self.percputime_old[i].iowait
+            for i in range(len(self.percputime_old)):
+                if hasattr(self.percputime_old[i], 'irq'):
+                    self.percputime_total_old[i] += self.percputime_old[i].irq
+            for i in range(len(self.percputime_old)):
+                if hasattr(self.percputime_old[i], 'softirq'):
+                    self.percputime_total_old[i] += self.percputime_old[i].softirq
+            self.percpu = []
         else:
-            if not hasattr(self, 'percputime_old'):
-                self.percputime_old = psutil.cpu_times(percpu = True)
-                self.percputime_total_old = []
-                for i in range(len(self.percputime_old)):
-                    self.percputime_total_old.append(self.percputime_old[i].user +
-                                                     self.percputime_old[i].system +
-                                                     self.percputime_old[i].idle)
+            try:
+                self.percputime_new = psutil.cpu_times(percpu = True)
+                self.percputime_total_new = []
+                for i in range(len(self.percputime_new)):
+                    self.percputime_total_new.append(self.percputime_new[i].user +
+                                                     self.percputime_new[i].system +
+                                                     self.percputime_new[i].idle)
                 # Only available on some OS
-                for i in range(len(self.percputime_old)):
-                    if hasattr(self.percputime_old[i], 'nice'):
-                        self.percputime_total_old[i] += self.percputime_old[i].nice
-                for i in range(len(self.percputime_old)):
-                    if hasattr(self.percputime_old[i], 'iowait'):
-                        self.percputime_total_old[i] += self.percputime_old[i].iowait
-                for i in range(len(self.percputime_old)):
-                    if hasattr(self.percputime_old[i], 'irq'):
-                        self.percputime_total_old[i] += self.percputime_old[i].irq
-                for i in range(len(self.percputime_old)):
-                    if hasattr(self.percputime_old[i], 'softirq'):
-                        self.percputime_total_old[i] += self.percputime_old[i].softirq
+                for i in range(len(self.percputime_new)):
+                    if hasattr(self.percputime_new[i], 'nice'):
+                        self.percputime_total_new[i] += self.percputime_new[i].nice
+                for i in range(len(self.percputime_new)):
+                    if hasattr(self.percputime_new[i], 'iowait'):
+                        self.percputime_total_new[i] += self.percputime_new[i].iowait
+                for i in range(len(self.percputime_new)):
+                    if hasattr(self.percputime_new[i], 'irq'):
+                        self.percputime_total_new[i] += self.percputime_new[i].irq
+                for i in range(len(self.percputime_new)):
+                    if hasattr(self.percputime_new[i], 'softirq'):
+                        self.percputime_total_new[i] += self.percputime_new[i].softirq
+                perpercent = []
                 self.percpu = []
-            else:
-                try:
-                    self.percputime_new = psutil.cpu_times(percpu = True)
-                    self.percputime_total_new = []
-                    for i in range(len(self.percputime_new)):
-                        self.percputime_total_new.append(self.percputime_new[i].user +
-                                                         self.percputime_new[i].system +
-                                                         self.percputime_new[i].idle)
-                    # Only available on some OS
-                    for i in range(len(self.percputime_new)):
-                        if hasattr(self.percputime_new[i], 'nice'):
-                            self.percputime_total_new[i] += self.percputime_new[i].nice
-                    for i in range(len(self.percputime_new)):
-                        if hasattr(self.percputime_new[i], 'iowait'):
-                            self.percputime_total_new[i] += self.percputime_new[i].iowait
-                    for i in range(len(self.percputime_new)):
-                        if hasattr(self.percputime_new[i], 'irq'):
-                            self.percputime_total_new[i] += self.percputime_new[i].irq
-                    for i in range(len(self.percputime_new)):
-                        if hasattr(self.percputime_new[i], 'softirq'):
-                            self.percputime_total_new[i] += self.percputime_new[i].softirq
-                    perpercent = []
-                    self.percpu = []
-                    for i in range(len(self.percputime_new)):
-                        perpercent.append(100 / (self.percputime_total_new[i] -
-                                                 self.percputime_total_old[i]))
-                        cpu =  {'kernel':
-                                    (self.percputime_new[i].system -
-                                     self.percputime_old[i].system) * perpercent[i],
-                                'user':
-                                    (self.percputime_new[i].user -
-                                     self.percputime_old[i].user) * perpercent[i],
-                                'idle':
-                                    (self.percputime_new[i].idle -
-                                     self.percputime_old[i].idle) * perpercent[i]}
-                        if hasattr(self.percputime_new[i], 'nice'):
-                            cpu['nice'] = (self.percputime_new[i].nice -
-                                           self.percputime_old[i].nice) * perpercent[i]
-                        self.percpu.append(cpu)
-                    self.percputime_old = self.percputime_new
-                    self.percputime_total_old = self.percputime_total_new
-                except Exception:
-                    self.percpu = []
-            if (self.server_tag):
-                self.all_stats["percpu"] = self.percpu
+                for i in range(len(self.percputime_new)):
+                    perpercent.append(100 / (self.percputime_total_new[i] -
+                                             self.percputime_total_old[i]))
+                    cpu =  {'kernel':
+                                (self.percputime_new[i].system -
+                                 self.percputime_old[i].system) * perpercent[i],
+                            'user':
+                                (self.percputime_new[i].user -
+                                 self.percputime_old[i].user) * perpercent[i],
+                            'idle':
+                                (self.percputime_new[i].idle -
+                                 self.percputime_old[i].idle) * perpercent[i]}
+                    if hasattr(self.percputime_new[i], 'nice'):
+                        cpu['nice'] = (self.percputime_new[i].nice -
+                                       self.percputime_old[i].nice) * perpercent[i]
+                    self.percpu.append(cpu)
+                self.percputime_old = self.percputime_new
+                self.percputime_total_old = self.percputime_total_new
+            except Exception:
+                self.percpu = []
 
         # LOAD
-        if (self.client_tag):
-            if input_stats != {}:
-                self.load = input_stats["load"]
+        if hasattr(os, 'getloadavg'):
+            getload = os.getloadavg()
+            self.load = {'min1': getload[0],
+                         'min5': getload[1],
+                         'min15': getload[2]}
         else:
-            if hasattr(os, 'getloadavg'):
-                getload = os.getloadavg()
-                self.load = {'min1': getload[0],
-                             'min5': getload[1],
-                             'min15': getload[2]}
-            else:
-                self.load = {}
-            if (self.server_tag):
-                self.all_stats["load"] = self.load
+            self.load = {}
 
         # MEM
-        if (self.client_tag):
-            if input_stats != {}:
-                self.mem = input_stats["mem"]
-                self.memswap = input_stats["memswap"]
+        if psutil_mem_vm:
+            # If PsUtil 0.6+
+            phymem = psutil.virtual_memory()
+            if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
+               cachemem = phymem.cached + phymem.buffers
+            else:
+               cachemem = 0
+            self.mem = {'cache': cachemem,
+                        'total': phymem.total,
+                        'used': phymem.used,
+                        'free': phymem.free,
+                        'percent': phymem.percent}
+            virtmem = psutil.swap_memory()
+            self.memswap = {'total': virtmem.total,
+                            'used': virtmem.used,
+                            'free': virtmem.free,
+                            'percent': virtmem.percent}
         else:
-            if psutil_mem_vm:
-                # If PsUtil 0.6+
-                phymem = psutil.virtual_memory()
-                if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
-                   cachemem = phymem.cached + phymem.buffers
+            # For olders PsUtil version
+            # Physical memory (RAM)
+            if hasattr(psutil, 'phymem_usage'):
+                phymem = psutil.phymem_usage()
+                if (hasattr(psutil, 'cached_phymem') and
+                    hasattr(psutil, 'phymem_buffers')):
+                    # Cache stat only available for Linux
+                    cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
                 else:
-                   cachemem = 0
+                    cachemem = 0
                 self.mem = {'cache': cachemem,
                             'total': phymem.total,
                             'used': phymem.used,
                             'free': phymem.free,
                             'percent': phymem.percent}
-                virtmem = psutil.swap_memory()
+            else:
+                self.mem = {}
+            # Virtual memory (SWAP)
+            if hasattr(psutil, 'virtmem_usage'):
+                virtmem = psutil.virtmem_usage()
                 self.memswap = {'total': virtmem.total,
                                 'used': virtmem.used,
                                 'free': virtmem.free,
                                 'percent': virtmem.percent}
             else:
-                # For olders PsUtil version
-                # Physical memory (RAM)
-                if hasattr(psutil, 'phymem_usage'):
-                    phymem = psutil.phymem_usage()
-                    if (hasattr(psutil, 'cached_phymem') and
-                        hasattr(psutil, 'phymem_buffers')):
-                        # Cache stat only available for Linux
-                        cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-                    else:
-                        cachemem = 0
-                    self.mem = {'cache': cachemem,
-                                'total': phymem.total,
-                                'used': phymem.used,
-                                'free': phymem.free,
-                                'percent': phymem.percent}
-                else:
-                    self.mem = {}
-                # Virtual memory (SWAP)
-                if hasattr(psutil, 'virtmem_usage'):
-                    virtmem = psutil.virtmem_usage()
-                    self.memswap = {'total': virtmem.total,
-                                    'used': virtmem.used,
-                                    'free': virtmem.free,
-                                    'percent': virtmem.percent}
-                else:
-                    self.memswap = {}
-            if (self.server_tag):
-                self.all_stats["mem"] = self.mem
-                self.all_stats["memswap"] = self.memswap
+                self.memswap = {}
 
         # NET
-        if (self.client_tag):
-            if input_stats != {}:
-                self.network = input_stats["network"]
-        else:
-            if psutil_network_io_tag:
-                self.network = []
-                if hasattr(psutil, 'network_io_counters'):
-                    if not hasattr(self, 'network_old'):
-                        self.network_old = psutil.network_io_counters(True)
-                    else:
-                        self.network_new = psutil.network_io_counters(True)
-                        for net in self.network_new:
-                            try:
-                                # Try necessary to manage dynamic network interface
-                                netstat = {}
-                                netstat['interface_name'] = net
-                                netstat['rx'] = (self.network_new[net].bytes_recv -
-                                                 self.network_old[net].bytes_recv)
-                                netstat['tx'] = (self.network_new[net].bytes_sent -
-                                                 self.network_old[net].bytes_sent)
-                            except Exception:
-                                continue
-                            else:
-                                self.network.append(netstat)
-                        self.network_old = self.network_new
-            if (self.server_tag):
-                self.all_stats["network"] = self.network
+        if psutil_network_io_tag:
+            self.network = []
+            if hasattr(psutil, 'network_io_counters'):
+                if not hasattr(self, 'network_old'):
+                    self.network_old = psutil.network_io_counters(True)
+                else:
+                    self.network_new = psutil.network_io_counters(True)
+                    for net in self.network_new:
+                        try:
+                            # Try necessary to manage dynamic network interface
+                            netstat = {}
+                            netstat['interface_name'] = net
+                            netstat['rx'] = (self.network_new[net].bytes_recv -
+                                             self.network_old[net].bytes_recv)
+                            netstat['tx'] = (self.network_new[net].bytes_sent -
+                                             self.network_old[net].bytes_sent)
+                        except Exception:
+                            continue
+                        else:
+                            self.network.append(netstat)
+                    self.network_old = self.network_new
 
         # SENSORS
-        if (self.client_tag):
-            if input_stats != {}:
-                try:
-                    self.sensors = input_stats["sensors"]
-                except:
-                    self.sensors = {}
-        else:
-            if (sensors_tag):
-                self.sensors = self.glancesgrabsensors.get()
-            if (self.server_tag):
-                self.all_stats["sensors"] = self.sensors
+        if (sensors_tag):
+            self.sensors = self.glancesgrabsensors.get()
 
         # DISK I/O
-        if (self.client_tag):
-            if input_stats != {}:
-                self.diskio = input_stats["diskio"]
-        else:
-            if psutil_disk_io_tag:
-                self.diskio = []
-                if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'):
-                    if not hasattr(self, 'diskio_old'):
-                        self.diskio_old = psutil.disk_io_counters(True)
-                    else:
-                        self.diskio_new = psutil.disk_io_counters(True)
-                        for disk in self.diskio_new:
-                            try:
-                                # Try necessary to manage dynamic disk creation/del
-                                diskstat = {}
-                                diskstat['disk_name'] = disk
-                                diskstat['read_bytes'] = (
-                                    self.diskio_new[disk].read_bytes -
-                                    self.diskio_old[disk].read_bytes)
-                                diskstat['write_bytes'] = (
-                                    self.diskio_new[disk].write_bytes -
-                                    self.diskio_old[disk].write_bytes)
-                            except Exception:
-                                continue
-                            else:
-                                self.diskio.append(diskstat)
-                        self.diskio_old = self.diskio_new
-            if (self.server_tag):
-                self.all_stats["diskio"] = self.diskio
+        if psutil_disk_io_tag:
+            self.diskio = []
+            if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'):
+                if not hasattr(self, 'diskio_old'):
+                    self.diskio_old = psutil.disk_io_counters(True)
+                else:
+                    self.diskio_new = psutil.disk_io_counters(True)
+                    for disk in self.diskio_new:
+                        try:
+                            # Try necessary to manage dynamic disk creation/del
+                            diskstat = {}
+                            diskstat['disk_name'] = disk
+                            diskstat['read_bytes'] = (
+                                self.diskio_new[disk].read_bytes -
+                                self.diskio_old[disk].read_bytes)
+                            diskstat['write_bytes'] = (
+                                self.diskio_new[disk].write_bytes -
+                                self.diskio_old[disk].write_bytes)
+                        except Exception:
+                            continue
+                        else:
+                            self.diskio.append(diskstat)
+                    self.diskio_old = self.diskio_new
 
         # FILE SYSTEM
-        if (self.client_tag):
-            if input_stats != {}:
-                self.fs = input_stats["fs"]
-        else:
-            if psutil_fs_usage_tag:
-                self.fs = self.glancesgrabfs.get()
-            if (self.server_tag):
-                self.all_stats["fs"] = self.fs
+        if psutil_fs_usage_tag:
+            self.fs = self.glancesgrabfs.get()
 
         # PROCESS
+        self._process_list_refresh()
+
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
-        if (self.client_tag):
-            if input_stats != {}:
-                self.processcount = input_stats["processcount"]
-                self.process = input_stats["process"]
-            self.process_list_refresh = True
-        else:
-            if self.process_list_refresh:
-                self.process_first_grab = False
-                if not hasattr(self, 'process_all'):
-                    self.process_all = [proc for proc in psutil.process_iter()]
-                    self.process_first_grab = True
-                self.process = []
-                self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-                # Manage new processes
-                process_new = [proc.pid for proc in self.process_all]
-                for proc in psutil.process_iter():
-                    if proc.pid not in process_new:
-                        self.process_all.append(proc)
-                # Grab stats from process list
-                for proc in self.process_all[:]:
-                    try:
-                        if not proc.is_running():
-                            try:
-                                self.process_all.remove(proc)
-                            except Exception:
-                                pass
-                    except psutil.error.NoSuchProcess:
-                        try:
-                            self.process_all.remove(proc)
-                        except Exception:
-                            pass
-                    else:
-                        # Global stats
-                        try:
-                            self.processcount[str(proc.status)] += 1
-                        except psutil.error.NoSuchProcess:
-                            # Process non longer exist
-                            pass
-                        except KeyError:
-                            # Key did not exist, create it
-                            self.processcount[str(proc.status)] = 1
-                        finally:
-                            self.processcount['total'] += 1
-                        # Per process stats
-                        try:
-                            self.process.append(self.__get_process_stats__(proc))
-                        except Exception:
-                            pass
-                # If it is the first grab then empty process list
-                if self.process_first_grab:
-                    self.process = []
-            self.process_list_refresh = not self.process_list_refresh
-            if (self.server_tag):
-                self.all_stats["processcount"] = self.processcount
-                self.all_stats["process"] = self.process
-
         # Get the current date/time
         self.now = datetime.now()
 
         # Get the number of core (CPU) (Used to display load alerts)
-        if (self.client_tag):
-            if input_stats != {}:
-                self.core_number = input_stats["core_number"]
-        else:
-            self.core_number = psutil.NUM_CPUS
-            if (self.server_tag):
-                self.all_stats["core_number"] = self.core_number
+        self.core_number = psutil.NUM_CPUS
 
     def update(self, input_stats = {}):
         # Update the stats
@@ -1043,6 +961,75 @@ class glancesStats:
 
     def getNow(self):
         return self.now
+
+
+class GlancesStatsServer(GlancesStats):
+    def __init__(self):
+        GlancesStats.__init__(self)
+
+        # Init the all_stats used by the server
+        # all_stats is a dict of dicts filled by the server
+        self.all_stats = collections.defaultdict(dict)
+        self._init_host()
+        self.all_stats["host"] = self.host
+
+    def __update__(self, input_stats):
+        """
+        Update the stats
+        """
+
+        GlancesStats.__update__(self, input_stats)
+        self.process_list_refresh = True
+        self._process_list_refresh()
+
+        self.all_stats["cpu"] = self.cpu
+        self.all_stats["percpu"] = self.percpu
+        self.all_stats["load"] = self.load
+        self.all_stats["mem"] = self.mem
+        self.all_stats["memswap"] = self.memswap
+        self.all_stats["network"] = self.network
+        self.all_stats["sensors"] = self.sensors
+        self.all_stats["diskio"] = self.diskio
+        self.all_stats["fs"] = self.fs
+        self.all_stats["processcount"] = self.processcount
+        self.all_stats["process"] = self.process
+        self.all_stats["core_number"] = self.core_number
+
+        # Get the current date/time
+        self.now = datetime.now()
+
+
+class GlancesStatsClient(GlancesStats):
+    def __init__(self):
+        GlancesStats.__init__(self)
+        # Cached informations (no need to be refreshed)
+        # Host and OS informations
+
+    def __update__(self, input_stats):
+        """
+        Update the stats
+        """
+
+        if input_stats != {}:
+            self.host = input_stats["host"]
+            self.cpu = input_stats["cpu"]
+            self.percpu = input_stats["percpu"]
+            self.load = input_stats["load"]
+            self.mem = input_stats["mem"]
+            self.memswap = input_stats["memswap"]
+            self.network = input_stats["network"]
+            try:
+                self.sensors = input_stats["sensors"]
+            except:
+                self.sensors = {}
+            self.diskio = input_stats["diskio"]
+            self.fs = input_stats["fs"]
+            self.processcount = input_stats["processcount"]
+            self.process = input_stats["process"]
+            self.core_number = input_stats["core_number"]
+
+        # Get the current date/time
+        self.now = datetime.now()
 
 
 class glancesScreen:
@@ -2820,7 +2807,8 @@ def main():
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
         # Init stats
-        stats = glancesStats(server_tag = True)
+        stats = GlancesStatsServer()
+        stats.update({})
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
 
@@ -2838,7 +2826,7 @@ def main():
         logs = glancesLogs()
 
         # Init stats
-        stats = glancesStats(client_tag = True)
+        stats = GlancesStatsClient()
 
         # Init screen
         screen = glancesScreen(refresh_time=refresh_time)
@@ -2852,7 +2840,7 @@ def main():
         logs = glancesLogs()
 
         # Init stats
-        stats = glancesStats()
+        stats = GlancesStats()
 
         # Init HTML output
         if html_tag:
@@ -2883,7 +2871,6 @@ def main():
             else:
                 server_status = "Connected"
                 stats.update(server_stats)
-
             # Update the screen
             screen.update(stats, cs_status = server_status)
     else:
