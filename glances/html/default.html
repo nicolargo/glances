@@ -13,7 +13,7 @@
 		<thead>
 			<tr>
 				<th scope="col" class="bgcpu fgcpu"></th>
-				<th scope="col" class="bgcpu fgcpu">Cpu <small>{{ (cpu.user + cpu.kernel + cpu.nice)|round(1) }}%</small></th>
+				<th scope="col" class="bgcpu fgcpu">Cpu <small>{{ (cpu.user + cpu.system + cpu.nice)|round(1) }}%</small></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -22,8 +22,8 @@
 				<td class="{{ cpu.user_color }}">{{ cpu.user|round(1) }}</td>
 			</tr>
 			<tr>
-				<td class="bgcpu fgcpu">Kernel</td>
-				<td class="{{ cpu.kernel_color }}">{{ cpu.kernel|round(1) }}</td>
+				<td class="bgcpu fgcpu">System</td>
+				<td class="{{ cpu.system_color }}">{{ cpu.system|round(1) }}</td>
 			</tr>
 			<tr>
 				<td class="bgcpu fgcpu">Nice</td>
@@ -83,13 +83,13 @@
 				<td class="bgmem fgmem">Used</td>
 				<td>{{ mem.used|filesizeformat(binary = true) }}</td>
 				<td class="{{ memswap.used_color }}">{{ memswap.used|filesizeformat(binary = true) }}</td>
-				<td class="{{ mem.used_color }}">{{ (mem.used-mem.cache)|filesizeformat(binary = true) }}</td>
+				<td class="{{ mem.used_color }}">{{ mem.used|filesizeformat(binary = true) }}</td>
 			</tr>
 			<tr>
 				<td class="bgmem fgmem">Free</td>
 				<td>{{ mem.free|filesizeformat(binary = true) }}</td>
 				<td>{{ memswap.free|filesizeformat(binary = true) }}</td>
-				<td>{{ (mem.free+mem.cache)|filesizeformat(binary = true) }}</td>
+				<td>{{ mem.free|filesizeformat(binary = true) }}</td>
 			</tr>
 		</tbody>
 	</table>

@@ -661,12 +661,12 @@ class GlancesStats:
                     self.cputime_total_new += self.cputime_new.softirq
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
-                self.cpu = {'kernel':
-                                (self.cputime_new.system -
-                                 self.cputime_old.system) * percent,
-                            'user':
+                self.cpu = {'user':
                                 (self.cputime_new.user -
                                  self.cputime_old.user) * percent,
+                            'system':
+                                (self.cputime_new.system -
+                                 self.cputime_old.system) * percent,
                             'idle':
                                 (self.cputime_new.idle -
                                  self.cputime_old.idle) * percent}
@@ -684,9 +684,9 @@ class GlancesStats:
             except Exception:
                 self.cpu = {}
 
-        # PerCPU
+        # Per-CPU
         if not hasattr(self, 'percputime_old'):
-            self.percputime_old = psutil.cpu_times(percpu = True)
+            self.percputime_old = psutil.cpu_times(percpu=True)
             self.percputime_total_old = []
             for i in range(len(self.percputime_old)):
                 self.percputime_total_old.append(self.percputime_old[i].user +
@@ -708,7 +708,7 @@ class GlancesStats:
             self.percpu = []
         else:
             try:
-                self.percputime_new = psutil.cpu_times(percpu = True)
+                self.percputime_new = psutil.cpu_times(percpu=True)
                 self.percputime_total_new = []
                 for i in range(len(self.percputime_new)):
                     self.percputime_total_new.append(self.percputime_new[i].user +
@@ -732,12 +732,12 @@ class GlancesStats:
                 for i in range(len(self.percputime_new)):
                     perpercent.append(100 / (self.percputime_total_new[i] -
                                              self.percputime_total_old[i]))
-                    cpu =  {'kernel':
-                                (self.percputime_new[i].system -
-                                 self.percputime_old[i].system) * perpercent[i],
-                            'user':
+                    cpu =  {'user':
                                 (self.percputime_new[i].user -
                                  self.percputime_old[i].user) * perpercent[i],
+                            'system':
+                                (self.percputime_new[i].system -
+                                 self.percputime_old[i].system) * perpercent[i],
                             'idle':
                                 (self.percputime_new[i].idle -
                                  self.percputime_old[i].idle) * perpercent[i]}
@@ -760,42 +760,61 @@ class GlancesStats:
             self.load = {}
 
         # MEM
+        # psutil >= 0.6
         if psutil_mem_vm:
-            # If PsUtil 0.6+
+            # RAM
             phymem = psutil.virtual_memory()
-            if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
-               cachemem = phymem.cached + phymem.buffers
-            else:
-               cachemem = 0
-            self.mem = {'cache': cachemem,
-                        'total': phymem.total,
-                        'used': phymem.used,
-                        'free': phymem.free,
-                        'percent': phymem.percent}
+
+            # buffers and cached (Linux, BSD)
+            buffers = getattr(phymem, 'buffers', lambda: 0)
+            cached = getattr(phymem, 'cached', lambda: 0)
+
+            # phymem free and usage
+            total = phymem.total
+            free = phymem.available  # phymem.free + buffers + cached
+            used = total - free
+
+            self.mem = {'total': total,
+                        'percent': phymem.percent,
+                        'used': used,
+                        'free': free,
+                        'active': phymem.active,
+                        'inactive': phymem.inactive,
+                        'buffers': buffers,
+                        'cached': cached}
+
+            # Swap
             virtmem = psutil.swap_memory()
             self.memswap = {'total': virtmem.total,
                             'used': virtmem.used,
                             'free': virtmem.free,
                             'percent': virtmem.percent}
         else:
-            # For olders PsUtil version
-            # Physical memory (RAM)
+            # psutil < 0.6
+            # RAM
             if hasattr(psutil, 'phymem_usage'):
                 phymem = psutil.phymem_usage()
-                if (hasattr(psutil, 'cached_phymem') and
-                    hasattr(psutil, 'phymem_buffers')):
-                    # Cache stat only available for Linux
-                    cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-                else:
-                    cachemem = 0
-                self.mem = {'cache': cachemem,
-                            'total': phymem.total,
-                            'used': phymem.used,
-                            'free': phymem.free,
-                            'percent': phymem.percent}
+
+                # buffers and cached (Linux, BSD)
+                buffers = getattr(psutil, 'phymem_buffers', lambda: 0)()
+                cached = getattr(psutil, 'cached_phymem', lambda: 0)()
+
+                # phymem free and usage
+                total = phymem.total
+                free = phymem.free + buffers + cached
+                used = total - free
+
+                # active and inactive not available for psutil < 0.6
+                self.mem = {'total': total,
+                            'percent': phymem.percent,
+                            'used': used,
+                            'free': free,
+                            'buffers': buffers,
+                            'cached': cached}
             else:
                 self.mem = {}
-            # Virtual memory (SWAP)
+
+            # Swap
             if hasattr(psutil, 'virtmem_usage'):
                 virtmem = psutil.virtmem_usage()
                 self.memswap = {'total': virtmem.total,
@@ -950,7 +969,7 @@ class GlancesStats:
             # If global MEM > 70% sort by MEM usage
             # else sort by CPU usage
             if (self.mem['total'] != 0):
-                memtotal = ((self.mem['used'] - self.mem['cache']) * 100) / self.mem['total']
+                memtotal = (self.mem['used'] * 100) / self.mem['total']
                 if memtotal > limits.getSTDWarning():
                     sortedby = 'memory_percent'
         elif sortedby == 'name':
@@ -1053,9 +1072,9 @@ class glancesScreen:
         self.system_y = 0
         self.cpu_x = 0
         self.cpu_y = 2
-        self.load_x = 19
+        self.load_x = 17
         self.load_y = 2
-        self.mem_x = 39
+        self.mem_x = 33
         self.mem_y = 2
         self.network_x = 0
         self.network_y = 7
@@ -1110,7 +1129,8 @@ class glancesScreen:
         else:
             self.hascolors = False
 
-        self.title_color = curses.A_BOLD | curses.A_UNDERLINE
+        self.title_color = curses.A_BOLD
+        self.title_underline_color = curses.A_BOLD | curses.A_UNDERLINE
         self.help_color = curses.A_BOLD
         if self.hascolors:
             # Colors text styles
@@ -1452,28 +1472,28 @@ class glancesScreen:
 
         # Is it possible to display extended stats ?
         # If yes then tag_extendedcpu = True
-        tag_extendedcpu = screen_x >  self.cpu_x + 79 + 17
+        tag_extendedcpu = screen_x > self.cpu_x + 79 + 17
 
-        # Is it possible to display percpu stats ?
-        # Do you want it ? (percpu_tag)
+        # Is it possible to display per-CPU stats ?
+        # Do you want it ?
         # If yes then tag_percpu = True
-        if (self.percpu_tag):
-            tag_percpu = screen_x >  self.cpu_x + 79 + (len(percpu)-1)*10
+        if self.percpu_tag:
+            tag_percpu = screen_x > self.cpu_x + 79 + (len(percpu) - 1) * 10
         else:
             tag_percpu = False
 
-        # Compute x offset
-        if (tag_percpu):
-            offset_x = (len(percpu)-1)*10
-        elif (tag_extendedcpu):
-            offset_x = 17
+        # compute x offset
+        if tag_percpu:
+            offset_x = (len(percpu) - 1) * 8
+        elif tag_extendedcpu:
+            offset_x = 16
         else:
             offset_x = 0
 
-        # Display CPU stats
-        if (screen_y > self.cpu_y + 5 and tag_percpu):
-            # Display per CPU stats whenspace is available
-            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 8,
+        # display CPU stats
+        if screen_y > self.cpu_y + 5 and tag_percpu:
+            # display per-CPU stats when space is available
+            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 6,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
 
@@ -1482,33 +1502,43 @@ class glancesScreen:
                                          _("Compute data..."), 15)
                 return 0
 
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("User:"), 8)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x, _("Kernel:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Idle:"), 8)
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x,
+                                     _("user:"), 5)
+            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
+                                     _("system:"), 7)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
+                                     _("idle:"), 5)
 
             for i in range(len(percpu)):
-                self.term_window.addnstr(self.cpu_y, self.cpu_x + 10 + i*10,
-                                         "%.1f%%" % (100 - percpu[i]['idle']), 8)
+                # percentage of usage
+                self.term_window.addnstr(
+                    self.cpu_y, self.cpu_x + 8 + i * 8,
+                    format((100 - percpu[i]['idle']) / 100, '>6.1%'), 6)
 
+                # user
                 alert = self.__getCpuAlert(percpu[i]['user'])
                 logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['user'], 8,
-                                         self.__colors_list[alert])
+                self.term_window.addnstr(
+                    self.cpu_y + 1, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['user'] / 100, '>6.1%'), 6,
+                    self.__colors_list2[alert])
 
-                alert = self.__getCpuAlert(percpu[i]['kernel'])
-                logs.add(alert, "CPU-%d kernel" % i, percpu[i]['kernel'], proclist)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['kernel'], 8,
-                                         self.__colors_list[alert])
-                # No alert for IDLE
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['idle'], 8)
+                # system
+                alert = self.__getCpuAlert(percpu[i]['system'])
+                logs.add(alert, "CPU-%d system" % i, percpu[i]['system'],
+                         proclist)
+                self.term_window.addnstr(
+                    self.cpu_y + 2, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['system'] / 100, '>6.1%'), 6,
+                    self.__colors_list2[alert])
 
-        elif (screen_y > self.cpu_y + 5 and
-              screen_x > self.cpu_x + 18):
-            # Display summary information
-            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 8,
+                # idle
+                self.term_window.addnstr(
+                    self.cpu_y + 3, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['idle'] / 100, '>6.1%'), 6)
+        # display CPU summary information
+        elif screen_y > self.cpu_y + 5 and screen_x > self.cpu_x + 18:
+            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 3,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
 
@@ -1517,58 +1547,70 @@ class glancesScreen:
                                          _("Compute data..."), 15)
                 return 0
 
-            self.term_window.addnstr(self.cpu_y, self.cpu_x + 10,
-                                     "%.1f%%" % (100 - cpu['idle']), 8)
+            # percentage of usage
+            cpu_percent = (100 - cpu['idle']) / 100
+            self.term_window.addnstr(self.cpu_y, self.cpu_x + 8,
+                                     format(cpu_percent, '>6.1%'), 6)
 
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x,
-                                     _("User:"), 8)
+            # user
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("user:"), 5)
             alert = self.__getCpuAlert(cpu['user'])
             logs.add(alert, "CPU user", cpu['user'], proclist)
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10,
-                                     "%.1f" % cpu['user'], 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 8,
+                                     format(cpu['user'] / 100, '>6.1%'), 6,
+                                     self.__colors_list2[alert])
 
+            # system
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
-                                     _("Kernel:"), 8)
-            alert = self.__getCpuAlert(cpu['kernel'])
-            logs.add(alert, "CPU kernel", cpu['kernel'], proclist)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10,
-                                     "%.1f" % cpu['kernel'], 8,
-                                     self.__colors_list[alert])
-            # No alert for IDLE
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
-                                     _("Idle:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
-                                     "%.1f" % cpu['idle'], 8)
+                                     _("system:"), 7)
+            alert = self.__getCpuAlert(cpu['system'])
+            logs.add(alert, "CPU system", cpu['system'], proclist)
+            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 8,
+                                     format(cpu['system'] / 100, '>6.1%'), 6,
+                                     self.__colors_list2[alert])
 
-            if (screen_y > self.cpu_y + 5 and tag_extendedcpu):
-                # Display extended CPU stats whenspace is available
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 17,
-                                         _("IO Wait:"), 8)
+            # idle
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("idle:"), 5)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 8,
+                                     format(cpu['idle'] / 100, '>6.1%'), 6)
+
+            # display extended CPU stats when space is available
+            if screen_y > self.cpu_y + 5 and tag_extendedcpu:
+                # nice
+                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 16,
+                                         _("nice:"), 5)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
-                                             "%.1f" % cpu['iowait'], 8,
-                                             self.__getExtCpuColor(cpu['iowait']))
+                    self.term_window.addnstr(
+                        self.cpu_y + 1, self.cpu_x + 24,
+                        format(cpu['nice'] / 100, '>6.1%'), 6)
                 except:
-                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
-                                             "N/A", 8)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 17,
-                                         _("IRQ:"), 8)
+                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 24,
+                                             "N/A", 3)
+
+                # iowait (Linux)
+                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 16,
+                                         _("iowait:"), 7)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
-                                            "%.1f" % cpu['irq'], 8)
+                    self.term_window.addnstr(
+                        self.cpu_y + 2, self.cpu_x + 24,
+                        format(cpu['iowait'] / 100, '>6.1%'), 6,
+                        self.__getExtCpuColor(cpu['iowait']))
                 except:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
-                                             "N/A", 8)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 17,
-                                         _("Nice:"), 8)
+                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 24,
+                                             "N/A", 3)
+
+                # irq (Linux, FreeBSD)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
+                                         _("irq:"), 4)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                             "%.1f" % cpu['nice'], 8)
+                    self.term_window.addnstr(
+                        self.cpu_y + 3, self.cpu_x + 24,
+                        format(cpu['irq'] / 100,'>6.1%'), 6)
                 except:
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                             "N/A", 8)
-        # Return the X offset to display Load and Mem
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 24,
+                                             "N/A", 3)
+
+        # return the x offset to display load and mem
         return offset_x
 
     def displayLoad(self, load, core, proclist, offset_x=0):
@@ -1579,94 +1621,153 @@ class glancesScreen:
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.load_y + 5 and
             screen_x > self.load_x + offset_x + 18):
-            self.term_window.addnstr(self.load_y, self.load_x + offset_x, _("Load"), 8,
+            self.term_window.addnstr(self.load_y,
+                                     self.load_x + offset_x, _("Load"), 4,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.load_y, self.load_x + offset_x + 10,
-                                     str(core) + _("-Core"), 8)
-            self.term_window.addnstr(self.load_y + 1, self.load_x + offset_x,
-                                     _("1 min:"), 8)
-            self.term_window.addnstr(self.load_y + 2, self.load_x + offset_x,
-                                     _("5 min:"), 8)
-            self.term_window.addnstr(self.load_y + 3, self.load_x + offset_x,
-                                     _("15 min:"), 8)
+            self.term_window.addnstr(self.load_y, self.load_x + offset_x + 7,
+                                     str(core) + _("-core"), 7)
 
-            self.term_window.addnstr(self.load_y + 1, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min1']), 8)
+            # 1 min
+            self.term_window.addnstr(self.load_y + 1,
+                                     self.load_x + offset_x, _("1 min:"), 6)
+            self.term_window.addnstr(self.load_y + 1,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min1'], '>5.2f'), 5)
 
+            # 5 min
+            self.term_window.addnstr(self.load_y + 2,
+                                     self.load_x + offset_x, _("5 min:"), 6)
             alert = self.__getLoadAlert(load['min5'], core)
             logs.add(alert, "LOAD 5-min", load['min5'], proclist)
-            self.term_window.addnstr(self.load_y + 2, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min5']), 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.load_y + 2,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min5'], '>5.2f'), 5,
+                                     self.__colors_list2[alert])
 
+            # 15 min
+            self.term_window.addnstr(self.load_y + 3,
+                                     self.load_x + offset_x, _("15 min:"), 7)
             alert = self.__getLoadAlert(load['min15'], core)
             logs.add(alert, "LOAD 15-min", load['min15'], proclist)
-            self.term_window.addnstr(self.load_y + 3, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min15']), 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.load_y + 3,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min15'], '>5.2f'), 5,
+                                     self.__colors_list2[alert])
 
     def displayMem(self, mem, memswap, proclist, offset_x=0):
-        # MEM
+        # Memory
         if not mem or not memswap:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + 38):
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x, _("Mem"), 8,
+            # RAM
+            self.term_window.addnstr(self.mem_y,
+                                     self.mem_x + offset_x, _("Mem"), 8,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
+
+            # percentage of usage
+            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 6,
+                                     format(mem['percent'] / 100, '>6.1%'), 6)
+
+            # total
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x,
-                                     _("Total:"), 6)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x, _("Used:"), 6)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x, _("Free:"), 6)
-
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 9,
-                                     "{0:.1%}".format(mem['percent'] / 100), 8)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['used']), 8)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['free']), 8)
-
-            # real memory usage
-            real_used_phymem = mem['used'] - mem['cache']
-            real_free_phymem = mem['free'] + mem['cache']
-            alert = self.__getMemAlert(real_used_phymem, mem['total'])
-            logs.add(alert, "MEM real", real_used_phymem, proclist)
+                                     _("total:"), 6)
             self.term_window.addnstr(
-                self.mem_y + 2, self.mem_x + offset_x + 15,
-                "({0})".format(self.__autoUnit(real_used_phymem)), 8,
-                self.__colors_list[alert])
+                self.mem_y + 1, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['total']), '>5'), 5)
+
+            # used
+            alert = self.__getMemAlert(mem['used'], mem['total'])
+            logs.add(alert, "MEM real", mem['used'], proclist)
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x,
+                                     _("used:"), 5)
             self.term_window.addnstr(
-                self.mem_y + 3, self.mem_x + offset_x + 15,
-                "({0})".format(self.__autoUnit(real_free_phymem)), 8)
+                self.mem_y + 2, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['used']), '>5'), 5,
+                self.__colors_list2[alert])
+
+            # free
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x,
+                                     _("free:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['free']), '>5'), 5)
+
+            # active and inactive (only available for psutil >= 0.6)
+            if psutil_mem_vm:
+                # active
+                self.term_window.addnstr(self.mem_y,
+                                         self.mem_x + offset_x + 14,
+                                         _("active:"), 7)
+                self.term_window.addnstr(
+                    self.mem_y, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['active']), '>5'), 5)
+
+                # inactive
+                self.term_window.addnstr(self.mem_y + 1,
+                                         self.mem_x + offset_x + 14,
+                                         _("inactive:"), 9)
+                self.term_window.addnstr(
+                    self.mem_y + 1, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['inactive']), '>5'), 5)
+
+            # buffers (Linux, BSD)
+            self.term_window.addnstr(self.mem_y + 2,
+                                     self.mem_x + offset_x + 14,
+                                     _("buffers:"), 8)
+            self.term_window.addnstr(
+                self.mem_y + 2, self.mem_x + offset_x + 24,
+                format(self.__autoUnit(mem['buffers']), '>5'), 5)
+
+            # cached (Linux, BSD)
+            self.term_window.addnstr(self.mem_y + 3,
+                                     self.mem_x + offset_x + 14,
+                                     _("cached:"), 7)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 24,
+                format(self.__autoUnit(mem['cached']), '>5'), 5)
 
             # Swap
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 25, _("Swap"), 8,
+            self.term_window.addnstr(self.mem_y,
+                                     self.mem_x + offset_x + 32, _("Swap"), 4,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 25,
-                                     _("Total:"), 6)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 25,
-                                     _("Used:"), 6)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 25,
-                                     _("Free:"), 6)
 
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 34,
-                                     "{0:.1%}".format(memswap['percent'] / 100),
-                                     8)
+            # percentage of usage
+            self.term_window.addnstr(
+                self.mem_y, self.mem_x + offset_x + 38,
+                format(memswap['percent'] / 100, '>6.1%'), 6)
+
+            # total
+            self.term_window.addnstr(self.mem_y + 1,
+                                     self.mem_x + offset_x + 32,
+                                     _("total:"), 6)
+            self.term_window.addnstr(
+                self.mem_y + 1, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['total']), '>5'), 8)
+
+            # used
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'], proclist)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['used']), 8,
-                                     self.__colors_list[alert])
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['free']), 8)
+            self.term_window.addnstr(self.mem_y + 2,
+                                     self.mem_x + offset_x + 32,
+                                     _("used:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 2, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['used']), '>5'), 8,
+                self.__colors_list2[alert])
+
+            # free
+            self.term_window.addnstr(self.mem_y + 3,
+                                     self.mem_x + offset_x + 32,
+                                     _("free:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['free']), '>5'), 8)
 
     def displayNetwork(self, network):
         """
@@ -2207,7 +2308,7 @@ class glancesScreen:
                 self.help_y + 4, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("Key"), _("Function"), width=width),
-                79, self.title_color if self.hascolors else 0)
+                79, self.title_underline_color if self.hascolors else 0)
             self.term_window.addnstr(
                 self.help_y + 5, self.help_x,
                 "{0:^{width}} {1}".format(
@@ -2356,7 +2457,7 @@ class glancesHtml:
 
     def __getCpuColor(self, cpu, max=100):
         cpu['user_color'] = self.__getColor(cpu['user'], max)
-        cpu['kernel_color'] = self.__getColor(cpu['kernel'], max)
+        cpu['system_color'] = self.__getColor(cpu['system'], max)
         cpu['nice_color'] = self.__getColor(cpu['nice'], max)
         return cpu
 
@@ -2383,8 +2484,7 @@ class glancesHtml:
         return load
 
     def __getMemColor(self, mem):
-        real_used_phymem = mem['used'] - mem['cache']
-        mem['used_color'] = self.__getColor(real_used_phymem, mem['total'])
+        mem['used_color'] = self.__getColor(mem['used'], mem['total'])
 
         return mem
 
@@ -2458,7 +2558,7 @@ class glancesCsv:
         if stats.getCpu():
             # Update CSV with the CPU stats
             cpu = stats.getCpu()
-            self.__csvfile.writerow(["cpu", cpu['user'], cpu['kernel'],
+            self.__csvfile.writerow(["cpu", cpu['user'], cpu['system'],
                                      cpu['nice']])
         if stats.getLoad():
             # Update CSV with the LOAD stats
