@@ -1084,7 +1084,7 @@ class glancesScreen:
         self.diskio_y = -1
         self.fs_x = 0
         self.fs_y = -1
-        self.process_x = 29
+        self.process_x = 26
         self.process_y = 7
         self.log_x = 0
         self.log_y = -1
@@ -1328,7 +1328,7 @@ class glancesScreen:
             # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
         elif self.pressedkey == 98:
-            # 'b' > Switch between bit/s and byte/s for network IO
+            # 'b' > Switch between bit/s and Byte/s for network IO
             self.net_byteps_tag = not self.net_byteps_tag
         elif self.pressedkey == 99 and psutil_get_cpu_percent_tag:
             # 'c' > Sort processes by CPU usage
@@ -1774,21 +1774,19 @@ class glancesScreen:
         Display the network interface bitrate
         Return the number of interfaces
         """
-        # Network interfaces bitrate
         if not self.network_tag:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.network_y + 3 and
             screen_x > self.network_x + 28):
-            # Network interfaces bitrate
             self.term_window.addnstr(self.network_y, self.network_x,
-                                     _("Network"), 8, self.title_color if
+                                     _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                     _("Rx/s"), 8)
-            self.term_window.addnstr(self.network_y, self.network_x + 19,
-                                     _("Tx/s"), 8)
+                                     format(_("Rx/s"), '>5'), 5)
+            self.term_window.addnstr(self.network_y, self.network_x + 18,
+                                     format(_("Tx/s"), '>5'), 5)
 
             # If there is no data to display...
             if not network:
@@ -1801,19 +1799,30 @@ class glancesScreen:
             net_num = min(screen_y - self.network_y - 3, len(network))
             for i in range(0, net_num):
                 elapsed_time = max(1, self.__refresh_time)
+
+                # network interface name
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
                     network[i]['interface_name'] + ':', 8)
-                if (self.net_byteps_tag):
+
+                # Byte/s or bit/s
+                if self.net_byteps_tag:
                     rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
                     tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
                 else:
-                    rx = self.__autoUnit(network[i]['rx'] // elapsed_time * 8) + "b"
-                    tx = self.__autoUnit(network[i]['tx'] // elapsed_time * 8) + "b"
-                self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 10, rx, 8)
-                self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 19, tx, 8)
+                    rx = self.__autoUnit(
+                        network[i]['rx'] // elapsed_time * 8) + "b"
+                    tx = self.__autoUnit(
+                        network[i]['tx'] // elapsed_time * 8) + "b"
+
+                # rx/s
+                self.term_window.addnstr(self.network_y + 1 + i,
+                                         self.network_x + 10,
+                                         format(rx, '>5'), 5)
+                # tx/s
+                self.term_window.addnstr(self.network_y + 1 + i,
+                                         self.network_x + 18,
+                                         format(tx, '>5'), 5)
                 ret = ret + 1
             return ret
         return 0
@@ -1865,9 +1874,9 @@ class glancesScreen:
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 10,
-                                     _("In/s"), 8)
-            self.term_window.addnstr(self.diskio_y, self.diskio_x + 19,
-                                     _("Out/s"), 8)
+                                     format(_("In/s"), '>5'), 5)
+            self.term_window.addnstr(self.diskio_y, self.diskio_x + 18,
+                                     format(_("Out/s"), '>5'), 5)
 
             # If there is no data to display...
             if not diskio:
@@ -1880,17 +1889,23 @@ class glancesScreen:
             disk_num = min(screen_y - self.diskio_y - 3, len(diskio))
             for disk in range(0, disk_num):
                 elapsed_time = max(1, self.__refresh_time)
+
+                # partition name
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x,
                     diskio[disk]['disk_name'] + ':', 8)
+
+                # in/s
+                ins = diskio[disk]['write_bytes'] // elapsed_time
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 10,
-                    self.__autoUnit(
-                        diskio[disk]['write_bytes'] // elapsed_time), 8)
+                    format(self.__autoUnit(ins), '>5'), 5)
+
+                # out/s
+                outs = diskio[disk]['read_bytes'] // elapsed_time
                 self.term_window.addnstr(
-                    self.diskio_y + 1 + disk, self.diskio_x + 19,
-                    self.__autoUnit(
-                        diskio[disk]['read_bytes'] // elapsed_time), 8)
+                    self.diskio_y + 1 + disk, self.diskio_x + 18,
+                    format(self.__autoUnit(outs), '>5'), 5)
             return disk + 3
         return 0
 
@@ -1903,32 +1918,41 @@ class glancesScreen:
         self.fs_y = offset_y
         if (screen_y > self.fs_y + 3 and
             screen_x > self.fs_x + 28):
-            self.term_window.addnstr(self.fs_y, self.fs_x, _("Mount"), 8,
+            self.term_window.addnstr(self.fs_y, self.fs_x, _("Mount"), 5,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 10, _("Total"), 7)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 19, _("Used"), 7)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 9,
+                                     format(_("Used"), '>6'), 6)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 17,
+                                     format(_("Total"), '>6'), 6)
 
             # Adapt the maximum disk to the screen
             mounted = 0
             fs_num = min(screen_y - self.fs_y - 3, len(fs))
             for mounted in range(0, fs_num):
+                # mount point
                 if len(fs[mounted]['mnt_point']) > 8:
                     self.term_window.addnstr(
-                        self.fs_y + 1 + mounted,
-                        self.fs_x, '_'+fs[mounted]['mnt_point'][-7:], 8)
+                        self.fs_y + 1 + mounted, self.fs_x,
+                        '_' + fs[mounted]['mnt_point'][-7:], 8)
                 else:
                     self.term_window.addnstr(
-                        self.fs_y + 1 + mounted,
-                        self.fs_x, fs[mounted]['mnt_point'], 8)
+                        self.fs_y + 1 + mounted, self.fs_x,
+                        fs[mounted]['mnt_point'], 8)
+
+                fs_usage = fs[mounted]['used']
+                fs_size = fs[mounted]['size']
+                # used
                 self.term_window.addnstr(
-                    self.fs_y + 1 + mounted,
-                    self.fs_x + 10, self.__autoUnit(fs[mounted]['size']), 8)
+                    self.fs_y + 1 + mounted, self.fs_x + 9,
+                    format(self.__autoUnit(fs_usage), '>6'), 6,
+                    self.__getFsColor(fs_usage, fs_size))
+
+                # total
                 self.term_window.addnstr(
-                    self.fs_y + 1 + mounted,
-                    self.fs_x + 19, self.__autoUnit(fs[mounted]['used']), 8,
-                    self.__getFsColor(fs[mounted]['used'],
-                                      fs[mounted]['size']))
+                    self.fs_y + 1 + mounted, self.fs_x + 17,
+                    format(self.__autoUnit(fs_size), '>6'), 6)
+
             return mounted + 3
         return 0
 
@@ -1996,18 +2020,19 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        # If there is no network & diskio & fs stats
+        # If there is no network & diskio & fs & sensors stats
         # then increase process window
         if (not self.network_tag and
             not self.diskio_tag and
-            not self.fs_tag):
+            not self.fs_tag and
+            not self.sensors_tag):
             process_x = 0
         else:
             process_x = self.process_x
-        # Display the process summary
+
+        # Processes summary
         if (screen_y > self.process_y + 4 and
             screen_x > process_x + 48):
-            # Processes sumary
             self.term_window.addnstr(self.process_y, process_x, _("Processes"),
                                      9, self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
@@ -2016,7 +2041,7 @@ class glancesScreen:
                      stats.getProcessCount()['sleeping'])
             self.term_window.addnstr(
                 self.process_y, process_x + 10,
-                "{0}, {1} {2}, {3} {4}, {5} {6}".format(
+                '{0:>3}, {1:>2} {2}, {3:>3} {4}, {5:>2} {6}'.format(
                     str(processcount['total']),
                     str(processcount['running']),
                     _("running"),
@@ -2029,13 +2054,13 @@ class glancesScreen:
         if (screen_y > self.process_y + 4 and
             screen_x > process_x + 49):
 
-            # Display the process detail
             tag_pid = False
             tag_uid = False
             tag_nice = False
             tag_status = False
             tag_proc_time = False
             tag_io = False
+
             if screen_x > process_x + 55:
                 tag_pid = True
             if screen_x > process_x + 64:
@@ -2055,63 +2080,63 @@ class glancesScreen:
             # VMS
             self.term_window.addnstr(
                 self.process_y + 2, process_x,
-                _("VIRT"), 5)
+                format(_("VIRT"), '>5'), 5)
             # RSS
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 7,
-                _("RES"), 5)
+                self.process_y + 2, process_x + 6,
+                format(_("RES"), '>5'), 5)
             # CPU%
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 14,
-                _("CPU%"), 5, curses.A_UNDERLINE
+                self.process_y + 2, process_x + 12,
+                format(_("CPU%"), '>5'), 5, curses.A_UNDERLINE
                 if self.getProcessSortedBy() == 'cpu_percent' else 0)
             # MEM%
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 21,
-                _("MEM%"), 5, curses.A_UNDERLINE
+                self.process_y + 2, process_x + 18,
+                format(_("MEM%"), '>5'), 5, curses.A_UNDERLINE
                 if self.getProcessSortedBy() == 'memory_percent' else 0)
-            process_name_x = 28
+            process_name_x = 24
             # If screen space (X) is available then:
             # PID
             if tag_pid:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("PID"), 6)
-                process_name_x += 7
+                    format(_("PID"), '>5'), 5)
+                process_name_x += 6
             # UID
             if tag_uid:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("USER"), 8)
-                process_name_x += 10
+                    _("USER"), 4)
+                process_name_x += 11
             # NICE
             if tag_nice:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("NI"), 3)
+                    format(_("NI"), '>3'), 3)
                 process_name_x += 4
             # STATUS
             if tag_status:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
                     _("S"), 1)
-                process_name_x += 3
+                process_name_x += 2
             # TIME+
             if tag_proc_time:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("TIME+"), 8)
-                process_name_x += 10
+                    format(_("TIME+"), '>8'), 8)
+                process_name_x += 9
             # IO
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("IO_R"), 6)
-                process_name_x += 8
+                    format(_("IO_R"), '>6'), 6)
+                process_name_x += 7
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("IO_W"), 6)
-                process_name_x += 8
+                    format(_("IO_W"), '>6'), 6)
+                process_name_x += 7
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -2132,18 +2157,18 @@ class glancesScreen:
                 process_size = processlist[processes]['memory_info'][1]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
-                    self.__autoUnit(process_size), 5)
+                    format(self.__autoUnit(process_size), '>5'), 5)
                 # RSS
                 process_resident = processlist[processes]['memory_info'][0]
                 self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 7,
-                    self.__autoUnit(process_resident), 5)
+                    self.process_y + 3 + processes, process_x + 6,
+                    format(self.__autoUnit(process_resident), '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 if psutil_get_cpu_percent_tag:
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 14,
-                        "{0:.1f}".format(cpu_percent), 5,
+                        self.process_y + 3 + processes, process_x + 12,
+                        format(cpu_percent, '>5.1f'), 5,
                         self.__getProcessColor(cpu_percent))
                 else:
                     self.term_window.addnstr(
@@ -2151,33 +2176,33 @@ class glancesScreen:
                 # MEM%
                 memory_percent = processlist[processes]['memory_percent']
                 self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 21,
-                    "{0:.1f}".format(memory_percent), 5,
+                    self.process_y + 3 + processes, process_x + 18,
+                    format(memory_percent, '>5.1f'), 5,
                     self.__getProcessColor(memory_percent))
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
                     pid = processlist[processes]['pid']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 28,
-                        str(pid), 6)
+                        self.process_y + 3 + processes, process_x + 24,
+                        format(str(pid), '>5'), 5)
                 # UID
                 if tag_uid:
                     uid = processlist[processes]['username']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 35,
-                        str(uid), 8)
+                        self.process_y + 3 + processes, process_x + 30,
+                        str(uid), 9)
                 # NICE
                 if tag_nice:
                     nice = processlist[processes]['nice']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 45,
-                        str(nice), 3)
+                        self.process_y + 3 + processes, process_x + 41,
+                        format(str(nice), '>3'), 3)
                 # STATUS
                 if tag_status:
                     status = processlist[processes]['status']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 49,
+                        self.process_y + 3 + processes, process_x + 45,
                         str(status), 1)
                 # TIME+
                 if tag_proc_time:
@@ -2190,33 +2215,33 @@ class glancesScreen:
                         tag_proc_time = False
                     else:
                         dtime = "{0}:{1}.{2}".format(
-                                    str(dtime.seconds // 60 % 60).zfill(2),
+                                    str(dtime.seconds // 60 % 60),
                                     str(dtime.seconds % 60).zfill(2),
-                                    str(dtime.microseconds)[:2])
+                                    str(dtime.microseconds)[:2].zfill(2))
                         self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 52,
-                            dtime, 8)
+                            self.process_y + 3 + processes, process_x + 47,
+                            format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
                     try:
                         if  processlist[processes]['io_counters'] == {}:
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
+                                self.process_y + 3 + processes, process_x + 56,
                                 _("A_DENY"), 6)
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 70,
+                                self.process_y + 3 + processes, process_x + 63,
                                 _("A_DENY"), 6)
                         else:
                             # Processes are only refresh every 2 refresh_time
                             #~ elapsed_time = max(1, self.__refresh_time) * 2
                             io_read = processlist[processes]['io_counters'][2]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
-                                self.__autoUnit(io_read), 6)
+                                self.process_y + 3 + processes, process_x + 56,
+                                format(self.__autoUnit(io_read), '>6'), 6)
                             io_write = processlist[processes]['io_counters'][3]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 70,
-                                self.__autoUnit(io_write), 6)
+                                self.process_y + 3 + processes, process_x + 63,
+                                format(self.__autoUnit(io_write), '>6'), 6)
                     except:
                         pass
 
@@ -2318,7 +2343,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 6, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("b"), _("Switch between bit/s or byte/s for network IO"),
+                    _("b"), _("Switch between bit/s or Byte/s for network IO"),
                               width=width), 79, self.ifCRITICAL_color2
                     if not psutil_get_cpu_percent_tag else 0)
             self.term_window.addnstr(
