@@ -65,7 +65,6 @@ if platform.system() != 'Windows':
         import curses.panel
     except ImportError:
         print(_('Curses module not found. Glances cannot start.'))
-        print()
         sys.exit(1)
 
 try:
@@ -73,14 +72,12 @@ try:
     import psutil
 except ImportError:
     print(_('PsUtil module not found. Glances cannot start.'))
-    print()
     sys.exit(1)
 
-if (int(psutil.__version__.split('.')[0]) == 0) \
-    and (int(psutil.__version__.split('.')[1]) < 4):
-    print(_('PsUtil version %s detected') % psutil.__version__)
-    print(_('PsUtil > 0.4.0 is needed. Glances cannot start.'))
-    print()
+psutil_version = tuple([int(num) for num in psutil.__version__.split('.')])
+if psutil_version < (0, 4, 1):
+    print(_('PsUtil version %s detected.') % psutil.__version__)
+    print(_('PsUtil 0.4.1 or higher is needed. Glances cannot start.'))
     sys.exit(1)
 
 try:
@@ -269,7 +266,7 @@ class glancesLogs:
                 return i
         return -1
 
-    def add(self, item_state, item_type, item_value, proc_list = []):
+    def add(self, item_state, item_type, item_value, proc_list=[]):
         """
         item_state = "OK|CAREFUL|WARNING|CRITICAL"
         item_type = "CPU*|LOAD|MEM"
@@ -304,14 +301,14 @@ class glancesLogs:
                 item = []
                 item.append(time.mktime(datetime.now().timetuple()))
                 item.append(-1)
-                item.append(item_state)     # STATE: WARNING|CRITICAL
-                item.append(item_type)      # TYPE: CPU, LOAD, MEM...
-                item.append(item_value)     # MAX
-                item.append(item_value)     # AVG
-                item.append(item_value)     # MIN
-                item.append(item_value)     # SUM
-                item.append(1)              # COUNT
-                item.append(topprocess[0:3]) # TOP 3 PROCESS LIST
+                item.append(item_state)       # STATE: WARNING|CRITICAL
+                item.append(item_type)        # TYPE: CPU, LOAD, MEM...
+                item.append(item_value)       # MAX
+                item.append(item_value)       # AVG
+                item.append(item_value)       # MIN
+                item.append(item_value)       # SUM
+                item.append(1)                # COUNT
+                item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
                 self.logs_list.insert(0, item)
                 if self.len() > self.logs_max:
                     self.logs_list.pop()
@@ -347,7 +344,7 @@ class glancesLogs:
 
         return self.len()
 
-    def clean(self, critical = False):
+    def clean(self, critical=False):
         """
         Clean the log list by deleting finished item
         By default, only delete WARNING message
@@ -451,7 +448,7 @@ class glancesGrabSensors:
             for chip in sensors.iter_detected_chips():
                 for feature in chip:
                     sensors_current = {}
-                    sensors_current['label'] = chip.prefix+" "+feature.label
+                    sensors_current['label'] = chip.prefix + " " + feature.label
                     sensors_current['label'] = sensors_current['label'][-20:]
                     sensors_current['value'] = feature.get_value()
                     self.sensors_list.append(sensors_current)
@@ -464,11 +461,11 @@ class glancesGrabSensors:
         if self.initok:
             sensors.cleanup()
 
+
 class GlancesStats:
     """
     This class store, update and give stats
     """
-
 
     def __init__(self):
         """
@@ -572,11 +569,12 @@ class GlancesStats:
         !!! With:    2.0 - 2.2
 
         """
-        procstat = proc.as_dict(['get_memory_info', 'get_cpu_percent', 'get_memory_percent',
-                                 'pid', 'username', 'get_nice',
-                                 'get_cpu_times', 'name', 'status', 'cmdline'])
+        procstat = proc.as_dict(['get_memory_info', 'get_cpu_percent',
+                                 'get_memory_percent', 'pid', 'username',
+                                 'get_nice', 'get_cpu_times', 'name',
+                                 'status', 'cmdline'])
         if psutil_get_io_counter_tag:
-            procstat['io_counters']  = proc.get_io_counters()
+            procstat['io_counters'] = proc.get_io_counters()
         procstat['status'] = str(procstat['status'])[:1].upper()
         procstat['cmdline'] = " ".join(procstat['cmdline'])
 
@@ -598,7 +596,7 @@ class GlancesStats:
 
         try:
             if psutil_get_io_counter_tag:
-                procstat['io_counters']  = proc.get_io_counters()
+                procstat['io_counters'] = proc.get_io_counters()
         except:
             procstat['io_counters'] = {}
 
@@ -621,7 +619,6 @@ class GlancesStats:
         procstat['cmdline'] = " ".join(proc.cmdline)
 
         return procstat
-
 
     def __update__(self, input_stats):
         """
@@ -661,15 +658,12 @@ class GlancesStats:
                     self.cputime_total_new += self.cputime_new.softirq
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
-                self.cpu = {'kernel':
-                                (self.cputime_new.system -
-                                 self.cputime_old.system) * percent,
-                            'user':
-                                (self.cputime_new.user -
-                                 self.cputime_old.user) * percent,
-                            'idle':
-                                (self.cputime_new.idle -
-                                 self.cputime_old.idle) * percent}
+                self.cpu = {'user': (self.cputime_new.user -
+                                     self.cputime_old.user) * percent,
+                            'system': (self.cputime_new.system -
+                                       self.cputime_old.system) * percent,
+                            'idle': (self.cputime_new.idle -
+                                     self.cputime_old.idle) * percent}
                 if hasattr(self.cputime_new, 'nice'):
                     self.cpu['nice'] = (self.cputime_new.nice -
                                         self.cputime_old.nice) * percent
@@ -684,9 +678,9 @@ class GlancesStats:
             except Exception:
                 self.cpu = {}
 
-        # PerCPU
+        # Per-CPU
         if not hasattr(self, 'percputime_old'):
-            self.percputime_old = psutil.cpu_times(percpu = True)
+            self.percputime_old = psutil.cpu_times(percpu=True)
             self.percputime_total_old = []
             for i in range(len(self.percputime_old)):
                 self.percputime_total_old.append(self.percputime_old[i].user +
@@ -708,7 +702,7 @@ class GlancesStats:
             self.percpu = []
         else:
             try:
-                self.percputime_new = psutil.cpu_times(percpu = True)
+                self.percputime_new = psutil.cpu_times(percpu=True)
                 self.percputime_total_new = []
                 for i in range(len(self.percputime_new)):
                     self.percputime_total_new.append(self.percputime_new[i].user +
@@ -732,15 +726,12 @@ class GlancesStats:
                 for i in range(len(self.percputime_new)):
                     perpercent.append(100 / (self.percputime_total_new[i] -
                                              self.percputime_total_old[i]))
-                    cpu =  {'kernel':
-                                (self.percputime_new[i].system -
-                                 self.percputime_old[i].system) * perpercent[i],
-                            'user':
-                                (self.percputime_new[i].user -
-                                 self.percputime_old[i].user) * perpercent[i],
-                            'idle':
-                                (self.percputime_new[i].idle -
-                                 self.percputime_old[i].idle) * perpercent[i]}
+                    cpu = {'user': (self.percputime_new[i].user -
+                                    self.percputime_old[i].user) * perpercent[i],
+                           'system': (self.percputime_new[i].system -
+                                      self.percputime_old[i].system) * perpercent[i],
+                           'idle': (self.percputime_new[i].idle -
+                                    self.percputime_old[i].idle) * perpercent[i]}
                     if hasattr(self.percputime_new[i], 'nice'):
                         cpu['nice'] = (self.percputime_new[i].nice -
                                        self.percputime_old[i].nice) * perpercent[i]
@@ -760,42 +751,61 @@ class GlancesStats:
             self.load = {}
 
         # MEM
+        # psutil >= 0.6
         if psutil_mem_vm:
-            # If PsUtil 0.6+
+            # RAM
             phymem = psutil.virtual_memory()
-            if (hasattr(phymem, 'cached') and hasattr(phymem, 'buffers')):
-               cachemem = phymem.cached + phymem.buffers
-            else:
-               cachemem = 0
-            self.mem = {'cache': cachemem,
-                        'total': phymem.total,
-                        'used': phymem.used,
-                        'free': phymem.free,
-                        'percent': phymem.percent}
+
+            # buffers and cached (Linux, BSD)
+            buffers = getattr(phymem, 'buffers', lambda: 0)
+            cached = getattr(phymem, 'cached', lambda: 0)
+
+            # phymem free and usage
+            total = phymem.total
+            free = phymem.available  # phymem.free + buffers + cached
+            used = total - free
+
+            self.mem = {'total': total,
+                        'percent': phymem.percent,
+                        'used': used,
+                        'free': free,
+                        'active': phymem.active,
+                        'inactive': phymem.inactive,
+                        'buffers': buffers,
+                        'cached': cached}
+
+            # Swap
             virtmem = psutil.swap_memory()
             self.memswap = {'total': virtmem.total,
                             'used': virtmem.used,
                             'free': virtmem.free,
                             'percent': virtmem.percent}
         else:
-            # For olders PsUtil version
-            # Physical memory (RAM)
+            # psutil < 0.6
+            # RAM
             if hasattr(psutil, 'phymem_usage'):
                 phymem = psutil.phymem_usage()
-                if (hasattr(psutil, 'cached_phymem') and
-                    hasattr(psutil, 'phymem_buffers')):
-                    # Cache stat only available for Linux
-                    cachemem = psutil.cached_phymem() + psutil.phymem_buffers()
-                else:
-                    cachemem = 0
-                self.mem = {'cache': cachemem,
-                            'total': phymem.total,
-                            'used': phymem.used,
-                            'free': phymem.free,
-                            'percent': phymem.percent}
+
+                # buffers and cached (Linux, BSD)
+                buffers = getattr(psutil, 'phymem_buffers', lambda: 0)()
+                cached = getattr(psutil, 'cached_phymem', lambda: 0)()
+
+                # phymem free and usage
+                total = phymem.total
+                free = phymem.free + buffers + cached
+                used = total - free
+
+                # active and inactive not available for psutil < 0.6
+                self.mem = {'total': total,
+                            'percent': phymem.percent,
+                            'used': used,
+                            'free': free,
+                            'buffers': buffers,
+                            'cached': cached}
             else:
                 self.mem = {}
-            # Virtual memory (SWAP)
+
+            # Swap
             if hasattr(psutil, 'virtmem_usage'):
                 virtmem = psutil.virtmem_usage()
                 self.memswap = {'total': virtmem.total,
@@ -872,7 +882,7 @@ class GlancesStats:
         # Get the number of core (CPU) (Used to display load alerts)
         self.core_number = psutil.NUM_CPUS
 
-    def update(self, input_stats = {}):
+    def update(self, input_stats={}):
         # Update the stats
         self.__update__(input_stats)
 
@@ -950,7 +960,7 @@ class GlancesStats:
             # If global MEM > 70% sort by MEM usage
             # else sort by CPU usage
             if (self.mem['total'] != 0):
-                memtotal = ((self.mem['used'] - self.mem['cache']) * 100) / self.mem['total']
+                memtotal = (self.mem['used'] * 100) / self.mem['total']
                 if memtotal > limits.getSTDWarning():
                     sortedby = 'memory_percent'
         elif sortedby == 'name':
@@ -1053,9 +1063,9 @@ class glancesScreen:
         self.system_y = 0
         self.cpu_x = 0
         self.cpu_y = 2
-        self.load_x = 19
+        self.load_x = 17
         self.load_y = 2
-        self.mem_x = 39
+        self.mem_x = 33
         self.mem_y = 2
         self.network_x = 0
         self.network_y = 7
@@ -1065,7 +1075,7 @@ class glancesScreen:
         self.diskio_y = -1
         self.fs_x = 0
         self.fs_y = -1
-        self.process_x = 29
+        self.process_x = 26
         self.process_y = 7
         self.log_x = 0
         self.log_y = -1
@@ -1110,7 +1120,8 @@ class glancesScreen:
         else:
             self.hascolors = False
 
-        self.title_color = curses.A_BOLD | curses.A_UNDERLINE
+        self.title_color = curses.A_BOLD
+        self.title_underline_color = curses.A_BOLD | curses.A_UNDERLINE
         self.help_color = curses.A_BOLD
         if self.hascolors:
             # Colors text styles
@@ -1308,7 +1319,7 @@ class glancesScreen:
             # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
         elif self.pressedkey == 98:
-            # 'b' > Switch between bit/s and byte/s for network IO
+            # 'b' > Switch between bit/s and Byte/s for network IO
             self.net_byteps_tag = not self.net_byteps_tag
         elif self.pressedkey == 99 and psutil_get_cpu_percent_tag:
             # 'c' > Sort processes by CPU usage
@@ -1342,7 +1353,7 @@ class glancesScreen:
             logs.clean()
         elif self.pressedkey == 120:
             # 'x' > Delete finished warning and critical logs
-            logs.clean(critical = True)
+            logs.clean(critical=True)
 
         # Return the key code
         return self.pressedkey
@@ -1354,7 +1365,7 @@ class glancesScreen:
         curses.curs_set(1)
         curses.endwin()
 
-    def display(self, stats, cs_status = "None"):
+    def display(self, stats, cs_status="None"):
         """
         Display stats on the screen
         cs_status:
@@ -1382,7 +1393,7 @@ class glancesScreen:
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
                                     diskio_count + fs_count)
         self.displayProcess(processcount, processlist, log_count)
-        self.displayCaption(cs_status = cs_status)
+        self.displayCaption(cs_status=cs_status)
         self.displayNow(stats.getNow())
         self.displayHelp()
 
@@ -1390,7 +1401,7 @@ class glancesScreen:
         # Erase the content of the screen
         self.term_window.erase()
 
-    def flush(self, stats, cs_status = "None"):
+    def flush(self, stats, cs_status="None"):
         """
         Clear and update screen
         cs_status:
@@ -1400,9 +1411,9 @@ class glancesScreen:
         """
              # Flush display
         self.erase()
-        self.display(stats, cs_status = cs_status)
+        self.display(stats, cs_status=cs_status)
 
-    def update(self, stats, cs_status = "None"):
+    def update(self, stats, cs_status="None"):
         """
         Update the screen and wait __refresh_time sec / catch key every 100 ms
         cs_status:
@@ -1412,7 +1423,7 @@ class glancesScreen:
         """
 
         # flush display
-        self.flush(stats, cs_status = cs_status)
+        self.flush(stats, cs_status=cs_status)
 
         # Wait
         countdown = Timer(self.__refresh_time)
@@ -1420,7 +1431,7 @@ class glancesScreen:
             # Getkey
             if self.__catchKey() > -1:
                 # flush display
-                self.flush(stats, cs_status = cs_status)
+                self.flush(stats, cs_status=cs_status)
             # Wait 100ms...
             curses.napms(100)
 
@@ -1452,28 +1463,28 @@ class glancesScreen:
 
         # Is it possible to display extended stats ?
         # If yes then tag_extendedcpu = True
-        tag_extendedcpu = screen_x >  self.cpu_x + 79 + 17
+        tag_extendedcpu = screen_x > self.cpu_x + 79 + 17
 
-        # Is it possible to display percpu stats ?
-        # Do you want it ? (percpu_tag)
+        # Is it possible to display per-CPU stats ?
+        # Do you want it ?
         # If yes then tag_percpu = True
-        if (self.percpu_tag):
-            tag_percpu = screen_x >  self.cpu_x + 79 + (len(percpu)-1)*10
+        if self.percpu_tag:
+            tag_percpu = screen_x > self.cpu_x + 79 + (len(percpu) - 1) * 10
         else:
             tag_percpu = False
 
-        # Compute x offset
-        if (tag_percpu):
-            offset_x = (len(percpu)-1)*10
-        elif (tag_extendedcpu):
-            offset_x = 17
+        # compute x offset
+        if tag_percpu:
+            offset_x = (len(percpu) - 1) * 8
+        elif tag_extendedcpu:
+            offset_x = 16
         else:
             offset_x = 0
 
-        # Display CPU stats
-        if (screen_y > self.cpu_y + 5 and tag_percpu):
-            # Display per CPU stats whenspace is available
-            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 8,
+        # display CPU stats
+        if screen_y > self.cpu_y + 5 and tag_percpu:
+            # display per-CPU stats when space is available
+            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 6,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
 
@@ -1482,33 +1493,43 @@ class glancesScreen:
                                          _("Compute data..."), 15)
                 return 0
 
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("User:"), 8)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x, _("Kernel:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("Idle:"), 8)
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x,
+                                     _("user:"), 5)
+            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
+                                     _("system:"), 7)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
+                                     _("idle:"), 5)
 
             for i in range(len(percpu)):
-                self.term_window.addnstr(self.cpu_y, self.cpu_x + 10 + i*10,
-                                         "%.1f%%" % (100 - percpu[i]['idle']), 8)
+                # percentage of usage
+                self.term_window.addnstr(
+                    self.cpu_y, self.cpu_x + 8 + i * 8,
+                    format((100 - percpu[i]['idle']) / 100, '>6.1%'), 6)
 
+                # user
                 alert = self.__getCpuAlert(percpu[i]['user'])
                 logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['user'], 8,
-                                         self.__colors_list[alert])
+                self.term_window.addnstr(
+                    self.cpu_y + 1, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['user'] / 100, '>6.1%'), 6,
+                    self.__colors_list2[alert])
 
-                alert = self.__getCpuAlert(percpu[i]['kernel'])
-                logs.add(alert, "CPU-%d kernel" % i, percpu[i]['kernel'], proclist)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['kernel'], 8,
-                                         self.__colors_list[alert])
-                # No alert for IDLE
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10 + i*10,
-                                         "%.1f" % percpu[i]['idle'], 8)
+                # system
+                alert = self.__getCpuAlert(percpu[i]['system'])
+                logs.add(alert, "CPU-%d system" % i, percpu[i]['system'],
+                         proclist)
+                self.term_window.addnstr(
+                    self.cpu_y + 2, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['system'] / 100, '>6.1%'), 6,
+                    self.__colors_list2[alert])
 
-        elif (screen_y > self.cpu_y + 5 and
-              screen_x > self.cpu_x + 18):
-            # Display summary information
-            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 8,
+                # idle
+                self.term_window.addnstr(
+                    self.cpu_y + 3, self.cpu_x + 8 + i * 8,
+                    format(percpu[i]['idle'] / 100, '>6.1%'), 6)
+        # display CPU summary information
+        elif screen_y > self.cpu_y + 5 and screen_x > self.cpu_x + 18:
+            self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 3,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
 
@@ -1517,58 +1538,70 @@ class glancesScreen:
                                          _("Compute data..."), 15)
                 return 0
 
-            self.term_window.addnstr(self.cpu_y, self.cpu_x + 10,
-                                     "%.1f%%" % (100 - cpu['idle']), 8)
+            # percentage of usage
+            cpu_percent = (100 - cpu['idle']) / 100
+            self.term_window.addnstr(self.cpu_y, self.cpu_x + 8,
+                                     format(cpu_percent, '>6.1%'), 6)
 
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x,
-                                     _("User:"), 8)
+            # user
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("user:"), 5)
             alert = self.__getCpuAlert(cpu['user'])
             logs.add(alert, "CPU user", cpu['user'], proclist)
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 10,
-                                     "%.1f" % cpu['user'], 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 8,
+                                     format(cpu['user'] / 100, '>6.1%'), 6,
+                                     self.__colors_list2[alert])
 
+            # system
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
-                                     _("Kernel:"), 8)
-            alert = self.__getCpuAlert(cpu['kernel'])
-            logs.add(alert, "CPU kernel", cpu['kernel'], proclist)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 10,
-                                     "%.1f" % cpu['kernel'], 8,
-                                     self.__colors_list[alert])
-            # No alert for IDLE
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
-                                     _("Idle:"), 8)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 10,
-                                     "%.1f" % cpu['idle'], 8)
+                                     _("system:"), 7)
+            alert = self.__getCpuAlert(cpu['system'])
+            logs.add(alert, "CPU system", cpu['system'], proclist)
+            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 8,
+                                     format(cpu['system'] / 100, '>6.1%'), 6,
+                                     self.__colors_list2[alert])
 
-            if (screen_y > self.cpu_y + 5 and tag_extendedcpu):
-                # Display extended CPU stats whenspace is available
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 17,
-                                         _("IO Wait:"), 8)
+            # idle
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("idle:"), 5)
+            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 8,
+                                     format(cpu['idle'] / 100, '>6.1%'), 6)
+
+            # display extended CPU stats when space is available
+            if screen_y > self.cpu_y + 5 and tag_extendedcpu:
+                # nice
+                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 16,
+                                         _("nice:"), 5)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
-                                             "%.1f" % cpu['iowait'], 8,
-                                             self.__getExtCpuColor(cpu['iowait']))
+                    self.term_window.addnstr(
+                        self.cpu_y + 1, self.cpu_x + 24,
+                        format(cpu['nice'] / 100, '>6.1%'), 6)
                 except:
-                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 27,
-                                             "N/A", 8)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 17,
-                                         _("IRQ:"), 8)
+                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 24,
+                                             "N/A", 3)
+
+                # iowait (Linux)
+                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 16,
+                                         _("iowait:"), 7)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
-                                            "%.1f" % cpu['irq'], 8)
+                    self.term_window.addnstr(
+                        self.cpu_y + 2, self.cpu_x + 24,
+                        format(cpu['iowait'] / 100, '>6.1%'), 6,
+                        self.__getExtCpuColor(cpu['iowait']))
                 except:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 27,
-                                             "N/A", 8)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 17,
-                                         _("Nice:"), 8)
+                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 24,
+                                             "N/A", 3)
+
+                # irq (Linux, FreeBSD)
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
+                                         _("irq:"), 4)
                 try:
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                             "%.1f" % cpu['nice'], 8)
+                    self.term_window.addnstr(
+                        self.cpu_y + 3, self.cpu_x + 24,
+                        format(cpu['irq'] / 100, '>6.1%'), 6)
                 except:
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 27,
-                                             "N/A", 8)
-        # Return the X offset to display Load and Mem
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 24,
+                                             "N/A", 3)
+
+        # return the x offset to display load and mem
         return offset_x
 
     def displayLoad(self, load, core, proclist, offset_x=0):
@@ -1579,115 +1612,172 @@ class glancesScreen:
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.load_y + 5 and
             screen_x > self.load_x + offset_x + 18):
-            self.term_window.addnstr(self.load_y, self.load_x + offset_x, _("Load"), 8,
+            self.term_window.addnstr(self.load_y,
+                                     self.load_x + offset_x, _("Load"), 4,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.load_y, self.load_x + offset_x + 10,
-                                     str(core) + _("-Core"), 8)
-            self.term_window.addnstr(self.load_y + 1, self.load_x + offset_x,
-                                     _("1 min:"), 8)
-            self.term_window.addnstr(self.load_y + 2, self.load_x + offset_x,
-                                     _("5 min:"), 8)
-            self.term_window.addnstr(self.load_y + 3, self.load_x + offset_x,
-                                     _("15 min:"), 8)
+            self.term_window.addnstr(self.load_y, self.load_x + offset_x + 7,
+                                     str(core) + _("-core"), 7)
 
-            self.term_window.addnstr(self.load_y + 1, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min1']), 8)
+            # 1 min
+            self.term_window.addnstr(self.load_y + 1,
+                                     self.load_x + offset_x, _("1 min:"), 6)
+            self.term_window.addnstr(self.load_y + 1,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min1'], '>5.2f'), 5)
 
+            # 5 min
+            self.term_window.addnstr(self.load_y + 2,
+                                     self.load_x + offset_x, _("5 min:"), 6)
             alert = self.__getLoadAlert(load['min5'], core)
             logs.add(alert, "LOAD 5-min", load['min5'], proclist)
-            self.term_window.addnstr(self.load_y + 2, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min5']), 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.load_y + 2,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min5'], '>5.2f'), 5,
+                                     self.__colors_list2[alert])
 
+            # 15 min
+            self.term_window.addnstr(self.load_y + 3,
+                                     self.load_x + offset_x, _("15 min:"), 7)
             alert = self.__getLoadAlert(load['min15'], core)
             logs.add(alert, "LOAD 15-min", load['min15'], proclist)
-            self.term_window.addnstr(self.load_y + 3, self.load_x + offset_x + 10,
-                                     "{0:.2f}".format(load['min15']), 8,
-                                     self.__colors_list[alert])
+            self.term_window.addnstr(self.load_y + 3,
+                                     self.load_x + offset_x + 8,
+                                     format(load['min15'], '>5.2f'), 5,
+                                     self.__colors_list2[alert])
 
     def displayMem(self, mem, memswap, proclist, offset_x=0):
-        # MEM
+        # Memory
         if not mem or not memswap:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + 38):
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x, _("Mem"), 8,
+            # RAM
+            self.term_window.addnstr(self.mem_y,
+                                     self.mem_x + offset_x, _("Mem"), 8,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
+
+            # percentage of usage
+            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 6,
+                                     format(mem['percent'] / 100, '>6.1%'), 6)
+
+            # total
             self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x,
-                                     _("Total:"), 6)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x, _("Used:"), 6)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x, _("Free:"), 6)
-
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 9,
-                                     "{0:.1%}".format(mem['percent'] / 100), 8)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['used']), 8)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 9,
-                                     self.__autoUnit(mem['free']), 8)
-
-            # real memory usage
-            real_used_phymem = mem['used'] - mem['cache']
-            real_free_phymem = mem['free'] + mem['cache']
-            alert = self.__getMemAlert(real_used_phymem, mem['total'])
-            logs.add(alert, "MEM real", real_used_phymem, proclist)
+                                     _("total:"), 6)
             self.term_window.addnstr(
-                self.mem_y + 2, self.mem_x + offset_x + 15,
-                "({0})".format(self.__autoUnit(real_used_phymem)), 8,
-                self.__colors_list[alert])
+                self.mem_y + 1, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['total']), '>5'), 5)
+
+            # used
+            alert = self.__getMemAlert(mem['used'], mem['total'])
+            logs.add(alert, "MEM real", mem['used'], proclist)
+            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x,
+                                     _("used:"), 5)
             self.term_window.addnstr(
-                self.mem_y + 3, self.mem_x + offset_x + 15,
-                "({0})".format(self.__autoUnit(real_free_phymem)), 8)
+                self.mem_y + 2, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['used']), '>5'), 5,
+                self.__colors_list2[alert])
+
+            # free
+            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x,
+                                     _("free:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 7,
+                format(self.__autoUnit(mem['free']), '>5'), 5)
+
+            # active and inactive (only available for psutil >= 0.6)
+            if psutil_mem_vm:
+                # active
+                self.term_window.addnstr(self.mem_y,
+                                         self.mem_x + offset_x + 14,
+                                         _("active:"), 7)
+                self.term_window.addnstr(
+                    self.mem_y, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['active']), '>5'), 5)
+
+                # inactive
+                self.term_window.addnstr(self.mem_y + 1,
+                                         self.mem_x + offset_x + 14,
+                                         _("inactive:"), 9)
+                self.term_window.addnstr(
+                    self.mem_y + 1, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['inactive']), '>5'), 5)
+
+            # buffers (Linux, BSD)
+            self.term_window.addnstr(self.mem_y + 2,
+                                     self.mem_x + offset_x + 14,
+                                     _("buffers:"), 8)
+            self.term_window.addnstr(
+                self.mem_y + 2, self.mem_x + offset_x + 24,
+                format(self.__autoUnit(mem['buffers']), '>5'), 5)
+
+            # cached (Linux, BSD)
+            self.term_window.addnstr(self.mem_y + 3,
+                                     self.mem_x + offset_x + 14,
+                                     _("cached:"), 7)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 24,
+                format(self.__autoUnit(mem['cached']), '>5'), 5)
 
             # Swap
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 25, _("Swap"), 8,
+            self.term_window.addnstr(self.mem_y,
+                                     self.mem_x + offset_x + 32, _("Swap"), 4,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 25,
-                                     _("Total:"), 6)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 25,
-                                     _("Used:"), 6)
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 25,
-                                     _("Free:"), 6)
 
-            self.term_window.addnstr(self.mem_y, self.mem_x + offset_x + 34,
-                                     "{0:.1%}".format(memswap['percent'] / 100),
-                                     8)
+            # percentage of usage
+            self.term_window.addnstr(
+                self.mem_y, self.mem_x + offset_x + 38,
+                format(memswap['percent'] / 100, '>6.1%'), 6)
+
+            # total
+            self.term_window.addnstr(self.mem_y + 1,
+                                     self.mem_x + offset_x + 32,
+                                     _("total:"), 6)
+            self.term_window.addnstr(
+                self.mem_y + 1, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['total']), '>5'), 8)
+
+            # used
             alert = self.__getMemAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'], proclist)
-            self.term_window.addnstr(self.mem_y + 1, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['total']), 8)
-            self.term_window.addnstr(self.mem_y + 2, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['used']), 8,
-                                     self.__colors_list[alert])
-            self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x + 34,
-                                     self.__autoUnit(memswap['free']), 8)
+            self.term_window.addnstr(self.mem_y + 2,
+                                     self.mem_x + offset_x + 32,
+                                     _("used:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 2, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['used']), '>5'), 8,
+                self.__colors_list2[alert])
+
+            # free
+            self.term_window.addnstr(self.mem_y + 3,
+                                     self.mem_x + offset_x + 32,
+                                     _("free:"), 5)
+            self.term_window.addnstr(
+                self.mem_y + 3, self.mem_x + offset_x + 39,
+                format(self.__autoUnit(memswap['free']), '>5'), 8)
 
     def displayNetwork(self, network):
         """
         Display the network interface bitrate
         Return the number of interfaces
         """
-        # Network interfaces bitrate
         if not self.network_tag:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if (screen_y > self.network_y + 3 and
             screen_x > self.network_x + 28):
-            # Network interfaces bitrate
             self.term_window.addnstr(self.network_y, self.network_x,
-                                     _("Network"), 8, self.title_color if
+                                     _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                     _("Rx/s"), 8)
-            self.term_window.addnstr(self.network_y, self.network_x + 19,
-                                     _("Tx/s"), 8)
+                                     format(_("Rx/s"), '>5'), 5)
+            self.term_window.addnstr(self.network_y, self.network_x + 18,
+                                     format(_("Tx/s"), '>5'), 5)
 
             # If there is no data to display...
             if not network:
@@ -1700,19 +1790,30 @@ class glancesScreen:
             net_num = min(screen_y - self.network_y - 3, len(network))
             for i in range(0, net_num):
                 elapsed_time = max(1, self.__refresh_time)
+
+                # network interface name
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
                     network[i]['interface_name'] + ':', 8)
-                if (self.net_byteps_tag):
+
+                # Byte/s or bit/s
+                if self.net_byteps_tag:
                     rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
                     tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
                 else:
-                    rx = self.__autoUnit(network[i]['rx'] // elapsed_time * 8) + "b"
-                    tx = self.__autoUnit(network[i]['tx'] // elapsed_time * 8) + "b"
-                self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 10, rx, 8)
-                self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x + 19, tx, 8)
+                    rx = self.__autoUnit(
+                        network[i]['rx'] // elapsed_time * 8) + "b"
+                    tx = self.__autoUnit(
+                        network[i]['tx'] // elapsed_time * 8) + "b"
+
+                # rx/s
+                self.term_window.addnstr(self.network_y + 1 + i,
+                                         self.network_x + 10,
+                                         format(rx, '>5'), 5)
+                # tx/s
+                self.term_window.addnstr(self.network_y + 1 + i,
+                                         self.network_x + 18,
+                                         format(tx, '>5'), 5)
                 ret = ret + 1
             return ret
         return 0
@@ -1733,7 +1834,7 @@ class glancesScreen:
             self.term_window.addnstr(self.sensors_y, self.sensors_x,
                                      _("Sensors"), 8, self.title_color
                                      if self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.sensors_y, self.sensors_x+22,
+            self.term_window.addnstr(self.sensors_y, self.sensors_x + 22,
                                      _("C"), 3)
 
             # Adapt the maximum interface to the screen
@@ -1764,9 +1865,9 @@ class glancesScreen:
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 10,
-                                     _("In/s"), 8)
-            self.term_window.addnstr(self.diskio_y, self.diskio_x + 19,
-                                     _("Out/s"), 8)
+                                     format(_("In/s"), '>5'), 5)
+            self.term_window.addnstr(self.diskio_y, self.diskio_x + 18,
+                                     format(_("Out/s"), '>5'), 5)
 
             # If there is no data to display...
             if not diskio:
@@ -1779,17 +1880,23 @@ class glancesScreen:
             disk_num = min(screen_y - self.diskio_y - 3, len(diskio))
             for disk in range(0, disk_num):
                 elapsed_time = max(1, self.__refresh_time)
+
+                # partition name
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x,
                     diskio[disk]['disk_name'] + ':', 8)
+
+                # in/s
+                ins = diskio[disk]['write_bytes'] // elapsed_time
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x + 10,
-                    self.__autoUnit(
-                        diskio[disk]['write_bytes'] // elapsed_time), 8)
+                    format(self.__autoUnit(ins), '>5'), 5)
+
+                # out/s
+                outs = diskio[disk]['read_bytes'] // elapsed_time
                 self.term_window.addnstr(
-                    self.diskio_y + 1 + disk, self.diskio_x + 19,
-                    self.__autoUnit(
-                        diskio[disk]['read_bytes'] // elapsed_time), 8)
+                    self.diskio_y + 1 + disk, self.diskio_x + 18,
+                    format(self.__autoUnit(outs), '>5'), 5)
             return disk + 3
         return 0
 
@@ -1802,32 +1909,41 @@ class glancesScreen:
         self.fs_y = offset_y
         if (screen_y > self.fs_y + 3 and
             screen_x > self.fs_x + 28):
-            self.term_window.addnstr(self.fs_y, self.fs_x, _("Mount"), 8,
+            self.term_window.addnstr(self.fs_y, self.fs_x, _("Mount"), 5,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 10, _("Total"), 7)
-            self.term_window.addnstr(self.fs_y, self.fs_x + 19, _("Used"), 7)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 9,
+                                     format(_("Used"), '>6'), 6)
+            self.term_window.addnstr(self.fs_y, self.fs_x + 17,
+                                     format(_("Total"), '>6'), 6)
 
             # Adapt the maximum disk to the screen
             mounted = 0
             fs_num = min(screen_y - self.fs_y - 3, len(fs))
             for mounted in range(0, fs_num):
+                # mount point
                 if len(fs[mounted]['mnt_point']) > 8:
                     self.term_window.addnstr(
-                        self.fs_y + 1 + mounted,
-                        self.fs_x, '_'+fs[mounted]['mnt_point'][-7:], 8)
+                        self.fs_y + 1 + mounted, self.fs_x,
+                        '_' + fs[mounted]['mnt_point'][-7:], 8)
                 else:
                     self.term_window.addnstr(
-                        self.fs_y + 1 + mounted,
-                        self.fs_x, fs[mounted]['mnt_point'], 8)
+                        self.fs_y + 1 + mounted, self.fs_x,
+                        fs[mounted]['mnt_point'], 8)
+
+                fs_usage = fs[mounted]['used']
+                fs_size = fs[mounted]['size']
+                # used
                 self.term_window.addnstr(
-                    self.fs_y + 1 + mounted,
-                    self.fs_x + 10, self.__autoUnit(fs[mounted]['size']), 8)
+                    self.fs_y + 1 + mounted, self.fs_x + 9,
+                    format(self.__autoUnit(fs_usage), '>6'), 6,
+                    self.__getFsColor(fs_usage, fs_size))
+
+                # total
                 self.term_window.addnstr(
-                    self.fs_y + 1 + mounted,
-                    self.fs_x + 19, self.__autoUnit(fs[mounted]['used']), 8,
-                    self.__getFsColor(fs[mounted]['used'],
-                                      fs[mounted]['size']))
+                    self.fs_y + 1 + mounted, self.fs_x + 17,
+                    format(self.__autoUnit(fs_size), '>6'), 6)
+
             return mounted + 3
         return 0
 
@@ -1877,9 +1993,9 @@ class glancesScreen:
                         log[logcount][3], log[logcount][6],
                         log[logcount][5], log[logcount][4])
                 # Add top process
-                if (log[logcount][9] != []):
-                    logmsg += " - Top process: {0}".format(
-                            log[logcount][9][0]['name'])
+                if log[logcount][9] != []:
+                    log_proc_name = log[logcount][9][0]['name']
+                    logmsg += " - Top process: {0}".format(log_proc_name)
                 # Display the log
                 self.term_window.addnstr(self.log_y + 1 + logcount,
                                          self.log_x, logmsg, len(logmsg))
@@ -1895,18 +2011,19 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        # If there is no network & diskio & fs stats
+        # If there is no network & diskio & fs & sensors stats
         # then increase process window
         if (not self.network_tag and
             not self.diskio_tag and
-            not self.fs_tag):
+            not self.fs_tag and
+            not self.sensors_tag):
             process_x = 0
         else:
             process_x = self.process_x
-        # Display the process summary
+
+        # Processes summary
         if (screen_y > self.process_y + 4 and
             screen_x > process_x + 48):
-            # Processes sumary
             self.term_window.addnstr(self.process_y, process_x, _("Processes"),
                                      9, self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
@@ -1915,7 +2032,7 @@ class glancesScreen:
                      stats.getProcessCount()['sleeping'])
             self.term_window.addnstr(
                 self.process_y, process_x + 10,
-                "{0}, {1} {2}, {3} {4}, {5} {6}".format(
+                '{0:>3}, {1:>2} {2}, {3:>3} {4}, {5:>2} {6}'.format(
                     str(processcount['total']),
                     str(processcount['running']),
                     _("running"),
@@ -1928,13 +2045,13 @@ class glancesScreen:
         if (screen_y > self.process_y + 4 and
             screen_x > process_x + 49):
 
-            # Display the process detail
             tag_pid = False
             tag_uid = False
             tag_nice = False
             tag_status = False
             tag_proc_time = False
             tag_io = False
+
             if screen_x > process_x + 55:
                 tag_pid = True
             if screen_x > process_x + 64:
@@ -1954,63 +2071,63 @@ class glancesScreen:
             # VMS
             self.term_window.addnstr(
                 self.process_y + 2, process_x,
-                _("VIRT"), 5)
+                format(_("VIRT"), '>5'), 5)
             # RSS
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 7,
-                _("RES"), 5)
+                self.process_y + 2, process_x + 6,
+                format(_("RES"), '>5'), 5)
             # CPU%
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 14,
-                _("CPU%"), 5, curses.A_UNDERLINE
+                self.process_y + 2, process_x + 12,
+                format(_("CPU%"), '>5'), 5, curses.A_UNDERLINE
                 if self.getProcessSortedBy() == 'cpu_percent' else 0)
             # MEM%
             self.term_window.addnstr(
-                self.process_y + 2, process_x + 21,
-                _("MEM%"), 5, curses.A_UNDERLINE
+                self.process_y + 2, process_x + 18,
+                format(_("MEM%"), '>5'), 5, curses.A_UNDERLINE
                 if self.getProcessSortedBy() == 'memory_percent' else 0)
-            process_name_x = 28
+            process_name_x = 24
             # If screen space (X) is available then:
             # PID
             if tag_pid:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("PID"), 6)
-                process_name_x += 7
+                    format(_("PID"), '>5'), 5)
+                process_name_x += 6
             # UID
             if tag_uid:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("USER"), 8)
-                process_name_x += 10
+                    _("USER"), 4)
+                process_name_x += 11
             # NICE
             if tag_nice:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("NI"), 3)
+                    format(_("NI"), '>3'), 3)
                 process_name_x += 4
             # STATUS
             if tag_status:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
                     _("S"), 1)
-                process_name_x += 3
+                process_name_x += 2
             # TIME+
             if tag_proc_time:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("TIME+"), 8)
-                process_name_x += 10
+                    format(_("TIME+"), '>8'), 8)
+                process_name_x += 9
             # IO
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("IO_R"), 6)
-                process_name_x += 8
+                    format(_("IO_R"), '>6'), 6)
+                process_name_x += 7
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    _("IO_W"), 6)
-                process_name_x += 8
+                    format(_("IO_W"), '>6'), 6)
+                process_name_x += 7
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -2031,18 +2148,18 @@ class glancesScreen:
                 process_size = processlist[processes]['memory_info'][1]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
-                    self.__autoUnit(process_size), 5)
+                    format(self.__autoUnit(process_size), '>5'), 5)
                 # RSS
                 process_resident = processlist[processes]['memory_info'][0]
                 self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 7,
-                    self.__autoUnit(process_resident), 5)
+                    self.process_y + 3 + processes, process_x + 6,
+                    format(self.__autoUnit(process_resident), '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 if psutil_get_cpu_percent_tag:
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 14,
-                        "{0:.1f}".format(cpu_percent), 5,
+                        self.process_y + 3 + processes, process_x + 12,
+                        format(cpu_percent, '>5.1f'), 5,
                         self.__getProcessColor(cpu_percent))
                 else:
                     self.term_window.addnstr(
@@ -2050,33 +2167,33 @@ class glancesScreen:
                 # MEM%
                 memory_percent = processlist[processes]['memory_percent']
                 self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 21,
-                    "{0:.1f}".format(memory_percent), 5,
+                    self.process_y + 3 + processes, process_x + 18,
+                    format(memory_percent, '>5.1f'), 5,
                     self.__getProcessColor(memory_percent))
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
                     pid = processlist[processes]['pid']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 28,
-                        str(pid), 6)
+                        self.process_y + 3 + processes, process_x + 24,
+                        format(str(pid), '>5'), 5)
                 # UID
                 if tag_uid:
                     uid = processlist[processes]['username']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 35,
-                        str(uid), 8)
+                        self.process_y + 3 + processes, process_x + 30,
+                        str(uid), 9)
                 # NICE
                 if tag_nice:
                     nice = processlist[processes]['nice']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 45,
-                        str(nice), 3)
+                        self.process_y + 3 + processes, process_x + 41,
+                        format(str(nice), '>3'), 3)
                 # STATUS
                 if tag_status:
                     status = processlist[processes]['status']
                     self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 49,
+                        self.process_y + 3 + processes, process_x + 45,
                         str(status), 1)
                 # TIME+
                 if tag_proc_time:
@@ -2089,33 +2206,33 @@ class glancesScreen:
                         tag_proc_time = False
                     else:
                         dtime = "{0}:{1}.{2}".format(
-                                    str(dtime.seconds // 60 % 60).zfill(2),
+                                    str(dtime.seconds // 60 % 60),
                                     str(dtime.seconds % 60).zfill(2),
-                                    str(dtime.microseconds)[:2])
+                                    str(dtime.microseconds)[:2].zfill(2))
                         self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 52,
-                            dtime, 8)
+                            self.process_y + 3 + processes, process_x + 47,
+                            format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
                     try:
                         if  processlist[processes]['io_counters'] == {}:
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
+                                self.process_y + 3 + processes, process_x + 56,
                                 _("A_DENY"), 6)
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 70,
+                                self.process_y + 3 + processes, process_x + 63,
                                 _("A_DENY"), 6)
                         else:
                             # Processes are only refresh every 2 refresh_time
                             #~ elapsed_time = max(1, self.__refresh_time) * 2
                             io_read = processlist[processes]['io_counters'][2]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
-                                self.__autoUnit(io_read), 6)
+                                self.process_y + 3 + processes, process_x + 56,
+                                format(self.__autoUnit(io_read), '>6'), 6)
                             io_write = processlist[processes]['io_counters'][3]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 70,
-                                self.__autoUnit(io_write), 6)
+                                self.process_y + 3 + processes, process_x + 63,
+                                format(self.__autoUnit(io_write), '>6'), 6)
                     except:
                         pass
 
@@ -2132,7 +2249,7 @@ class glancesScreen:
                                          process_x + process_name_x,
                                          command, max_process_name)
 
-    def displayCaption(self, cs_status = "None"):
+    def displayCaption(self, cs_status="None"):
         """
         Display the caption (bottom left)
         cs_status:
@@ -2146,24 +2263,25 @@ class glancesScreen:
         screen_y = self.screen.getmaxyx()[0]
         if (client_tag):
             if (cs_status.lower() == "connected"):
-                msg_client = _("Connected to")+" "+format(server_ip)
+                msg_client = _("Connected to") + " " + format(server_ip)
                 msg_client_style = self.default_color2 if self.hascolors else curses.A_UNDERLINE
             elif (cs_status.lower() == "disconnected"):
-                msg_client = _("Disconnected from")+" "+format(server_ip)
+                msg_client = _("Disconnected from") + "  " + format(server_ip)
                 msg_client_style = self.ifCRITICAL_color2 if self.hascolors else curses.A_UNDERLINE
         msg_help = _("Press 'h' for help")
         if (client_tag):
             if (screen_y > self.caption_y and
                 screen_x > self.caption_x + len(msg_client)):
                 self.term_window.addnstr(max(self.caption_y, screen_y - 1),
-                                        self.caption_x, msg_client, len(msg_client),
-                                        msg_client_style)
-            if (screen_x > self.caption_x + len(msg_client)+3+len(msg_help)):
+                                         self.caption_x, msg_client,
+                                         len(msg_client), msg_client_style)
+            if (screen_x > self.caption_x + len(msg_client) + 3 + len(msg_help)):
                 self.term_window.addnstr(max(self.caption_y, screen_y - 1),
-                                        self.caption_x+len(msg_client), " | "+msg_help, 3+len(msg_help))
+                                         self.caption_x + len(msg_client),
+                                         ' | ' + msg_help, 3 + len(msg_help))
         else:
             self.term_window.addnstr(max(self.caption_y, screen_y - 1),
-                                    self.caption_x, msg_help, len(msg_help))
+                                     self.caption_x, msg_help, len(msg_help))
 
     def displayHelp(self):
         """
@@ -2207,25 +2325,26 @@ class glancesScreen:
                 self.help_y + 4, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("Key"), _("Function"), width=width),
-                79, self.title_color if self.hascolors else 0)
+                79, self.title_underline_color if self.hascolors else 0)
             self.term_window.addnstr(
                 self.help_y + 5, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("a"), _("Sort processes automatically"), width=width),
-                79, self.ifCRITICAL_color2
-                    if not psutil_get_cpu_percent_tag else 0)
+                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                else 0)
             self.term_window.addnstr(
                 self.help_y + 6, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("b"), _("Switch between bit/s or byte/s for network IO"),
-                              width=width), 79, self.ifCRITICAL_color2
-                    if not psutil_get_cpu_percent_tag else 0)
+                    _("b"), _("Switch between bit/s or Byte/s for network IO"),
+                    width=width),
+                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                else 0)
             self.term_window.addnstr(
                 self.help_y + 7, self.help_x,
                 "{0:^{width}} {1}".format(
                     _("c"), _("Sort processes by CPU%"), width=width),
-                79, self.ifCRITICAL_color2
-                    if not psutil_get_cpu_percent_tag else 0)
+                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                else 0)
             self.term_window.addnstr(
                 self.help_y + 8, self.help_x,
                 "{0:^{width}} {1}".format(
@@ -2356,7 +2475,7 @@ class glancesHtml:
 
     def __getCpuColor(self, cpu, max=100):
         cpu['user_color'] = self.__getColor(cpu['user'], max)
-        cpu['kernel_color'] = self.__getColor(cpu['kernel'], max)
+        cpu['system_color'] = self.__getColor(cpu['system'], max)
         cpu['nice_color'] = self.__getColor(cpu['nice'], max)
         return cpu
 
@@ -2383,8 +2502,7 @@ class glancesHtml:
         return load
 
     def __getMemColor(self, mem):
-        real_used_phymem = mem['used'] - mem['cache']
-        mem['used_color'] = self.__getColor(real_used_phymem, mem['total'])
+        mem['used_color'] = self.__getColor(mem['used'], mem['total'])
 
         return mem
 
@@ -2458,7 +2576,7 @@ class glancesCsv:
         if stats.getCpu():
             # Update CSV with the CPU stats
             cpu = stats.getCpu()
-            self.__csvfile.writerow(["cpu", cpu['user'], cpu['kernel'],
+            self.__csvfile.writerow(["cpu", cpu['user'], cpu['system'],
                                      cpu['nice']])
         if stats.getLoad():
             # Update CSV with the LOAD stats
@@ -2493,7 +2611,7 @@ class GlancesInstance():
     All the methods of this class are published as XML RPC methods
     """
 
-    def __init__(self, refresh_time = 1):
+    def __init__(self, refresh_time=1):
         self.timer = Timer(0)
         self.refresh_time = refresh_time
 
@@ -2543,11 +2661,11 @@ class GlancesServer():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, bind_address, bind_port = 61209,
-                 RequestHandler = GlancesHandler,
-                 refresh_time = 1):
+    def __init__(self, bind_address, bind_port=61209,
+                 RequestHandler=GlancesHandler,
+                 refresh_time=1):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
-                                    requestHandler = RequestHandler)
+                                         requestHandler=RequestHandler)
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(refresh_time))
         return
@@ -2564,11 +2682,11 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, server_address, server_port = 61209):
+    def __init__(self, server_address, server_port=61209):
         try:
             self.client = ServerProxy('http://%s:%d' % (server_address, server_port))
         except:
-            print(_("Error: creating client socket")+" http://%s:%d" % (server_address, server_port))
+            print(_("Error: creating client socket") + " http://%s:%d" % (server_address, server_port))
             pass
         return
 
@@ -2764,7 +2882,6 @@ def main():
     if html_tag:
         if not html_lib_tag:
             print(_("Error: Need Jinja2 library to export into HTML"))
-            print()
             print(_("Try to install the python-jinja2 package"))
             sys.exit(2)
         try:
@@ -2803,7 +2920,7 @@ def main():
     # Init Glances depending of the mode (standalone, client, server)
     if server_tag:
         # Init the server
-        print(_("Glances server is running on")+ " %s:%s" % (bind_ip, server_port))
+        print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
         # Init stats
@@ -2872,7 +2989,7 @@ def main():
                 server_status = "Connected"
                 stats.update(server_stats)
             # Update the screen
-            screen.update(stats, cs_status = server_status)
+            screen.update(stats, cs_status=server_status)
     else:
         # Start the standalone (CLI) loop
         while True:
