@@ -760,6 +760,10 @@ class GlancesStats:
             buffers = getattr(phymem, 'buffers', lambda: 0)
             cached = getattr(phymem, 'cached', lambda: 0)
 
+            # active and inactive not available on Windows
+            active = getattr(phymem, 'active', lambda: 0)
+            inactive = getattr(phymem, 'inactive', lambda: 0)
+
             # phymem free and usage
             total = phymem.total
             free = phymem.available  # phymem.free + buffers + cached
@@ -769,8 +773,8 @@ class GlancesStats:
                         'percent': phymem.percent,
                         'used': used,
                         'free': free,
-                        'active': phymem.active,
-                        'inactive': phymem.inactive,
+                        'active': active,
+                        'inactive': inactive,
                         'buffers': buffers,
                         'cached': cached}
 
