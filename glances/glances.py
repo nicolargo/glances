@@ -978,6 +978,7 @@ class GlancesStats:
 
 
 class GlancesStatsServer(GlancesStats):
+
     def __init__(self):
         GlancesStats.__init__(self)
 
@@ -1014,6 +1015,7 @@ class GlancesStatsServer(GlancesStats):
 
 
 class GlancesStatsClient(GlancesStats):
+
     def __init__(self):
         GlancesStats.__init__(self)
         # Cached informations (no need to be refreshed)
@@ -1656,8 +1658,11 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+        memblocksize = 46
+        extblocksize = 18
         if (screen_y > self.mem_y + 5 and
-            screen_x > self.mem_x + offset_x + 38):
+            screen_x > self.mem_x + offset_x + memblocksize - extblocksize):
+            
             # RAM
             self.term_window.addnstr(self.mem_y,
                                      self.mem_x + offset_x, _("Mem"), 8,
@@ -1692,40 +1697,47 @@ class glancesScreen:
                 self.mem_y + 3, self.mem_x + offset_x + 7,
                 format(self.__autoUnit(mem['free']), '>5'), 5)
 
-            # active and inactive (only available for psutil >= 0.6)
-            if psutil_mem_vm:
-                # active
-                self.term_window.addnstr(self.mem_y,
+            if (screen_x > self.mem_x + offset_x + memblocksize):
+                # Display extended informations if space is available
+                
+                # active and inactive (only available for psutil >= 0.6)
+                if psutil_mem_vm:
+                    # active
+                    self.term_window.addnstr(self.mem_y,
+                                             self.mem_x + offset_x + 14,
+                                             _("active:"), 7)
+                    self.term_window.addnstr(
+                        self.mem_y, self.mem_x + offset_x + 24,
+                        format(self.__autoUnit(mem['active']), '>5'), 5)
+
+                    # inactive
+                    self.term_window.addnstr(self.mem_y + 1,
+                                             self.mem_x + offset_x + 14,
+                                             _("inactive:"), 9)
+                    self.term_window.addnstr(
+                        self.mem_y + 1, self.mem_x + offset_x + 24,
+                        format(self.__autoUnit(mem['inactive']), '>5'), 5)
+
+                # buffers (Linux, BSD)
+                self.term_window.addnstr(self.mem_y + 2,
                                          self.mem_x + offset_x + 14,
-                                         _("active:"), 7)
+                                         _("buffers:"), 8)
                 self.term_window.addnstr(
-                    self.mem_y, self.mem_x + offset_x + 24,
-                    format(self.__autoUnit(mem['active']), '>5'), 5)
+                    self.mem_y + 2, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['buffers']), '>5'), 5)
 
-                # inactive
-                self.term_window.addnstr(self.mem_y + 1,
+                # cached (Linux, BSD)
+                self.term_window.addnstr(self.mem_y + 3,
                                          self.mem_x + offset_x + 14,
-                                         _("inactive:"), 9)
+                                         _("cached:"), 7)
                 self.term_window.addnstr(
-                    self.mem_y + 1, self.mem_x + offset_x + 24,
-                    format(self.__autoUnit(mem['inactive']), '>5'), 5)
+                    self.mem_y + 3, self.mem_x + offset_x + 24,
+                    format(self.__autoUnit(mem['cached']), '>5'), 5)
 
-            # buffers (Linux, BSD)
-            self.term_window.addnstr(self.mem_y + 2,
-                                     self.mem_x + offset_x + 14,
-                                     _("buffers:"), 8)
-            self.term_window.addnstr(
-                self.mem_y + 2, self.mem_x + offset_x + 24,
-                format(self.__autoUnit(mem['buffers']), '>5'), 5)
-
-            # cached (Linux, BSD)
-            self.term_window.addnstr(self.mem_y + 3,
-                                     self.mem_x + offset_x + 14,
-                                     _("cached:"), 7)
-            self.term_window.addnstr(
-                self.mem_y + 3, self.mem_x + offset_x + 24,
-                format(self.__autoUnit(mem['cached']), '>5'), 5)
-
+            else:
+                # If space is NOT available then mind the gap...
+                offset_x -= extblocksize
+                
             # Swap
             self.term_window.addnstr(self.mem_y,
                                      self.mem_x + offset_x + 32, _("Swap"), 4,
@@ -2633,6 +2645,17 @@ class GlancesInstance():
         # Update and return all the stats
         self.__update__()
         return json.dumps(stats.getAll())
+
+    def getSystem(self):
+        # Return operating system info
+        # No need to update...
+        #~ self.__update__()
+        return json.dumps(stats.getSystem())
+
+    def getCore(self):
+        # Update and return number of Core
+        self.__update__()
+        return json.dumps(stats.getCore())
 
     def getCpu(self):
         # Update and return CPU stats
