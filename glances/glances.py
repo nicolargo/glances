@@ -625,36 +625,23 @@ class GlancesStats:
         """
 
         # CPU
+        cputime = psutil.cpu_times()
+        cputime_total = (cputime.user +
+                         cputime.system +
+                         cputime.idle)
+        # Only available on some OS
+        if hasattr(cputime, 'nice'): cputime_total += cputime.nice
+        if hasattr(cputime, 'iowait'): cputime_total += cputime.iowait
+        if hasattr(cputime, 'irq'): cputime_total += cputime.irq
+        if hasattr(cputime, 'softirq'): cputime_total += cputime.softirq
         if not hasattr(self, 'cputime_old'):
-            self.cputime_old = psutil.cpu_times()
-            self.cputime_total_old = (self.cputime_old.user +
-                                      self.cputime_old.system +
-                                      self.cputime_old.idle)
-            # Only available on some OS
-            if hasattr(self.cputime_old, 'nice'):
-                self.cputime_total_old += self.cputime_old.nice
-            if hasattr(self.cputime_old, 'iowait'):
-                self.cputime_total_old += self.cputime_old.iowait
-            if hasattr(self.cputime_old, 'irq'):
-                self.cputime_total_old += self.cputime_old.irq
-            if hasattr(self.cputime_old, 'softirq'):
-                self.cputime_total_old += self.cputime_old.softirq
+            self.cputime_old = cputime
+            self.cputime_total_old = cputime_total
             self.cpu = {}
         else:
+            self.cputime_new = cputime
+            self.cputime_total_new = cputime_total
             try:
-                self.cputime_new = psutil.cpu_times()
-                self.cputime_total_new = (self.cputime_new.user +
-                                          self.cputime_new.system +
-                                          self.cputime_new.idle)
-                # Only available on some OS
-                if hasattr(self.cputime_new, 'nice'):
-                    self.cputime_total_new += self.cputime_new.nice
-                if hasattr(self.cputime_new, 'iowait'):
-                    self.cputime_total_new += self.cputime_new.iowait
-                if hasattr(self.cputime_new, 'irq'):
-                    self.cputime_total_new += self.cputime_new.irq
-                if hasattr(self.cputime_new, 'softirq'):
-                    self.cputime_total_new += self.cputime_new.softirq
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
                 self.cpu = {'user': (self.cputime_new.user -
@@ -678,50 +665,35 @@ class GlancesStats:
                 self.cpu = {}
 
         # Per-CPU
+        percputime = psutil.cpu_times(percpu=True)
+        percputime_total = []
+        for i in range(len(percputime)):
+            percputime_total.append(percputime[i].user +
+                                    percputime[i].system +
+                                    percputime[i].idle)
+        # Only available on some OS
+        for i in range(len(percputime)):
+            if hasattr(percputime[i], 'nice'):
+                percputime_total[i] += percputime[i].nice
+        for i in range(len(percputime)):
+            if hasattr(percputime[i], 'iowait'):
+                percputime_total[i] += percputime[i].iowait
+        for i in range(len(percputime)):
+            if hasattr(percputime[i], 'irq'):
+                percputime_total[i] += percputime[i].irq
+        for i in range(len(percputime)):
+            if hasattr(percputime[i], 'softirq'):
+                percputime_total[i] += percputime[i].softirq
         if not hasattr(self, 'percputime_old'):
-            self.percputime_old = psutil.cpu_times(percpu=True)
-            self.percputime_total_old = []
-            for i in range(len(self.percputime_old)):
-                self.percputime_total_old.append(self.percputime_old[i].user +
-                                                 self.percputime_old[i].system +
-                                                 self.percputime_old[i].idle)
-            # Only available on some OS
-            for i in range(len(self.percputime_old)):
-                if hasattr(self.percputime_old[i], 'nice'):
-                    self.percputime_total_old[i] += self.percputime_old[i].nice
-            for i in range(len(self.percputime_old)):
-                if hasattr(self.percputime_old[i], 'iowait'):
-                    self.percputime_total_old[i] += self.percputime_old[i].iowait
-            for i in range(len(self.percputime_old)):
-                if hasattr(self.percputime_old[i], 'irq'):
-                    self.percputime_total_old[i] += self.percputime_old[i].irq
-            for i in range(len(self.percputime_old)):
-                if hasattr(self.percputime_old[i], 'softirq'):
-                    self.percputime_total_old[i] += self.percputime_old[i].softirq
+            self.percputime_old = percputime
+            self.percputime_total_old = percputime_total
             self.percpu = []
         else:
+            self.percputime_new = percputime
+            self.percputime_total_new = percputime_total
+            perpercent = []
+            self.percpu = []
             try:
-                self.percputime_new = psutil.cpu_times(percpu=True)
-                self.percputime_total_new = []
-                for i in range(len(self.percputime_new)):
-                    self.percputime_total_new.append(self.percputime_new[i].user +
-                                                     self.percputime_new[i].system +
-                                                     self.percputime_new[i].idle)
-                # Only available on some OS
-                for i in range(len(self.percputime_new)):
-                    if hasattr(self.percputime_new[i], 'nice'):
-                        self.percputime_total_new[i] += self.percputime_new[i].nice
-                for i in range(len(self.percputime_new)):
-                    if hasattr(self.percputime_new[i], 'iowait'):
-                        self.percputime_total_new[i] += self.percputime_new[i].iowait
-                for i in range(len(self.percputime_new)):
-                    if hasattr(self.percputime_new[i], 'irq'):
-                        self.percputime_total_new[i] += self.percputime_new[i].irq
-                for i in range(len(self.percputime_new)):
-                    if hasattr(self.percputime_new[i], 'softirq'):
-                        self.percputime_total_new[i] += self.percputime_new[i].softirq
-                perpercent = []
-                self.percpu = []
                 for i in range(len(self.percputime_new)):
                     perpercent.append(100 / (self.percputime_total_new[i] -
                                              self.percputime_total_old[i]))
