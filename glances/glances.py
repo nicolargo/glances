@@ -1447,17 +1447,17 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+        if host['os_name'] == "Linux":
+            system_msg = _("{0} {1} with {2} {3} on {4}").format(
+                system['linux_distro'], system['platform'],
+                system['os_name'], system['os_version'],
+                host['hostname'])
+        else:
+            system_msg = _("{0} {1} {2} on {3}").format(
+                system['os_name'], system['os_version'],
+                system['platform'], host['hostname'])
         if (screen_y > self.system_y and
-            screen_x > self.system_x + 79):
-            if host['os_name'] == "Linux":
-                system_msg = _("{0} {1} with {2} {3} on {4}").format(
-                    system['linux_distro'], system['platform'],
-                    system['os_name'], system['os_version'],
-                    host['hostname'])
-            else:
-                system_msg = _("{0} {1} {2} on {3}").format(
-                    system['os_name'], system['os_version'],
-                    system['platform'], host['hostname'])
+            screen_x > self.system_x + len(system_msg)):
             center = (screen_x // 2) - len(system_msg) // 2
             self.term_window.addnstr(self.system_y, self.system_x + center,
                                      system_msg, 80, curses.A_UNDERLINE)
