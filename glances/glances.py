@@ -51,10 +51,10 @@ except ImportError:
     from xmlrpc.server import SimpleXMLRPCServer
 
 try:
-    # python2
+    # For Python v2.x
     from xmlrpclib import ServerProxy
 except ImportError:
-    # python3
+    # For Python v3.x
     from xmlrpc.client import ServerProxy
 
 if platform.system() != 'Windows':
@@ -141,7 +141,6 @@ except Exception:
     psutil_network_io_tag = False
 else:
     psutil_network_io_tag = True
-
 
 try:
     # Sensors (optionnal)
@@ -585,7 +584,7 @@ class GlancesStats:
         Get process (proc) statistics
         """
         procstat = {}
-
+        
         procstat['memory_info'] = proc.get_memory_info()
 
         if psutil_get_cpu_percent_tag:
