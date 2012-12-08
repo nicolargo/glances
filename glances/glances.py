@@ -1457,8 +1457,15 @@ class glancesScreen:
             offset_x = 16
         else:
             offset_x = 0
+            
+        # Log
+        if cpu:
+            logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
+                     cpu['user'], proclist)
+            logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
+                     cpu['system'], proclist)
 
-        # display CPU stats
+        # Display CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
             # display per-CPU stats when space is available
             self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 6,
@@ -1485,7 +1492,8 @@ class glancesScreen:
 
                 # user
                 alert = self.__getCpuAlert(percpu[i]['user'])
-                logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
+                # Do not log PerCpu but on ly CPU (see below)
+                #~ logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
                 self.term_window.addnstr(
                     self.cpu_y + 1, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['user'] / 100, '>6.1%'), 6,
@@ -1493,8 +1501,8 @@ class glancesScreen:
 
                 # system
                 alert = self.__getCpuAlert(percpu[i]['system'])
-                logs.add(alert, "CPU-%d system" % i, percpu[i]['system'],
-                         proclist)
+                # Do not log PerCpu but on ly CPU (see below)
+                #~ logs.add(alert, "CPU-%d system" % i, percpu[i]['system'], proclist)
                 self.term_window.addnstr(
                     self.cpu_y + 2, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['system'] / 100, '>6.1%'), 6,
@@ -1523,19 +1531,19 @@ class glancesScreen:
             # user
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("user:"), 5)
             alert = self.__getCpuAlert(cpu['user'])
-            logs.add(alert, "CPU user", cpu['user'], proclist)
+            #~ logs.add(alert, "CPU user", cpu['user'], proclist)
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 8,
                                      format(cpu['user'] / 100, '>6.1%'), 6,
-                                     self.__colors_list2[alert])
+                                     self.__colors_list[alert])
 
             # system
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
                                      _("system:"), 7)
             alert = self.__getCpuAlert(cpu['system'])
-            logs.add(alert, "CPU system", cpu['system'], proclist)
+            #~ logs.add(alert, "CPU system", cpu['system'], proclist)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 8,
                                      format(cpu['system'] / 100, '>6.1%'), 6,
-                                     self.__colors_list2[alert])
+                                     self.__colors_list[alert])
 
             # idle
             self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("idle:"), 5)
@@ -1611,7 +1619,7 @@ class glancesScreen:
             self.term_window.addnstr(self.load_y + 2,
                                      self.load_x + offset_x + 8,
                                      format(load['min5'], '>5.2f'), 5,
-                                     self.__colors_list2[alert])
+                                     self.__colors_list[alert])
 
             # 15 min
             self.term_window.addnstr(self.load_y + 3,
@@ -1621,7 +1629,7 @@ class glancesScreen:
             self.term_window.addnstr(self.load_y + 3,
                                      self.load_x + offset_x + 8,
                                      format(load['min15'], '>5.2f'), 5,
-                                     self.__colors_list2[alert])
+                                     self.__colors_list[alert])
 
     def displayMem(self, mem, memswap, proclist, offset_x=0):
         # Memory
@@ -1659,7 +1667,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.mem_y + 2, self.mem_x + offset_x + 7,
                 format(self.__autoUnit(mem['used']), '>5'), 5,
-                self.__colors_list2[alert])
+                self.__colors_list[alert])
 
             # free
             self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x,
@@ -1737,7 +1745,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.mem_y + 2, self.mem_x + offset_x + 39,
                 format(self.__autoUnit(memswap['used']), '>5'), 8,
-                self.__colors_list2[alert])
+                self.__colors_list[alert])
 
             # free
             self.term_window.addnstr(self.mem_y + 3,
