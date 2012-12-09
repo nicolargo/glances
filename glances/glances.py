@@ -461,6 +461,73 @@ class glancesGrabSensors:
             sensors.cleanup()
 
 
+class GlancesGrabProcesses:
+    """
+    Get processed stats using the PsUtil lib
+    """
+
+    def __get_process_stats__(self, proc):
+        """
+        Get process (proc) statistics
+        """
+        procstat = {}
+        
+        procstat['memory_info'] = proc.get_memory_info()
+
+        if psutil_get_cpu_percent_tag:
+            procstat['cpu_percent'] = \
+                proc.get_cpu_percent(interval=0)
+
+        procstat['memory_percent'] = proc.get_memory_percent()
+
+        try:
+            if psutil_get_io_counter_tag:
+                procstat['io_counters'] = proc.get_io_counters()
+        except:
+            procstat['io_counters'] = {}
+
+        procstat['pid'] = proc.pid
+        procstat['username'] = proc.username
+
+        if hasattr(proc, 'get_nice'):
+            # Deprecated in PsUtil 0.5.0+
+            procstat['nice'] = proc.get_nice()
+        elif hasattr(proc, 'nice'):
+            # Else
+            procstat['nice'] = proc.nice
+
+        procstat['status'] = str(proc.status)[:1].upper()
+        procstat['cpu_times'] = proc.get_cpu_times()
+        procstat['name'] = proc.name
+        procstat['cmdline'] = " ".join(proc.cmdline)
+
+        return procstat
+
+    
+    def update(self):
+        self.processlist = []
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
+
+        for proc in psutil.process_iter():
+            # Update processlist
+            self.processlist.append(self.__get_process_stats__(proc))
+            # Update processcount
+            try:
+                self.processcount[str(proc.status)] += 1
+            except KeyError:
+                # Key did not exist, create it
+                self.processcount[str(proc.status)] = 1
+            self.processcount['total'] += 1
+
+
+    def getcount(self):
+        return self.processcount
+
+    
+    def getlist(self):
+        return self.processlist
+
+
 class GlancesStats:
     """
     This class store, update and give stats
@@ -486,56 +553,9 @@ class GlancesStats:
             except:
                 self.sensors_tag = False
 
-        # Process list refresh
+        # Init the process list
         self.process_list_refresh = True
-
-    def _process_list_refresh(self):
-        if self.process_list_refresh:
-            self.process_first_grab = False
-            if not hasattr(self, 'process_all'):
-                self.process_all = [proc for proc in psutil.process_iter()]
-                self.process_first_grab = True
-            self.process = []
-            self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-            # Manage new processes
-            process_new = [proc.pid for proc in self.process_all]
-            for proc in psutil.process_iter():
-                if proc.pid not in process_new:
-                    self.process_all.append(proc)
-            # Grab stats from process list
-            for proc in self.process_all[:]:
-                try:
-                    if not proc.is_running():
-                        try:
-                            self.process_all.remove(proc)
-                        except Exception:
-                            pass
-                except psutil.error.NoSuchProcess:
-                    try:
-                        self.process_all.remove(proc)
-                    except Exception:
-                        pass
-                else:
-                    # Global stats
-                    try:
-                        self.processcount[str(proc.status)] += 1
-                    except psutil.error.NoSuchProcess:
-                        # Process non longer exist
-                        pass
-                    except KeyError:
-                        # Key did not exist, create it
-                        self.processcount[str(proc.status)] = 1
-                    finally:
-                        self.processcount['total'] += 1
-                    # Per process stats
-                    try:
-                        self.process.append(self.__get_process_stats__(proc))
-                    except Exception:
-                        pass
-            # If it is the first grab then empty process list
-            if self.process_first_grab:
-                self.process = []
-        self.process_list_refresh = not self.process_list_refresh
+        self.glancesgrabprocesses = GlancesGrabProcesses()
 
     def _init_host(self):
         self.host = {}
@@ -576,46 +596,6 @@ class GlancesStats:
             procstat['io_counters'] = proc.get_io_counters()
         procstat['status'] = str(procstat['status'])[:1].upper()
         procstat['cmdline'] = " ".join(procstat['cmdline'])
-
-        return procstat
-
-    def __get_process_stats__(self, proc):
-        """
-        Get process (proc) statistics
-        """
-        procstat = {}
-        
-        procstat['memory_info'] = proc.get_memory_info()
-
-        if psutil_get_cpu_percent_tag:
-            procstat['cpu_percent'] = \
-                proc.get_cpu_percent(interval=0)
-
-        procstat['memory_percent'] = proc.get_memory_percent()
-
-        try:
-            if psutil_get_io_counter_tag:
-                procstat['io_counters'] = proc.get_io_counters()
-        except:
-            procstat['io_counters'] = {}
-
-        procstat['pid'] = proc.pid
-        procstat['username'] = proc.username
-
-        if hasattr(proc, 'get_nice'):
-            # Deprecated in PsUtil 0.5.0+
-            procstat['nice'] = proc.get_nice()
-        elif hasattr(proc, 'nice'):
-            # Else
-            procstat['nice'] = proc.nice
-        else:
-            # Never here...
-            procstat['nice'] = 0
-
-        procstat['status'] = str(proc.status)[:1].upper()
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['name'] = proc.name
-        procstat['cmdline'] = " ".join(proc.cmdline)
 
         return procstat
 
@@ -847,7 +827,9 @@ class GlancesStats:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
-        self._process_list_refresh()
+        self.glancesgrabprocesses.update()
+        self.process = self.glancesgrabprocesses.getlist()
+        self.processcount = self.glancesgrabprocesses.getcount()
 
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
@@ -2794,7 +2776,7 @@ def main():
         server_tag = False
 
     # Set the default refresh time
-    refresh_time = 2
+    refresh_time = 3
 
     # Set the default TCP port for client and server
     server_port = 61209
