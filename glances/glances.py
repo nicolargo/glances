@@ -941,14 +941,16 @@ class GlancesStatsServer(GlancesStats):
         self._init_host()
         self.all_stats["host"] = self.host
 
+        # Init the process list
+        self.process_list_refresh = True
+        self.glancesgrabprocesses = GlancesGrabProcesses()
+
     def __update__(self, input_stats):
         """
         Update the stats
         """
 
         GlancesStats.__update__(self, input_stats)
-        self.process_list_refresh = True
-        self._process_list_refresh()
 
         self.all_stats["cpu"] = self.cpu
         self.all_stats["percpu"] = self.percpu
