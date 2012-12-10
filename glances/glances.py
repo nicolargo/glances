@@ -461,6 +461,73 @@ class glancesGrabSensors:
             sensors.cleanup()
 
 
+class GlancesGrabProcesses:
+    """
+    Get processed stats using the PsUtil lib
+    """
+
+    def __get_process_stats__(self, proc):
+        """
+        Get process (proc) statistics
+        """
+        procstat = {}
+        
+        procstat['memory_info'] = proc.get_memory_info()
+
+        if psutil_get_cpu_percent_tag:
+            procstat['cpu_percent'] = \
+                proc.get_cpu_percent(interval=0)
+
+        procstat['memory_percent'] = proc.get_memory_percent()
+
+        try:
+            if psutil_get_io_counter_tag:
+                procstat['io_counters'] = proc.get_io_counters()
+        except:
+            procstat['io_counters'] = {}
+
+        procstat['pid'] = proc.pid
+        procstat['username'] = proc.username
+
+        if hasattr(proc, 'get_nice'):
+            # Deprecated in PsUtil 0.5.0+
+            procstat['nice'] = proc.get_nice()
+        elif hasattr(proc, 'nice'):
+            # Else
+            procstat['nice'] = proc.nice
+
+        procstat['status'] = str(proc.status)[:1].upper()
+        procstat['cpu_times'] = proc.get_cpu_times()
+        procstat['name'] = proc.name
+        procstat['cmdline'] = " ".join(proc.cmdline)
+
+        return procstat
+
+    
+    def update(self):
+        self.processlist = []
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
+
+        for proc in psutil.process_iter():
+            # Update processlist
+            self.processlist.append(self.__get_process_stats__(proc))
+            # Update processcount
+            try:
+                self.processcount[str(proc.status)] += 1
+            except KeyError:
+                # Key did not exist, create it
+                self.processcount[str(proc.status)] = 1
+            self.processcount['total'] += 1
+
+
+    def getcount(self):
+        return self.processcount
+
+    
+    def getlist(self):
+        return self.processlist
+
+
 class GlancesStats:
     """
     This class store, update and give stats
@@ -486,56 +553,9 @@ class GlancesStats:
             except:
                 self.sensors_tag = False
 
-        # Process list refresh
+        # Init the process list
         self.process_list_refresh = True
-
-    def _process_list_refresh(self):
-        if self.process_list_refresh:
-            self.process_first_grab = False
-            if not hasattr(self, 'process_all'):
-                self.process_all = [proc for proc in psutil.process_iter()]
-                self.process_first_grab = True
-            self.process = []
-            self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-            # Manage new processes
-            process_new = [proc.pid for proc in self.process_all]
-            for proc in psutil.process_iter():
-                if proc.pid not in process_new:
-                    self.process_all.append(proc)
-            # Grab stats from process list
-            for proc in self.process_all[:]:
-                try:
-                    if not proc.is_running():
-                        try:
-                            self.process_all.remove(proc)
-                        except Exception:
-                            pass
-                except psutil.error.NoSuchProcess:
-                    try:
-                        self.process_all.remove(proc)
-                    except Exception:
-                        pass
-                else:
-                    # Global stats
-                    try:
-                        self.processcount[str(proc.status)] += 1
-                    except psutil.error.NoSuchProcess:
-                        # Process non longer exist
-                        pass
-                    except KeyError:
-                        # Key did not exist, create it
-                        self.processcount[str(proc.status)] = 1
-                    finally:
-                        self.processcount['total'] += 1
-                    # Per process stats
-                    try:
-                        self.process.append(self.__get_process_stats__(proc))
-                    except Exception:
-                        pass
-            # If it is the first grab then empty process list
-            if self.process_first_grab:
-                self.process = []
-        self.process_list_refresh = not self.process_list_refresh
+        self.glancesgrabprocesses = GlancesGrabProcesses()
 
     def _init_host(self):
         self.host = {}
@@ -576,46 +596,6 @@ class GlancesStats:
             procstat['io_counters'] = proc.get_io_counters()
         procstat['status'] = str(procstat['status'])[:1].upper()
         procstat['cmdline'] = " ".join(procstat['cmdline'])
-
-        return procstat
-
-    def __get_process_stats__(self, proc):
-        """
-        Get process (proc) statistics
-        """
-        procstat = {}
-        
-        procstat['memory_info'] = proc.get_memory_info()
-
-        if psutil_get_cpu_percent_tag:
-            procstat['cpu_percent'] = \
-                proc.get_cpu_percent(interval=0)
-
-        procstat['memory_percent'] = proc.get_memory_percent()
-
-        try:
-            if psutil_get_io_counter_tag:
-                procstat['io_counters'] = proc.get_io_counters()
-        except:
-            procstat['io_counters'] = {}
-
-        procstat['pid'] = proc.pid
-        procstat['username'] = proc.username
-
-        if hasattr(proc, 'get_nice'):
-            # Deprecated in PsUtil 0.5.0+
-            procstat['nice'] = proc.get_nice()
-        elif hasattr(proc, 'nice'):
-            # Else
-            procstat['nice'] = proc.nice
-        else:
-            # Never here...
-            procstat['nice'] = 0
-
-        procstat['status'] = str(proc.status)[:1].upper()
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['name'] = proc.name
-        procstat['cmdline'] = " ".join(proc.cmdline)
 
         return procstat
 
@@ -847,7 +827,15 @@ class GlancesStats:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
-        self._process_list_refresh()
+        self.glancesgrabprocesses.update()
+        process = self.glancesgrabprocesses.getlist()
+        processcount = self.glancesgrabprocesses.getcount()
+        if not hasattr(self, 'process'):            
+            self.process = []
+            self.processcount = {}
+        else:
+            self.process = process
+            self.processcount = processcount
 
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
@@ -959,14 +947,13 @@ class GlancesStatsServer(GlancesStats):
         self._init_host()
         self.all_stats["host"] = self.host
 
+
     def __update__(self, input_stats):
         """
         Update the stats
         """
 
         GlancesStats.__update__(self, input_stats)
-        self.process_list_refresh = True
-        self._process_list_refresh()
 
         self.all_stats["cpu"] = self.cpu
         self.all_stats["percpu"] = self.percpu
@@ -1357,8 +1344,8 @@ class glancesScreen:
         # Display stats
         self.displaySystem(stats.getHost(), stats.getSystem())
         cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
-        self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
-        self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
+        load_offset = self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
+        self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, load_offset)
         network_count = self.displayNetwork(stats.getNetwork())
         sensors_count = self.displaySensors(stats.getSensors(),
                                             self.network_y + network_count)
@@ -1440,7 +1427,7 @@ class glancesScreen:
 
         # Is it possible to display extended stats ?
         # If yes then tag_extendedcpu = True
-        tag_extendedcpu = screen_x > self.cpu_x + 79 + 17
+        tag_extendedcpu = screen_x > self.cpu_x + 79 + 15
 
         # Is it possible to display per-CPU stats ?
         # Do you want it ?
@@ -1586,7 +1573,7 @@ class glancesScreen:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 24,
                                              "N/A", 3)
 
-        # return the x offset to display load and mem
+        # return the x offset to display load
         return offset_x
 
     def displayLoad(self, load, core, proclist, offset_x=0):
@@ -1595,8 +1582,15 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+        
+        loadblocksize = 15
+        
+        #~ test = max(0, (screen_x - (self.load_x + offset_x + loadblocksize)))
+        #~ self.term_window.addnstr(1, test, str(test), 3)
+        
         if (screen_y > self.load_y + 5 and
-            screen_x > self.load_x + offset_x + 18):
+            screen_x > self.load_x + offset_x + loadblocksize):
+            
             self.term_window.addnstr(self.load_y,
                                      self.load_x + offset_x, _("Load"), 4,
                                      self.title_color if self.hascolors else
@@ -1630,6 +1624,9 @@ class glancesScreen:
                                      self.load_x + offset_x + 8,
                                      format(load['min15'], '>5.2f'), 5,
                                      self.__colors_list[alert])
+        
+        # return the x offset to display mem
+        return offset_x
 
     def displayMem(self, mem, memswap, proclist, offset_x=0):
         # Memory
@@ -1637,8 +1634,13 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        memblocksize = 46
-        extblocksize = 18
+
+        memblocksize = 45
+        extblocksize = 15
+
+        #~ test = max(0, (screen_x - (self.mem_x + offset_x + + memblocksize - extblocksize)))
+        #~ self.term_window.addnstr(6, test, str(test), 3)
+
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + memblocksize - extblocksize):
             
@@ -2275,8 +2277,10 @@ class glancesScreen:
                                          self.caption_x + len(msg_client),
                                          ' | ' + msg_help, 3 + len(msg_help))
         else:
-            self.term_window.addnstr(max(self.caption_y, screen_y - 1),
-                                     self.caption_x, msg_help, len(msg_help))
+            if (screen_y > self.caption_y and
+                screen_x > self.caption_x + len(msg_help)):
+                self.term_window.addnstr(max(self.caption_y, screen_y - 1),
+                                         self.caption_x, msg_help, len(msg_help))
 
     def displayHelp(self):
         """
@@ -2794,7 +2798,7 @@ def main():
         server_tag = False
 
     # Set the default refresh time
-    refresh_time = 2
+    refresh_time = 3
 
     # Set the default TCP port for client and server
     server_port = 61209
