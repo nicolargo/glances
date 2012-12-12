@@ -25,31 +25,50 @@
 import unittest
 import glances
 import multiprocessing
+import time 
 
 class TestGlancesStat(unittest.TestCase):
 
     def setUp(self):
-        self.stats = glances.glancesStats()
+        self.stats = glances.GlancesStats()
+        self.stats.update()        
+
+    def test_Glances_getSystem(self):
         self.stats.update()
+        system = self.stats.getSystem()
+        print "System info: %s" % system
+        self.assertTrue(len(system) > 1)
 
     def test_Glances_getCore(self):
-        self.assertEqual(self.stats.getCore(), multiprocessing.cpu_count())
+        self.stats.update()
+        core = self.stats.getCore()
+        print "CPU Core number: %s" % core
+        self.assertEqual(core, multiprocessing.cpu_count())
 
     def test_Glances_getCpu(self):
         self.stats.update()
-        self.assertEqual(len(self.stats.getCpu()), 4)
+        cpu = self.stats.getCpu()
+        print "CPU stat %s:" % cpu
+        self.assertTrue(len(cpu) > 1)
 
     def test_Glances_getPerCpu(self):
         self.stats.update()
-        self.assertEqual(len(self.stats.getPerCpu()), multiprocessing.cpu_count())
+        percpu = self.stats.getPerCpu()
+        print "PerCPU stat %s:" % percpu
+        self.assertEqual(len(percpu), multiprocessing.cpu_count())
 
     def test_Glances_getMem(self):
         self.stats.update()
-        self.assertTrue(len(self.stats.getMem()) > 2)
+        mem = self.stats.getMem()
+        print "Mem stat %s:" % mem
+        self.assertTrue(len(mem) > 2)
 
     def test_Glances_getMemSwap(self):
         self.stats.update()
+        memswap = self.stats.getMemSwap()
+        print "MemSwap stat %s:" % memswap
         self.assertTrue(len(self.stats.getMemSwap()) > 2)
+
 
 if __name__ == '__main__':
     unittest.main()
