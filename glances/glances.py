@@ -827,15 +827,29 @@ class GlancesStats:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
+        # TODO: Add IO rate -1
+        #~ self.glancesgrabprocesses.update()
+        #~ process = self.glancesgrabprocesses.getlist()
+        #~ processcount = self.glancesgrabprocesses.getcount()
+        #~ if not hasattr(self, 'process_old'):
+            #~ self.processcount = {}
+            #~ self.process = []
+            #~ self.process_old = process
+        #~ else:
+            #~ self.processcount = processcount
+            #~ self.process = process
+            #~ for proc in self.process:
+                #~ pass
+            #~ self.process_old = process
         self.glancesgrabprocesses.update()
         process = self.glancesgrabprocesses.getlist()
         processcount = self.glancesgrabprocesses.getcount()
-        if not hasattr(self, 'process'):            
-            self.process = []
+        if not hasattr(self, 'process'):
             self.processcount = {}
+            self.process = []
         else:
-            self.process = process
             self.processcount = processcount
+            self.process = process
 
         # Initialiation of the running processes list
         # Data are refreshed every two cycle (refresh_time * 2)
