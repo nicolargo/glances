@@ -487,13 +487,18 @@ class GlancesGrabProcesses:
             procstat['io_counters'] = {}
 
         procstat['pid'] = proc.pid
-        procstat['username'] = proc.username
+        try:
+            procstat['username'] = proc.username
+        except psutil.AccessDenied, err:
+            procstat['username'] = ""
+            pass
 
         if hasattr(proc, 'get_nice'):
             # Deprecated in PsUtil 0.5.0+
             try:
                 procstat['nice'] = proc.get_nice()
             except psutil.AccessDenied, err:
+                procstat['nice'] = 0
                 pass
         elif hasattr(proc, 'nice'):
             # Else
