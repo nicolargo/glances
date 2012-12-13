@@ -490,7 +490,7 @@ class GlancesGrabProcesses:
         try:
             procstat['username'] = proc.username
         except psutil.AccessDenied, err:
-            procstat['username'] = ""
+            procstat['username'] = "?"
             pass
 
         if hasattr(proc, 'get_nice'):
@@ -698,12 +698,12 @@ class GlancesStats:
             phymem = psutil.virtual_memory()
 
             # buffers and cached (Linux, BSD)
-            buffers = getattr(phymem, 'buffers', lambda: 0)
-            cached = getattr(phymem, 'cached', lambda: 0)
+            buffers = getattr(phymem, 'buffers', 0)
+            cached = getattr(phymem, 'cached', 0)
 
             # active and inactive not available on Windows
-            active = getattr(phymem, 'active', lambda: 0)
-            inactive = getattr(phymem, 'inactive', lambda: 0)
+            active = getattr(phymem, 'active', 0)
+            inactive = getattr(phymem, 'inactive', 0)
 
             # phymem free and usage
             total = phymem.total
