@@ -1450,7 +1450,7 @@ class glancesScreen:
             offset_x = 0
             
         # Log
-        if cpu:
+        if cpu and hasattr(cpu, 'system'):
             logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
                      cpu['user'], proclist)
             logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
@@ -1519,63 +1519,64 @@ class glancesScreen:
             self.term_window.addnstr(self.cpu_y, self.cpu_x + 8,
                                      format(cpu_percent, '>6.1%'), 6)
 
+            y = 1
             # user
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x, _("user:"), 5)
+            self.term_window.addnstr(self.cpu_y + y, self.cpu_x, _("user:"), 5)
             alert = self.__getCpuAlert(cpu['user'])
             #~ logs.add(alert, "CPU user", cpu['user'], proclist)
-            self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 8,
+            self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                      format(cpu['user'] / 100, '>6.1%'), 6,
                                      self.__colors_list[alert])
+            y += 1
 
             # system
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
-                                     _("system:"), 7)
-            alert = self.__getCpuAlert(cpu['system'])
-            #~ logs.add(alert, "CPU system", cpu['system'], proclist)
-            self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 8,
-                                     format(cpu['system'] / 100, '>6.1%'), 6,
-                                     self.__colors_list[alert])
+            if hasattr(cpu, 'system'):
+                self.term_window.addnstr(self.cpu_y + y, self.cpu_x,
+                                         _("system:"), 7)
+                alert = self.__getCpuAlert(cpu['system'])
+                #~ logs.add(alert, "CPU system", cpu['system'], proclist)
+                self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
+                                         format(cpu['system'] / 100, '>6.1%'), 6,
+                                         self.__colors_list[alert])
+                y += 1
 
             # idle
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x, _("idle:"), 5)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 8,
+            self.term_window.addnstr(self.cpu_y + y, self.cpu_x, _("idle:"), 5)
+            self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                      format(cpu['idle'] / 100, '>6.1%'), 6)
+            y += 1
 
             # display extended CPU stats when space is available
             if screen_y > self.cpu_y + 5 and tag_extendedcpu:
-                # nice
-                self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 16,
-                                         _("nice:"), 5)
-                try:
+                                         
+                y = 1
+                if hasattr(cpu, 'nice'):
+                    # nice
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
+                                             _("nice:"), 5)
                     self.term_window.addnstr(
-                        self.cpu_y + 1, self.cpu_x + 24,
+                        self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['nice'] / 100, '>6.1%'), 6)
-                except:
-                    self.term_window.addnstr(self.cpu_y + 1, self.cpu_x + 24,
-                                             "N/A", 3)
+                    y += 1
 
-                # iowait (Linux)
-                self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 16,
-                                         _("iowait:"), 7)
-                try:
+                if hasattr(cpu, 'iowait'):
+                    # iowait (Linux)
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
+                                             _("iowait:"), 7)
                     self.term_window.addnstr(
-                        self.cpu_y + 2, self.cpu_x + 24,
+                        self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['iowait'] / 100, '>6.1%'), 6,
                         self.__getExtCpuColor(cpu['iowait']))
-                except:
-                    self.term_window.addnstr(self.cpu_y + 2, self.cpu_x + 24,
-                                             "N/A", 3)
+                    y += 1
 
                 # irq (Linux, FreeBSD)
-                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
-                                         _("irq:"), 4)
-                try:
+                if hasattr(cpu, 'irq'):
+                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
+                                             _("irq:"), 4)
                     self.term_window.addnstr(
                         self.cpu_y + 3, self.cpu_x + 24,
                         format(cpu['irq'] / 100, '>6.1%'), 6)
-                except:
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 24,
-                                             "N/A", 3)
+                    y += 1
 
         # return the x offset to display load
         return offset_x
@@ -1687,37 +1688,46 @@ class glancesScreen:
                 
                 # active and inactive (only available for psutil >= 0.6)
                 if psutil_mem_vm:
+                    y = 0
                     # active
-                    self.term_window.addnstr(self.mem_y,
-                                             self.mem_x + offset_x + 14,
-                                             _("active:"), 7)
-                    self.term_window.addnstr(
-                        self.mem_y, self.mem_x + offset_x + 24,
-                        format(self.__autoUnit(mem['active']), '>5'), 5)
+                    if hasattr(mem, 'active'):
+                        self.term_window.addnstr(self.mem_y + y,
+                                                 self.mem_x + offset_x + 14,
+                                                 _("active:"), 7)
+                        self.term_window.addnstr(
+                            self.mem_y + y, self.mem_x + offset_x + 24,
+                            format(self.__autoUnit(mem['active']), '>5'), 5)
+                        y += 1
 
                     # inactive
-                    self.term_window.addnstr(self.mem_y + 1,
-                                             self.mem_x + offset_x + 14,
-                                             _("inactive:"), 9)
-                    self.term_window.addnstr(
-                        self.mem_y + 1, self.mem_x + offset_x + 24,
-                        format(self.__autoUnit(mem['inactive']), '>5'), 5)
+                    if hasattr(mem, 'inactive'):
+                        self.term_window.addnstr(self.mem_y + y,
+                                                 self.mem_x + offset_x + 14,
+                                                 _("inactive:"), 9)
+                        self.term_window.addnstr(
+                            self.mem_y + y, self.mem_x + offset_x + 24,
+                            format(self.__autoUnit(mem['inactive']), '>5'), 5)
+                        y += 1
 
                 # buffers (Linux, BSD)
-                self.term_window.addnstr(self.mem_y + 2,
-                                         self.mem_x + offset_x + 14,
-                                         _("buffers:"), 8)
-                self.term_window.addnstr(
-                    self.mem_y + 2, self.mem_x + offset_x + 24,
-                    format(self.__autoUnit(mem['buffers']), '>5'), 5)
+                if hasattr(mem, 'buffers'):
+                    self.term_window.addnstr(self.mem_y + y,
+                                             self.mem_x + offset_x + 14,
+                                             _("buffers:"), 8)
+                    self.term_window.addnstr(
+                        self.mem_y + y, self.mem_x + offset_x + 24,
+                        format(self.__autoUnit(mem['buffers']), '>5'), 5)
+                    y += 1
 
                 # cached (Linux, BSD)
-                self.term_window.addnstr(self.mem_y + 3,
-                                         self.mem_x + offset_x + 14,
-                                         _("cached:"), 7)
-                self.term_window.addnstr(
-                    self.mem_y + 3, self.mem_x + offset_x + 24,
-                    format(self.__autoUnit(mem['cached']), '>5'), 5)
+                if hasattr(mem, 'cached'):
+                    self.term_window.addnstr(self.mem_y + y,
+                                             self.mem_x + offset_x + 14,
+                                             _("cached:"), 7)
+                    self.term_window.addnstr(
+                        self.mem_y + y, self.mem_x + offset_x + 24,
+                        format(self.__autoUnit(mem['cached']), '>5'), 5)
+                    y += 1
 
             else:
                 # If space is NOT available then mind the gap...
