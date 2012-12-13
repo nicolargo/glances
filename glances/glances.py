@@ -491,7 +491,10 @@ class GlancesGrabProcesses:
 
         if hasattr(proc, 'get_nice'):
             # Deprecated in PsUtil 0.5.0+
-            procstat['nice'] = proc.get_nice()
+            try:
+                procstat['nice'] = proc.get_nice()
+            except psutil.AccessDenied, err:
+                pass
         elif hasattr(proc, 'nice'):
             # Else
             procstat['nice'] = proc.nice
