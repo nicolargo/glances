@@ -421,7 +421,7 @@ class glancesGrabFs:
 
 class glancesGrabSensors:
     """
-    Get Sensors stats using the PySensors lib
+    Get sensors stats using the PySensors lib
     """
 
     def __init__(self):
@@ -442,15 +442,15 @@ class glancesGrabSensors:
         # Reset the list
         self.sensors_list = []
 
-        # Open the current mounted FS
+        # grab only temperature stats
         if self.initok:
             for chip in sensors.iter_detected_chips():
                 for feature in chip:
                     sensors_current = {}
-                    sensors_current['label'] = chip.prefix + " " + feature.label
-                    sensors_current['label'] = sensors_current['label'][-20:]
-                    sensors_current['value'] = feature.get_value()
-                    self.sensors_list.append(sensors_current)
+                    if feature.name.startswith('temp'):
+                        sensors_current['label'] = feature.label[:20]
+                        sensors_current['value'] = int(feature.get_value())
+                        self.sensors_list.append(sensors_current)
 
     def get(self):
         self.__update__()
@@ -1843,10 +1843,10 @@ class glancesScreen:
             screen_x > self.sensors_x + 28):
             # Sensors header
             self.term_window.addnstr(self.sensors_y, self.sensors_x,
-                                     _("Sensors"), 8, self.title_color
+                                     _("Sensors"), 7, self.title_color
                                      if self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.sensors_y, self.sensors_x + 22,
-                                     _("C"), 3)
+            self.term_window.addnstr(self.sensors_y, self.sensors_x + 21,
+                                     format(_("°C"), '>3'), 3)
 
             # Adapt the maximum interface to the screen
             ret = 2
@@ -1856,8 +1856,8 @@ class glancesScreen:
                     self.sensors_y + 1 + i, self.sensors_x,
                     sensors[i]['label'] + ':', 21)
                 self.term_window.addnstr(
-                    self.sensors_y + 1 + i, self.sensors_x + 22,
-                    format(int(sensors[i]['value'])), 3)
+                    self.sensors_y + 1 + i, self.sensors_x + 20,
+                    format(sensors[i]['value'], '>3'), 3)
                 ret = ret + 1
             return ret
         return 0
