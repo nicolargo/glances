@@ -1450,11 +1450,14 @@ class glancesScreen:
             offset_x = 0
             
         # Log
-        if cpu and hasattr(cpu, 'system'):
-            logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
-                     cpu['user'], proclist)
-            logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
-                     cpu['system'], proclist)
+        if cpu:
+            try:
+                logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
+                         cpu['user'], proclist)
+                logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
+                         cpu['system'], proclist)
+            except:
+                pass
 
         # Display CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
@@ -1530,7 +1533,7 @@ class glancesScreen:
             y += 1
 
             # system
-            if hasattr(cpu, 'system'):
+            if 'system' in cpu:
                 self.term_window.addnstr(self.cpu_y + y, self.cpu_x,
                                          _("system:"), 7)
                 alert = self.__getCpuAlert(cpu['system'])
@@ -1550,7 +1553,7 @@ class glancesScreen:
             if screen_y > self.cpu_y + 5 and tag_extendedcpu:
                                          
                 y = 1
-                if hasattr(cpu, 'nice'):
+                if 'nice' in cpu:
                     # nice
                     self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
                                              _("nice:"), 5)
@@ -1559,7 +1562,7 @@ class glancesScreen:
                         format(cpu['nice'] / 100, '>6.1%'), 6)
                     y += 1
 
-                if hasattr(cpu, 'iowait'):
+                if 'iowait' in cpu:
                     # iowait (Linux)
                     self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
                                              _("iowait:"), 7)
@@ -1570,7 +1573,7 @@ class glancesScreen:
                     y += 1
 
                 # irq (Linux, FreeBSD)
-                if hasattr(cpu, 'irq'):
+                if 'irq' in cpu:
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
                                              _("irq:"), 4)
                     self.term_window.addnstr(
@@ -1690,7 +1693,7 @@ class glancesScreen:
                 if psutil_mem_vm:
                     y = 0
                     # active
-                    if hasattr(mem, 'active'):
+                    if 'active' in mem:
                         self.term_window.addnstr(self.mem_y + y,
                                                  self.mem_x + offset_x + 14,
                                                  _("active:"), 7)
@@ -1700,7 +1703,7 @@ class glancesScreen:
                         y += 1
 
                     # inactive
-                    if hasattr(mem, 'inactive'):
+                    if 'inactive' in mem:
                         self.term_window.addnstr(self.mem_y + y,
                                                  self.mem_x + offset_x + 14,
                                                  _("inactive:"), 9)
@@ -1710,7 +1713,7 @@ class glancesScreen:
                         y += 1
 
                 # buffers (Linux, BSD)
-                if hasattr(mem, 'buffers'):
+                if 'buffers' in mem:
                     self.term_window.addnstr(self.mem_y + y,
                                              self.mem_x + offset_x + 14,
                                              _("buffers:"), 8)
@@ -1720,7 +1723,7 @@ class glancesScreen:
                     y += 1
 
                 # cached (Linux, BSD)
-                if hasattr(mem, 'cached'):
+                if 'cached' in mem:
                     self.term_window.addnstr(self.mem_y + y,
                                              self.mem_x + offset_x + 14,
                                              _("cached:"), 7)
