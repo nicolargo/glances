@@ -579,25 +579,7 @@ class GlancesStats:
             self.host['os_version'] = " ".join(os_version[::2])
         else:
             self.host['os_version'] = ""
-
-    def __get_process_stats_NEW__(self, proc):
-        """
-        Get process (proc) statistics
-        !!! No performance gap (CPU %)
-        !!! Without: 1.5 - 2.0
-        !!! With:    2.0 - 2.2
-
-        """
-        procstat = proc.as_dict(['get_memory_info', 'get_cpu_percent',
-                                 'get_memory_percent', 'pid', 'username',
-                                 'get_nice', 'get_cpu_times', 'name',
-                                 'status', 'cmdline'])
-        if psutil_get_io_counter_tag:
-            procstat['io_counters'] = proc.get_io_counters()
-        procstat['status'] = str(procstat['status'])[:1].upper()
-        procstat['cmdline'] = " ".join(procstat['cmdline'])
-
-        return procstat
+            
 
     def __update__(self, input_stats):
         """
