@@ -58,7 +58,8 @@ except ImportError:
     # For Python v3.x
     from xmlrpc.client import ServerProxy
 
-if platform.system() != 'Windows':
+is_Windows = sys.platform.startswith('win')
+if not is_Windows:
     # Only import curses for non Windows OS
     # Curses did not exist on Windows OS (shame on it)
     try:
@@ -89,6 +90,7 @@ except Exception:
 else:
     psutil_get_cpu_percent_tag = True
 
+is_Linux = sys.platform.startswith('linux')
 try:
     # get_io_counter method only available with PsUtil 0.2.1+
     psutil.Process(os.getpid()).get_io_counters()
@@ -96,7 +98,7 @@ except Exception:
     psutil_get_io_counter_tag = False
 else:
     # get_io_counter only available on Linux
-    if sys.platform.startswith("linux"):
+    if is_Linux:
         psutil_get_io_counter_tag = True
     else:
         psutil_get_io_counter_tag = False
@@ -143,15 +145,19 @@ except Exception:
 else:
     psutil_network_io_tag = True
 
-try:
-    # Sensors (optionnal)
-    import sensors
-except ImportError:
+# Sensors (optional; only available on Linux)
+if is_Linux:
+    try:
+        import sensors
+    except ImportError:
+        sensors_lib_tag = False
+        sensors_tag = False
+    else:
+        sensors_lib_tag = True
+        sensors_tag = True
+else:
     sensors_lib_tag = False
     sensors_tag = False
-else:
-    sensors_lib_tag = True
-    sensors_tag = True
 
 try:
     # HTML output (optionnal)
@@ -1315,7 +1321,7 @@ class glancesScreen:
             # 'p' > Sort processes by name
             self.setProcessSortedBy('name')
         elif self.pressedkey == 115:
-            # 's' > Show/Hide Sensors stats
+            # 's' > Show/hide sensors stats (Linux-only)
             self.sensors_tag = not self.sensors_tag
         elif self.pressedkey == 119:
             # 'w' > Delete finished warning logs
@@ -1832,7 +1838,7 @@ class glancesScreen:
 
     def displaySensors(self, sensors, offset_y=0):
         """
-        Display the Sensors stats
+        Display the sensors stats (Linux-only)
         Return the number of sensors stats
         """
         if not self.sensors_tag or not sensors:
@@ -2385,7 +2391,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.help_y + 13, self.help_x,
                 "{0:^{width}} {1}".format(
-                    _("s"), _("Show/hide sensors stats"), width=width),
+                    _("s"), _("Show/hide sensors stats (Linux-only)"), width=width),
                 79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
             self.term_window.addnstr(
                 self.help_y + 14, self.help_x,
@@ -2749,7 +2755,7 @@ def printSyntax():
     print(_("\t-B IP|NAME\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-d\t\tDisable disk I/O module"))
-    print(_("\t-e\t\tEnable the sensors module"))
+    print(_("\t-e\t\tEnable the sensors module (Linux-only)"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
     print(_("\t-h\t\tDisplay the syntax and exit"))
     print(_("\t-m\t\tDisable mount module"))
@@ -2806,8 +2812,8 @@ def main():
     html_tag = False
     csv_tag = False
     client_tag = False
-    if os.name == "nt":
-        # Force server mode for Windows operating system
+    if is_Windows:
+        # Force server mode for Windows OS
         server_tag = True
     else:
         server_tag = False
@@ -2864,11 +2870,14 @@ def main():
                 printSyntax()
                 sys.exit(2)
         elif opt in ("-e", "--sensors"):
-            if not sensors_lib_tag:
-                print(_("Error: PySensors lib not found"))
-                sys.exit(2)
+            if is_Linux:
+                if not sensors_lib_tag:
+                    print(_("Error: PySensors library not found"))
+                    sys.exit(2)
+                else:
+                    sensors_tag = True
             else:
-                sensors_tag = True
+                print(_("Error: Sensors module is only available on Linux"))
         elif opt in ("-f", "--file"):
             output_file = arg
             output_folder = arg
