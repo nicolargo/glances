@@ -34,7 +34,9 @@ import getopt
 import signal
 import time
 from datetime import datetime, timedelta
+import locale
 import gettext
+locale.setlocale(locale.LC_ALL, '')
 gettext.install(__appname__)
 
 # Specifics libs
@@ -431,7 +433,7 @@ class glancesGrabSensors:
         """
         Init sensors stats
         """
-        
+
         try:
             sensors.init()
         except:
@@ -443,7 +445,7 @@ class glancesGrabSensors:
         """
         Update the stats
         """
-        
+
         # Reset the list
         self.sensors_list = []
 
@@ -1455,9 +1457,9 @@ class glancesScreen:
         # Log
         if cpu:
             try:
-                logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
+                logs.add(self.__getCpuAlert(cpu['user']), "CPU user",
                          cpu['user'], proclist)
-                logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
+                logs.add(self.__getCpuAlert(cpu['system']), "CPU system",
                          cpu['system'], proclist)
             except:
                 pass
