@@ -1,9 +1,9 @@
-.TH glances 1  "November, 2012" "version 1.5" "USER COMMANDS"
+.TH glances 1  "December, 2012" "version 1.5.2" "USER COMMANDS"
 .SH NAME
 glances \- CLI curses based monitoring tool
 .SH SYNOPSIS
 .B glances
-[\-bdhmnsv] [\-t refresh] [\-B bind] [\-c server] [\-p port] [\-o output] [\-f file]
+[\-bdehmnsv] [\-t refresh] [\-B bind] [\-c server] [\-p port] [\-o output] [\-f file]
 .SH DESCRIPTION
 Glances is a free (LGPL) curses-based  monitoring tool which aims to present a maximum of information
 in a minimum of space, ideally to fit in a classical 80x24 terminal. Glances can adapt dynamicaly the
@@ -11,33 +11,35 @@ displayed information depending on the terminal size.
 .PP
 This tool is written in Python and uses PsUtil to fetch the statistical values from key elements.
 .PP
-You can use the following keys to sort the processesi list:
+When Glances is running, you can use the following keys:
 .PP
-	'a' to set the automatic mode. The process list is sorted automatically
+	'a' Automatic mode. The process list is sorted automatically
 .PP
-	'b' to switch between bit/s or byte/s for network IO
+	'b' Switch between bit/s or Byte/s for network IO
 .PP
-	'c' the processes list is sorted by CPU consomption
+	'c' Sort processes by CPU%
 .PP
-	'd' Disable or enable the disk IO stats
+	'd' Show/hide disk IO stats
 .PP
-	'f' Disable or enable the file system stats
+	'f' Show/hide file system stats
 .PP
-	'h' Hide or show the help message
+	'h' Show/hide the help message
 .PP
-	'l' Hide or show the logs
+	'l' Show/hide log messages
 .PP
-	'm' the processes list is sorted by process size
+	'm' Sort processes by MEM%
 .PP
-	'n' Disable or enable the network interfaces stats
+	'n' Show/hide network stats
 .PP
-	'p' The processes list is sorted by process name
+	'p' Sort processes by name
+.PP
+	's' Show/hide sensors stats (Linux-only)
 .PP
 	'w' Delete finished warning logs messages
 .PP
 	'x' Delete finished warning and critical logs
 .PP
-	'q' Exit
+	'q' Quit
 .PP
 	'1' Switch between global CPU and per core stats
 .PP
@@ -57,6 +59,9 @@ Connect to a Glances server (IP address or hostname)
 .TP
 \-d
 Disable disk I/O module
+.TP
+\-e
+Enable the sensors module (Linux-only)
 .TP
 \-f file
 Set the output folder (HTML) or file (CSV)
@@ -80,7 +85,7 @@ Define the client or server TCP port (default: 61209)
 Run Glances in server mode
 .TP
 \-t sec
-Set the refresh time in seconds (default: 2)
+Set the refresh time in seconds (default: 3)
 .TP
 \-v
 Display the version and exit

@@ -32,6 +32,7 @@ Pre-requisites (information for packagers):
 * python-setuptools (for the installation via setup.py)
 * python-psutil 0.4.1+ (replace the old libstatgrab's lib)
 * python-jinja2 2.0+ (optional for HTML export)
+* pysensors (Python library for sensors stats)
 
 ### From package manager (very easy way)
 
@@ -49,7 +50,7 @@ You first need to install pypi on your system. For example on Debian/Ubuntu:
 Then install the latest Glances version:
 
     $ sudo pip install Glances
-        
+
 Note: if you are behind an HTTP Proxy, you should use
 
     $ sudo pip install --proxy=user:password@url:port Glances
@@ -80,7 +81,7 @@ If you have the following error:
     Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
     This link will help resolve the above errors:
     https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
-    
+
 Try to runs:
 
     $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
@@ -88,7 +89,7 @@ Try to runs:
 
 ### Concerning Windows operating system
 
-Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode. 
+Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode.
 
 To install Glances on you system:
 
@@ -102,7 +103,7 @@ I need contributors to package Glances for Windows (for exemple using [PyInstall
 
 Get the latest version (form GitHub):
 
-    $ rm -rf /tmp/nicolargo-glances-* 
+    $ rm -rf /tmp/nicolargo-glances-*
     $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 
 Glances use a standard GNU style installer (for a Debian like system):
@@ -121,7 +122,7 @@ Glances use a standard GNU style installer (for a Debian like system):
 If you want to monitor your local machine, just run:
 
 	$ glances
-    
+
 ### In client/server mode
 
 If you want to remotely monitor a machine (called server) from another one (called client).
@@ -129,7 +130,7 @@ If you want to remotely monitor a machine (called server) from another one (call
 Run this command on the server:
 
     server$ glances -s
-    
+
 and this one on the client:
 
     client$ glances -c @server
@@ -164,6 +165,7 @@ When Glances is running, you can press:
 * 'b' switch between bit/s or byte/s for network IO
 * 'c' sort the processes list by CPU consumption
 * 'd' disable or enable the disk IO stats
+* 'e' enable the sensors module (PySensors library is needed; Linux-only)
 * 'f' disable or enable the file system stats
 * 'l' disable or enable the logs
 * 'm' sort the processes list by process MEM
@@ -202,7 +204,7 @@ time. The total CPU usage is displayed on the first line.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
 
-If horizontal space is available, per core CPU infomations are displayed. 
+If horizontal space is available, per core CPU infomations are displayed.
 
 Color code used:
 
@@ -223,7 +225,7 @@ average sum of the number of processes waiting in the run-queue plus the
 number currently executing over 1, 5, and 15 minute time periods."
 
 Glances gets the number of CPU cores to adapt the alerts. With Glances,
-alerts on average load are only set on 5 and 15 mins. The first line 
+alerts on average load are only set on 5 and 15 mins. The first line
 also display the number of CPU core.
 
 If average load is < O.7*Core, then status is set to "OK".
@@ -273,6 +275,18 @@ If bit rate is > 90%, then status is set to "CRITICAL".
 
 For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.
+
+### Sensors (optional; only available on Linux)
+
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/sensors.png)
+
+Optionally, Glances displays the sensors informations (lm-sensors).
+
+You should enable this module using the following command line:
+
+    glances -e
+
+There is no alert on this information.
 
 ### Disk I/O
 
@@ -377,6 +391,7 @@ Glances localization files exist for:
 
 * English (default langage)
 * French
+* Italian
 * Spanish
 * Portugal
 
