@@ -431,6 +431,7 @@ class glancesGrabSensors:
         """
         Init sensors stats
         """
+        
         try:
             sensors.init()
         except:
@@ -442,6 +443,7 @@ class glancesGrabSensors:
         """
         Update the stats
         """
+        
         # Reset the list
         self.sensors_list = []
 
