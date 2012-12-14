@@ -34,7 +34,9 @@ import getopt
 import signal
 import time
 from datetime import datetime, timedelta
+import locale
 import gettext
+locale.setlocale(locale.LC_ALL, '')
 gettext.install(__appname__)
 
 # Specifics libs
