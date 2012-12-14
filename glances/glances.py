@@ -1436,7 +1436,7 @@ class glancesScreen:
 
         # Is it possible to display extended stats ?
         # If yes then tag_extendedcpu = True
-        tag_extendedcpu = screen_x > self.cpu_x + 79 + 15
+        tag_extendedcpu = screen_x > self.cpu_x + 79 + 14
 
         # Is it possible to display per-CPU stats ?
         # Do you want it ?
@@ -2072,7 +2072,7 @@ class glancesScreen:
                 tag_status = True
             if screen_x > process_x + 77:
                 tag_proc_time = True
-            if screen_x > process_x + 97:
+            if screen_x > process_x + 92:
                 tag_io = True
 
             if not psutil_get_io_counter_tag:
@@ -2127,17 +2127,17 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
                     format(_("TIME+"), '>8'), 8)
-                process_name_x += 9
+                process_name_x += 10
             # IO
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_R"), '>6'), 6)
-                process_name_x += 7
+                    format(_("IO_R"), '>4'), 4)
+                process_name_x += 6
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_W"), '>6'), 6)
-                process_name_x += 7
+                    format(_("IO_W"), '>4'), 4)
+                process_name_x += 6
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -2227,22 +2227,22 @@ class glancesScreen:
                     try:
                         if  processlist[processes]['io_counters'] == {}:
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 56,
-                                _("A_DENY"), 6)
+                                self.process_y + 3 + processes, process_x + 57,
+                                "   ?", 4)
                             self.term_window.addnstr(
                                 self.process_y + 3 + processes, process_x + 63,
-                                _("A_DENY"), 6)
+                                "   ?", 4)
                         else:
                             # Processes are only refresh every 2 refresh_time
                             #~ elapsed_time = max(1, self.__refresh_time) * 2
                             io_read = processlist[processes]['io_counters'][2]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 56,
-                                format(self.__autoUnit(io_read), '>6'), 6)
+                                self.process_y + 3 + processes, process_x + 57,
+                                format(self.__autoUnit(io_read), '>4'), 4)
                             io_write = processlist[processes]['io_counters'][3]
                             self.term_window.addnstr(
                                 self.process_y + 3 + processes, process_x + 63,
-                                format(self.__autoUnit(io_write), '>6'), 6)
+                                format(self.__autoUnit(io_write), '>4'), 4)
                     except:
                         pass
 
