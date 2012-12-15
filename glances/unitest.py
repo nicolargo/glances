@@ -69,8 +69,14 @@ class TestGlancesStat(unittest.TestCase):
         self.stats.update()
         memswap = self.stats.getMemSwap()
         print "MemSwap stat %s:" % memswap
-        self.assertTrue(len(self.stats.getMemSwap()) > 2)
-
-
+        self.assertTrue(len(memswap) > 2)
+        
+    def test_Glances_getNetwork(self):
+        self.stats.update()
+        net = self.stats.getNetwork()
+        print "Network stat %s:" % net
+        self.assertTrue(len(net) > 1)
+        
+        
 if __name__ == '__main__':
     unittest.main()
