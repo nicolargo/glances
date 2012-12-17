@@ -433,7 +433,7 @@ class glancesGrabSensors:
         """
         Init sensors stats
         """
-        
+
         try:
             sensors.init()
         except:
@@ -445,7 +445,7 @@ class glancesGrabSensors:
         """
         Update the stats
         """
-        
+
         # Reset the list
         self.sensors_list = []
 
@@ -1457,9 +1457,9 @@ class glancesScreen:
         # Log
         if cpu:
             try:
-                logs.add(self.__getCpuAlert(cpu['user']), "CPU user", 
+                logs.add(self.__getCpuAlert(cpu['user']), "CPU user",
                          cpu['user'], proclist)
-                logs.add(self.__getCpuAlert(cpu['system']), "CPU system", 
+                logs.add(self.__getCpuAlert(cpu['system']), "CPU system",
                          cpu['system'], proclist)
             except:
                 pass
@@ -2127,17 +2127,17 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
                     format(_("TIME+"), '>8'), 8)
-                process_name_x += 10
+                process_name_x += 9
             # IO
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_R"), '>4'), 4)
+                    format(_("IO_R"), '>5'), 5)
                 process_name_x += 6
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_W"), '>4'), 4)
-                process_name_x += 6
+                    format(_("IO_W"), '>5'), 5)
+                process_name_x += 7
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -2227,22 +2227,22 @@ class glancesScreen:
                     try:
                         if  processlist[processes]['io_counters'] == {}:
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 57,
-                                "   ?", 4)
+                                self.process_y + 3 + processes, process_x + 56,
+                                format("?", '>5'), 5)
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 63,
-                                "   ?", 4)
+                                self.process_y + 3 + processes, process_x + 62,
+                                format("?", '>5'), 5)
                         else:
                             # Processes are only refresh every 2 refresh_time
                             #~ elapsed_time = max(1, self.__refresh_time) * 2
                             io_read = processlist[processes]['io_counters'][2]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 57,
-                                format(self.__autoUnit(io_read), '>4'), 4)
+                                self.process_y + 3 + processes, process_x + 56,
+                                format(self.__autoUnit(io_read), '>5'), 5)
                             io_write = processlist[processes]['io_counters'][3]
                             self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 63,
-                                format(self.__autoUnit(io_write), '>4'), 4)
+                                self.process_y + 3 + processes, process_x + 62,
+                                format(self.__autoUnit(io_write), '>5'), 5)
                     except:
                         pass
 
