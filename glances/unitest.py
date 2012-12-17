@@ -24,9 +24,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import glances
 import multiprocessing
-# import time
+import glances
 
 
 class TestGlancesStat(unittest.TestCase):
@@ -38,45 +37,45 @@ class TestGlancesStat(unittest.TestCase):
     def test_Glances_getSystem(self):
         self.stats.update()
         system = self.stats.getSystem()
-        print "System info: %s" % system
+        print("System info: %s" % system)
         self.assertTrue(len(system) > 1)
 
     def test_Glances_getCore(self):
         self.stats.update()
         core = self.stats.getCore()
-        print "CPU Core number: %s" % core
+        print("CPU Core number: %s" % core)
         self.assertEqual(core, multiprocessing.cpu_count())
 
     def test_Glances_getCpu(self):
         self.stats.update()
         cpu = self.stats.getCpu()
-        print "CPU stat %s:" % cpu
+        print("CPU stat %s:" % cpu)
         self.assertTrue(len(cpu) > 1)
 
     def test_Glances_getPerCpu(self):
         self.stats.update()
         percpu = self.stats.getPerCpu()
-        print "PerCPU stat %s:" % percpu
+        print("PerCPU stat %s:" % percpu)
         self.assertEqual(len(percpu), multiprocessing.cpu_count())
 
     def test_Glances_getMem(self):
         self.stats.update()
         mem = self.stats.getMem()
-        print "Mem stat %s:" % mem
+        print("Mem stat %s:" % mem)
         self.assertTrue(len(mem) > 2)
 
     def test_Glances_getMemSwap(self):
         self.stats.update()
         memswap = self.stats.getMemSwap()
-        print "MemSwap stat %s:" % memswap
+        print("MemSwap stat %s:" % memswap)
         self.assertTrue(len(memswap) > 2)
-        
+
     def test_Glances_getNetwork(self):
         self.stats.update()
         net = self.stats.getNetwork()
-        print "Network stat %s:" % net
+        print("Network stat %s:" % net)
         self.assertTrue(len(net) > 1)
-        
-        
+
+
 if __name__ == '__main__':
     unittest.main()
