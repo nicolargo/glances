@@ -2669,11 +2669,41 @@ class GlancesInstance():
         # Update and return MEMSWAP stats
         self.__update__()
         return json.dumps(stats.getMemSwap())
+    
+    def getSensors(self):
+        # Update and return SENSORS stats
+        self.__update__()
+        return json.dumps(stats.getSensors())        
+
+    def getNetwork(self):
+        # Update and return NET stats
+        self.__update__()
+        return json.dumps(stats.getNetwork())        
+
+    def getDiskIO(self):
+        # Update and return DISK IO stats
+        self.__update__()
+        return json.dumps(stats.getDiskIO())        
+
+    def getFs(self):
+        # Update and return FS stats
+        self.__update__()
+        return json.dumps(stats.getFs())        
+
+    def getProcessCount(self):
+        # Update and return ProcessCount stats
+        self.__update__()
+        return json.dumps(stats.getProcessCount())        
+
+    def getProcessList(self):
+        # Update and return ProcessList stats
+        self.__update__()
+        return json.dumps(stats.getProcessList())        
 
     def getNow(self):
         # Update and return current date/hour
         self.__update__()
-        return json.dumps(stats.getNow())
+        return json.dumps(stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
 
 
 class GlancesServer():
