@@ -43,6 +43,12 @@ gettext.install(__appname__)
 import json
 import collections
 
+# Somes libs depends of OS
+is_Bsd = sys.platform.endswith('bsd')
+is_Linux = sys.platform.startswith('linux')
+is_Mac = sys.platform.startswith('darwin')
+is_Windows = sys.platform.startswith('win')
+
 try:
     # For Python v2.x
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -59,7 +65,6 @@ except ImportError:
     # For Python v3.x
     from xmlrpc.client import ServerProxy
 
-is_Windows = sys.platform.startswith('win')
 if not is_Windows:
     # Only import curses for non Windows OS
     # Curses did not exist on Windows OS (shame on it)
@@ -91,7 +96,6 @@ except Exception:
 else:
     psutil_get_cpu_percent_tag = True
 
-is_Linux = sys.platform.startswith('linux')
 try:
     # get_io_counter method only available with PsUtil 0.2.1+
     psutil.Process(os.getpid()).get_io_counters()
@@ -523,8 +527,14 @@ class GlancesGrabProcesses:
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
 
         for proc in psutil.process_iter():
+            procstat = self.__get_process_stats__(proc)
+            # Ignore the 'idle' process on Windows or Bsd
+            # Waiting upstream patch from PsUtil
+            if ((is_Windows or is_Bsd) 
+                and (procstat['cmdline'] == 'idle')):
+                continue
             # Update processlist
-            self.processlist.append(self.__get_process_stats__(proc))
+            self.processlist.append(procstat)
             # Update processcount
             try:
                 self.processcount[str(proc.status)] += 1
