@@ -530,8 +530,8 @@ class GlancesGrabProcesses:
             procstat = self.__get_process_stats__(proc)
             # Ignore the 'idle' process on Windows or Bsd
             # Waiting upstream patch from PsUtil
-            if ((is_Windows or is_Bsd) 
-                and (procstat['cmdline'] == 'idle')):
+            if ((is_Bsd and (procstat['cmdline'] == 'idle'))
+                 or (is_Windows and (procstat['cmdline'] == 'System Idle Process'))):
                 continue
             # Update processlist
             self.processlist.append(procstat)
