@@ -1821,7 +1821,7 @@ class glancesScreen:
                 # network interface name
                 self.term_window.addnstr(
                     self.network_y + 1 + i, self.network_x,
-                    unicode(network[i]['interface_name'], 'ascii', 'ignore') + ':', 8)
+                    network[i]['interface_name'].encode('ascii', 'ignore') + ':', 8)
 
                 # Byte/s or bit/s
                 if self.net_byteps_tag:
