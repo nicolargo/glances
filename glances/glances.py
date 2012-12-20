@@ -44,7 +44,7 @@ import json
 import collections
 
 # Somes libs depends of OS
-is_Bsd = sys.platform.endswith('bsd')
+is_Bsd = sys.platform.find('bsd') != -1
 is_Linux = sys.platform.startswith('linux')
 is_Mac = sys.platform.startswith('darwin')
 is_Windows = sys.platform.startswith('win')
