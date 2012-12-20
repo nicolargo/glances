@@ -1819,9 +1819,12 @@ class glancesScreen:
                 elapsed_time = max(1, self.__refresh_time)
 
                 # network interface name
-                self.term_window.addnstr(
-                    self.network_y + 1 + i, self.network_x,
-                    network[i]['interface_name'].encode('ascii', 'ignore') + ':', 8)
+                ifname = network[i]['interface_name'].encode('ascii', 'ignore').split(':')[0]
+                if (len(ifname) > 8):
+                    ifname = '_'+ifname[-8:]
+                self.term_window.addnstr(                    
+                    self.network_y + 1 + i, self.network_x,                    
+                    ifname, 8)
 
                 # Byte/s or bit/s
                 if self.net_byteps_tag:
@@ -1869,7 +1872,7 @@ class glancesScreen:
             for i in range(0, sensors_num):
                 self.term_window.addnstr(
                     self.sensors_y + 1 + i, self.sensors_x,
-                    sensors[i]['label'] + ':', 21)
+                    sensors[i]['label'], 21)
                 self.term_window.addnstr(
                     self.sensors_y + 1 + i, self.sensors_x + 20,
                     format(sensors[i]['value'], '>3'), 3)
@@ -1909,7 +1912,7 @@ class glancesScreen:
                 # partition name
                 self.term_window.addnstr(
                     self.diskio_y + 1 + disk, self.diskio_x,
-                    diskio[disk]['disk_name'] + ':', 8)
+                    diskio[disk]['disk_name'], 8)
 
                 # in/s
                 ins = diskio[disk]['write_bytes'] // elapsed_time
