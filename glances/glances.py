@@ -209,9 +209,10 @@ class glancesLimits:
     # Exemple:
     #  limits_list['STD'] = [50, 70, 90]
 
-    #_______________________________CAREFUL WARNING CRITICAL
+    #_______________________CAREFUL WARNING CRITICAL
     __limits_list = {'STD': [50, 70, 90],
-                     'LOAD': [0.7, 1.0, 5.0]}
+                     'LOAD': [0.7, 1.0, 5.0],
+                     'TEMP': [50, 70, 80]}
 
     def __init__(self, careful=50, warning=70, critical=90):
         self.__limits_list['STD'] = [careful, warning, critical]
@@ -233,6 +234,15 @@ class glancesLimits:
 
     def getLOADCritical(self, core=1):
         return self.__limits_list['LOAD'][2] * core
+
+    def getTEMPCareful(self):
+        return self.__limits_list['TEMP'][0]
+
+    def getTEMPWarning(self):
+        return self.__limits_list['TEMP'][1]
+
+    def getTEMPCritical(self):
+        return self.__limits_list['TEMP'][2]
 
 
 class glancesLogs:
@@ -1290,6 +1300,28 @@ class glancesScreen:
     def __getProcessColor(self, current=0, max=100):
         return self.__getColor2(current, max)
 
+    def __getSensorsAlert(self, current=0):
+        # Alert for Sensors (temperature in degre)
+        # If current < CAREFUL then alert = OK
+        # If current > CAREFUL then alert = CAREFUL
+        # If current > WARNING then alert = WARNING
+        # If current > CRITICALthen alert = CRITICAL
+
+        if current > limits.getTEMPCritical():
+            return 'CRITICAL'
+        elif current > limits.getTEMPWarning():
+            return 'WARNING'
+        elif current > limits.getTEMPCareful():
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def __getSensorsColor(self, current=0):
+        """
+        Return color for Sensors temperature (non logged stats)
+        """
+        return self.__colors_list2[self.__getSensorsAlert(current)]
+
     def __catchKey(self):
         # Get key
         self.pressedkey = self.term_window.getch()
@@ -1878,7 +1910,8 @@ class glancesScreen:
                     sensors[i]['label'], 21)
                 self.term_window.addnstr(
                     self.sensors_y + 1 + i, self.sensors_x + 20,
-                    format(sensors[i]['value'], '>3'), 3)
+                    format(sensors[i]['value'], '>3'), 3,
+                    self.__getSensorsColor(sensors[i]['value']))
                 ret = ret + 1
             return ret
         return 0

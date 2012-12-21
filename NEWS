@@ -3,8 +3,11 @@ Version 1.5.2
 
     * Add sensors module (enable it with -e option)
     * Improve CPU stats (IO wait, Nice, IRQ)
-    * More stats in lower space (yes it is possible)
+    * More stats in lower space (yes it's possible)
     * Refactor processes list and count (lower CPU/MEM footprint)
+    * Add functions to the RCP method
+    * Completed unit test
+    * and fixes...
 
 Version 1.5.1
 =============
