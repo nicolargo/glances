@@ -931,7 +931,7 @@ class GlancesStats:
         Return the sorted process list
         """
 
-        if self.process == {}:
+        if (self.process == {}) or ('limits' not in globals()):
             return self.process
 
         sortedReverse = True
