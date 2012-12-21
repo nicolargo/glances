@@ -870,8 +870,8 @@ class GlancesStats:
         # Update the stats
         self.__update__(input_stats)
 
-    def getAll(self):
-        return self.all_stats
+    #~ def getAll(self):
+        #~ return self.all_stats
 
     def getHost(self):
         return self.host
@@ -990,6 +990,9 @@ class GlancesStatsServer(GlancesStats):
 
         # Get the current date/time
         self.now = datetime.now()
+
+    def getAll(self):
+        return self.all_stats
 
 
 class GlancesStatsClient(GlancesStats):
