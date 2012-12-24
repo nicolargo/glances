@@ -907,31 +907,31 @@ class GlancesStats:
     def getMemSwap(self):
         return self.memswap
 
-    def getSensors(self):
-        if sensors_tag:
-            return sorted(self.sensors,
-                          key=lambda sensors: sensors['label'])
-        else:
-            return 0
-
     def getNetwork(self):
         if psutil_network_io_tag:
             return sorted(self.network,
                           key=lambda network: network['interface_name'])
         else:
-            return 0
+            return []
+
+    def getSensors(self):
+        if sensors_tag:
+            return sorted(self.sensors,
+                          key=lambda sensors: sensors['label'])
+        else:
+            return []
 
     def getDiskIO(self):
         if psutil_disk_io_tag:
             return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
         else:
-            return 0
+            return []
 
     def getFs(self):
         if psutil_fs_usage_tag:
             return sorted(self.fs, key=lambda fs: fs['mnt_point'])
         else:
-            return 0
+            return []
 
     def getProcessCount(self):
         return self.processcount
@@ -990,10 +990,22 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["load"] = self.load
         self.all_stats["mem"] = self.mem
         self.all_stats["memswap"] = self.memswap
-        self.all_stats["network"] = self.network
-        self.all_stats["sensors"] = self.sensors
-        self.all_stats["diskio"] = self.diskio
-        self.all_stats["fs"] = self.fs
+        if psutil_network_io_tag:
+            self.all_stats["network"] = self.network
+        else:
+            self.all_stats["network"] = []
+        if sensors_tag:
+            self.all_stats["sensors"] = self.sensors
+        else:
+            self.all_stats["sensors"] = []
+        if psutil_disk_io_tag:
+            self.all_stats["diskio"] = self.diskio
+        else:
+            self.all_stats["diskio"] = []
+        if psutil_fs_usage_tag:
+            self.all_stats["fs"] = self.fs
+        else:
+            self.all_stats["fs"] = []
         self.all_stats["processcount"] = self.processcount
         self.all_stats["process"] = self.process
         self.all_stats["core_number"] = self.core_number
@@ -1024,13 +1036,22 @@ class GlancesStatsClient(GlancesStats):
             self.load = input_stats["load"]
             self.mem = input_stats["mem"]
             self.memswap = input_stats["memswap"]
-            self.network = input_stats["network"]
+            try:
+                self.network = input_stats["network"]
+            except:
+                self.network = []
             try:
                 self.sensors = input_stats["sensors"]
             except:
-                self.sensors = {}
-            self.diskio = input_stats["diskio"]
-            self.fs = input_stats["fs"]
+                self.sensors = []
+            try:
+                self.diskio = input_stats["diskio"]
+            except:
+                self.diskio = []
+            try:
+                self.fs = input_stats["fs"]
+            except:
+                self.fs = []
             self.processcount = input_stats["processcount"]
             self.process = input_stats["process"]
             self.core_number = input_stats["core_number"]
