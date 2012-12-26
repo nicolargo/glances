@@ -25,6 +25,9 @@
 
 import unittest
 import multiprocessing
+import os
+import signal
+import time
 import glances
 
 
@@ -114,7 +117,6 @@ class TestGlancesStat(unittest.TestCase):
         #~ print("Optionnal sensors stat %s:" % sensors)
         self.assertTrue(type(sensors) == list)        
         #~ self.assertTrue(len(sensors) > 0)
-
 
 if __name__ == '__main__':
     unittest.main()

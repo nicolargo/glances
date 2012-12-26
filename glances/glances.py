@@ -747,11 +747,16 @@ class GlancesStats:
                         'cached': cached}
 
             # Swap
-            virtmem = psutil.swap_memory()
-            self.memswap = {'total': virtmem.total,
-                            'used': virtmem.used,
-                            'free': virtmem.free,
-                            'percent': virtmem.percent}
+            # try... is an hack for issue #152
+            try:
+                virtmem = psutil.swap_memory()
+            except:
+                self.memswap = {}
+            else:
+                self.memswap = {'total': virtmem.total,
+                                'used': virtmem.used,
+                                'free': virtmem.free,
+                                'percent': virtmem.percent}
         else:
             # psutil < 0.6
             # RAM
@@ -1709,7 +1714,7 @@ class glancesScreen:
 
     def displayMem(self, mem, memswap, proclist, offset_x=0):
         # Memory
-        if not mem or not memswap:
+        if not mem:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
@@ -1805,6 +1810,9 @@ class glancesScreen:
             else:
                 # If space is NOT available then mind the gap...
                 offset_x -= extblocksize
+
+            if not memswap:
+                return 0
 
             # Swap
             self.term_window.addnstr(self.mem_y,
