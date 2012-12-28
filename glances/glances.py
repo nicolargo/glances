@@ -493,13 +493,34 @@ class GlancesGrabProcesses:
         """
         procstat = {}
 
-        procstat['memory_info'] = proc.get_memory_info()
+        try:
+            procstat['name'] = proc.name
+        except psutil.AccessDenied:
+            # Can not get the process name ?
+            # then exit...
+            return {}
+        
+        try:
+            procstat['cmdline'] = " ".join(proc.cmdline)
+        except psutil.AccessDenied:
+            procstat['cmdline'] = "?"            
+
+        try:
+            procstat['memory_info'] = proc.get_memory_info()
+        except psutil.AccesDenied:
+            procstat['memory_info'] = {}
+
+        try:
+            procstat['memory_percent'] = proc.get_memory_percent()
+        except psutil.AccesDenied:
+            procstat['memory_percent'] = {}
 
         if psutil_get_cpu_percent_tag:
-            procstat['cpu_percent'] = \
-                proc.get_cpu_percent(interval=0)
-
-        procstat['memory_percent'] = proc.get_memory_percent()
+            try:
+                procstat['cpu_percent'] = \
+                    proc.get_cpu_percent(interval=0)
+            except psutil.AccesDenied:
+                procstat['cpu_percent'] = {}
 
         try:
             if psutil_get_io_counter_tag:
@@ -512,7 +533,6 @@ class GlancesGrabProcesses:
             procstat['username'] = proc.username
         except psutil.AccessDenied:
             procstat['username'] = "?"
-            pass
 
         if hasattr(proc, 'get_nice'):
             # Deprecated in PsUtil 0.5.0+
@@ -520,15 +540,19 @@ class GlancesGrabProcesses:
                 procstat['nice'] = proc.get_nice()
             except psutil.AccessDenied:
                 procstat['nice'] = 0
-                pass
         elif hasattr(proc, 'nice'):
             # Else
             procstat['nice'] = proc.nice
 
-        procstat['status'] = str(proc.status)[:1].upper()
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['name'] = proc.name
-        procstat['cmdline'] = " ".join(proc.cmdline)
+        try:
+            procstat['status'] = str(proc.status)[:1].upper()
+        except psutil.AccessDenied:
+            procstat['status'] = "?"
+
+        try:
+            procstat['cpu_times'] = proc.get_cpu_times()
+        except psutil.AccessDenied:
+            procstat['cpu_times'] = {}
 
         return procstat
 
