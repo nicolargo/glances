@@ -1787,10 +1787,10 @@ class glancesScreen:
                 format(self.__autoUnit(mem['free']), '>5'), 5)
 
             # Display extended informations if space is available
+            y = 0
             if screen_x > self.mem_x + offset_x + memblocksize:
                 # active and inactive (only available for psutil >= 0.6)
                 if psutil_mem_vm:
-                    y = 0
                     # active
                     if 'active' in mem:
                         self.term_window.addnstr(self.mem_y + y,
