@@ -37,6 +37,8 @@
 
 <h1>Glances -- Eye on your system</h1>
 
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png" alt="screenshot"></p>
+
 <h2>Description</h2>
 
 <p>Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.</p>
@@ -64,6 +66,7 @@
 <li>python-setuptools (for the installation via setup.py)</li>
 <li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
 <li>python-jinja2 2.0+ (optional for HTML export)</li>
+<li>pysensors (Python library for sensors stats)</li>
 </ul><h3>From package manager (very easy way)</h3>
 
 <p>Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...</p>
@@ -127,7 +130,7 @@ $ brew link Glances
 
 <h3>Concerning Windows operating system</h3>
 
-<p>Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode. </p>
+<p>Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode.</p>
 
 <p>To install Glances on you system:</p>
 
@@ -142,7 +145,7 @@ $ brew link Glances
 
 <p>Get the latest version (form GitHub):</p>
 
-<pre><code>$ rm -rf /tmp/nicolargo-glances-* 
+<pre><code>$ rm -rf /tmp/nicolargo-glances-*
 $ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
 </code></pre>
 
@@ -212,11 +215,13 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 <li><p>'b' switch between bit/s or byte/s for network IO</p></li>
 <li><p>'c' sort the processes list by CPU consumption</p></li>
 <li><p>'d' disable or enable the disk IO stats</p></li>
+<li><p>'e' enable the sensors module (PySensors library is needed; Linux-only)</p></li>
 <li><p>'f' disable or enable the file system stats</p></li>
 <li><p>'l' disable or enable the logs</p></li>
 <li><p>'m' sort the processes list by process MEM</p></li>
 <li><p>'n' disable or enable the network interfaces stats</p></li>
 <li><p>'p' sort by process name</p></li>
+<li><p>'s' disable or enable the sensor stats (only available with -e tag)</p></li>
 <li><p>'w' delete finished warning logs messages</p></li>
 <li><p>'x' delete finished warning and critical logs messages</p></li>
 <li><p>'1' switch between global CPU and per core stats</p></li>
@@ -240,16 +245,18 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu.png" alt="screenshot"></p>
 
-<p>Long view (only available if your terminal is wide enough)</p>
+<p>If horizontal space is available, extended CPU infomations are displayed.</p>
+
+<p>Extended view (only available if your terminal is wide enough)</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png" alt="screenshot"></p>
 
-<p>The CPU stats are shown as a percentage and for the configured refresh
-time. The total CPU usage is displayed on the first line.</p>
+<p>If user click on the '1' key, per CPU stats is displayed:</p>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/percpu.png" alt="screenshot"></p>
 
-<p>If horizontal space is available, per core CPU infomations are displayed. </p>
+<p>The CPU stats are shown as a percentage and for the configured refresh
+time. The total CPU usage is displayed on the first line.</p>
 
 <p>Color code used:</p>
 
@@ -270,7 +277,7 @@ average sum of the number of processes waiting in the run-queue plus the
 number currently executing over 1, 5, and 15 minute time periods."</p>
 
 <p>Glances gets the number of CPU cores to adapt the alerts. With Glances,
-alerts on average load are only set on 5 and 15 mins. The first line 
+alerts on average load are only set on 5 and 15 mins. The first line
 also display the number of CPU core.</p>
 
 <p>If average load is &lt; O.7*Core, then status is set to "OK".</p>
@@ -283,13 +290,13 @@ also display the number of CPU core.</p>
 
 <h3>Memory</h3>
 
+<p>Glances uses two columns: one for the RAM and another one for the SWAP.</p>
+
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/mem.png" alt="screenshot"></p>
 
-<p>Glances uses three columns: memory (RAM), "real" and swap.</p>
+<p>If space is available, Glances displays extended informations:</p>
 
-<p>Real used memory is: used - cache.</p>
-
-<p>Real free memory is: free + cache.</p>
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/mem-wide.png" alt="screenshot"></p>
 
 <p>With Glances, alerts are only set for on used swap and real memory.</p>
 
@@ -320,6 +327,21 @@ dynamicaly (bits per second, Kbits per second, Mbits per second...).</p>
 
 <p>For example, on a 100 Mbps Ethernet interface, the warning status is set
 if the bit rate is higher than 70 Mbps.</p>
+
+<h3>Sensors (optional; only available on Linux)</h3>
+
+<p><img src="https://github.com/nicolargo/glances/raw/master/doc/sensors.png" alt="screenshot"></p>
+
+<p>Optionally, Glances displays the sensors informations (lm-sensors).</p>
+
+<p>A filter is processed in order to only display temperature.</p>
+
+<p>You should enable this module using the following command line:</p>
+
+<pre><code>glances -e
+</code></pre>
+
+<p>There is no alert on this information.</p>
 
 <h3>Disk I/O</h3>
 
@@ -382,8 +404,8 @@ S - Sleeping (may be interrupted)
 T - Traced or stopped
 Z - Zombie or "hung" process</p>
 </li>
-<li><p>IO_R and IO_W: Per process IO read and write</p></li>
 <li><p>TIME+:  Cumulative CPU time used</p></li>
+<li><p>IO_R and IO_W: Per process IO read and write</p></li>
 <li><p>NAME: Process name or command line</p></li>
 </ul><h3>Logs</h3>
 
@@ -426,11 +448,10 @@ Z - Zombie or "hung" process</p>
 <ul>
 <li>English (default langage)</li>
 <li>French</li>
+<li>Italian</li>
 <li>Spanish</li>
 <li>Portugal</li>
 </ul><p>Feel free to contribute !</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png" alt="screenshot"></p>
         </section>
 
         <footer>
