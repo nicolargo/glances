@@ -1,3 +1,5 @@
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/484466/nicolargoglances-on-GitHub)
+
 ===========================================
 Glances -- Votre système en un coups d'oeil
 ===========================================
@@ -175,6 +177,7 @@ Quand Glances est lancé, il est possible d'utiliser les touches suivantes:
 * 'm' forcer le tri par consommation MEMOIRE
 * 'n' desactiver ou activer l'affichage des interfaces réseau
 * 'p' forcer le tri par nom de processus
+* 's' desactiver ou activer l'affichage des temperatures (si option -e)
 * 'w' supprimer les alertes finies de type WARNING
 * 'x' supprimer les alertes finies de type WARNING et CRITICAL
 * '1' passer des stats CPU globale à CPU détaillé
@@ -199,12 +202,12 @@ Vue si la taille du terminal est suffisante:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png)
 
-L'état de la CPU est affiché par un pourcentage de l'utilisation globale.
+Si la taille de la fenêtre est suffisante et que l'utilisateur clique sur, 
+la touche '1' alors Glances affiche les informations de CPU par coeur.
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
 
-Si la taille de la fenêtre est suffisante, Glances affiche les informations 
-de CPU par coeur.
+L'état de la CPU est affiché par un pourcentage de l'utilisation globale.
 
 Les codes couleurs suivant sont utilisés:
 
@@ -240,13 +243,13 @@ Si la charge moyenne est > 5*Core, alors le status est "CRITICAL".
 
 ### Mémoire
 
+Glances affiche 2 type d'information pour la mémoire: RAM et SWAP.
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/mem.png)
 
-Glances affiche 3 types d'informations pour la mémoire: RAM, SWAP et réelle.
+Si l'espace est disponible, alors Glances affiche aussi:
 
-La mémoire réelle occupée est calculée ainsi = used - cache.
-
-La mémoire réelle libre est calculée ainsi = free + cache.
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/mem-wide.png)
 
 Les alertes utilisent les seuils suivants:
 
@@ -284,6 +287,8 @@ passera à WARNING si le débit dépasse les 70 Mbps.
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/sensors.png)
 
 Glances peut afficher les informations sur les capteurs (lm-sensors).
+
+Un filtre est appliqué pour afficher uniquement les températures.
 
 Ce module est optionnel et doit être activé avec l'option:
 

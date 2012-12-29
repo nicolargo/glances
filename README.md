@@ -171,6 +171,7 @@ When Glances is running, you can press:
 * 'm' sort the processes list by process MEM
 * 'n' disable or enable the network interfaces stats
 * 'p' sort by process name
+* 's' disable or enable the sensor stats (only available with -e tag)
 * 'w' delete finished warning logs messages
 * 'x' delete finished warning and critical logs messages
 * '1' switch between global CPU and per core stats
@@ -195,16 +196,18 @@ Short view:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu.png)
 
-Long view (only available if your terminal is wide enough)
+If horizontal space is available, extended CPU infomations are displayed.
+
+Extended view (only available if your terminal is wide enough)
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png)
 
-The CPU stats are shown as a percentage and for the configured refresh
-time. The total CPU usage is displayed on the first line.
+If user click on the '1' key, per CPU stats is displayed:
 
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/percpu.png)
 
-If horizontal space is available, per core CPU infomations are displayed.
+The CPU stats are shown as a percentage and for the configured refresh
+time. The total CPU usage is displayed on the first line.
 
 Color code used:
 
@@ -238,13 +241,14 @@ If average load is > 5*Core, then status is set to "CRITICAL".
 
 ### Memory
 
+
+Glances uses two columns: one for the RAM and another one for the SWAP.
+
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/mem.png)
 
-Glances uses three columns: memory (RAM), "real" and swap.
+If space is available, Glances displays extended informations:
 
-Real used memory is: used - cache.
-
-Real free memory is: free + cache.
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/mem-wide.png)
 
 With Glances, alerts are only set for on used swap and real memory.
 
@@ -281,6 +285,8 @@ if the bit rate is higher than 70 Mbps.
 ![screenshot](https://github.com/nicolargo/glances/raw/master/doc/sensors.png)
 
 Optionally, Glances displays the sensors informations (lm-sensors).
+
+A filter is processed in order to only display temperature.
 
 You should enable this module using the following command line:
 
@@ -347,8 +353,8 @@ The number of processes in the list is adapted to the screen size.
    T - Traced or stopped
    Z - Zombie or "hung" process
 
-* IO_R and IO_W: Per process IO read and write
 * TIME+:  Cumulative CPU time used
+* IO_R and IO_W: Per process IO read and write
 * NAME: Process name or command line
 
 ### Logs
