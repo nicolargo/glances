@@ -38,6 +38,8 @@ Pre-requisites (information for packagers):
 
 Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...
 
+Check if the version is the latest one.
+
 ### From PyPi (easy and cross platform way)
 
 PyPi is an official Python package manager.
@@ -54,21 +56,6 @@ Then install the latest Glances version:
 Note: if you are behind an HTTP Proxy, you should use
 
     $ sudo pip install --proxy=user:password@url:port Glances
-
-### From PPA (easy way for Ubuntu/Mint...)
-
-Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
-
-The PPA is available for Ubuntu version 9.10 to 12.04.
-
-To install the PPA just enter:
-
-    $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-    $ sudo apt-get update
-
-Then install Glances:
-
-    $ sudo apt-get install glances
 
 ### From [Homebrew](http://mxcl.github.com/homebrew/) via PyPi (OS X)
 

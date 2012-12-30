@@ -57,18 +57,6 @@ Note: si vous êtes derrière un Proxy alors il faut utiliser
 
     $ sudo pip install --proxy=user:password@url:port Glances
 
-### Depuis le PPA (Ubuntu/Mint)
-
-Arnaud Hartmann maintient un PPA avec la version stable de Glances.
-
-Pour installer Glances à partir de ce PPA, il suffit de saisir:
-
-	$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-	$ sudo apt-get update
-	$ sudo apt-get install glances
-
-Le PPA propose les paquets pour les versions Ubuntu 9.10 jusqu'à 12.04.
-
 ### Depuis [Homebrew](http://mxcl.github.com/homebrew/) et pat PyPi (pour OS X)
 
         $ brew install brew-pip
