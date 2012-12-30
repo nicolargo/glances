@@ -507,19 +507,19 @@ class GlancesGrabProcesses:
 
         try:
             procstat['memory_info'] = proc.get_memory_info()
-        except psutil.AccesDenied:
+        except psutil.AccessDenied:
             procstat['memory_info'] = {}
 
         try:
             procstat['memory_percent'] = proc.get_memory_percent()
-        except psutil.AccesDenied:
+        except psutil.AccessDenied:
             procstat['memory_percent'] = {}
 
         if psutil_get_cpu_percent_tag:
             try:
                 procstat['cpu_percent'] = \
                     proc.get_cpu_percent(interval=0)
-            except psutil.AccesDenied:
+            except psutil.AccessDenied:
                 procstat['cpu_percent'] = {}
 
         try:
