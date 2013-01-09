@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.5.2"
+__version__ = "1.6b"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -34,6 +34,7 @@ import getopt
 import signal
 import time
 from datetime import datetime, timedelta
+import ConfigParser
 import locale
 import gettext
 locale.setlocale(locale.LC_ALL, '')
@@ -180,6 +181,8 @@ except ImportError:
 else:
     csv_lib_tag = True
 
+# Define the default configuration file
+default_conf_file = "/etc/glances.conf"
 
 # Classes
 #========
@@ -206,51 +209,169 @@ class glancesLimits:
 
     # The limit list is stored in an hash table:
     #  limits_list[STAT] = [CAREFUL, WARNING, CRITICAL]
-    # Exemple:
-    #  limits_list['STD'] = [50, 70, 90]
-
-    #_______________________CAREFUL WARNING CRITICAL
+    #
+    # STD is for defaults limits (CPU / MEM / SWAP / FS)
+    # CPU_IOWAIT limits (iowait in %)
+    # LOAD is for LOAD limits (5 min / 15 min)
+    # TEMP is for sensors limits (temperature in °C)
+    #
+    #_____________________[ CAREFUL, WARNING, CRITICAL ]
     __limits_list = {'STD': [50, 70, 90],
+                     'CPU_USER': [50, 70, 90],
+                     'CPU_SYSTEM': [50, 70, 90],
+                     'CPU_IOWAIT': [40, 60, 80],
                      'LOAD': [0.7, 1.0, 5.0],
-                     'TEMP': [50, 70, 80]}
+                     'MEM': [50, 70, 90],
+                     'SWAP': [50, 70, 90],
+                     'TEMP': [60, 70, 80],
+                     'FS': [50, 70, 90]}
 
-    def __init__(self, careful=50, warning=70, critical=90):
-        self.__limits_list['STD'] = [careful, warning, critical]
+    def __init__(self, conf_file = default_conf_file):
+        # Open the configuration file
+        config = ConfigParser.RawConfigParser()
+        if (config.read(conf_file) != []): 
+            # The configuration file exist 
+            if (config.has_section('global')):
+                # The configuration file has a limits section
+                # Read STD limits
+                self.__setLimits(config, 'global', 'STD', 'careful')
+                self.__setLimits(config, 'global', 'STD', 'warning')
+                self.__setLimits(config, 'global', 'STD', 'critical')
+            if (config.has_section('cpu')):
+                # Read CPU limits
+                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_careful')
+                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_warning')
+                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_critical')
+                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_careful')
+                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_warning')
+                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_critical')
+                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_careful')
+                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_warning')
+                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_critical')
+            if (config.has_section('load')):
+                # Read LOAD limits
+                self.__setLimits(config, 'load', 'LOAD', 'careful')
+                self.__setLimits(config, 'load', 'LOAD', 'warning')
+                self.__setLimits(config, 'load', 'LOAD', 'critical')
+            if (config.has_section('memory')):
+                # Read MEM limits
+                self.__setLimits(config, 'memory', 'MEM', 'careful')
+                self.__setLimits(config, 'memory', 'MEM', 'warning')
+                self.__setLimits(config, 'memory', 'MEM', 'critical')
+            if (config.has_section('swap')):
+                # Read MEM limits
+                self.__setLimits(config, 'swap', 'SWAP', 'careful')
+                self.__setLimits(config, 'swap', 'SWAP', 'warning')
+                self.__setLimits(config, 'swap', 'SWAP', 'critical')
+            if (config.has_section('temperature')):
+                # Read TEMP limits
+                self.__setLimits(config, 'temperature', 'TEMP', 'careful')
+                self.__setLimits(config, 'temperature', 'TEMP', 'warning')
+                self.__setLimits(config, 'temperature', 'TEMP', 'critical')
+            if (config.has_section('filesystem')):
+                # Read FS limits
+                self.__setLimits(config, 'filesystem', 'FS', 'careful')
+                self.__setLimits(config, 'filesystem', 'FS', 'warning')
+                self.__setLimits(config, 'filesystem', 'FS', 'critical')
+            
+    def __setLimits(self, config, section, stat, alert):
+        """
+        config: Pointer to the config file ConfigParser.RawConfigParser()
+        section: 'limits'
+        stat: 'CPU', 'LOAD', 'MEM', 'SWAP', 'TEMP'...
+        alert key (from config file): 
+        """
+        try:
+            value = config.getfloat(section, alert)
+        except ConfigParser.NoOptionError:
+            pass
+        else:
+            #~ print("%s / %s = %s -> %s" % (section, alert, value, stat)) 
+            if (alert.endswith('careful')):
+                self.__limits_list[stat][0] = value
+            elif (alert.endswith('warning')):
+                self.__limits_list[stat][1] = value
+            elif (alert.endswith('critical')):
+                self.__limits_list[stat][2] = value
+
+    def getCareful(self, stat):
+        return self.__limits_list[stat][0]
+
+    def getWarning(self, stat):
+        return self.__limits_list[stat][1]
+
+    def getCritical(self, stat):
+        return self.__limits_list[stat][2]
 
     def getSTDCareful(self):
-        return self.__limits_list['STD'][0]
+        return self.getCareful('STD')
 
     def getSTDWarning(self):
-        return self.__limits_list['STD'][1]
+        return self.getWarning('STD')
 
     def getSTDCritical(self):
-        return self.__limits_list['STD'][2]
+        return self.getCritical('STD')
+
+    def getCPUCareful(self, stat):
+        return self.getCareful('CPU_' + stat.upper())
+
+    def getCPUWarning(self, stat):
+        return self.getWarning('CPU_' + stat.upper())
+
+    def getCPUCritical(self, stat):
+        return self.getCritical('CPU_' + stat.upper())
 
     def getLOADCareful(self, core=1):
-        return self.__limits_list['LOAD'][0] * core
+        return self.getCareful('LOAD') * core
 
     def getLOADWarning(self, core=1):
-        return self.__limits_list['LOAD'][1] * core
+        return self.getWarning('LOAD') * core
 
     def getLOADCritical(self, core=1):
-        return self.__limits_list['LOAD'][2] * core
+        return self.getCritical('LOAD') * core
+
+    def getMEMCareful(self):
+        return self.getCareful('MEM')
+
+    def getMEMWarning(self):
+        return self.getWarning('MEM')
+
+    def getMEMCritical(self):
+        return self.getCritical('MEM')
+
+    def getSWAPCareful(self):
+        return self.getCareful('SWAP')
+
+    def getSWAPWarning(self):
+        return self.getWarning('SWAP')
+
+    def getSWAPCritical(self):
+        return self.getCritical('SWAP')
 
     def getTEMPCareful(self):
-        return self.__limits_list['TEMP'][0]
+        return self.getCareful('TEMP')
 
     def getTEMPWarning(self):
-        return self.__limits_list['TEMP'][1]
+        return self.getWarning('TEMP')
 
     def getTEMPCritical(self):
-        return self.__limits_list['TEMP'][2]
+        return self.getCritical('TEMP')
+
+    def getFSCareful(self):
+        return self.getCareful('FS')
+
+    def getFSWarning(self):
+        return self.getWarning('FS')
+
+    def getFSCritical(self):
+        return self.getCritical('FS')
 
 
 class glancesLogs:
     """
     The main class to manage logs inside the Glances software
-    Logs is a list of list (stored in the self.logs_list var):
-    [["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
-      MAX, AVG, MIN, SUM, COUNT],...]
+    Logs is a list of list (stored in the self.logs_list var)
+    See item description in the add function
     """
 
     def __init__(self):
@@ -303,10 +424,13 @@ class glancesLogs:
 
         # Add Top process sort depending on alert type
         if item_type.startswith("MEM"):
-            # MEM
+            # Sort TOP process by memory_percent
             sortby = 'memory_percent'
+        elif item_type.startswith("CPU IO") and is_Linux:
+            # Sort TOP process by io_counters (only for Linux OS)
+            sortby = 'io_counters'
         else:
-            # CPU* and LOAD
+            # Default TOP process sort is cpu_percent (for CPU* and LOAD)
             sortby = 'cpu_percent'
         topprocess = sorted(proc_list, key=lambda process: process[sortby],
                             reverse=True)
@@ -486,6 +610,14 @@ class GlancesGrabProcesses:
     """
     Get processed stats using the PsUtil lib
     """
+    
+    def __init__(self):
+        """
+        Init the io dict
+        key = pid
+        value = [ read_bytes_old, write_bytes_old ]
+        """
+        self.io_old = {}
 
     def __get_process_stats__(self, proc):
         """
@@ -497,8 +629,11 @@ class GlancesGrabProcesses:
             procstat['name'] = proc.name
         except psutil.AccessDenied:
             # Can not get the process name ?
-            # then exit...
+            # then no need to retreive others stats
+            # so exit...
             return {}
+
+        procstat['pid'] = proc.pid
         
         try:
             procstat['cmdline'] = " ".join(proc.cmdline)
@@ -522,13 +657,34 @@ class GlancesGrabProcesses:
             except psutil.AccessDenied:
                 procstat['cpu_percent'] = {}
 
-        try:
-            if psutil_get_io_counter_tag:
-                procstat['io_counters'] = proc.get_io_counters()
-        except:
-            procstat['io_counters'] = {}
+        # procstat['io_counters'] is a list:
+        # [ read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag ]
+        # if io_tag = 0 > Access denied (display "?")
+        # If io_tag = 1 > No access denied (display the IO rate)
+        if psutil_get_io_counter_tag:
+            try:
+                # Get the process IO counters
+                proc_io = proc.get_io_counters()
+                io_new = [ proc_io.read_bytes, proc_io.write_bytes ]
+            except psutil.AccessDenied:
+                # Access denied to process IO (no root account)
+                # Put 0 in all values (for sort) and io_tag = 0 (for display)
+                procstat['io_counters'] = [ 0, 0 ] + [ 0, 0 ]
+                io_tag = 0
+            else:
+                # For IO rate computation
+                # Append saved IO r/w bytes
+                try:
+                    procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
+                except KeyError:
+                    procstat['io_counters'] = io_new + [ 0, 0 ]
+                # then save the IO r/w bytes
+                self.io_old[procstat['pid']] = io_new
+                io_tag = 1
 
-        procstat['pid'] = proc.pid
+            # Append the IO tag (for display)
+            procstat['io_counters'] += [ io_tag ] 
+
         try:
             procstat['username'] = proc.username
         except psutil.AccessDenied:
@@ -559,7 +715,8 @@ class GlancesGrabProcesses:
     def update(self):
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-
+        
+        # For each existing process...
         for proc in psutil.process_iter():
             procstat = self.__get_process_stats__(proc)
             # Ignore the 'idle' process on Windows or Bsd
@@ -568,8 +725,8 @@ class GlancesGrabProcesses:
                  or (is_Windows and (procstat['name'] == 'System Idle Process'))):
                 continue
             # Update processlist
-            self.processlist.append(procstat)
-            # Update processcount
+            self.processlist.append(procstat)                
+            # Update processcount (global stattistics)
             try:
                 self.processcount[str(proc.status)] += 1
             except KeyError:
@@ -611,6 +768,7 @@ class GlancesStats:
 
         # Init the process list
         self.process_list_refresh = True
+        self.process_list_sortedby = ''
         self.glancesgrabprocesses = GlancesGrabProcesses()
 
     def _init_host(self):
@@ -873,23 +1031,9 @@ class GlancesStats:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
-        # TODO: Add IO rate -1
-        #~ self.glancesgrabprocesses.update()
-        #~ process = self.glancesgrabprocesses.getlist()
-        #~ processcount = self.glancesgrabprocesses.getcount()
-        #~ if not hasattr(self, 'process_old'):
-            #~ self.processcount = {}
-            #~ self.process = []
-            #~ self.process_old = process
-        #~ else:
-            #~ self.processcount = processcount
-            #~ self.process = process
-            #~ for proc in self.process:
-                #~ pass
-            #~ self.process_old = process
         self.glancesgrabprocesses.update()
-        process = self.glancesgrabprocesses.getlist()
         processcount = self.glancesgrabprocesses.getcount()
+        process = self.glancesgrabprocesses.getlist()
         if not hasattr(self, 'process'):
             self.processcount = {}
             self.process = []
@@ -897,8 +1041,6 @@ class GlancesStats:
             self.processcount = processcount
             self.process = process
 
-        # Initialiation of the running processes list
-        # Data are refreshed every two cycle (refresh_time * 2)
         # Get the current date/time
         self.now = datetime.now()
 
@@ -909,8 +1051,11 @@ class GlancesStats:
         # Update the stats
         self.__update__(input_stats)
 
-    #~ def getAll(self):
-        #~ return self.all_stats
+    def getSortedBy(self):
+        return self.process_list_sortedby
+
+    def getAll(self):
+        return self.all_stats
 
     def getHost(self):
         return self.host
@@ -975,22 +1120,41 @@ class GlancesStats:
 
         sortedReverse = True
         if sortedby == 'auto':
+            # Auto selection
+            # By default sort by CPU or memory (if CPU not available)
             if psutil_get_cpu_percent_tag:
                 sortedby = 'cpu_percent'
             else:
                 sortedby = 'memory_percent'
-            # Auto selection
-            # If global MEM > 70% sort by MEM usage
-            # else sort by CPU usage
-            if self.mem['total'] != 0:
-                memtotal = (self.mem['used'] * 100) / self.mem['total']
-                if memtotal > limits.getSTDWarning():
-                    sortedby = 'memory_percent'
+            # Dynamic choice
+            if (('iowait' in self.cpu) and 
+                (self.cpu['iowait'] > limits.getCPUWarning(stat = 'iowait'))):
+                # If CPU IOWait > 70% sort by IORATE usage
+                sortedby = 'io_counters'
+            elif ((self.mem['total'] != 0) 
+                    and (((self.mem['used'] * 100) / self.mem['total']) > limits.getMEMWarning())):
+                # If global MEM > 70% sort by MEM usage
+                sortedby = 'memory_percent'
         elif sortedby == 'name':
             sortedReverse = False
 
-        return sorted(self.process, key=lambda process: process[sortedby],
-                      reverse=sortedReverse)
+        if (sortedby == 'io_counters'):
+            # Sort process by IO rate (sum IO read + IO write)
+            listsorted = sorted(self.process, 
+                            key=lambda process: process[sortedby][0]-process[sortedby][2]
+                                                +process[sortedby][1]-process[sortedby][3],
+                            reverse=sortedReverse)
+        else:
+            # Others sorts
+            listsorted = sorted(self.process, 
+                            key=lambda process: process[sortedby],
+                            reverse=sortedReverse)
+
+        # Save the latest sort type in a global var
+        self.process_list_sortedby = sortedby
+
+        # Return the sorted list
+        return listsorted
 
     def getNow(self):
         return self.now
@@ -1018,23 +1182,11 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["percpu"] = self.percpu
         self.all_stats["load"] = self.load
         self.all_stats["mem"] = self.mem
-        self.all_stats["memswap"] = self.memswap
-        if psutil_network_io_tag:
-            self.all_stats["network"] = self.network
-        else:
-            self.all_stats["network"] = []
-        if sensors_tag:
-            self.all_stats["sensors"] = self.sensors
-        else:
-            self.all_stats["sensors"] = []
-        if psutil_disk_io_tag:
-            self.all_stats["diskio"] = self.diskio
-        else:
-            self.all_stats["diskio"] = []
-        if psutil_fs_usage_tag:
-            self.all_stats["fs"] = self.fs
-        else:
-            self.all_stats["fs"] = []
+        self.all_stats["memswap"] = self.memswap            
+        self.all_stats["network"] = self.network if psutil_network_io_tag else []
+        self.all_stats["sensors"] = self.sensors if sensors_tag else []
+        self.all_stats["diskio"] = self.diskio if psutil_disk_io_tag else []
+        self.all_stats["fs"] = self.fs if psutil_fs_usage_tag else []
         self.all_stats["processcount"] = self.processcount
         self.all_stats["process"] = self.process
         self.all_stats["core_number"] = self.core_number
@@ -1050,8 +1202,6 @@ class GlancesStatsClient(GlancesStats):
 
     def __init__(self):
         GlancesStats.__init__(self)
-        # Cached informations (no need to be refreshed)
-        # Host and OS informations
 
     def __update__(self, input_stats):
         """
@@ -1278,11 +1428,9 @@ class glancesScreen:
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
         try:
-            (current * 100) / max
+            variable = (current * 100) / max
         except ZeroDivisionError:
             return 'DEFAULT'
-
-        variable = (current * 100) / max
 
         if variable > limits.getSTDCritical():
             return 'CRITICAL'
@@ -1305,14 +1453,30 @@ class glancesScreen:
         """
         return self.__colors_list2[self.__getAlert(current, max)]
 
-    def __getCpuAlert(self, current=0, max=100):
-        return self.__getAlert(current, max)
+    def __getCpuAlert(self, current=0, max=100, stat = ''):
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
 
-    def __getCpuColor(self, current=0, max=100):
-        return self.__getColor(current, max)
+        if (variable > limits.getCPUCritical(stat = stat)):
+            return 'CRITICAL'
+        elif (variable > limits.getCPUWarning(stat = stat)):
+            return 'WARNING'
+        elif (variable > limits.getCPUCareful(stat = stat)):
+            return 'CAREFUL'
 
-    def __getExtCpuColor(self, current=0, max=100):
-        return self.__getColor2(current, max)
+        return 'OK'
+
+    def __getCpuColor(self, current=0, max=100, stat = ''):
+        return self.__colors_list[self.__getCpuAlert(current, max, stat)]
+
+    def __getCpuColor2(self, current=0, max=100, stat = ''):
+        return self.__colors_list2[self.__getCpuAlert(current, max, stat)]
 
     def __getLoadAlert(self, current=0, core=1):
         # If current < CAREFUL*core of max then alert = OK
@@ -1333,19 +1497,73 @@ class glancesScreen:
         return self.__colors_list[self.__getLoadAlert(current, core)]
 
     def __getMemAlert(self, current=0, max=100):
-        return self.__getAlert(current, max)
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if variable > limits.getMEMCritical():
+            return 'CRITICAL'
+        elif variable > limits.getMEMWarning():
+            return 'WARNING'
+        elif variable > limits.getMEMCareful():
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def __getSWAPAlert(self, current=0, max=100):
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if variable > limits.getSWAPCritical():
+            return 'CRITICAL'
+        elif variable > limits.getSWAPWarning():
+            return 'WARNING'
+        elif variable > limits.getSWAPCareful():
+            return 'CAREFUL'
+
+        return 'OK'
 
     def __getMemColor(self, current=0, max=100):
         return self.__getColor(current, max)
 
+    def __getMemColor2(self, current=0, max=100):
+        return self.__getColor2(current, max)
+
     def __getNetColor(self, current=0, max=100):
         return self.__getColor2(current, max)
 
-    def __getSensorsColor(self, current=0, max=100):
-        return self.__getColor2(current, max)
+    def __getFsAlert(self, current=0, max=100):
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if variable > limits.getSWAPCritical():
+            return 'CRITICAL'
+        elif variable > limits.getSWAPWarning():
+            return 'WARNING'
+        elif variable > limits.getSWAPCareful():
+            return 'CAREFUL'
+
+        return 'OK'
 
     def __getFsColor(self, current=0, max=100):
-        return self.__getColor2(current, max)
+        return self.__colors_list2[self.__getFsAlert(current, max)]
 
     def __getProcessColor(self, current=0, max=100):
         return self.__getColor2(current, max)
@@ -1401,6 +1619,9 @@ class glancesScreen:
         elif self.pressedkey == 104:
             # 'h' > Show/hide help
             self.help_tag = not self.help_tag
+        elif self.pressedkey == 105 and psutil_get_io_counter_tag:
+            # 'i' > Sort processes by IO rate
+            self.setProcessSortedBy('io_counters')
         elif self.pressedkey == 108:
             # 'l' > Show/hide log messages
             self.log_tag = not self.log_tag
@@ -1445,6 +1666,7 @@ class glancesScreen:
         # Get stats for processes (used in another functions for logs)
         processcount = stats.getProcessCount()
         processlist = stats.getProcessList(screen.getProcessSortedBy())
+
         # Display stats
         self.displaySystem(stats.getHost(), stats.getSystem())
         cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
@@ -1460,10 +1682,10 @@ class glancesScreen:
                                   network_count + diskio_count)
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
                                     diskio_count + fs_count)
-        self.displayProcess(processcount, processlist, log_count)
-        self.displayCaption(cs_status=cs_status)
+        self.displayProcess(processcount, processlist, stats.getSortedBy(), log_count)
+        self.displayCaption(cs_status = cs_status)
         self.displayNow(stats.getNow())
-        self.displayHelp()
+        self.displayHelp(core = stats.getCore())
 
     def erase(self):
         # Erase the content of the screen
@@ -1556,6 +1778,8 @@ class glancesScreen:
                          cpu['user'], proclist)
                 logs.add(self.__getCpuAlert(cpu['system']), "CPU system",
                          cpu['system'], proclist)
+                logs.add(self.__getCpuAlert(cpu['iowait']), "CPU IOwait",
+                         cpu['iowait'], proclist)
             except:
                 pass
 
@@ -1586,8 +1810,6 @@ class glancesScreen:
 
                 # user
                 alert = self.__getCpuAlert(percpu[i]['user'])
-                # Do not log PerCpu but on ly CPU (see below)
-                #~ logs.add(alert, "CPU-%d user" % i, percpu[i]['user'], proclist)
                 self.term_window.addnstr(
                     self.cpu_y + 1, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['user'] / 100, '>6.1%'), 6,
@@ -1595,8 +1817,6 @@ class glancesScreen:
 
                 # system
                 alert = self.__getCpuAlert(percpu[i]['system'])
-                # Do not log PerCpu but on ly CPU (see below)
-                #~ logs.add(alert, "CPU-%d system" % i, percpu[i]['system'], proclist)
                 self.term_window.addnstr(
                     self.cpu_y + 2, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['system'] / 100, '>6.1%'), 6,
@@ -1625,8 +1845,7 @@ class glancesScreen:
             y = 1
             # user
             self.term_window.addnstr(self.cpu_y + y, self.cpu_x, _("user:"), 5)
-            alert = self.__getCpuAlert(cpu['user'])
-            #~ logs.add(alert, "CPU user", cpu['user'], proclist)
+            alert = self.__getCpuAlert(cpu['user'], stat = 'user')
             self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                      format(cpu['user'] / 100, '>6.1%'), 6,
                                      self.__colors_list[alert])
@@ -1636,8 +1855,7 @@ class glancesScreen:
             if 'system' in cpu:
                 self.term_window.addnstr(self.cpu_y + y, self.cpu_x,
                                          _("system:"), 7)
-                alert = self.__getCpuAlert(cpu['system'])
-                #~ logs.add(alert, "CPU system", cpu['system'], proclist)
+                alert = self.__getCpuAlert(cpu['system'], stat = 'system')
                 self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                          format(cpu['system'] / 100, '>6.1%'), 6,
                                          self.__colors_list[alert])
@@ -1669,11 +1887,11 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['iowait'] / 100, '>6.1%'), 6,
-                        self.__getExtCpuColor(cpu['iowait']))
+                        self.__getCpuColor(cpu['iowait'], stat = 'iowait'))
                     y += 1
 
-                # irq (Linux, FreeBSD)
                 if 'irq' in cpu:
+                    # irq (Linux, FreeBSD)
                     self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
                                              _("irq:"), 4)
                     self.term_window.addnstr(
@@ -1692,9 +1910,6 @@ class glancesScreen:
         screen_y = self.screen.getmaxyx()[0]
 
         loadblocksize = 15
-
-        #~ test = max(0, (screen_x - (self.load_x + offset_x + loadblocksize)))
-        #~ self.term_window.addnstr(1, test, str(test), 3)
 
         if (screen_y > self.load_y + 5 and
             screen_x > self.load_x + offset_x + loadblocksize):
@@ -1745,9 +1960,6 @@ class glancesScreen:
 
         memblocksize = 45
         extblocksize = 15
-
-        #~ test = max(0, (screen_x - (self.mem_x + offset_x + + memblocksize - extblocksize)))
-        #~ self.term_window.addnstr(6, test, str(test), 3)
 
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + memblocksize - extblocksize):
@@ -1849,6 +2061,7 @@ class glancesScreen:
                 self.mem_y, self.mem_x + offset_x + 38,
                 format(memswap['percent'] / 100, '>6.1%'), 6)
 
+
             # total
             self.term_window.addnstr(self.mem_y + 1,
                                      self.mem_x + offset_x + 32,
@@ -1858,7 +2071,7 @@ class glancesScreen:
                 format(self.__autoUnit(memswap['total']), '>5'), 8)
 
             # used
-            alert = self.__getMemAlert(memswap['used'], memswap['total'])
+            alert = self.__getSWAPAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'], proclist)
             self.term_window.addnstr(self.mem_y + 2,
                                      self.mem_x + offset_x + 32,
@@ -2120,7 +2333,23 @@ class glancesScreen:
             return logcount + 3
         return 0
 
-    def displayProcess(self, processcount, processlist, log_count=0):
+
+    def getProcessColumnColor(self, column, sortedby):
+        """
+        Return the Process title colr depending of:
+        self.getProcessSortedBy() -> User sort choice
+                         sortedby -> System last sort        
+        """
+        if ((self.getProcessSortedBy() == 'auto') and 
+            (sortedby == column)):
+            return curses.A_UNDERLINE
+        elif (self.getProcessSortedBy() == column):
+            return self.title_color if self.hascolors else curses.A_UNDERLINE
+        else:
+            return 0
+
+
+    def displayProcess(self, processcount, processlist, sortedby='', log_count=0):
         # Process
         if not processcount:
             return 0
@@ -2154,6 +2383,17 @@ class glancesScreen:
                     _("sleeping"),
                     str(other),
                     _("other")), 42)
+
+        # Sort info
+        # self.getProcessSortedBy() -> User sort choice
+        #                  sortedby -> System last sort
+        if self.getProcessSortedBy() == 'auto':
+            sortmsg = _("sorted automatically")
+        else:
+            sortmsg = _("sorted by ") + sortedby
+        if screen_y > self.process_y + 4 and screen_x > process_x + 49 + len(sortmsg):
+            self.term_window.addnstr(self.process_y, 76, 
+                                     sortmsg, len(sortmsg))
 
         # Processes detail
         if screen_y > self.process_y + 4 and screen_x > process_x + 49:
@@ -2191,13 +2431,13 @@ class glancesScreen:
             # CPU%
             self.term_window.addnstr(
                 self.process_y + 2, process_x + 12,
-                format(_("CPU%"), '>5'), 5, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'cpu_percent' else 0)
+                format(_("CPU%"), '>5'), 5, 
+                self.getProcessColumnColor('cpu_percent', sortedby))
             # MEM%
             self.term_window.addnstr(
                 self.process_y + 2, process_x + 18,
-                format(_("MEM%"), '>5'), 5, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'memory_percent' else 0)
+                format(_("MEM%"), '>5'), 5, 
+                self.getProcessColumnColor('memory_percent', sortedby))
             process_name_x = 24
             # If screen space (X) is available then:
             # PID
@@ -2234,17 +2474,19 @@ class glancesScreen:
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_R"), '>5'), 5)
+                    format(_("IOr/s"), '>5'), 5, 
+                    self.getProcessColumnColor('io_counters', sortedby))
                 process_name_x += 6
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_W"), '>5'), 5)
+                    format(_("IOw/s"), '>5'), 5, 
+                    self.getProcessColumnColor('io_counters', sortedby))
                 process_name_x += 7
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
                 _("NAME"), 12, curses.A_UNDERLINE
-                if self.getProcessSortedBy() == 'name' else 0)
+                if sortedby == 'name' else 0)
 
             # If there is no data to display...
             if not processlist:
@@ -2326,27 +2568,29 @@ class glancesScreen:
                             format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
-                    try:
-                        if  processlist[processes]['io_counters'] == {}:
-                            self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 56,
-                                format("?", '>5'), 5)
-                            self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
-                                format("?", '>5'), 5)
-                        else:
-                            # Processes are only refresh every 2 refresh_time
-                            #~ elapsed_time = max(1, self.__refresh_time) * 2
-                            io_read = processlist[processes]['io_counters'][2]
-                            self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 56,
-                                format(self.__autoUnit(io_read), '>5'), 5)
-                            io_write = processlist[processes]['io_counters'][3]
-                            self.term_window.addnstr(
-                                self.process_y + 3 + processes, process_x + 62,
-                                format(self.__autoUnit(io_write), '>5'), 5)
-                    except:
-                        pass
+                    if processlist[processes]['io_counters'][4] == 0:
+                        # If io_tag == 0 (['io_counters'][4])
+                        # then do not diplay IO rate
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 56,
+                            format("?", '>5'), 5)
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 62,
+                            format("?", '>5'), 5)
+                    else:
+                        # If io_tag == 1 (['io_counters'][4])
+                        # then diplay IO rate
+                        io_read = processlist[processes]['io_counters'][0]
+                        io_read_old = processlist[processes]['io_counters'][2]
+                        io_write = processlist[processes]['io_counters'][1]
+                        io_write_old = processlist[processes]['io_counters'][3]
+                        elapsed_time = max(1, self.__refresh_time)
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 56,
+                            format(self.__autoUnit((io_read-io_read_old)/elapsed_time), '>5'), 5)
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 62,
+                            format(self.__autoUnit((io_write-io_write_old)/elapsed_time), '>5'), 5)
 
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
@@ -2397,7 +2641,7 @@ class glancesScreen:
                 self.term_window.addnstr(max(self.caption_y, screen_y - 1),
                                          self.caption_x, msg_help, len(msg_help))
 
-    def displayHelp(self):
+    def displayHelp(self, core):
         """
         Show the help panel
         """
@@ -2422,96 +2666,162 @@ class glancesScreen:
                     _("Glances {0}").format(self.__version),
                     79, self.title_color if self.hascolors else 0)
 
-            self.term_window.addnstr(self.help_y + 2, self.help_x,
-                                     _("Captions: "), 79)
-            self.term_window.addnstr(self.help_y + 2, self.help_x + 10,
+            # Display the limits table
+            width = 8
+            limits_table_x = self.help_x
+            limits_table_y = self.help_y + 2
+            self.term_window.addnstr(limits_table_y, limits_table_x,
+                                     _("Limits > "), 8)
+            self.term_window.addnstr(limits_table_y, limits_table_x + 10,
                                      _("   OK   "), 8, self.default_color)
-            self.term_window.addnstr(self.help_y + 2, self.help_x + 18,
+            self.term_window.addnstr(limits_table_y, limits_table_x + 18,
                                      _("CAREFUL "), 8, self.ifCAREFUL_color)
-            self.term_window.addnstr(self.help_y + 2, self.help_x + 26,
+            self.term_window.addnstr(limits_table_y, limits_table_x + 26,
                                      _("WARNING "), 8, self.ifWARNING_color)
-            self.term_window.addnstr(self.help_y + 2, self.help_x + 34,
+            self.term_window.addnstr(limits_table_y, limits_table_x + 34,
                                      _("CRITICAL"), 8, self.ifCRITICAL_color)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Default %"), 
+                    '0', 
+                    limits.getSTDCareful(), 
+                    limits.getSTDWarning(), 
+                    limits.getSTDCritical(), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("IOwait % "), 
+                    '0', 
+                    limits.getCPUCareful(stat = 'iowait'), 
+                    limits.getCPUWarning(stat = 'iowait'), 
+                    limits.getCPUCritical(stat = 'iowait'), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Load     "), 
+                    '0', 
+                    limits.getLOADCareful()*core, 
+                    limits.getLOADWarning()*core, 
+                    limits.getLOADCritical()*core, 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Temp °C  "), 
+                    '0', 
+                    limits.getTEMPCareful(), 
+                    limits.getTEMPWarning(), 
+                    limits.getTEMPCritical(), 
+                    width=width), 79)
 
+            # Key table (first column)
             width = 5
+            key_table_x = self.help_x
+            key_table_y = limits_table_y + 2
             self.term_window.addnstr(
-                self.help_y + 4, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("Key"), _("Function"), width=width),
-                79, self.title_underline_color if self.hascolors else 0)
-            self.term_window.addnstr(
-                self.help_y + 5, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("a"), _("Sort processes automatically"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
                 else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 6, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("b"), _("Switch between bit/s or Byte/s for network IO"),
-                    width=width),
-                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
-                else 0)
-            self.term_window.addnstr(
-                self.help_y + 7, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("c"), _("Sort processes by CPU%"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
                 else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 8, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("m"), _("Sort processes by MEM%"), width=width), 79)
+                    _("m"), _("Sort processes by MEM%"), width=width), 38)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 9, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("p"), _("Sort processes by name"), width=width), 79)
+                    _("p"), _("Sort processes by name"), width=width), 38)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 10, self.help_x,
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("i"), _("Sort processes by IO Rate"), width=width), 38)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("d"), _("Show/hide disk I/O stats"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
+                38, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 11, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("f"), _("Show/hide file system stats"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
+                38, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 12, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("n"), _("Show/hide network stats"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+                38, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 13, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("s"), _("Show/hide sensors stats (Linux-only)"), width=width),
-                79, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+                    _("s"), _("Show/hide sensors stats"), width=width),
+                38, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+            key_table_y += 1
             self.term_window.addnstr(
-                self.help_y + 14, self.help_x,
+                key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("l"), _("Show/hide log messages"), width=width), 79)
-            self.term_window.addnstr(
-                self.help_y + 15, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("w"), _("Delete finished warning logs messages"), width=width), 79)
-            self.term_window.addnstr(
-                self.help_y + 16, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("x"), _("Delete finished warning and critical logs"), width=width), 79)
-            self.term_window.addnstr(
-                self.help_y + 17, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("1"), _("Switch between global CPU and per core stats"), width=width), 79)
-            self.term_window.addnstr(
-                self.help_y + 18, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("h"), _("Show/hide this help message"), width=width), 79)
-            self.term_window.addnstr(
-                self.help_y + 19, self.help_x,
-                "{0:^{width}} {1}".format(
-                    _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width),
-                79)
+                    _("l"), _("Show/hide log messages"), width=width), 38)
 
+            # Key table (second column)
+            width = 5
+            key_table_x = self.help_x + 38
+            key_table_y = limits_table_y + 2
+
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("b"), _("Bit/s or Byte/s for network IO"),
+                    width=width),
+                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
+                else 0)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("w"), _("Delete warning logs"), width=width), 38)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("x"), _("Delete warning and critical logs"), width=width), 38)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("1"), _("Global CPU or Per Core stats"), width=width), 38)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("h"), _("Show/hide this help message"), width=width), 38)
+            key_table_y += 1
+            self.term_window.addnstr(
+                key_table_y, key_table_x,
+                "{0:^{width}} {1}".format(
+                    _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width), 38)
+
+                
     def displayNow(self, now):
         # Display the current date and time (now...) - Center
         if not now:
@@ -2870,11 +3180,13 @@ def printVersion():
 
 def printSyntax():
     printVersion()
-    print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v]"))
+    print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v] ..."))
     print("")
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
     print(_("\t-B IP|NAME\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
+    print(_("\t-C file\t\tPath to the configuration file (default: %s)") %
+            default_conf_file)
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-e\t\tEnable the sensors module (Linux-only)"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
@@ -2939,6 +3251,9 @@ def main():
     else:
         server_tag = False
 
+    # Default configuration file (if exist)
+    conf_file = default_conf_file
+
     # Set the default refresh time
     refresh_time = 3
 
@@ -2948,11 +3263,11 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "netrate", "help", "output",
                                     "file", "time", "version", "server",
-                                    "client", "port"])
+                                    "client", "port", "config"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -3016,6 +3331,8 @@ def main():
             psutil_network_io_tag = False
         elif opt in ("-b", "--bytepersec"):
             network_bytepersec_tag = True
+        elif opt in ("-C", "--config"):
+            conf_file = arg
         else:
             printSyntax()
             sys.exit(0)
@@ -3092,7 +3409,7 @@ def main():
             sys.exit(2)
 
         # Init Limits
-        limits = glancesLimits()
+        limits = glancesLimits(conf_file)
 
         # Init Logs
         logs = glancesLogs()
@@ -3106,7 +3423,7 @@ def main():
         # Init the classical CLI
 
         # Init Limits
-        limits = glancesLimits()
+        limits = glancesLimits(conf_file)
 
         # Init Logs
         logs = glancesLogs()
