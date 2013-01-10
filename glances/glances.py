@@ -1816,7 +1816,7 @@ class glancesScreen:
 
         # Display CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
-            # display per-CPU stats when space is available
+            # Display per-CPU
             self.term_window.addnstr(self.cpu_y, self.cpu_x, _("PerCPU"), 6,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
@@ -1840,25 +1840,24 @@ class glancesScreen:
                     format((100 - percpu[i]['idle']) / 100, '>6.1%'), 6)
 
                 # user
-                alert = self.__getCpuAlert(percpu[i]['user'])
                 self.term_window.addnstr(
                     self.cpu_y + 1, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['user'] / 100, '>6.1%'), 6,
-                    self.__colors_list2[alert])
+                    self.__getCpuColor2(percpu[i]['user'], stat = 'user'))
 
                 # system
-                alert = self.__getCpuAlert(percpu[i]['system'])
                 self.term_window.addnstr(
                     self.cpu_y + 2, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['system'] / 100, '>6.1%'), 6,
-                    self.__colors_list2[alert])
+                    self.__getCpuColor2(percpu[i]['system'], stat = 'system'))
 
                 # idle
                 self.term_window.addnstr(
                     self.cpu_y + 3, self.cpu_x + 8 + i * 8,
                     format(percpu[i]['idle'] / 100, '>6.1%'), 6)
-        # display CPU summary information
+                    
         elif screen_y > self.cpu_y + 5 and screen_x > self.cpu_x + 18:
+            # display CPU summary information
             self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 3,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
