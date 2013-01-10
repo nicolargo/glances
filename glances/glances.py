@@ -224,7 +224,9 @@ class glancesLimits:
                      'MEM': [50, 70, 90],
                      'SWAP': [50, 70, 90],
                      'TEMP': [60, 70, 80],
-                     'FS': [50, 70, 90]}
+                     'FS': [50, 70, 90],
+                     'PROCESS_CPU': [50, 70, 90],
+                     'PROCESS_MEM': [50, 70, 90]}
 
     def __init__(self, conf_file = default_conf_file):
         # Open the configuration file
@@ -273,6 +275,14 @@ class glancesLimits:
                 self.__setLimits(config, 'filesystem', 'FS', 'careful')
                 self.__setLimits(config, 'filesystem', 'FS', 'warning')
                 self.__setLimits(config, 'filesystem', 'FS', 'critical')
+            if (config.has_section('process')):
+                # Process limits
+                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_careful')
+                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_warning')
+                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_critical')
+                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_careful')
+                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_warning')
+                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_critical')
             
     def __setLimits(self, config, section, stat, alert):
         """
@@ -365,6 +375,15 @@ class glancesLimits:
 
     def getFSCritical(self):
         return self.getCritical('FS')
+
+    def getProcessCareful(self, stat = ''):
+        return self.getCareful('PROCESS_' + stat.upper())
+
+    def getProcessWarning(self, stat = ''):
+        return self.getWarning('PROCESS_' + stat.upper())
+
+    def getProcessCritical(self, stat = ''):
+        return self.getWarning('PROCESS_' + stat.upper())
 
 
 class glancesLogs:
@@ -1422,37 +1441,6 @@ class glancesScreen:
 
         return "{0!s}".format(val)
 
-    def __getAlert(self, current=0, max=100):
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        try:
-            variable = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if variable > limits.getSTDCritical():
-            return 'CRITICAL'
-        elif variable > limits.getSTDWarning():
-            return 'WARNING'
-        elif variable > limits.getSTDCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getColor(self, current=0, max=100):
-        """
-        Return colors for logged stats
-        """
-        return self.__colors_list[self.__getAlert(current, max)]
-
-    def __getColor2(self, current=0, max=100):
-        """
-        Return colors for non logged stats
-        """
-        return self.__colors_list2[self.__getAlert(current, max)]
-
     def __getCpuAlert(self, current=0, max=100, stat = ''):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
@@ -1496,6 +1484,9 @@ class glancesScreen:
     def __getLoadColor(self, current=0, core=1):
         return self.__colors_list[self.__getLoadAlert(current, core)]
 
+    def __getLoadColor2(self, current=0, core=1):
+        return self.__colors_list2[self.__getLoadAlert(current, core)]
+
     def __getMemAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
@@ -1515,7 +1506,13 @@ class glancesScreen:
 
         return 'OK'
 
-    def __getSWAPAlert(self, current=0, max=100):
+    def __getMemColor(self, current=0, max=100):
+        return self.__colors_list[self.__getMemAlert(current, max)]
+
+    def __getMemColor2(self, current=0, max=100):
+        return self.__colors_list2[self.__getMemAlert(current, max)]
+
+    def __getSwapAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
@@ -1534,14 +1531,11 @@ class glancesScreen:
 
         return 'OK'
 
-    def __getMemColor(self, current=0, max=100):
-        return self.__getColor(current, max)
+    def __getSwapColor(self, current=0, max=100):
+        return self.__colors_list[self.__getSwapAlert(current, max)]
 
-    def __getMemColor2(self, current=0, max=100):
-        return self.__getColor2(current, max)
-
-    def __getNetColor(self, current=0, max=100):
-        return self.__getColor2(current, max)
+    def __getSwapColor2(self, current=0, max=100):
+        return self.__colors_list2[self.__getSwapAlert(current, max)]
 
     def __getFsAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
@@ -1563,10 +1557,10 @@ class glancesScreen:
         return 'OK'
 
     def __getFsColor(self, current=0, max=100):
-        return self.__colors_list2[self.__getFsAlert(current, max)]
+        return self.__colors_list[self.__getFsAlert(current, max)]
 
-    def __getProcessColor(self, current=0, max=100):
-        return self.__getColor2(current, max)
+    def __getFsColor2(self, current=0, max=100):
+        return self.__colors_list2[self.__getFsAlert(current, max)]
 
     def __getSensorsAlert(self, current=0):
         # Alert for Sensors (temperature in degre)
@@ -1586,9 +1580,46 @@ class glancesScreen:
 
     def __getSensorsColor(self, current=0):
         """
-        Return color for Sensors temperature (non logged stats)
+        Return color for Sensors temperature
+        """
+        return self.__colors_list[self.__getSensorsAlert(current)]
+
+    def __getSensorsColor2(self, current=0):
+        """
+        Return color for Sensors temperature
         """
         return self.__colors_list2[self.__getSensorsAlert(current)]
+
+    def __getProcessAlert(self, current=0, max=100, stat = ''):
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if (variable > limits.getProcessCritical(stat = stat)):
+            return 'CRITICAL'
+        elif (variable > limits.getProcessWarning(stat = stat)):
+            return 'WARNING'
+        elif (variable > limits.getProcessCareful(stat = stat)):
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def __getProcessCpuColor(self, current=0, max=100):
+        return self.__colors_list[self.__getProcessAlert(current, max, 'CPU')]
+
+    def __getProcessCpuColor2(self, current=0, max=100):
+        return self.__colors_list2[self.__getProcessAlert(current, max, 'CPU')]
+
+    def __getProcessMemColor(self, current=0, max=100):
+        return self.__colors_list[self.__getProcessAlert(current, max, 'MEM')]
+
+    def __getProcessMemColor2(self, current=0, max=100):
+        return self.__colors_list2[self.__getProcessAlert(current, max, 'MEM')]
 
     def __catchKey(self):
         # Get key
@@ -1845,20 +1876,18 @@ class glancesScreen:
             y = 1
             # user
             self.term_window.addnstr(self.cpu_y + y, self.cpu_x, _("user:"), 5)
-            alert = self.__getCpuAlert(cpu['user'], stat = 'user')
             self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                      format(cpu['user'] / 100, '>6.1%'), 6,
-                                     self.__colors_list[alert])
+                                     self.__getCpuColor(cpu['user'], stat = 'user'))
             y += 1
 
             # system
             if 'system' in cpu:
                 self.term_window.addnstr(self.cpu_y + y, self.cpu_x,
                                          _("system:"), 7)
-                alert = self.__getCpuAlert(cpu['system'], stat = 'system')
                 self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 8,
                                          format(cpu['system'] / 100, '>6.1%'), 6,
-                                         self.__colors_list[alert])
+                                         self.__getCpuColor(cpu['system'], stat = 'system'))
                 y += 1
 
             # idle
@@ -1936,7 +1965,7 @@ class glancesScreen:
             self.term_window.addnstr(self.load_y + 2,
                                      self.load_x + offset_x + 8,
                                      format(load['min5'], '>5.2f'), 5,
-                                     self.__colors_list[alert])
+                                     self.__getLoadColor(load['min5'], core))
 
             # 15 min
             self.term_window.addnstr(self.load_y + 3,
@@ -1946,7 +1975,7 @@ class glancesScreen:
             self.term_window.addnstr(self.load_y + 3,
                                      self.load_x + offset_x + 8,
                                      format(load['min15'], '>5.2f'), 5,
-                                     self.__colors_list[alert])
+                                     self.__getLoadColor(load['min15'], core))
 
         # return the x offset to display mem
         return offset_x
@@ -1989,7 +2018,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.mem_y + 2, self.mem_x + offset_x + 7,
                 format(self.__autoUnit(mem['used']), '>5'), 5,
-                self.__colors_list[alert])
+                self.__getMemColor(mem['used'], mem['total']))
 
             # free
             self.term_window.addnstr(self.mem_y + 3, self.mem_x + offset_x,
@@ -2071,7 +2100,7 @@ class glancesScreen:
                 format(self.__autoUnit(memswap['total']), '>5'), 8)
 
             # used
-            alert = self.__getSWAPAlert(memswap['used'], memswap['total'])
+            alert = self.__getSwapAlert(memswap['used'], memswap['total'])
             logs.add(alert, "MEM swap", memswap['used'], proclist)
             self.term_window.addnstr(self.mem_y + 2,
                                      self.mem_x + offset_x + 32,
@@ -2079,7 +2108,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 self.mem_y + 2, self.mem_x + offset_x + 39,
                 format(self.__autoUnit(memswap['used']), '>5'), 8,
-                self.__colors_list[alert])
+                self.__getSwapColor(memswap['used'], memswap['total']))
 
             # free
             self.term_window.addnstr(self.mem_y + 3,
@@ -2260,18 +2289,16 @@ class glancesScreen:
                         self.fs_y + 1 + mounted, self.fs_x,
                         fs[mounted]['mnt_point'], 8)
 
-                fs_usage = fs[mounted]['used']
-                fs_size = fs[mounted]['size']
                 # used
                 self.term_window.addnstr(
                     self.fs_y + 1 + mounted, self.fs_x + 9,
-                    format(self.__autoUnit(fs_usage), '>6'), 6,
-                    self.__getFsColor(fs_usage, fs_size))
+                    format(self.__autoUnit(fs[mounted]['used']), '>6'), 6,
+                    self.__getFsColor2(fs[mounted]['used'], fs[mounted]['size']))
 
                 # total
                 self.term_window.addnstr(
                     self.fs_y + 1 + mounted, self.fs_x + 17,
-                    format(self.__autoUnit(fs_size), '>6'), 6)
+                    format(self.__autoUnit(fs[mounted]['size']), '>6'), 6)
 
             return mounted + 3
         return 0
@@ -2514,7 +2541,7 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x + 12,
                         format(cpu_percent, '>5.1f'), 5,
-                        self.__getProcessColor(cpu_percent))
+                        self.__getProcessCpuColor2(cpu_percent))
                 else:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x, "N/A", 8)
@@ -2523,7 +2550,7 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 18,
                     format(memory_percent, '>5.1f'), 5,
-                    self.__getProcessColor(memory_percent))
+                    self.__getProcessMemColor2(memory_percent))
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
@@ -2670,31 +2697,49 @@ class glancesScreen:
             width = 8
             limits_table_x = self.help_x
             limits_table_y = self.help_y + 2
-            self.term_window.addnstr(limits_table_y, limits_table_x,
-                                     _("Limits > "), 8)
-            self.term_window.addnstr(limits_table_y, limits_table_x + 10,
-                                     _("   OK   "), 8, self.default_color)
             self.term_window.addnstr(limits_table_y, limits_table_x + 18,
-                                     _("CAREFUL "), 8, self.ifCAREFUL_color)
+                                     _("   OK   "), 8, self.default_color)
             self.term_window.addnstr(limits_table_y, limits_table_x + 26,
-                                     _("WARNING "), 8, self.ifWARNING_color)
+                                     _("CAREFUL "), 8, self.ifCAREFUL_color)
             self.term_window.addnstr(limits_table_y, limits_table_x + 34,
+                                     _("WARNING "), 8, self.ifWARNING_color)
+            self.term_window.addnstr(limits_table_y, limits_table_x + 42,
                                      _("CRITICAL"), 8, self.ifCRITICAL_color)
+            #~ limits_table_y += 1
+            #~ self.term_window.addnstr(
+                #~ limits_table_y, limits_table_x,
+                #~ "{0:16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    #~ _("Default %"), 
+                    #~ '0', 
+                    #~ limits.getSTDCareful(), 
+                    #~ limits.getSTDWarning(), 
+                    #~ limits.getSTDCritical(), 
+                    #~ width=width), 79)
             limits_table_y += 1
             self.term_window.addnstr(
                 limits_table_y, limits_table_x,
-                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Default %"), 
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("CPU user %   "), 
                     '0', 
-                    limits.getSTDCareful(), 
-                    limits.getSTDWarning(), 
-                    limits.getSTDCritical(), 
+                    limits.getCPUCareful(stat = 'user'), 
+                    limits.getCPUWarning(stat = 'user'), 
+                    limits.getCPUCritical(stat = 'user'), 
                     width=width), 79)
             limits_table_y += 1
             self.term_window.addnstr(
                 limits_table_y, limits_table_x,
-                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("IOwait % "), 
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("CPU system % "), 
+                    '0', 
+                    limits.getCPUCareful(stat = 'system'), 
+                    limits.getCPUWarning(stat = 'system'), 
+                    limits.getCPUCritical(stat = 'system'), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("CPU IOwait % "), 
                     '0', 
                     limits.getCPUCareful(stat = 'iowait'), 
                     limits.getCPUWarning(stat = 'iowait'), 
@@ -2703,8 +2748,8 @@ class glancesScreen:
             limits_table_y += 1
             self.term_window.addnstr(
                 limits_table_y, limits_table_x,
-                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Load     "), 
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Load         "), 
                     '0', 
                     limits.getLOADCareful()*core, 
                     limits.getLOADWarning()*core, 
@@ -2713,12 +2758,62 @@ class glancesScreen:
             limits_table_y += 1
             self.term_window.addnstr(
                 limits_table_y, limits_table_x,
-                "{0:^{width}} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Temp °C  "), 
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("RAM Memory % "), 
+                    '0', 
+                    limits.getMEMCareful(), 
+                    limits.getMEMWarning(), 
+                    limits.getMEMCritical(), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Swap memory %"), 
+                    '0', 
+                    limits.getSWAPCareful(), 
+                    limits.getSWAPWarning(), 
+                    limits.getSWAPCritical(), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16}  {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Temp °C      "), 
                     '0', 
                     limits.getTEMPCareful(), 
                     limits.getTEMPWarning(), 
                     limits.getTEMPCritical(), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("Filesystem % "), 
+                    '0', 
+                    limits.getFSCareful(), 
+                    limits.getFSWarning(), 
+                    limits.getFSCritical(), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("CPU Process %"), 
+                    '0', 
+                    limits.getProcessCareful(stat = 'CPU'), 
+                    limits.getProcessWarning(stat = 'CPU'), 
+                    limits.getProcessCritical(stat = 'CPU'), 
+                    width=width), 79)
+            limits_table_y += 1
+            self.term_window.addnstr(
+                limits_table_y, limits_table_x,
+                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
+                    _("MEM Process %"), 
+                    '0', 
+                    limits.getProcessCareful(stat = 'MEM'), 
+                    limits.getProcessWarning(stat = 'MEM'), 
+                    limits.getProcessCritical(stat = 'MEM'), 
                     width=width), 79)
 
             # Key table (first column)
