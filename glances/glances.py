@@ -3269,6 +3269,7 @@ class GlancesClient():
             print(_("Error: Connection to server failed"))
             sys.exit(-1)
         else:
+            # !!! TO DO FOR VERSION 1.5.x and 1.6
             return __version__[:3] == client_version
 
     def client_get(self):
@@ -3400,7 +3401,7 @@ def main():
             try:
                 arg
             except NameError:
-                print(_("Error: -c flag need an argument (server IP address/name"))
+                print(_("Error: -c flag need an argument (server IP address/name)"))
                 sys.exit(2)
             server_ip = arg
         elif opt in ("-p", "--port"):
