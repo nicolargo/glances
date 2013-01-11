@@ -14,6 +14,8 @@ data_files = [
                            'NEWS',
                            'screenshot.png']),
     ('share/doc/glances/doc', glob('doc/*.png')),
+    ('/etc', ['glances/conf/glances.conf']),
+    ('share/glances/conf-default', ['glances/conf/glances.conf']),
     ('share/glances/html', glob('glances/html/*.html')),
     ('share/glances/css', glob('glances/css/*.css')),
     ('share/glances/img', glob('glances/img/*.png')),
@@ -23,8 +25,8 @@ for mo in glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 setup(name='Glances',
-      version='1.5.2',
-      download_url='https://s3.amazonaws.com/glances/glances-1.5.2.tar.gz',
+      version='1.6b',
+      download_url='https://s3.amazonaws.com/glances/glances-1.6b.tar.gz',
       url='https://github.com/nicolargo/glances',
       description='CLI curses-based monitoring tool',
       author='Nicolas Hennion',
