@@ -1866,6 +1866,8 @@ class glancesScreen:
                     format(percpu[i]['system'] / 100, '>6.1%'), 6,
                     self.__getCpuColor2(percpu[i]['system'], stat = 'system'))
 
+                # If the IOWait stat is available then display it
+                # else display the IDLE stat
                 if 'iowait' in percpu[i]:
                     # iowait
                     self.term_window.addnstr(
