@@ -313,6 +313,7 @@ class glancesLimits:
     def getCritical(self, stat):
         return self.__limits_list[stat][2]
 
+    # TO BE DELETED AFTER THE HTML output refactoring
     def getSTDCareful(self):
         return self.getCareful('STD')
 
@@ -321,6 +322,7 @@ class glancesLimits:
 
     def getSTDCritical(self):
         return self.getCritical('STD')
+    # /TO BE DELETED AFTER THE HTML output refactoring
 
     def getCPUCareful(self, stat):
         return self.getCareful('CPU_' + stat.upper())
@@ -904,6 +906,15 @@ class GlancesStats:
                     if hasattr(self.percputime_new[i], 'nice'):
                         cpu['nice'] = (self.percputime_new[i].nice -
                                        self.percputime_old[i].nice) * perpercent[i]
+                    if hasattr(self.percputime_new[i], 'iowait'):
+                        cpu['iowait'] = (self.percputime_new[i].iowait -
+                                         self.percputime_old[i].iowait) * perpercent[i]
+                    if hasattr(self.percputime_new[i], 'irq'):
+                        cpu['irq'] = (self.percputime_new[i].irq -
+                                      self.percputime_old[i].irq) * perpercent[i]
+                    if hasattr(self.percputime_new[i], 'softirq'):
+                        cpu['softirq'] = (self.percputime_new[i].softirq -
+                                          self.percputime_old[i].softirq) * perpercent[i]
                     self.percpu.append(cpu)
                 self.percputime_old = self.percputime_new
                 self.percputime_total_old = self.percputime_total_new
@@ -1827,11 +1838,15 @@ class glancesScreen:
                 return 0
 
             self.term_window.addnstr(self.cpu_y + 1, self.cpu_x,
-                                     _("user:"), 5)
+                                     _("user:"), 7)
             self.term_window.addnstr(self.cpu_y + 2, self.cpu_x,
                                      _("system:"), 7)
-            self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
-                                     _("idle:"), 5)
+            if 'iowait' in percpu[0]:
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
+                                         _("iowait:"), 7)
+            else:
+                self.term_window.addnstr(self.cpu_y + 3, self.cpu_x,
+                                         _("idle:"), 7)
 
             for i in range(len(percpu)):
                 # percentage of usage
@@ -1851,10 +1866,18 @@ class glancesScreen:
                     format(percpu[i]['system'] / 100, '>6.1%'), 6,
                     self.__getCpuColor2(percpu[i]['system'], stat = 'system'))
 
-                # idle
-                self.term_window.addnstr(
-                    self.cpu_y + 3, self.cpu_x + 8 + i * 8,
-                    format(percpu[i]['idle'] / 100, '>6.1%'), 6)
+                if 'iowait' in percpu[i]:
+                    # iowait
+                    self.term_window.addnstr(
+                        self.cpu_y + 3, self.cpu_x + 8 + i * 8,
+                        format(percpu[i]['iowait'] / 100, '>6.1%'), 6,
+                        self.__getCpuColor2(percpu[i]['iowait'], stat = 'iowait'))
+                        
+                else:
+                    # idle
+                    self.term_window.addnstr(
+                        self.cpu_y + 3, self.cpu_x + 8 + i * 8,
+                        format(percpu[i]['idle'] / 100, '>6.1%'), 6)
                     
         elif screen_y > self.cpu_y + 5 and screen_x > self.cpu_x + 18:
             # display CPU summary information
@@ -2704,16 +2727,7 @@ class glancesScreen:
                                      _("WARNING "), 8, self.ifWARNING_color)
             self.term_window.addnstr(limits_table_y, limits_table_x + 42,
                                      _("CRITICAL"), 8, self.ifCRITICAL_color)
-            #~ limits_table_y += 1
-            #~ self.term_window.addnstr(
-                #~ limits_table_y, limits_table_x,
-                #~ "{0:16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    #~ _("Default %"), 
-                    #~ '0', 
-                    #~ limits.getSTDCareful(), 
-                    #~ limits.getSTDWarning(), 
-                    #~ limits.getSTDCritical(), 
-                    #~ width=width), 79)
+
             limits_table_y += 1
             self.term_window.addnstr(
                 limits_table_y, limits_table_x,
@@ -3274,10 +3288,10 @@ def printVersion():
 
 def printSyntax():
     printVersion()
-    print(_("Usage: glances [-f file] [-o output] [-t sec] [-h] [-v] ..."))
-    print("")
+    print(_("Usage: glances [opt]"))
+    print(_(" with opt:"))
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
-    print(_("\t-B IP|NAME\tBind server to the given IP or host NAME"))
+    print(_("\t-B @IP|host\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-C file\t\tPath to the configuration file (default: %s)") %
             default_conf_file)
@@ -3299,7 +3313,6 @@ def printSyntax():
 def end():
     if server_tag:
         # Stop the server loop
-        #~ print(_("Stop Glances server"))
         server.server_close()
     else:
         if client_tag:

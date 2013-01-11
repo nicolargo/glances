@@ -5,7 +5,8 @@ Version 1.6
     * Display limits in the help screen
     * Add per process IO (read and write) rate in B per second
       IO rate only available on Linux from a root account
-    * If CPU iowait alert then sort by processes by IO rate 
+    * If CPU iowait alert then sort by processes by IO rate
+    * Per CPU display IOwait (if data is available) 
     * Process column style auto (underline) or manual (bold) 
     * Display a sort indicator (is space is available)
     * Change the table key in the help screen 
