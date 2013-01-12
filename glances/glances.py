@@ -182,7 +182,8 @@ else:
     csv_lib_tag = True
 
 # Define the default configuration file
-default_conf_file = "/etc/glances.conf"
+DEFAULT_CONF_FILE = "/etc/glances/glances.conf"
+
 
 # Classes
 #========
@@ -228,7 +229,7 @@ class glancesLimits:
                      'PROCESS_CPU': [50, 70, 90],
                      'PROCESS_MEM': [50, 70, 90]}
 
-    def __init__(self, conf_file = default_conf_file):
+    def __init__(self, conf_file=DEFAULT_CONF_FILE):
         # Open the configuration file
         config = ConfigParser.RawConfigParser()
         if (config.read(conf_file) != []): 
@@ -3297,7 +3298,7 @@ def printSyntax():
     print(_("\t-B @IP|host\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
     print(_("\t-C file\t\tPath to the configuration file (default: %s)") %
-            default_conf_file)
+          DEFAULT_CONF_FILE)
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-e\t\tEnable the sensors module (Linux-only)"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
@@ -3362,7 +3363,7 @@ def main():
         server_tag = False
 
     # Default configuration file (if exist)
-    conf_file = default_conf_file
+    conf_file = DEFAULT_CONF_FILE
 
     # Set the default refresh time
     refresh_time = 3
