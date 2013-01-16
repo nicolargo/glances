@@ -1342,7 +1342,10 @@ class glancesScreen:
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
         if hasattr(curses, 'curs_set'):
-            curses.curs_set(0)
+            try:
+                curses.curs_set(0)
+            except:
+                pass
 
         # Init colors
         self.hascolors = False
