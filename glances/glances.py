@@ -34,7 +34,7 @@ import getopt
 import signal
 import time
 from datetime import datetime, timedelta
-import ConfigParser
+#~ import ConfigParser
 import locale
 import gettext
 locale.setlocale(locale.LC_ALL, '')
@@ -49,6 +49,14 @@ is_Bsd = sys.platform.find('bsd') != -1
 is_Linux = sys.platform.startswith('linux')
 is_Mac = sys.platform.startswith('darwin')
 is_Windows = sys.platform.startswith('win')
+
+try:
+    # ConfigParser
+    from configparser import RawConfigParser
+    from configparser import NoOptionError
+except:
+    from ConfigParser import RawConfigParser
+    from ConfigParser import NoOptionError
 
 try:
     # For Python v2.x
@@ -231,7 +239,8 @@ class glancesLimits:
 
     def __init__(self, conf_file=DEFAULT_CONF_FILE):
         # Open the configuration file
-        config = ConfigParser.RawConfigParser()
+        #~ config = ConfigParser.RawConfigParser()
+        config = RawConfigParser()
         if (config.read(conf_file) != []): 
             # The configuration file exist 
             if (config.has_section('global')):
@@ -287,14 +296,14 @@ class glancesLimits:
             
     def __setLimits(self, config, section, stat, alert):
         """
-        config: Pointer to the config file ConfigParser.RawConfigParser()
+        config: Pointer to the config file RawConfigParser()
         section: 'limits'
         stat: 'CPU', 'LOAD', 'MEM', 'SWAP', 'TEMP'...
         alert key (from config file): 
         """
         try:
             value = config.getfloat(section, alert)
-        except ConfigParser.NoOptionError:
+        except NoOptionError:
             pass
         else:
             #~ print("%s / %s = %s -> %s" % (section, alert, value, stat)) 
@@ -740,21 +749,25 @@ class GlancesGrabProcesses:
         
         # For each existing process...
         for proc in psutil.process_iter():
-            procstat = self.__get_process_stats__(proc)
-            # Ignore the 'idle' process on Windows or Bsd
-            # Waiting upstream patch from PsUtil
-            if ((is_Bsd and (procstat['name'] == 'idle'))
-                 or (is_Windows and (procstat['name'] == 'System Idle Process'))):
-                continue
-            # Update processlist
-            self.processlist.append(procstat)                
-            # Update processcount (global stattistics)
             try:
-                self.processcount[str(proc.status)] += 1
-            except KeyError:
-                # Key did not exist, create it
-                self.processcount[str(proc.status)] = 1
-            self.processcount['total'] += 1
+                procstat = self.__get_process_stats__(proc)
+                # Ignore the 'idle' process on Windows or Bsd
+                # Waiting upstream patch from PsUtil
+                if ((is_Bsd and (procstat['name'] == 'idle'))
+                     or (is_Windows and (procstat['name'] == 'System Idle Process'))):
+                    continue
+                # Update processlist
+                self.processlist.append(procstat)                
+                # Update processcount (global stattistics)
+                try:
+                    self.processcount[str(proc.status)] += 1
+                except KeyError:
+                    # Key did not exist, create it
+                    self.processcount[str(proc.status)] = 1
+                self.processcount['total'] += 1                
+            except:
+                # may receive a NoSuchProcess exception
+                continue
 
     def getcount(self):
         return self.processcount
@@ -2174,7 +2187,8 @@ class glancesScreen:
                 elapsed_time = max(1, self.__refresh_time)
 
                 # network interface name
-                ifname = network[i]['interface_name'].encode('ascii', 'ignore').split(':')[0]
+                #~ ifname = network[i]['interface_name'].encode('ascii', 'ignore').split(':')[0]
+                ifname = network[i]['interface_name'].split(':')[0]
                 if (len(ifname) > 8):
                     ifname = '_'+ifname[-8:]
                 self.term_window.addnstr(                    
