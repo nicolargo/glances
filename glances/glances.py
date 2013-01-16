@@ -2563,6 +2563,7 @@ class glancesScreen:
                                          _("Compute data..."), 15)
                 return 6
 
+            # Display the processes list
             proc_num = min(screen_y - self.term_h +
                            self.process_y - log_count + 5,
                            len(processlist))
@@ -3322,7 +3323,7 @@ class GlancesClient():
 
 
 def printVersion():
-    print(_("Glances version") + (" ") + __version__)
+    print(_("Glances version") + (" ") + __version__ + _(" with PsUtil ") + psutil.__version__)
 
 
 def printSyntax():
