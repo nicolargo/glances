@@ -2587,19 +2587,27 @@ class glancesScreen:
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 if psutil_get_cpu_percent_tag:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 12,
-                        format(cpu_percent, '>5.1f'), 5,
-                        self.__getProcessCpuColor2(cpu_percent))
+                    try:
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x + 12,
+                            format(cpu_percent, '>5.1f'), 5,
+                            self.__getProcessCpuColor2(cpu_percent))
+                    except:
+                        self.term_window.addnstr(
+                            self.process_y + 3 + processes, process_x, "N/A", 8)                        
                 else:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x, "N/A", 8)
                 # MEM%
-                memory_percent = processlist[processes]['memory_percent']
-                self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 18,
-                    format(memory_percent, '>5.1f'), 5,
-                    self.__getProcessMemColor2(memory_percent))
+                if (processlist[processes]['memory_percent'] != {}):
+                    memory_percent = processlist[processes]['memory_percent']
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 18,
+                        format(memory_percent, '>5.1f'), 5,
+                        self.__getProcessMemColor2(memory_percent))
+                else:
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 18, "N/A", 8)
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
