@@ -2565,15 +2565,25 @@ class glancesScreen:
                            len(processlist))
             for processes in range(0, proc_num):
                 # VMS
-                process_size = processlist[processes]['memory_info'][1]
-                self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x,
-                    format(self.__autoUnit(process_size), '>5'), 5)
+                if (processlist[processes]['memory_info'] != {}):
+                    process_size = processlist[processes]['memory_info'][1]
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x,
+                        format(self.__autoUnit(process_size), '>5'), 5)
+                else:
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x, 
+                        format('?', '>5'), 5)
                 # RSS
-                process_resident = processlist[processes]['memory_info'][0]
-                self.term_window.addnstr(
-                    self.process_y + 3 + processes, process_x + 6,
-                    format(self.__autoUnit(process_resident), '>5'), 5)
+                if (processlist[processes]['memory_info'] != {}):
+                    process_resident = processlist[processes]['memory_info'][0]
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 6,
+                        format(self.__autoUnit(process_resident), '>5'), 5)
+                else:
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 6,
+                        format('?', '>5'), 5)                    
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 if psutil_get_cpu_percent_tag:
