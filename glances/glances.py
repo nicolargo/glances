@@ -2656,8 +2656,9 @@ class glancesScreen:
                             format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
-                    if processlist[processes]['io_counters'][4] == 0:
-                        # If io_tag == 0 (['io_counters'][4])
+                    if ((processlist[processes]['io_counters'] == {}) 
+                        or (processlist[processes]['io_counters'][4] == 0)):
+                        # If Nodata or io_tag == 0 (['io_counters'][4])
                         # then do not diplay IO rate
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
