@@ -1649,10 +1649,25 @@ class glancesScreen:
     def __getProcessMemColor2(self, current=0, max=100):
         return self.__colors_list2[self.__getProcessAlert(current, max, 'MEM')]
 
+    def __getkey(self, window):
+        '''
+        A getKey function to catch ESC key AND Numlock key (issue #163)
+        '''
+        keycode = [ 0, 0 ]
+        keycode[0] = window.getch()
+        keycode[1] = window.getch()
+                    
+        if (keycode[0] == 27) and (keycode[1] != -1):
+            # Do not escape on specials keys
+            return -1
+        else:
+            return keycode[0]
+            
     def __catchKey(self):
         # Get key
-        self.pressedkey = self.term_window.getch()
-
+        #~ self.pressedkey = self.term_window.getch()
+        self.pressedkey = self.__getkey(self.term_window)
+        
         # Actions...
         if self.pressedkey == 27 or self.pressedkey == 113:
             # 'ESC'|'q' > Quit
