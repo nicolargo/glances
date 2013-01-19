@@ -314,6 +314,13 @@ class glancesLimits:
             elif (alert.endswith('critical')):
                 self.__limits_list[stat][2] = value
 
+    def setAll(self, newlimits):
+        self.__limits_list = newlimits
+        return True
+
+    def getAll(self):
+        return self.__limits_list
+
     def getCareful(self, stat):
         return self.__limits_list[stat][0]
 
@@ -2671,7 +2678,8 @@ class glancesScreen:
                             format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
-                    if ((processlist[processes]['io_counters'] == {}) 
+                    if ((processlist[processes]['io_counters'] == {})
+                        or (len(processlist[processes]['io_counters']) < 5)
                         or (processlist[processes]['io_counters'][4] == 0)):
                         # If Nodata or io_tag == 0 (['io_counters'][4])
                         # then do not diplay IO rate
@@ -3214,6 +3222,10 @@ class GlancesInstance():
         self.__update__()
         return json.dumps(stats.getAll())
 
+    def getAllLimits(self):
+        # Return all the limits
+        return json.dumps(limits.getAll())
+
     def getSystem(self):
         # Return operating system info
         # No need to update...
@@ -3322,8 +3334,15 @@ class GlancesClient():
             print(_("Error: Connection to server failed"))
             sys.exit(-1)
         else:
-            # !!! TO DO FOR VERSION 1.5.x and 1.6
-            return __version__[:3] == client_version
+            return __version__[:2] == client_version[:2]
+
+    def client_get_limits(self):
+        try:
+            serverlimits = json.loads(self.client.getAllLimits())
+        except:
+            return {}
+        else:
+            return serverlimits
 
     def client_get(self):
         try:
@@ -3416,6 +3435,7 @@ def main():
 
     # Default configuration file (if exist)
     conf_file = DEFAULT_CONF_FILE
+    conf_file_tag = False
 
     # Set the default refresh time
     refresh_time = 3
@@ -3496,6 +3516,7 @@ def main():
             network_bytepersec_tag = True
         elif opt in ("-C", "--config"):
             conf_file = arg
+            conf_file_tag = True
         else:
             printSyntax()
             sys.exit(0)
@@ -3513,6 +3534,10 @@ def main():
         if html_tag or csv_tag:
             print(_("Error: Can not use both -c and -o flag"))
             sys.exit(2)
+        if conf_file_tag:
+            print(_("Error: Can not use both -c and -C flag"))
+            print(_("       Limits are set based on the server ones"))
+            sys.exit(2) 
 
     if html_tag:
         if not html_lib_tag:
@@ -3558,12 +3583,14 @@ def main():
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
+        # Init Limits
+        limits = glancesLimits(conf_file)
+
         # Init stats
         stats = GlancesStatsServer()
         stats.update({})
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
-
         client = GlancesClient(server_ip, server_port)
 
         # Test if client and server are in the same major version
@@ -3614,6 +3641,11 @@ def main():
         # Start the server loop
         server.serve_forever()
     elif client_tag:
+        # Set the limits to the server ones
+        server_limits = client.client_get_limits()
+        if (server_limits != {}):
+            limits.setAll(server_limits)
+        
         # Start the client (CLI) loop
         while True:
             # Get server system informations

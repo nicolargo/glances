@@ -2,6 +2,7 @@ Version 1.6
 ===========
 
     * Configuration file: user can defines limits
+    * In client/server mode, limits are set by the server side
     * Display limits in the help screen
     * Add per process IO (read and write) rate in B per second
       IO rate only available on Linux from a root account

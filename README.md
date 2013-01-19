@@ -38,11 +38,13 @@ Pre-requisites (information for packagers):
 
 Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...
 
+Check if the version is the latest one.
+
 ### From PyPi (easy and cross platform way)
 
 PyPi is an official Python package manager.
 
-You first need to install pypi on your system. For example on Debian/Ubuntu:
+You first need to install PyPi on your system. For example on Debian/Ubuntu:
 
     $ sudo apt-get update
     $ sudo apt-get install python-pip build-essential python-dev
@@ -51,26 +53,11 @@ Then install the latest Glances version:
 
     $ sudo pip install Glances
 
-Note: if you are behind an HTTP Proxy, you should use
+Note: if you are behind an HTTP Proxy, you should use instead:
 
     $ sudo pip install --proxy=user:password@url:port Glances
 
-### From PPA (easy way for Ubuntu/Mint...)
-
-Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:
-
-The PPA is available for Ubuntu version 9.10 to 12.04.
-
-To install the PPA just enter:
-
-    $ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-    $ sudo apt-get update
-
-Then install Glances:
-
-    $ sudo apt-get install glances
-
-### From [Homebrew](http://mxcl.github.com/homebrew/) via PyPi (OS X)
+### From [Homebrew](http://mxcl.github.com/homebrew/) for Mac OS X
 
     $ brew install brew-pip
 	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
@@ -79,10 +66,8 @@ Then install Glances:
 If you have the following error:
 
     Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
-    This link will help resolve the above errors:
-    https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
 
-Try to runs:
+then try to run:
 
     $ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
     $ brew link Glances
@@ -97,7 +82,7 @@ To install Glances on you system:
     * Install the [PsUtil lib](https://code.google.com/p/psutil/downloads/list)
     * Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
 
-I need contributors to package Glances for Windows (for exemple using [PyInstaller](http://www.pyinstaller.org/)).
+I am looking for a contributor to package Glances for Windows (for exemple using [PyInstaller](http://www.pyinstaller.org/)).
 
 ### From source
 
@@ -114,6 +99,14 @@ Glances use a standard GNU style installer (for a Debian like system):
 	$ tar zxvf glances-last.tgz
 	$ cd nicolargo-glances-*
 	$ sudo python setup.py install
+
+## Configuration
+
+No configuration is needed to use Glances.
+
+Furthermore, the release 1.6 introduces a configuration file to setup limits.
+
+The default configuration file is under the /etc/glances/glances.conf file.
 
 ## Running
 
@@ -139,6 +132,13 @@ where @server is the IP address or hostname of the server
 
 Glances uses a [XML/RPC](http://docs.python.org/2/library/simplexmlrpcserver.html) server and can be used by another client software.
 
+In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).
+
+In client mode, you can set the TCP port of the server (-p port).
+
+Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
+        TCP port is 61209.
+
 ## User guide
 
 By default, stats are refreshed every second, to change this setting, you can
@@ -155,8 +155,9 @@ Importants stats are colored:
 
 When Glances is running, you can press:
 
-* 'h' to display a help message with the keys you can press
 * 'a' to set the automatic mode. The processes are sorted automatically
+
+    IF CPU IoWait > 60% sort by process "IO read and write"
 
     If CPU > 70%, sort by process "CPU consumption"
 
@@ -167,6 +168,8 @@ When Glances is running, you can press:
 * 'd' disable or enable the disk IO stats
 * 'e' enable the sensors module (PySensors library is needed; Linux-only)
 * 'f' disable or enable the file system stats
+* 'h' to display a help message with the keys you can press and the limits
+* 'i' sort the processes list by CPU IO (need root account on some OS)
 * 'l' disable or enable the logs
 * 'm' sort the processes list by process MEM
 * 'n' disable or enable the network interfaces stats
@@ -176,13 +179,6 @@ When Glances is running, you can press:
 * 'x' delete finished warning and critical logs messages
 * '1' switch between global CPU and per core stats
 * 'q' Exit
-
-In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).
-
-In client mode, you can set the TCP port of the server (-p port).
-
-Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
-        TCP port is 61209.
 
 ### Header
 
