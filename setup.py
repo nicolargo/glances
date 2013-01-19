@@ -8,7 +8,6 @@ from setuptools import setup
 data_files = [
     ('share/man/man1', ['man/glances.1']),
     ('share/doc/glances', ['README',
-                           'README-fr',
                            'COPYING',
                            'AUTHORS',
                            'NEWS',
