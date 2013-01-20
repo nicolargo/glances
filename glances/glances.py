@@ -105,17 +105,17 @@ except Exception:
 else:
     psutil_get_cpu_percent_tag = True
 
-try:
-    # get_io_counter method only available with PsUtil 0.2.1+
-    psutil.Process(os.getpid()).get_io_counters()
-except Exception:
-    psutil_get_io_counter_tag = False
-else:
-    # get_io_counter only available on Linux
-    if is_Linux:
-        psutil_get_io_counter_tag = True
-    else:
+if not is_Mac:
+    try:
+        # get_io_counters method only available with PsUtil 0.2.1+
+        psutil.Process(os.getpid()).get_io_counters()
+    except Exception:
         psutil_get_io_counter_tag = False
+    else:
+        psutil_get_io_counter_tag = True
+else:
+    # get_io_counters not available on OS X
+    psutil_get_io_counter_tag = False
 
 try:
     # virtual_memory() is only available with PsUtil 0.6+
@@ -648,7 +648,7 @@ class GlancesGrabProcesses:
     """
     Get processed stats using the PsUtil lib
     """
-    
+
     def __init__(self):
         """
         Init the io dict
@@ -659,55 +659,41 @@ class GlancesGrabProcesses:
 
     def __get_process_stats__(self, proc):
         """
-        Get process (proc) statistics
+        Get process statistics
         """
         procstat = {}
 
-        try:
-            procstat['name'] = proc.name
-        except psutil.AccessDenied:
-            # Can not get the process name ?
-            # then no need to retreive others stats
-            # so exit...
-            return {}
-
+        procstat['name'] = proc.name
         procstat['pid'] = proc.pid
-        
-        try:
-            procstat['cmdline'] = " ".join(proc.cmdline)
-        except psutil.AccessDenied:
-            procstat['cmdline'] = "?"            
-
-        try:
-            procstat['memory_info'] = proc.get_memory_info()
-        except psutil.AccessDenied:
-            procstat['memory_info'] = {}
-
-        try:
-            procstat['memory_percent'] = proc.get_memory_percent()
-        except psutil.AccessDenied:
-            procstat['memory_percent'] = {}
+        procstat['username'] = proc.username
+        procstat['cmdline'] = " ".join(proc.cmdline)
+        procstat['memory_info'] = proc.get_memory_info()
+        procstat['memory_percent'] = proc.get_memory_percent()
+        procstat['status'] = str(proc.status)[:1].upper()
+        procstat['cpu_times'] = proc.get_cpu_times()
 
         if psutil_get_cpu_percent_tag:
-            try:
-                procstat['cpu_percent'] = \
-                    proc.get_cpu_percent(interval=0)
-            except psutil.AccessDenied:
-                procstat['cpu_percent'] = {}
+            procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+
+        if hasattr(proc, 'get_nice'):
+            # deprecated in psutil 0.5.0+
+            procstat['nice'] = proc.get_nice()
+        elif hasattr(proc, 'nice'):
+            procstat['nice'] = proc.nice
 
         # procstat['io_counters'] is a list:
-        # [ read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag ]
-        # if io_tag = 0 > Access denied (display "?")
+        # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+        # If io_tag = 0 > Access denied (display "?")
         # If io_tag = 1 > No access denied (display the IO rate)
         if psutil_get_io_counter_tag:
             try:
                 # Get the process IO counters
                 proc_io = proc.get_io_counters()
-                io_new = [ proc_io.read_bytes, proc_io.write_bytes ]
+                io_new = [proc_io.read_bytes, proc_io.write_bytes]
             except psutil.AccessDenied:
                 # Access denied to process IO (no root account)
                 # Put 0 in all values (for sort) and io_tag = 0 (for display)
-                procstat['io_counters'] = [ 0, 0 ] + [ 0, 0 ]
+                procstat['io_counters'] = [0, 0] + [0, 0]
                 io_tag = 0
             else:
                 # For IO rate computation
@@ -715,66 +701,42 @@ class GlancesGrabProcesses:
                 try:
                     procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
                 except KeyError:
-                    procstat['io_counters'] = io_new + [ 0, 0 ]
+                    procstat['io_counters'] = io_new + [0, 0]
                 # then save the IO r/w bytes
                 self.io_old[procstat['pid']] = io_new
                 io_tag = 1
 
             # Append the IO tag (for display)
-            procstat['io_counters'] += [ io_tag ] 
-
-        try:
-            procstat['username'] = proc.username
-        except psutil.AccessDenied:
-            procstat['username'] = "?"
-
-        if hasattr(proc, 'get_nice'):
-            # Deprecated in PsUtil 0.5.0+
-            try:
-                procstat['nice'] = proc.get_nice()
-            except psutil.AccessDenied:
-                procstat['nice'] = 0
-        elif hasattr(proc, 'nice'):
-            # Else
-            procstat['nice'] = proc.nice
-
-        try:
-            procstat['status'] = str(proc.status)[:1].upper()
-        except psutil.AccessDenied:
-            procstat['status'] = "?"
-
-        try:
-            procstat['cpu_times'] = proc.get_cpu_times()
-        except psutil.AccessDenied:
-            procstat['cpu_times'] = {}
+            procstat['io_counters'] += [io_tag]
 
         return procstat
 
     def update(self):
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
-        
+
         # For each existing process...
         for proc in psutil.process_iter():
             try:
                 procstat = self.__get_process_stats__(proc)
                 # Ignore the 'idle' process on Windows or Bsd
                 # Waiting upstream patch from PsUtil
-                if ((is_Bsd and (procstat['name'] == 'idle'))
-                     or (is_Windows and (procstat['name'] == 'System Idle Process'))):
+                if (is_Bsd and procstat['name'] == 'idle' or
+                    is_Windows and procstat['name'] == 'System Idle Process'):
                     continue
-                # Update processlist
-                self.processlist.append(procstat)                
                 # Update processcount (global stattistics)
                 try:
                     self.processcount[str(proc.status)] += 1
                 except KeyError:
                     # Key did not exist, create it
                     self.processcount[str(proc.status)] = 1
-                self.processcount['total'] += 1                
-            except:
-                # may receive a NoSuchProcess exception
+                else:
+                    self.processcount['total'] += 1
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
+            else:
+                # Update processlist
+                self.processlist.append(procstat)
 
     def getcount(self):
         return self.processcount
@@ -2591,49 +2553,31 @@ class glancesScreen:
                            len(processlist))
             for processes in range(0, proc_num):
                 # VMS
-                if (processlist[processes]['memory_info'] != {}):
-                    process_size = processlist[processes]['memory_info'][1]
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x,
-                        format(self.__autoUnit(process_size), '>5'), 5)
-                else:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x, 
-                        format('?', '>5'), 5)
+                process_size = processlist[processes]['memory_info'][1]
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x,
+                    format(self.__autoUnit(process_size), '>5'), 5)
                 # RSS
-                if (processlist[processes]['memory_info'] != {}):
-                    process_resident = processlist[processes]['memory_info'][0]
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 6,
-                        format(self.__autoUnit(process_resident), '>5'), 5)
-                else:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 6,
-                        format('?', '>5'), 5)                    
+                process_resident = processlist[processes]['memory_info'][0]
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x + 6,
+                    format(self.__autoUnit(process_resident), '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 if psutil_get_cpu_percent_tag:
-                    try:
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 12,
-                            format(cpu_percent, '>5.1f'), 5,
-                            self.__getProcessCpuColor2(cpu_percent))
-                    except:
-                        self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x, "N/A", 8)                        
+                    self.term_window.addnstr(
+                        self.process_y + 3 + processes, process_x + 12,
+                        format(cpu_percent, '>5.1f'), 5,
+                        self.__getProcessCpuColor2(cpu_percent))
                 else:
                     self.term_window.addnstr(
                         self.process_y + 3 + processes, process_x, "N/A", 8)
                 # MEM%
-                if (processlist[processes]['memory_percent'] != {}):
-                    memory_percent = processlist[processes]['memory_percent']
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 18,
-                        format(memory_percent, '>5.1f'), 5,
-                        self.__getProcessMemColor2(memory_percent))
-                else:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 18, "N/A", 8)
+                memory_percent = processlist[processes]['memory_percent']
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x + 18,
+                    format(memory_percent, '>5.1f'), 5,
+                    self.__getProcessMemColor2(memory_percent))
                 # If screen space (X) is available then:
                 # PID
                 if tag_pid:
@@ -2678,10 +2622,8 @@ class glancesScreen:
                             format(dtime, '>8'), 8)
                 # IO
                 if tag_io:
-                    if ((processlist[processes]['io_counters'] == {})
-                        or (len(processlist[processes]['io_counters']) < 5)
-                        or (processlist[processes]['io_counters'][4] == 0)):
-                        # If Nodata or io_tag == 0 (['io_counters'][4])
+                    if processlist[processes]['io_counters'][4] == 0:
+                        # If io_tag == 0 (['io_counters'][4])
                         # then do not diplay IO rate
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
