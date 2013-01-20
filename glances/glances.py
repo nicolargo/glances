@@ -719,10 +719,12 @@ class GlancesGrabProcesses:
         for proc in psutil.process_iter():
             try:
                 procstat = self.__get_process_stats__(proc)
-                # Ignore the 'idle' process on Windows or Bsd
-                # Waiting upstream patch from PsUtil
+                # ignore the 'idle' process on Windows and *BSD
+                # ignore the 'kernel_task' process on OS X
+                # waiting for upstream patch from psutil
                 if (is_Bsd and procstat['name'] == 'idle' or
-                    is_Windows and procstat['name'] == 'System Idle Process'):
+                    is_Windows and procstat['name'] == 'System Idle Process' or
+                    is_Mac and procstat['name'] == 'kernel_task'):
                     continue
                 # Update processcount (global stattistics)
                 try:
