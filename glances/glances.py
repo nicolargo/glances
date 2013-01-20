@@ -2057,10 +2057,9 @@ class glancesScreen:
             # Display extended informations if space is available
             y = 0
             if screen_x > self.mem_x + offset_x + memblocksize:
-                # active and inactive (only available for psutil >= 0.6)
+                # active and inactive (UNIX; only available for psutil >= 0.6)
                 if psutil_mem_vm:
-                    # active
-                    if 'active' in mem:
+                    if not is_Windows:
                         self.term_window.addnstr(self.mem_y + y,
                                                  self.mem_x + offset_x + 14,
                                                  _("active:"), 7)
@@ -2069,8 +2068,6 @@ class glancesScreen:
                             format(self.__autoUnit(mem['active']), '>5'), 5)
                         y += 1
 
-                    # inactive
-                    if 'inactive' in mem:
                         self.term_window.addnstr(self.mem_y + y,
                                                  self.mem_x + offset_x + 14,
                                                  _("inactive:"), 9)
@@ -2079,8 +2076,8 @@ class glancesScreen:
                             format(self.__autoUnit(mem['inactive']), '>5'), 5)
                         y += 1
 
-                # buffers (Linux, BSD)
-                if 'buffers' in mem:
+                # buffers & cached (Linux, BSD)
+                if is_Linux or is_Bsd:
                     self.term_window.addnstr(self.mem_y + y,
                                              self.mem_x + offset_x + 14,
                                              _("buffers:"), 8)
@@ -2089,8 +2086,6 @@ class glancesScreen:
                         format(self.__autoUnit(mem['buffers']), '>5'), 5)
                     y += 1
 
-                # cached (Linux, BSD)
-                if 'cached' in mem:
                     self.term_window.addnstr(self.mem_y + y,
                                              self.mem_x + offset_x + 14,
                                              _("cached:"), 7)
@@ -2098,7 +2093,6 @@ class glancesScreen:
                         self.mem_y + y, self.mem_x + offset_x + 24,
                         format(self.__autoUnit(mem['cached']), '>5'), 5)
                     y += 1
-
             else:
                 # If space is NOT available then mind the gap...
                 offset_x -= extblocksize
