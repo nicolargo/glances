@@ -1,5 +1,4 @@
 include README
-include README-fr
 include COPYING
 include AUTHORS
 include ChangeLog
