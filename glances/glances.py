@@ -57,6 +57,10 @@ except ImportError:
     from ConfigParser import RawConfigParser
     from ConfigParser import NoOptionError
 
+# For client/server authentication
+from base64 import b64decode
+from hashlib import md5
+
 try:
     # For Python v2.x
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -68,10 +72,10 @@ except ImportError:
 
 try:
     # For Python v2.x
-    from xmlrpclib import ServerProxy
+    from xmlrpclib import ServerProxy, ProtocolError
 except ImportError:
     # For Python v3.x
-    from xmlrpc.client import ServerProxy
+    from xmlrpc.client import ServerProxy, ProtocolError
 
 if not is_Windows:
     # Only import curses for non Windows OS
@@ -2605,8 +2609,15 @@ class glancesScreen:
                             self.process_y + 3 + processes, process_x + 47,
                             format(dtime, '>8'), 8)
                 # IO
+                # Hack to allow client 1.6 to connect to server 1.5.2
+                process_tag_io = True 
+                try:
+                    if (processlist[processes]['io_counters'][4] == 0):
+                        process_tag_io = True
+                except:
+                    process_tag_io = False
                 if tag_io:
-                    if processlist[processes]['io_counters'][4] == 0:
+                    if (not process_tag_io):
                         # If io_tag == 0 (['io_counters'][4])
                         # then do not diplay IO rate
                         self.term_window.addnstr(
@@ -3110,6 +3121,47 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
     """
     rpc_paths = ('/RPC2',)
 
+    def authenticate(self, headers):
+        auth = headers.get('Authorization') 
+        try:
+            (basic, _, encoded) = headers.get('Authorization').partition(' ')
+        except:
+            # Client did not ask for authentidaction
+            # If server need it then exit 
+            return not self.server.isAuth
+        else:
+            # Client authentication
+            (basic, _, encoded) = headers.get('Authorization').partition(' ')
+            assert basic == 'Basic', 'Only basic authentication supported'
+            #    Encoded portion of the header is a string
+            #    Need to convert to bytestring
+            encodedByteString = encoded.encode()
+            #    Decode Base64 byte String to a decoded Byte String
+            decodedBytes = b64decode(encodedByteString)
+            #    Convert from byte string to a regular String
+            decodedString = decodedBytes.decode()
+            #    Get the username and password from the string
+            (username, _, password) = decodedString.partition(':')
+            #    Check that username and password match internal global dictionary
+            return self.check_user(username, password)
+
+    def check_user(self, username, password):
+        # Check username and password in the dictionnary
+        if username in self.server.user_dict:
+            if self.server.user_dict[username] == md5(password).hexdigest():        
+                return True
+        return False
+
+    def parse_request(self):        
+        if SimpleXMLRPCRequestHandler.parse_request(self):
+            # Next we authenticate
+            if self.authenticate(self.headers):
+                return True
+            else:
+                # if authentication fails, tell the client
+                self.send_error(401, 'Authentication failed')
+        return False
+
     def log_message(self, format, *args):
         # No message displayed on the server side
         pass
@@ -3215,14 +3267,27 @@ class GlancesServer():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, bind_address, bind_port=61209,
-                 RequestHandler=GlancesHandler,
-                 refresh_time=1):
+
+    def __init__(self, bind_address, bind_port = 61209,
+                 RequestHandler = GlancesHandler,
+                 refresh_time = 1):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
                                          requestHandler=RequestHandler)
+        # The users dict
+        # username / MD5 password couple
+        # By default, no auth is needed
+        self.server.user_dict = {}
+        self.server.isAuth = False
+        # Register functions
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(refresh_time))
-        return
+
+    def add_user(self, username, password):
+        '''
+        Add an user to the dictionnary        
+        '''
+        self.server.user_dict[username] = md5(password).hexdigest()
+        self.server.isAuth = True
 
     def serve_forever(self):
         self.server.serve_forever()
@@ -3236,19 +3301,36 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, server_address, server_port=61209):
+    def __init__(self, server_address, server_port=61209, 
+                 username = "glances", password = ""):
+        # Build the URI
+        if (password != ""):
+            uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
+        else:
+            uri = 'http://%s:%d' % (server_address, server_port)
+            
+        # Try to connect to the URI
         try:
-            self.client = ServerProxy('http://%s:%d' % (server_address, server_port))
+            self.client = ServerProxy(uri)
         except:
-            print(_("Error: creating client socket") + " http://%s:%d" % (server_address, server_port))
+            print(_("Error: creating client socket") + " %s" % uri)
             pass
         return
 
     def client_init(self):
         try:
+            self.client.init()
+        except ProtocolError as err: 
+            if (str(err).find(" 401 ") > 0):
+                print(_("Error: Connection to server failed. Bad password."))
+                sys.exit(-1)
+            else:
+                print(_("Error: Connection to server failed. Unknown error."))
+                sys.exit(-1)            
+        try:
             client_version = self.client.init()[:3]
         except:
-            print(_("Error: Connection to server failed"))
+            print(_("Error: Connection to server failed. Can not get the server version."))
             sys.exit(-1)
         else:
             return __version__[:2] == client_version[:2]
@@ -3296,6 +3378,7 @@ def printSyntax():
     print(_("\t-o output\tDefine additional output (available: HTML or CSV)"))
     print(_("\t-p PORT\t\tDefine the client or server TCP port (default: %d)" %
             server_port))
+    print(_("\t-P password\tClient/server password"))
     print(_("\t-s\t\tRun Glances in server mode"))
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
@@ -3361,13 +3444,17 @@ def main():
     server_port = 61209
     bind_ip = "0.0.0.0"
 
+    # Default username/password
+    username = "glances"
+    password = ""
+
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:P:",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "netrate", "help", "output",
                                     "file", "time", "version", "server",
-                                    "client", "port", "config"])
+                                    "client", "port", "config", "password"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -3379,6 +3466,13 @@ def main():
             sys.exit(0)
         elif opt in ("-s", "--server"):
             server_tag = True
+        elif opt in ("-P", "--password"):
+            try:
+                arg
+            except NameError:
+                print(_("Error: -P flag need an argument (password)"))
+                sys.exit(2)
+            password = arg
         elif opt in ("-B", "--bind"):
             try:
                 arg
@@ -3500,6 +3594,10 @@ def main():
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
+        # Set the server login/password (if -P tag)
+        if (password != ""):
+            server.add_user(username, password)
+
         # Init Limits
         limits = glancesLimits(conf_file)
 
@@ -3508,7 +3606,7 @@ def main():
         stats.update({})
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
-        client = GlancesClient(server_ip, server_port)
+        client = GlancesClient(server_ip, server_port, username, password)
 
         # Test if client and server are in the same major version
         if not client.client_init():
