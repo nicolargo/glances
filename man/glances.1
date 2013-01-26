@@ -1,13 +1,14 @@
-.TH glances 1  "December, 2012" "version 1.5.2" "USER COMMANDS"
+.TH glances 1  "January, 2013" "version 1.6" "USER COMMANDS"
 .SH NAME
 glances \- CLI curses based monitoring tool
 .SH SYNOPSIS
 .B glances
-[\-bdehmnsv] [\-t refresh] [\-B bind] [\-c server] [\-p port] [\-o output] [\-f file]
+[\-bdehmnsv] [\-C conffile] [\-t refresh] [\-B bind] [\-c server] [\-p port] [\-P password] [\-o output] [\-f file]
 .SH DESCRIPTION
 Glances is a free (LGPL) curses-based  monitoring tool which aims to present a maximum of information
-in a minimum of space, ideally to fit in a classical 80x24 terminal. Glances can adapt dynamicaly the
-displayed information depending on the terminal size.
+in a minimum of space, ideally to fit in a classical 80x24 terminal or higher to have additionnal information. 
+Glances can adapt dynamicaly the displayed information depending on the terminal size.
+It can also work in a client/server mode (for remote monitoring).
 .PP
 This tool is written in Python and uses PsUtil to fetch the statistical values from key elements.
 .PP
@@ -24,6 +25,8 @@ When Glances is running, you can use the following keys:
 	'f' Show/hide file system stats
 .PP
 	'h' Show/hide the help message
+.PP
+	'i' Sort processes by IO rate
 .PP
 	'l' Show/hide log messages
 .PP
@@ -57,6 +60,9 @@ Bind server to the given IP or host NAME
 \-c server
 Connect to a Glances server (IP address or hostname)
 .TP
+\-C conffile
+Use a configuration file (default is /etc/glances/glances.conf)
+.TP
 \-d
 Disable disk I/O module
 .TP
@@ -81,6 +87,9 @@ Define additional output (available: HTML or CSV)
 \-p port
 Define the client or server TCP port (default: 61209)
 .TP
+\-P password
+Define the client or server password (default: no password)
+.TP
 \-s
 Run Glances in server mode
 .TP
@@ -100,4 +109,4 @@ glances returns a zero exit status if it succeeds to print/grab information.
 .PP
 It returns 2 if it fails to parse its options (missing arguments, invalid value, etc).
 .SH AUTHOR
-Glances is written by Nicolargo (contact@nicolargo.com).
+Glances is written by Nicolas Hennion aka Nicolargo (contact@nicolargo.com).

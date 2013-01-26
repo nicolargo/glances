@@ -25,8 +25,8 @@ for mo in glob('i18n/*/LC_MESSAGES/*.mo'):
 
 setup(
     name='Glances',
-    version='1.6b',
-    download_url='https://s3.amazonaws.com/glances/glances-1.6b.tar.gz',
+    version='1.6',
+    download_url='https://s3.amazonaws.com/glances/glances-1.6.tar.gz',
     url='https://github.com/nicolargo/glances',
     description='CLI curses-based monitoring tool',
     author='Nicolas Hennion',

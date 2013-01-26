@@ -136,8 +136,11 @@ In server mode, you can set the bind address (-B ADDRESS) and listenning TCP por
 
 In client mode, you can set the TCP port of the server (-p port).
 
-Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
-        TCP port is 61209.
+Default binding address is 0.0.0.0 (Glances will listen on all the networks interfaces) and TCP port is 61209.
+
+In client/server mode, limits are set by the server side. 
+
+The version 1.6 introduces a optionnal password to access to the server (-P password).
 
 ## User guide
 
@@ -169,7 +172,7 @@ When Glances is running, you can press:
 * 'e' enable the sensors module (PySensors library is needed; Linux-only)
 * 'f' disable or enable the file system stats
 * 'h' to display a help message with the keys you can press and the limits
-* 'i' sort the processes list by CPU IO (need root account on some OS)
+* 'i' sort the processes list by IO rate (need root account on some OS)
 * 'l' disable or enable the logs
 * 'm' sort the processes list by process MEM
 * 'n' disable or enable the network interfaces stats
@@ -236,7 +239,6 @@ If average load is > 1*Core, then status is set to "WARNING".
 If average load is > 5*Core, then status is set to "CRITICAL".
 
 ### Memory
-
 
 Glances uses two columns: one for the RAM and another one for the SWAP.
 
@@ -350,7 +352,7 @@ The number of processes in the list is adapted to the screen size.
    Z - Zombie or "hung" process
 
 * TIME+:  Cumulative CPU time used
-* IO_R and IO_W: Per process IO read and write
+* IO_R and IO_W: Per process IO read and write rate (in byte per second)
 * NAME: Process name or command line
 
 ### Logs

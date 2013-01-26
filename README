@@ -172,7 +172,7 @@ When Glances is running, you can press:
 * 'e' enable the sensors module (PySensors library is needed; Linux-only)
 * 'f' disable or enable the file system stats
 * 'h' to display a help message with the keys you can press and the limits
-* 'i' sort the processes list by CPU IO (need root account on some OS)
+* 'i' sort the processes list by IO rate (need root account on some OS)
 * 'l' disable or enable the logs
 * 'm' sort the processes list by process MEM
 * 'n' disable or enable the network interfaces stats
@@ -239,7 +239,6 @@ If average load is > 1*Core, then status is set to "WARNING".
 If average load is > 5*Core, then status is set to "CRITICAL".
 
 ### Memory
-
 
 Glances uses two columns: one for the RAM and another one for the SWAP.
 
@@ -353,7 +352,7 @@ The number of processes in the list is adapted to the screen size.
    Z - Zombie or "hung" process
 
 * TIME+:  Cumulative CPU time used
-* IO_R and IO_W: Per process IO read and write
+* IO_R and IO_W: Per process IO read and write rate (in byte per second)
 * NAME: Process name or command line
 
 ### Logs
