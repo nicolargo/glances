@@ -71,11 +71,13 @@
 
 <p>Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...</p>
 
+<p>Check if the version is the latest one.</p>
+
 <h3>From PyPi (easy and cross platform way)</h3>
 
 <p>PyPi is an official Python package manager.</p>
 
-<p>You first need to install pypi on your system. For example on Debian/Ubuntu:</p>
+<p>You first need to install PyPi on your system. For example on Debian/Ubuntu:</p>
 
 <pre><code>$ sudo apt-get update
 $ sudo apt-get install python-pip build-essential python-dev
@@ -86,29 +88,12 @@ $ sudo apt-get install python-pip build-essential python-dev
 <pre><code>$ sudo pip install Glances
 </code></pre>
 
-<p>Note: if you are behind an HTTP Proxy, you should use</p>
+<p>Note: if you are behind an HTTP Proxy, you should use instead:</p>
 
 <pre><code>$ sudo pip install --proxy=user:password@url:port Glances
 </code></pre>
 
-<h3>From PPA (easy way for Ubuntu/Mint...)</h3>
-
-<p>Arnaud Hartmann (thanks to him !) maintains a PPA with the latest Glances version:</p>
-
-<p>The PPA is available for Ubuntu version 9.10 to 12.04.</p>
-
-<p>To install the PPA just enter:</p>
-
-<pre><code>$ sudo add-apt-repository ppa:arnaud-hartmann/glances-stable
-$ sudo apt-get update
-</code></pre>
-
-<p>Then install Glances:</p>
-
-<pre><code>$ sudo apt-get install glances
-</code></pre>
-
-<h3>From <a href="http://mxcl.github.com/homebrew/">Homebrew</a> via PyPi (OS X)</h3>
+<h3>From <a href="http://mxcl.github.com/homebrew/">Homebrew</a> for Mac OS X</h3>
 
 <pre><code>$ brew install brew-pip
 $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
@@ -118,11 +103,9 @@ $ brew pip Glances
 <p>If you have the following error:</p>
 
 <pre><code>Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
-This link will help resolve the above errors:
-https://github.com/mxcl/homebrew/wiki/bug-fixing-checklist
 </code></pre>
 
-<p>Try to runs:</p>
+<p>then try to run:</p>
 
 <pre><code>$ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
 $ brew link Glances
@@ -139,7 +122,7 @@ $ brew link Glances
 * Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
 </code></pre>
 
-<p>I need contributors to package Glances for Windows (for exemple using <a href="http://www.pyinstaller.org/">PyInstaller</a>).</p>
+<p>I am looking for a contributor to package Glances for Windows (for exemple using <a href="http://www.pyinstaller.org/">PyInstaller</a>).</p>
 
 <h3>From source</h3>
 
@@ -158,6 +141,14 @@ $ tar zxvf glances-last.tgz
 $ cd nicolargo-glances-*
 $ sudo python setup.py install
 </code></pre>
+
+<h2>Configuration</h2>
+
+<p>No configuration is needed to use Glances.</p>
+
+<p>Furthermore, the release 1.6 introduces a configuration file to setup limits.</p>
+
+<p>The default configuration file is under the /etc/glances/glances.conf file.</p>
 
 <h2>Running</h2>
 
@@ -186,6 +177,16 @@ $ sudo python setup.py install
 
 <p>Glances uses a <a href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML/RPC</a> server and can be used by another client software.</p>
 
+<p>In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).</p>
+
+<p>In client mode, you can set the TCP port of the server (-p port).</p>
+
+<p>Default binding address is 0.0.0.0 (Glances will listen on all the networks interfaces) and TCP port is 61209.</p>
+
+<p>In client/server mode, limits are set by the server side. </p>
+
+<p>The version 1.6 introduces a optionnal password to access to the server (-P password).</p>
+
 <h2>User guide</h2>
 
 <p>By default, stats are refreshed every second, to change this setting, you can
@@ -204,9 +205,10 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 </ul><p>When Glances is running, you can press:</p>
 
 <ul>
-<li>'h' to display a help message with the keys you can press</li>
 <li>
 <p>'a' to set the automatic mode. The processes are sorted automatically</p>
+
+<p>IF CPU IoWait &gt; 60% sort by process "IO read and write"</p>
 
 <p>If CPU &gt; 70%, sort by process "CPU consumption"</p>
 
@@ -217,6 +219,8 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 <li><p>'d' disable or enable the disk IO stats</p></li>
 <li><p>'e' enable the sensors module (PySensors library is needed; Linux-only)</p></li>
 <li><p>'f' disable or enable the file system stats</p></li>
+<li><p>'h' to display a help message with the keys you can press and the limits</p></li>
+<li><p>'i' sort the processes list by IO rate (need root account on some OS)</p></li>
 <li><p>'l' disable or enable the logs</p></li>
 <li><p>'m' sort the processes list by process MEM</p></li>
 <li><p>'n' disable or enable the network interfaces stats</p></li>
@@ -226,14 +230,7 @@ use the -t option. For example to set the refresh rate to 5 seconds:</p>
 <li><p>'x' delete finished warning and critical logs messages</p></li>
 <li><p>'1' switch between global CPU and per core stats</p></li>
 <li><p>'q' Exit</p></li>
-</ul><p>In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).</p>
-
-<p>In client mode, you can set the TCP port of the server (-p port).</p>
-
-<p>Default binding address is 0.0.0.0 (Glancess will listen on all the networks interfaces).
-        TCP port is 61209.</p>
-
-<h3>Header</h3>
+</ul><h3>Header</h3>
 
 <p><img src="https://github.com/nicolargo/glances/raw/master/doc/header.png" alt="screenshot"></p>
 
@@ -405,7 +402,7 @@ T - Traced or stopped
 Z - Zombie or "hung" process</p>
 </li>
 <li><p>TIME+:  Cumulative CPU time used</p></li>
-<li><p>IO_R and IO_W: Per process IO read and write</p></li>
+<li><p>IO_R and IO_W: Per process IO read and write rate (in byte per second)</p></li>
 <li><p>NAME: Process name or command line</p></li>
 </ul><h3>Logs</h3>
 
