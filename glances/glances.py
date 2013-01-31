@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.6"
+__version__ = "1.7alpha"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -345,14 +345,23 @@ class glancesLimits:
     def getFSCritical(self):
         return self.getCritical('FS')
 
-    def getProcessCareful(self, stat=''):
-        return self.getCareful('PROCESS_' + stat.upper())
+    def getProcessCareful(self, stat='', core=1):
+        if (stat.upper() != 'CPU'):
+            # Use core only for CPU
+            core = 1
+        return self.getCareful('PROCESS_' + stat.upper()) * core
 
-    def getProcessWarning(self, stat=''):
-        return self.getWarning('PROCESS_' + stat.upper())
+    def getProcessWarning(self, stat='', core=1):
+        if (stat.upper() != 'CPU'):
+            # Use core only for CPU
+            core = 1
+        return self.getWarning('PROCESS_' + stat.upper()) * core
 
-    def getProcessCritical(self, stat=''):
-        return self.getWarning('PROCESS_' + stat.upper())
+    def getProcessCritical(self, stat='', core=1):
+        if (stat.upper() != 'CPU'):
+            # Use core only for CPU
+            core = 1
+        return self.getCritical('PROCESS_' + stat.upper()) * core
 
 
 class glancesLogs:
@@ -1528,30 +1537,31 @@ class glancesScreen:
         """
         return self.__colors_list2[self.__getSensorsAlert(current)]
 
-    def __getProcessAlert(self, current=0, max=100, stat=''):
+    def __getProcessAlert(self, current=0, max=100, stat='', core=1):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
+        # If stat == 'CPU', get core into account...
         try:
             variable = (current * 100) / max
         except ZeroDivisionError:
             return 'DEFAULT'
 
-        if variable > limits.getProcessCritical(stat=stat):
+        if variable > limits.getProcessCritical(stat=stat, core=core):
             return 'CRITICAL'
-        elif variable > limits.getProcessWarning(stat=stat):
+        elif variable > limits.getProcessWarning(stat=stat, core=core):
             return 'WARNING'
-        elif variable > limits.getProcessCareful(stat=stat):
+        elif variable > limits.getProcessCareful(stat=stat, core=core):
             return 'CAREFUL'
 
         return 'OK'
 
-    def __getProcessCpuColor(self, current=0, max=100):
-        return self.__colors_list[self.__getProcessAlert(current, max, 'CPU')]
+    def __getProcessCpuColor(self, current=0, max=100, core=1):
+        return self.__colors_list[self.__getProcessAlert(current, max, 'CPU', core)]
 
-    def __getProcessCpuColor2(self, current=0, max=100):
-        return self.__colors_list2[self.__getProcessAlert(current, max, 'CPU')]
+    def __getProcessCpuColor2(self, current=0, max=100, core=1):
+        return self.__colors_list2[self.__getProcessAlert(current, max, 'CPU', core)]
 
     def __getProcessMemColor(self, current=0, max=100):
         return self.__colors_list[self.__getProcessAlert(current, max, 'MEM')]
@@ -1666,7 +1676,8 @@ class glancesScreen:
                                   network_count + diskio_count)
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
                                     diskio_count + fs_count)
-        self.displayProcess(processcount, processlist, stats.getSortedBy(), log_count)
+        self.displayProcess(processcount, processlist, stats.getSortedBy(), 
+                            log_count=log_count, core=stats.getCore())
         self.displayCaption(cs_status=cs_status)
         self.displayNow(stats.getNow())
         self.displayHelp(core=stats.getCore())
@@ -2330,7 +2341,7 @@ class glancesScreen:
         else:
             return 0
 
-    def displayProcess(self, processcount, processlist, sortedby='', log_count=0):
+    def displayProcess(self, processcount, processlist, sortedby='', log_count=0, core=1):
         # Process
         if not processcount:
             return 0
@@ -2495,7 +2506,7 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 12,
                     format(cpu_percent, '>5.1f'), 5,
-                    self.__getProcessCpuColor2(cpu_percent))
+                    self.__getProcessCpuColor2(cpu_percent, core=core))
                 # MEM%
                 memory_percent = processlist[processes]['memory_percent']
                 self.term_window.addnstr(
@@ -2743,9 +2754,9 @@ class glancesScreen:
                 limits_table_y, limits_table_x,
                 "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
                     _("CPU Process %"), '0',
-                    limits.getProcessCareful(stat='CPU'),
-                    limits.getProcessWarning(stat='CPU'),
-                    limits.getProcessCritical(stat='CPU'),
+                    limits.getProcessCareful(stat='CPU', core=core),
+                    limits.getProcessWarning(stat='CPU', core=core),
+                    limits.getProcessCritical(stat='CPU', core=core),
                     width=width), 79)
             limits_table_y += 1
             self.term_window.addnstr(
