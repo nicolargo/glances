@@ -43,6 +43,10 @@ gettext.install(__appname__)
 import json
 import collections
 
+# For client/server authentication
+from base64 import b64decode
+from hashlib import md5
+
 # Somes libs depends of OS
 is_BSD = sys.platform.find('bsd') != -1
 is_Linux = sys.platform.startswith('linux')
@@ -56,10 +60,6 @@ try:
 except ImportError:
     from ConfigParser import RawConfigParser
     from ConfigParser import NoOptionError
-
-# For client/server authentication
-from base64 import b64decode
-from hashlib import md5
 
 try:
     # For Python v2.x
@@ -78,8 +78,7 @@ except ImportError:
     from xmlrpc.client import ServerProxy, ProtocolError
 
 if not is_Windows:
-    # Only import curses for non Windows OS
-    # Curses did not exist on Windows OS (shame on it)
+    # curses did not exist on Windows (shame on it)
     try:
         import curses
         import curses.panel
@@ -101,66 +100,18 @@ if psutil_version < (0, 4, 1):
     sys.exit(1)
 
 try:
-    # get_cpu_percent method only available with PsUtil 0.2.0+
-    psutil.Process(os.getpid()).get_cpu_percent(interval=0)
-except Exception:
-    psutil_get_cpu_percent_tag = False
-else:
-    psutil_get_cpu_percent_tag = True
-
-if not is_Mac:
-    try:
-        # get_io_counters method only available with PsUtil 0.2.1+
-        psutil.Process(os.getpid()).get_io_counters()
-    except Exception:
-        psutil_get_io_counter_tag = False
-    else:
-        psutil_get_io_counter_tag = True
-else:
-    # get_io_counters not available on OS X
-    psutil_get_io_counter_tag = False
-
-try:
-    # virtual_memory() is only available with PsUtil 0.6+
+    # virtual_memory() only available with PsUtil 0.6+
     psutil.virtual_memory()
-except:
-    try:
-        # (phy|virt)mem_usage methods only available with PsUtil 0.3.0+
-        psutil.phymem_usage()
-        psutil.virtmem_usage()
-    except Exception:
-        psutil_mem_usage_tag = False
-    else:
-        psutil_mem_usage_tag = True
-        psutil_mem_vm = False
+except Exception:
+    psutil_mem_vm = False
 else:
-    psutil_mem_usage_tag = True
     psutil_mem_vm = True
 
-try:
-    # disk_(partitions|usage) methods only available with PsUtil 0.3.0+
-    psutil.disk_partitions()
-    psutil.disk_usage('/')
-except Exception:
-    psutil_fs_usage_tag = False
+if not is_Mac:
+    psutil_get_io_counter_tag = True
 else:
-    psutil_fs_usage_tag = True
-
-try:
-    # disk_io_counters method only available with PsUtil 0.4.0+
-    psutil.disk_io_counters()
-except Exception:
-    psutil_disk_io_tag = False
-else:
-    psutil_disk_io_tag = True
-
-try:
-    # network_io_counters method only available with PsUtil 0.4.0+
-    psutil.network_io_counters()
-except Exception:
-    psutil_network_io_tag = False
-else:
-    psutil_network_io_tag = True
+    # get_io_counters() not available on OS X
+    psutil_get_io_counter_tag = False
 
 # Sensors (optional; only available on Linux)
 if is_Linux:
@@ -168,13 +119,10 @@ if is_Linux:
         import sensors
     except ImportError:
         sensors_lib_tag = False
-        sensors_tag = False
     else:
         sensors_lib_tag = True
-        sensors_tag = True
 else:
     sensors_lib_tag = False
-    sensors_tag = False
 
 try:
     # HTML output (optional)
@@ -245,13 +193,13 @@ class glancesLimits:
         config = RawConfigParser()
         if config.read(conf_file) != []:
             # The configuration file exist
-            if (config.has_section('global')):
+            if config.has_section('global'):
                 # The configuration file has a limits section
                 # Read STD limits
                 self.__setLimits(config, 'global', 'STD', 'careful')
                 self.__setLimits(config, 'global', 'STD', 'warning')
                 self.__setLimits(config, 'global', 'STD', 'critical')
-            if (config.has_section('cpu')):
+            if config.has_section('cpu'):
                 # Read CPU limits
                 self.__setLimits(config, 'cpu', 'CPU_USER', 'user_careful')
                 self.__setLimits(config, 'cpu', 'CPU_USER', 'user_warning')
@@ -262,32 +210,32 @@ class glancesLimits:
                 self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_careful')
                 self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_warning')
                 self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_critical')
-            if (config.has_section('load')):
+            if config.has_section('load'):
                 # Read LOAD limits
                 self.__setLimits(config, 'load', 'LOAD', 'careful')
                 self.__setLimits(config, 'load', 'LOAD', 'warning')
                 self.__setLimits(config, 'load', 'LOAD', 'critical')
-            if (config.has_section('memory')):
+            if config.has_section('memory'):
                 # Read MEM limits
                 self.__setLimits(config, 'memory', 'MEM', 'careful')
                 self.__setLimits(config, 'memory', 'MEM', 'warning')
                 self.__setLimits(config, 'memory', 'MEM', 'critical')
-            if (config.has_section('swap')):
+            if config.has_section('swap'):
                 # Read MEM limits
                 self.__setLimits(config, 'swap', 'SWAP', 'careful')
                 self.__setLimits(config, 'swap', 'SWAP', 'warning')
                 self.__setLimits(config, 'swap', 'SWAP', 'critical')
-            if (config.has_section('temperature')):
+            if config.has_section('temperature'):
                 # Read TEMP limits
                 self.__setLimits(config, 'temperature', 'TEMP', 'careful')
                 self.__setLimits(config, 'temperature', 'TEMP', 'warning')
                 self.__setLimits(config, 'temperature', 'TEMP', 'critical')
-            if (config.has_section('filesystem')):
+            if config.has_section('filesystem'):
                 # Read FS limits
                 self.__setLimits(config, 'filesystem', 'FS', 'careful')
                 self.__setLimits(config, 'filesystem', 'FS', 'warning')
                 self.__setLimits(config, 'filesystem', 'FS', 'critical')
-            if (config.has_section('process')):
+            if config.has_section('process'):
                 # Process limits
                 self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_careful')
                 self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_warning')
@@ -659,7 +607,7 @@ class GlancesGrabProcesses:
         """
         self.io_old = {}
 
-    def __get_process_stats__(self, proc):
+    def __get_process_stats(self, proc):
         """
         Get process statistics
         """
@@ -673,9 +621,7 @@ class GlancesGrabProcesses:
         procstat['memory_percent'] = proc.get_memory_percent()
         procstat['status'] = str(proc.status)[:1].upper()
         procstat['cpu_times'] = proc.get_cpu_times()
-
-        if psutil_get_cpu_percent_tag:
-            procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+        procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
 
         if hasattr(proc, 'get_nice'):
             # deprecated in psutil 0.5.0+
@@ -720,7 +666,7 @@ class GlancesGrabProcesses:
         # For each existing process...
         for proc in psutil.process_iter():
             try:
-                procstat = self.__get_process_stats__(proc)
+                procstat = self.__get_process_stats(proc)
                 # ignore the 'idle' process on Windows and *BSD
                 # ignore the 'kernel_task' process on OS X
                 # waiting for upstream patch from psutil
@@ -809,7 +755,7 @@ class GlancesStats:
 
         # CPU
         cputime = psutil.cpu_times(percpu=False)
-        cputime_total = (cputime.user + cputime.system + cputime.idle)
+        cputime_total = cputime.user + cputime.system + cputime.idle
         # Only available on some OS
         if hasattr(cputime, 'nice'):
             cputime_total += cputime.nice
@@ -990,59 +936,57 @@ class GlancesStats:
                 self.memswap = {}
 
         # NET
-        if psutil_network_io_tag:
+        if network_tag:
             self.network = []
-            if hasattr(psutil, 'network_io_counters'):
-                if not hasattr(self, 'network_old'):
-                    self.network_old = psutil.network_io_counters(pernic=True)
-                else:
-                    self.network_new = psutil.network_io_counters(pernic=True)
-                    for net in self.network_new:
-                        try:
-                            # Try necessary to manage dynamic network interface
-                            netstat = {}
-                            netstat['interface_name'] = net
-                            netstat['rx'] = (self.network_new[net].bytes_recv -
-                                             self.network_old[net].bytes_recv)
-                            netstat['tx'] = (self.network_new[net].bytes_sent -
-                                             self.network_old[net].bytes_sent)
-                        except Exception:
-                            continue
-                        else:
-                            self.network.append(netstat)
-                    self.network_old = self.network_new
+            if not hasattr(self, 'network_old'):
+                self.network_old = psutil.network_io_counters(pernic=True)
+            else:
+                self.network_new = psutil.network_io_counters(pernic=True)
+                for net in self.network_new:
+                    try:
+                        # Try necessary to manage dynamic network interface
+                        netstat = {}
+                        netstat['interface_name'] = net
+                        netstat['rx'] = (self.network_new[net].bytes_recv -
+                                         self.network_old[net].bytes_recv)
+                        netstat['tx'] = (self.network_new[net].bytes_sent -
+                                         self.network_old[net].bytes_sent)
+                    except Exception:
+                        continue
+                    else:
+                        self.network.append(netstat)
+                self.network_old = self.network_new
 
         # SENSORS
         if sensors_tag:
             self.sensors = self.glancesgrabsensors.get()
 
         # DISK I/O
-        if psutil_disk_io_tag:
+        if diskio_tag:
             self.diskio = []
-            if psutil_disk_io_tag and hasattr(psutil, 'disk_io_counters'):
-                if not hasattr(self, 'diskio_old'):
-                    self.diskio_old = psutil.disk_io_counters(perdisk=True)
-                else:
-                    self.diskio_new = psutil.disk_io_counters(perdisk=True)
-                    for disk in self.diskio_new:
-                        try:
-                            # Try necessary to manage dynamic disk creation/del
-                            diskstat = {}
-                            diskstat['disk_name'] = disk
-                            diskstat['read_bytes'] = (
-                                self.diskio_new[disk].read_bytes -
-                                self.diskio_old[disk].read_bytes)
-                            diskstat['write_bytes'] = (
-                                self.diskio_new[disk].write_bytes -
-                                self.diskio_old[disk].write_bytes)
-                        except Exception:
-                            continue
-                        else:
-                            self.diskio.append(diskstat)
-                    self.diskio_old = self.diskio_new
+            if not hasattr(self, 'diskio_old'):
+                self.diskio_old = psutil.disk_io_counters(perdisk=True)
+            else:
+                self.diskio_new = psutil.disk_io_counters(perdisk=True)
+                for disk in self.diskio_new:
+                    try:
+                        # Try necessary to manage dynamic disk creation/del
+                        diskstat = {}
+                        diskstat['disk_name'] = disk
+                        diskstat['read_bytes'] = (
+                            self.diskio_new[disk].read_bytes -
+                            self.diskio_old[disk].read_bytes)
+                        diskstat['write_bytes'] = (
+                            self.diskio_new[disk].write_bytes -
+                            self.diskio_old[disk].write_bytes)
+                    except Exception:
+                        continue
+                    else:
+                        self.diskio.append(diskstat)
+                self.diskio_old = self.diskio_new
 
         # FILE SYSTEM
-        if psutil_fs_usage_tag:
+        if fs_tag:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
@@ -1097,7 +1041,7 @@ class GlancesStats:
         return self.memswap
 
     def getNetwork(self):
-        if psutil_network_io_tag:
+        if network_tag:
             return sorted(self.network,
                           key=lambda network: network['interface_name'])
         else:
@@ -1111,13 +1055,13 @@ class GlancesStats:
             return []
 
     def getDiskIO(self):
-        if psutil_disk_io_tag:
+        if diskio_tag:
             return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
         else:
             return []
 
     def getFs(self):
-        if psutil_fs_usage_tag:
+        if fs_tag:
             return sorted(self.fs, key=lambda fs: fs['mnt_point'])
         else:
             return []
@@ -1135,12 +1079,8 @@ class GlancesStats:
 
         sortedReverse = True
         if sortedby == 'auto':
-            # Auto selection
-            # By default sort by CPU or memory (if CPU not available)
-            if psutil_get_cpu_percent_tag:
-                sortedby = 'cpu_percent'
-            else:
-                sortedby = 'memory_percent'
+            # Auto selection (default: sort by CPU%)
+            sortedby = 'cpu_percent'
             # Dynamic choice
             if ('iowait' in self.cpu and
                 self.cpu['iowait'] > limits.getCPUWarning(stat='iowait')):
@@ -1197,10 +1137,10 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["load"] = self.load
         self.all_stats["mem"] = self.mem
         self.all_stats["memswap"] = self.memswap
-        self.all_stats["network"] = self.network if psutil_network_io_tag else []
+        self.all_stats["network"] = self.network if network_tag else []
         self.all_stats["sensors"] = self.sensors if sensors_tag else []
-        self.all_stats["diskio"] = self.diskio if psutil_disk_io_tag else []
-        self.all_stats["fs"] = self.fs if psutil_fs_usage_tag else []
+        self.all_stats["diskio"] = self.diskio if diskio_tag else []
+        self.all_stats["fs"] = self.fs if fs_tag else []
         self.all_stats["processcount"] = self.processcount
         self.all_stats["process"] = self.process
         self.all_stats["core_number"] = self.core_number
@@ -1381,10 +1321,10 @@ class glancesScreen:
         }
 
         # What are we going to display
-        self.network_tag = psutil_network_io_tag
+        self.network_tag = network_tag
         self.sensors_tag = sensors_tag
-        self.diskio_tag = psutil_disk_io_tag
-        self.fs_tag = psutil_fs_usage_tag
+        self.diskio_tag = diskio_tag
+        self.fs_tag = fs_tag
         self.log_tag = True
         self.help_tag = False
         self.percpu_tag = False
@@ -1651,20 +1591,20 @@ class glancesScreen:
         elif self.pressedkey == 98:
             # 'b' > Switch between bit/s and Byte/s for network IO
             self.net_byteps_tag = not self.net_byteps_tag
-        elif self.pressedkey == 99 and psutil_get_cpu_percent_tag:
+        elif self.pressedkey == 99:
             # 'c' > Sort processes by CPU usage
             self.setProcessSortedBy('cpu_percent')
-        elif self.pressedkey == 100 and psutil_disk_io_tag:
+        elif self.pressedkey == 100 and diskio_tag:
             # 'd' > Show/hide disk I/O stats
             self.diskio_tag = not self.diskio_tag
-        elif self.pressedkey == 102 and psutil_fs_usage_tag:
+        elif self.pressedkey == 102 and fs_tag:
             # 'f' > Show/hide fs stats
             self.fs_tag = not self.fs_tag
         elif self.pressedkey == 104:
             # 'h' > Show/hide help
             self.help_tag = not self.help_tag
         elif self.pressedkey == 105 and psutil_get_io_counter_tag:
-            # 'i' > Sort processes by IO rate
+            # 'i' > Sort processes by IO rate (not available on OS X)
             self.setProcessSortedBy('io_counters')
         elif self.pressedkey == 108:
             # 'l' > Show/hide log messages
@@ -1672,7 +1612,7 @@ class glancesScreen:
         elif self.pressedkey == 109:
             # 'm' > Sort processes by MEM usage
             self.setProcessSortedBy('memory_percent')
-        elif self.pressedkey == 110 and psutil_network_io_tag:
+        elif self.pressedkey == 110 and network_tag:
             # 'n' > Show/hide network stats
             self.network_tag = not self.network_tag
         elif self.pressedkey == 112:
@@ -1940,7 +1880,7 @@ class glancesScreen:
                     self.term_window.addnstr(
                         self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['iowait'] / 100, '>6.1%'), 6,
-                        self.__getCpuColor(cpu['iowait'], stat = 'iowait'))
+                        self.__getCpuColor(cpu['iowait'], stat='iowait'))
                     y += 1
 
                 if 'irq' in cpu:
@@ -2515,14 +2455,14 @@ class glancesScreen:
             if tag_io:
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_R/s"), '>6'), 6,
+                    format(_("IOR/s"), '>5'), 5,
                     self.getProcessColumnColor('io_counters', sortedby))
-                process_name_x += 7
+                process_name_x += 6
                 self.term_window.addnstr(
                     self.process_y + 2, process_x + process_name_x,
-                    format(_("IO_W/s"), '>6'), 6,
+                    format(_("IOW/s"), '>5'), 5,
                     self.getProcessColumnColor('io_counters', sortedby))
-                process_name_x += 7
+                process_name_x += 6
             # PROCESS NAME
             self.term_window.addnstr(
                 self.process_y + 2, process_x + process_name_x,
@@ -2552,14 +2492,10 @@ class glancesScreen:
                     format(self.__autoUnit(process_resident), '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
-                if psutil_get_cpu_percent_tag:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x + 12,
-                        format(cpu_percent, '>5.1f'), 5,
-                        self.__getProcessCpuColor2(cpu_percent))
-                else:
-                    self.term_window.addnstr(
-                        self.process_y + 3 + processes, process_x, "N/A", 8)
+                self.term_window.addnstr(
+                    self.process_y + 3 + processes, process_x + 12,
+                    format(cpu_percent, '>5.1f'), 5,
+                    self.__getProcessCpuColor2(cpu_percent))
                 # MEM%
                 memory_percent = processlist[processes]['memory_percent']
                 self.term_window.addnstr(
@@ -2610,22 +2546,22 @@ class glancesScreen:
                             format(dtime, '>8'), 8)
                 # IO
                 # Hack to allow client 1.6 to connect to server 1.5.2
-                process_tag_io = True 
+                process_tag_io = True
                 try:
-                    if (processlist[processes]['io_counters'][4] == 0):
+                    if processlist[processes]['io_counters'][4] == 0:
                         process_tag_io = True
                 except:
                     process_tag_io = False
                 if tag_io:
-                    if (not process_tag_io):
+                    if not process_tag_io:
                         # If io_tag == 0 (['io_counters'][4])
                         # then do not diplay IO rate
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
-                            format("?", '>6'), 6)
+                            format("?", '>5'), 5)
                         self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 63,
-                            format("?", '>6'), 6)
+                            self.process_y + 3 + processes, process_x + 62,
+                            format("?", '>5'), 5)
                     else:
                         # If io_tag == 1 (['io_counters'][4])
                         # then diplay IO rate
@@ -2638,10 +2574,10 @@ class glancesScreen:
                         io_ws = (io_write - io_write_old) / elapsed_time
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
-                            format(self.__autoUnit(io_rs), '>6'), 6)
+                            format(self.__autoUnit(io_rs), '>5'), 5)
                         self.term_window.addnstr(
-                            self.process_y + 3 + processes, process_x + 63,
-                            format(self.__autoUnit(io_ws), '>6'), 6)
+                            self.process_y + 3 + processes, process_x + 62,
+                            format(self.__autoUnit(io_ws), '>5'), 5)
 
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
@@ -2828,16 +2764,12 @@ class glancesScreen:
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("a"), _("Sort processes automatically"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
-                else 0)
+                    _("a"), _("Sort processes automatically"), width=width), 38)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("c"), _("Sort processes by CPU%"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
-                else 0)
+                    _("c"), _("Sort processes by CPU%"), width=width), 38)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
@@ -2858,25 +2790,25 @@ class glancesScreen:
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("d"), _("Show/hide disk I/O stats"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_disk_io_tag else 0)
+                38, self.ifCRITICAL_color2 if not diskio_tag else 0)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("f"), _("Show/hide file system stats"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_fs_usage_tag else 0)
+                38, self.ifCRITICAL_color2 if not fs_tag else 0)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("n"), _("Show/hide network stats"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+                38, self.ifCRITICAL_color2 if not network_tag else 0)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
                     _("s"), _("Show/hide sensors stats"), width=width),
-                38, self.ifCRITICAL_color2 if not psutil_network_io_tag else 0)
+                38, self.ifCRITICAL_color2 if not sensors_tag else 0)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
@@ -2891,10 +2823,7 @@ class glancesScreen:
             self.term_window.addnstr(
                 key_table_y, key_table_x,
                 "{0:^{width}} {1}".format(
-                    _("b"), _("Bit/s or Byte/s for network IO"),
-                    width=width),
-                38, self.ifCRITICAL_color2 if not psutil_get_cpu_percent_tag
-                else 0)
+                    _("b"), _("Bit/s or Byte/s for network IO"), width=width), 38)
             key_table_y += 1
             self.term_window.addnstr(
                 key_table_y, key_table_x,
@@ -3122,12 +3051,12 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
 
     def authenticate(self, headers):
-        auth = headers.get('Authorization') 
+        # auth = headers.get('Authorization')
         try:
             (basic, _, encoded) = headers.get('Authorization').partition(' ')
         except:
             # Client did not ask for authentidaction
-            # If server need it then exit 
+            # If server need it then exit
             return not self.server.isAuth
         else:
             # Client authentication
@@ -3148,11 +3077,11 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
     def check_user(self, username, password):
         # Check username and password in the dictionnary
         if username in self.server.user_dict:
-            if self.server.user_dict[username] == md5(password).hexdigest():        
+            if self.server.user_dict[username] == md5(password).hexdigest():
                 return True
         return False
 
-    def parse_request(self):        
+    def parse_request(self):
         if SimpleXMLRPCRequestHandler.parse_request(self):
             # Next we authenticate
             if self.authenticate(self.headers):
@@ -3267,10 +3196,8 @@ class GlancesServer():
     This class creates and manages the TCP client
     """
 
-
-    def __init__(self, bind_address, bind_port = 61209,
-                 RequestHandler = GlancesHandler,
-                 refresh_time = 1):
+    def __init__(self, bind_address, bind_port=61209,
+                 RequestHandler=GlancesHandler, refresh_time=1):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
                                          requestHandler=RequestHandler)
         # The users dict
@@ -3284,7 +3211,7 @@ class GlancesServer():
 
     def add_user(self, username, password):
         '''
-        Add an user to the dictionnary        
+        Add an user to the dictionnary
         '''
         self.server.user_dict[username] = md5(password).hexdigest()
         self.server.isAuth = True
@@ -3301,14 +3228,14 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, server_address, server_port=61209, 
-                 username = "glances", password = ""):
+    def __init__(self, server_address, server_port=61209,
+                 username="glances", password=""):
         # Build the URI
-        if (password != ""):
+        if password != "":
             uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
         else:
             uri = 'http://%s:%d' % (server_address, server_port)
-            
+
         # Try to connect to the URI
         try:
             self.client = ServerProxy(uri)
@@ -3320,13 +3247,13 @@ class GlancesClient():
     def client_init(self):
         try:
             self.client.init()
-        except ProtocolError as err: 
-            if (str(err).find(" 401 ") > 0):
+        except ProtocolError as err:
+            if str(err).find(" 401 ") > 0:
                 print(_("Error: Connection to server failed. Bad password."))
                 sys.exit(-1)
             else:
                 print(_("Error: Connection to server failed. Unknown error."))
-                sys.exit(-1)            
+                sys.exit(-1)
         try:
             client_version = self.client.init()[:3]
         except:
@@ -3415,13 +3342,14 @@ def main():
     global limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
-    global psutil_get_cpu_percent_tag, psutil_get_io_counter_tag, psutil_mem_usage_tag
-    global psutil_mem_vm, psutil_fs_usage_tag, psutil_disk_io_tag, psutil_network_io_tag
-    global network_bytepersec_tag
-    global sensors_tag
+    global psutil_get_io_counter_tag, psutil_mem_vm
+    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag
     global refresh_time, client, server, server_port, server_ip
 
     # Set default tags
+    fs_tag = True
+    diskio_tag = True
+    network_tag = True
     network_bytepersec_tag = False
     sensors_tag = False
     html_tag = False
@@ -3518,11 +3446,11 @@ def main():
                 print(_("Error: Refresh time should be a positive integer"))
                 sys.exit(2)
         elif opt in ("-d", "--diskio"):
-            psutil_disk_io_tag = False
+            diskio_tag = False
         elif opt in ("-m", "--mount"):
-            psutil_fs_usage_tag = False
+            fs_tag = False
         elif opt in ("-n", "--netrate"):
-            psutil_network_io_tag = False
+            network_tag = False
         elif opt in ("-b", "--bytepersec"):
             network_bytepersec_tag = True
         elif opt in ("-C", "--config"):
@@ -3577,13 +3505,11 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     if client_tag:
-        psutil_get_cpu_percent_tag = True
         psutil_get_io_counter_tag = True
-        psutil_mem_usage_tag = True
         psutil_mem_vm = True
-        psutil_fs_usage_tag = True
-        psutil_disk_io_tag = True
-        psutil_network_io_tag = True
+        fs_tag = True
+        diskio_tag = True
+        network_tag = True
         sensors_tag = True
     elif server_tag:
         sensors_tag = True
@@ -3595,7 +3521,7 @@ def main():
         server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
 
         # Set the server login/password (if -P tag)
-        if (password != ""):
+        if password != "":
             server.add_user(username, password)
 
         # Init Limits
