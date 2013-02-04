@@ -3,7 +3,7 @@
 #
 # Glances is a simple textual monitoring tool
 #
-# Copyright (C) 2012 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2013 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -139,6 +139,12 @@ except ImportError:
     cvs_lib_tag = False
 else:
     csv_lib_tag = True
+
+# Default tag
+sensors_tag = False
+network_tag = True
+diskio_tag = True
+fs_tag = True
 
 # Define the default configuration file
 DEFAULT_CONF_FILE = "/etc/glances/glances.conf"

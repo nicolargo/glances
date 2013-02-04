@@ -30,7 +30,6 @@ import signal
 import time
 import glances
 
-
 class TestGlancesStat(unittest.TestCase):
 
     def setUp(self):
