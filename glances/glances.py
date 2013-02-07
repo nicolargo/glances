@@ -630,7 +630,10 @@ class GlancesGrabProcesses:
 
         procstat['name'] = proc.name
         procstat['pid'] = proc.pid
-        procstat['username'] = proc.username
+        try:
+            procstat['username'] = proc.username
+        except KeyError:
+            procstat['username'] = proc.uids.real
         procstat['cmdline'] = " ".join(proc.cmdline)
         procstat['memory_info'] = proc.get_memory_info()
         procstat['memory_percent'] = proc.get_memory_percent()
