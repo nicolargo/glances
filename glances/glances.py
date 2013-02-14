@@ -54,27 +54,28 @@ is_Mac = sys.platform.startswith('darwin')
 is_Windows = sys.platform.startswith('win')
 
 try:
-    # ConfigParser
-    from configparser import RawConfigParser
-    from configparser import NoOptionError
-except ImportError:
+    # Python 2
     from ConfigParser import RawConfigParser
     from ConfigParser import NoOptionError
+except ImportError:
+    # Python 3
+    from configparser import RawConfigParser
+    from configparser import NoOptionError
 
 try:
-    # For Python v2.x
+    # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 except ImportError:
-    # For Python v3.x
+    # Python 3
     from xmlrpc.server import SimpleXMLRPCRequestHandler
     from xmlrpc.server import SimpleXMLRPCServer
 
 try:
-    # For Python v2.x
+    # Python 2
     from xmlrpclib import ServerProxy, ProtocolError
 except ImportError:
-    # For Python v3.x
+    # Python 3
     from xmlrpc.client import ServerProxy, ProtocolError
 
 if not is_Windows:
@@ -146,9 +147,6 @@ network_tag = True
 diskio_tag = True
 fs_tag = True
 
-# Define the default configuration file
-DEFAULT_CONF_FILE = "/etc/glances/glances.conf"
-
 
 # Classes
 #========
@@ -168,20 +166,95 @@ class Timer:
         return time.time() > self.target
 
 
+class Config:
+    """
+    This class is used to access/read config file, if it exists
+
+    :param location: the custom path to search for config file
+    :type location: str or None
+    """
+    def __init__(self, location=None):
+        self.location = location
+        self.filename = 'glances.conf'
+
+        self.parser = RawConfigParser()
+        self.load()
+
+    def load(self):
+        """
+        Load a config file from the list of paths, if it exists
+        """
+        for path in self.get_paths_list():
+            if os.path.isfile(path) and os.path.getsize(path) > 0:
+                self.parser.read(path)
+                break
+
+    def get_paths_list(self):
+        """
+        Get a list of config file paths, taking into account of the OS,
+        priority and location.
+
+        * Linux: ~/.config/glances, /etc/glances
+        * BSD: ~/.config/glances, /usr/local/etc/glances
+        * Mac: ~/Library/Application Support/glances, /usr/local/etc/glances
+
+        The config file will be searched in the following order of priority:
+            * /path/to/file (via -C flag)
+            * user's home directory (per-user settings)
+            * /etc directory (system-wide settings)
+        """
+        paths = []
+
+        if self.location is not None:
+            paths.append(self.location)
+
+        if is_Linux or is_BSD:
+            paths.append(os.path.join(
+                os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
+                __appname__, self.filename))
+        elif is_Mac:
+            paths.append(os.path.join(
+                os.path.expanduser('~/Library/Application Support/'),
+                __appname__, self.filename))
+
+        if is_Linux:
+            paths.append(os.path.join('/etc', __appname__, self.filename))
+        elif is_BSD or is_Mac:
+            paths.append(os.path.join(
+                sys.prefix, '/etc', __appname__, self.filename))
+
+        return paths
+
+    def has_section(self, section):
+        """
+        Return info about the existence of a section
+        """
+        return self.parser.has_section(section)
+
+    def get_option(self, section, option):
+        """
+        Get the value of an option, if it exist
+        """
+        try:
+            value = self.parser.getfloat(section, option)
+        except NoOptionError:
+            return
+        else:
+            return value
+
+
 class glancesLimits:
     """
-    Manage the limit OK,CAREFUL,WARNING,CRITICAL for each stats
-    """
+    Manage the limit OK, CAREFUL, WARNING, CRITICAL for each stats
 
-    # The limit list is stored in an hash table:
-    #  limits_list[STAT] = [CAREFUL, WARNING, CRITICAL]
-    #
-    # STD is for defaults limits (CPU / MEM / SWAP / FS)
-    # CPU_IOWAIT limits (iowait in %)
-    # LOAD is for LOAD limits (5 min / 15 min)
-    # TEMP is for sensors limits (temperature in °C)
-    #
-    #_____________________[ CAREFUL, WARNING, CRITICAL ]
+    The limit list is stored in an hash table:
+    __limits_list[STAT] = [CAREFUL, WARNING, CRITICAL]
+
+    STD is for defaults limits (CPU/MEM/SWAP/FS)
+    CPU_IOWAIT limits (iowait in %)
+    LOAD is for LOAD limits (5 min/15 min)
+    TEMP is for sensors limits (temperature in °C)
+    """
     __limits_list = {'STD': [50, 70, 90],
                      'CPU_USER': [50, 70, 90],
                      'CPU_SYSTEM': [50, 70, 90],
@@ -194,81 +267,73 @@ class glancesLimits:
                      'PROCESS_CPU': [50, 70, 90],
                      'PROCESS_MEM': [50, 70, 90]}
 
-    def __init__(self, conf_file=DEFAULT_CONF_FILE):
-        # Open the configuration file
-        config = RawConfigParser()
-        if config.read(conf_file) != []:
-            # The configuration file exist
-            if config.has_section('global'):
-                # The configuration file has a limits section
-                # Read STD limits
-                self.__setLimits(config, 'global', 'STD', 'careful')
-                self.__setLimits(config, 'global', 'STD', 'warning')
-                self.__setLimits(config, 'global', 'STD', 'critical')
-            if config.has_section('cpu'):
-                # Read CPU limits
-                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_careful')
-                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_warning')
-                self.__setLimits(config, 'cpu', 'CPU_USER', 'user_critical')
-                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_careful')
-                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_warning')
-                self.__setLimits(config, 'cpu', 'CPU_SYSTEM', 'system_critical')
-                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_careful')
-                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_warning')
-                self.__setLimits(config, 'cpu', 'CPU_IOWAIT', 'iowait_critical')
-            if config.has_section('load'):
-                # Read LOAD limits
-                self.__setLimits(config, 'load', 'LOAD', 'careful')
-                self.__setLimits(config, 'load', 'LOAD', 'warning')
-                self.__setLimits(config, 'load', 'LOAD', 'critical')
-            if config.has_section('memory'):
-                # Read MEM limits
-                self.__setLimits(config, 'memory', 'MEM', 'careful')
-                self.__setLimits(config, 'memory', 'MEM', 'warning')
-                self.__setLimits(config, 'memory', 'MEM', 'critical')
-            if config.has_section('swap'):
-                # Read MEM limits
-                self.__setLimits(config, 'swap', 'SWAP', 'careful')
-                self.__setLimits(config, 'swap', 'SWAP', 'warning')
-                self.__setLimits(config, 'swap', 'SWAP', 'critical')
-            if config.has_section('temperature'):
-                # Read TEMP limits
-                self.__setLimits(config, 'temperature', 'TEMP', 'careful')
-                self.__setLimits(config, 'temperature', 'TEMP', 'warning')
-                self.__setLimits(config, 'temperature', 'TEMP', 'critical')
-            if config.has_section('filesystem'):
-                # Read FS limits
-                self.__setLimits(config, 'filesystem', 'FS', 'careful')
-                self.__setLimits(config, 'filesystem', 'FS', 'warning')
-                self.__setLimits(config, 'filesystem', 'FS', 'critical')
-            if config.has_section('process'):
-                # Process limits
-                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_careful')
-                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_warning')
-                self.__setLimits(config, 'process', 'PROCESS_CPU', 'cpu_critical')
-                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_careful')
-                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_warning')
-                self.__setLimits(config, 'process', 'PROCESS_MEM', 'mem_critical')
+    def __init__(self):
+        # Test if the configuration file has a limits section
+        if config.has_section('global'):
+            # Read STD limits
+            self.__setLimits('STD', 'global', 'careful')
+            self.__setLimits('STD', 'global', 'warning')
+            self.__setLimits('STD', 'global', 'critical')
+        if config.has_section('cpu'):
+            # Read CPU limits
+            self.__setLimits('CPU_USER', 'cpu', 'user_careful')
+            self.__setLimits('CPU_USER', 'cpu', 'user_warning')
+            self.__setLimits('CPU_USER', 'cpu', 'user_critical')
+            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_careful')
+            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_warning')
+            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_critical')
+            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_careful')
+            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_warning')
+            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_critical')
+        if config.has_section('load'):
+            # Read LOAD limits
+            self.__setLimits('LOAD', 'load', 'careful')
+            self.__setLimits('LOAD', 'load', 'warning')
+            self.__setLimits('LOAD', 'load', 'critical')
+        if config.has_section('memory'):
+            # Read MEM limits
+            self.__setLimits('MEM', 'memory', 'careful')
+            self.__setLimits('MEM', 'memory', 'warning')
+            self.__setLimits('MEM', 'memory', 'critical')
+        if config.has_section('swap'):
+            # Read MEM limits
+            self.__setLimits('SWAP', 'swap', 'careful')
+            self.__setLimits('SWAP', 'swap', 'warning')
+            self.__setLimits('SWAP', 'swap', 'critical')
+        if config.has_section('temperature'):
+            # Read TEMP limits
+            self.__setLimits('TEMP', 'temperature', 'careful')
+            self.__setLimits('TEMP', 'temperature', 'warning')
+            self.__setLimits('TEMP', 'temperature', 'critical')
+        if config.has_section('filesystem'):
+            # Read FS limits
+            self.__setLimits('FS', 'filesystem', 'careful')
+            self.__setLimits('FS', 'filesystem', 'warning')
+            self.__setLimits('FS', 'filesystem', 'critical')
+        if config.has_section('process'):
+            # Process limits
+            self.__setLimits('PROCESS_CPU', 'process', 'cpu_careful')
+            self.__setLimits('PROCESS_CPU', 'process', 'cpu_warning')
+            self.__setLimits('PROCESS_CPU', 'process', 'cpu_critical')
+            self.__setLimits('PROCESS_MEM', 'process', 'mem_careful')
+            self.__setLimits('PROCESS_MEM', 'process', 'mem_warning')
+            self.__setLimits('PROCESS_MEM', 'process', 'mem_critical')
 
-    def __setLimits(self, config, section, stat, alert):
+    def __setLimits(self, stat, section, alert):
         """
-        config: Pointer to the config file RawConfigParser()
-        section: 'limits'
-        stat: 'CPU', 'LOAD', 'MEM', 'SWAP', 'TEMP'...
-        alert key (from config file):
+        stat: 'CPU', 'LOAD', 'MEM', 'SWAP', 'TEMP', etc.
+        section: 'cpu', 'load', 'memory', 'swap', 'temperature', etc.
+        alert: 'careful', 'warning', 'critical'
         """
-        try:
-            value = config.getfloat(section, alert)
-        except NoOptionError:
-            pass
-        else:
-            #~ print("%s / %s = %s -> %s" % (section, alert, value, stat))
-            if alert.endswith('careful'):
-                self.__limits_list[stat][0] = value
-            elif alert.endswith('warning'):
-                self.__limits_list[stat][1] = value
-            elif alert.endswith('critical'):
-                self.__limits_list[stat][2] = value
+        value = config.get_option(section, alert)
+
+        #~ print("%s / %s = %s -> %s" % (section, alert, value, stat))
+        if alert.endswith('careful'):
+            self.__limits_list[stat][0] = value
+        elif alert.endswith('warning'):
+            self.__limits_list[stat][1] = value
+        elif alert.endswith('critical'):
+            self.__limits_list[stat][2] = value
 
     def setAll(self, newlimits):
         self.__limits_list = newlimits
@@ -352,19 +417,19 @@ class glancesLimits:
         return self.getCritical('FS')
 
     def getProcessCareful(self, stat='', core=1):
-        if (stat.upper() != 'CPU'):
+        if stat.upper() != 'CPU':
             # Use core only for CPU
             core = 1
         return self.getCareful('PROCESS_' + stat.upper()) * core
 
     def getProcessWarning(self, stat='', core=1):
-        if (stat.upper() != 'CPU'):
+        if stat.upper() != 'CPU':
             # Use core only for CPU
             core = 1
         return self.getWarning('PROCESS_' + stat.upper()) * core
 
     def getProcessCritical(self, stat='', core=1):
-        if (stat.upper() != 'CPU'):
+        if stat.upper() != 'CPU':
             # Use core only for CPU
             core = 1
         return self.getCritical('PROCESS_' + stat.upper()) * core
@@ -1685,7 +1750,7 @@ class glancesScreen:
                                   network_count + diskio_count)
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
                                     diskio_count + fs_count)
-        self.displayProcess(processcount, processlist, stats.getSortedBy(), 
+        self.displayProcess(processcount, processlist, stats.getSortedBy(),
                             log_count=log_count, core=stats.getCore())
         self.displayCaption(cs_status=cs_status)
         self.displayNow(stats.getNow())
@@ -3314,8 +3379,7 @@ def printSyntax():
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
     print(_("\t-B @IP|host\tBind server to the given IP or host NAME"))
     print(_("\t-c @IP|host\tConnect to a Glances server"))
-    print(_("\t-C file\t\tPath to the configuration file (default: %s)") %
-          DEFAULT_CONF_FILE)
+    print(_("\t-C file\t\tPath to the configuration file"))
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-e\t\tEnable the sensors module (Linux-only)"))
     print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
@@ -3359,7 +3423,7 @@ def main():
     # Glances - Init stuff
     ######################
 
-    global limits, logs, stats, screen
+    global config, limits, logs, stats, screen
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_io_counter_tag, psutil_mem_vm
@@ -3381,8 +3445,8 @@ def main():
     else:
         server_tag = False
 
-    # Default configuration file (if exist)
-    conf_file = DEFAULT_CONF_FILE
+    # Configuration file stuff
+    conf_file = ""
     conf_file_tag = False
 
     # Set the default refresh time
@@ -3524,6 +3588,11 @@ def main():
     # Catch CTRL-C
     signal.signal(signal.SIGINT, signal_handler)
 
+    if conf_file_tag:
+        config = Config(conf_file)
+    else:
+        config = Config()
+
     if client_tag:
         psutil_get_io_counter_tag = True
         psutil_mem_vm = True
@@ -3545,7 +3614,7 @@ def main():
             server.add_user(username, password)
 
         # Init Limits
-        limits = glancesLimits(conf_file)
+        limits = glancesLimits()
 
         # Init stats
         stats = GlancesStatsServer()
@@ -3560,7 +3629,7 @@ def main():
             sys.exit(2)
 
         # Init Limits
-        limits = glancesLimits(conf_file)
+        limits = glancesLimits()
 
         # Init Logs
         logs = glancesLogs()
@@ -3574,7 +3643,7 @@ def main():
         # Init the classical CLI
 
         # Init Limits
-        limits = glancesLimits(conf_file)
+        limits = glancesLimits()
 
         # Init Logs
         logs = glancesLogs()
