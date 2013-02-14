@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from glob import glob
-from os.path import dirname
+import os
+import sys
+import glob
 
 from setuptools import setup
 
@@ -13,15 +14,20 @@ data_files = [
                            'NEWS',
                            'screenshot.png',
                            'glances/conf/glances.conf']),
-    ('share/doc/glances/doc', glob('doc/*.png')),
-    ('etc/glances', ['glances/conf/glances.conf']),
-    ('share/glances/html', glob('glances/html/*.html')),
-    ('share/glances/css', glob('glances/css/*.css')),
-    ('share/glances/img', glob('glances/img/*.png')),
+    ('share/doc/glances/doc', glob.glob('doc/*.png')),
+    ('share/glances/html', glob.glob('glances/html/*.html')),
+    ('share/glances/css', glob.glob('glances/css/*.css')),
+    ('share/glances/img', glob.glob('glances/img/*.png')),
 ]
 
-for mo in glob('i18n/*/LC_MESSAGES/*.mo'):
-    data_files.append((dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
+if hasattr(sys, 'real_prefix') or ('bsd' or 'darwin' in sys.platform):
+    etc_path = os.path.join(sys.prefix, 'etc', 'glances')
+if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
+    etc_path = os.path.join('/etc', 'glances')
+data_files.append((etc_path, ['glances/conf/glances.conf']))
+
+for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
+    data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 setup(
     name='Glances',

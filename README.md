@@ -107,7 +107,20 @@ No configuration is needed to use Glances.
 
 Furthermore, the release 1.6 introduces a configuration file to setup limits.
 
-The default configuration file is under the /etc/glances/glances.conf file.
+The default configuration file is under:
+
+    /etc/glances/glances.conf (Linux)
+or
+
+    /usr/local/etc/glances.conf (*BSD and OS X)
+
+To override the default configuration, you can copy the `glances.conf` file to
+your `$XDG_CONFIG_HOME` directory (e.g. Linux):
+
+    mkdir -p $XDG_CONFIG_HOME/glances
+    cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/
+
+On OS X, you should copy the configuration file to `~/Library/Application Support/glances/`.
 
 ## Running
 
@@ -139,7 +152,7 @@ In client mode, you can set the TCP port of the server (-p port).
 
 Default binding address is 0.0.0.0 (Glances will listen on all the networks interfaces) and TCP port is 61209.
 
-In client/server mode, limits are set by the server side. 
+In client/server mode, limits are set by the server side.
 
 The version 1.6 introduces a optionnal password to access to the server (-P password).
 
