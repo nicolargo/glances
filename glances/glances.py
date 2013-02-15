@@ -587,13 +587,14 @@ class glancesGrabFs:
                               'gvfsd-fuse', 'none')
 
         # Ignore the following FS type
-        self.ignore_fstype = ('autofs', 'binfmt_misc', 'debugfs', 'devpts',
-                              'devtmpfs', 'hugetlbfs', 'iso9660', 'mqueue',
-                              'none', 'proc', 'rootfs', 'securityfs', 'sysfs',
-                              'usbfs')
+        self.ignore_fstype = ('autofs', 'binfmt_misc', 'configfs', 'debugfs',
+                              'devfs', 'devpts', 'devtmpfs', 'hugetlbfs',
+                              'iso9660', 'linprocfs', 'mqueue', 'none',
+                              'proc', 'procfs', 'rootfs', 'securityfs',
+                              'sysfs', 'usbfs')
 
-        # ignore fs by mount point
-        self.ignore_mntpoint = ('', '/dev/shm', '/sys/fs/cgroup')
+        # ignore FS by mount point
+        self.ignore_mntpoint = ('', '/dev/shm', '/lib/init/rw', '/sys/fs/cgroup')
 
     def __update__(self):
         """
