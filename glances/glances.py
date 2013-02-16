@@ -1287,7 +1287,7 @@ class glancesScreen:
     # If global used MEM > WARINING => Sorted by MEM usage
     __process_sortedby = 'auto'
 
-    def __init__(self, refresh_time=1):
+    def __init__(self, refresh_time=1, use_bold=1):
         # Global information to display
         self.__version = __version__
 
@@ -1358,30 +1358,35 @@ class glancesScreen:
         else:
             self.hascolors = False
 
-        self.title_color = curses.A_BOLD
-        self.title_underline_color = curses.A_BOLD | curses.A_UNDERLINE
-        self.help_color = curses.A_BOLD
+        if use_bold:
+            A_BOLD = curses.A_BOLD
+        else:
+            A_BOLD = 0
+
+        self.title_color = A_BOLD
+        self.title_underline_color = A_BOLD | curses.A_UNDERLINE
+        self.help_color = A_BOLD
         if self.hascolors:
             # Colors text styles
             self.no_color = curses.color_pair(1)
-            self.default_color = curses.color_pair(3) | curses.A_BOLD
-            self.ifCAREFUL_color = curses.color_pair(4) | curses.A_BOLD
-            self.ifWARNING_color = curses.color_pair(5) | curses.A_BOLD
-            self.ifCRITICAL_color = curses.color_pair(2) | curses.A_BOLD
-            self.default_color2 = curses.color_pair(7) | curses.A_BOLD
-            self.ifCAREFUL_color2 = curses.color_pair(8) | curses.A_BOLD
-            self.ifWARNING_color2 = curses.color_pair(9) | curses.A_BOLD
-            self.ifCRITICAL_color2 = curses.color_pair(6) | curses.A_BOLD
+            self.default_color = curses.color_pair(3) | A_BOLD
+            self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
+            self.ifWARNING_color = curses.color_pair(5) | A_BOLD
+            self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
+            self.default_color2 = curses.color_pair(7) | A_BOLD
+            self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
+            self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
+            self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
         else:
             # B&W text styles
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.ifCAREFUL_color = curses.A_UNDERLINE
-            self.ifWARNING_color = curses.A_BOLD
+            self.ifWARNING_color = A_BOLD
             self.ifCRITICAL_color = curses.A_REVERSE
             self.default_color2 = curses.A_NORMAL
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
-            self.ifWARNING_color2 = curses.A_BOLD
+            self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
 
         # Define the colors list (hash table) for logged stats
@@ -3395,6 +3400,7 @@ def printSyntax():
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
+    print(_("\t-z\t\tDo not use the bold color attribute"))
 
 
 def end():
@@ -3453,6 +3459,9 @@ def main():
     # Set the default refresh time
     refresh_time = 3
 
+    # Use curses.A_BOLD by default
+    use_bold = True
+
     # Set the default TCP port for client and server
     server_port = 61209
     bind_ip = "0.0.0.0"
@@ -3463,11 +3472,12 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:P:",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:P:z",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "netrate", "help", "output",
                                     "file", "time", "version", "server",
-                                    "client", "port", "config", "password"])
+                                    "client", "port", "config", "password",
+                                    "nobold"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -3541,6 +3551,8 @@ def main():
         elif opt in ("-C", "--config"):
             conf_file = arg
             conf_file_tag = True
+        elif opt in ("-z", "--nobold"):
+            use_bold = False
         else:
             printSyntax()
             sys.exit(0)
@@ -3639,7 +3651,8 @@ def main():
         stats = GlancesStatsClient()
 
         # Init screen
-        screen = glancesScreen(refresh_time=refresh_time)
+        screen = glancesScreen(refresh_time=refresh_time,
+                               use_bold=use_bold)
     else:
         # Init the classical CLI
 
@@ -3663,7 +3676,8 @@ def main():
                                    refresh_time=refresh_time)
 
         # Init screen
-        screen = glancesScreen(refresh_time=refresh_time)
+        screen = glancesScreen(refresh_time=refresh_time,
+                               use_bold=use_bold)
 
     # Glances - Main loop
     #####################
