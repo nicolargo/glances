@@ -1,6 +1,7 @@
 Version 1.6.1
 =============
 
+    * Added -z/--nobold option for better appearence under Solarized terminal
     * Correct a bug on the CPU process limit
     * Take into account the number of core in the CPU process limit
     * Code refactory: PsUtil < 0.4.1 is depredicated (Thk to Alessio)
