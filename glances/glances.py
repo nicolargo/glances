@@ -2744,202 +2744,114 @@ class glancesScreen:
                     _("Glances {0}").format(self.__version),
                     79, self.title_color if self.hascolors else 0)
 
-            # Display the limits table
-            width = 8
+            # display the limits table
             limits_table_x = self.help_x
             limits_table_y = self.help_y + 2
             self.term_window.addnstr(limits_table_y, limits_table_x + 18,
-                                     _("   OK   "), 8, self.default_color)
+                                     format(_("OK"), '^8'), 8,
+                                     self.default_color)
             self.term_window.addnstr(limits_table_y, limits_table_x + 26,
-                                     _("CAREFUL "), 8, self.ifCAREFUL_color)
+                                     format(_("CAREFUL"), '^8'), 8,
+                                     self.ifCAREFUL_color),
             self.term_window.addnstr(limits_table_y, limits_table_x + 34,
-                                     _("WARNING "), 8, self.ifWARNING_color)
+                                     format(_("WARNING"), '^8'), 8,
+                                     self.ifWARNING_color),
             self.term_window.addnstr(limits_table_y, limits_table_x + 42,
-                                     _("CRITICAL"), 8, self.ifCRITICAL_color)
+                                     format(_("CRITICAL"), '^8'), 8,
+                                     self.ifCRITICAL_color),
 
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("CPU user %   "), '0',
-                    limits.getCPUCareful(stat='user'),
-                    limits.getCPUWarning(stat='user'),
-                    limits.getCPUCritical(stat='user'),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("CPU system % "), '0',
-                    limits.getCPUCareful(stat='system'),
-                    limits.getCPUWarning(stat='system'),
-                    limits.getCPUCritical(stat='system'),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("CPU IOwait % "), '0',
-                    limits.getCPUCareful(stat='iowait'),
-                    limits.getCPUWarning(stat='iowait'),
-                    limits.getCPUCritical(stat='iowait'),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Load         "), '0',
-                    limits.getLOADCareful() * core,
-                    limits.getLOADWarning() * core,
-                    limits.getLOADCritical() * core,
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("RAM Memory % "), '0',
-                    limits.getMEMCareful(),
-                    limits.getMEMWarning(),
-                    limits.getMEMCritical(),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Swap memory %"), '0',
-                    limits.getSWAPCareful(),
-                    limits.getSWAPWarning(),
-                    limits.getSWAPCritical(),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16}  {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Temp °C      "), '0',
-                    limits.getTEMPCareful(),
-                    limits.getTEMPWarning(),
-                    limits.getTEMPCritical(),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("Filesystem % "), '0',
-                    limits.getFSCareful(),
-                    limits.getFSWarning(),
-                    limits.getFSCritical(),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("CPU Process %"), '0',
-                    limits.getProcessCareful(stat='CPU', core=core),
-                    limits.getProcessWarning(stat='CPU', core=core),
-                    limits.getProcessCritical(stat='CPU', core=core),
-                    width=width), 79)
-            limits_table_y += 1
-            self.term_window.addnstr(
-                limits_table_y, limits_table_x,
-                "{0:^16} {1:^{width}}{2:^{width}}{3:^{width}}{4:^{width}}".format(
-                    _("MEM Process %"), '0',
-                    limits.getProcessCareful(stat='MEM'),
-                    limits.getProcessWarning(stat='MEM'),
-                    limits.getProcessCritical(stat='MEM'),
-                    width=width), 79)
+            # display the stat labels
+            stat_labels = [_("CPU user %"), _("CPU system %"),
+                           _("CPU iowait %"), _("Load"),
+                           _("RAM memory %"), _("Swap memory %"),
+                           _("Temp °C"), _("Filesystem %"),
+                           _("CPU process %"), _("MEM process %")]
 
-            # Key table (first column)
-            width = 5
-            key_table_x = self.help_x
-            key_table_y = limits_table_y + 2
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("a"), _("Sort processes automatically"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("c"), _("Sort processes by CPU%"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("m"), _("Sort processes by MEM%"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("p"), _("Sort processes by name"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("i"), _("Sort processes by IO Rate"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("d"), _("Show/hide disk I/O stats"), width=width),
-                38, self.ifCRITICAL_color2 if not diskio_tag else 0)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("f"), _("Show/hide file system stats"), width=width),
-                38, self.ifCRITICAL_color2 if not fs_tag else 0)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("n"), _("Show/hide network stats"), width=width),
-                38, self.ifCRITICAL_color2 if not network_tag else 0)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("s"), _("Show/hide sensors stats"), width=width),
-                38, self.ifCRITICAL_color2 if not sensors_tag else 0)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("l"), _("Show/hide log messages"), width=width), 38)
+            width = 8
+            limits_table_x = self.help_x + 2
+            limits_table_y = self.help_y + 3
+            for label in stat_labels:
+                self.term_window.addnstr(limits_table_y, limits_table_x,
+                                         format(label, '<14'), 14)
+                limits_table_y += 1
 
-            # Key table (second column)
-            width = 5
+            # display the limit values
+            limit_values = [[0, limits.getCPUCareful(stat='user'),
+                             limits.getCPUWarning(stat='user'),
+                             limits.getCPUCritical(stat='user')],
+                            [0, limits.getCPUCareful(stat='system'),
+                             limits.getCPUWarning(stat='system'),
+                             limits.getCPUCritical(stat='system')],
+                            [0, limits.getCPUCareful(stat='iowait'),
+                             limits.getCPUWarning(stat='iowait'),
+                             limits.getCPUCritical(stat='iowait')],
+                            [0, limits.getLOADCareful() * core,
+                             limits.getLOADWarning() * core,
+                             limits.getLOADCritical() * core],
+                            [0, limits.getMEMCareful(),
+                             limits.getMEMWarning(),
+                             limits.getMEMCritical()],
+                            [0, limits.getSWAPCareful(),
+                             limits.getSWAPWarning(),
+                             limits.getSWAPCritical()],
+                            [0, limits.getTEMPCareful(),
+                             limits.getTEMPWarning(),
+                             limits.getTEMPCritical()],
+                            [0, limits.getFSCareful(),
+                             limits.getFSWarning(),
+                             limits.getFSCritical()],
+                            [0, limits.getProcessCareful(stat='CPU', core=core),
+                             limits.getProcessWarning(stat='CPU', core=core),
+                             limits.getProcessCritical(stat='CPU', core=core)],
+                            [0, limits.getProcessCareful(stat='MEM'),
+                             limits.getProcessWarning(stat='MEM'),
+                             limits.getProcessCritical(stat='MEM')]]
+
+            limits_table_x = self.help_x + 15
+            limits_table_y = self.help_y + 3
+            for value in limit_values:
+                self.term_window.addnstr(
+                    limits_table_y, limits_table_x,
+                    '{0:>{width}}{1:>{width}}{2:>{width}}{3:>{width}}'.format(
+                        *value, width=width), 32)
+                limits_table_y += 1
+
+            # key table (left column)
+            key_col_left = [[_("a"), _("Sort processes automatically")],
+                            [_("c"), _("Sort processes by CPU%")],
+                            [_("m"), _("Sort processes by MEM%")],
+                            [_("p"), _("Sort processes by name")],
+                            [_("i"), _("Sort processes by IO rate")],
+                            [_("d"), _("Show/hide disk I/O stats")],
+                            [_("f"), _("Show/hide file system stats")],
+                            [_("n"), _("Show/hide network stats")],
+                            [_("s"), _("Show/hide sensors stats")],
+                            [_("l"), _("Show/hide log messages")]]
+
+            width = 3
+            key_table_x = self.help_x + 2
+            key_table_y = limits_table_y + 1
+            for key in key_col_left:
+                self.term_window.addnstr(
+                    key_table_y, key_table_x,
+                    '{0:{width}}{1}'.format(*key, width=width), 38)
+                key_table_y += 1
+
+            # key table (right column)
+            key_col_right = [[_("b"), _("Bit/s or Byte/s for network IO")],
+                             [_("w"), _("Delete warning logs")],
+                             [_("x"), _("Delete warning and critical logs")],
+                             [_("1"), _("Global CPU or per-CPU stats")],
+                             [_("h"), _("Show/hide this help message")],
+                             [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
+
             key_table_x = self.help_x + 38
-            key_table_y = limits_table_y + 2
-
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("b"), _("Bit/s or Byte/s for network IO"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("w"), _("Delete warning logs"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("x"), _("Delete warning and critical logs"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("1"), _("Global CPU or Per Core stats"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("h"), _("Show/hide this help message"), width=width), 38)
-            key_table_y += 1
-            self.term_window.addnstr(
-                key_table_y, key_table_x,
-                "{0:^{width}} {1}".format(
-                    _("q"), _("Quit (Esc and Ctrl-C also work)"), width=width), 38)
+            key_table_y = limits_table_y + 1
+            for key in key_col_right:
+                self.term_window.addnstr(
+                    key_table_y, key_table_x,
+                    '{0:{width}}{1}'.format(*key, width=width), 38)
+                key_table_y += 1
 
     def displayNow(self, now):
         # Display the current date and time (now...) - Center
