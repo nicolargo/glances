@@ -1,7 +1,8 @@
 Version 1.6.1
 =============
 
-    * Added -z/--nobold option for better appearence under Solarized terminal
+    * Add per-user settings support
+    * Add -z/--nobold option for better appearence under Solarized terminal
     * Correct a bug on the CPU process limit
     * Take into account the number of core in the CPU process limit
     * Code refactory: PsUtil < 0.4.1 is depredicated (Thk to Alessio)
@@ -15,11 +16,11 @@ Version 1.6
     * Add per process IO (read and write) rate in B per second
       IO rate only available on Linux from a root account
     * If CPU iowait alert then sort by processes by IO rate
-    * Per CPU display IOwait (if data is available) 
+    * Per CPU display IOwait (if data is available)
     * Add password for the client/server mode (-P password)
-    * Process column style auto (underline) or manual (bold) 
+    * Process column style auto (underline) or manual (bold)
     * Display a sort indicator (is space is available)
-    * Change the table key in the help screen 
+    * Change the table key in the help screen
 
 Version 1.5.2
 =============
@@ -41,7 +42,7 @@ Version 1.5.1
 Version 1.5
 ===========
 
-    * Add a client/server mode (XMLRPC) for remote monitoring 
+    * Add a client/server mode (XMLRPC) for remote monitoring
     * Correct a bug on process IO with non root users
     * Add 'w' shortkey to delete finished warning message
     * Add 'x' shortkey to delete finished warning/critical message
@@ -90,7 +91,7 @@ Version 1.4
 	* No decimal places for values < GB
 	* New memory and swap layout
 	* Add percentage of usage for both memory and swap
-        * Add MEM% usage, NICE, STATUS, UID, PID and running TIME per process 
+        * Add MEM% usage, NICE, STATUS, UID, PID and running TIME per process
 	* Add sort by MEM% ('m' key)
 	* Add sort by Process name ('p' key)
 	* Multiple minor fixes, changes and improvements
