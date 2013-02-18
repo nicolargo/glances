@@ -75,6 +75,13 @@ then try to run:
 
 ### Concerning Windows operating system
 
+Thanks to Nicolas Bourges, a Windows installer is available:
+
+64 bits: https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe
+32 bits: https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe
+
+If you want to install it manually, please read the following procedure.
+
 Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode.
 
 To install Glances on you system:
