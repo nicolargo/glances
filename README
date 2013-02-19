@@ -1,5 +1,4 @@
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/484466/nicolargoglances-on-GitHub)
-[![Build Status](https://travis-ci.org/nicolargo/glances.png?branch=master)](https://travis-ci.org/nicolargo/glances)
 
 =============================
 Glances -- Eye on your system
