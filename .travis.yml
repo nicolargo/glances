@@ -5,4 +5,4 @@ python:
   - "2.7"
   - "3.2"
 
-script: python setup.py install
+script: python glances/unitest.py
