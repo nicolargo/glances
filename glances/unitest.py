@@ -82,21 +82,21 @@ class TestGlancesStat(unittest.TestCase):
         self.stats.update()
         net = self.stats.getNetwork()
         #~ print("Network stat %s:" % net)
-        self.assertTrue(type(net) == list)        
+        self.assertTrue(type(net) == list)
         self.assertTrue(len(net) > 0)
 
     def test_Glances_getDiskIO(self):
         self.stats.update()
         diskio = self.stats.getDiskIO()
         #~ print("DiskIO stat %s:" % diskio)
-        self.assertTrue(type(diskio) == list)        
+        self.assertTrue(type(diskio) == list)
         self.assertTrue(len(diskio) > 0)
 
     def test_Glances_getFs(self):
         self.stats.update()
         fs = self.stats.getFs()
         #~ print("File system stat %s:" % fs)
-        self.assertTrue(type(fs) == list)        
+        self.assertTrue(type(fs) == list)
         self.assertTrue(len(fs) > 0)
 
     def test_Glances_getProcess(self):
@@ -114,7 +114,7 @@ class TestGlancesStat(unittest.TestCase):
         self.stats.update()
         sensors = self.stats.getSensors()
         #~ print("Optionnal sensors stat %s:" % sensors)
-        self.assertTrue(type(sensors) == list)        
+        self.assertTrue(type(sensors) == list)
         #~ self.assertTrue(len(sensors) > 0)
 
 if __name__ == '__main__':
