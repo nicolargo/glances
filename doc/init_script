@@ -1,0 +1,91 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          glances
+# Required-Start:    networking
+# Required-Stop:     networking
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start and stop the Glance server
+### END INIT INFO
+
+# Author: beudbeud@beudibox.fr
+
+set -e
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Glances server"
+NAME=glances
+DAEMON=/usr/bin/$NAME
+DAEMON_ARGS=""
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
+case $1 in
+	start)
+	if [ -e $PIDFILE ]; then
+		log_daemon_msg "$NAME process was already running"
+		log_end_msg 1
+	else
+		# Start the daemon.
+		log_daemon_msg "Starting the process" "$NAME"
+		# Start the daemon with the help of start-stop-daemon
+		# Log the message appropriately
+		if start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE -b -m --exec $DAEMON -- -s $DAEMON_ARGS; then
+			log_end_msg 0
+		else
+			log_end_msg 1
+		fi
+	fi
+	;;
+
+	stop)
+	# Stop the daemon.
+	if [ -e $PIDFILE ]; then
+		status_of_proc -p $PIDFILE $DAEMON "Stoppping the $NAME process" && status="0" || status="$?"
+		if [ "$status" = 0 ]; then
+			start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+			/bin/rm -rf $PIDFILE
+		fi
+	else
+		log_daemon_msg "Glances process was already stopped"
+		log_end_msg 1
+	fi
+	;;
+
+	restart|reload)
+	# Restart the daemon.
+	$0 stop && sleep 2 && $0 start
+	;;
+
+	status)
+	# Check the status of the process.
+	if [ -e $PIDFILE ]; then
+		status_of_proc -p $PIDFILE $DAEMON "$NAME process" && exit 0 || exit $?
+	else
+		log_daemon_msg "Glances process is not running"
+		log_end_msg 1
+	fi
+	;;
+
+	*)
+	 # For invalid arguments, print the usage message.
+	 echo "Usage: $0 {start|stop|restart|reload|status}"
+	 exit 2
+	 ;;
+esac
