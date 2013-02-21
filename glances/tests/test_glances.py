@@ -3,11 +3,6 @@
 #
 # Glances unitary test
 #
-# Syntax:
-# ./unitest.py
-# or
-# ./unitest.py -v
-#
 # Copyright (C) 2012 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
@@ -23,12 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# import os
+# import time
+# import signal
 import unittest
 import multiprocessing
-import os
-import signal
-import time
-import glances
+
+from glances import glances
+
 
 class TestGlancesStat(unittest.TestCase):
 

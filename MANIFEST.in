@@ -1,7 +1,6 @@
 include README
 include COPYING
 include AUTHORS
-include ChangeLog
 include NEWS
 include screenshot.png
 recursive-include doc *.png
