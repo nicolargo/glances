@@ -1,4 +1,5 @@
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/thing/484466/nicolargoglances-on-GitHub)
+[![Build Status](https://travis-ci.org/nicolargo/glances.png?branch=master)](https://travis-ci.org/nicolargo/glances)
 
 =============================
 Glances -- Eye on your system
@@ -16,11 +17,11 @@ It is developed in Python.
 
 Console (80x24) screenshot:
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot.png)
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/screenshot.png)
 
 Wide terminal (> 90x24) screenshot:
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/screenshot-wide.png)
+![screenshot](https://github.com/nicolargo/glances/raw/master/doc/screenshot-wide.png)
 
 ## Installation
 
@@ -60,8 +61,8 @@ Note: if you are behind an HTTP Proxy, you should use instead:
 ### From [Homebrew](http://mxcl.github.com/homebrew/) for Mac OS X
 
     $ brew install brew-pip
-	$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-	$ brew pip Glances
+    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+    $ brew pip Glances
 
 If you have the following error:
 
@@ -103,9 +104,9 @@ Glances use a standard GNU style installer (for a Debian like system):
     $ sudo apt-get update
     $ sudo apt-get install python-setuptools build-essential python-dev
     $ cd /tmp
-	$ tar zxvf glances-last.tgz
-	$ cd nicolargo-glances-*
-	$ sudo python setup.py install
+    $ tar zxvf glances-last.tgz
+    $ cd nicolargo-glances-*
+    $ sudo python setup.py install
 
 ## Configuration
 
@@ -134,7 +135,7 @@ On OS X, you should copy the configuration file to `~/Library/Application Suppor
 
 If you want to monitor your local machine, just run:
 
-	$ glances
+    $ glances
 
 ### In client/server mode
 
@@ -167,7 +168,7 @@ The version 1.6 introduces a optionnal password to access to the server (-P pass
 By default, stats are refreshed every second, to change this setting, you can
 use the -t option. For example to set the refresh rate to 5 seconds:
 
-	$ glances -t 5
+    $ glances -t 5
 
 Importants stats are colored:
 

@@ -20,10 +20,3 @@ done
 
 echo -e "\n\n* SUCCESS: Uninstall complete."
 rm install.record
-
-
-
-
-
-
-
