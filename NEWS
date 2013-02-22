@@ -52,130 +52,129 @@ Version 1.5
 Version 1.4.2.2
 ===============
 
-	* Add switch between bit/sec and byte/sec for network IO
-	* Add Changelog (generated with gitchangelog)
+    * Add switch between bit/sec and byte/sec for network IO
+    * Add Changelog (generated with gitchangelog)
 
 Version 1.4.2.1
 ===============
 
-	* Minor patch to solve memomy issue (#94) on Mac OS X
+    * Minor patch to solve memomy issue (#94) on Mac OS X
 
 Version 1.4.2
 =============
 
-        * Use the news virtual_memory() and virtual_swap() fct (PsUtil)
-        * Display "Top process" in logs
-        * Minor patch on man page for Debian packaging
-        * Code optimization (less try and except)
+    * Use the news virtual_memory() and virtual_swap() fct (PsUtil)
+    * Display "Top process" in logs
+    * Minor patch on man page for Debian packaging
+    * Code optimization (less try and except)
 
 Version 1.4.1.1
 ===============
 
-	* Minor patch to disable Process IO for OS X (not available in PsUtil)
+    * Minor patch to disable Process IO for OS X (not available in PsUtil)
 
 Version 1.4.1
 =============
 
-	* Per core CPU stats (if space is available)
-	* Add Process IO Read/Write information (if space is available)
-	* Uniformize units
+    * Per core CPU stats (if space is available)
+    * Add Process IO Read/Write information (if space is available)
+    * Uniformize units
 
 Version 1.4
 ===========
 
-	* Goodby StatGrab... Welcome to the PsUtil library !
-	* No more autotools, use setup.py to install (or package)
-	* Only major stats (CPU, Load and memory) use background colors
-	* Improve operating system name detection
-	* New system info: one-line layout and add Arch Linux support
-	* No decimal places for values < GB
-	* New memory and swap layout
-	* Add percentage of usage for both memory and swap
-        * Add MEM% usage, NICE, STATUS, UID, PID and running TIME per process
-	* Add sort by MEM% ('m' key)
-	* Add sort by Process name ('p' key)
-	* Multiple minor fixes, changes and improvements
-	* Disable Disk IO module from the command line (-d)
-	* Disable Mount module from the command line (-m)
-	* Disable Net rate module from the command line (-n)
-	* Improved FreeBSD support
-	* Cleaning code and style
-	* Code is now checked with pep8
-	* CSV and HTML output (experimental functions, no yet documentation)
+    * Goodby StatGrab... Welcome to the PsUtil library !
+    * No more autotools, use setup.py to install (or package)
+    * Only major stats (CPU, Load and memory) use background colors
+    * Improve operating system name detection
+    * New system info: one-line layout and add Arch Linux support
+    * No decimal places for values < GB
+    * New memory and swap layout
+    * Add percentage of usage for both memory and swap
+    * Add MEM% usage, NICE, STATUS, UID, PID and running TIME per process
+    * Add sort by MEM% ('m' key)
+    * Add sort by Process name ('p' key)
+    * Multiple minor fixes, changes and improvements
+    * Disable Disk IO module from the command line (-d)
+    * Disable Mount module from the command line (-m)
+    * Disable Net rate module from the command line (-n)
+    * Improved FreeBSD support
+    * Cleaning code and style
+    * Code is now checked with pep8
+    * CSV and HTML output (experimental functions, no yet documentation)
 
 Version 1.3.7
 =============
 
-	* Display (if terminal space is available) an alerts history (logs)
-	* Add a limits classe to manage stats limits
-	* Manage black and white console (issue #31)
+    * Display (if terminal space is available) an alerts history (logs)
+    * Add a limits classe to manage stats limits
+    * Manage black and white console (issue #31)
 
 Version 1.3.6
 =============
 
-	* Add control before libs import
-	* Change static Python path (issue #20)
-	* Correct a bug with a network interface disaippear (issue #27)
-	* Add French and Spanish translation (thx to Jean Bob)
+    * Add control before libs import
+    * Change static Python path (issue #20)
+    * Correct a bug with a network interface disaippear (issue #27)
+    * Add French and Spanish translation (thx to Jean Bob)
 
 Version 1.3.5
 =============
 
-	* Add an help panel when Glances is running (key: 'h')
-	* Add keys descriptions in the syntax (--help | -h)
+    * Add an help panel when Glances is running (key: 'h')
+    * Add keys descriptions in the syntax (--help | -h)
 
 Version 1.3.4
 =============
 
-	* New key: 'n' to enable/disable network stats
-	* New key: 'd' to enable/disable disk IO stats
-	* New key: 'f' to enable/disable FS stats
-	* Reorganised the screen when stat are not available|disable
-	* Force Glances to use the enmbeded fs stats (issue #16)
+    * New key: 'n' to enable/disable network stats
+    * New key: 'd' to enable/disable disk IO stats
+    * New key: 'f' to enable/disable FS stats
+    * Reorganised the screen when stat are not available|disable
+    * Force Glances to use the enmbeded fs stats (issue #16)
 
 Version 1.3.3
 =============
 
-	* Automaticaly swith between process short and long name
-	* Center the host / system information
-	* Always put the hour/date in the bottom/right
-	* Correct a bug if there is a lot of Disk/IO
-	* Add control about available libstatgrab functions
+    * Automaticaly swith between process short and long name
+    * Center the host / system information
+    * Always put the hour/date in the bottom/right
+    * Correct a bug if there is a lot of Disk/IO
+    * Add control about available libstatgrab functions
 
 Version 1.3.2
 =============
 
-	* Add alert for network bit rate°
-	* Change the caption
-	* Optimised net, disk IO and fs display (share the space)
-
-° Disable on Ubuntu because the libstatgrab return a zero value
-  for the network interface speed.
+    * Add alert for network bit rate°
+    * Change the caption
+    * Optimised net, disk IO and fs display (share the space)
+      Disable on Ubuntu because the libstatgrab return a zero value
+      for the network interface speed.
 
 Version 1.3.1
 =============
 
-	* Add alert on load (depend on number of CPU core)
-	* Fix bug when the FS list is very long
+    * Add alert on load (depend on number of CPU core)
+    * Fix bug when the FS list is very long
 
 Version 1.3
 ===========
 
-	* Add file system stats (total and used space)
-	* Adapt unit dynamicaly (K, M, G)
-	* Add man page (Thanks to Edouard Bourguignon)
+    * Add file system stats (total and used space)
+    * Adapt unit dynamicaly (K, M, G)
+    * Add man page (Thanks to Edouard Bourguignon)
 
 Version 1.2
 ===========
 
-	* Resize the terminal and the windows are adapted dynamicaly
-	* Refresh screen instantanetly when a key is pressed
+    * Resize the terminal and the windows are adapted dynamicaly
+    * Refresh screen instantanetly when a key is pressed
 
 Version 1.1.3
 =============
 
-	* Add disk IO monitoring
-	* Add caption
-	* Correct a bug when computing the bitrate with the option -t
-	* Catch CTRL-C before init the screen (Bug #2)
-	* Check if mem.total = 0 before division (Bug #1)
+    * Add disk IO monitoring
+    * Add caption
+    * Correct a bug when computing the bitrate with the option -t
+    * Catch CTRL-C before init the screen (Bug #2)
+    * Check if mem.total = 0 before division (Bug #1)

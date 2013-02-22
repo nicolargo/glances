@@ -8,16 +8,15 @@ from setuptools import setup
 
 data_files = [
     ('share/man/man1', ['man/glances.1']),
-    ('share/doc/glances', ['README',
+    ('share/doc/glances', ['AUTHORS',
                            'COPYING',
-                           'AUTHORS',
                            'NEWS',
-                           'screenshot.png',
+                           'README',
                            'glances/conf/glances.conf']),
     ('share/doc/glances/doc', glob.glob('doc/*.png')),
-    ('share/glances/html', glob.glob('glances/html/*.html')),
-    ('share/glances/css', glob.glob('glances/css/*.css')),
-    ('share/glances/img', glob.glob('glances/img/*.png')),
+    ('share/glances/css', glob.glob('glances/data/css/*.css')),
+    ('share/glances/html', glob.glob('glances/data/html/*.html')),
+    ('share/glances/img', glob.glob('glances/data/img/*.png')),
 ]
 
 if hasattr(sys, 'real_prefix') or ('bsd' or 'darwin' in sys.platform):
