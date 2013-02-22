@@ -40,6 +40,7 @@ setup(
     license="LGPL",
     keywords="cli curses monitoring system",
     long_description=open('README').read(),
+    test_suite="glances.tests",
     install_requires=['psutil>=0.4.1'],
     packages=['glances'],
     extras_require={
