@@ -2871,23 +2871,25 @@ class glancesHtml:
     """
     This class manages the HTML output
     """
-
-    def __init__(self, htmlfolder="/usr/share", refresh_time=1):
-        # Global information to display
-
-        # Init refresh time
+    def __init__(self, html_path, refresh_time=1):
+        html_filename = 'glances.html'
+        html_template = 'default.html'
         self.__refresh_time = refresh_time
 
-        # Set the root path
-        self.root_path = htmlfolder + '/'
+        # Set the HTML output file
+        self.html_file = os.path.join(html_path, html_filename)
+
+        # Get the working path
+        self.work_path = self.get_work_path()
 
         # Set the templates path
+        template_path = os.path.join(self.work_path, 'html')
         environment = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + '/html'),
+            loader=jinja2.FileSystemLoader(template_path),
             extensions=['jinja2.ext.loopcontrols'])
 
         # Open the template
-        self.template = environment.get_template('default.html')
+        self.template = environment.get_template(html_template)
 
         # Define the colors list (hash table) for logged stats
         self.__colors_list = {
@@ -2898,6 +2900,27 @@ class glancesHtml:
             'WARNING': "bgcwarning fgcwarning",
             'CRITICAL': "bgcritical fgcritical"
         }
+
+    def get_work_path(self):
+        """
+        Get the working path
+
+        The data files will be searched in the following paths:
+            * /path/to/glances/glances/data
+            * {/usr,/usr/local}/share/glances (Linux or *BSD/OS X)
+        """
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        local_path = os.path.join(base_path, 'data')
+        share_path = os.path.join(sys.prefix, 'share', __appname__)
+
+        if os.path.exists(local_path):
+            work_path = local_path  # running from local directory
+        elif os.path.exists(share_path):
+            work_path = share_path  # running from system directory
+        else:
+            work_path = ""
+
+        return work_path
 
     def __getAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
@@ -2974,30 +2997,26 @@ class glancesHtml:
     def update(self, stats):
         if stats.getCpu():
             # Open the output file
-            f = open(self.root_path + 'glances.html', 'w')
+            with open(self.html_file, 'w') as f:
+                # HTML refresh is set to 1.5 * refresh_time
+                # to avoid display while page rendering
+                data = self.template.render(
+                    refresh=int(self.__refresh_time * 1.5),
+                    host=stats.getHost(),
+                    system=stats.getSystem(),
+                    cpu=self.__getCpuColor(stats.getCpu()),
+                    load=self.__getLoadColor(stats.getLoad(), stats.getCore()),
+                    core=stats.getCore(),
+                    mem=self.__getMemColor(stats.getMem()),
+                    memswap=self.__getMemSwapColor(stats.getMemSwap()),
+                    net=stats.getNetwork(),
+                    diskio=stats.getDiskIO(),
+                    fs=self.__getFsColor(stats.getFs()),
+                    proccount=stats.getProcessCount(),
+                    proclist=stats.getProcessList())
 
-            # Process color
-
-            # Render it
-            # HTML Refresh is set to 1.5 * refresh_time
-            # ... to avoid display while page rendering
-            data = self.template.render(
-                refresh=int(self.__refresh_time * 1.5),
-                host=stats.getHost(),
-                system=stats.getSystem(),
-                cpu=self.__getCpuColor(stats.getCpu()),
-                load=self.__getLoadColor(stats.getLoad(), stats.getCore()),
-                core=stats.getCore(),
-                mem=self.__getMemColor(stats.getMem()),
-                memswap=self.__getMemSwapColor(stats.getMemSwap()),
-                net=stats.getNetwork(),
-                diskio=stats.getDiskIO(),
-                fs=self.__getFsColor(stats.getFs()),
-                proccount=stats.getProcessCount(),
-                proclist=stats.getProcessList())
-
-            # Write data into the file
-            f.write(data)
+                # Write data into the file
+                f.write(data)
 
             # Close the file
             f.close()
@@ -3019,7 +3038,7 @@ class glancesCsv:
             self.__cvsfile_fd = open("%s" % cvsfile, "wb")
             self.__csvfile = csv.writer(self.__cvsfile_fd)
         except IOError as error:
-            print("Can not create the output CSV file: ", error[1])
+            print("Cannot create the output CSV file: ", error[1])
             sys.exit(0)
 
     def exit(self):
@@ -3472,18 +3491,18 @@ def main():
     # Check options
     if server_tag:
         if client_tag:
-            print(_("Error: Can not use both -s and -c flag"))
+            print(_("Error: Cannot use both -s and -c flag"))
             sys.exit(2)
         if html_tag or csv_tag:
-            print(_("Error: Can not use both -s and -o flag"))
+            print(_("Error: Cannot use both -s and -o flag"))
             sys.exit(2)
 
     if client_tag:
         if html_tag or csv_tag:
-            print(_("Error: Can not use both -c and -o flag"))
+            print(_("Error: Cannot use both -c and -o flag"))
             sys.exit(2)
         if conf_file_tag:
-            print(_("Error: Can not use both -c and -C flag"))
+            print(_("Error: Cannot use both -c and -C flag"))
             print(_("       Limits are set based on the server ones"))
             sys.exit(2)
 
@@ -3495,7 +3514,7 @@ def main():
         try:
             output_folder
         except UnboundLocalError:
-            print(_("Error: HTML export (-o html) need"
+            print(_("Error: HTML export (-o html) need "
                     "output folder definition (-f <folder>)"))
             sys.exit(2)
 
@@ -3579,7 +3598,7 @@ def main():
 
         # Init HTML output
         if html_tag:
-            htmloutput = glancesHtml(htmlfolder=output_folder,
+            htmloutput = glancesHtml(html_path=output_folder,
                                      refresh_time=refresh_time)
 
         # Init CSV output
