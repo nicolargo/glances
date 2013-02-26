@@ -1075,14 +1075,8 @@ class GlancesStats:
 
         # PROCESS
         self.glancesgrabprocesses.update()
-        processcount = self.glancesgrabprocesses.getcount()
-        process = self.glancesgrabprocesses.getlist()
-        if not hasattr(self, 'process'):
-            self.processcount = {}
-            self.process = []
-        else:
-            self.processcount = processcount
-            self.process = process
+        self.processcount = self.glancesgrabprocesses.getcount()
+        self.process = self.glancesgrabprocesses.getlist()
 
         # Get the current date/time
         self.now = datetime.now()
