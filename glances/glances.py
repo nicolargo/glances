@@ -1419,6 +1419,7 @@ class glancesScreen:
         self.help_tag = False
         self.percpu_tag = False
         self.net_byteps_tag = network_bytepersec_tag
+        self.network_stats_totalled = False
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
@@ -1712,6 +1713,9 @@ class glancesScreen:
         elif self.pressedkey == 115:
             # 's' > Show/hide sensors stats (Linux-only)
             self.sensors_tag = not self.sensors_tag
+        elif self.pressedkey == 116:
+            # 't' > Total or Receive/Transmit network stats
+            self.network_stats_totalled = not self.network_stats_totalled
         elif self.pressedkey == 119:
             # 'w' > Delete finished warning logs
             logs.clean()
@@ -2180,12 +2184,14 @@ class glancesScreen:
             self.term_window.addnstr(self.network_y, self.network_x,
                                      _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.network_y, self.network_x + 7,
-                                     format(_("Rx/s"), '>5'), 5)
-            self.term_window.addnstr(self.network_y, self.network_x + 13,
-                                     format(_("Tx/s"), '>5'), 5)
-            self.term_window.addnstr(self.network_y, self.network_x + 19,
-                                     format(_("Total"), '>5'), 5)
+            if self.network_stats_totalled:
+                self.term_window.addnstr(self.network_y, self.network_x + 10,
+                                         format(_("Rx/s"), '>5'), 5)
+                self.term_window.addnstr(self.network_y, self.network_x + 18,
+                                         format(_("Tx/s"), '>5'), 5)
+            else:
+                self.term_window.addnstr(self.network_y, self.network_x + 18,
+                                        format(_("Total"), '<5'), 5)
 
             # If there is no data to display...
             if not network:
@@ -2211,28 +2217,31 @@ class glancesScreen:
                 if self.net_byteps_tag:
                     rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
                     tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
+                    # Combined, or total network traffic
                     cx = self.__autoUnit(network[i]['cx'] // elapsed_time)
                 else:
                     rx = self.__autoUnit(
                         network[i]['rx'] // elapsed_time * 8) + "b"
                     tx = self.__autoUnit(
                         network[i]['tx'] // elapsed_time * 8) + "b"
+                    # Combined, or total network traffic
                     cx = self.__autoUnit(
                         network[i]['cx'] // elapsed_time * 8) + "b"
                 
-
-                # rx/s
-                self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x + 6,
-                                         format(rx, '>5'), 5)
-                # tx/s
-                self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x + 12,
-                                         format(tx, '>5'), 5)
-                # cx/s
-                self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x + 18,
-                                         format(cx, '>5'), 5)
+                if self.network_stats_totalled:
+                    # rx/s
+                    self.term_window.addnstr(self.network_y + 1 + i,
+                                             self.network_x + 10,
+                                             format(rx, '>5'), 5)
+                    # tx/s
+                    self.term_window.addnstr(self.network_y + 1 + i,
+                                             self.network_x + 18,
+                                             format(tx, '>5'), 5)
+                else:
+                    # cx/s (Combined, or total)
+                    self.term_window.addnstr(self.network_y + 1 + i,
+                                             self.network_x + 18,
+                                             format(cx, '>5'), 5)
                 ret = ret + 1
             return ret
         return 0
@@ -2848,13 +2857,14 @@ class glancesScreen:
                     '{0:{width}}{1}'.format(*key, width=width), 38)
                 key_table_y += 1
 
-            # key table (right column)
-            key_col_right = [[_("b"), _("Bit/s or Byte/s for network IO")],
-                             [_("w"), _("Delete warning logs")],
-                             [_("x"), _("Delete warning and critical logs")],
-                             [_("1"), _("Global CPU or per-CPU stats")],
-                             [_("h"), _("Show/hide this help message")],
-                             [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
+                # key table (right column)
+                key_col_right = [[_("b"), _("Bit/s or Byte/s for network IO")],
+                                 [_("w"), _("Delete warning logs")],
+                                 [_("x"), _("Delete warning and critical logs")],
+                                 [_("1"), _("Global CPU or per-CPU stats")],
+                                 [_("h"), _("Show/hide this help message")],
+                                 [_("t"), _("View network traffic as total")],
+                                 [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
 
             key_table_x = self.help_x + 38
             key_table_y = limits_table_y + 1
