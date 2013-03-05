@@ -1035,6 +1035,7 @@ class GlancesStats:
                                          self.network_old[net].bytes_recv)
                         netstat['tx'] = (self.network_new[net].bytes_sent -
                                          self.network_old[net].bytes_sent)
+                        netstat['cx'] = netstat['rx'] + netstat['tx']
                     except Exception:
                         continue
                     else:
@@ -2179,10 +2180,12 @@ class glancesScreen:
             self.term_window.addnstr(self.network_y, self.network_x,
                                      _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
-            self.term_window.addnstr(self.network_y, self.network_x + 10,
+            self.term_window.addnstr(self.network_y, self.network_x + 7,
                                      format(_("Rx/s"), '>5'), 5)
-            self.term_window.addnstr(self.network_y, self.network_x + 18,
+            self.term_window.addnstr(self.network_y, self.network_x + 13,
                                      format(_("Tx/s"), '>5'), 5)
+            self.term_window.addnstr(self.network_y, self.network_x + 19,
+                                     format(_("Total"), '>5'), 5)
 
             # If there is no data to display...
             if not network:
@@ -2208,20 +2211,28 @@ class glancesScreen:
                 if self.net_byteps_tag:
                     rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
                     tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
+                    cx = self.__autoUnit(network[i]['cx'] // elapsed_time)
                 else:
                     rx = self.__autoUnit(
                         network[i]['rx'] // elapsed_time * 8) + "b"
                     tx = self.__autoUnit(
                         network[i]['tx'] // elapsed_time * 8) + "b"
+                    cx = self.__autoUnit(
+                        network[i]['cx'] // elapsed_time * 8) + "b"
+                
 
                 # rx/s
                 self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x + 10,
+                                         self.network_x + 6,
                                          format(rx, '>5'), 5)
                 # tx/s
                 self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x + 18,
+                                         self.network_x + 12,
                                          format(tx, '>5'), 5)
+                # cx/s
+                self.term_window.addnstr(self.network_y + 1 + i,
+                                         self.network_x + 18,
+                                         format(cx, '>5'), 5)
                 ret = ret + 1
             return ret
         return 0
