@@ -2184,7 +2184,7 @@ class glancesScreen:
             self.term_window.addnstr(self.network_y, self.network_x,
                                      _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
-            if self.network_stats_totalled:
+            if not self.network_stats_totalled:
                 self.term_window.addnstr(self.network_y, self.network_x + 10,
                                          format(_("Rx/s"), '>5'), 5)
                 self.term_window.addnstr(self.network_y, self.network_x + 18,
