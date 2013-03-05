@@ -2191,7 +2191,7 @@ class glancesScreen:
                                          format(_("Tx/s"), '>5'), 5)
             else:
                 self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                        format(_("R+T/s"), '>13'), 13)
+                                        format(_("Rx+Tx/s"), '>13'), 13)
 
             # If there is no data to display...
             if not network:
