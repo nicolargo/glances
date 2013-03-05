@@ -2228,7 +2228,7 @@ class glancesScreen:
                     cx = self.__autoUnit(
                         network[i]['cx'] // elapsed_time * 8) + "b"
                 
-                if self.network_stats_totalled:
+                if not self.network_stats_totalled:
                     # rx/s
                     self.term_window.addnstr(self.network_y + 1 + i,
                                              self.network_x + 10,
