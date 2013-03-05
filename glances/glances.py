@@ -1714,7 +1714,7 @@ class glancesScreen:
             # 's' > Show/hide sensors stats (Linux-only)
             self.sensors_tag = not self.sensors_tag
         elif self.pressedkey == 116:
-            # 't' > Total or Receive/Transmit network stats
+            # 't' > View network traffic as total
             self.network_stats_totalled = not self.network_stats_totalled
         elif self.pressedkey == 119:
             # 'w' > Delete finished warning logs
