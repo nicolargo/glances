@@ -2250,11 +2250,11 @@ class glancesScreen:
                     cx_per_sec = self.__autoUnit(
                         network[i]['cx'] // elapsed_time * 8) + "b"
                     cumulative_rx = self.__autoUnit(
-                        network[i]['cumulative_rx'] * 8) + "b"
+                        network[i]['cumulative_rx']) + "b"
                     cumulative_tx = self.__autoUnit(
-                        network[i]['cumulative_tx'] * 8) + "b"
+                        network[i]['cumulative_tx']) + "b"
                     cumulative_cx = self.__autoUnit(
-                        network[i]['cumulative_cx'] * 8) + "b"
+                        network[i]['cumulative_cx']) + "b"
 
                 if self.network_stats_cumulative:
                     rx = cumulative_rx
@@ -2268,17 +2268,17 @@ class glancesScreen:
                 if not self.network_stats_combined:
                     # rx/s
                     self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 10,
-                                             format(rx, '>5'), 5)
+                                             self.network_x + 8,
+                                             format(rx, '>7'), 7)
                     # tx/s
                     self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 18,
-                                             format(tx, '>5'), 5)
+                                             self.network_x + 16,
+                                             format(tx, '>7'), 7)
                 else:
                     # cx/s (Combined, or total)
                     self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 18,
-                                             format(cx, '>5'), 5)
+                                             self.network_x + 16,
+                                             format(cx, '>7'), 7)
                 ret = ret + 1
             return ret
         return 0
