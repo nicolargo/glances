@@ -1031,10 +1031,14 @@ class GlancesStats:
                         # Try necessary to manage dynamic network interface
                         netstat = {}
                         netstat['interface_name'] = net
+                        netstat['cumulative_rx'] = self.network_new[net].bytes_recv
                         netstat['rx'] = (self.network_new[net].bytes_recv -
                                          self.network_old[net].bytes_recv)
+                        netstat['cumulative_tx'] = self.network_new[net].bytes_sent
                         netstat['tx'] = (self.network_new[net].bytes_sent -
                                          self.network_old[net].bytes_sent)
+                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                                    netstat['cumulative_tx'])
                         netstat['cx'] = netstat['rx'] + netstat['tx']
                     except Exception:
                         continue
@@ -1419,7 +1423,8 @@ class glancesScreen:
         self.help_tag = False
         self.percpu_tag = False
         self.net_byteps_tag = network_bytepersec_tag
-        self.network_stats_totalled = False
+        self.network_stats_combined = False
+        self.network_stats_cumulative = False
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
@@ -1714,8 +1719,11 @@ class glancesScreen:
             # 's' > Show/hide sensors stats (Linux-only)
             self.sensors_tag = not self.sensors_tag
         elif self.pressedkey == 116:
-            # 't' > View network traffic as total
-            self.network_stats_totalled = not self.network_stats_totalled
+            # 't' > View network traffic as combination
+            self.network_stats_combined = not self.network_stats_combined
+        elif self.pressedkey == 117:
+            # 'u' > View cumulative network IO
+            self.network_stats_cumulative = not self.network_stats_cumulative
         elif self.pressedkey == 119:
             # 'w' > Delete finished warning logs
             logs.clean()
@@ -2184,14 +2192,23 @@ class glancesScreen:
             self.term_window.addnstr(self.network_y, self.network_x,
                                      _("Network"), 7, self.title_color if
                                      self.hascolors else curses.A_UNDERLINE)
-            if not self.network_stats_totalled:
+
+            if self.network_stats_combined:
+                column_name = "Rx+Tx"
+                if not self.network_stats_cumulative:
+                    column_name += "/s"
                 self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                         format(_("Rx/s"), '>5'), 5)
-                self.term_window.addnstr(self.network_y, self.network_x + 18,
-                                         format(_("Tx/s"), '>5'), 5)
+                                         format(_(column_name), '>13'), 13)
             else:
+                rx_column_name = "Rx"
+                tx_column_name = "Tx"
+                if not self.network_stats_cumulative:
+                    rx_column_name += "/s"
+                    tx_column_name += "/s"
                 self.term_window.addnstr(self.network_y, self.network_x + 10,
-                                        format(_("Rx+Tx/s"), '>13'), 13)
+                                         format(_(rx_column_name), '>5'), 5)
+                self.term_window.addnstr(self.network_y, self.network_x + 18,
+                                     format(_(tx_column_name), '>5'), 5)
 
             # If there is no data to display...
             if not network:
@@ -2215,20 +2232,40 @@ class glancesScreen:
 
                 # Byte/s or bit/s
                 if self.net_byteps_tag:
-                    rx = self.__autoUnit(network[i]['rx'] // elapsed_time)
-                    tx = self.__autoUnit(network[i]['tx'] // elapsed_time)
+                    rx_per_sec = self.__autoUnit(network[i]['rx'] // elapsed_time)
+                    tx_per_sec = self.__autoUnit(network[i]['tx'] // elapsed_time)
                     # Combined, or total network traffic
-                    cx = self.__autoUnit(network[i]['cx'] // elapsed_time)
+                    # cx is combined rx + tx
+                    cx_per_sec = self.__autoUnit(network[i]['cx'] // elapsed_time)
+                    cumulative_rx = self.__autoUnit(network[i]['cumulative_rx'])
+                    cumulative_tx = self.__autoUnit(network[i]['cumulative_tx'])
+                    cumulative_cx = self.__autoUnit(network[i]['cumulative_cx'])
+
                 else:
-                    rx = self.__autoUnit(
+                    rx_per_sec = self.__autoUnit(
                         network[i]['rx'] // elapsed_time * 8) + "b"
-                    tx = self.__autoUnit(
+                    tx_per_sec = self.__autoUnit(
                         network[i]['tx'] // elapsed_time * 8) + "b"
-                    # Combined, or total network traffic
-                    cx = self.__autoUnit(
+                    # cx is combined rx + tx
+                    cx_per_sec = self.__autoUnit(
                         network[i]['cx'] // elapsed_time * 8) + "b"
-                
-                if not self.network_stats_totalled:
+                    cumulative_rx = self.__autoUnit(
+                        network[i]['cumulative_rx'] * 8) + "b"
+                    cumulative_tx = self.__autoUnit(
+                        network[i]['cumulative_tx'] * 8) + "b"
+                    cumulative_cx = self.__autoUnit(
+                        network[i]['cumulative_cx'] * 8) + "b"
+
+                if self.network_stats_cumulative:
+                    rx = cumulative_rx
+                    tx = cumulative_tx
+                    cx = cumulative_cx
+                else:
+                    rx = rx_per_sec
+                    tx = tx_per_sec
+                    cx = cx_per_sec
+
+                if not self.network_stats_combined:
                     # rx/s
                     self.term_window.addnstr(self.network_y + 1 + i,
                                              self.network_x + 10,
@@ -2858,12 +2895,13 @@ class glancesScreen:
                 key_table_y += 1
 
                 # key table (right column)
-                key_col_right = [[_("b"), _("Bit/s or Byte/s for network IO")],
+                key_col_right = [[_("b"), _("Bits or Bytes for network IO")],
                                  [_("w"), _("Delete warning logs")],
                                  [_("x"), _("Delete warning and critical logs")],
                                  [_("1"), _("Global CPU or per-CPU stats")],
                                  [_("h"), _("Show/hide this help message")],
-                                 [_("t"), _("View network traffic as total")],
+                                 [_("t"), _("View network IO as combination")],
+                                 [_("u"), _("View cumulative network IO")],
                                  [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
 
             key_table_x = self.help_x + 38
