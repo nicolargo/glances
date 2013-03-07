@@ -2250,11 +2250,11 @@ class glancesScreen:
                     cx_per_sec = self.__autoUnit(
                         network[i]['cx'] // elapsed_time * 8) + "b"
                     cumulative_rx = self.__autoUnit(
-                        network[i]['cumulative_rx']) + "b"
+                        network[i]['cumulative_rx'] * 8) + "b"
                     cumulative_tx = self.__autoUnit(
-                        network[i]['cumulative_tx']) + "b"
+                        network[i]['cumulative_tx'] * 8) + "b"
                     cumulative_cx = self.__autoUnit(
-                        network[i]['cumulative_cx']) + "b"
+                        network[i]['cumulative_cx'] * 8) + "b"
 
                 if self.network_stats_cumulative:
                     rx = cumulative_rx
