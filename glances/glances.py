@@ -3610,7 +3610,7 @@ def main():
     if server_tag:
         # Init the server
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
-        server = GlancesServer(bind_ip, server_port, GlancesHandler, refresh_time)
+        server = GlancesServer(bind_ip, int(server_port), GlancesHandler, refresh_time)
 
         # Set the server login/password (if -P tag)
         if password != "":
