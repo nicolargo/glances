@@ -101,7 +101,7 @@ if psutil_version < (0, 4, 1):
     sys.exit(1)
 
 try:
-    # virtual_memory() only available with PsUtil 0.6+
+    # virtual_memory() only available with PsUtil 0.6+ u
     psutil.virtual_memory()
 except Exception:
     psutil_mem_vm = False
@@ -808,6 +808,7 @@ class GlancesStats:
         self.process_list_refresh = True
         self.process_list_sortedby = ''
         self.glancesgrabprocesses = GlancesGrabProcesses()
+        self.last_update_time = None
 
     def _init_host(self):
         self.host = {}
@@ -1022,6 +1023,15 @@ class GlancesStats:
         # NET
         if network_tag:
             self.network = []
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            current_time = time.time()
+            if not self.last_update_time:
+                time_since_update = 1
+            else:
+                time_since_update = current_time - self.last_update_time
+            self.last_update_time = current_time
             if not hasattr(self, 'network_old'):
                 self.network_old = psutil.network_io_counters(pernic=True)
             else:
@@ -1030,6 +1040,7 @@ class GlancesStats:
                     try:
                         # Try necessary to manage dynamic network interface
                         netstat = {}
+                        netstat['time_since_update'] = time_since_update
                         netstat['interface_name'] = net
                         netstat['cumulative_rx'] = self.network_new[net].bytes_recv
                         netstat['rx'] = (self.network_new[net].bytes_recv -
