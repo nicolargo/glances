@@ -3635,7 +3635,7 @@ def main():
         stats.update({})
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
-        client = GlancesClient(server_ip, server_port, username, password)
+        client = GlancesClient(server_ip, int(server_port), username, password)
 
         # Test if client and server are in the same major version
         if not client.client_init():
