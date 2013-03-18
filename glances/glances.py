@@ -3191,15 +3191,15 @@ class GlancesInstance():
     All the methods of this class are published as XML RPC methods
     """
 
-    def __init__(self, refresh_time=1):
+    def __init__(self, cached_time=1):
         self.timer = Timer(0)
-        self.refresh_time = refresh_time
+        self.cached_time = cached_time
 
     def __update__(self):
-        # Never update more than 1 time per refresh_time
+        # Never update more than 1 time per cached_time
         if self.timer.finished():
             stats.update()
-        self.timer = Timer(self.refresh_time)
+        self.timer = Timer(self.cached_time)
 
     def init(self):
         # Return the Glances version
@@ -3287,7 +3287,7 @@ class GlancesServer():
     """
 
     def __init__(self, bind_address, bind_port=61209,
-                 RequestHandler=GlancesHandler, refresh_time=1):
+                 RequestHandler=GlancesHandler, cached_time=1):
         self.server = SimpleXMLRPCServer((bind_address, bind_port),
                                          requestHandler=RequestHandler)
         # The users dict
@@ -3297,7 +3297,7 @@ class GlancesServer():
         self.server.isAuth = False
         # Register functions
         self.server.register_introspection_functions()
-        self.server.register_instance(GlancesInstance(refresh_time))
+        self.server.register_instance(GlancesInstance(cached_time))
 
     def add_user(self, username, password):
         '''
@@ -3462,6 +3462,9 @@ def main():
     # Set the default refresh time
     refresh_time = 3
 
+    # Set the default cache lifetime (for server)
+    cached_time = 1
+
     # Use curses.A_BOLD by default
     use_bold = True
 
@@ -3623,7 +3626,7 @@ def main():
     if server_tag:
         # Init the server
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
-        server = GlancesServer(bind_ip, int(server_port), GlancesHandler, refresh_time)
+        server = GlancesServer(bind_ip, int(server_port), GlancesHandler, cached_time)
 
         # Set the server login/password (if -P tag)
         if password != "":
