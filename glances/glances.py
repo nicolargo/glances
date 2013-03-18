@@ -101,7 +101,7 @@ if psutil_version < (0, 4, 1):
     sys.exit(1)
 
 try:
-    # virtual_memory() only available with PsUtil 0.6+ u
+    # virtual_memory() only available with PsUtil 0.6+
     psutil.virtual_memory()
 except Exception:
     psutil_mem_vm = False
@@ -747,10 +747,12 @@ class GlancesGrabProcesses:
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
 
+        time_since_update = getTimeSinceLastUpdate('process_disk')
         # For each existing process...
         for proc in psutil.process_iter():
             try:
                 procstat = self.__get_process_stats(proc)
+                procstat['time_since_update'] = time_since_update
                 # ignore the 'idle' process on Windows and *BSD
                 # ignore the 'kernel_task' process on OS X
                 # waiting for upstream patch from psutil
@@ -808,7 +810,6 @@ class GlancesStats:
         self.process_list_refresh = True
         self.process_list_sortedby = ''
         self.glancesgrabprocesses = GlancesGrabProcesses()
-        self.last_update_time = None
 
     def _init_host(self):
         self.host = {}
@@ -1026,12 +1027,7 @@ class GlancesStats:
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
-            current_time = time.time()
-            if not self.last_update_time:
-                time_since_update = 1
-            else:
-                time_since_update = current_time - self.last_update_time
-            self.last_update_time = current_time
+            time_since_update = getTimeSinceLastUpdate('net')
             if not hasattr(self, 'network_old'):
                 self.network_old = psutil.network_io_counters(pernic=True)
             else:
@@ -1063,6 +1059,7 @@ class GlancesStats:
 
         # DISK I/O
         if diskio_tag:
+            time_since_update = getTimeSinceLastUpdate('disk')
             self.diskio = []
             if not hasattr(self, 'diskio_old'):
                 self.diskio_old = psutil.disk_io_counters(perdisk=True)
@@ -1072,6 +1069,7 @@ class GlancesStats:
                     try:
                         # Try necessary to manage dynamic disk creation/del
                         diskstat = {}
+                        diskstat['time_since_update'] = time_since_update
                         diskstat['disk_name'] = disk
                         diskstat['read_bytes'] = (
                             self.diskio_new[disk].read_bytes -
@@ -3437,6 +3435,10 @@ def main():
     global psutil_get_io_counter_tag, psutil_mem_vm
     global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag
     global refresh_time, client, server, server_port, server_ip
+    global last_update_times
+
+    # create update times dict
+    last_update_times = {}
 
     # Set default tags
     fs_tag = True
@@ -3719,6 +3721,19 @@ def main():
             # Update the CSV output
             if csv_tag:
                 csvoutput.update(stats)
+
+
+def getTimeSinceLastUpdate(IOType):
+    global last_update_times
+    assert(IOType in ['net', 'disk', 'process_disk'])
+    current_time = time.time()
+    last_time = last_update_times.get(IOType)
+    if not last_time:
+        time_since_update = 1
+    else:
+        time_since_update = current_time - last_time
+    last_update_times[IOType] = current_time
+    return time_since_update
 
 # Main
 #=====
