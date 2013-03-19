@@ -1475,13 +1475,18 @@ class glancesScreen:
         }
 
         for key in reversed(symbols):
-            if val >= prefix[key]:
-                value = float(val) / prefix[key]
-                if key == "M" or key == "K":
-                    return "{0:.0f}{1}".format(value, key)
+            value = float(val) / prefix[key]
+            if value > 1:
+                fixed_decimal_places = 0
+                if value < 100:
+                    fixed_decimal_places = 1
+                if value < 10:
+                    fixed_decimal_places = 2
+                val_string = "{0:.%df}{1}" % fixed_decimal_places
+                if key in 'YZEPTG':
+                    return val_string.format(value, key)
                 else:
-                    return "{0:.1f}{1}".format(value, key)
-
+                    return "{0:.0f}{1}".format(value, key)
         return "{0!s}".format(val)
 
     def __getCpuAlert(self, current=0, max=100, stat=''):
