@@ -199,6 +199,8 @@ When Glances is running, you can press:
 * 'n' disable or enable the network interfaces stats
 * 'p' sort by process name
 * 's' disable or enable the sensor stats (only available with -e tag)
+* 't' View network IO as combination
+* 'u' View cumulative network IO
 * 'w' delete finished warning logs messages
 * 'x' delete finished warning and critical logs messages
 * '1' switch between global CPU and per core stats
