@@ -1,0 +1,1882 @@
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-23
+
+    version 1.6.1
+
+Merge: a0e1380 a0060f9
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-19
+
+    Merge pull request #218 from jrenner/master
+    
+    Tried to improve autoUnit
+
+Jon Renner <rennerjc@gmail.com>	2013-03-19
+
+    work in improving autoUnit
+
+Merge: 3feb3b3 5540b0a
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-19
+
+    Merge pull request #217 from jrenner/master
+    
+    Fixes #215 changed timer to only reset when an update is run, not just an attempt to update
+
+Jon Renner <rennerjc@gmail.com>	2013-03-19
+
+    possible solution for issue #215
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-18
+
+    Change refresh_time to cached_time for the server side
+
+Merge: a9a7a70 02bd6d2
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-18
+
+    Merge pull request #216 from jrenner/master
+    
+    implement time_since_update for disk and processes
+
+Jon Renner <rennerjc@gmail.com>	2013-03-18
+
+    add time_since_update for disk and process_disk
+    
+    remove one line
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-17
+
+    Solve issue #206 / Server port in client mode
+
+Merge: db6bfc2 837446e
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-15
+
+    Merge pull request #203 from jrenner/master
+    
+    add time_since_update to netstats (let API users calc net bytes/s)
+
+Jon Renner <rennerjc@gmail.com>	2013-03-15
+
+    netstats dict now contains time_since_update
+
+Merge: 7aa29c5 62df236
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-10
+
+    Merge pull request #202 from jrenner/master
+    
+    fixed crash bug related to custom port with '-p' arg
+
+Jon Renner <rennerjc@gmail.com>	2013-03-10
+
+    fix crash bug when specifying custom server port
+
+Merge: 345cd2d f0fe6af
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-08
+
+    Merge pull request #199 from jrenner/master
+    
+    fix bits/bytes calculation
+
+Jon Renner <rennerjc@gmail.com>	2013-03-07
+
+    fix num of bits calculation for network stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-06
+
+    Apply patch https://github.com/nicolargo/glances/pull/197#issuecomment-14490606
+
+Merge: d94eceb 22fdb43
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-06
+
+    Merge branch 'master' of github.com:nicolargo/glances
+
+Merge: f7d96b5 508ad16
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-06
+
+    Merge pull request #197 from jrenner/master
+    
+    press 'u' to view cumulative network traffic
+
+Merge: f7d96b5 508ad16
+Nicolas Hennion <nicolas@nicolargo.com>	2013-03-06
+
+    Merge branch 'master' of https://github.com/jrenner/glances
+
+Jon Renner <rennerjc@gmail.com>	2013-03-06
+
+    key "u" shows cumulative net traffic
+
+Merge: e867e75 94b10cc
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-05
+
+    Merge pull request #196 from jrenner/master
+    
+    Sorry, I forgot to change the comment
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    correct comment for keypress "t" (116) to match help screen text
+
+Merge: e5c7df9 3603ed9
+Nicolas Hennion <nicolashennion@gmail.com>	2013-03-05
+
+    Merge pull request #195 from jrenner/master
+    
+    Press 't' to toggle single Rx+Tx/s column under network stats
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    decided on final column name: Rx+Tx/s
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    needed a not in the boolean check for network_stats_totalled
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    needed a not in the boolean check for network_stats_totalled
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    implemented Total net traffic as single R+T/s column
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    Implemented toggle for total net stats
+
+Jon Renner <rennerjc@gmail.com>	2013-03-05
+
+    added Total traffic to network stats
+
+Merge: a1cad52 0560f63
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-22
+
+    Merge pull request #187 from asergi/master
+    
+    Improve packaging
+
+Alessio Sergi <al3hex@gmail.com>	2013-02-22
+
+    Improve packaging
+
+Merge: f42cea0 e5f9c92
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-22
+
+    Merge pull request #185 from asergi/master
+    
+    Fix Travis-CI issue
+
+Alessio Sergi <al3hex@gmail.com>	2013-02-21
+
+    Disable test against Travis-CI
+
+Alessio Sergi <al3hex@gmail.com>	2013-02-21
+
+    Disable test against Travis-CI
+
+Alessio Sergi <al3hex@gmail.com>	2013-02-21
+
+    Fix Travis-CI issue
+
+Merge: 1dfca91 8cecbe0
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-20
+
+    Merge pull request #184 from abeudin/master
+    
+    Add init script
+
+Adrien Beudin <beudbeud@beudibox.fr>	2013-02-20
+
+    bug fix
+
+Adrien Beudin <beudbeud@beudibox.fr>	2013-02-20
+
+    update init script
+
+Adrien Beudin <beudbeud@beudibox.fr>	2013-02-20
+
+    add init script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    Update the readme to remove Travis...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    .travis.yml make me sad
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    Change the travis conf file to run the unitest.py script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    Change the travis conf file to run the unitest.py script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    Change the travis conf file to run the unitest.py script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-19
+
+    Change the travis conf file to run the unitest.py script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-18
+
+    Change documentation for Windows Installation
+
+Merge: b40f8ed 69479e6
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-17
+
+    Merge pull request #182 from asergi/master
+    
+    Improve help display
+
+asergi <al3hex@gmail.com>	2013-02-17
+
+    Improve help display
+
+asergi <al3hex@gmail.com>	2013-02-17
+
+    Update NEWS as per #179
+
+asergi <al3hex@gmail.com>	2013-02-17
+
+    Update man page as per #181
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-16
+
+    Update the NEWS with the latest pull #181
+
+Merge: 666342c 8a58f71
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-16
+
+    Merge pull request #181 from creaktive/master
+    
+    Added command-line option to disable the curses.A_BOLD
+
+Stanislaw Pusep <creaktive@gmail.com>	2013-02-16
+
+    Added -z/--nobold option for better appearence under Solarized terminal color scheme
+
+Merge: 957d672 4830f41
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-15
+
+    Merge pull request #180 from asergi/master
+    
+    More dummy FS to ignore
+
+asergi <al3hex@gmail.com>	2013-02-15
+
+    Add more dummy FS to the ignore list
+
+Merge: cac7862 98074ed
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-14
+
+    Merge pull request #179 from asergi/master
+    
+    Nice pull !
+    
+    Thk Alessio
+
+Merge: de0e47d facd698
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-14
+
+    Merge pull request #178 from ZogStriP/patch-1
+    
+    Added travis-ci build status image
+
+asergi <al3hex@gmail.com>	2013-02-14
+
+    Add per-user settings support
+
+Régis Hanol <regis@hanol.fr>	2013-02-14
+
+    Added travis-ci build status image
+
+Merge: a3194f4 b2829dd
+Nicolas Hennion <nicolashennion@gmail.com>	2013-02-07
+
+    Merge pull request #174 from jellonek/master
+    
+    Support processes with uids unknown to pwd lib.
+
+Piotr Skamruk <piotr.skamruk@gmail.com>	2013-02-07
+
+    Workaround for unknown users.
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-02-04
+
+    Repair unitest.py after commit https://github.com/asergi/glances/commit/d558e51e2a0f69928396a64c432eb6f255f15384
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-31
+
+    On the road on the version 1.6.1
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-31
+
+    Correct a bug on the critical limit for procecess / Take into acount the number of core in the process CPU limits
+
+Merge: fce5686 ad5c902
+Nicolas Hennion <nicolashennion@gmail.com>	2013-01-31
+
+    Merge pull request #171 from asergi/master
+    
+    Drop obsolete code / Huge patch ! Thk for your work Alessio !!!
+
+asergi <al3hex@gmail.com>	2013-01-31
+
+    More code cleanup
+
+asergi <al3hex@gmail.com>	2013-01-31
+
+    Drop obsolete code
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-26
+
+    Update AUTHORS
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-26
+
+    version 1.6
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-22
+
+    Add password for the client/server mode
+
+Merge: 6d00de1 f7b96d3
+Nicolas Hennion <nicolashennion@gmail.com>	2013-01-21
+
+    Merge pull request #167 from asergi/master
+    
+    Fix for issues #157, #158 and #164
+
+asergi <al3hex@gmail.com>	2013-01-20
+
+    Fixes and cleanup
+
+asergi <al3hex@gmail.com>	2013-01-20
+
+    OS X: corret an issue on memory display
+
+asergi <al3hex@gmail.com>	2013-01-20
+
+    OS X: ignore dummy process
+
+asergi <al3hex@gmail.com>	2013-01-20
+
+    Fix for issues #157, #158 and #164
+
+Merge: 17cb69b 0a559e7
+Nicolas Hennion <nicolashennion@gmail.com>	2013-01-20
+
+    Merge pull request #166 from Verrus/master
+    
+    Fixxed my self found issue #165
+
+Verrus <vrijks@gmail.com>	2013-01-19
+
+    deleted the README-FR as required file.
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-19
+
+    Change the default conf file (limits)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-19
+
+    In client/server mode Glances grabs limits from the server side
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-18
+
+    Correct a bug with special key (issue #163)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-18
+
+    Correct io_counters error client/server Issue #164
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-16
+
+    Add the PsUtil version to the -v and -h tag
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-16
+
+    Catch curs_set
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-16
+
+    Add key control on Mac OS X
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-16
+
+    Add key control on Mac OS X
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-16
+
+    Include patch from Kelly Anderson:
+    
+    * The first patch was required to get glances working on python 3.3, I'm
+    not sure if it breaks python 2.7 implementations, but I figured it would
+    be good for you to take a look at it.
+    
+    * The NoSuchProcess patches should be considered one, since the second
+    patch fixed the problem correctly and depends on the first patch being
+    applied.
+    
+    * The NoSuchProcess exception is thrown from PsUtils when you try to
+    access a process that has "disappeared/finished".
+    
+    * The ConfigParser patch will take care of the fact that ConfigParser was
+    renamed configparser with Python3.
+
+Merge: bfbc1b7 28c893a
+Nicolas Hennion <nicolashennion@gmail.com>	2013-01-12
+
+    Merge pull request #162 from asergi/master
+    
+    Change default config file path
+
+asergi <al3hex@gmail.com>	2013-01-12
+
+    Fix setup.py
+
+Merge: ebf8cf9 9359637
+Nicolas Hennion <nicolashennion@gmail.com>	2013-01-11
+
+    Merge pull request #160 from nicolargo/iorate
+    
+    IoRate and more...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-11
+
+    New release for the french file translation
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-11
+
+    Add comments
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-11
+
+    Display IOWait on the PerCpu view
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-10
+
+    Correct an issue on perCPU display
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-10
+
+    Add fct to define color/alert
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-09
+
+    Add remarks on IOWait limits
+
+Nicolas Hennion <nicolas@nicolargo.com>	2013-01-09
+
+    Add IORate and first code for file configuration
+
+Merge: a81bf5c 8a643f1
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-30
+
+    Merge pull request #154 from peritus/patch-1
+    
+    Fix typo: s/AccesDenied/AccessDenied/
+
+Filip Noetzel <filip@j03.de>	2012-12-30
+
+    Fix typo: s/AccesDenied/AccessDenied/
+    
+    Helps with "AttributeError: 'module' object has no attribute 'AccesDenied'"
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-30
+
+    Change installation proc
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-29
+
+    Update doc
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-29
+
+    Update screenshot
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-29
+
+    Fixed UnboundLocalError / Thk to Geoff
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-28
+
+    version 1.5.2
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-28
+
+    Double check if right is ok for process stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-26
+
+    Little hack for a PsUtil issue #152
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-24
+
+    Test on DIskIO
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-21
+
+    Add color to sensors
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-21
+
+    Add a condition to test if limits exist before the process sort
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-21
+
+    Delete the unused getAll fonction from the GlancesStat class
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-20
+
+     Try to correct a bug on OpenVZ / See Issue #141
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-20
+
+    Correct #Issue #149
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-18
+
+    Replace cmdline per name when filter Idle process ! Fuck... Had to sleep...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-18
+
+    Hide Idle processes on Windows too: Name System Idle Process
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-18
+
+    Add ascii encoding on network interface name
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-18
+
+    Add ascii encoding on network interface name
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-18
+
+    Filter and hide idle processes on Windows and FreeBSD
+
+Merge: e93d20c f474966
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-17
+
+    Merge pull request #148 from asergi/master
+    
+    Test: python3 compatibility fix
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-17
+
+    Add new RPC methods: 'getAll', 'getCore', 'getCpu', 'getDiskIO', 'getFs', 'getLoad', 'getMem', 'getMemSwap', 'getNetwork', 'getNow', 'getProcessCount', 'getProcessList', 'getSensors', 'getSystem'
+
+asergi <al3hex@gmail.com>	2012-12-15
+
+    Test: python3 fix
+
+Merge: 3674652 f522501
+asergi <al3hex@gmail.com>	2012-12-15
+
+    Merge remote-tracking branch 'upstream/master'
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-14
+
+    Space optim for processing (IO)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-14
+
+    Update .gitignore
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-14
+
+    Solve issue on process display
+
+asergi <al3hex@gmail.com>	2012-12-14
+
+    Fix unicode formatting bug
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-14
+
+    Merge Pull #146
+
+Merge: 8795724 cafa382
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-14
+
+    Merge branch 'master' of https://github.com/asergi/glances into asergi-master
+    
+    Conflicts:
+glances/glances.py           
+
+asergi <al3hex@gmail.com>	2012-12-14
+
+    Update README and man. Cleanup.
+
+asergi <al3hex@gmail.com>	2012-12-14
+
+    Sensors: lm_sensors is Linux-only
+
+asergi <al3hex@gmail.com>	2012-12-13
+
+    Fix unicode encoding issue
+
+asergi <al3hex@gmail.com>	2012-12-13
+
+    Sensors: display only temperature stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    replace hasattr by ... in ...
+
+asergi <al3hex@gmail.com>	2012-12-13
+
+    Complete fix issue #136
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    Add control on receive stat. Correct Issue #145
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    Correct the issue #136
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    Try and catch to solve AccessDenied on username stat on Windows 7
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    Try and catch to solve AccessDenied on nice stat on Windows 7
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-13
+
+    Delete an unused function
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-12
+
+    Correct a bug on unitary tests
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-12
+
+    Update AUTHORS file
+
+Merge: c60736e 4d92032
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-10
+
+    Merge pull request #140 from nicolargo/newprocessesclass
+    
+    Newprocessesclass
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-10
+
+    Remove sandbox
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-10
+
+    Correct a bug when x size < caption len
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-10
+
+    New pocesses class for server
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-09
+
+    Add a new class to manage process list
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-08
+
+    Loged stats are displayed using reverse color / Other important stat with color
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-07
+
+    Reverse pull 139
+
+Merge: 6f62773 4964abe
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-07
+
+    Merge pull request #139 from philips/fix-crasher-in-memory-stats
+    
+    glances: fix crasher
+
+Brandon Philips <brandon.philips@rackspace.com>	2012-12-06
+
+    glances: fix crasher
+    
+    you need to call the function otherwise you will try running float() on
+    a function later when you try displaying it
+    
+    Introduced in eda1cf5ba750ed82700b018b799db2ca31693870
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-06
+
+    Reverte issue #138
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-05
+
+    Correct an issue on the default.html Jinja template
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-05
+
+    Refactor CPU and LOAD stats graber
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-05
+
+    Cosmetic change
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-05
+
+    Solve an issue when screen size < 80 columns
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-12-05
+
+    Solve an issue when screen size < 80 columns
+
+Merge: 27b5653 4b984ba
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-04
+
+    Merge pull request #137 from asergi/master
+    
+    Fix memory active/inactive bug on Windows
+
+asergi <al3hex@gmail.com>	2012-12-04
+
+    Mem: fix active/inactive bug on Windows
+
+Merge: 422f628 b8baced
+Nicolas Hennion <nicolashennion@gmail.com>	2012-12-03
+
+    Merge pull request #135 from asergi/master
+    
+    Fixes and improvements
+
+asergi <al3hex@gmail.com>	2012-12-03
+
+    Some small fixes and cleanup
+
+asergi <al3hex@gmail.com>	2012-12-03
+
+    Fix alignment of numbers and strings
+
+asergi <al3hex@gmail.com>	2012-12-02
+
+    Improve top layout. Mem: add new stats.
+
+Merge: d04b030 007b3a3
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-29
+
+    Merge pull request #131 from philips/refactor-classes
+    
+    Refactor classes
+
+Brandon Philips <brandon@ifup.org>	2012-11-29
+
+    glances: refactor glancesStats into three classes
+    
+    refactor glancesStats into three classes. This way glances can support a
+    new backend like the Cloud Monitoring Agent in a more clean manner.
+
+Brandon Philips <brandon@ifup.org>	2012-11-28
+
+    glances: cleanup end of line whitespace
+    
+    there were a lot of lines with end of line whitespace. Clean it all up.
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-24
+
+    Change CPU Display
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-24
+
+    Color on extended CPU info
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-24
+
+    Correct bug with server in version 1.5.1
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-21
+
+    Improve CPU stats displaying
+
+Merge: f487b99 5fa1f96
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-18
+
+    Merge pull request #126 from nicolargo/sensors
+    
+    Sensors module
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-18
+
+    Commit for the sensors module
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-17
+
+    First version with sensors. Not running with client/server
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-16
+
+    Replace the PsUtil version checker / Should correct an issue on VM client
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-13
+
+    Correct French traduction
+
+Merge: 24761a6 7968182
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-11
+
+    Merge pull request #123 from asergi/master
+    
+    Add systemd support
+
+asergi <al3hex@gmail.com>	2012-11-11
+
+    Add systemd support
+
+Merge: 7436794 94d016a
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-10
+
+    Merge pull request #122 from david-guenault/master
+    
+    Fix html template path in glancesHtml class
+
+David GUENAULT <dguenault@monitoring-fr.org>	2012-11-10
+
+    Fix html template path in glancesHtml Class
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-09
+
+    Patch for HTML and CSV output
+
+Merge: 51e2b7e c101c7a
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-09
+
+    Merge pull request #119 from asergi/master
+    
+    Fix python3 support
+
+asergi <al3hex@gmail.com>	2012-11-09
+
+    Fix python3 support
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-09
+
+    version 1.5.1
+
+Merge: b9c6615 aa5d77b
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-09
+
+    Merge pull request #118 from asergi/master
+    
+    Fix bugs for psutil < 0.6.0
+
+asergi <al3hex@gmail.com>	2012-11-09
+
+    Fix bugs for psutil < 0.6.0
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-08
+
+    Load international before first message...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Add screenshots
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    version 1.5
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Check PsUtil > 0.4.0
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Corect a bug on Windows and IO
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Catch timedelta issue on Amazon EC2 server / related to issue #87
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Manage Fs name > 8 chars
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Invert get_nice and nice
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-07
+
+    Re-add the main() function
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-06
+
+    Add Python 3 compatibility
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-06
+
+    Add refesh time for server side
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-06
+
+    Add a connected to / disconnected from server message
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-03
+
+    Update man page
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-02
+
+    Add control when server is down
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-02
+
+    Update documentation for the beta phase
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-02
+
+    Add shortkey to delete warning (w) or warning+critical (x) logs messages
+
+Merge: 921b8c5 a7e9ffe
+Nicolas Hennion <nicolashennion@gmail.com>	2012-11-02
+
+    Merge pull request #108 from nicolargo/clientserver
+    
+    Clientserver
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-02
+
+    Change the process IO columns and update informations files
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-01
+
+    Add funcs to RPC instance
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-01
+
+    Glances client/server is now fully RPC/XML compliant
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-11-01
+
+    Correct a major issue on the get_io_counters on non user process (thx to the Alessio mail)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-31
+
+    Corect bug on CPU % on Windows
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-31
+
+    CPU stats corrected for Windows
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-31
+
+    Force server mode for Windows OS
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-30
+
+    Add the -B argument for binding on a specific interface / optimize lib load
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-29
+
+    Add INIT and QUIT. Clean the code. Do stuff...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-28
+
+    IO bug with client
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-28
+
+    Add first step of the Glances client/master
+
+Merge: 8ba41b7 769a0c4
+Nicolas Hennion <nicolashennion@gmail.com>	2012-10-24
+
+    Merge pull request #104 from 2xyo/master
+    
+    Add support of Travis CI continuous integration service
+
+Yohann Lepage <yohann@lepage.info>	2012-10-24
+
+    Add support of Travis CI continuous integration service
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-23
+
+    Correct PATH in the Web export module
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-23
+
+    Minor doc update
+
+Merge: 2167d6c c9af089
+Nicolas Hennion <nicolashennion@gmail.com>	2012-10-23
+
+    Merge pull request #103 from sebastianmoreno/patch-1
+    
+    Update i18n/es/LC_MESSAGES/glances.po
+
+Sebastián Moreno <smoreno@inconcertcc.com>	2012-10-22
+
+    Update i18n/es/LC_MESSAGES/glances.po
+    
+    Algunas correcciones. 
+
+Merge: 0b04964 96d4f93
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-22
+
+    Merge branch 'master' of github.com:nicolargo/glances
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-22
+
+    Add -b (key 'b') to switch between bit/s or byte/s for network IO
+
+Merge: aec30cb f693e43
+Nicolas Hennion <nicolashennion@gmail.com>	2012-10-22
+
+    Merge pull request #101 from 2xyo/master
+    
+    Changelog is missing
+    
+    Add it to my own "build script"
+
+Yohann Lepage <yohann@lepage.info>	2012-10-19
+
+    Add Changelog
+
+Merge: 2089543 415c830
+Nicolas Hennion <nicolashennion@gmail.com>	2012-10-16
+
+    Merge pull request #100 from mxjeff/locale-issue
+    
+    Fixed Portuguese locale name.
+
+kaliko <efrim@azylum.org>	2012-10-15
+
+    Fixed Portuguese locale name
+    
+    On POSIX system locale follow "language[_territory]" naming scheme.
+
+Merge: 4542db5 c7b8651
+Nicolas Hennion <nicolashennion@gmail.com>	2012-10-08
+
+    Merge pull request #98 from mxjeff/html_issue
+    
+    Fixed broken HTML output (issue #97)
+    
+    Action (for me): make a formal validation of the HTML and CSV module
+
+kaliko <efrim@azylum.org>	2012-10-08
+
+    Fixed broken HTML output (issue #97)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-10-02
+
+    version 1.4.2.1
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-25
+
+    Test as_dict()...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-22
+
+    version 1.4.2
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-22
+
+    Clean the code...
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-21
+
+    Clean the code, go back try / except
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-21
+
+    New function: Get process stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-21
+
+    New function: Get process stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-20
+
+    Cache OS information
+
+Merge: d445e79 4d2d357
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-19
+
+    Merge pull request #91 from rberaldo/master
+    
+    Brazilian Portuguese Translation
+
+Rafael Beraldo <rberaldo@cabaladada.org>	2012-09-20
+
+    Files for the Brazilian Portuguese translation
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-19
+
+    Add Top process in the log
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-17
+
+    test code for IO ps
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-15
+
+    Use the news virtual_memory() and virtual_swap() fct
+
+Merge: f52bdf6 11c5eb7
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-15
+
+    Merge pull request #88 from dmd/patch-1
+    
+    eliminate redundant 'per'
+
+Daniel M. Drucker <dmd@3e.org>	2012-09-14
+
+    eliminate redundant 'per'
+    
+    If you're measuring the rate of X, you can say Xps or X/s, but saying X/ps is redundant and wrong.
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-14
+
+    Update installation doc
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-12
+
+    pip install Glances / Better than pip install glances
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-10
+
+    After the 2to3 / Python 3 compatibility
+
+Merge: 2781b83 fd0b5f2
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-10
+
+    Merge branch 'master' of github.com:nicolargo/glances
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-10
+
+    After the 2to3 / Python 3 compatibility
+
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-09
+
+    Update README.md
+
+Merge: ac03b29 25cff95
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-09
+
+    Merge pull request #85 from luxflux/patch-1
+    
+    Fix typo
+
+Raffael Schmid <raffael@yux.ch>	2012-09-09
+
+    Fix typo
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-07
+
+    Add logo to HitHub doc 2
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-07
+
+    Add logo to HitHub doc
+
+Merge: 6265763 f053798
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-07
+
+    Merge pull request #81 from dlion/master
+    
+    Italian translation added !
+    Very nice works :)
+    
+    Thank ou for the contribution !
+
+dlion <domenico.luciani@email.it>	2012-09-07
+
+    Compiled file for italian translation
+
+dlion <domenico.luciani@email.it>	2012-09-07
+
+    File for italian translation
+
+dlion <domenico.luciani@email.it>	2012-09-07
+
+    Compiled file for italian translation
+
+dlion <domenico.luciani@email.it>	2012-09-07
+
+    Italian translation file compiled
+
+dlion <domenico.luciani@email.it>	2012-09-07
+
+    File for Italian Translation
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-06
+
+    version 1.4.1.1
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-06
+
+    version 1.4.1
+
+Merge: b128e05 60f2d6c
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-06
+
+    Merge pull request #75 from dlion/master
+    
+    Uninstall script
+
+dlion <domenico.luciani@email.it>	2012-09-06
+
+    A simple uninstall script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-05
+
+    Add a switch -b to display network rate in byte per second
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-05
+
+    Add Process IO Read/Write information, if space is available
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-05
+
+    Add Process IO Read/Write information, if space is available
+
+Merge: 29e284b be3a0a3
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-05
+
+    Merge pull request #71 from xiongchiamiov/master
+    
+    Fix typos/misspellings in README
+
+Merge: 2f118aa 9dd6aa7
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-05
+
+    Merge pull request #70 from pigmonkey/master
+    
+    Fix README typo
+
+xiongchiamiov <xiong.chiamiov@gmail.com>	2012-09-04
+
+    Fix typos/misspellings in README
+    
+    I didn't include the change made in pull #70:
+    https://github.com/nicolargo/glances/pull/70/files
+    
+    I also didn't make any changes to the French version, assuming that it is
+    already correct.
+
+Pig Monkey <pm@pig-monkey.com>	2012-09-04
+
+    Fix README typo
+
+Merge: 9658dd3 47a8ba0
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-04
+
+    Merge pull request #66 from xorpaul/patch-1
+    
+    fixed small spelling mistakes
+
+Andreas Paul <xorpaul@gmail.com>	2012-09-04
+
+    fixed small spelling mistakes
+
+Andreas Paul <xorpaul@gmail.com>	2012-09-04
+
+    fixed small spelling mistakes
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-04
+
+    Update installation documentation for OS X
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-09-04
+
+    Add first code for process IO / no display
+
+Merge: d2031d2 365a078
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-03
+
+    Merge pull request #60 from qzio/patch-1
+    
+    link to correct flattr "thing"
+
+Merge: 62c1b34 5a90911
+Nicolas Hennion <nicolashennion@gmail.com>	2012-09-03
+
+    Merge pull request #58 from crcastle/patch-1
+    
+    Add OSX install instructions
+
+joel hansson <joel.hansson@gmail.com>	2012-09-03
+
+    link to correct flattr "thing"
+
+Chris Castle <castle@alum.colby.edu>	2012-09-03
+
+    Add OSX install instructions
+    
+    - Uses Homebrew package manager (and pip)
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-28
+
+    Add the '1' key to switch between per CPU / per core stats
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-26
+
+    Minor indentation change
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-26
+
+    Add unitest script
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-26
+
+    Update doc
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-26
+
+    Add per CPU information
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-11
+
+    Change installation procedure
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-11
+
+    Change installation procedure
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-09
+
+    Add depdencies in the documentation
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-09
+
+    Change installation procedure
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-07
+
+    Solve the issue #52 with Python 2.x
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-07
+
+    Solve the issue #52 with Python 2.x
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-07
+
+    Fix Setup.py issue
+
+Merge: 919b473 f620472
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-07
+
+    Merge pull request #51 from asergi/master
+    
+    Fix package build problem
+
+asergi <al3hex@gmail.com>	2012-07-07
+
+    Fix setup.py
+
+asergi <al3hex@gmail.com>	2012-07-07
+
+    Add glances dir
+
+asergi <al3hex@gmail.com>	2012-07-07
+
+    Rename src => glances
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-06
+
+    Change the setup.py
+
+Merge: 1e04f70 cfcf6bf
+Nicolas Hennion <nicolas@nicolargo.com>	2012-07-06
+
+    version 1.4
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-06-28
+
+    Change process nice for PsUtil 0.5.0
+
+Nicolas Hennion <nicolas@nicolargo.com>	2012-06-21
+
+    A bunch of new features (#48) by Alessio Sergi
+
+asergi <al3hex@gmail.com>	2012-06-21
+
+    Add sort processes by MEM% (replace sort by VIRT) + other minor changes
+
+asergi <al3hex@gmail.com>	2012-06-20
+
+    Fix bare except: statements
+
+asergi <al3hex@gmail.com>	2012-06-19
+
+    Strip leading/trailing whitespaces from all files
+
+asergi <al3hex@gmail.com>	2012-06-19
+
+    Delete old backup files
+
+asergi <al3hex@gmail.com>	2012-06-19
+
+    Code style cleaning
+
+asergi <al3hex@gmail.com>	2012-06-16
+
+    Update help screen
+
+asergi <al3hex@gmail.com>	2012-06-16
+
+    Fix display of minutes in TIME+
+
+asergi <al3hex@gmail.com>	2012-06-12
+
+    Add MEM%, NICE, STATUS and TIME+ to the processes infos
+
+asergi <al3hex@gmail.com>	2012-05-31
+
+    Put process summary on one line
+
+asergi <al3hex@gmail.com>	2012-05-31
+
+    Load: fix viewing on FreeBSD/Mac OS X
+
+asergi <al3hex@gmail.com>	2012-05-30
+
+    Mem/Swap: new layout and add percentage of usage
+
+asergi <al3hex@gmail.com>	2012-05-30
+
+    Fix formatting of log messages
+
+asergi <al3hex@gmail.com>	2012-05-27
+
+    No decimal places for values < GB
+
+asergi <al3hex@gmail.com>	2012-05-23
+
+    Improve system info. Add Arch Linux support. Fix FreeBSD system info.
+
+nicolargo <nicolargo@lifebook.(none)>	2012-05-02
+
+    Allow user to disable module from the command line
+
+nicolargo <nicolargo@lifebook.(none)>	2012-05-01
+
+    Add PID/UID to the processes informations
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-04-22
+
+    Add mem to CSV output and manage flush
+
+Merge: 20ebc26 671d647
+Nicolas Hennion <nicolas@nicolargo.com>	2012-04-05
+
+    Merge pull request #46 from asergi/experimental
+    
+    Thanks for your contrib !
+
+asergi <al3hex@gmail.com>	2012-04-05
+
+    Fixed (another) broken multiline strings
+
+asergi <al3hex@gmail.com>	2012-04-05
+
+    Minor aesthetic fixes
+
+asergi <al3hex@gmail.com>	2012-04-05
+
+    Fixed broken multiline strings
+
+asergi <al3hex@gmail.com>	2012-04-04
+
+    Fix naming conventions issue
+
+asergi <al3hex@gmail.com>	2012-04-04
+
+    Fixed typos
+
+asergi <al3hex@gmail.com>	2012-04-04
+
+    Improved .gitignore
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-04-03
+
+    README
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-04-03
+
+    PEP8
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-30
+
+    Bug correct on screen
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-30
+
+    Code checked with PEP8 checker
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-27
+
+    Patch on the Makefile.am (Thx to Al3Hex)
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-27
+
+    CVS
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-21
+
+    Add FS color in HTML output
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-21
+
+    Add test to solve issue #45
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-17
+
+    Minor change
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-16
+
+    Correct for issue #37
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-14
+
+    Add CLI option to manage HTML output
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-03-14
+
+    Add the MANIFEST.in
+
+Merge: 67fdbe9 e01737d
+Nicolas Hennion <nicolas@nicolargo.com>	2012-03-14
+
+    Merge pull request #43 from laurentb/experimental
+    
+    Include package data files
+
+Laurent Bachelier <laurent@bachelier.name>	2012-03-14
+
+    Include package data files
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-14
+
+    Add additionnal file for HTML output
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-14
+
+    Update documentation: use setup.py for installation
+
+Merge: 86d8e0b 8721b82
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-14
+
+    Merge branch 'experimental' of github.com:nicolargo/glances into experimental
+
+Merge: edee020 91adde8
+Nicolas Hennion <nicolas@nicolargo.com>	2012-03-14
+
+    Merge pull request #42 from laurentb/experimental
+    
+    Much simpler, pure-python packaging + i18n
+
+Laurent Bachelier <laurent@bachelier.name>	2012-03-14
+
+    Simple building and packaging of i18n
+
+Laurent Bachelier <laurent@bachelier.name>	2012-03-13
+
+    Much simpler, pure-python packaging
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-13
+
+    Update doc for PPA
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-03-13
+
+    HTML Output
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-21
+
+    Ok when insert/remove external disk
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-21
+
+    Excexclude rootfs and autofs
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-18
+
+    Try before removing process
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-16
+
+    Reduce process load
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-14
+
+    Add control/msg to lib import
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-14
+
+    Solve the _() error message
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-13
+
+    Verbose the help message depending of the PsUtil version
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-13
+
+    Change the process list algorithm
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-12
+
+    Remove the unused get_io_counters calls
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-12
+
+    Ready for beta test
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-02-11
+
+    Change the help windows
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-08
+
+    PsUtil - Add process stat
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-07
+
+    Replace FsGrab by PsUtil
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-06
+
+    DISK IO
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-02-06
+
+    First version of the experimental BRANCH
+    PSUtil replace StatGrab for CPU, LOAD and MEM
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-01-31
+
+    version 1.3.7
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-23
+
+    B&W console
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-01-22
+
+    Try for all the init color sequence
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-20
+
+    Flatt button in the README
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-19
+
+    Add try before curses.curs_set(0)
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-18
+
+    Update screenshot
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-18
+
+    version 1.3.6
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-01-15
+
+    Change Roadmap to add the issue 26
+
+Merge: 4a4e711 8ed8f53
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-13
+
+    wMerge branch 'master' of github.com:nicolargo/glances
+    
+    Conflicts:
+src/glances.py           
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-13
+
+    Minor update
+
+Merge: a29d712 0bb6563
+Nicolas Hennion <nicolas@nicolargo.com>	2012-01-13
+
+    Merge pull request #25 from jeanbob/master
+    
+    Traduction française (vérifié) et espagnole (non vérifié)
+
+Peter Fontaine (aka JeanBoB <jeanbob@jeanbob.eu>	2012-01-12
+
+    French and Spanish translation added.
+
+Peter Fontaine (aka JeanBoB <jeanbob@jeanbob.eu>	2012-01-06
+
+    i18n support added by JeanBoB.
+    French translation added.
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-05
+
+    Change the path to Python to env issue #20
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-04
+
+    Upgrade ss
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-04
+
+    Update README
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-04
+
+    Update screenshot
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2012-01-04
+
+    version 1.3.5
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2012-01-03
+
+    Add a buildout.cfg
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-25
+
+    Update screenshot
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-25
+
+    version 1.3.4
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-23
+
+    Update screenshot for v1.3.3
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-23
+
+    version 1.3.3
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-21
+
+    Add Python PYPI informations
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-20
+
+    Add a french version of the README
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-18
+
+    Update the documentation
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-17
+
+    Update screenshot
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-17
+
+    version 1.3.2
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-16
+
+    version 1.3.1
+
+Merge: b6ac77b 46af718
+Nicolas Hennion <nicolas@nicolargo.com>	2011-12-15
+
+    Merge pull request #8 from rwmacleod/master
+    
+    Thx !
+
+Randy MacLeod <rwmacleod@gmail.com>	2011-12-14
+
+    Fix consomption typo
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-14
+
+    No more FS limitation
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-13
+
+    Update screenshot
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-13
+
+    version 1.3
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-10
+
+    Docs
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-10
+
+    Change the REAME for the 1.2 version
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-10
+
+    version 1.2
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-06
+
+    Instructions to install on Ubuntu 10.04 and 10.10
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-06
+
+    Ubuntu 10.04 note
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-06
+
+    Ubuntu < 11.04 notes
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-06
+
+    Change installation procedure
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-06
+
+    version 1.1.3
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-05
+
+    v1.1.2
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-05
+
+    version 1.1.1
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-05
+
+    1.1 screenshot
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-05
+
+    Add caption
+
+nicolargo <nicolargo@nicolargo-boulot.(none)>	2011-12-05
+
+    Add setup.py
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Catch CTRL-C before init screen
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Catch CTRL-C before init screen
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Add control before division
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Fix Readme.md
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Fix Readme.md
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Fix screenshot in Readme.md
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    Add screenshot
+
+nicolargo <nicolargo@nicolargo-fujitsu.(none)>	2011-12-04
+
+    First public release
