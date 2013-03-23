@@ -1,11 +1,18 @@
 Version 1.6.1
 =============
 
-    * Add per-user settings support
+    * Add per-user settings (configuration file) support
     * Add -z/--nobold option for better appearence under Solarized terminal
-    * Correct a bug on the CPU process limit
+    * Key 'u' shows cumulative net traffic
+    * Work in improving autoUnit
     * Take into account the number of core in the CPU process limit
+    * API improvment add time_since_update for disk, process_disk and network
+    * Improve help display
+    * Add more dummy FS to the ignore list
     * Code refactory: PsUtil < 0.4.1 is depredicated (Thk to Alessio)
+    * Correct a bug on the CPU process limit
+    * Fix crash bug when specifying custom server port
+    * Add Debian style init script for the Glances server
 
 Version 1.6
 ===========
