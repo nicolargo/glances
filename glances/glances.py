@@ -680,6 +680,11 @@ class glancesGrabHDDTemp:
     """
     Get hddtemp stats using a socket connection
     """ 
+
+    cache = ""
+    address = "127.0.0.1"
+    port = 7634
+
     def __init__(self):
         """
         Init hddtemp stats
@@ -687,7 +692,7 @@ class glancesGrabHDDTemp:
 
         try:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sck.connect(("127.0.0.1", 7634))
+            sck.connect((self.address, self.port))
             sck.close()
         except:
             self.initok = False
@@ -703,18 +708,33 @@ class glancesGrabHDDTemp:
         self.hddtemp_list = []
 
         if self.initok:
-            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sck.connect(("127.0.0.1", 7634))
-            data = sck.recv(4096)
-            lines = data.split("\n")
-            for line in lines:
+            data = ""
+            # Taking care of a possible subtle death of hddtemp
+            try:
+                sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sck.connect((self.address, self.port))
+                data = sck.recv(4096)
+                sck.close()
+            except:
                 hddtemp_current = {}
-                fields = line.split('|')
-                if len(fields) == 6:
-                    hddtemp_current['label'] = fields[1]
+                hddtemp_current['label'] = "hddtemp is gone"
+                hddtemp_current['value'] = 0
+                self.hddtemp_list.append(hddtemp_current)
+                return
+            else:
+                # Considering the size of "|/dev/sda||0||" as the minimum
+                if len(data) < 14: 
+                    if len(self.cache) == 0:
+                        data = "|hddtemp error||0||"
+                    else:
+                        data = self.cache
+                self.cache = data
+                for line in data.split("\n"):
+                    hddtemp_current = {}
+                    fields = line.split('|')
+                    hddtemp_current['label'] = fields[1].split("/")[-1]
                     hddtemp_current['value'] = int(fields[3])
                     self.hddtemp_list.append(hddtemp_current)
-            sck.close()
 
     def get(self):
         self.__update__()
