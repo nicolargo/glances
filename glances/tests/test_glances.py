@@ -114,5 +114,12 @@ class TestGlancesStat(unittest.TestCase):
         self.assertTrue(type(sensors) == list)
         #~ self.assertTrue(len(sensors) > 0)
 
+    def test_Glances_getHDDTemp(self):
+        self.stats.update()
+        hddtemp = self.stats.getHDDTemp()
+        #~ print("Optionnal hddtemp stat %s:" % hddtemp)
+        self.assertTrue(type(hddtemp) == list)
+        #~ self.assertTrue(len(hddtemp) > 0)
+
 if __name__ == '__main__':
     unittest.main()

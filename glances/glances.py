@@ -36,6 +36,7 @@ import time
 from datetime import datetime, timedelta
 import locale
 import gettext
+import socket
 locale.setlocale(locale.LC_ALL, '')
 gettext.install(__appname__)
 
@@ -143,6 +144,7 @@ else:
 
 # Default tag
 sensors_tag = False
+hddtemp_tag = False
 network_tag = True
 diskio_tag = True
 fs_tag = True
@@ -253,7 +255,7 @@ class glancesLimits:
     STD is for defaults limits (CPU/MEM/SWAP/FS)
     CPU_IOWAIT limits (iowait in %)
     LOAD is for LOAD limits (5 min/15 min)
-    TEMP is for sensors limits (temperature in °C)
+    TEMP is for sensors/hddtemp limits (temperature in °C)
     """
     __limits_list = {'STD': [50, 70, 90],
                      'CPU_USER': [50, 70, 90],
@@ -674,6 +676,70 @@ class glancesGrabSensors:
         if self.initok:
             sensors.cleanup()
 
+class glancesGrabHDDTemp:
+    """
+    Get hddtemp stats using a socket connection
+    """ 
+
+    cache = ""
+    address = "127.0.0.1"
+    port = 7634
+
+    def __init__(self):
+        """
+        Init hddtemp stats
+        """
+
+        try:
+            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sck.connect((self.address, self.port))
+            sck.close()
+        except:
+            self.initok = False
+        else:
+            self.initok = True
+
+    def __update__(self):
+        """
+        Update the stats
+        """
+
+        # Reset the list
+        self.hddtemp_list = []
+
+        if self.initok:
+            data = ""
+            # Taking care of a possible subtle death of hddtemp
+            try:
+                sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sck.connect((self.address, self.port))
+                data = sck.recv(4096)
+                sck.close()
+            except:
+                hddtemp_current = {}
+                hddtemp_current['label'] = "hddtemp is gone"
+                hddtemp_current['value'] = 0
+                self.hddtemp_list.append(hddtemp_current)
+                return
+            else:
+                # Considering the size of "|/dev/sda||0||" as the minimum
+                if len(data) < 14: 
+                    if len(self.cache) == 0:
+                        data = "|hddtemp error||0||"
+                    else:
+                        data = self.cache
+                self.cache = data
+                for line in data.split("\n"):
+                    hddtemp_current = {}
+                    fields = line.split('|')
+                    hddtemp_current['label'] = fields[1].split("/")[-1]
+                    hddtemp_current['value'] = int(fields[3])
+                    self.hddtemp_list.append(hddtemp_current)
+
+    def get(self):
+        self.__update__()
+        return self.hddtemp_list
+
 
 class GlancesGrabProcesses:
     """
@@ -805,6 +871,13 @@ class GlancesStats:
                 self.glancesgrabsensors = glancesGrabSensors()
             except Exception:
                 self.sensors_tag = False
+
+        # Init the hddtemp stats (optional)
+        if hddtemp_tag:
+            try:
+                self.glancesgrabhddtemp = glancesGrabHDDTemp()
+            except Exception:
+                self.hddtemp_tag = False
 
         # Init the process list
         self.process_list_refresh = True
@@ -1057,6 +1130,10 @@ class GlancesStats:
         if sensors_tag:
             self.sensors = self.glancesgrabsensors.get()
 
+        # HDDTEMP
+        if hddtemp_tag:
+            self.hddtemp = self.glancesgrabhddtemp.get()
+
         # DISK I/O
         if diskio_tag:
             time_since_update = getTimeSinceLastUpdate('disk')
@@ -1152,6 +1229,13 @@ class GlancesStats:
         else:
             return []
 
+    def getHDDTemp(self):
+        if hddtemp_tag:
+            return sorted(self.hddtemp,
+                          key=lambda hddtemp: hddtemp['label'])
+        else:
+            return []
+
     def getDiskIO(self):
         if diskio_tag:
             return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
@@ -1237,6 +1321,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["memswap"] = self.memswap
         self.all_stats["network"] = self.network if network_tag else []
         self.all_stats["sensors"] = self.sensors if sensors_tag else []
+        self.all_stats["hddtemp"] = self.hddtemp if hddtemp_tag else []
         self.all_stats["diskio"] = self.diskio if diskio_tag else []
         self.all_stats["fs"] = self.fs if fs_tag else []
         self.all_stats["processcount"] = self.processcount
@@ -1275,6 +1360,10 @@ class GlancesStatsClient(GlancesStats):
                 self.sensors = input_stats["sensors"]
             except:
                 self.sensors = []
+            try:
+                self.hddtemp = input_stats["hddtemp"]
+            except:
+                self.hddtemp = []                
             try:
                 self.diskio = input_stats["diskio"]
             except:
@@ -1320,6 +1409,8 @@ class glancesScreen:
         self.network_y = 7
         self.sensors_x = 0
         self.sensors_y = -1
+        self.hddtemp_x = 0
+        self.hddtemp_y = -1        
         self.diskio_x = 0
         self.diskio_y = -1
         self.fs_x = 0
@@ -1426,6 +1517,7 @@ class glancesScreen:
         # What are we going to display
         self.network_tag = network_tag
         self.sensors_tag = sensors_tag
+        self.hddtemp_tag = hddtemp_tag
         self.diskio_tag = diskio_tag
         self.fs_tag = fs_tag
         self.log_tag = True
@@ -1744,6 +1836,9 @@ class glancesScreen:
         elif self.pressedkey == 120:
             # 'x' > Delete finished warning and critical logs
             logs.clean(critical=True)
+        elif self.pressedkey == 121:
+            # 'y' > Show/hide hddtemp stats
+            self.hddtemp_tag = not self.hddtemp_tag
 
         # Return the key code
         return self.pressedkey
@@ -1776,13 +1871,18 @@ class glancesScreen:
         network_count = self.displayNetwork(stats.getNetwork())
         sensors_count = self.displaySensors(stats.getSensors(),
                                             self.network_y + network_count)
+        hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
+                                            self.network_y + network_count + sensors_count)
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
-                                          self.network_y + sensors_count + network_count)
+                                          self.network_y + sensors_count + 
+                                          network_count + hddtemp_count)
         fs_count = self.displayFs(stats.getFs(),
                                   self.network_y + sensors_count +
-                                  network_count + diskio_count)
+                                  network_count + diskio_count + 
+                                  hddtemp_count)
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
-                                    diskio_count + fs_count)
+                                    diskio_count + fs_count + 
+                                    hddtemp_count)
         self.displayProcess(processcount, processlist, stats.getSortedBy(),
                             log_count=log_count, core=stats.getCore())
         self.displayCaption(cs_status=cs_status)
@@ -2330,6 +2430,39 @@ class glancesScreen:
             return ret
         return 0
 
+    def displayHDDTemp(self, hddtemp, offset_y=0):
+        """
+        Display the hddtemp stats
+        Return the number of hddtemp stats
+        """
+        if not self.hddtemp_tag or not hddtemp:
+            return 0
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+        self.hddtemp_y = offset_y
+        if screen_y > self.hddtemp_y + 3 and screen_x > self.hddtemp_x + 28:
+            # hddtemp header
+            self.term_window.addnstr(self.hddtemp_y, self.hddtemp_x,
+                                     _("HDD Temp"), 8, self.title_color
+                                     if self.hascolors else curses.A_UNDERLINE)
+            self.term_window.addnstr(self.hddtemp_y, self.hddtemp_x + 21,
+                                     format(_("°C"), '>3'), 3)
+
+            # Adapt the maximum interface to the screen
+            ret = 2
+            hddtemp_num = min(screen_y - self.hddtemp_y - 3, len(hddtemp))
+            for i in range(0, hddtemp_num):
+                self.term_window.addnstr(
+                    self.hddtemp_y + 1 + i, self.hddtemp_x,
+                    hddtemp[i]['label'], 21)
+                self.term_window.addnstr(
+                    self.hddtemp_y + 1 + i, self.hddtemp_x + 20,
+                    format(hddtemp[i]['value'], '>3'), 3,
+                    self.__getSensorsColor(hddtemp[i]['value']))
+                ret = ret + 1
+            return ret
+        return 0
+
     def displayDiskIO(self, diskio, offset_y=0):
         # Disk input/output rate
         if not self.diskio_tag:
@@ -2498,12 +2631,13 @@ class glancesScreen:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        # If there is no network & diskio & fs & sensors stats
+        # If there is no network & diskio & fs & sensors stats & hddtemp stats
         # then increase process window
         if (not self.network_tag and
             not self.diskio_tag and
             not self.fs_tag and
-            not self.sensors_tag):
+            not self.sensors_tag and
+            not self.hddtemp_tag):
             process_x = 0
         else:
             process_x = self.process_x
@@ -2897,6 +3031,7 @@ class glancesScreen:
                             [_("f"), _("Show/hide file system stats")],
                             [_("n"), _("Show/hide network stats")],
                             [_("s"), _("Show/hide sensors stats")],
+                            [_("y"), _("Show/hide hddtemp stats")],
                             [_("l"), _("Show/hide log messages")]]
 
             width = 3
@@ -3258,6 +3393,11 @@ class GlancesInstance():
         self.__update__()
         return json.dumps(stats.getSensors())
 
+    def getHDDTemp(self):
+        # Update and return HDDTEMP stats
+        self.__update__()
+        return json.dumps(stats.getHDDTemp())
+
     def getNetwork(self):
         # Update and return NET stats
         self.__update__()
@@ -3407,6 +3547,7 @@ def printSyntax():
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
+    print(_("\t-y\t\tEnable the hddtemp module"))    
     print(_("\t-z\t\tDo not use the bold color attribute"))
 
 
@@ -3441,7 +3582,7 @@ def main():
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_io_counter_tag, psutil_mem_vm
-    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag
+    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag, hddtemp_tag
     global refresh_time, client, server, server_port, server_ip
     global last_update_times
 
@@ -3454,6 +3595,7 @@ def main():
     network_tag = True
     network_bytepersec_tag = False
     sensors_tag = False
+    hddtemp_tag = False
     html_tag = False
     csv_tag = False
     client_tag = False
@@ -3486,9 +3628,9 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdemnho:f:t:vsc:p:C:P:z",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z",
                                    ["bind", "bytepersec", "diskio", "mount",
-                                    "sensors", "netrate", "help", "output",
+                                    "sensors", "hddtemp", "netrate", "help", "output",
                                     "file", "time", "version", "server",
                                     "client", "port", "config", "password",
                                     "nobold"])
@@ -3545,6 +3687,8 @@ def main():
                     sensors_tag = True
             else:
                 print(_("Error: Sensors module is only available on Linux"))
+        elif opt in ("-y", "--hddtemp"):
+            hddtemp_tag = True
         elif opt in ("-f", "--file"):
             output_file = arg
             output_folder = arg
@@ -3627,8 +3771,10 @@ def main():
         diskio_tag = True
         network_tag = True
         sensors_tag = True
+        hddtemp_tag = True
     elif server_tag:
         sensors_tag = True
+        hddtemp_tag = True
 
     # Init Glances depending of the mode (standalone, client, server)
     if server_tag:
