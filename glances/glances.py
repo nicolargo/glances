@@ -710,9 +710,10 @@ class glancesGrabHDDTemp:
             for line in lines:
                 hddtemp_current = {}
                 fields = line.split('|')
-                hddtemp_current['label'] = fields[1]
-                hddtemp_current['value'] = int(fields[3])
-                self.hddtemp_list.append(hddtemp_current)
+                if len(fields) == 6:
+                    hddtemp_current['label'] = fields[1]
+                    hddtemp_current['value'] = int(fields[3])
+                    self.hddtemp_list.append(hddtemp_current)
             sck.close()
 
     def get(self):
