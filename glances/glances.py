@@ -1872,7 +1872,7 @@ class glancesScreen:
         sensors_count = self.displaySensors(stats.getSensors(),
                                             self.network_y + network_count)
         hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
-                                            self.sensors_y + sensors_count)        
+                                            self.network_y + network_count + sensors_count)
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
                                           self.network_y + sensors_count + 
                                           network_count + hddtemp_count)
