@@ -713,6 +713,7 @@ class glancesGrabHDDTemp:
                 hddtemp_current['label'] = fields[1]
                 hddtemp_current['value'] = int(fields[3])
                 self.hddtemp_list.append(hddtemp_current)
+            sck.close()
 
     def get(self):
         self.__update__()
@@ -2421,7 +2422,7 @@ class glancesScreen:
         if screen_y > self.hddtemp_y + 3 and screen_x > self.hddtemp_x + 28:
             # hddtemp header
             self.term_window.addnstr(self.hddtemp_y, self.hddtemp_x,
-                                     _("HDD Temp"), 7, self.title_color
+                                     _("HDD Temp"), 8, self.title_color
                                      if self.hascolors else curses.A_UNDERLINE)
             self.term_window.addnstr(self.hddtemp_y, self.hddtemp_x + 21,
                                      format(_("°C"), '>3'), 3)
