@@ -1547,12 +1547,9 @@ class glancesScreen:
 
     def __autoUnit(self, val):
         """
-        Convert val to string and concatenate the good unit
-        Exemples:
-            960 -> 960
-            142948 -> 143K
-            560745673 -> 561M
-            ...
+        Make a nice human readable string out of val
+        a good script for testing outputs:
+        https://gist.github.com/jrenner/5195216
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {
@@ -1570,10 +1567,12 @@ class glancesScreen:
             value = float(val) / prefix[key]
             if value > 1:
                 fixed_decimal_places = 0
-                if value < 100:
-                    fixed_decimal_places = 1
                 if value < 10:
                     fixed_decimal_places = 2
+                elif value < 100:
+                    fixed_decimal_places = 1
+                else:
+                    fixed_decimal_places = 0
                 val_string = "{0:.%df}{1}" % fixed_decimal_places
                 if key in 'YZEPTG':
                     return val_string.format(value, key)
