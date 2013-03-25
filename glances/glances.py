@@ -3031,8 +3031,7 @@ class glancesScreen:
                             [_("f"), _("Show/hide file system stats")],
                             [_("n"), _("Show/hide network stats")],
                             [_("s"), _("Show/hide sensors stats")],
-                            [_("y"), _("Show/hide hddtemp stats")],
-                            [_("l"), _("Show/hide log messages")]]
+                            [_("y"), _("Show/hide hddtemp stats")]]
 
             width = 3
             key_table_x = self.help_x + 2
@@ -3044,7 +3043,8 @@ class glancesScreen:
                 key_table_y += 1
 
                 # key table (right column)
-                key_col_right = [[_("b"), _("Bits or Bytes for network IO")],
+                key_col_right = [[_("l"), _("Show/hide log messages")],
+                                 [_("b"), _("Bits or Bytes for network IO")],
                                  [_("w"), _("Delete warning logs")],
                                  [_("x"), _("Delete warning and critical logs")],
                                  [_("1"), _("Global CPU or per-CPU stats")],
