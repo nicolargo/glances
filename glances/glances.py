@@ -255,7 +255,8 @@ class glancesLimits:
     STD is for defaults limits (CPU/MEM/SWAP/FS)
     CPU_IOWAIT limits (iowait in %)
     LOAD is for LOAD limits (5 min/15 min)
-    TEMP is for sensors/hddtemp limits (temperature in °C)
+    TEMP is for sensors limits (temperature in °C)
+    HDDTEMP is for hddtemp limits (temperature in °C)
     """
     __limits_list = {'STD': [50, 70, 90],
                      'CPU_USER': [50, 70, 90],
@@ -265,6 +266,7 @@ class glancesLimits:
                      'MEM': [50, 70, 90],
                      'SWAP': [50, 70, 90],
                      'TEMP': [60, 70, 80],
+                     'HDDTEMP': [45, 52, 60],
                      'FS': [50, 70, 90],
                      'PROCESS_CPU': [50, 70, 90],
                      'PROCESS_MEM': [50, 70, 90]}
@@ -307,6 +309,11 @@ class glancesLimits:
             self.__setLimits('TEMP', 'temperature', 'careful')
             self.__setLimits('TEMP', 'temperature', 'warning')
             self.__setLimits('TEMP', 'temperature', 'critical')
+        if config.has_section('hddtemperature'):
+            # Read HDDTEMP limits
+            self.__setLimits('HDDTEMP', 'hddtemperature', 'careful')
+            self.__setLimits('HDDTEMP', 'hddtemperature', 'warning')
+            self.__setLimits('HDDTEMP', 'hddtemperature', 'critical')
         if config.has_section('filesystem'):
             # Read FS limits
             self.__setLimits('FS', 'filesystem', 'careful')
@@ -408,6 +415,15 @@ class glancesLimits:
 
     def getTEMPCritical(self):
         return self.getCritical('TEMP')
+
+    def getHDDTEMPCareful(self):
+        return self.getCareful('HDDTEMP')
+
+    def getHDDTEMPWarning(self):
+        return self.getWarning('HDDTEMP')
+
+    def getHDDTEMPCritical(self):
+        return self.getCritical('HDDTEMP')
 
     def getFSCareful(self):
         return self.getCareful('FS')
@@ -1730,6 +1746,35 @@ class glancesScreen:
         """
         return self.__colors_list2[self.__getSensorsAlert(current)]
 
+    def __getHDDTempAlert(self, current=0):
+        # Alert for HDDTemp (temperature in degre)
+        # If current < CAREFUL then alert = OK
+        # If current > CAREFUL then alert = CAREFUL
+        # If current > WARNING then alert = WARNING
+        # If current > CRITICALthen alert = CRITICAL
+
+        if current > limits.getHDDTEMPCritical():
+            return 'CRITICAL'
+        elif current > limits.getHDDTEMPWarning():
+            return 'WARNING'
+        elif current > limits.getHDDTEMPCareful():
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def __getHDDTempColor(self, current=0):
+        """
+        Return color for HDDTemp temperature
+        """
+        return self.__colors_list[self.__getHDDTempAlert(current)]
+
+    def __getHDDTempColor2(self, current=0):
+        """
+        Return color for HDDTemp temperature
+        """
+        return self.__colors_list2[self.__getHDDTempAlert(current)]
+
+
     def __getProcessAlert(self, current=0, max=100, stat='', core=1):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
@@ -2458,7 +2503,7 @@ class glancesScreen:
                 self.term_window.addnstr(
                     self.hddtemp_y + 1 + i, self.hddtemp_x + 20,
                     format(hddtemp[i]['value'], '>3'), 3,
-                    self.__getSensorsColor(hddtemp[i]['value']))
+                    self.__getHDDTempColor(hddtemp[i]['value']))
                 ret = ret + 1
             return ret
         return 0
@@ -2969,8 +3014,9 @@ class glancesScreen:
             stat_labels = [_("CPU user %"), _("CPU system %"),
                            _("CPU iowait %"), _("Load"),
                            _("RAM memory %"), _("Swap memory %"),
-                           _("Temp °C"), _("Filesystem %"),
-                           _("CPU process %"), _("MEM process %")]
+                           _("Temp °C"), _("HDD Temp °C"),
+                           _("Filesystem %"), _("CPU process %"),
+                           _("MEM process %")]
 
             width = 8
             limits_table_x = self.help_x + 2
@@ -3002,6 +3048,9 @@ class glancesScreen:
                             [0, limits.getTEMPCareful(),
                              limits.getTEMPWarning(),
                              limits.getTEMPCritical()],
+                            [0, limits.getHDDTEMPCareful(),
+                             limits.getHDDTEMPWarning(),
+                             limits.getHDDTEMPCritical()],
                             [0, limits.getFSCareful(),
                              limits.getFSWarning(),
                              limits.getFSCritical()],
@@ -3031,8 +3080,7 @@ class glancesScreen:
                             [_("f"), _("Show/hide file system stats")],
                             [_("n"), _("Show/hide network stats")],
                             [_("s"), _("Show/hide sensors stats")],
-                            [_("y"), _("Show/hide hddtemp stats")],
-                            [_("l"), _("Show/hide log messages")]]
+                            [_("y"), _("Show/hide hddtemp stats")]]
 
             width = 3
             key_table_x = self.help_x + 2
@@ -3044,7 +3092,8 @@ class glancesScreen:
                 key_table_y += 1
 
                 # key table (right column)
-                key_col_right = [[_("b"), _("Bits or Bytes for network IO")],
+                key_col_right = [[_("l"), _("Show/hide log messages")],
+                                 [_("b"), _("Bits or Bytes for network IO")],
                                  [_("w"), _("Delete warning logs")],
                                  [_("x"), _("Delete warning and critical logs")],
                                  [_("1"), _("Global CPU or per-CPU stats")],
