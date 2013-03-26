@@ -904,7 +904,10 @@ class GlancesStats:
         self.host = {}
         self.host['os_name'] = platform.system()
         self.host['hostname'] = platform.node()
-        self.host['platform'] = platform.architecture()[0]
+        if platform.uname()[4]:
+            self.host['platform'] = platform.uname()[4]
+        else:
+            self.host['platform'] = platform.architecture()[0]
         is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
         if self.host['os_name'] == "Linux":
             if is_archlinux:
@@ -1561,21 +1564,22 @@ class glancesScreen:
     def getProcessSortedBy(self):
         return self.__process_sortedby
 
-    def __autoUnit(self, val, no_float=False):
+    def __autoUnit(self, val, low_precision=False):
         """
         Make a nice human readable string out of val
         Number of decimal places increases as quantity approaches 1
 
         examples:
-        CASE: 0              RESULT:          0 no_float:          0
-        CASE: 93             RESULT:         93 no_float:         93
-        CASE: 1207           RESULT:      1.18K no_float:         1K
-        CASE: 24611          RESULT:      24.0K no_float:        24K
-        CASE: 160553         RESULT:       157K no_float:       157K
-        CASE: 2438956        RESULT:      2.33M no_float:         2M
+        CASE: 613421788        RESULT:       585M low_precision:       585M
+        CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
+        CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
+        CASE: 838471403472     RESULT:       781G low_precision:       781G
+        CASE: 9683209690677    RESULT:      8.81T low_precision:       8.8T
+        CASE: 1073741824       RESULT:      1024M low_precision:      1024M
+        CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
 
-        parameter 'no_float=True' returns integers.
-        sacrificing precision for more readability
+        parameter 'low_precision=True' returns less decimal places.
+        potentially sacrificing precision for more readability
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {
@@ -1593,12 +1597,17 @@ class glancesScreen:
             value = float(val) / prefix[key]
             if value > 1:
                 fixed_decimal_places = 0
-                if no_float:
-                    pass
-                elif value < 10:
+                if value < 10:
                     fixed_decimal_places = 2
                 elif value < 100:
                     fixed_decimal_places = 1
+                if low_precision:
+                    if key in 'MK':
+                        fixed_decimal_places = 0
+                    else:
+                        fixed_decimal_places = min(1, fixed_decimal_places)
+                elif key in 'K':
+                    fixed_decimal_places = 0
                 formatter = "{0:.%df}{1}" % fixed_decimal_places
                 return formatter.format(value, key)
         return "{0!s}".format(val)
@@ -2831,13 +2840,13 @@ class glancesScreen:
                 process_size = processlist[processes]['memory_info'][1]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
-                    format(self.__autoUnit(process_size, no_float=True),
+                    format(self.__autoUnit(process_size, low_precision=True),
                            '>5'), 5)
                 # RSS
                 process_resident = processlist[processes]['memory_info'][0]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 6,
-                    format(self.__autoUnit(process_resident, no_float=True),
+                    format(self.__autoUnit(process_resident, low_precision=True),
                            '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
@@ -2923,11 +2932,11 @@ class glancesScreen:
                         io_ws = (io_write - io_write_old) / elapsed_time
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
-                            format(self.__autoUnit(io_rs, no_float=True),
+                            format(self.__autoUnit(io_rs, low_precision=True),
                                    '>5'), 5)
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 62,
-                            format(self.__autoUnit(io_ws, no_float=True),
+                            format(self.__autoUnit(io_ws, low_precision=True),
                                    '>5'), 5)
 
                 # display process command line
