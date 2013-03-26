@@ -1561,14 +1561,21 @@ class glancesScreen:
     def getProcessSortedBy(self):
         return self.__process_sortedby
 
-    def __autoUnit(self, val):
+    def __autoUnit(self, val, no_float=False):
         """
-        Convert val to string and concatenate the good unit
-        Exemples:
-            960 -> 960
-            142948 -> 143K
-            560745673 -> 561M
-            ...
+        Make a nice human readable string out of val
+        Number of decimal places increases as quantity approaches 1
+
+        examples:
+        CASE: 0              RESULT:          0 no_float:          0
+        CASE: 93             RESULT:         93 no_float:         93
+        CASE: 1207           RESULT:      1.18K no_float:         1K
+        CASE: 24611          RESULT:      24.0K no_float:        24K
+        CASE: 160553         RESULT:       157K no_float:       157K
+        CASE: 2438956        RESULT:      2.33M no_float:         2M
+
+        parameter 'no_float=True' returns integers.
+        sacrificing precision for more readability
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {
@@ -1586,15 +1593,14 @@ class glancesScreen:
             value = float(val) / prefix[key]
             if value > 1:
                 fixed_decimal_places = 0
-                if value < 100:
-                    fixed_decimal_places = 1
-                if value < 10:
+                if no_float:
+                    pass
+                elif value < 10:
                     fixed_decimal_places = 2
-                val_string = "{0:.%df}{1}" % fixed_decimal_places
-                if key in 'YZEPTG':
-                    return val_string.format(value, key)
-                else:
-                    return "{0:.0f}{1}".format(value, key)
+                elif value < 100:
+                    fixed_decimal_places = 1
+                formatter = "{0:.%df}{1}" % fixed_decimal_places
+                return formatter.format(value, key)
         return "{0!s}".format(val)
 
     def __getCpuAlert(self, current=0, max=100, stat=''):
@@ -2825,12 +2831,14 @@ class glancesScreen:
                 process_size = processlist[processes]['memory_info'][1]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x,
-                    format(self.__autoUnit(process_size), '>5'), 5)
+                    format(self.__autoUnit(process_size, no_float=True),
+                           '>5'), 5)
                 # RSS
                 process_resident = processlist[processes]['memory_info'][0]
                 self.term_window.addnstr(
                     self.process_y + 3 + processes, process_x + 6,
-                    format(self.__autoUnit(process_resident), '>5'), 5)
+                    format(self.__autoUnit(process_resident, no_float=True),
+                           '>5'), 5)
                 # CPU%
                 cpu_percent = processlist[processes]['cpu_percent']
                 self.term_window.addnstr(
@@ -2915,10 +2923,12 @@ class glancesScreen:
                         io_ws = (io_write - io_write_old) / elapsed_time
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 56,
-                            format(self.__autoUnit(io_rs), '>5'), 5)
+                            format(self.__autoUnit(io_rs, no_float=True),
+                                   '>5'), 5)
                         self.term_window.addnstr(
                             self.process_y + 3 + processes, process_x + 62,
-                            format(self.__autoUnit(io_ws), '>5'), 5)
+                            format(self.__autoUnit(io_ws, no_float=True),
+                                   '>5'), 5)
 
                 # display process command line
                 max_process_name = screen_x - process_x - process_name_x
