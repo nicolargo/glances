@@ -904,7 +904,10 @@ class GlancesStats:
         self.host = {}
         self.host['os_name'] = platform.system()
         self.host['hostname'] = platform.node()
-        self.host['platform'] = platform.architecture()[0]
+        if platform.uname()[4]:
+            self.host['platform'] = platform.uname()[4]
+        else:
+            self.host['platform'] = platform.architecture()[0]
         is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
         if self.host['os_name'] == "Linux":
             if is_archlinux:
