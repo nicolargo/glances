@@ -725,7 +725,7 @@ class glancesGrabHDDTemp:
 
         if self.initok:
             data = ""
-            # Taking care of a possible subtle death of hddtemp
+            # Taking care of sudden deaths/stops of hddtemp daemon
             try:
                 sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sck.connect((self.address, self.port))
@@ -745,11 +745,13 @@ class glancesGrabHDDTemp:
                     else:
                         data = self.cache
                 self.cache = data
-                for line in data.split("\n"):
+                fields = data.split("|")
+                devices = (len(fields) - 1) / 5
+                for i in range(0, devices):
+                    offset = i * 5
                     hddtemp_current = {}
-                    fields = line.split('|')
-                    hddtemp_current['label'] = fields[1].split("/")[-1]
-                    hddtemp_current['value'] = int(fields[3])
+                    hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
+                    hddtemp_current['value'] = int(fields[offset + 3])
                     self.hddtemp_list.append(hddtemp_current)
 
     def get(self):
