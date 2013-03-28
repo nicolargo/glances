@@ -750,8 +750,13 @@ class glancesGrabHDDTemp:
                 for i in range(0, devices):
                     offset = i * 5
                     hddtemp_current = {}
-                    hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
-                    hddtemp_current['value'] = int(fields[offset + 3])
+                    temperature = fields[offset + 3]
+                    if temperature == "ERR":
+                        hddtemp_current['label'] = "hddtemp error"
+                        hddtemp_current['value'] = 0
+                    else:
+                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
+                        hddtemp_current['value'] = int(temperature)
                     self.hddtemp_list.append(hddtemp_current)
 
     def get(self):
