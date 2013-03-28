@@ -3628,13 +3628,13 @@ def printSyntax():
     print(_("\t-p PORT\t\tDefine the client or server TCP port (default: %d)" %
             server_port))
     print(_("\t-P password\tClient/server password"))
+    print(_("\t-r\t\tDo not list processes (significant CPU use reduction)"))
     print(_("\t-s\t\tRun Glances in server mode"))
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
     print(_("\t-y\t\tEnable the hddtemp module"))    
     print(_("\t-z\t\tDo not use the bold color attribute"))
-    print(_("\t-r\t\tDo not list processes (significant CPU use reduction)"))
 
 
 def end():
