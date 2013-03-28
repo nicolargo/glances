@@ -148,6 +148,7 @@ hddtemp_tag = False
 network_tag = True
 diskio_tag = True
 fs_tag = True
+process_tag = True
 
 
 # Classes
@@ -1187,15 +1188,16 @@ class GlancesStats:
             self.fs = self.glancesgrabfs.get()
 
         # PROCESS
-        self.glancesgrabprocesses.update()
-        processcount = self.glancesgrabprocesses.getcount()
-        process = self.glancesgrabprocesses.getlist()
-        if not hasattr(self, 'process'):
-            self.processcount = {}
-            self.process = []
-        else:
-            self.processcount = processcount
-            self.process = process
+        if process_tag:
+            self.glancesgrabprocesses.update()
+            processcount = self.glancesgrabprocesses.getcount()
+            process = self.glancesgrabprocesses.getlist()
+            if not hasattr(self, 'process'):
+                self.processcount = {}
+                self.process = []
+            else:
+                self.processcount = processcount
+                self.process = process
 
         # Get the current date/time
         self.now = datetime.now()
@@ -1271,13 +1273,18 @@ class GlancesStats:
             return []
 
     def getProcessCount(self):
-        return self.processcount
+        if process_tag:
+            return self.processcount
+        else:
+            return 0
 
     def getProcessList(self, sortedby='auto'):
         """
         Return the sorted process list
         """
 
+        if not process_tag:
+            return []
         if self.process == {} or 'limits' not in globals():
             return self.process
 
@@ -1346,8 +1353,8 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["hddtemp"] = self.hddtemp if hddtemp_tag else []
         self.all_stats["diskio"] = self.diskio if diskio_tag else []
         self.all_stats["fs"] = self.fs if fs_tag else []
-        self.all_stats["processcount"] = self.processcount
-        self.all_stats["process"] = self.process
+        self.all_stats["processcount"] = self.processcount if process_tag else 0
+        self.all_stats["process"] = self.process if process_tag else []
         self.all_stats["core_number"] = self.core_number
 
         # Get the current date/time
@@ -1545,6 +1552,7 @@ class glancesScreen:
         self.log_tag = True
         self.help_tag = False
         self.percpu_tag = False
+        self.process_tag = process_tag
         self.net_byteps_tag = network_bytepersec_tag
         self.network_stats_combined = False
         self.network_stats_cumulative = False
@@ -2697,15 +2705,21 @@ class glancesScreen:
         # If there is no network & diskio & fs & sensors stats & hddtemp stats
         # then increase process window
         if (not self.network_tag and
-            not self.diskio_tag and
-            not self.fs_tag and
-            not self.sensors_tag and
-            not self.hddtemp_tag):
+                not self.diskio_tag and
+                not self.fs_tag and
+                not self.sensors_tag and
+                not self.hddtemp_tag):
             process_x = 0
         else:
             process_x = self.process_x
 
         # Processes summary
+        if not self.process_tag:
+            self.term_window.addnstr(self.process_y, process_x,
+                                     _("Processes (disabled)"),
+                                     20, self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            return 0
         if screen_y > self.process_y + 4 and screen_x > process_x + 48:
             self.term_window.addnstr(self.process_y, process_x, _("Processes"),
                                      9, self.title_color if self.hascolors else
@@ -3620,6 +3634,7 @@ def printSyntax():
     print(_("\t-v\t\tDisplay the version and exit"))
     print(_("\t-y\t\tEnable the hddtemp module"))    
     print(_("\t-z\t\tDo not use the bold color attribute"))
+    print(_("\t-r\t\tDo not list processes (significant CPU use reduction)"))
 
 
 def end():
@@ -3653,7 +3668,8 @@ def main():
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_io_counter_tag, psutil_mem_vm
-    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag, hddtemp_tag
+    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag
+    global hddtemp_tag, process_tag
     global refresh_time, client, server, server_port, server_ip
     global last_update_times
 
@@ -3667,6 +3683,7 @@ def main():
     network_bytepersec_tag = False
     sensors_tag = False
     hddtemp_tag = False
+    process_tag = True
     html_tag = False
     csv_tag = False
     client_tag = False
@@ -3699,12 +3716,12 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z:r",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "hddtemp", "netrate", "help", "output",
                                     "file", "time", "version", "server",
                                     "client", "port", "config", "password",
-                                    "nobold"])
+                                    "nobold", "noproc"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -3782,6 +3799,8 @@ def main():
             conf_file_tag = True
         elif opt in ("-z", "--nobold"):
             use_bold = False
+        elif opt in ("-r", "--noproc"):
+            process_tag = False
         else:
             printSyntax()
             sys.exit(0)
