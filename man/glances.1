@@ -12,6 +12,46 @@ It can also work in a client/server mode (for remote monitoring).
 .PP
 This tool is written in Python and uses PsUtil to fetch the statistical values from key elements.
 .PP
+The command line options are the following:
+.PP
+    -b		Display network rate in Byte per second
+.PP    
+	-B @IP|host	Bind server to the given IP or host NAME
+.PP
+	-c @IP|host	Connect to a Glances server
+.PP
+	-C file		Path to the configuration file
+.PP    
+	-d		Disable disk I/O module
+.PP    
+	-e		Enable the sensors module (Linux-only)
+.PP    
+	-f file		Set the output folder (HTML) or file (CSV)
+.PP    
+	-h		Display the syntax and exit
+.PP    
+	-m		Disable mount module
+.PP
+	-n		Disable network module
+.PP
+	-o output	Define additional output (available: HTML or CSV)
+.PP
+	-p PORT		Define the client or server TCP port (default: 61209)
+.PP
+	-P password	Client/server password
+.PP
+	-r		Do not list processes (significant CPU use reduction)
+.PP
+	-s		Run Glances in server mode
+.PP
+	-t sec		Set the refresh time in seconds (default: 3)
+.PP
+	-v		Display the version and exit
+.PP
+	-y		Enable the hddtemp module
+.PP
+	-z		Do not use the bold color attribute
+.PP
 When Glances is running, you can use the following keys:
 .PP
 	'a' Automatic mode. The process list is sorted automatically
