@@ -3640,7 +3640,7 @@ def printSyntax():
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
-    print(_("\t-y\t\tEnable the hddtemp module"))    
+    print(_("\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"))    
     print(_("\t-z\t\tDo not use the bold color attribute"))
 
 
