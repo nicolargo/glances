@@ -165,10 +165,27 @@ The version 1.6 introduces a optionnal password to access to the server (-P pass
 
 ## User guide
 
-By default, stats are refreshed every second, to change this setting, you can
-use the -t option. For example to set the refresh rate to 5 seconds:
+Command line options are:
 
-    $ glances -t 5
+    -b		    Display network rate in Byte per second
+	-B @IP|host	Bind server to the given IP or host NAME
+	-c @IP|host	Connect to a Glances server
+	-C file		Path to the configuration file
+	-d		    Disable disk I/O module
+	-e		    Enable the sensors module (Linux-only)
+	-f file		Set the output folder (HTML) or file (CSV)
+	-h		    Display the syntax and exit
+	-m		    Disable mount module
+	-n		    Disable network module
+	-o output	Define additional output (available: HTML or CSV)
+	-p PORT		Define the client or server TCP port (default: 61209)
+	-P password	Client/server password
+	-r		    Do not list processes (significant CPU use reduction)
+	-s		    Run Glances in server mode
+	-t sec		Set the refresh time in seconds (default: 3)
+	-v		    Display the version and exit
+	-y		    Enable the hddtemp module
+	-z		    Do not use the bold color attribute
 
 Importants stats are colored:
 
