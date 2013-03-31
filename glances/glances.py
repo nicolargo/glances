@@ -882,6 +882,12 @@ class GlancesStats:
         """
 
         self._init_host()
+        
+        # Init the grab error tags
+        # for managing error during stats grab
+        # By default, we *hope* that there is no error
+        self.network_error_tag = False
+        self.diskio_error_tag = False
 
         # Init the fs stats
         try:
@@ -1125,14 +1131,17 @@ class GlancesStats:
                 self.memswap = {}
 
         # NET
-        if network_tag:
+        if network_tag and not self.network_error_tag:
             self.network = []
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
             time_since_update = getTimeSinceLastUpdate('net')
             if not hasattr(self, 'network_old'):
-                self.network_old = psutil.network_io_counters(pernic=True)
+                try:
+                    self.network_old = psutil.network_io_counters(pernic=True)
+                except IOError:
+                    self.network_error_tag = True
             else:
                 self.network_new = psutil.network_io_counters(pernic=True)
                 for net in self.network_new:
@@ -1165,11 +1174,14 @@ class GlancesStats:
             self.hddtemp = self.glancesgrabhddtemp.get()
 
         # DISK I/O
-        if diskio_tag:
+        if diskio_tag and not self.diskio_error_tag:
             time_since_update = getTimeSinceLastUpdate('disk')
             self.diskio = []
             if not hasattr(self, 'diskio_old'):
-                self.diskio_old = psutil.disk_io_counters(perdisk=True)
+                try:
+                    self.diskio_old = psutil.disk_io_counters(perdisk=True)
+                except IOError:
+                    self.diskio_error_tag = True
             else:
                 self.diskio_new = psutil.disk_io_counters(perdisk=True)
                 for disk in self.diskio_new:
@@ -1946,14 +1958,15 @@ class glancesScreen:
         cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
         load_offset = self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
         self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, load_offset)
-        network_count = self.displayNetwork(stats.getNetwork())
+        network_count = self.displayNetwork(stats.getNetwork(), error = stats.network_error_tag)
         sensors_count = self.displaySensors(stats.getSensors(),
                                             self.network_y + network_count)
         hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
                                             self.network_y + network_count + sensors_count)
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
-                                          self.network_y + sensors_count + 
-                                          network_count + hddtemp_count)
+                                          offset_y = self.network_y + sensors_count + 
+                                          network_count + hddtemp_count,
+                                          error = stats.diskio_error_tag)
         fs_count = self.displayFs(stats.getFs(),
                                   self.network_y + sensors_count +
                                   network_count + diskio_count + 
@@ -2371,9 +2384,10 @@ class glancesScreen:
                 self.mem_y + 3, self.mem_x + offset_x + 39,
                 format(self.__autoUnit(memswap['free']), '>5'), 8)
 
-    def displayNetwork(self, network):
+    def displayNetwork(self, network, error = False):
         """
         Display the network interface bitrate
+        If error = True, then display a grab error message
         Return the number of interfaces
         """
         if not self.network_tag:
@@ -2402,8 +2416,13 @@ class glancesScreen:
                 self.term_window.addnstr(self.network_y, self.network_x + 18,
                                      format(_(tx_column_name), '>5'), 5)
 
-            # If there is no data to display...
-            if not network:
+            if error:
+                # If there is a grab error
+                self.term_window.addnstr(self.network_y + 1, self.network_x,
+                                         _("Can not grab data..."), 20)
+                return 3
+            elif not network:
+                # or no data to display...
                 self.term_window.addnstr(self.network_y + 1, self.network_x,
                                          _("Compute data..."), 15)
                 return 3
@@ -2541,7 +2560,7 @@ class glancesScreen:
             return ret
         return 0
 
-    def displayDiskIO(self, diskio, offset_y=0):
+    def displayDiskIO(self, diskio, offset_y=0, error = False):
         # Disk input/output rate
         if not self.diskio_tag:
             return 0
@@ -2558,8 +2577,13 @@ class glancesScreen:
             self.term_window.addnstr(self.diskio_y, self.diskio_x + 18,
                                      format(_("Out/s"), '>5'), 5)
 
-            # If there is no data to display...
-            if not diskio:
+            if error:
+                # If there is a grab error
+                self.term_window.addnstr(self.diskio_y + 1, self.diskio_x,
+                                         _("Can not grab data..."), 20)
+                return 3
+            elif not diskio:
+                # or no data to display...
                 self.term_window.addnstr(self.diskio_y + 1, self.diskio_x,
                                          _("Compute data..."), 15)
                 return 3
