@@ -2344,7 +2344,11 @@ class glancesScreen:
                 offset_x -= extblocksize
 
             if not memswap:
+                # If there is no swap stat, then do not display it
                 return 0
+            if memswap['total'] == 0:
+                # If swap is null, then do not display it
+                return 0                
 
             # Swap
             self.term_window.addnstr(self.mem_y,
