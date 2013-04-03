@@ -197,19 +197,26 @@ class Config:
         Get a list of config file paths, taking into account of the OS,
         priority and location.
 
+        * running from source: /path/to/glances/glances/conf
         * Linux: ~/.config/glances, /etc/glances
         * BSD: ~/.config/glances, /usr/local/etc/glances
         * Mac: ~/Library/Application Support/glances, /usr/local/etc/glances
 
         The config file will be searched in the following order of priority:
             * /path/to/file (via -C flag)
+            * /path/to/glances/glances/conf
             * user's home directory (per-user settings)
             * /etc directory (system-wide settings)
         """
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        local_path = os.path.join(base_path, 'conf', self.filename)
         paths = []
 
         if self.location is not None:
             paths.append(self.location)
+
+        if os.path.exists(local_path):
+            paths.append(local_path)
 
         if is_Linux or is_BSD:
             paths.append(os.path.join(
