@@ -119,7 +119,7 @@ The default configuration file is under:
     /etc/glances/glances.conf (Linux)
 or
 
-    /usr/local/etc/glances.conf (*BSD and OS X)
+    /usr/local/etc/glances/glances.conf (*BSD and OS X)
 
 To override the default configuration, you can copy the `glances.conf` file to
 your `$XDG_CONFIG_HOME` directory (e.g. Linux):
