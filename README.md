@@ -17,11 +17,11 @@ It is developed in Python.
 
 Console (80x24) screenshot:
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/doc/screenshot.png)
+![screenshot](https://raw.github.com/nicolargo/glances/master/doc/screenshot.png)
 
 Wide terminal (> 90x24) screenshot:
 
-![screenshot](https://github.com/nicolargo/glances/raw/master/doc/screenshot-wide.png)
+![screenshot](https://raw.github.com/nicolargo/glances/master/doc/screenshot-wide.png)
 
 ## Installation
 
