@@ -107,6 +107,12 @@ Glances use a standard GNU style installer (for a Debian like system):
     $ tar zxvf glances-last.tgz
     $ cd nicolargo-glances-*
     $ sudo python setup.py install
+    
+## From a configuration manager
+
+Puppet: https://github.com/rverchere/puppet-glances
+
+Chef: https://github.com/cookbooks/hw-chef-glances
 
 ## Configuration
 
