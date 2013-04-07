@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Glances 1.4.1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-02-17 17:04+0100\n"
+"POT-Creation-Date: 2013-04-07 17:10+0200\n"
 "PO-Revision-Date: 2012-09-20 01:53-0300\n"
 "Last-Translator: Rafael Beraldo <rberaldo@cabaladada.org>\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -17,640 +17,681 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: glances/glances.py:87
+#: glances/glances.py:88
 msgid "Curses module not found. Glances cannot start."
 msgstr ""
 
-#: glances/glances.py:94
+#: glances/glances.py:95
 msgid "PsUtil module not found. Glances cannot start."
 msgstr ""
 
-#: glances/glances.py:99
+#: glances/glances.py:100
 #, python-format
 msgid "PsUtil version %s detected."
 msgstr ""
 
-#: glances/glances.py:100
+#: glances/glances.py:101
 msgid "PsUtil 0.4.1 or higher is needed. Glances cannot start."
 msgstr ""
 
-#: glances/glances.py:1327
+#: glances/glances.py:1487
 msgid "Error: Cannot init the curses library.\n"
 msgstr ""
 
-#: glances/glances.py:1810
+#: glances/glances.py:2035
 msgid "{0} {1} with {2} {3} on {4}"
 msgstr ""
 
-#: glances/glances.py:1815
+#: glances/glances.py:2040
 msgid "{0} {1} {2} on {3}"
 msgstr ""
 
-#: glances/glances.py:1863
+#: glances/glances.py:2088
 msgid "PerCPU"
 msgstr ""
 
-#: glances/glances.py:1869 glances/glances.py:1923 glances/glances.py:2190
-#: glances/glances.py:2282 glances/glances.py:2566
+#: glances/glances.py:2094 glances/glances.py:2148 glances/glances.py:2438
+#: glances/glances.py:2599 glances/glances.py:2890
 msgid "Compute data..."
 msgstr ""
 
-#: glances/glances.py:1873 glances/glances.py:1933
+#: glances/glances.py:2098 glances/glances.py:2158
 msgid "user:"
 msgstr ""
 
-#: glances/glances.py:1875 glances/glances.py:1942
+#: glances/glances.py:2100 glances/glances.py:2167
 msgid "system:"
 msgstr ""
 
-#: glances/glances.py:1878 glances/glances.py:1970
+#: glances/glances.py:2103 glances/glances.py:2195
 msgid "iowait:"
 msgstr ""
 
-#: glances/glances.py:1881 glances/glances.py:1949
+#: glances/glances.py:2106 glances/glances.py:2174
 msgid "idle:"
 msgstr ""
 
-#: glances/glances.py:1917
+#: glances/glances.py:2142
 msgid "CPU"
 msgstr ""
 
-#: glances/glances.py:1961
+#: glances/glances.py:2186
 msgid "nice:"
 msgstr ""
 
-#: glances/glances.py:1980
+#: glances/glances.py:2205
 msgid "irq:"
 msgstr ""
 
-#: glances/glances.py:2002 glances/glances.py:2765
+#: glances/glances.py:2227 glances/glances.py:3093
 msgid "Load"
 msgstr "Carga"
 
-#: glances/glances.py:2006
+#: glances/glances.py:2231
 msgid "-core"
 msgstr ""
 
-#: glances/glances.py:2010
+#: glances/glances.py:2235
 msgid "1 min:"
 msgstr "1 min:"
 
-#: glances/glances.py:2017
+#: glances/glances.py:2242
 msgid "5 min:"
 msgstr ""
 
-#: glances/glances.py:2027
+#: glances/glances.py:2252
 msgid "15 min:"
 msgstr ""
 
-#: glances/glances.py:2053
+#: glances/glances.py:2278
 msgid "Mem"
 msgstr "Mem"
 
-#: glances/glances.py:2063 glances/glances.py:2145
+#: glances/glances.py:2288 glances/glances.py:2374
 msgid "total:"
 msgstr ""
 
-#: glances/glances.py:2072 glances/glances.py:2155
+#: glances/glances.py:2297 glances/glances.py:2384
 msgid "used:"
 msgstr ""
 
-#: glances/glances.py:2080 glances/glances.py:2164
+#: glances/glances.py:2305 glances/glances.py:2393
 msgid "free:"
 msgstr ""
 
-#: glances/glances.py:2093
+#: glances/glances.py:2318
 msgid "active:"
 msgstr ""
 
-#: glances/glances.py:2101
+#: glances/glances.py:2326
 msgid "inactive:"
 msgstr ""
 
-#: glances/glances.py:2111
+#: glances/glances.py:2336
 msgid "buffers:"
 msgstr ""
 
-#: glances/glances.py:2119
+#: glances/glances.py:2344
 msgid "cached:"
 msgstr ""
 
-#: glances/glances.py:2133
+#: glances/glances.py:2362
 msgid "Swap"
 msgstr "Swap"
 
-#: glances/glances.py:2180
+#: glances/glances.py:2410
 msgid "Network"
 msgstr ""
 
-#: glances/glances.py:2183
-msgid "Rx/s"
+#: glances/glances.py:2433 glances/glances.py:2594
+msgid "Can not grab data..."
 msgstr ""
 
-#: glances/glances.py:2185
-msgid "Tx/s"
-msgstr ""
-
-#: glances/glances.py:2242
+#: glances/glances.py:2521
 msgid "Sensors"
 msgstr ""
 
-#: glances/glances.py:2245
+#: glances/glances.py:2524 glances/glances.py:2557
 msgid "°C"
 msgstr ""
 
-#: glances/glances.py:2271
+#: glances/glances.py:2554
+msgid "HDD Temp"
+msgstr ""
+
+#: glances/glances.py:2583
 msgid "Disk I/O"
 msgstr "I/O do Disco"
 
-#: glances/glances.py:2275
+#: glances/glances.py:2587
 msgid "In/s"
 msgstr ""
 
-#: glances/glances.py:2277
+#: glances/glances.py:2589
 msgid "Out/s"
 msgstr ""
 
-#: glances/glances.py:2318
+#: glances/glances.py:2635
 msgid "Mount"
 msgstr "Partições"
 
-#: glances/glances.py:2322
+#: glances/glances.py:2639
 msgid "Used"
 msgstr "Usado"
 
-#: glances/glances.py:2324
+#: glances/glances.py:2641
 msgid "Total"
 msgstr "Total"
 
-#: glances/glances.py:2366
+#: glances/glances.py:2683
 msgid "WARNING|CRITICAL logs for CPU|LOAD|MEM"
 msgstr ""
 
-#: glances/glances.py:2368
+#: glances/glances.py:2685
 msgid " (lasts "
 msgstr ""
 
-#: glances/glances.py:2369
+#: glances/glances.py:2686
 msgid " entries)"
 msgstr ""
 
-#: glances/glances.py:2371
+#: glances/glances.py:2688
 msgid " (one entry)"
 msgstr ""
 
-#: glances/glances.py:2442
+#: glances/glances.py:2761
+msgid "Processes (disabled)"
+msgstr ""
+
+#: glances/glances.py:2766
 msgid "Processes"
 msgstr ""
 
-#: glances/glances.py:2453
+#: glances/glances.py:2777
 msgid "running"
 msgstr ""
 
-#: glances/glances.py:2455
+#: glances/glances.py:2779
 msgid "sleeping"
 msgstr ""
 
-#: glances/glances.py:2457
+#: glances/glances.py:2781
 msgid "other"
 msgstr ""
 
-#: glances/glances.py:2463
+#: glances/glances.py:2787
 msgid "sorted automatically"
 msgstr ""
 
-#: glances/glances.py:2465
+#: glances/glances.py:2789
 msgid "sorted by "
 msgstr ""
 
-#: glances/glances.py:2498
+#: glances/glances.py:2822
 msgid "VIRT"
 msgstr ""
 
-#: glances/glances.py:2502
+#: glances/glances.py:2826
 msgid "RES"
 msgstr ""
 
-#: glances/glances.py:2506
+#: glances/glances.py:2830
 msgid "CPU%"
 msgstr ""
 
-#: glances/glances.py:2511
+#: glances/glances.py:2835
 msgid "MEM%"
 msgstr ""
 
-#: glances/glances.py:2519
+#: glances/glances.py:2843
 msgid "PID"
 msgstr ""
 
-#: glances/glances.py:2525
+#: glances/glances.py:2849
 msgid "USER"
 msgstr ""
 
-#: glances/glances.py:2531
+#: glances/glances.py:2855
 msgid "NI"
 msgstr ""
 
-#: glances/glances.py:2537
+#: glances/glances.py:2861
 msgid "S"
 msgstr ""
 
-#: glances/glances.py:2543
+#: glances/glances.py:2867
 msgid "TIME+"
 msgstr ""
 
-#: glances/glances.py:2549
+#: glances/glances.py:2873
 msgid "IOR/s"
 msgstr ""
 
-#: glances/glances.py:2554
+#: glances/glances.py:2878
 msgid "IOW/s"
 msgstr ""
 
-#: glances/glances.py:2560
+#: glances/glances.py:2884
 msgid "NAME"
 msgstr ""
 
-#: glances/glances.py:2700
+#: glances/glances.py:3028
 msgid "Connected to"
 msgstr ""
 
-#: glances/glances.py:2703
+#: glances/glances.py:3031
 msgid "Disconnected from"
 msgstr ""
 
-#: glances/glances.py:2705
+#: glances/glances.py:3033
 msgid "Press 'h' for help"
 msgstr ""
 
-#: glances/glances.py:2738
+#: glances/glances.py:3066
 msgid "Glances {0} with PsUtil {1}"
 msgstr ""
 
-#: glances/glances.py:2744
+#: glances/glances.py:3072
 msgid "Glances {0}"
 msgstr ""
 
-#: glances/glances.py:2751
+#: glances/glances.py:3079
 msgid "OK"
 msgstr ""
 
-#: glances/glances.py:2754
+#: glances/glances.py:3082
 msgid "CAREFUL"
 msgstr ""
 
-#: glances/glances.py:2757
+#: glances/glances.py:3085
 msgid "WARNING"
 msgstr ""
 
-#: glances/glances.py:2760
+#: glances/glances.py:3088
 msgid "CRITICAL"
 msgstr "CRÍTICO"
 
-#: glances/glances.py:2764
+#: glances/glances.py:3092
 msgid "CPU user %"
 msgstr ""
 
-#: glances/glances.py:2764
+#: glances/glances.py:3092
 msgid "CPU system %"
 msgstr ""
 
-#: glances/glances.py:2765
+#: glances/glances.py:3093
 msgid "CPU iowait %"
 msgstr ""
 
-#: glances/glances.py:2766
+#: glances/glances.py:3094
 msgid "RAM memory %"
 msgstr ""
 
-#: glances/glances.py:2766
+#: glances/glances.py:3094
 msgid "Swap memory %"
 msgstr ""
 
-#: glances/glances.py:2767
+#: glances/glances.py:3095
 msgid "Temp °C"
 msgstr ""
 
-#: glances/glances.py:2767
+#: glances/glances.py:3095
+msgid "HDD Temp °C"
+msgstr ""
+
+#: glances/glances.py:3096
 msgid "Filesystem %"
 msgstr ""
 
-#: glances/glances.py:2768
+#: glances/glances.py:3096
 msgid "CPU process %"
 msgstr ""
 
-#: glances/glances.py:2768
+#: glances/glances.py:3097
 msgid "MEM process %"
 msgstr ""
 
-#: glances/glances.py:2820
+#: glances/glances.py:3152
 msgid "a"
 msgstr ""
 
-#: glances/glances.py:2820
+#: glances/glances.py:3152
 msgid "Sort processes automatically"
 msgstr ""
 
-#: glances/glances.py:2821
+#: glances/glances.py:3153
 msgid "c"
 msgstr ""
 
-#: glances/glances.py:2821
+#: glances/glances.py:3153
 msgid "Sort processes by CPU%"
 msgstr ""
 
-#: glances/glances.py:2822
+#: glances/glances.py:3154
 msgid "m"
 msgstr ""
 
-#: glances/glances.py:2822
+#: glances/glances.py:3154
 msgid "Sort processes by MEM%"
 msgstr ""
 
-#: glances/glances.py:2823
+#: glances/glances.py:3155
 msgid "p"
 msgstr ""
 
-#: glances/glances.py:2823
+#: glances/glances.py:3155
 msgid "Sort processes by name"
 msgstr ""
 
-#: glances/glances.py:2824
+#: glances/glances.py:3156
 msgid "i"
 msgstr ""
 
-#: glances/glances.py:2824
+#: glances/glances.py:3156
 msgid "Sort processes by IO rate"
 msgstr ""
 
-#: glances/glances.py:2825
+#: glances/glances.py:3157
 msgid "d"
 msgstr ""
 
-#: glances/glances.py:2825
+#: glances/glances.py:3157
 msgid "Show/hide disk I/O stats"
 msgstr ""
 
-#: glances/glances.py:2826
+#: glances/glances.py:3158
 msgid "f"
 msgstr ""
 
-#: glances/glances.py:2826
+#: glances/glances.py:3158
 msgid "Show/hide file system stats"
 msgstr ""
 
-#: glances/glances.py:2827
+#: glances/glances.py:3159
 msgid "n"
 msgstr ""
 
-#: glances/glances.py:2827
+#: glances/glances.py:3159
 msgid "Show/hide network stats"
 msgstr ""
 
-#: glances/glances.py:2828
+#: glances/glances.py:3160
 msgid "s"
 msgstr ""
 
-#: glances/glances.py:2828
+#: glances/glances.py:3160
 msgid "Show/hide sensors stats"
 msgstr ""
 
-#: glances/glances.py:2829
+#: glances/glances.py:3161
+msgid "y"
+msgstr ""
+
+#: glances/glances.py:3161
+msgid "Show/hide hddtemp stats"
+msgstr ""
+
+#: glances/glances.py:3173
 msgid "l"
 msgstr ""
 
-#: glances/glances.py:2829
+#: glances/glances.py:3173
 msgid "Show/hide log messages"
 msgstr ""
 
-#: glances/glances.py:2841
+#: glances/glances.py:3174
 msgid "b"
 msgstr ""
 
-#: glances/glances.py:2841
-msgid "Bit/s or Byte/s for network IO"
+#: glances/glances.py:3174
+msgid "Bits or Bytes for network IO"
 msgstr ""
 
-#: glances/glances.py:2842
+#: glances/glances.py:3175
 msgid "w"
 msgstr ""
 
-#: glances/glances.py:2842
+#: glances/glances.py:3175
 msgid "Delete warning logs"
 msgstr ""
 
-#: glances/glances.py:2843
+#: glances/glances.py:3176
 msgid "x"
 msgstr ""
 
-#: glances/glances.py:2843
+#: glances/glances.py:3176
 msgid "Delete warning and critical logs"
 msgstr ""
 
-#: glances/glances.py:2844
+#: glances/glances.py:3177
 msgid "1"
 msgstr ""
 
-#: glances/glances.py:2844
+#: glances/glances.py:3177
 msgid "Global CPU or per-CPU stats"
 msgstr ""
 
-#: glances/glances.py:2845
+#: glances/glances.py:3178
 msgid "h"
 msgstr ""
 
-#: glances/glances.py:2845
+#: glances/glances.py:3178
 msgid "Show/hide this help message"
 msgstr ""
 
-#: glances/glances.py:2846
+#: glances/glances.py:3179
+msgid "t"
+msgstr ""
+
+#: glances/glances.py:3179
+msgid "View network IO as combination"
+msgstr ""
+
+#: glances/glances.py:3180
+msgid "u"
+msgstr ""
+
+#: glances/glances.py:3180
+msgid "View cumulative network IO"
+msgstr ""
+
+#: glances/glances.py:3181
 msgid "q"
 msgstr ""
 
-#: glances/glances.py:2846
+#: glances/glances.py:3181
 msgid "Quit (Esc and Ctrl-C also work)"
 msgstr ""
 
-#: glances/glances.py:2863 glances/glances.py:3194
+#: glances/glances.py:3198 glances/glances.py:3556
 msgid "%Y-%m-%d %H:%M:%S"
 msgstr "%d-%m-%Y %H:%M:%S"
 
-#: glances/glances.py:3246
+#: glances/glances.py:3608
 msgid "Error: creating client socket"
 msgstr ""
 
-#: glances/glances.py:3255
+#: glances/glances.py:3617
 msgid "Error: Connection to server failed. Bad password."
 msgstr ""
 
-#: glances/glances.py:3258
+#: glances/glances.py:3620
 msgid "Error: Connection to server failed. Unknown error."
 msgstr ""
 
-#: glances/glances.py:3263
+#: glances/glances.py:3625
 msgid "Error: Connection to server failed. Can not get the server version."
 msgstr ""
 
-#: glances/glances.py:3290
+#: glances/glances.py:3652
 msgid "Glances version"
 msgstr ""
 
-#: glances/glances.py:3290
+#: glances/glances.py:3652
 msgid " with PsUtil "
 msgstr ""
 
-#: glances/glances.py:3295
+#: glances/glances.py:3657
 msgid "Usage: glances [opt]"
 msgstr ""
 
-#: glances/glances.py:3296
+#: glances/glances.py:3658
 msgid " with opt:"
 msgstr ""
 
-#: glances/glances.py:3297
+#: glances/glances.py:3659
 msgid "\t-b\t\tDisplay network rate in Byte per second"
 msgstr ""
 
-#: glances/glances.py:3298
+#: glances/glances.py:3660
 msgid "\t-B @IP|host\tBind server to the given IP or host NAME"
 msgstr ""
 
-#: glances/glances.py:3299
+#: glances/glances.py:3661
 msgid "\t-c @IP|host\tConnect to a Glances server"
 msgstr ""
 
-#: glances/glances.py:3300
+#: glances/glances.py:3662
 msgid "\t-C file\t\tPath to the configuration file"
 msgstr ""
 
-#: glances/glances.py:3301
+#: glances/glances.py:3663
 msgid "\t-d\t\tDisable disk I/O module"
 msgstr ""
 
-#: glances/glances.py:3302
+#: glances/glances.py:3664
 msgid "\t-e\t\tEnable the sensors module (Linux-only)"
 msgstr ""
 
-#: glances/glances.py:3303
+#: glances/glances.py:3665
 msgid "\t-f file\t\tSet the output folder (HTML) or file (CSV)"
 msgstr ""
 
-#: glances/glances.py:3304
+#: glances/glances.py:3666
 msgid "\t-h\t\tDisplay the syntax and exit"
 msgstr ""
 
-#: glances/glances.py:3305
+#: glances/glances.py:3667
 msgid "\t-m\t\tDisable mount module"
 msgstr ""
 
-#: glances/glances.py:3306
+#: glances/glances.py:3668
 msgid "\t-n\t\tDisable network module"
 msgstr ""
 
-#: glances/glances.py:3307
+#: glances/glances.py:3669
 msgid "\t-o output\tDefine additional output (available: HTML or CSV)"
 msgstr ""
 
-#: glances/glances.py:3308
+#: glances/glances.py:3670
 #, python-format
 msgid "\t-p PORT\t\tDefine the client or server TCP port (default: %d)"
 msgstr ""
 
-#: glances/glances.py:3310
+#: glances/glances.py:3672
 msgid "\t-P password\tClient/server password"
 msgstr ""
 
-#: glances/glances.py:3311
+#: glances/glances.py:3673
+msgid "\t-r\t\tDo not list processes (significant CPU use reduction)"
+msgstr ""
+
+#: glances/glances.py:3674
 msgid "\t-s\t\tRun Glances in server mode"
 msgstr ""
 
-#: glances/glances.py:3312
+#: glances/glances.py:3675
 #, python-format
 msgid "\t-t sec\t\tSet the refresh time in seconds (default: %d)"
 msgstr ""
 
-#: glances/glances.py:3314
+#: glances/glances.py:3677
 msgid "\t-v\t\tDisplay the version and exit"
 msgstr ""
 
-#: glances/glances.py:3315
+#: glances/glances.py:3678
+msgid "\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"
+msgstr ""
+
+#: glances/glances.py:3679
 msgid "\t-z\t\tDo not use the bold color attribute"
 msgstr ""
 
-#: glances/glances.py:3408
+#: glances/glances.py:3782
 msgid "Error: -P flag need an argument (password)"
 msgstr ""
 
-#: glances/glances.py:3415
+#: glances/glances.py:3789
 msgid "Error: -B flag need an argument (bind IP address)"
 msgstr ""
 
-#: glances/glances.py:3423
+#: glances/glances.py:3797
 msgid "Error: -c flag need an argument (server IP address/name)"
 msgstr ""
 
-#: glances/glances.py:3434
+#: glances/glances.py:3808
 #, python-format
 msgid "Error: Unknown output %s"
 msgstr ""
 
-#: glances/glances.py:3440
+#: glances/glances.py:3814
 msgid "Error: PySensors library not found"
 msgstr ""
 
-#: glances/glances.py:3445
+#: glances/glances.py:3819
 msgid "Error: Sensors module is only available on Linux"
 msgstr ""
 
-#: glances/glances.py:3453
+#: glances/glances.py:3829
 msgid "Error: Refresh time should be a positive integer"
 msgstr ""
 
-#: glances/glances.py:3475
-msgid "Error: Can not use both -s and -c flag"
+#: glances/glances.py:3853
+msgid "Error: Cannot use both -s and -c flag"
 msgstr ""
 
-#: glances/glances.py:3478
-msgid "Error: Can not use both -s and -o flag"
+#: glances/glances.py:3856
+msgid "Error: Cannot use both -s and -o flag"
 msgstr ""
 
-#: glances/glances.py:3483
-msgid "Error: Can not use both -c and -o flag"
+#: glances/glances.py:3861
+msgid "Error: Cannot use both -c and -o flag"
 msgstr ""
 
-#: glances/glances.py:3486
-msgid "Error: Can not use both -c and -C flag"
+#: glances/glances.py:3864
+msgid "Error: Cannot use both -c and -C flag"
 msgstr ""
 
-#: glances/glances.py:3487
+#: glances/glances.py:3865
 msgid "       Limits are set based on the server ones"
 msgstr ""
 
-#: glances/glances.py:3492
+#: glances/glances.py:3870
 msgid "Error: Need Jinja2 library to export into HTML"
 msgstr ""
 
-#: glances/glances.py:3493
+#: glances/glances.py:3871
 msgid "Try to install the python-jinja2 package"
 msgstr ""
 
-#: glances/glances.py:3498
-msgid "Error: HTML export (-o html) needoutput folder definition (-f <folder>)"
+#: glances/glances.py:3876
+msgid ""
+"Error: HTML export (-o html) need output folder definition (-f <folder>)"
 msgstr ""
 
-#: glances/glances.py:3504
+#: glances/glances.py:3882
 msgid "Error: Need CSV library to export into CSV"
 msgstr ""
 
-#: glances/glances.py:3509
+#: glances/glances.py:3887
 msgid "Error: CSV export (-o csv) need output file definition (-f <file>)"
 msgstr ""
 
-#: glances/glances.py:3534
+#: glances/glances.py:3914
 msgid "Glances server is running on"
 msgstr ""
 
-#: glances/glances.py:3553
+#: glances/glances.py:3933
 msgid "Error: The server version is not compatible"
 msgstr ""
 
