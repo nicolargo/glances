@@ -1,0 +1,143 @@
+.TH glances 1  "April, 2013" "version 1.7" "USER COMMANDS"
+.SH NAME
+glances \- A cross-platform curses-based monitoring tool
+.SH SYNOPSIS
+.B glances
+[\-bdehmnrsvyz] [\-B bind] [\-c server] [\-C conffile] [\-f file] [\-o output] [\-p port] [\-P password] [\-t refresh]
+.SH DESCRIPTION
+Glances is a free (LGPL) cross-platform curses-based monitoring tool which aims to present a maximum of information
+in a minimum of space, ideally to fit in a classical 80x24 terminal or higher to have additionnal information.
+Glances can adapt dynamically the displayed information depending on the terminal size.
+It can also work in a client/server mode for remote monitoring.
+.PP
+This tool is written in Python and uses psutil to fetch the statistical values from key elements.
+.PP
+The current version grab the following stats: CPU, Load, Memory, Network rate, Disk I/O, file system,
+process number and details.
+.SH COMMAND-LINE OPTIONS
+The command-line options are the following:
+.TP
+.B \-b
+Display network rate in Byte per second
+.TP
+.B \-B @IP|host
+Bind server to the given IP or hostname
+.TP
+.B \-c @IP|host
+Connect to a Glances server
+.TP
+.B \-C file
+Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
+.TP
+.B \-d
+Disable disk I/O module
+.TP
+.B \-e
+Enable the sensors module (Linux-only)
+.TP
+.B \-f file
+Set the output folder (HTML) or file (CSV)
+.TP
+.B \-h
+Display the help and exit
+.TP
+.B \-m
+Disable mount module
+.TP
+.B \-n
+Disable network module
+.TP
+.B \-o output
+Define additional output (available: HTML or CSV)
+.TP
+.B \-p PORT
+Define the client or server TCP port (default: 61209)
+.TP
+.B \-P password
+Define a client/server password
+.TP
+.B \-r
+Do not list processes
+.TP
+.B \-s
+Run Glances in server mode
+.TP
+.B \-t sec
+Set the refresh time in seconds (default: 3)
+.TP
+.B \-v
+Display the version and exit
+.TP
+.B \-y
+Enable the hddtemp module (requires running hddtemp daemon)
+.TP
+.B \-z
+Do not use the bold color attribute
+.SH INTERACTIVE COMMANDS
+You can use the following keys while in Glances:
+.TP
+.B a
+Automatic mode. The process list is sorted automatically
+.TP
+.B b
+Switch between bit/s or Byte/s for network IO
+.TP
+.B c
+Sort processes by CPU%
+.TP
+.B d
+Show/hide disk IO stats
+.TP
+.B f
+Show/hide file system stats
+.TP
+.B h
+Show/hide the help message
+.TP
+.B i
+Sort processes by IO rate
+.TP
+.B l
+Show/hide log messages
+.TP
+.B m
+Sort processes by MEM%
+.TP
+.B n
+Show/hide network stats
+.TP
+.B p
+Sort processes by name
+.TP
+.B s
+Show/hide sensors stats (Linux-only)
+.TP
+.B t
+View network IO as combination
+.TP
+.B u
+View cumulative network IO
+.TP
+.B w
+Delete finished warning log messages
+.TP
+.B x
+Delete finished warning and critical log messages
+.TP
+.B 1
+Switch between global CPU and per-CPU stats
+.TP
+.B q
+Quit
+.SH EXAMPLES
+.TP
+Refresh information every 5 seconds:
+.B glances
+\-t 5
+.PP
+.SH EXIT STATUS
+Glances returns a zero exit status if it succeeds to print/grab information.
+.PP
+It returns 2 if it fails to parse its options (missing arguments, invalid value, etc).
+.SH AUTHOR
+Glances is written by Nicolas Hennion aka Nicolargo (contact@nicolargo.com)
