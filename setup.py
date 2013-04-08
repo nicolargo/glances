@@ -7,16 +7,14 @@ import glob
 from setuptools import setup
 
 data_files = [
-    ('share/man/man1', ['man/glances.1']),
-    ('share/doc/glances', ['AUTHORS',
-                           'COPYING',
-                           'NEWS',
-                           'README',
+    ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
+                           'docs/glances-doc.html',
                            'glances/conf/glances.conf']),
-    ('share/doc/glances/doc', glob.glob('doc/*.png')),
+    ('share/doc/glances/images', glob.glob('docs/images/*.png')),
     ('share/glances/css', glob.glob('glances/data/css/*.css')),
     ('share/glances/html', glob.glob('glances/data/html/*.html')),
     ('share/glances/img', glob.glob('glances/data/img/*.png')),
+    ('share/man/man1', ['docs/man/glances.1'])
 ]
 
 if hasattr(sys, 'real_prefix') or ('bsd' or 'darwin' in sys.platform):
@@ -31,22 +29,37 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
 setup(
     name='Glances',
     version='1.7a',
-    download_url='https://s3.amazonaws.com/glances/glances-1.7a.tar.gz',
-    url='https://github.com/nicolargo/glances',
-    description='CLI curses-based monitoring tool',
+    description="A cross-platform curses-based monitoring tool",
+    long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
+    url='https://github.com/nicolargo/glances',
+    download_url='https://s3.amazonaws.com/glances/glances-1.7a.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
-    long_description=open('README').read(),
-    test_suite="glances.tests",
     install_requires=['psutil>=0.4.1'],
-    packages=['glances'],
     extras_require={
         'HTML': ['jinja2>=2.0'],
-        'SENSORS': ['pysensors>=0.0.2'],
+        'SENSORS': ['pysensors>=0.0.2']
     },
+    packages=['glances'],
     include_package_data=True,
     data_files=data_files,
+    test_suite="glances.tests",
     entry_points={"console_scripts": ["glances=glances.glances:main"]},
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console :: Curses',
+        'Intended Audience :: Developers',
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3'
+    ]
 )
