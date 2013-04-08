@@ -703,7 +703,7 @@ class glancesGrabSensors:
 class glancesGrabHDDTemp:
     """
     Get hddtemp stats using a socket connection
-    """ 
+    """
 
     cache = ""
     address = "127.0.0.1"
@@ -747,7 +747,7 @@ class glancesGrabHDDTemp:
                 return
             else:
                 # Considering the size of "|/dev/sda||0||" as the minimum
-                if len(data) < 14: 
+                if len(data) < 14:
                     if len(self.cache) == 0:
                         data = "|hddtemp error||0||"
                     else:
@@ -889,7 +889,7 @@ class GlancesStats:
         """
 
         self._init_host()
-        
+
         # Init the grab error tags
         # for managing error during stats grab
         # By default, we *hope* that there is no error
@@ -1418,7 +1418,7 @@ class GlancesStatsClient(GlancesStats):
             try:
                 self.hddtemp = input_stats["hddtemp"]
             except:
-                self.hddtemp = []                
+                self.hddtemp = []
             try:
                 self.diskio = input_stats["diskio"]
             except:
@@ -1465,7 +1465,7 @@ class glancesScreen:
         self.sensors_x = 0
         self.sensors_y = -1
         self.hddtemp_x = 0
-        self.hddtemp_y = -1        
+        self.hddtemp_y = -1
         self.diskio_x = 0
         self.diskio_y = -1
         self.fs_x = 0
@@ -1971,15 +1971,15 @@ class glancesScreen:
         hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
                                             self.network_y + network_count + sensors_count)
         diskio_count = self.displayDiskIO(stats.getDiskIO(),
-                                          offset_y = self.network_y + sensors_count + 
+                                          offset_y = self.network_y + sensors_count +
                                           network_count + hddtemp_count,
                                           error = stats.diskio_error_tag)
         fs_count = self.displayFs(stats.getFs(),
                                   self.network_y + sensors_count +
-                                  network_count + diskio_count + 
+                                  network_count + diskio_count +
                                   hddtemp_count)
         log_count = self.displayLog(self.network_y + sensors_count + network_count +
-                                    diskio_count + fs_count + 
+                                    diskio_count + fs_count +
                                     hddtemp_count)
         self.displayProcess(processcount, processlist, stats.getSortedBy(),
                             log_count=log_count, core=stats.getCore())
@@ -2355,7 +2355,7 @@ class glancesScreen:
                 return 0
             if memswap['total'] == 0:
                 # If swap is null, then do not display it
-                return 0                
+                return 0
 
             # Swap
             self.term_window.addnstr(self.mem_y,
@@ -3675,7 +3675,7 @@ def printSyntax():
     print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
-    print(_("\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"))    
+    print(_("\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"))
     print(_("\t-z\t\tDo not use the bold color attribute"))
 
 

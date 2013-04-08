@@ -1,7 +1,6 @@
 include AUTHORS
 include COPYING
 include NEWS
-include README
-recursive-include doc *.png
+include README.rst
+recursive-include docs images/*.png man/glances.1 glances-doc.html
 recursive-include i18n *.mo
-recursive-include man *.1

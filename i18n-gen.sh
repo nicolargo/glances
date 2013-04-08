@@ -12,8 +12,7 @@ LANG_LIST='es fr it pt_BR'
 
 xgettext --language=Python --keyword=_ --output=./i18n/glances.pot ./glances/glances.py
 
-for i in `echo $LANG_LIST`
-do
+for i in $LANG_LIST; do
    echo "Generate language pack for: $i"
    msgmerge --update --no-fuzzy-matching --backup=off ./i18n/$i/LC_MESSAGES/glances.po ./i18n/glances.pot
    msgfmt ./i18n/$i/LC_MESSAGES/glances.po --output-file ./i18n/$i/LC_MESSAGES/glances.mo
