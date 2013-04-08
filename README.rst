@@ -1,11 +1,11 @@
-===============================
-Glances - An eye on your system
-===============================
-
 .. image:: http://api.flattr.com/button/flattr-badge-large.png
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
         :target: https://travis-ci.org/nicolargo/glances
+
+===============================
+Glances - An eye on your system
+===============================
 
 .. image:: docs/images/glances-white-256.png
         :width: 128
