@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Glances is a simple textual monitoring tool
+# Glances an eye on your system
 #
 # Copyright (C) 2013 Nicolargo <nicolas@nicolargo.com>
 #
@@ -3412,11 +3412,11 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
         # Thk to: https://gist.github.com/rca/4063325
         self.send_my_headers()
         SimpleXMLRPCRequestHandler.end_headers(self)
- 
+
     def send_my_headers(self):
         # Specific header is here (solved the issue #227)
         self.send_header("Access-Control-Allow-Origin", "*")
-        
+
     def authenticate(self, headers):
         # auth = headers.get('Authorization')
         try:
