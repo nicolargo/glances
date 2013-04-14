@@ -1577,7 +1577,7 @@ class glancesScreen:
         self.fs_tag = fs_tag
         self.log_tag = True
         self.help_tag = False
-        self.percpu_tag = False
+        self.percpu_tag = percpu_tag
         self.process_tag = process_tag
         self.net_byteps_tag = network_bytepersec_tag
         self.network_stats_combined = False
@@ -3687,6 +3687,7 @@ def printSyntax():
     print(_("\t-v\t\tDisplay the version and exit"))
     print(_("\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"))
     print(_("\t-z\t\tDo not use the bold color attribute"))
+    print(_("\t-1\t\tStart Glances in per CPU mode"))
 
 
 def end():
@@ -3720,8 +3721,8 @@ def main():
     global htmloutput, csvoutput
     global html_tag, csv_tag, server_tag, client_tag
     global psutil_get_io_counter_tag, psutil_mem_vm
-    global fs_tag, diskio_tag, network_tag, network_bytepersec_tag, sensors_tag
-    global hddtemp_tag, process_tag
+    global percpu_tag, fs_tag, diskio_tag, network_tag, network_bytepersec_tag
+    global sensors_tag, hddtemp_tag, process_tag
     global refresh_time, client, server, server_port, server_ip
     global last_update_times
 
@@ -3729,6 +3730,7 @@ def main():
     last_update_times = {}
 
     # Set default tags
+    percpu_tag = False
     fs_tag = True
     diskio_tag = True
     network_tag = True
@@ -3768,12 +3770,12 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z:r",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z:r1",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "hddtemp", "netrate", "help", "output",
                                     "file", "time", "version", "server",
                                     "client", "port", "config", "password",
-                                    "nobold", "noproc"])
+                                    "nobold", "noproc", "percpu"])
     except getopt.GetoptError as err:
         # Print help information and exit:
         print(str(err))
@@ -3853,6 +3855,8 @@ def main():
             use_bold = False
         elif opt in ("-r", "--noproc"):
             process_tag = False
+        elif opt in ("-1", "--percpu"):
+            percpu_tag = True
         else:
             printSyntax()
             sys.exit(0)
