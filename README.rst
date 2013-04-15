@@ -120,7 +120,7 @@ Just run:
 Documentation
 =============
 
-For complete documentation see ``glances-doc.html``.
+For complete documentation see ``glances-doc.html``: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 
 Author
 ======
