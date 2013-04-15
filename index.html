@@ -1,506 +1,186 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Glances by nicolargo</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <title>Glances by nicolargo</title>
   </head>
-
   <body>
-    <div id="container">
-      <div class="inner">
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Glances</h1>
+        <p class="header">Glances an Eye on your system</p>
 
-        <header>
-          <h1>Glances</h1>
-          <h2>Glances an Eye on your system</h2>
-        </header>
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/nicolargo/glances/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/nicolargo/glances/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/nicolargo/glances">View On GitHub</a></li>
+        </ul>
 
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/nicolargo/glances/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/nicolargo/glances/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/nicolargo/glances" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/nicolargo">nicolargo</a></p>
 
-        <hr>
 
-        <section id="main_content">
-          <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this git repo"></a>
-<a href="https://travis-ci.org/nicolargo/glances"><img src="https://travis-ci.org/nicolargo/glances.png?branch=master" alt="Build Status"></a></p>
+      </header>
+      <section>
+        <p>.. image:: <a href="http://api.flattr.com/button/flattr-badge-large.png">http://api.flattr.com/button/flattr-badge-large.png</a>
+        :target: <a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub">https://flattr.com/thing/484466/nicolargoglances-on-GitHub</a>
+.. image:: <a href="https://travis-ci.org/nicolargo/glances.png?branch=master">https://travis-ci.org/nicolargo/glances.png?branch=master</a>
+        :target: <a href="https://travis-ci.org/nicolargo/glances">https://travis-ci.org/nicolargo/glances</a></p>
 
 <h1></h1>
 
-<h1>Glances -- Eye on your system</h1>
+<h1>Glances - An eye on your system</h1>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/glances-white-256.png" alt="screenshot"></p>
+<p>.. image:: docs/images/glances-white-256.png
+        :width: 128</p>
 
-<h2>Description</h2>
+<p><strong>Glances</strong> is a cross-platform curses-based monitoring tool written in Python.</p>
 
-<p>Glances is a CLI curses based monitoring tool for GNU/Linux and BSD OS.</p>
+<p>It uses the <code>psutil</code>_ library to get information from your system.</p>
 
-<p>Glances uses the PsUtil library to get information from your system.</p>
+<p>.. image:: docs/images/screenshot-wide.png</p>
 
-<p>It is developed in Python.</p>
-
-<p>Console (80x24) screenshot:</p>
-
-<p><img src="https://raw.github.com/nicolargo/glances/master/doc/screenshot.png" alt="screenshot"></p>
-
-<p>Wide terminal (&gt; 90x24) screenshot:</p>
-
-<p><img src="https://raw.github.com/nicolargo/glances/master/doc/screenshot-wide.png" alt="screenshot"></p>
-
-<h2>Installation</h2>
-
-<p>Pre-requisites (information for packagers):</p>
-
-<ul>
-<li>Python 2.6+ (not tested with Python 3+)</li>
-<li>build-essential (for installation via Pypi and setup.py)</li>
-<li>python-dev (for installation via Pypi)</li>
-<li>python-setuptools (for the installation via setup.py)</li>
-<li>python-psutil 0.4.1+ (replace the old libstatgrab's lib)</li>
-<li>python-jinja2 2.0+ (optional for HTML export)</li>
-<li>pysensors (Python library for sensors stats)</li>
-</ul><h3>From package manager (very easy way)</h3>
-
-<p>Packages exist for Debian (SID), Arch, Fedora, Redhat, FreeBSD...</p>
-
-<p>Check if the version is the latest one.</p>
-
-<h3>From PyPi (easy and cross platform way)</h3>
-
-<p>PyPi is an official Python package manager.</p>
-
-<p>You first need to install PyPi on your system. For example on Debian/Ubuntu:</p>
-
-<pre><code>$ sudo apt-get update
-$ sudo apt-get install python-pip build-essential python-dev
-</code></pre>
-
-<p>Then install the latest Glances version:</p>
-
-<pre><code>$ sudo pip install Glances
-</code></pre>
-
-<p>Note: if you are behind an HTTP Proxy, you should use instead:</p>
-
-<pre><code>$ sudo pip install --proxy=user:password@url:port Glances
-</code></pre>
-
-<h3>From <a href="http://mxcl.github.com/homebrew/">Homebrew</a> for Mac OS X</h3>
-
-<pre><code>$ brew install brew-pip
-$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-$ brew pip Glances
-</code></pre>
-
-<p>If you have the following error:</p>
-
-<pre><code>Error: Failed executing: pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X (.rb:)
-</code></pre>
-
-<p>then try to run:</p>
-
-<pre><code>$ pip install glances==1.X --install-option=--prefix=/usr/local/XXX/glances/1.X
-$ brew link Glances
-</code></pre>
-
-<h3>Concerning Windows operating system</h3>
-
-<p>Thanks to Nicolas Bourges, a Windows installer is available:</p>
-
-<p>64 bits: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe</a>
-32 bits: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe</a></p>
-
-<p>If you want to install it manually, please read the following procedure.</p>
-
-<p>Windows operating system only support the Glances in server mode. So if you ran Glances on Windows, it will be automaticaly running in server mode.</p>
-
-<p>To install Glances on you system:</p>
-
-<pre><code>* Install [Python for Windows](http://www.python.org/getit/)
-* Install the [PsUtil lib](https://code.google.com/p/psutil/downloads/list)
-* Download the latest [Glances version](https://raw.github.com/nicolargo/glances/master/glances/glances.py)
-</code></pre>
-
-<p>I am looking for a contributor to package Glances for Windows (for exemple using <a href="http://www.pyinstaller.org/">PyInstaller</a>).</p>
-
-<h3>From source</h3>
-
-<p>Get the latest version (form GitHub):</p>
-
-<pre><code>$ rm -rf /tmp/nicolargo-glances-*
-$ wget -O /tmp/glances-last.tgz https://github.com/nicolargo/glances/tarball/master
-</code></pre>
-
-<p>Glances use a standard GNU style installer (for a Debian like system):</p>
-
-<pre><code>$ sudo apt-get update
-$ sudo apt-get install python-setuptools build-essential python-dev
-$ cd /tmp
-$ tar zxvf glances-last.tgz
-$ cd nicolargo-glances-*
-$ sudo python setup.py install
-</code></pre>
-
-<h2>Configuration</h2>
-
-<p>No configuration is needed to use Glances.</p>
-
-<p>Furthermore, the release 1.6 introduces a configuration file to setup limits.</p>
-
-<p>The default configuration file is under:</p>
-
-<pre><code>/etc/glances/glances.conf (Linux)
-</code></pre>
-
-<p>or</p>
-
-<pre><code>/usr/local/etc/glances/glances.conf (*BSD and OS X)
-</code></pre>
-
-<p>To override the default configuration, you can copy the <code>glances.conf</code> file to
-your <code>$XDG_CONFIG_HOME</code> directory (e.g. Linux):</p>
-
-<pre><code>mkdir -p $XDG_CONFIG_HOME/glances
-cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/
-</code></pre>
-
-<p>On OS X, you should copy the configuration file to <code>~/Library/Application Support/glances/</code>.</p>
-
-<h2>Running</h2>
-
-<h3>In standalone mode</h3>
-
-<p>If you want to monitor your local machine, just run:</p>
-
-<pre><code>$ glances
-</code></pre>
-
-<h3>In client/server mode</h3>
-
-<p>If you want to remotely monitor a machine (called server) from another one (called client).</p>
-
-<p>Run this command on the server:</p>
-
-<pre><code>server$ glances -s
-</code></pre>
-
-<p>and this one on the client:</p>
-
-<pre><code>client$ glances -c @server
-</code></pre>
-
-<p>where <a href="https://github.com/server" class="user-mention">@server</a> is the IP address or hostname of the server</p>
-
-<p>Glances uses a <a href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML/RPC</a> server and can be used by another client software.</p>
-
-<p>In server mode, you can set the bind address (-B ADDRESS) and listenning TCP port (-p PORT).</p>
-
-<p>In client mode, you can set the TCP port of the server (-p port).</p>
-
-<p>Default binding address is 0.0.0.0 (Glances will listen on all the networks interfaces) and TCP port is 61209.</p>
-
-<p>In client/server mode, limits are set by the server side.</p>
-
-<p>The version 1.6 introduces a optionnal password to access to the server (-P password).</p>
-
-<h2>User guide</h2>
-
-<p>Command line options are:</p>
-
-<pre><code>-b          Display network rate in Byte per second
--B @IP|host Bind server to the given IP or host NAME
--c @IP|host Connect to a Glances server
--C file     Path to the configuration file
--d          Disable disk I/O module
--e          Enable the sensors module (Linux-only)
--f file     Set the output folder (HTML) or file (CSV)
--h          Display the syntax and exit
--m          Disable mount module
--n          Disable network module
--o output   Define additional output (available: HTML or CSV)
--p PORT     Define the client or server TCP port (default: 61209)
--P password Client/server password
--r          Do not list processes (significant CPU use reduction)
--s          Run Glances in server mode
--t sec      Set the refresh time in seconds (default: 3)
--v          Display the version and exit
--y          Enable the hddtemp module
--z          Do not use the bold color attribute
-</code></pre>
-
-<p>Importants stats are colored:</p>
-
-<ul>
-<li>GREEN:   stat counter is "OK"</li>
-<li>BLUE:    stat counter is "CAREFUL"</li>
-<li>MAGENTA: stat counter is "WARNING"</li>
-<li>RED:     stat counter is "CRITICAL"</li>
-</ul><p>When Glances is running, you can press:</p>
+<h1>Requirements</h1>
 
 <ul>
 <li>
-<p>'a' to set the automatic mode. The processes are sorted automatically</p>
+<code>python &gt;= 2.6</code> (tested with version 2.6, 2.7, 3.2, 3.3)</li>
+<li>
+<code>psutil &gt;= 0.4.1</code> (recommended version &gt;= 0.6)</li>
+<li>
+<code>jinja</code> (optional for HTML output)</li>
+<li>
+<code>pysensors</code> (optional for HW monitoring support)</li>
+<li>
+<code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
+<li><code>setuptools</code></li>
+</ul><h1>Installation</h1>
 
-<p>IF CPU IoWait &gt; 60% sort by process "IO read and write"</p>
+<p>Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
+Debian (Sid), Ubuntu (13.04+) and FreeBSD, so you should be able to
+install it using your favorite package manager.</p>
 
-<p>If CPU &gt; 70%, sort by process "CPU consumption"</p>
+<p>Glances is on <code>PyPI</code>_. To install, simply use <code>pip</code>_:</p>
 
-<p>If MEM &gt; 70%, sort by process "memory size"</p>
-</li>
-<li><p>'b' switch between bit/s or byte/s for network IO</p></li>
-<li><p>'c' sort the processes list by CPU consumption</p></li>
-<li><p>'d' disable or enable the disk IO stats</p></li>
-<li><p>'e' enable the sensors module (PySensors library is needed; Linux-only)</p></li>
-<li><p>'f' disable or enable the file system stats</p></li>
-<li><p>'h' to display a help message with the keys you can press and the limits</p></li>
-<li><p>'i' sort the processes list by IO rate (need root account on some OS)</p></li>
-<li><p>'l' disable or enable the logs</p></li>
-<li><p>'m' sort the processes list by process MEM</p></li>
-<li><p>'n' disable or enable the network interfaces stats</p></li>
-<li><p>'p' sort by process name</p></li>
-<li><p>'s' disable or enable the sensor stats (only available with -e tag)</p></li>
-<li><p>'t' View network IO as combination</p></li>
-<li><p>'u' View cumulative network IO</p></li>
-<li><p>'w' delete finished warning logs messages</p></li>
-<li><p>'x' delete finished warning and critical logs messages</p></li>
-<li><p>'1' switch between global CPU and per core stats</p></li>
-<li><p>'q' Exit</p></li>
-</ul><h3>Header</h3>
+<p>.. code-block:: console</p>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/header.png" alt="screenshot"></p>
-
-<p>The header shows the host name and the operating system name, version and architecture.</p>
-
-<h3>CPU</h3>
-
-<p>Short view:</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu.png" alt="screenshot"></p>
-
-<p>If horizontal space is available, extended CPU infomations are displayed.</p>
-
-<p>Extended view (only available if your terminal is wide enough)</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/cpu-wide.png" alt="screenshot"></p>
-
-<p>If user click on the '1' key, per CPU stats is displayed:</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/percpu.png" alt="screenshot"></p>
-
-<p>The CPU stats are shown as a percentage and for the configured refresh
-time. The total CPU usage is displayed on the first line.</p>
-
-<p>Color code used:</p>
-
-<p>If user|kernel|nice CPU is &lt; 50%, then status is set to "OK".</p>
-
-<p>If user|kernel|nice CPU is &gt; 50%, then status is set to "CAREFUL".</p>
-
-<p>If user|kernel|nice CPU is &gt; 70%, then status is set to "WARNING".</p>
-
-<p>If user|kernel|nice CPU is &gt; 90%, then status is set to "CRITICAL".</p>
-
-<h3>Load</h3>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/load.png" alt="screenshot"></p>
-
-<p>On the Nosheep blog, Zach defines average load: "In short it is the
-average sum of the number of processes waiting in the run-queue plus the
-number currently executing over 1, 5, and 15 minute time periods."</p>
-
-<p>Glances gets the number of CPU cores to adapt the alerts. With Glances,
-alerts on average load are only set on 5 and 15 mins. The first line
-also display the number of CPU core.</p>
-
-<p>If average load is &lt; O.7*Core, then status is set to "OK".</p>
-
-<p>If average load is &gt; O.7*Core, then status is set to "CAREFUL".</p>
-
-<p>If average load is &gt; 1*Core, then status is set to "WARNING".</p>
-
-<p>If average load is &gt; 5*Core, then status is set to "CRITICAL".</p>
-
-<h3>Memory</h3>
-
-<p>Glances uses two columns: one for the RAM and another one for the SWAP.</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/mem.png" alt="screenshot"></p>
-
-<p>If space is available, Glances displays extended informations:</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/mem-wide.png" alt="screenshot"></p>
-
-<p>With Glances, alerts are only set for on used swap and real memory.</p>
-
-<p>If memory is &lt; 50%, then status is set to "OK".</p>
-
-<p>If memory is &gt; 50%, then status is set to "CAREFUL".</p>
-
-<p>If memory is &gt; 70%, then status is set to "WARNING".</p>
-
-<p>If memory is &gt; 90%, then status is set to "CRITICAL".</p>
-
-<h3>Network bit rate</h3>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/network.png" alt="screenshot"></p>
-
-<p>Glances display the network interface bit rate. The unit is adapted
-dynamicaly (bits per second, Kbits per second, Mbits per second...).</p>
-
-<p>Alerts are set only if the network interface maximum speed is available.</p>
-
-<p>If bit rate is &lt; 50%, then status is set to "OK".</p>
-
-<p>If bit rate is &gt; 50%, then status is set to "CAREFUL".</p>
-
-<p>If bit rate is &gt; 70%, then status is set to "WARNING".</p>
-
-<p>If bit rate is &gt; 90%, then status is set to "CRITICAL".</p>
-
-<p>For example, on a 100 Mbps Ethernet interface, the warning status is set
-if the bit rate is higher than 70 Mbps.</p>
-
-<h3>Sensors (optional; only available on Linux)</h3>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/sensors.png" alt="screenshot"></p>
-
-<p>Optionally, Glances displays the sensors informations (lm-sensors).</p>
-
-<p>A filter is processed in order to only display temperature.</p>
-
-<p>You should enable this module using the following command line:</p>
-
-<pre><code>glances -e
+<pre><code>pip install Glances
 </code></pre>
 
-<p>There is no alert on this information.</p>
+<h2>OS X</h2>
 
-<h3>Disk I/O</h3>
+<p>OS X users can also install Glances using <code>Homebrew</code>_ or <code>MacPorts</code>_.</p>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/diskio.png" alt="screenshot"></p>
+<p>Homebrew</p>
 
-<p>Glances displays the disk I/O throughput. The unit is adapted dynamically
-(bytes per second, Kbytes per second, Mbytes per second...).</p>
+<pre><code>
+.. code-block:: console
 
-<p>There is no alert on this information.</p>
+    $ brew install brew-pip
+    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+    $ brew pip Glances
 
-<h3>Filesystem</h3>
+.. note:: If you get the following error:
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/fs.png" alt="screenshot"></p>
+    ::
 
-<p>Glances displays the total and used filesytem disk space. The unit is
-adapted dynamically (bytes per second, Kbytes per second, Mbytes per
-second...).</p>
+        Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
 
-<p>Alerts are set for used disk space:</p>
+    Try to run:
 
-<p>If disk used is &lt; 50%, then status is set to "OK".</p>
+    .. code-block:: console
 
-<p>If disk used is &gt; 50%, then status is set to "CAREFUL".</p>
+        $ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
+        $ brew link Glances
 
-<p>If disk used is &gt; 70%, then status is set to "WARNING".</p>
+MacPorts
+</code></pre>
 
-<p>If disk used is &gt; 90%, then status is set to "CRITICAL".</p>
+<p>.. code-block:: console</p>
 
-<h3>Processes</h3>
+<pre><code>$ sudo port install glances
+</code></pre>
 
-<p>Short view:</p>
+<h2>Windows</h2>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/processlist.png" alt="screenshot"></p>
+<p>Windows only support Glances in server mode. Glances will automatically run in server mode on it.</p>
 
-<p>Long view (only available if your terminal is wide enough)</p>
-
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/processlist-wide.png" alt="screenshot"></p>
-
-<p>Glances displays a summary and a list of processes.</p>
-
-<p>By default (or if you hit the 'a' key) the process list is automatically
-sorted by CPU of memory consumption.</p>
-
-<p>The number of processes in the list is adapted to the screen size.</p>
+<p>Thanks to <code>Nicolas Bourges</code>, Glances can be easily installed using a Windows installer:</p>
 
 <ul>
-<li>VIRT: Virtual memory size (in byte)</li>
-<li>REST: Amount of resident memory (in byte)</li>
-<li>CPU%: % of CPU used by the process</li>
-<li>MEM%: % of MEM used by the process</li>
-<li>PID: Process ID</li>
-<li>USER: Process user ID</li>
-<li>NI: Nice level of the process</li>
-<li>
-<p>S: Process status</p>
+<li>glances-1.6.0-x86.exe_ (32-bit, md5sum: 1d25902a2b1030f953a108792f4732cf)</li>
+<li>glances-1.6.0-x64.exe_ (64-bit, md5sum: de2c35c4bdd6a3ab2b938ea5f4c1567d)</li>
+</ul><p>Otherwise, you have to follow these steps:</p>
 
-<p>R - Running
-D - Sleeping (may not be interrupted)
-S - Sleeping (may be interrupted)
-T - Traced or stopped
-Z - Zombie or "hung" process</p>
+<ul>
+<li>Install <code>Python for Windows</code>: <a href="http://www.python.org/getit/">http://www.python.org/getit/</a>
 </li>
-<li><p>TIME+:  Cumulative CPU time used</p></li>
-<li><p>IO_R and IO_W: Per process IO read and write rate (in byte per second)</p></li>
-<li><p>NAME: Process name or command line</p></li>
-</ul><h3>Logs</h3>
+<li>Install the <code>psutil</code> library: <a href="https://code.google.com/p/psutil/downloads/list">https://code.google.com/p/psutil/downloads/list</a>
+</li>
+<li>Download <code>Glances</code> from here: <a href="http://nicolargo.github.io/glances/">http://nicolargo.github.io/glances/</a>
+</li>
+</ul><h2>Source</h2>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/logs.png" alt="screenshot"></p>
+<p>To install Glances from source:</p>
 
-<p>A logs list is displayed in the bottom of the screen if (and only if):</p>
+<p>.. code-block:: console</p>
 
-<ul>
-<li>at least one WARNING or CRITICAL alert was occured.</li>
-<li>space is available in the bottom of the console/terminal</li>
-</ul><p>There is one line per alert with the following information:</p>
+<pre><code>$ curl -L https://github.com/nicolargo/glances/archive/vX.X.tar.gz -o glances-X.X.tar.gz
+$ tar -zxvf glances-*.tar.gz
+$ cd glances-*
+# python setup.py install
+</code></pre>
 
-<ul>
-<li>start date</li>
-<li>end date</li>
-<li>alert name</li>
-<li>(min/avg/max) values</li>
-</ul><h3>Footer</h3>
+<p>.. note:: On Debian/Ubuntu, you have to install first <code>build-essential</code> and <code>python-dev</code>.</p>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/footer.png" alt="screenshot"></p>
+<h2>Puppet</h2>
 
-<p>Glances displays the current time/date and access to the embedded help screen.</p>
+<p>You can install Glances using <code>Puppet</code>_: <a href="https://github.com/rverchere/puppet-glances">https://github.com/rverchere/puppet-glances</a></p>
 
-<p>If you have ran Glances in client mode (-c), you can also see if the client is connected to the server.</p>
+<h1>Usage</h1>
 
-<p>If client is connected:</p>
+<p>Just run:</p>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/client-connected.png" alt="screenshot"></p>
+<p>.. code-block:: console</p>
 
-<p>else:</p>
+<pre><code>$ glances [OPTIONS]
+</code></pre>
 
-<p><img src="https://github.com/nicolargo/glances/raw/master/doc/client-disconnected.png" alt="screenshot"></p>
+<h1>Documentation</h1>
 
-<p>On the left, you can easely seen if you are connected to a Glances server.</p>
+<p>For complete documentation see <code>glances-doc.html</code>: <a href="https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst">https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst</a></p>
 
-<h2>Localisation</h2>
+<h1>Author</h1>
 
-<p>Glances localization files exist for:</p>
+<p>Nicolas Hennion (<a href="https://github.com/nicolargo" class="user-mention">@nicolargo</a>) <a href="mailto:nicolas@nicolargo.com">nicolas@nicolargo.com</a></p>
 
-<ul>
-<li>English (default langage)</li>
-<li>French</li>
-<li>Italian</li>
-<li>Spanish</li>
-<li>Portugal</li>
-</ul><p>Feel free to contribute !</p>
-        </section>
+<h1>License</h1>
 
-        <footer>
-          Glances is maintained by <a href="https://github.com/nicolargo">nicolargo</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
-        </footer>
+<p>LGPL. See <code>COPYING</code> for more details.</p>
 
-                  <script type="text/javascript">
+<p>.. _psutil: <a href="https://code.google.com/p/psutil/">https://code.google.com/p/psutil/</a>
+.. _PyPI: <a href="https://pypi.python.org/pypi">https://pypi.python.org/pypi</a>
+.. _pip: <a href="http://www.pip-installer.org/">http://www.pip-installer.org/</a>
+.. _Homebrew: <a href="http://mxcl.github.com/homebrew/">http://mxcl.github.com/homebrew/</a>
+.. _MacPorts: <a href="https://www.macports.org/">https://www.macports.org/</a>
+.. _glances-1.6.0-x86.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe</a>
+.. _glances-1.6.0-x64.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe</a>
+.. _Puppet: <a href="https://puppetlabs.com/puppet/what-is-puppet/">https://puppetlabs.com/puppet/what-is-puppet/</a></p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -511,7 +191,5 @@ Z - Zombie or "hung" process</p>
             } catch(err) {}
           </script>
 
-      </div>
-    </div>
   </body>
 </html>
