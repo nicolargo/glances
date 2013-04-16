@@ -34,70 +34,60 @@ class TestGlancesStat(unittest.TestCase):
         self.stats.update()
 
     def test_Glances_getSystem(self):
-        self.stats.update()
         system = self.stats.getSystem()
         #~ print("System info: %s" % system)
         self.assertTrue(type(system) == dict)
         self.assertTrue(len(system) > 1)
 
     def test_Glances_getCore(self):
-        self.stats.update()
         core = self.stats.getCore()
         #~ print("CPU Core number: %s" % core)
         self.assertTrue(type(core) == int)
         self.assertEqual(core, multiprocessing.cpu_count())
 
     def test_Glances_getCpu(self):
-        self.stats.update()
         cpu = self.stats.getCpu()
         #~ print("CPU stat %s:" % cpu)
         self.assertTrue(type(cpu) == dict)
         self.assertTrue(len(cpu) > 1)
 
     def test_Glances_getPerCpu(self):
-        self.stats.update()
         percpu = self.stats.getPerCpu()
         #~ print("PerCPU stat %s:" % percpu)
         self.assertTrue(type(percpu) == list)
         self.assertEqual(len(percpu), multiprocessing.cpu_count())
 
     def test_Glances_getMem(self):
-        self.stats.update()
         mem = self.stats.getMem()
         #~ print("Mem stat %s:" % mem)
         self.assertTrue(type(mem) == dict)
         self.assertTrue(len(mem) > 2)
 
     def test_Glances_getMemSwap(self):
-        self.stats.update()
         memswap = self.stats.getMemSwap()
         #~ print("MemSwap stat %s:" % memswap)
         self.assertTrue(type(memswap) == dict)
         self.assertTrue(len(memswap) > 2)
 
     def test_Glances_getNetwork(self):
-        self.stats.update()
         net = self.stats.getNetwork()
         #~ print("Network stat %s:" % net)
         self.assertTrue(type(net) == list)
         self.assertTrue(len(net) > 0)
 
     def test_Glances_getDiskIO(self):
-        self.stats.update()
         diskio = self.stats.getDiskIO()
         #~ print("DiskIO stat %s:" % diskio)
         self.assertTrue(type(diskio) == list)
         self.assertTrue(len(diskio) > 0)
 
     def test_Glances_getFs(self):
-        self.stats.update()
         fs = self.stats.getFs()
         #~ print("File system stat %s:" % fs)
         self.assertTrue(type(fs) == list)
         self.assertTrue(len(fs) > 0)
 
     def test_Glances_getProcess(self):
-        self.stats.update()
         pc = self.stats.getProcessCount()
         pl = self.stats.getProcessList()
         #~ print("Processes stat %s:" % pc)
@@ -108,14 +98,12 @@ class TestGlancesStat(unittest.TestCase):
         self.assertTrue(len(pl) > 0)
 
     def test_Glances_getSensors(self):
-        self.stats.update()
         sensors = self.stats.getSensors()
         #~ print("Optionnal sensors stat %s:" % sensors)
         self.assertTrue(type(sensors) == list)
         #~ self.assertTrue(len(sensors) > 0)
 
     def test_Glances_getHDDTemp(self):
-        self.stats.update()
         hddtemp = self.stats.getHDDTemp()
         #~ print("Optionnal hddtemp stat %s:" % hddtemp)
         self.assertTrue(type(hddtemp) == list)

@@ -142,6 +142,9 @@ except ImportError:
 else:
     csv_lib_tag = True
 
+# create update times dict
+last_update_times = {}
+
 # Default tag
 sensors_tag = False
 hddtemp_tag = False
@@ -920,6 +923,7 @@ class GlancesStats:
         self.process_list_refresh = True
         self.process_list_sortedby = ''
         self.glancesgrabprocesses = GlancesGrabProcesses()
+        self.update()
 
     def _init_host(self):
         self.host = {}
@@ -950,7 +954,7 @@ class GlancesStats:
         else:
             self.host['os_version'] = ""
 
-    def __update__(self, input_stats):
+    def __update__(self):
         """
         Update the stats
         """
@@ -1231,9 +1235,9 @@ class GlancesStats:
         # Get the number of core (CPU) (Used to display load alerts)
         self.core_number = psutil.NUM_CPUS
 
-    def update(self, input_stats={}):
-        # Update the stats
-        self.__update__(input_stats)
+    def update(self):
+        "Update the stats"
+        self.__update__()
 
     def getSortedBy(self):
         return self.process_list_sortedby
@@ -3724,10 +3728,6 @@ def main():
     global percpu_tag, fs_tag, diskio_tag, network_tag, network_bytepersec_tag
     global sensors_tag, hddtemp_tag, process_tag
     global refresh_time, client, server, server_port, server_ip
-    global last_update_times
-
-    # create update times dict
-    last_update_times = {}
 
     # Set default tags
     percpu_tag = False
