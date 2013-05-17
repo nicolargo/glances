@@ -120,7 +120,7 @@ Just run:
 Documentation
 =============
 
-For complete documentation see: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+For complete documentation see `glances-doc`_.
 
 Author
 ======
@@ -141,3 +141,4 @@ LGPL. See ``COPYING`` for more details.
 .. _glances-1.6.0-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe
 .. _glances-1.6.0-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
+.. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
