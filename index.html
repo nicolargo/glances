@@ -17,7 +17,7 @@
     <div class="wrapper">
       <header>
         <h1 class="header">Glances</h1>
-        <p class="header">Glances an Eye on your system</p>
+        <p class="header">An eye on your system</p>
 
         <ul>
           <li class="download"><a class="buttons" href="https://github.com/nicolargo/glances/zipball/master">Download ZIP</a></li>
@@ -30,23 +30,18 @@
 
       </header>
       <section>
-        <p>.. image:: <a href="http://api.flattr.com/button/flattr-badge-large.png">http://api.flattr.com/button/flattr-badge-large.png</a>
-        :target: <a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub">https://flattr.com/thing/484466/nicolargoglances-on-GitHub</a>
-.. image:: <a href="https://travis-ci.org/nicolargo/glances.png?branch=master">https://travis-ci.org/nicolargo/glances.png?branch=master</a>
-        :target: <a href="https://travis-ci.org/nicolargo/glances">https://travis-ci.org/nicolargo/glances</a></p>
-
-<h1></h1>
+        <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="https://api.flattr.com/button/flattr-badge-large.png"</img></a>
+           <a href="https://travis-ci.org/nicolargo/glances"><img src="https://travis-ci.org/nicolargo/glances.png?branch=master"</img></a></p>
 
 <h1>Glances - An eye on your system</h1>
 
-<p>.. image:: docs/images/glances-white-256.png
-        :width: 128</p>
+<p><img src="https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png" width="128"</img></p>
 
 <p><strong>Glances</strong> is a cross-platform curses-based monitoring tool written in Python.</p>
 
-<p>It uses the <code>psutil</code>_ library to get information from your system.</p>
+<p>It uses the <a href="https://code.google.com/p/psutil/">psutil</a> library to get information from your system.</p>
 
-<p>.. image:: docs/images/screenshot-wide.png</p>
+<p><img src="https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png"</img></p>
 
 <h1>Requirements</h1>
 
@@ -65,46 +60,39 @@
 </ul><h1>Installation</h1>
 
 <p>Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid), Ubuntu (13.04+) and FreeBSD, so you should be able to
+Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
 install it using your favorite package manager.</p>
 
-<p>Glances is on <code>PyPI</code>_. To install, simply use <code>pip</code>_:</p>
-
-<p>.. code-block:: console</p>
+<p>Glances is on <a href="https://pypi.python.org/pypi">PyPI</a>. To install, simply use <a href="http://www.pip-installer.org/">pip</a>:</p>
 
 <pre><code>pip install Glances
 </code></pre>
 
 <h2>OS X</h2>
 
-<p>OS X users can also install Glances using <code>Homebrew</code>_ or <code>MacPorts</code>_.</p>
+<p>OS X users can also install Glances using <a href="http://mxcl.github.com/homebrew/">Homebrew</a> or <a href="https://www.macports.org/">MacPorts</a>.</p>
 
-<p>Homebrew</p>
+<h3>Homebrew</h3>
 
-<pre><code>
-.. code-block:: console
-
-    $ brew install brew-pip
-    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-    $ brew pip Glances
-
-.. note:: If you get the following error:
-
-    ::
-
-        Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
-
-    Try to run:
-
-    .. code-block:: console
-
-        $ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
-        $ brew link Glances
-
-MacPorts
+<pre><code>$ brew install brew-pip
+$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+$ brew pip Glances
 </code></pre>
 
-<p>.. code-block:: console</p>
+<p><strong><u>Note</u></strong></p>
+
+<p>If you get the following error:</p>
+
+<pre><code>Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
+</code></pre>
+
+<p>Try to run:</p>
+
+<pre><code>$ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
+$ brew link Glances
+</code></pre>
+
+<h3>MacPorts</h3>
 
 <pre><code>$ sudo port install glances
 </code></pre>
@@ -116,8 +104,8 @@ MacPorts
 <p>Thanks to <code>Nicolas Bourges</code>, Glances can be easily installed using a Windows installer:</p>
 
 <ul>
-<li>glances-1.6.0-x86.exe_ (32-bit, md5sum: 1d25902a2b1030f953a108792f4732cf)</li>
-<li>glances-1.6.0-x64.exe_ (64-bit, md5sum: de2c35c4bdd6a3ab2b938ea5f4c1567d)</li>
+<li><a href="https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe">glances-1.6.0-x86.exe</a> (32-bit, md5sum: 1d25902a2b1030f953a108792f4732cf)</li>
+<li><a href="https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe">glances-1.6.0-x64.exe</a> (64-bit, md5sum: de2c35c4bdd6a3ab2b938ea5f4c1567d)</li>
 </ul><p>Otherwise, you have to follow these steps:</p>
 
 <ul>
@@ -131,32 +119,30 @@ MacPorts
 
 <p>To install Glances from source:</p>
 
-<p>.. code-block:: console</p>
-
 <pre><code>$ curl -L https://github.com/nicolargo/glances/archive/vX.X.tar.gz -o glances-X.X.tar.gz
 $ tar -zxvf glances-*.tar.gz
 $ cd glances-*
 # python setup.py install
 </code></pre>
 
-<p>.. note:: On Debian/Ubuntu, you have to install first <code>build-essential</code> and <code>python-dev</code>.</p>
+<p><strong><u>Note</u></strong></p>
+
+<p>On Debian/Ubuntu, you have to install first <code>build-essential</code> and <code>python-dev</code>.</p>
 
 <h2>Puppet</h2>
 
-<p>You can install Glances using <code>Puppet</code>_: <a href="https://github.com/rverchere/puppet-glances">https://github.com/rverchere/puppet-glances</a></p>
+<p>You can install Glances using <a href="https://puppetlabs.com/puppet/what-is-puppet/">Puppet</a>: <a href="https://github.com/rverchere/puppet-glances">https://github.com/rverchere/puppet-glances</a></p>
 
 <h1>Usage</h1>
 
 <p>Just run:</p>
 
-<p>.. code-block:: console</p>
-
-<pre><code>$ glances [OPTIONS]
+<pre><code>$ glances
 </code></pre>
 
 <h1>Documentation</h1>
 
-<p>For complete documentation see <code>glances-doc.html</code>: <a href="https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst">https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst</a></p>
+<p>For complete documentation see <a href="https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst">glances-doc</a>.</p>
 
 <h1>Author</h1>
 
@@ -166,14 +152,6 @@ $ cd glances-*
 
 <p>LGPL. See <code>COPYING</code> for more details.</p>
 
-<p>.. _psutil: <a href="https://code.google.com/p/psutil/">https://code.google.com/p/psutil/</a>
-.. _PyPI: <a href="https://pypi.python.org/pypi">https://pypi.python.org/pypi</a>
-.. _pip: <a href="http://www.pip-installer.org/">http://www.pip-installer.org/</a>
-.. _Homebrew: <a href="http://mxcl.github.com/homebrew/">http://mxcl.github.com/homebrew/</a>
-.. _MacPorts: <a href="https://www.macports.org/">https://www.macports.org/</a>
-.. _glances-1.6.0-x86.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe</a>
-.. _glances-1.6.0-x64.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe</a>
-.. _Puppet: <a href="https://puppetlabs.com/puppet/what-is-puppet/">https://puppetlabs.com/puppet/what-is-puppet/</a></p>
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
