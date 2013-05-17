@@ -30,7 +30,7 @@ Installation
 ============
 
 Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid), Ubuntu (13.04+) and FreeBSD, so you should be able to
+Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
 install it using your favorite package manager.
 
 Glances is on `PyPI`_. To install, simply use `pip`_:
@@ -115,12 +115,12 @@ Just run:
 
 .. code-block:: console
 
-    $ glances [OPTIONS]
+    $ glances
 
 Documentation
 =============
 
-For complete documentation see ``glances-doc.html``: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+For complete documentation see: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 
 Author
 ======
