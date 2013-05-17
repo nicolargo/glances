@@ -1,4 +1,4 @@
-.. image:: http://api.flattr.com/button/flattr-badge-large.png
+.. image:: https://api.flattr.com/button/flattr-badge-large.png
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
         :target: https://travis-ci.org/nicolargo/glances
@@ -7,14 +7,14 @@
 Glances - An eye on your system
 ===============================
 
-.. image:: docs/images/glances-white-256.png
+.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
         :width: 128
 
 **Glances** is a cross-platform curses-based monitoring tool written in Python.
 
 It uses the `psutil`_ library to get information from your system.
 
-.. image:: docs/images/screenshot-wide.png
+.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
 
 Requirements
 ============
