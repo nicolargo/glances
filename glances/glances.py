@@ -1445,7 +1445,7 @@ class glancesScreen:
     # If global used MEM > WARINING => Sorted by MEM usage
     __process_sortedby = 'auto'
 
-    def __init__(self, refresh_time=1, use_bold=1):
+    def __init__(self, cursesScreen, refresh_time=1, use_bold=1):
         # Global information to display
         self.__version = __version__
 
@@ -1482,7 +1482,7 @@ class glancesScreen:
         self.caption_y = 3
 
         # Init the curses screen
-        self.screen = curses.initscr()
+        self.screen = cursesScreen
         if not self.screen:
             print(_("Error: Cannot init the curses library.\n"))
 
@@ -3713,7 +3713,7 @@ def signal_handler(signal, frame):
     end()
 
 
-def main():
+def main(cursesScreen):
     # Glances - Init stuff
     ######################
 
@@ -3957,7 +3957,7 @@ def main():
         stats = GlancesStatsClient()
 
         # Init screen
-        screen = glancesScreen(refresh_time=refresh_time,
+        screen = glancesScreen(cursesScreen, refresh_time=refresh_time,
                                use_bold=use_bold)
     else:
         # Init the classical CLI
@@ -3982,7 +3982,7 @@ def main():
                                    refresh_time=refresh_time)
 
         # Init screen
-        screen = glancesScreen(refresh_time=refresh_time,
+        screen = glancesScreen(cursesScreen, refresh_time=refresh_time,
                                use_bold=use_bold)
 
     # Glances - Main loop
@@ -4042,7 +4042,7 @@ def getTimeSinceLastUpdate(IOType):
 #=====
 
 if __name__ == "__main__":
-    main()
+    curses.wrapper(main)
 
 
 # The end...
