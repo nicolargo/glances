@@ -1,4 +1,4 @@
-.. image:: http://api.flattr.com/button/flattr-badge-large.png
+.. image:: https://api.flattr.com/button/flattr-badge-large.png
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
         :target: https://travis-ci.org/nicolargo/glances
@@ -7,14 +7,14 @@
 Glances - An eye on your system
 ===============================
 
-.. image:: docs/images/glances-white-256.png
+.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
         :width: 128
 
 **Glances** is a cross-platform curses-based monitoring tool written in Python.
 
 It uses the `psutil`_ library to get information from your system.
 
-.. image:: docs/images/screenshot-wide.png
+.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
 
 Requirements
 ============
@@ -30,7 +30,7 @@ Installation
 ============
 
 Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid), Ubuntu (13.04+) and FreeBSD, so you should be able to
+Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
 install it using your favorite package manager.
 
 Glances is on `PyPI`_. To install, simply use `pip`_:
@@ -115,12 +115,12 @@ Just run:
 
 .. code-block:: console
 
-    $ glances [OPTIONS]
+    $ glances
 
 Documentation
 =============
 
-For complete documentation see ``glances-doc.html``: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+For complete documentation see `glances-doc`_.
 
 Author
 ======
@@ -141,3 +141,4 @@ LGPL. See ``COPYING`` for more details.
 .. _glances-1.6.0-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe
 .. _glances-1.6.0-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
+.. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst

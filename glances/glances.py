@@ -150,6 +150,9 @@ diskio_tag = True
 fs_tag = True
 process_tag = True
 
+# Global moved outside main for unit tests
+last_update_times = {}
+
 
 # Classes
 #========
