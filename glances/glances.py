@@ -1882,61 +1882,61 @@ class glancesScreen:
         self.pressedkey = self.__getkey(self.term_window)
 
         # Actions...
-        if self.pressedkey == 27 or self.pressedkey == 113:
+        if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             end()
-        elif self.pressedkey == 49:
+        elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.percpu_tag = not self.percpu_tag
-        elif self.pressedkey == 97:
+        elif self.pressedkey == ord('a'):
             # 'a' > Sort processes automatically
             self.setProcessSortedBy('auto')
-        elif self.pressedkey == 98:
+        elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             self.net_byteps_tag = not self.net_byteps_tag
-        elif self.pressedkey == 99:
+        elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             self.setProcessSortedBy('cpu_percent')
-        elif self.pressedkey == 100 and diskio_tag:
+        elif self.pressedkey == ord('d') and diskio_tag:
             # 'd' > Show/hide disk I/O stats
             self.diskio_tag = not self.diskio_tag
-        elif self.pressedkey == 102 and fs_tag:
+        elif self.pressedkey == ord('f') and fs_tag:
             # 'f' > Show/hide fs stats
             self.fs_tag = not self.fs_tag
-        elif self.pressedkey == 104:
+        elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.help_tag = not self.help_tag
-        elif self.pressedkey == 105 and psutil_get_io_counter_tag:
+        elif self.pressedkey == ord('i') and psutil_get_io_counter_tag:
             # 'i' > Sort processes by IO rate (not available on OS X)
             self.setProcessSortedBy('io_counters')
-        elif self.pressedkey == 108:
+        elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
             self.log_tag = not self.log_tag
-        elif self.pressedkey == 109:
+        elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
             self.setProcessSortedBy('memory_percent')
-        elif self.pressedkey == 110 and network_tag:
+        elif self.pressedkey == ord('n') and network_tag:
             # 'n' > Show/hide network stats
             self.network_tag = not self.network_tag
-        elif self.pressedkey == 112:
+        elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.setProcessSortedBy('name')
-        elif self.pressedkey == 115:
+        elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
             self.sensors_tag = not self.sensors_tag
-        elif self.pressedkey == 116:
+        elif self.pressedkey == ord('t'):
             # 't' > View network traffic as combination
             self.network_stats_combined = not self.network_stats_combined
-        elif self.pressedkey == 117:
+        elif self.pressedkey == ord('u'):
             # 'u' > View cumulative network IO
             self.network_stats_cumulative = not self.network_stats_cumulative
-        elif self.pressedkey == 119:
+        elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             logs.clean()
-        elif self.pressedkey == 120:
+        elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             logs.clean(critical=True)
-        elif self.pressedkey == 121:
+        elif self.pressedkey == ord('y'):
             # 'y' > Show/hide hddtemp stats
             self.hddtemp_tag = not self.hddtemp_tag
 
