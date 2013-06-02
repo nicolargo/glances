@@ -17,7 +17,7 @@ data_files = [
     ('share/man/man1', ['docs/man/glances.1'])
 ]
 
-if hasattr(sys, 'real_prefix') or ('bsd' or 'darwin' in sys.platform):
+if hasattr(sys, 'real_prefix') or (sys.platform in ('bsd', 'darwin')):
     etc_path = os.path.join(sys.prefix, 'etc', 'glances')
 if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
     etc_path = os.path.join('/etc', 'glances')
