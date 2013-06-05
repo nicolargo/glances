@@ -29,6 +29,9 @@ Requirements
 Installation
 ============
 
+On Linux
+--------
+
 Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
 Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
 install it using your favorite package manager.
@@ -39,10 +42,14 @@ Glances is on `PyPI`_. To install, simply use `pip`_:
 
     pip install Glances
 
+Notes: On Debian/Ubuntu, you need to install the `python-dev` package.
+
 OS X
 ----
 
 OS X users can also install Glances using `Homebrew`_ or `MacPorts`_.
+
+You can also used `pip`_ (see the Linux paragraph).
 
 Homebrew
 ````````
@@ -80,8 +87,8 @@ Windows only support Glances in server mode. Glances will automatically run in s
 
 Thanks to `Nicolas Bourges`, Glances can be easily installed using a Windows installer:
 
-- glances-1.6.0-x86.exe_ (32-bit, md5sum: 1d25902a2b1030f953a108792f4732cf)
-- glances-1.6.0-x64.exe_ (64-bit, md5sum: de2c35c4bdd6a3ab2b938ea5f4c1567d)
+- glances-1.6.1-x86.exe_ (32-bit, md5sum: 13d5be664599f80152f8f1ae47400576)
+- glances-1.6.1-x64.exe_ (64-bit, md5sum: a347ec5097d6d4d5039c7233872757a8)
 
 Otherwise, you have to follow these steps:
 
@@ -138,7 +145,7 @@ LGPL. See ``COPYING`` for more details.
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://mxcl.github.com/homebrew/
 .. _MacPorts: https://www.macports.org/
-.. _glances-1.6.0-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe
-.. _glances-1.6.0-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe
+.. _glances-1.6.1-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x86.exe
+.. _glances-1.6.1-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x64.exe
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
