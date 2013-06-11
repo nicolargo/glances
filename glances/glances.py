@@ -3244,12 +3244,17 @@ class glancesHtml:
         Get the working path
 
         The data files will be searched in the following paths:
-            * /path/to/glances/glances/data
-            * {/usr,/usr/local}/share/glances (Linux or *BSD/OS X)
+            * /path/to/glances/glances/data (local)
+            * {/usr,/usr/local}/share/glances (system-wide)
         """
+        # get local path
         base_path = os.path.dirname(os.path.abspath(__file__))
         local_path = os.path.join(base_path, 'data')
-        share_path = os.path.join(sys.prefix, 'share', __appname__)
+
+        # get system-wide path
+        path_name = os.path.split(sys.argv[0])[0]
+        prefix_path = os.path.dirname(os.path.abspath(path_name))
+        share_path = os.path.join(prefix_path, 'share', __appname__)
 
         if os.path.exists(local_path):
             work_path = local_path  # running from local directory
