@@ -3409,7 +3409,7 @@ class glancesCsv:
         self.__cvsfile_fd.flush()
 
 
-class GlancesHandler(SimpleXMLRPCRequestHandler):
+class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
     """
     Main XMLRPC handler
     """
@@ -3469,6 +3469,23 @@ class GlancesHandler(SimpleXMLRPCRequestHandler):
     def log_message(self, format, *args):
         # No message displayed on the server side
         pass
+
+
+class GlancesXMLRPCServer(SimpleXMLRPCServer):
+    """
+    Init a SimpleXMLRPCServer instance (IPv6-ready)
+    """
+    def __init__(self, bind_address, bind_port=61209,
+                 requestHandler=GlancesXMLRPCHandler):
+
+        try:
+            self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
+        except socket.error as e:
+            print(_("Couldn't open socket: %s") % e)
+            sys.exit(1)
+
+        SimpleXMLRPCServer.__init__(self, (bind_address, bind_port),
+                                    requestHandler)
 
 
 class GlancesInstance():
@@ -3578,11 +3595,11 @@ class GlancesServer():
     """
     This class creates and manages the TCP client
     """
-
     def __init__(self, bind_address, bind_port=61209,
-                 RequestHandler=GlancesHandler, cached_time=1):
-        self.server = SimpleXMLRPCServer((bind_address, bind_port),
-                                         requestHandler=RequestHandler)
+                 requestHandler=GlancesXMLRPCHandler, cached_time=1):
+        self.server = GlancesXMLRPCServer(bind_address, bind_port,
+                                          requestHandler)
+
         # The users dict
         # username / MD5 password couple
         # By default, no auth is needed
@@ -3934,7 +3951,7 @@ def main():
     if server_tag:
         # Init the server
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
-        server = GlancesServer(bind_ip, int(server_port), GlancesHandler, cached_time)
+        server = GlancesServer(bind_ip, int(server_port), GlancesXMLRPCHandler, cached_time)
 
         # Set the server login/password (if -P tag)
         if password != "":
