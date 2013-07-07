@@ -142,6 +142,15 @@ except ImportError:
 else:
     csv_lib_tag = True
 
+if (is_Linux):
+	try:
+		# Import the batinfo lib (optionnal)
+		import batinfo
+	except ImportError:
+		batinfo_lib_tag = False
+	else:
+		batinfo_lib_tag = True
+
 # Default tag
 sensors_tag = False
 hddtemp_tag = False
@@ -881,6 +890,55 @@ class GlancesGrabProcesses:
         return self.processlist
 
 
+class glancesGrabBat:
+    """
+    Get batteries stats using the Batinfo librairie
+    """
+
+    def __init__(self):
+        """
+        Init batteries stats
+        """
+
+        if (batinfo_lib_tag):
+	        try:
+	        	self.bat = batinfo.batteries()
+	        except:
+	            self.initok = False
+	        else:
+	            self.initok = True
+	            self.__update__()
+
+    def __update__(self):
+        """
+        Update the stats
+        """
+
+        if self.initok:
+            self.bat.update()
+            self.bat_list = self.bat.stat
+        else:
+        	self.bat_list = []
+
+    def get(self):
+    	# Update the stats
+        self.__update__()
+        return self.bat_list
+
+    def getcapacitypercent(self):
+
+    	if not self.initok or self.bat_list == []: 
+    		return []
+        # Init the bsum (sum of percent) and bcpt (number of batteries) 
+    	# and Loop over batteries (yes a computer could have more than 1 battery)
+    	bsum = 0
+    	for bcpt in range(len(self.get())):
+    		bsum = bsum + int(self.bat_list[bcpt].capacity)
+		bcpt = bcpt + 1
+    	# Return the global percent
+    	return int(bsum / bcpt)
+
+
 class GlancesStats:
     """
     This class store, update and give stats
@@ -918,6 +976,9 @@ class GlancesStats:
                 self.glancesgrabhddtemp = glancesGrabHDDTemp()
             except Exception:
                 self.hddtemp_tag = False
+
+        if batinfo_lib_tag:
+        	self.glancesgrabbat = glancesGrabBat()
 
         # Init the process list
         self.process_list_refresh = True
@@ -1183,6 +1244,10 @@ class GlancesStats:
         if hddtemp_tag:
             self.hddtemp = self.glancesgrabhddtemp.get()
 
+        # BATERRIES INFORMATION
+        if batinfo_lib_tag:
+        	self.batpercent = self.glancesgrabbat.getcapacitypercent()
+
         # DISK I/O
         if diskio_tag and not self.diskio_error_tag:
             time_since_update = getTimeSinceLastUpdate('disk')
@@ -1289,6 +1354,12 @@ class GlancesStats:
         else:
             return []
 
+    def getBatPercent(self):
+    	if batinfo_lib_tag:
+    		return self.batpercent
+    	else:
+			return [] 
+
     def getDiskIO(self):
         if diskio_tag:
             return sorted(self.diskio, key=lambda diskio: diskio['disk_name'])
@@ -1380,6 +1451,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["network"] = self.network if network_tag else []
         self.all_stats["sensors"] = self.sensors if sensors_tag else []
         self.all_stats["hddtemp"] = self.hddtemp if hddtemp_tag else []
+        self.all_stats["batpercent"] = self.batpercent if batinfo_lib_tag else []
         self.all_stats["diskio"] = self.diskio if diskio_tag else []
         self.all_stats["fs"] = self.fs if fs_tag else []
         self.all_stats["processcount"] = self.processcount if process_tag else 0
@@ -1422,6 +1494,10 @@ class GlancesStatsClient(GlancesStats):
                 self.hddtemp = input_stats["hddtemp"]
             except:
                 self.hddtemp = []
+            try:
+                self.batpercent = input_stats["batpercent"]
+            except:
+                self.batpercent = []
             try:
                 self.diskio = input_stats["diskio"]
             except:
@@ -1481,6 +1557,8 @@ class glancesScreen:
         self.help_y = 0
         self.now_x = 79
         self.now_y = 3
+        self.bat_x = 0
+        self.bat_y = 3
         self.caption_x = 0
         self.caption_y = 3
 
@@ -1829,7 +1907,6 @@ class glancesScreen:
         """
         return self.__colors_list2[self.__getHDDTempAlert(current)]
 
-
     def __getProcessAlert(self, current=0, max=100, stat='', core=1):
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
@@ -1987,8 +2064,9 @@ class glancesScreen:
         self.displayProcess(processcount, processlist, stats.getSortedBy(),
                             log_count=log_count, core=stats.getCore())
         self.displayCaption(cs_status=cs_status)
-        self.displayNow(stats.getNow())
         self.displayHelp(core=stats.getCore())
+        self.displayBat(stats.getBatPercent())
+        self.displayNow(stats.getNow())
 
     def erase(self):
         # Erase the content of the screen
@@ -3191,8 +3269,27 @@ class glancesScreen:
                     '{0:{width}}{1}'.format(*key, width=width), 38)
                 key_table_y += 1
 
+
+    def displayBat(self, batpercent):
+        # Display the current batteries capacities % - Center
+        if not batinfo_lib_tag and batpercent != []:
+            return 0
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+        # Build the message to display
+        bat_msg = "%d%%" % batpercent
+        # Display the message (if possible)
+        if (screen_y > self.bat_y and 
+        	screen_x > self.bat_x + len(bat_msg)):
+            center = (screen_x // 2) - len(bat_msg) // 2
+            self.term_window.addnstr(
+                max(self.bat_y, screen_y - 1),
+                self.bat_x + center,
+                bat_msg, len(bat_msg))
+
+
     def displayNow(self, now):
-        # Display the current date and time (now...) - Center
+        # Display the current date and time (now...) - Right
         if not now:
             return 0
         screen_x = self.screen.getmaxyx()[1]
@@ -3584,6 +3681,11 @@ class GlancesInstance():
         # Update and return ProcessList stats
         self.__update__()
         return json.dumps(stats.getProcessList())
+
+    def getBatPercent(self):
+        # Update and return total batteries percent stats
+        self.__update__()
+        return json.dumps(stats.getBatPercent())
 
     def getNow(self):
         # Update and return current date/hour
