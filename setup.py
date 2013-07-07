@@ -41,6 +41,7 @@ setup(
     extras_require={
         'HTML': ['jinja2>=2.0'],
         'SENSORS': ['pysensors>=0.0.2']
+        'BATINFO': ['batinfo>=0.1.3']
     },
     packages=['glances'],
     include_package_data=True,
