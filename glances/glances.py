@@ -3272,7 +3272,7 @@ class glancesScreen:
 
     def displayBat(self, batpercent):
         # Display the current batteries capacities % - Center
-        if not batinfo_lib_tag and batpercent != []:
+        if not batinfo_lib_tag or batpercent == []:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
