@@ -102,12 +102,20 @@ if psutil_version < (0, 4, 1):
     sys.exit(1)
 
 try:
-    # virtual_memory() only available from psutil >= 0.6
+    # psutil.virtual_memory() only available from psutil >= 0.6
     psutil.virtual_memory()
 except Exception:
     psutil_mem_vm = False
 else:
     psutil_mem_vm = True
+
+try:
+    # psutil.net_io_counters() only available from psutil >= 1.0.0
+    psutil.net_io_counters()
+except Exception:
+    psutil_net_io_counters = False
+else:
+    psutil_net_io_counters = True
 
 if not is_Mac:
     psutil_get_io_counter_tag = True
@@ -1203,17 +1211,26 @@ class GlancesStats:
         # NET
         if network_tag and not self.network_error_tag:
             self.network = []
+
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
             time_since_update = getTimeSinceLastUpdate('net')
+
+            if psutil_net_io_counters:
+                # psutil >= 1.0.0
+                get_net_io_counters = psutil.net_io_counters(pernic=True)
+            else:
+                # psutil < 1.0.0
+                get_net_io_counters = psutil.network_io_counters(pernic=True)
+
             if not hasattr(self, 'network_old'):
                 try:
-                    self.network_old = psutil.network_io_counters(pernic=True)
+                    self.network_old = get_net_io_counters
                 except IOError:
                     self.network_error_tag = True
             else:
-                self.network_new = psutil.network_io_counters(pernic=True)
+                self.network_new = get_net_io_counters
                 for net in self.network_new:
                     try:
                         # Try necessary to manage dynamic network interface
