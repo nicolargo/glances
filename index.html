@@ -53,24 +53,39 @@
 <li>
 <code>jinja</code> (optional for HTML output)</li>
 <li>
-<code>pysensors</code> (optional for HW monitoring support)</li>
+<code>pysensors</code> (optional for HW monitoring support) [Linux-only]</li>
 <li>
 <code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
+<li>
+<code>batinfo</code> (optional for battery monitoring support) [Linux-only]</li>
 <li><code>setuptools</code></li>
 </ul><h1>Installation</h1>
-
-<h2>OS GNU/Linux</h2>
-
-<p>Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
-install it using your favorite package manager.</p>
 
 <p>Glances is on <a href="https://pypi.python.org/pypi">PyPI</a>. To install, simply use <a href="http://www.pip-installer.org/">pip</a>:</p>
 
 <pre><code>pip install Glances
 </code></pre>
 
-<p>Notes: On Debian/Ubuntu, you need to install the python-dev package.</p>
+<p><em>Note</em>: On Debian/Ubuntu, you need to install first the <em>python-dev</em> package.</p>
+
+<h2>Linux</h2>
+
+<p>Actually, packages exist for Arch Linux, Fedora / CentOS / RHEL,
+Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
+install it using your favorite package manager.</p>
+
+<h2>FreeBSD</h2>
+
+<p>To install the precompiled binary package:</p>
+
+<pre><code># pkg_add -r py27-glances
+</code></pre>
+
+<p>To install Glances from ports:<p>
+
+<pre><code># cd /usr/ports/sysutils/py-glances/
+# make install clean
+</code></pre>
 
 <h2>OS X</h2>
 
@@ -82,8 +97,6 @@ install it using your favorite package manager.</p>
 $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
 $ brew pip Glances
 </code></pre>
-
-<p><strong><u>Note</u></strong></p>
 
 <p>If you get the following error:</p>
 
@@ -129,9 +142,7 @@ $ cd glances-*
 # python setup.py install
 </code></pre>
 
-<p><strong><u>Note</u></strong></p>
-
-<p>On Debian/Ubuntu, you have to install first <code>build-essential</code> and <code>python-dev</code>.</p>
+<p><em>Note</em>: On Debian/Ubuntu, you need to install first the <em>python-dev</em> package.</p>
 
 <h2>Puppet</h2>
 
