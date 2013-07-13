@@ -1422,11 +1422,15 @@ class GlancesStats:
             sortedReverse = False
 
         if sortedby == 'io_counters':
-            # Sort process by IO rate (sum IO read + IO write)
-            listsorted = sorted(self.process,
-                                key=lambda process: process[sortedby][0] -
-                                process[sortedby][2] + process[sortedby][1] -
-                                process[sortedby][3], reverse=sortedReverse)
+            try:
+                # Sort process by IO rate (sum IO read + IO write)
+                listsorted = sorted(self.process,
+                                    key=lambda process: process[sortedby][0] -
+                                    process[sortedby][2] + process[sortedby][1] -
+                                    process[sortedby][3], reverse=sortedReverse)
+            except:
+                listsorted = sorted(self.process, key=lambda process: process['cpu_percent'],
+                                    reverse=sortedReverse)                
         else:
             # Others sorts
             listsorted = sorted(self.process, key=lambda process: process[sortedby],
