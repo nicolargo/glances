@@ -22,19 +22,13 @@ Requirements
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
 - ``psutil >= 0.4.1`` (recommended version >= 0.6)
 - ``jinja`` (optional for HTML output)
-- ``pysensors`` (optional for HW monitoring support)
+- ``pysensors`` (optional for HW monitoring support) [Linux-only]
 - ``hddtemp`` (optional for HDD temperature monitoring support)
+- ``batinfo`` (optional for battery monitoring support) [Linux-only]
 - ``setuptools``
 
 Installation
 ============
-
-On Linux
---------
-
-Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid/Testing), Ubuntu (13.04+) and FreeBSD, so you should be able to
-install it using your favorite package manager.
 
 Glances is on `PyPI`_. To install, simply use `pip`_:
 
@@ -42,14 +36,35 @@ Glances is on `PyPI`_. To install, simply use `pip`_:
 
     pip install Glances
 
-Notes: On Debian/Ubuntu, you need to install the `python-dev` package.
+*Note*: On Debian/Ubuntu, you need to install first the `python-dev` package.
+
+Linux
+-----
+
+Actually, packages exist for Arch Linux, Fedora / CentOS / RHEL,
+Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
+install it using your favorite package manager.
+
+FreeBSD
+-------
+
+To install the precompiled binary package:
+
+.. code-block:: console
+
+    # pkg_add -r py27-glances
+
+To install Glances from ports:
+
+.. code-block:: console
+
+    # cd /usr/ports/sysutils/py-glances/
+    # make install clean
 
 OS X
 ----
 
 OS X users can also install Glances using `Homebrew`_ or `MacPorts`_.
-
-You can also used `pip`_ (see the Linux paragraph).
 
 Homebrew
 ````````
@@ -60,18 +75,18 @@ Homebrew
     $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
     $ brew pip Glances
 
-.. note:: If you get the following error:
+If you get the following error:
 
-    ::
+.. code-block:: console
 
-        Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
+    Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
 
-    Try to run:
+Try to run:
 
-    .. code-block:: console
+.. code-block:: console
 
-        $ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
-        $ brew link Glances
+    $ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
+    $ brew link Glances
 
 MacPorts
 ````````
@@ -108,7 +123,7 @@ To install Glances from source:
     $ cd glances-*
     # python setup.py install
 
-.. note:: On Debian/Ubuntu, you have to install first `build-essential` and `python-dev`.
+*Note*: On Debian/Ubuntu, you need to install first the `python-dev` package.
 
 Puppet
 ------
