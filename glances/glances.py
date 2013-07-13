@@ -911,11 +911,12 @@ class glancesGrabBat:
         if batinfo_lib_tag:
             try:
                 self.bat = batinfo.batteries()
+                self.initok = True
+                self.__update__()
             except:
                 self.initok = False
         else:
-            self.initok = True
-            self.__update__()
+            self.initok = False
 
     def __update__(self):
         """
