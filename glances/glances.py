@@ -142,6 +142,8 @@ if is_Linux:
         batinfo_lib_tag = False
     else:
         batinfo_lib_tag = True
+else:
+    batinfo_lib_tag = False
 
 try:
     # HTML output (optional)
