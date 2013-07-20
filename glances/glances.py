@@ -1685,6 +1685,9 @@ class glancesScreen:
         self.network_stats_combined = False
         self.network_stats_cumulative = False
 
+        # By default, no filter for process list
+        self.process_filter = "python"
+
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
 
@@ -2083,7 +2086,7 @@ class glancesScreen:
                                     diskio_count + fs_count +
                                     hddtemp_count)
         self.displayProcess(processcount, processlist, stats.getSortedBy(),
-                            log_count=log_count, core=stats.getCore())
+                            log_count=log_count, core=stats.getCore(), filter=self.process_filter)
         self.displayCaption(cs_status=cs_status)
         self.displayHelp(core=stats.getCore())
         self.displayBat(stats.getBatPercent())
@@ -2840,7 +2843,8 @@ class glancesScreen:
         else:
             return 0
 
-    def displayProcess(self, processcount, processlist, sortedby='', log_count=0, core=1):
+    def displayProcess(self, processcount, processlist, 
+                       sortedby='', log_count=0, core=1, filter=None):
         # Process
         if not processcount:
             return 0
@@ -2893,6 +2897,17 @@ class glancesScreen:
             screen_x > process_x + 49 + len(sortmsg)):
             self.term_window.addnstr(self.process_y, 76, sortmsg, len(sortmsg))
 
+        # Display filter
+        filterheader = _("Filter: ")
+        if (filter != None and
+            screen_y > self.process_y + 4 and
+            screen_x > process_x + 49 + len(filterheader) + len(str(filter))):
+            self.term_window.addnstr(self.process_y + 1, self.process_x, 
+                                     filterheader, len(filterheader), 
+                                     self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
+            self.term_window.addnstr(self.process_y + 1, self.process_x + len(filterheader), 
+                                     str(filter), len(str(filter)))
         # Processes detail
         if screen_y > self.process_y + 4 and screen_x > process_x + 49:
             tag_pid = False
@@ -2991,6 +3006,10 @@ class glancesScreen:
                 self.term_window.addnstr(self.process_y + 3, self.process_x,
                                          _("Compute data..."), 15)
                 return 6
+
+            # Filter processes list to be displayed
+            if (filter != None):
+                processlist = [p for p in processlist if p['name'].startswith('python')]
 
             # Display the processes list
             proc_num = min(screen_y - self.term_h +
