@@ -2992,15 +2992,18 @@ class glancesScreen:
                 # Search monitored processes by a regular expression
                 monitoredlist = [p for p in processlist if re.search(monitors.regex(item), p['cmdline']) != None]
                 # Build the message
-                monitormsg = "{0:>16} {1:3} {2:13} {3}".format(
+                monitormsg1 = "{0:>16} {1:3} {2:13}".format(
                     monitors.description(item),
                     len(monitoredlist) if len(monitoredlist) > 1 else "",
-                    _("RUNNING") if len(monitoredlist) > 0 else _("NOT RUNNING"),
+                    _("RUNNING") if len(monitoredlist) > 0 else _("NOT RUNNING"))
+                monitormsg2 = "{0}".format(
                     subprocess.check_output(monitors.command(item), shell = True) if monitors.command(item) != "" else "")
                 # Print the message
                 self.term_window.addnstr(monitor_y, self.process_x, 
-                                         monitormsg, screen_x - process_x,
+                                         monitormsg1, screen_x - process_x,
                                          self.__getMonitoredColor(len(monitoredlist)))
+                self.term_window.addnstr(monitor_y, self.process_x + 35, 
+                                         monitormsg2, screen_x - process_x - 35)
                 item += 1
 
         # Processes detail
@@ -4028,7 +4031,7 @@ def main():
 
     # Manage args
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:z:r1",
+        opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:zr1",
                                    ["bind", "bytepersec", "diskio", "mount",
                                     "sensors", "hddtemp", "netrate", "help", "output",
                                     "file", "time", "version", "server",
