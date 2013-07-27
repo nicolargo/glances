@@ -3064,8 +3064,11 @@ class glancesScreen:
                                                                   monitors.countmax(item)))
                 # Build and print optional message
                 if (monitors.command(item) != None):
-                    monitormsg2 = "{0}".format(
-                        subprocess.check_output(monitors.command(item), shell = True) if monitors.command(item) != "" else "")
+                    try:
+                        cmdret = subprocess.check_output(monitors.command(item), shell = True)
+                    except subprocess.CalledProcessError:
+                        cmdret = _("Error: ") + monitors.command(item)
+                    monitormsg2 = "{0}".format(cmdret)
                     self.term_window.addnstr(monitor_y, self.process_x + 35, 
                                              monitormsg2, screen_x - process_x - 35)
                 # else:
