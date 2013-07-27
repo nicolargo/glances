@@ -289,33 +289,55 @@ class Config:
 
 class monitorList:
     """
-    This class describe the monitored processes list (optionnal)
-    A list of 'important' process
+    This class describes the optionnal monitored processes list
+    A list of 'important' processes to monitor.
+
+    The list (Python list) is composed of items (Python dict) 
+    An item is defined (Dict keys'):
+    * description: Description of the processes (max 16 chars)
+    * regex: regular expression of the processes to monitor
+    * command: (optionnal) shell command for extended stat
+    * countmin: (optional) minimal number of processes
+    * countmax: (optional) maximum number of processes
     """
+
+    # Maximum number of items in the list
+    __monitor_list_max_size = 10
+    # The list
     __monitor_list = []
 
     def __init__(self):
         if config.has_section('monitor'):
             # Process monitoring list
-            self.__setMonitor('monitor', 'list')
+            self.__setMonitorList('monitor', 'list')
 
-    def __setMonitor(self, section, key):
+    def __setMonitorList(self, section, key):
         """
+        Init the monitored processes list
+        The list is defined in the Glances configuration file 
         """
-        # Get the process monitoring list
-        # list=shortname,regex,description;shortname,regex,description;...
-        # Each item (aka process) is separse by ';'
-        try:
-            monitorlist = config.get_raw_option(section, key).rsplit(';')
-        except:
-            self.__monitor_list = []
-        else:
-            # An item is composed: description,regex
-            # Values are separe by ','
-            self.__monitor_list = []
-            for item in monitorlist:
-                value = item.rsplit(',')
-                self.__monitor_list.append(value)
+
+        for l in range(1, self.__monitor_list_max_size + 1):
+            value = {}
+            key = "list_" + str(l) +"_"
+            try:
+                description = config.get_raw_option(section, key + "description")
+                regex = config.get_raw_option(section, key + "regex")
+                command = config.get_raw_option(section, key + "command")
+                countmin = config.get_raw_option(section, key + "countmin")
+                countmax = config.get_raw_option(section, key + "countmax")
+            except:
+                pass
+            else:
+                if (description != None and regex != None):
+                    # Build the new item
+                    value["description"] = description
+                    value["regex"] = regex
+                    value["command"] = command
+                    value["countmin"] = countmin
+                    value["countmax"] = countmax
+                    # Add the item to the list
+                    self.__monitor_list.append(value)
 
     def __str__(self):
         return str(self.__monitor_list)
@@ -329,20 +351,48 @@ class monitorList:
     def __len__(self):
         return len(self.__monitor_list)
 
-    def description(self, item):
-        if (item < len(self.__monitor_list)):
-            return self.__monitor_list[item][0]
-
-    def regex(self, item):
-        if (item < len(self.__monitor_list)):
-            return self.__monitor_list[item][1]
-
-    def command(self, item):
+    def __get__(self, item, key):
+        """
+        Meta function to return key value of item
+        None if not defined or item > len(list)
+        """
         if (item < len(self.__monitor_list)):
             try:
-                return self.__monitor_list[item][2]
+                return self.__monitor_list[item][key]
             except:
-                return ""
+                return None
+        else:
+            return None
+
+    def description(self, item):
+        """
+        Return the description of the item number (item)
+        """
+        return self.__get__(item, "description")
+
+    def regex(self, item):
+        """
+        Return the regular expression of the item number (item)
+        """
+        return self.__get__(item, "regex")
+
+    def command(self, item):
+        """
+        Return the stats command of the item number (item)
+        """
+        return self.__get__(item, "command")
+
+    def countmin(self, item):
+        """
+        Return the minimum number of processes of the item number (item)
+        """
+        return self.__get__(item, "countmin")
+
+    def countmax(self, item):
+        """
+        Return the maximum number of processes of the item number (item)
+        """
+        return self.__get__(item, "countmax")
 
 
 class glancesLimits:
@@ -996,8 +1046,12 @@ class glancesGrabBat:
         """
 
         if self.initok:
-            self.bat.update()
-            self.bat_list = self.bat.stat
+            try:
+                self.bat.update()
+            except:
+                self.bat_list = []
+            else:
+                self.bat_list = self.bat.stat
         else:
             self.bat_list = []
 
@@ -2020,15 +2074,6 @@ class glancesScreen:
 
         return 'OK'
 
-    def __getMonitoredAlert(self, nbprocess=0):
-        # If nbprocess = 0 then alert = CRITICAL
-        # else alert = OK
-
-        if nbprocess > 0:
-            return 'OK'
-        else:
-            return 'CRITICAL'
-
     def __getProcessCpuColor(self, current=0, max=100, core=1):
         return self.__colors_list[self.__getProcessAlert(current, max, 'CPU', core)]
 
@@ -2041,8 +2086,20 @@ class glancesScreen:
     def __getProcessMemColor2(self, current=0, max=100):
         return self.__colors_list2[self.__getProcessAlert(current, max, 'MEM')]
 
-    def __getMonitoredColor(self, nbprocess=0):
-        return self.__colors_list2[self.__getMonitoredAlert(nbprocess)]
+    def __getMonitoredAlert(self, nbprocess=0, countmin=None, countmax=None):
+        # If count is not defined, not monitoring the number of processes
+        if countmin == None: countmin = nbprocess
+        if countmax == None: countmax = nbprocess
+        if nbprocess > 0:
+            if int(countmin) <= int(nbprocess) <= int(countmax):
+                return 'OK'
+            else:
+                return 'WARNING'
+        else:
+            return 'CRITICAL'
+
+    def __getMonitoredColor(self, nbprocess=0, countmin=1, countmax=1):
+        return self.__colors_list2[self.__getMonitoredAlert(nbprocess, countmin, countmax)]
 
     def __getkey(self, window):
         '''
@@ -2942,7 +2999,9 @@ class glancesScreen:
         else:
             process_x = self.process_x
 
+        #******************
         # Processes summary
+        #******************
         if not self.process_tag:
             self.term_window.addnstr(self.process_y, process_x,
                                      _("Processes (disabled)"),
@@ -2978,7 +3037,9 @@ class glancesScreen:
             screen_x > process_x + 49 + len(sortmsg)):
             self.term_window.addnstr(self.process_y, 76, sortmsg, len(sortmsg))
 
+        #*************************
         # Monitored processes list
+        #*************************
         monitor_y  = self.process_y
         if (len(monitors) > 0 and 
             screen_y > self.process_y + 5 + len(monitors) and
@@ -2991,22 +3052,33 @@ class glancesScreen:
                 monitor_y += 1
                 # Search monitored processes by a regular expression
                 monitoredlist = [p for p in processlist if re.search(monitors.regex(item), p['cmdline']) != None]
-                # Build the message
+                # Build and print non optional message
                 monitormsg1 = "{0:>16} {1:3} {2:13}".format(
-                    monitors.description(item),
+                    monitors.description(item)[0:15],
                     len(monitoredlist) if len(monitoredlist) > 1 else "",
                     _("RUNNING") if len(monitoredlist) > 0 else _("NOT RUNNING"))
-                monitormsg2 = "{0}".format(
-                    subprocess.check_output(monitors.command(item), shell = True) if monitors.command(item) != "" else "")
-                # Print the message
                 self.term_window.addnstr(monitor_y, self.process_x, 
                                          monitormsg1, screen_x - process_x,
-                                         self.__getMonitoredColor(len(monitoredlist)))
-                self.term_window.addnstr(monitor_y, self.process_x + 35, 
-                                         monitormsg2, screen_x - process_x - 35)
+                                         self.__getMonitoredColor(len(monitoredlist), 
+                                                                  monitors.countmin(item),
+                                                                  monitors.countmax(item)))
+                # Build and print optional message
+                if (monitors.command(item) != None):
+                    monitormsg2 = "{0}".format(
+                        subprocess.check_output(monitors.command(item), shell = True) if monitors.command(item) != "" else "")
+                    self.term_window.addnstr(monitor_y, self.process_x + 35, 
+                                             monitormsg2, screen_x - process_x - 35)
+                # else:
+                #     monitormsg2 = "Min: {0} Current: {1} Max: {2} processes".format(
+                #         monitors.countmin(item), len(monitoredlist), monitors.countmax(item))
+                #     self.term_window.addnstr(monitor_y, self.process_x + 35, 
+                #                              monitormsg2, screen_x - process_x - 35)
+
                 item += 1
 
+        #*****************
         # Processes detail
+        #*****************
         if screen_y > monitor_y + 4 and screen_x > process_x + 49:
             tag_pid = False
             tag_uid = False
