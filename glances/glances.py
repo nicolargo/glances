@@ -643,15 +643,16 @@ class glancesLogs:
                 return i
         return -1
 
-    def add(self, item_state, item_type, item_value, proc_list=[]):
+    def add(self, item_state, item_type, item_value, proc_list=[], proc_desc=""):
         """
         item_state = "OK|CAREFUL|WARNING|CRITICAL"
-        item_type = "CPU*|LOAD|MEM"
+        item_type = "CPU*|LOAD|MEM|MON"
         item_value = value
         Item is defined by:
           ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
            MAX, AVG, MIN, SUM, COUNT,
-           [top3 process list]]
+           [top3 process list],
+           "Processes description"]
         If item is a 'new one':
           Add the new item at the beginning of the logs list
         Else:
@@ -666,7 +667,7 @@ class glancesLogs:
             # Sort TOP process by io_counters (only for Linux OS)
             sortby = 'io_counters'
         else:
-            # Default TOP process sort is cpu_percent (for CPU* and LOAD)
+            # Default TOP process sort is cpu_percent
             sortby = 'cpu_percent'
         topprocess = sorted(proc_list, key=lambda process: process[sortby],
                             reverse=True)
@@ -679,7 +680,9 @@ class glancesLogs:
                 # Time is stored in Epoch format
                 # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
                 item = []
+                # START DATE
                 item.append(time.mktime(datetime.now().timetuple()))
+                # END DATE
                 item.append(-1)
                 item.append(item_state)       # STATE: WARNING|CRITICAL
                 item.append(item_type)        # TYPE: CPU, LOAD, MEM...
@@ -689,6 +692,7 @@ class glancesLogs:
                 item.append(item_value)       # SUM
                 item.append(1)                # COUNT
                 item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
+                item.append(proc_desc)        # MONITORED PROCESSES DESC
                 self.logs_list.insert(0, item)
                 if self.len() > self.logs_max:
                     self.logs_list.pop()
@@ -720,6 +724,8 @@ class glancesLogs:
                     self.logs_list[item_index][8])
                 # TOP PROCESS LIST
                 self.logs_list[item_index][9] = topprocess[0:3]
+                # MONITORED PROCESSES DESC
+                self.logs_list[item_index][10] = proc_desc
 
         return self.len()
 
@@ -2923,7 +2929,7 @@ class glancesScreen:
                              min(offset_y - 3, screen_y - self.log_y,
                                  logs.len()))
             logtodisplay_count = min(screen_y - self.log_y - 3, logs.len())
-            logmsg = _("WARNING|CRITICAL logs for CPU|LOAD|MEM")
+            logmsg = _("WARNING|CRITICAL logs")
             if logtodisplay_count > 1:
                 logmsg += (_(" (lasts ") + str(logtodisplay_count) +
                            _(" entries)"))
@@ -2955,8 +2961,11 @@ class glancesScreen:
                     logmsg += " {0} ({1:.1f}/{2:.1f}/{3:.1f})".format(
                         log[logcount][3], log[logcount][6],
                         log[logcount][5], log[logcount][4])
-                # Add top process
-                if log[logcount][9] != []:
+                # Add the monitored process description
+                if log[logcount][10] != "":
+                    logmsg += " - {0}".format(log[logcount][10])
+                elif log[logcount][9] != []:
+                    # Add top processes
                     log_proc_name = log[logcount][9][0]['name']
                     logmsg += " - Top process: {0}".format(log_proc_name)
                 # Display the log
@@ -3071,12 +3080,17 @@ class glancesScreen:
                     monitormsg2 = "{0}".format(cmdret)
                     self.term_window.addnstr(monitor_y, self.process_x + 35, 
                                              monitormsg2, screen_x - process_x - 35)
-                # else:
-                #     monitormsg2 = "Min: {0} Current: {1} Max: {2} processes".format(
-                #         monitors.countmin(item), len(monitoredlist), monitors.countmax(item))
-                #     self.term_window.addnstr(monitor_y, self.process_x + 35, 
-                #                              monitormsg2, screen_x - process_x - 35)
 
+                # Generate log
+                logs.add(self.__getMonitoredAlert(len(monitoredlist), 
+                                                  monitors.countmin(item),
+                                                  monitors.countmax(item)), 
+                         "MON_" + str(item + 1), 
+                         len(monitoredlist), 
+                         proc_list = monitoredlist, 
+                         proc_desc = monitors.description(item))
+
+                # Next... 
                 item += 1
 
         #*****************
