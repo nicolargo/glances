@@ -43,6 +43,7 @@ gettext.install(__appname__)
 # Specifics libs
 import json
 import collections
+from functools import partial
 
 # For client/server authentication
 from base64 import b64decode
@@ -268,11 +269,9 @@ class Config:
         Get the value of an option, if it exist
         """
         try:
-            value = self.parser.getfloat(section, option)
+            return self.parser.getfloat(section, option)
         except NoOptionError:
             return
-        else:
-            return value
 
 
 class glancesLimits:
@@ -305,74 +304,90 @@ class glancesLimits:
         # Test if the configuration file has a limits section
         if config.has_section('global'):
             # Read STD limits
-            self.__setLimits('STD', 'global', 'careful')
-            self.__setLimits('STD', 'global', 'warning')
-            self.__setLimits('STD', 'global', 'critical')
+            self.__setLimits('STD', 'global')
         if config.has_section('cpu'):
             # Read CPU limits
-            self.__setLimits('CPU_USER', 'cpu', 'user_careful')
-            self.__setLimits('CPU_USER', 'cpu', 'user_warning')
-            self.__setLimits('CPU_USER', 'cpu', 'user_critical')
-            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_careful')
-            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_warning')
-            self.__setLimits('CPU_SYSTEM', 'cpu', 'system_critical')
-            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_careful')
-            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_warning')
-            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_critical')
+            self.__setLimits('CPU_USER', 'cpu', 'user')
+            self.__setLimits('CPU_SYSTEM', 'cpu', 'system')
+            self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait')
         if config.has_section('load'):
             # Read LOAD limits
-            self.__setLimits('LOAD', 'load', 'careful')
-            self.__setLimits('LOAD', 'load', 'warning')
-            self.__setLimits('LOAD', 'load', 'critical')
+            self.__setLimits('LOAD', 'load')
         if config.has_section('memory'):
             # Read MEM limits
-            self.__setLimits('MEM', 'memory', 'careful')
-            self.__setLimits('MEM', 'memory', 'warning')
-            self.__setLimits('MEM', 'memory', 'critical')
+            self.__setLimits('MEM', 'memory')
         if config.has_section('swap'):
             # Read MEM limits
-            self.__setLimits('SWAP', 'swap', 'careful')
-            self.__setLimits('SWAP', 'swap', 'warning')
-            self.__setLimits('SWAP', 'swap', 'critical')
+            self.__setLimits('SWAP', 'swap')
         if config.has_section('temperature'):
             # Read TEMP limits
-            self.__setLimits('TEMP', 'temperature', 'careful')
-            self.__setLimits('TEMP', 'temperature', 'warning')
-            self.__setLimits('TEMP', 'temperature', 'critical')
+            self.__setLimits('TEMP', 'temperature')
         if config.has_section('hddtemperature'):
             # Read HDDTEMP limits
-            self.__setLimits('HDDTEMP', 'hddtemperature', 'careful')
-            self.__setLimits('HDDTEMP', 'hddtemperature', 'warning')
-            self.__setLimits('HDDTEMP', 'hddtemperature', 'critical')
+            self.__setLimits('HDDTEMP', 'hddtemperature')
         if config.has_section('filesystem'):
             # Read FS limits
-            self.__setLimits('FS', 'filesystem', 'careful')
-            self.__setLimits('FS', 'filesystem', 'warning')
-            self.__setLimits('FS', 'filesystem', 'critical')
+            self.__setLimits('FS', 'filesystem')
         if config.has_section('process'):
             # Process limits
-            self.__setLimits('PROCESS_CPU', 'process', 'cpu_careful')
-            self.__setLimits('PROCESS_CPU', 'process', 'cpu_warning')
-            self.__setLimits('PROCESS_CPU', 'process', 'cpu_critical')
-            self.__setLimits('PROCESS_MEM', 'process', 'mem_careful')
-            self.__setLimits('PROCESS_MEM', 'process', 'mem_warning')
-            self.__setLimits('PROCESS_MEM', 'process', 'mem_critical')
+            self.__setLimits('PROCESS_CPU', 'process', 'cpu')
+            self.__setLimits('PROCESS_MEM', 'process', 'mem')
 
-    def __setLimits(self, stat, section, alert):
+    def __getattr__(self, name):
+        """
+        According to invoke methods to obtain data
+        """
+        base_type = ['Careful', 'Warning', 'Critical']
+        base_module = ['CPU', 'LOAD', 'Process', 'STD', 'MEM', 'SWAP', 'TEMP', 'HDDTEMP', 'FS']
+        get_type = ['get'+n for n in base_type]
+        get_module = ['get'+m+t for m in base_module\
+            for t in base_type]
+
+        if name in get_module:
+            for index, t in enumerate(base_type):
+                if name.endswith(t):
+                    module_name = name.replace('get', '').replace(t, '')
+                    if module_name == 'CPU':
+                        return partial(self.get_CPUStat, index)
+                    elif module_name == 'LOAD':
+                        return partial(self.get_LOADStat, index)
+                    elif module_name == 'Process':
+                        return partial(self.get_ProcessStat, index)
+                    return partial(self.get_Stat, index, module_name)
+        elif name in get_type:
+            return partial(self.get_Stat, get_type.index(name))
+
+    def get_Stat(self, index, stat):
+        return self.__limits_list[stat][index]
+
+    def get_CPUStat(self, index, stat):
+        return self.get_Stat(index, 'CPU_'+stat.upper())
+
+    def get_LOADStat(self, index, core=1):
+        return self.get_Stat(index, 'LOAD') * core
+
+    def get_ProcessStat(self, index, stat='', core=1):
+        if stat.upper() != 'CPU':
+            # Use core only for CPU
+            core = 1
+        return self.get_Stat(index, 'PROCESS_' + stat.upper()) * core
+
+    def __setLimits(self, stat, section, alert_prefix=None):
         """
         stat: 'CPU', 'LOAD', 'MEM', 'SWAP', 'TEMP', etc.
         section: 'cpu', 'load', 'memory', 'swap', 'temperature', etc.
         alert: 'careful', 'warning', 'critical'
         """
-        value = config.get_option(section, alert)
 
+        alert_type = ['careful', 'warning', 'critical']
         #~ print("%s / %s = %s -> %s" % (section, alert, value, stat))
-        if alert.endswith('careful'):
-            self.__limits_list[stat][0] = value
-        elif alert.endswith('warning'):
-            self.__limits_list[stat][1] = value
-        elif alert.endswith('critical'):
-            self.__limits_list[stat][2] = value
+        for index, alert in enumerate(alert_type):
+            if alert_prefix:
+                value = config.get_option(section, '{0}_{1}'.format(
+                        alert_prefix, alert))
+            else:
+                value = config.get_option(section, alert)
+            self.__limits_list[stat][index] = value
 
     def setAll(self, newlimits):
         self.__limits_list = newlimits
@@ -380,107 +395,6 @@ class glancesLimits:
 
     def getAll(self):
         return self.__limits_list
-
-    def getCareful(self, stat):
-        return self.__limits_list[stat][0]
-
-    def getWarning(self, stat):
-        return self.__limits_list[stat][1]
-
-    def getCritical(self, stat):
-        return self.__limits_list[stat][2]
-
-    # TO BE DELETED AFTER THE HTML output refactoring
-    def getSTDCareful(self):
-        return self.getCareful('STD')
-
-    def getSTDWarning(self):
-        return self.getWarning('STD')
-
-    def getSTDCritical(self):
-        return self.getCritical('STD')
-    # /TO BE DELETED AFTER THE HTML output refactoring
-
-    def getCPUCareful(self, stat):
-        return self.getCareful('CPU_' + stat.upper())
-
-    def getCPUWarning(self, stat):
-        return self.getWarning('CPU_' + stat.upper())
-
-    def getCPUCritical(self, stat):
-        return self.getCritical('CPU_' + stat.upper())
-
-    def getLOADCareful(self, core=1):
-        return self.getCareful('LOAD') * core
-
-    def getLOADWarning(self, core=1):
-        return self.getWarning('LOAD') * core
-
-    def getLOADCritical(self, core=1):
-        return self.getCritical('LOAD') * core
-
-    def getMEMCareful(self):
-        return self.getCareful('MEM')
-
-    def getMEMWarning(self):
-        return self.getWarning('MEM')
-
-    def getMEMCritical(self):
-        return self.getCritical('MEM')
-
-    def getSWAPCareful(self):
-        return self.getCareful('SWAP')
-
-    def getSWAPWarning(self):
-        return self.getWarning('SWAP')
-
-    def getSWAPCritical(self):
-        return self.getCritical('SWAP')
-
-    def getTEMPCareful(self):
-        return self.getCareful('TEMP')
-
-    def getTEMPWarning(self):
-        return self.getWarning('TEMP')
-
-    def getTEMPCritical(self):
-        return self.getCritical('TEMP')
-
-    def getHDDTEMPCareful(self):
-        return self.getCareful('HDDTEMP')
-
-    def getHDDTEMPWarning(self):
-        return self.getWarning('HDDTEMP')
-
-    def getHDDTEMPCritical(self):
-        return self.getCritical('HDDTEMP')
-
-    def getFSCareful(self):
-        return self.getCareful('FS')
-
-    def getFSWarning(self):
-        return self.getWarning('FS')
-
-    def getFSCritical(self):
-        return self.getCritical('FS')
-
-    def getProcessCareful(self, stat='', core=1):
-        if stat.upper() != 'CPU':
-            # Use core only for CPU
-            core = 1
-        return self.getCareful('PROCESS_' + stat.upper()) * core
-
-    def getProcessWarning(self, stat='', core=1):
-        if stat.upper() != 'CPU':
-            # Use core only for CPU
-            core = 1
-        return self.getWarning('PROCESS_' + stat.upper()) * core
-
-    def getProcessCritical(self, stat='', core=1):
-        if stat.upper() != 'CPU':
-            # Use core only for CPU
-            core = 1
-        return self.getCritical('PROCESS_' + stat.upper()) * core
 
 
 class glancesLogs:
