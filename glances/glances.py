@@ -3178,7 +3178,7 @@ class glancesScreen:
 
             # display the limits table
             limits_table_x = self.help_x
-            limits_table_y = self.help_y + 2
+            limits_table_y = self.help_y + 1
             self.term_window.addnstr(limits_table_y, limits_table_x + 18,
                                      format(_("OK"), '^8'), 8,
                                      self.default_color)
@@ -3202,7 +3202,7 @@ class glancesScreen:
 
             width = 8
             limits_table_x = self.help_x + 2
-            limits_table_y = self.help_y + 3
+            limits_table_y = self.help_y + 2
             for label in stat_labels:
                 self.term_window.addnstr(limits_table_y, limits_table_x,
                                          format(label, '<14'), 14)
@@ -3244,7 +3244,7 @@ class glancesScreen:
                              limits.getProcessCritical(stat='MEM')]]
 
             limits_table_x = self.help_x + 15
-            limits_table_y = self.help_y + 3
+            limits_table_y = self.help_y + 2
             for value in limit_values:
                 self.term_window.addnstr(
                     limits_table_y, limits_table_x,
