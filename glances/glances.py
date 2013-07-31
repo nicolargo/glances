@@ -40,7 +40,8 @@ import locale
 import gettext
 import socket
 locale.setlocale(locale.LC_ALL, '')
-gettext.install(__appname__)
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
+gettext.install(__appname__, '{0}/../share/locale'.format(cur_dir))
 
 # Specifics libs
 import json
