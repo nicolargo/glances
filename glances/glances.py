@@ -3713,6 +3713,19 @@ class GlancesInstance():
         self.__update__()
         return json.dumps(stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
 
+    def __getTimeSinceLastUpdate(self, IOType):
+        assert(IOType in ['net', 'disk', 'process_disk'])
+        return getTimeSinceLastUpdate(IOType)
+
+    def getNetTimeSinceLastUpdate(self):
+        return getTimeSinceLastUpdate('net')        
+
+    def getDiskTimeSinceLastUpdate(self):
+        return getTimeSinceLastUpdate('net')
+
+    def getProcessDiskTimeSinceLastUpdate(self):
+        return getTimeSinceLastUpdate('process_disk')
+
 
 class GlancesServer():
     """
