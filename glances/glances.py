@@ -3914,7 +3914,7 @@ class GlancesInstance():
         # Update and return current date/hour
         self.__update__()
         return json.dumps(stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
-
+        
 
 class GlancesServer():
     """
