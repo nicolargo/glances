@@ -3266,7 +3266,10 @@ class glancesScreen:
 
             width = 3
             key_table_x = self.help_x + 2
-            key_table_y = limits_table_y + 1
+            if screen_y > 24:
+                key_table_y = limits_table_y + 1
+            else:
+                key_table_y = limits_table_y
             for key in key_col_left:
                 self.term_window.addnstr(
                     key_table_y, key_table_x,
