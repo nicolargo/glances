@@ -6,7 +6,7 @@ This manual describes *Glances* version 1.7.
 
 Copyright © 2012-2013 Nicolas Hennion <nicolas@nicolargo.com>
 
-April 2013
+August 2013
 
 .. contents:: Table of Contents
 
@@ -68,7 +68,7 @@ Default binding address is ``0.0.0.0`` (Glances will listen on all the network i
 
 In client/server mode, limits are set by the server side.
 
-The version 1.6 introduces a optional password to access to the server ``-P password``.
+You can also set a password to access to the server ``-P password``.
 
 Command reference
 =================
@@ -76,9 +76,9 @@ Command reference
 Command-line options
 --------------------
 
--b           Display network rate in Byte per second
--B IP        Bind server to the given IP or hostname
--c IP        Connect to a Glances server
+-b           Display network rate in Bytes per second (default: Bits per second)
+-B IP        Bind server to the given IP or hostname (IPv4 or IPv6)
+-c IP        Connect to a Glances server by IP or hostname (IPv4 or IPv6)
 -C file      Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
 -d           Disable disk I/O module
 -e           Enable the sensors module (Linux-only)
@@ -89,9 +89,9 @@ Command-line options
 -o output    Define additional output (available: HTML or CSV)
 -p PORT      Define the client or server TCP port (default: 61209)
 -P password  Define a client/server password
--r           Do not list processes
+-r           Do not list processes (for low CPU consumption)
 -s           Run Glances in server mode
--t sec       Set the refresh time in seconds (default: 3)
+-t sec       Set the refresh time in seconds (default: 3 seconds)
 -v           Display the version and exit
 -y           Enable the hddtemp module (needs running hddtemp daemon)
 -z           Do not use the bold color attribute
@@ -99,7 +99,7 @@ Command-line options
 Interactive commands
 --------------------
 
-The following commands are supported while in Glances:
+The following commands (key pressed) are supported while in Glances:
 
 
 ``a``
@@ -146,9 +146,9 @@ The following commands are supported while in Glances:
 Configuration
 =============
 
-No configuration is needed to use Glances.
+No configuration file is mandatory to use Glances.
 
-Furthermore, starting from release 1.6, it has been introduced a configuration file for setup limits.
+Furthermore a configuration file is needed for setup limits and monitored processes list.
 
 By default, the configuration file is under:
 
