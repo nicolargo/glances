@@ -39,8 +39,6 @@ import subprocess
 import locale
 import gettext
 import socket
-locale.setlocale(locale.LC_ALL, '')
-gettext.install(__appname__)
 
 # Specifics libs
 import json
@@ -162,6 +160,26 @@ except ImportError:
     cvs_lib_tag = False
 else:
     csv_lib_tag = True
+
+# i18n
+locale.setlocale(locale.LC_ALL, '')
+gettext_domain = __appname__
+
+# get locale directory
+base_path = os.path.dirname(os.path.realpath(__file__))
+i18n_path = os.path.join(base_path, '..', 'i18n')
+
+path_name = os.path.split(sys.argv[0])[0]
+prefix_path = os.path.dirname(os.path.realpath(path_name))
+locale_path = os.path.join(prefix_path, 'share', 'locale')
+
+if os.path.exists(i18n_path):
+    locale_dir = i18n_path
+elif os.path.exists(locale_path):
+    locale_dir = locale_path
+else:
+    locale_dir = None
+gettext.install(gettext_domain, locale_dir)
 
 # Default tag
 sensors_tag = False
