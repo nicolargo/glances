@@ -4002,7 +4002,7 @@ class GlancesClient():
 
     def client_init(self):
         try:
-            self.client.init()
+            client_version = self.client.init()
         except ProtocolError as err:
             if str(err).find(" 401 ") > 0:
                 print(_("Error: Connection to server failed. Bad password."))
@@ -4010,13 +4010,7 @@ class GlancesClient():
             else:
                 print(_("Error: Connection to server failed. Unknown error."))
                 sys.exit(-1)
-        try:
-            client_version = self.client.init()[:3]
-        except:
-            print(_("Error: Connection to server failed. Can not get the server version."))
-            sys.exit(-1)
-        else:
-            return __version__[:2] == client_version[:2]
+        return __version__[:3] == client_version[:3]
 
     def client_get_limits(self):
         try:
