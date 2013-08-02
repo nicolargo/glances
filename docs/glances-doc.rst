@@ -388,7 +388,15 @@ Process status legend:
 ``Z``
     zombie
 
-The monitored processes list allows user, through the Glances configuration file, to group processes and quickly show if the number of runing process is not good. Each item is defined by:
+monitored processes list
+------------------------
+
+Optionnal and new in version 1.7.
+
+The monitored processes list allows user, through the Glances configuration file, to group processes and quickly show if the number of runing process is not good. 
+
+Each item is defined by:
+
 * description: description of the processes (max 16 chars)
 * regex: regular expression of the processes to monitor
 * command: (optional) full path to shell command/script for extended stat. Use with caution. Should return a single line string.  
