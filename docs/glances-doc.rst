@@ -70,6 +70,8 @@ In client/server mode, limits are set by the server side.
 
 You can also set a password to access to the server ``-P password``.
 
+Glances is IPv6 compatible: use the ``-B ::0`` option to bind to all IPv6 addresses. 
+
 Command reference
 =================
 
@@ -95,6 +97,7 @@ Command-line options
 -v           Display the version and exit
 -y           Enable the hddtemp module (needs running hddtemp daemon)
 -z           Do not use the bold color attribute
+-1           Start Glances in per CPU mode
 
 Interactive commands
 --------------------
@@ -148,7 +151,7 @@ Configuration
 
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed for setup limits and monitored processes list.
+Furthermore a configuration file is needed for setup limits and/or monitored processes list.
 
 By default, the configuration file is under:
 
@@ -216,6 +219,8 @@ The total CPU usage is displayed on the first line.
 | If user|system|nice CPU is ``>70%``, then status is set to ``"WARNING"``
 | If user|system|nice CPU is ``>90%``, then status is set to ``"CRITICAL"``
 
+Note: limits values can be overwrited in the configuration file ([cpu] section).
+
 Load
 ----
 
@@ -236,6 +241,8 @@ The first line also display the number of CPU core.
 | If average load is ``>1*core``, then status is set to ``"WARNING"``
 | If average load is ``>5*core``, then status is set to ``"CRITICAL"``
 
+Note: limits values can be overwrited in the configuration file ([load] section).
+
 Memory
 ------
 
@@ -253,6 +260,8 @@ With Glances, alerts are only set for on used memory and used swap.
 | If memory is ``>50%``, then status is set to ``"CAREFUL"``
 | If memory is ``>70%``, then status is set to ``"WARNING"``
 | If memory is ``>90%``, then status is set to ``"CRITICAL"``
+
+Note: limits values can be overwrited in the configuration file ([memory] and [swap] sections).
 
 Network
 -------
@@ -278,7 +287,7 @@ Sensors
 .. image:: images/sensors.png
 
 Glances can displays the sensors informations trough `lm-sensors` (only
-available on Linux).
+available on Linux) and hddtemp daemon.
 
 A filter is processed in order to only display temperature.
 
@@ -289,6 +298,8 @@ You should enable this module using the following command line:
     $ glances -e
 
 There is no alert on this information.
+
+Note: limits values can be overwrited in the configuration file ([temperature] and [hddtemperature] section).
 
 Disk I/O
 --------
@@ -314,6 +325,8 @@ Alerts are set for used disk space:
 | If disk used is ``>70%``, then status is set to ``"WARNING"``
 | If disk used is ``>90%``, then status is set to ``"CRITICAL"``
 
+Note: limits values can be overwrited in the configuration file ([filesystem] section).
+
 Processes list
 --------------
 
@@ -325,10 +338,15 @@ Full view:
 
 .. image:: images/processlist-wide.png
 
-Glances displays a summary and a list of processes.
+Three views are available for processes:
+* Processes summary 
+* Optionnal monitored processes list (new in Glances 1.7)
+* Processes list
 
 By default, or if you hit the ``a`` key, the processes list is automatically
 sorted by CPU of memory usage.
+
+Note: limits values can be overwrited in the configuration file ([process] section).
 
 The number of processes in the list is adapted to the screen size.
 
@@ -370,6 +388,37 @@ Process status legend:
 ``Z``
     zombie
 
+The monitored processes list allows user, through the Glances configuration file, to group processes and quickly show if the number of runing process is not good. Each item is defined by:
+* description: description of the processes (max 16 chars)
+* regex: regular expression of the processes to monitor
+* command: (optional) full path to shell command/script for extended stat. Use with caution. Should return a single line string.  
+* countmin: (optional) minimal number of processes. A warning will be displayed if number of process < count
+* countmax: (optional) maximum number of processes. A warning will be displayed if number of process > count
+
+Up to 10 items can be defined.
+
+For exemple, if you want to monitor the NGinx processes on a Web server, the following definition should do the job::
+
+    [monitor]
+    list_1_description=NGinx server
+    list_1_regex=.*nginx.*
+    list_1_command=nginx -v
+    list_1_countmin=1
+    list_1_countmax=4
+
+If you also want to monitor the PHP-FPM daemon processes, you should add another item::
+
+    [monitor]
+    list_1_description=NGinx server
+    list_1_regex=.*nginx.*
+    list_1_command=nginx -v
+    list_1_countmin=1
+    list_1_countmax=4
+    list_1_description=PHP-FPM
+    list_1_regex=.*php-fpm.*
+    list_1_countmin=1
+    list_1_countmax=20
+
 Logs
 ----
 
@@ -385,7 +434,7 @@ Each alert message displays the following information:
 1. start date
 2. end date
 3. alert name
-4. {min/avg/max} values
+4. {min/avg/max} values (or monitored processes list description)
 
 Footer
 ------
