@@ -58,7 +58,7 @@ and on the client:
 
     client$ glances -c @server
 
-where ``@server`` is the IP address or host name of the server.
+where ``@server`` is the IP address or hostname of the server.
 
 In server mode, you can set the bind address ``-B ADDRESS`` and listening TCP port ``-p PORT``.
 
@@ -70,7 +70,7 @@ In client/server mode, limits are set by the server side.
 
 You can also set a password to access to the server ``-P password``.
 
-Glances is IPv6 compatible: use the ``-B ::0`` option to bind to all IPv6 addresses. 
+Glances is ``IPv6`` compatible. Just use the ``-B ::1`` option to bind to all IPv6 addresses.
 
 Command reference
 =================
@@ -191,7 +191,7 @@ Header
 
 .. image:: images/header.png
 
-The header shows the OS name, release version, platform architecture and the host name.
+The header shows the OS name, release version, platform architecture and the hostname.
 On Linux, it shows also the kernel version.
 
 CPU
@@ -219,7 +219,7 @@ The total CPU usage is displayed on the first line.
 | If user|system|nice CPU is ``>70%``, then status is set to ``"WARNING"``
 | If user|system|nice CPU is ``>90%``, then status is set to ``"CRITICAL"``
 
-Note: limits values can be overwrited in the configuration file ([cpu] section).
+*Note*: limits values can be overwritten in the configuration file under the ``[cpu]`` section.
 
 Load
 ----
@@ -241,7 +241,7 @@ The first line also display the number of CPU core.
 | If average load is ``>1*core``, then status is set to ``"WARNING"``
 | If average load is ``>5*core``, then status is set to ``"CRITICAL"``
 
-Note: limits values can be overwrited in the configuration file ([load] section).
+*Note*: limits values can be overwritten in the configuration file under the ``[load]`` section.
 
 Memory
 ------
@@ -261,7 +261,7 @@ With Glances, alerts are only set for on used memory and used swap.
 | If memory is ``>70%``, then status is set to ``"WARNING"``
 | If memory is ``>90%``, then status is set to ``"CRITICAL"``
 
-Note: limits values can be overwrited in the configuration file ([memory] and [swap] sections).
+*Note*: limits values can be overwritten in the configuration file under the ``[memory]`` and ``[swap]`` sections.
 
 Network
 -------
@@ -287,19 +287,25 @@ Sensors
 .. image:: images/sensors.png
 
 Glances can displays the sensors informations trough `lm-sensors` (only
-available on Linux) and hddtemp daemon.
+available on Linux) and `hddtemp` daemon.
 
-A filter is processed in order to only display temperature.
+As of lm-sensors, a filter is processed in order to display temperature only.
 
-You should enable this module using the following command line:
+To enable the lm-sensors module:
 
 .. code-block:: console
 
     $ glances -e
 
+To enable the hddtemp module:
+
+.. code-block:: console
+
+    $ glances -y
+
 There is no alert on this information.
 
-Note: limits values can be overwrited in the configuration file ([temperature] and [hddtemperature] section).
+*Note*: limits values can be overwritten in the configuration file under the ``[temperature]`` and ``[hddtemperature]`` sections.
 
 Disk I/O
 --------
@@ -325,7 +331,7 @@ Alerts are set for used disk space:
 | If disk used is ``>70%``, then status is set to ``"WARNING"``
 | If disk used is ``>90%``, then status is set to ``"CRITICAL"``
 
-Note: limits values can be overwrited in the configuration file ([filesystem] section).
+*Note*: limits values can be overwritten in the configuration file under ``[filesystem]`` section.
 
 Processes list
 --------------
@@ -339,14 +345,15 @@ Full view:
 .. image:: images/processlist-wide.png
 
 Three views are available for processes:
-* Processes summary 
-* Optionnal monitored processes list (new in Glances 1.7)
+
+* Processes summary
+* Optional monitored processes list (new in 1.7)
 * Processes list
 
 By default, or if you hit the ``a`` key, the processes list is automatically
 sorted by CPU of memory usage.
 
-Note: limits values can be overwrited in the configuration file ([process] section).
+*Note*: limits values can be overwritten in the configuration file under the ``[process]`` section.
 
 The number of processes in the list is adapted to the screen size.
 
@@ -388,36 +395,41 @@ Process status legend:
 ``Z``
     zombie
 
-monitored processes list
+Monitored processes list
 ------------------------
 
-Optionnal and new in version 1.7.
+New in version 1.7. Optional.
 
-The monitored processes list allows user, through the Glances configuration file, to group processes and quickly show if the number of runing process is not good. 
+The monitored processes list allows user, through the configuration file,
+to group processes and quickly show if the number of running process is not good.
 
 Each item is defined by:
 
-* description: description of the processes (max 16 chars)
-* regex: regular expression of the processes to monitor
-* command: (optional) full path to shell command/script for extended stat. Use with caution. Should return a single line string.  
-* countmin: (optional) minimal number of processes. A warning will be displayed if number of process < count
-* countmax: (optional) maximum number of processes. A warning will be displayed if number of process > count
+* ``description``: description of the processes (max 16 chars).
+* ``regex``: regular expression of the processes to monitor.
+* ``command`` (optional): full path to shell command/script for extended stat. Should return a single line string. Use with caution.
+* ``countmin`` (optional): minimal number of processes. A warning will be displayed if number of processes < count.
+* ``countmax`` (optional): maximum number of processes. A warning will be displayed if number of processes > count.
 
 Up to 10 items can be defined.
 
-For exemple, if you want to monitor the NGinx processes on a Web server, the following definition should do the job::
+For example, if you want to monitor the NGINX processes on a Web server, the following definition should do the job:
+
+.. code-block:: console
 
     [monitor]
-    list_1_description=NGinx server
+    list_1_description=NGINX server
     list_1_regex=.*nginx.*
     list_1_command=nginx -v
     list_1_countmin=1
     list_1_countmax=4
 
-If you also want to monitor the PHP-FPM daemon processes, you should add another item::
+If you also want to monitor the PHP-FPM daemon processes, you should add another item:
+
+.. code-block:: console
 
     [monitor]
-    list_1_description=NGinx server
+    list_1_description=NGINX server
     list_1_regex=.*nginx.*
     list_1_command=nginx -v
     list_1_countmin=1

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.10: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
 <title>Glances</title>
 <style type="text/css">
 
@@ -152,7 +152,7 @@ td.option-group {
 <li><a class="reference internal" href="#disk-i-o" id="id19">Disk I/O</a></li>
 <li><a class="reference internal" href="#file-system" id="id20">File system</a></li>
 <li><a class="reference internal" href="#processes-list" id="id21">Processes list</a></li>
-<li><a class="reference internal" href="#monitored-processes-list" id="id22">monitored processes list</a></li>
+<li><a class="reference internal" href="#monitored-processes-list" id="id22">Monitored processes list</a></li>
 <li><a class="reference internal" href="#logs" id="id23">Logs</a></li>
 <li><a class="reference internal" href="#footer" id="id24">Footer</a></li>
 </ul>
@@ -194,13 +194,13 @@ just run on the server:</p>
 <pre class="code console literal-block">
 <span class="generic output">client$ glances -c &#64;server</span>
 </pre>
-<p>where <tt class="docutils literal">&#64;server</tt> is the IP address or host name of the server.</p>
+<p>where <tt class="docutils literal">&#64;server</tt> is the IP address or hostname of the server.</p>
 <p>In server mode, you can set the bind address <tt class="docutils literal"><span class="pre">-B</span> ADDRESS</tt> and listening TCP port <tt class="docutils literal"><span class="pre">-p</span> PORT</tt>.</p>
 <p>In client mode, you can set the TCP port of the server <tt class="docutils literal"><span class="pre">-p</span> PORT</tt>.</p>
 <p>Default binding address is <tt class="docutils literal">0.0.0.0</tt> (Glances will listen on all the network interfaces) and TCP port is <tt class="docutils literal">61209</tt>.</p>
 <p>In client/server mode, limits are set by the server side.</p>
 <p>You can also set a password to access to the server <tt class="docutils literal"><span class="pre">-P</span> password</tt>.</p>
-<p>Glances is IPv6 compatible: use the <tt class="docutils literal"><span class="pre">-B</span> ::0</tt> option to bind to all IPv6 addresses.</p>
+<p>Glances is <tt class="docutils literal">IPv6</tt> compatible. Just use the <tt class="docutils literal"><span class="pre">-B</span> ::1</tt> option to bind to all IPv6 addresses.</p>
 </div>
 </div>
 <div class="section" id="command-reference">
@@ -357,7 +357,7 @@ cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 <div class="section" id="header">
 <h2><a class="toc-backref" href="#id13">Header</a></h2>
 <img alt="images/header.png" src="images/header.png" />
-<p>The header shows the OS name, release version, platform architecture and the host name.
+<p>The header shows the OS name, release version, platform architecture and the hostname.
 On Linux, it shows also the kernel version.</p>
 </div>
 <div class="section" id="cpu">
@@ -377,7 +377,7 @@ The total CPU usage is displayed on the first line.</p>
 <div class="line">If user|system|nice CPU is <tt class="docutils literal">&gt;70%</tt>, then status is set to <tt class="docutils literal">&quot;WARNING&quot;</tt></div>
 <div class="line">If user|system|nice CPU is <tt class="docutils literal">&gt;90%</tt>, then status is set to <tt class="docutils literal">&quot;CRITICAL&quot;</tt></div>
 </div>
-<p>Note: limits values can be overwrited in the configuration file ([cpu] section).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under the <tt class="docutils literal">[cpu]</tt> section.</p>
 </div>
 <div class="section" id="load">
 <h2><a class="toc-backref" href="#id15">Load</a></h2>
@@ -396,7 +396,7 @@ The first line also display the number of CPU core.</p>
 <div class="line">If average load is <tt class="docutils literal">&gt;1*core</tt>, then status is set to <tt class="docutils literal">&quot;WARNING&quot;</tt></div>
 <div class="line">If average load is <tt class="docutils literal">&gt;5*core</tt>, then status is set to <tt class="docutils literal">&quot;CRITICAL&quot;</tt></div>
 </div>
-<p>Note: limits values can be overwrited in the configuration file ([load] section).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under the <tt class="docutils literal">[load]</tt> section.</p>
 </div>
 <div class="section" id="memory">
 <h2><a class="toc-backref" href="#id16">Memory</a></h2>
@@ -411,7 +411,7 @@ The first line also display the number of CPU core.</p>
 <div class="line">If memory is <tt class="docutils literal">&gt;70%</tt>, then status is set to <tt class="docutils literal">&quot;WARNING&quot;</tt></div>
 <div class="line">If memory is <tt class="docutils literal">&gt;90%</tt>, then status is set to <tt class="docutils literal">&quot;CRITICAL&quot;</tt></div>
 </div>
-<p>Note: limits values can be overwrited in the configuration file ([memory] and [swap] sections).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under the <tt class="docutils literal">[memory]</tt> and <tt class="docutils literal">[swap]</tt> sections.</p>
 </div>
 <div class="section" id="network">
 <h2><a class="toc-backref" href="#id17">Network</a></h2>
@@ -432,14 +432,18 @@ if the bit rate is higher than 70 Mbps.</p>
 <h2><a class="toc-backref" href="#id18">Sensors</a></h2>
 <img alt="images/sensors.png" src="images/sensors.png" />
 <p>Glances can displays the sensors informations trough <cite>lm-sensors</cite> (only
-available on Linux) and hddtemp daemon.</p>
-<p>A filter is processed in order to only display temperature.</p>
-<p>You should enable this module using the following command line:</p>
+available on Linux) and <cite>hddtemp</cite> daemon.</p>
+<p>As of lm-sensors, a filter is processed in order to display temperature only.</p>
+<p>To enable the lm-sensors module:</p>
 <pre class="code console literal-block">
 <span class="generic prompt">$</span> glances -e
 </pre>
+<p>To enable the hddtemp module:</p>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances -y
+</pre>
 <p>There is no alert on this information.</p>
-<p>Note: limits values can be overwrited in the configuration file ([temperature] and [hddtemperature] section).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under the <tt class="docutils literal">[temperature]</tt> and <tt class="docutils literal">[hddtemperature]</tt> sections.</p>
 </div>
 <div class="section" id="disk-i-o">
 <h2><a class="toc-backref" href="#id19">Disk I/O</a></h2>
@@ -459,7 +463,7 @@ adapted dynamically.</p>
 <div class="line">If disk used is <tt class="docutils literal">&gt;70%</tt>, then status is set to <tt class="docutils literal">&quot;WARNING&quot;</tt></div>
 <div class="line">If disk used is <tt class="docutils literal">&gt;90%</tt>, then status is set to <tt class="docutils literal">&quot;CRITICAL&quot;</tt></div>
 </div>
-<p>Note: limits values can be overwrited in the configuration file ([filesystem] section).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under <tt class="docutils literal">[filesystem]</tt> section.</p>
 </div>
 <div class="section" id="processes-list">
 <h2><a class="toc-backref" href="#id21">Processes list</a></h2>
@@ -467,13 +471,15 @@ adapted dynamically.</p>
 <img alt="images/processlist.png" src="images/processlist.png" />
 <p>Full view:</p>
 <img alt="images/processlist-wide.png" src="images/processlist-wide.png" />
-<p>Three views are available for processes:
-* Processes summary
-* Optionnal monitored processes list (new in Glances 1.7)
-* Processes list</p>
+<p>Three views are available for processes:</p>
+<ul class="simple">
+<li>Processes summary</li>
+<li>Optional monitored processes list (new in 1.7)</li>
+<li>Processes list</li>
+</ul>
 <p>By default, or if you hit the <tt class="docutils literal">a</tt> key, the processes list is automatically
 sorted by CPU of memory usage.</p>
-<p>Note: limits values can be overwrited in the configuration file ([process] section).</p>
+<p><em>Note</em>: limits values can be overwritten in the configuration file under the <tt class="docutils literal">[process]</tt> section.</p>
 <p>The number of processes in the list is adapted to the screen size.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">VIRT</tt></dt>
@@ -516,31 +522,32 @@ sorted by CPU of memory usage.</p>
 </dl>
 </div>
 <div class="section" id="monitored-processes-list">
-<h2><a class="toc-backref" href="#id22">monitored processes list</a></h2>
-<p>Optionnal and new in version 1.7.</p>
-<p>The monitored processes list allows user, through the Glances configuration file, to group processes and quickly show if the number of runing process is not good.</p>
+<h2><a class="toc-backref" href="#id22">Monitored processes list</a></h2>
+<p>New in version 1.7. Optional.</p>
+<p>The monitored processes list allows user, through the configuration file,
+to group processes and quickly show if the number of running process is not good.</p>
 <p>Each item is defined by:</p>
 <ul class="simple">
-<li>description: description of the processes (max 16 chars)</li>
-<li>regex: regular expression of the processes to monitor</li>
-<li>command: (optional) full path to shell command/script for extended stat. Use with caution. Should return a single line string.</li>
-<li>countmin: (optional) minimal number of processes. A warning will be displayed if number of process &lt; count</li>
-<li>countmax: (optional) maximum number of processes. A warning will be displayed if number of process &gt; count</li>
+<li><tt class="docutils literal">description</tt>: description of the processes (max 16 chars).</li>
+<li><tt class="docutils literal">regex</tt>: regular expression of the processes to monitor.</li>
+<li><tt class="docutils literal">command</tt> (optional): full path to shell command/script for extended stat. Should return a single line string. Use with caution.</li>
+<li><tt class="docutils literal">countmin</tt> (optional): minimal number of processes. A warning will be displayed if number of processes &lt; count.</li>
+<li><tt class="docutils literal">countmax</tt> (optional): maximum number of processes. A warning will be displayed if number of processes &gt; count.</li>
 </ul>
 <p>Up to 10 items can be defined.</p>
-<p>For exemple, if you want to monitor the NGinx processes on a Web server, the following definition should do the job:</p>
-<pre class="literal-block">
-[monitor]
-list_1_description=NGinx server
+<p>For example, if you want to monitor the NGINX processes on a Web server, the following definition should do the job:</p>
+<pre class="code console literal-block">
+<span class="generic output">[monitor]
+list_1_description=NGINX server
 list_1_regex=.*nginx.*
 list_1_command=nginx -v
 list_1_countmin=1
-list_1_countmax=4
+list_1_countmax=4</span>
 </pre>
 <p>If you also want to monitor the PHP-FPM daemon processes, you should add another item:</p>
-<pre class="literal-block">
-[monitor]
-list_1_description=NGinx server
+<pre class="code console literal-block">
+<span class="generic output">[monitor]
+list_1_description=NGINX server
 list_1_regex=.*nginx.*
 list_1_command=nginx -v
 list_1_countmin=1
@@ -548,7 +555,7 @@ list_1_countmax=4
 list_1_description=PHP-FPM
 list_1_regex=.*php-fpm.*
 list_1_countmin=1
-list_1_countmax=20
+list_1_countmax=20</span>
 </pre>
 </div>
 <div class="section" id="logs">
