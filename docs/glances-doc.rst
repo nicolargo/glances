@@ -219,7 +219,7 @@ The total CPU usage is displayed on the first line.
 | If user|system|nice CPU is ``>70%``, then status is set to ``"WARNING"``
 | If user|system|nice CPU is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limits values can be overwritten in the configuration file under the ``[cpu]`` section.
+*Note*: limit values can be overwritten in the configuration file under the ``[cpu]`` section.
 
 Load
 ----
@@ -241,7 +241,7 @@ The first line also display the number of CPU core.
 | If average load is ``>1*core``, then status is set to ``"WARNING"``
 | If average load is ``>5*core``, then status is set to ``"CRITICAL"``
 
-*Note*: limits values can be overwritten in the configuration file under the ``[load]`` section.
+*Note*: limit values can be overwritten in the configuration file under the ``[load]`` section.
 
 Memory
 ------
@@ -261,7 +261,7 @@ With Glances, alerts are only set for on used memory and used swap.
 | If memory is ``>70%``, then status is set to ``"WARNING"``
 | If memory is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limits values can be overwritten in the configuration file under the ``[memory]`` and ``[swap]`` sections.
+*Note*: limit values can be overwritten in the configuration file under the ``[memory]`` and ``[swap]`` sections.
 
 Network
 -------
@@ -305,7 +305,7 @@ To enable the hddtemp module:
 
 There is no alert on this information.
 
-*Note*: limits values can be overwritten in the configuration file under the ``[temperature]`` and ``[hddtemperature]`` sections.
+*Note*: limit values can be overwritten in the configuration file under the ``[temperature]`` and ``[hddtemperature]`` sections.
 
 Disk I/O
 --------
@@ -331,7 +331,7 @@ Alerts are set for used disk space:
 | If disk used is ``>70%``, then status is set to ``"WARNING"``
 | If disk used is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limits values can be overwritten in the configuration file under ``[filesystem]`` section.
+*Note*: limit values can be overwritten in the configuration file under ``[filesystem]`` section.
 
 Processes list
 --------------
@@ -353,7 +353,7 @@ Three views are available for processes:
 By default, or if you hit the ``a`` key, the processes list is automatically
 sorted by CPU of memory usage.
 
-*Note*: limits values can be overwritten in the configuration file under the ``[process]`` section.
+*Note*: limit values can be overwritten in the configuration file under the ``[process]`` section.
 
 The number of processes in the list is adapted to the screen size.
 
