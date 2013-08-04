@@ -161,22 +161,23 @@ except ImportError:
 else:
     csv_lib_tag = True
 
+# path definitions
+local_path = os.path.dirname(os.path.realpath(__file__))
+appname_path = os.path.split(sys.argv[0])[0]
+sys_prefix = os.path.dirname(os.path.realpath(appname_path))
+
 # i18n
 locale.setlocale(locale.LC_ALL, '')
 gettext_domain = __appname__
 
 # get locale directory
-base_path = os.path.dirname(os.path.realpath(__file__))
-i18n_path = os.path.join(base_path, '..', 'i18n')
-
-path_name = os.path.split(sys.argv[0])[0]
-prefix_path = os.path.dirname(os.path.realpath(path_name))
-locale_path = os.path.join(prefix_path, 'share', 'locale')
+i18n_path = os.path.join(local_path, '..', 'i18n')
+sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 
 if os.path.exists(i18n_path):
     locale_dir = i18n_path
-elif os.path.exists(locale_path):
-    locale_dir = locale_path
+elif os.path.exists(sys_i18n_path):
+    locale_dir = sys_i18n_path
 else:
     locale_dir = None
 gettext.install(gettext_domain, locale_dir)
@@ -248,17 +249,16 @@ class Config:
             * /path/to/file (via -C flag)
             * /path/to/glances/glances/conf
             * user's home directory (per-user settings)
-            * /etc directory (system-wide settings)
+            * {/usr/local,}/etc directory (system-wide settings)
         """
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        local_path = os.path.join(base_path, 'conf', self.filename)
         paths = []
+        conf_path = os.path.join(local_path, 'conf', self.filename)
 
         if self.location is not None:
             paths.append(self.location)
 
-        if os.path.exists(local_path):
-            paths.append(local_path)
+        if os.path.exists(conf_path):
+            paths.append(conf_path)
 
         if is_Linux or is_BSD:
             paths.append(os.path.join(
@@ -271,9 +271,12 @@ class Config:
 
         if is_Linux:
             paths.append(os.path.join('/etc', __appname__, self.filename))
-        elif is_BSD or is_Mac:
+        elif is_BSD:
             paths.append(os.path.join(
-                sys.prefix, '/etc', __appname__, self.filename))
+                sys.prefix, 'etc', __appname__, self.filename))
+        elif is_Mac:
+            paths.append(os.path.join(
+                sys_prefix, 'etc', __appname__, self.filename))
 
         return paths
 
@@ -3585,19 +3588,14 @@ class glancesHtml:
             * /path/to/glances/glances/data (local)
             * {/usr,/usr/local}/share/glances (system-wide)
         """
-        # get local path
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        local_path = os.path.join(base_path, 'data')
+        # get local and system-wide data paths
+        data_path = os.path.join(local_path, 'data')
+        sys_data_path = os.path.join(sys_prefix, 'share', __appname__)
 
-        # get system-wide path
-        path_name = os.path.split(sys.argv[0])[0]
-        prefix_path = os.path.dirname(os.path.abspath(path_name))
-        share_path = os.path.join(prefix_path, 'share', __appname__)
-
-        if os.path.exists(local_path):
-            work_path = local_path  # running from local directory
-        elif os.path.exists(share_path):
-            work_path = share_path  # running from system directory
+        if os.path.exists(data_path):
+            work_path = data_path
+        elif os.path.exists(sys_data_path):
+            work_path = sys_data_path
         else:
             work_path = ""
 

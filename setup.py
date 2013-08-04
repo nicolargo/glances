@@ -17,10 +17,12 @@ data_files = [
     ('share/man/man1', ['docs/man/glances.1'])
 ]
 
-if hasattr(sys, 'real_prefix') or (sys.platform in ('bsd', 'darwin')):
+if hasattr(sys, 'real_prefix') or 'bsd' in sys.platform:
     etc_path = os.path.join(sys.prefix, 'etc', 'glances')
 if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
     etc_path = os.path.join('/etc', 'glances')
+elif 'darwin' in sys.platform:
+    etc_path = os.path.join('/usr/local', 'etc', 'glances')
 data_files.append((etc_path, ['glances/conf/glances.conf']))
 
 for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
