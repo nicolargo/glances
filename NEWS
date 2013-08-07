@@ -1,8 +1,18 @@
 Version 1.7
 ===========
 
-    * ...
-
+    * Add monitored processes list
+    * Add hard disk temperature monitoring (thanks to the HDDtemp daemon)
+    * Add batteries capacities information (thanks to the Batinfo lib)
+    * Add command line argument -r toggles processes (reduce CPU usage)
+    * Add command line argument -1 to run Glances in per CPU mode
+    * Platform/architecture is more specific now
+    * XML-RPC server: Add IPv6 support for the client/server mode
+    * Add support for local conf file
+    * Add a uninstall script
+    * Add getNetTimeSinceLastUpdate() getDiskTimeSinceLastUpdate() and getProcessDiskTimeSinceLastUpdate() in the API
+    * Add more translation: Italien, Chinese
+    * and last but not least... up to 100 hundred bugs corrected / software and docs improvments
 
 Version 1.6.1
 =============
