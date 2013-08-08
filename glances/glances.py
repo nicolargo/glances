@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7RC3"
+__version__ = "1.7RC4"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -3097,16 +3097,26 @@ class glancesScreen:
                                                                   monitors.countmin(item),
                                                                   monitors.countmax(item)))
                 # Build and print optional message
-                if (monitors.command(item) != None):
-                    try:
-                        cmdret = subprocess.check_output(monitors.command(item), shell = True)
-                    except subprocess.CalledProcessError:
-                        cmdret = _("Error: ") + monitors.command(item)
-                    except:
-                        cmdret = _("Can not execute command")
-                    monitormsg2 = "{0}".format(cmdret)
-                    self.term_window.addnstr(monitor_y, self.process_x + 35,
-                                             monitormsg2, screen_x - process_x - 35)
+                if (len(monitoredlist) > 0):
+                    if (monitors.command(item) != None):
+                        # Execute the user command line
+                        try:
+                            cmdret = subprocess.check_output(monitors.command(item), shell = True)
+                        except subprocess.CalledProcessError:
+                            cmdret = _("Error: ") + monitors.command(item)
+                        except:
+                            cmdret = _("Can not execute command")
+                    else:
+                        # By default display CPU and MEM %
+                        cmdret = "CPU: {0:.1f}% / MEM: {1:.1f}%".format(
+                                    sum([p['cpu_percent'] for p in monitoredlist]),
+                                    sum([p['memory_percent'] for p in monitoredlist]))
+                else:
+                    cmdret = ""
+
+                monitormsg2 = "{0}".format(cmdret)
+                self.term_window.addnstr(monitor_y, self.process_x + 35,
+                                         monitormsg2, screen_x - process_x - 35)
 
                 # Generate log
                 logs.add(self.__getMonitoredAlert(len(monitoredlist),
