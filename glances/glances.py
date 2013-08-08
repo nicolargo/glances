@@ -1909,6 +1909,7 @@ class glancesScreen:
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
+        # stat is USER, SYSTEM or IOWAIT
         try:
             variable = (current * 100) / max
         except ZeroDivisionError:
@@ -2343,15 +2344,12 @@ class glancesScreen:
 
         # Log
         if cpu:
-            try:
-                logs.add(self.__getCpuAlert(cpu['user']), "CPU user",
-                         cpu['user'], proclist)
-                logs.add(self.__getCpuAlert(cpu['system']), "CPU system",
-                         cpu['system'], proclist)
-                logs.add(self.__getCpuAlert(cpu['iowait']), "CPU IOwait",
-                         cpu['iowait'], proclist)
-            except:
-                pass
+            logs.add(self.__getCpuAlert(cpu['user'], stat = "USER"), "CPU user",
+                     cpu['user'], proclist)
+            logs.add(self.__getCpuAlert(cpu['system'], stat = "SYSTEM"), "CPU system",
+                     cpu['system'], proclist)
+            logs.add(self.__getCpuAlert(cpu['iowait'], stat = "IOWAIT"), "CPU IOwait",
+                     cpu['iowait'], proclist)
 
         # Display per-CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
