@@ -1060,6 +1060,16 @@ class GlancesStats:
         self.process_list_sortedby = ''
         self.glancesgrabprocesses = GlancesGrabProcesses()
 
+    def __getattr__(self, name):
+        attr_list = ['Host', 'Cpu', 'PerCpu', 'Load', 'Mem', 'MemSwap']
+        get_attr_list = ['get'+attr for attr in attr_list]
+
+        if name in get_attr_list:
+            return partial(self._getModule, name[3:].lower())
+
+    def _getModule(self, name):
+        return getattr(self, name)
+
     def _init_host(self):
         self.host = {}
         self.host['os_name'] = platform.system()
@@ -1393,29 +1403,11 @@ class GlancesStats:
     def getAll(self):
         return self.all_stats
 
-    def getHost(self):
-        return self.host
-
     def getSystem(self):
         return self.host
 
-    def getCpu(self):
-        return self.cpu
-
-    def getPerCpu(self):
-        return self.percpu
-
     def getCore(self):
         return self.core_number
-
-    def getLoad(self):
-        return self.load
-
-    def getMem(self):
-        return self.mem
-
-    def getMemSwap(self):
-        return self.memswap
 
     def getNetwork(self):
         if network_tag:
@@ -1763,6 +1755,86 @@ class glancesScreen:
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
+    def __getattr__(self, name):
+        base_type = ['Mem', 'Swap', 'Fs', 'HDDTemp', 'Sensors']
+        get_alert_list = ['_glancesScreen__get' + m + 'Alert' for m in base_type]
+        base_type.extend(['Load', 'Cpu'])
+        get_color_list = ['_glancesScreen__get' + m + 'Color' for m in base_type]
+        get_color_list2 = ['_glancesScreen__get' + m + 'Color2' for m in base_type]
+
+        if name in get_alert_list:
+            return partial(self.getAlert, name[19:-5].upper())
+        elif name in get_color_list:
+            return partial(self.getColor, name[19:-5])
+        elif name in get_color_list2:
+            return partial(self.getColor2, name[19:-6])
+
+    def getColor(self, type, *args, **kwargs):
+        """
+        default: current=0, max=100, stat='', core=1
+        """
+        return self.__colors_list[getattr(
+            self, ''.join(['_glancesScreen__get', type, 'Alert']))(*args, **kwargs)]
+
+    def getColor2(self, type, *args, **kwargs):
+        """
+        default: current=0, max=100, stat='', core=1
+        """
+        return self.__colors_list2[getattr(
+            self, ''.join(['_glancesScreen__get', type, 'Alert']))(*args, **kwargs)]
+
+    def __getLoadAlert(self, current=0, core=1):
+        # If current < CAREFUL*core of max then alert = OK
+        # If current > CAREFUL*core of max then alert = CAREFUL
+        # If current > WARNING*core of max then alert = WARNING
+        # If current > CRITICAL*core of max then alert = CRITICAL
+
+        if current > limits.getLOADCritical(core):
+            return 'CRITICAL'
+        elif current > limits.getLOADWarning(core):
+            return 'WARNING'
+        elif current > limits.getLOADCareful(core):
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def __getCpuAlert(self, current=0, max=100, stat=''):
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if variable > limits.getCPUCritical(stat=stat):
+            return 'CRITICAL'
+        elif variable > limits.getCPUWarning(stat=stat):
+            return 'WARNING'
+        elif variable > limits.getCPUCareful(stat=stat):
+            return 'CAREFUL'
+
+        return 'OK'
+
+    def getAlert(self, type, current=0, max=100, stat='', core=1):
+
+        try:
+            variable = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+        if type == 'SENSORS':
+            type = 'TEMP'
+
+        if variable > getattr(limits, 'get' + type + 'Critical')():
+            return 'CRITICAL'
+        elif variable > getattr(limits, 'get' + type + 'Warning')():
+            return 'WARNING'
+        elif variable > getattr(limits, 'get' + type + 'Careful')():
+            return 'CAREFUL'
+
+        return 'OK'
+
     def setProcessSortedBy(self, sorted):
         self.__process_sortedautoflag = False
         self.__process_sortedby = sorted
@@ -1817,183 +1889,6 @@ class glancesScreen:
                 formatter = "{0:.%df}{1}" % fixed_decimal_places
                 return formatter.format(value, key)
         return "{0!s}".format(val)
-
-    def __getCpuAlert(self, current=0, max=100, stat=''):
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        try:
-            variable = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if variable > limits.getCPUCritical(stat=stat):
-            return 'CRITICAL'
-        elif variable > limits.getCPUWarning(stat=stat):
-            return 'WARNING'
-        elif variable > limits.getCPUCareful(stat=stat):
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getCpuColor(self, current=0, max=100, stat=''):
-        return self.__colors_list[self.__getCpuAlert(current, max, stat)]
-
-    def __getCpuColor2(self, current=0, max=100, stat=''):
-        return self.__colors_list2[self.__getCpuAlert(current, max, stat)]
-
-    def __getLoadAlert(self, current=0, core=1):
-        # If current < CAREFUL*core of max then alert = OK
-        # If current > CAREFUL*core of max then alert = CAREFUL
-        # If current > WARNING*core of max then alert = WARNING
-        # If current > CRITICAL*core of max then alert = CRITICAL
-
-        if current > limits.getLOADCritical(core):
-            return 'CRITICAL'
-        elif current > limits.getLOADWarning(core):
-            return 'WARNING'
-        elif current > limits.getLOADCareful(core):
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getLoadColor(self, current=0, core=1):
-        return self.__colors_list[self.__getLoadAlert(current, core)]
-
-    def __getLoadColor2(self, current=0, core=1):
-        return self.__colors_list2[self.__getLoadAlert(current, core)]
-
-    def __getMemAlert(self, current=0, max=100):
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        try:
-            variable = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if variable > limits.getMEMCritical():
-            return 'CRITICAL'
-        elif variable > limits.getMEMWarning():
-            return 'WARNING'
-        elif variable > limits.getMEMCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getMemColor(self, current=0, max=100):
-        return self.__colors_list[self.__getMemAlert(current, max)]
-
-    def __getMemColor2(self, current=0, max=100):
-        return self.__colors_list2[self.__getMemAlert(current, max)]
-
-    def __getSwapAlert(self, current=0, max=100):
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        try:
-            variable = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if variable > limits.getSWAPCritical():
-            return 'CRITICAL'
-        elif variable > limits.getSWAPWarning():
-            return 'WARNING'
-        elif variable > limits.getSWAPCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getSwapColor(self, current=0, max=100):
-        return self.__colors_list[self.__getSwapAlert(current, max)]
-
-    def __getSwapColor2(self, current=0, max=100):
-        return self.__colors_list2[self.__getSwapAlert(current, max)]
-
-    def __getFsAlert(self, current=0, max=100):
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        try:
-            variable = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if variable > limits.getSWAPCritical():
-            return 'CRITICAL'
-        elif variable > limits.getSWAPWarning():
-            return 'WARNING'
-        elif variable > limits.getSWAPCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getFsColor(self, current=0, max=100):
-        return self.__colors_list[self.__getFsAlert(current, max)]
-
-    def __getFsColor2(self, current=0, max=100):
-        return self.__colors_list2[self.__getFsAlert(current, max)]
-
-    def __getSensorsAlert(self, current=0):
-        # Alert for Sensors (temperature in degre)
-        # If current < CAREFUL then alert = OK
-        # If current > CAREFUL then alert = CAREFUL
-        # If current > WARNING then alert = WARNING
-        # If current > CRITICALthen alert = CRITICAL
-
-        if current > limits.getTEMPCritical():
-            return 'CRITICAL'
-        elif current > limits.getTEMPWarning():
-            return 'WARNING'
-        elif current > limits.getTEMPCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getSensorsColor(self, current=0):
-        """
-        Return color for Sensors temperature
-        """
-        return self.__colors_list[self.__getSensorsAlert(current)]
-
-    def __getSensorsColor2(self, current=0):
-        """
-        Return color for Sensors temperature
-        """
-        return self.__colors_list2[self.__getSensorsAlert(current)]
-
-    def __getHDDTempAlert(self, current=0):
-        # Alert for HDDTemp (temperature in degre)
-        # If current < CAREFUL then alert = OK
-        # If current > CAREFUL then alert = CAREFUL
-        # If current > WARNING then alert = WARNING
-        # If current > CRITICALthen alert = CRITICAL
-
-        if current > limits.getHDDTEMPCritical():
-            return 'CRITICAL'
-        elif current > limits.getHDDTEMPWarning():
-            return 'WARNING'
-        elif current > limits.getHDDTEMPCareful():
-            return 'CAREFUL'
-
-        return 'OK'
-
-    def __getHDDTempColor(self, current=0):
-        """
-        Return color for HDDTemp temperature
-        """
-        return self.__colors_list[self.__getHDDTempAlert(current)]
-
-    def __getHDDTempColor2(self, current=0):
-        """
-        Return color for HDDTemp temperature
-        """
-        return self.__colors_list2[self.__getHDDTempAlert(current)]
 
     def __getProcessAlert(self, current=0, max=100, stat='', core=1):
         # If current < CAREFUL of max then alert = OK
