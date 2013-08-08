@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7RC2"
+__version__ = "1.7RC3"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -3102,6 +3102,8 @@ class glancesScreen:
                         cmdret = subprocess.check_output(monitors.command(item), shell = True)
                     except subprocess.CalledProcessError:
                         cmdret = _("Error: ") + monitors.command(item)
+                    except:
+                        cmdret = _("Can not execute command")
                     monitormsg2 = "{0}".format(cmdret)
                     self.term_window.addnstr(monitor_y, self.process_x + 35,
                                              monitormsg2, screen_x - process_x - 35)
