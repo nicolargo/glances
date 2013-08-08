@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7a"
+__version__ = "1.7RC1"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -313,7 +313,7 @@ class monitorList:
     This class describes the optionnal monitored processes list
     A list of 'important' processes to monitor.
 
-    The list (Python list) is composed of items (Python dict) 
+    The list (Python list) is composed of items (Python dict)
     An item is defined (Dict keys'):
     * description: Description of the processes (max 16 chars)
     * regex: regular expression of the processes to monitor
@@ -335,7 +335,7 @@ class monitorList:
     def __setMonitorList(self, section, key):
         """
         Init the monitored processes list
-        The list is defined in the Glances configuration file 
+        The list is defined in the Glances configuration file
         """
 
         for l in range(1, self.__monitor_list_max_size + 1):
@@ -1583,7 +1583,7 @@ class GlancesStats:
                                     process[sortedby][3], reverse=sortedReverse)
             except:
                 listsorted = sorted(self.process, key=lambda process: process['cpu_percent'],
-                                    reverse=sortedReverse)                
+                                    reverse=sortedReverse)
         else:
             # Others sorts
             listsorted = sorted(self.process, key=lambda process: process[sortedby],
@@ -3011,7 +3011,7 @@ class glancesScreen:
         else:
             return 0
 
-    def displayProcess(self, processcount, processlist, 
+    def displayProcess(self, processcount, processlist,
                        sortedby='', log_count=0, core=1):
         # Process
         if not processcount:
@@ -3071,7 +3071,7 @@ class glancesScreen:
         # Monitored processes list
         #*************************
         monitor_y  = self.process_y
-        if (len(monitors) > 0 and 
+        if (len(monitors) > 0 and
             screen_y > self.process_y + 5 + len(monitors) and
             screen_x > process_x + 49):
             # Add space between process summary and monitored processes list
@@ -3087,9 +3087,9 @@ class glancesScreen:
                     monitors.description(item)[0:15],
                     len(monitoredlist) if len(monitoredlist) > 1 else "",
                     _("RUNNING") if len(monitoredlist) > 0 else _("NOT RUNNING"))
-                self.term_window.addnstr(monitor_y, self.process_x, 
+                self.term_window.addnstr(monitor_y, self.process_x,
                                          monitormsg1, screen_x - process_x,
-                                         self.__getMonitoredColor(len(monitoredlist), 
+                                         self.__getMonitoredColor(len(monitoredlist),
                                                                   monitors.countmin(item),
                                                                   monitors.countmax(item)))
                 # Build and print optional message
@@ -3099,19 +3099,19 @@ class glancesScreen:
                     except subprocess.CalledProcessError:
                         cmdret = _("Error: ") + monitors.command(item)
                     monitormsg2 = "{0}".format(cmdret)
-                    self.term_window.addnstr(monitor_y, self.process_x + 35, 
+                    self.term_window.addnstr(monitor_y, self.process_x + 35,
                                              monitormsg2, screen_x - process_x - 35)
 
                 # Generate log
-                logs.add(self.__getMonitoredAlert(len(monitoredlist), 
+                logs.add(self.__getMonitoredAlert(len(monitoredlist),
                                                   monitors.countmin(item),
-                                                  monitors.countmax(item)), 
-                         "MON_" + str(item + 1), 
-                         len(monitoredlist), 
-                         proc_list = monitoredlist, 
+                                                  monitors.countmax(item)),
+                         "MON_" + str(item + 1),
+                         len(monitoredlist),
+                         proc_list = monitoredlist,
                          proc_desc = monitors.description(item))
 
-                # Next... 
+                # Next...
                 item += 1
 
         #*****************
@@ -3219,7 +3219,7 @@ class glancesScreen:
             # How many processes are going to be displayed ?
             proc_num = min(screen_y - monitor_y - log_count - 5,
                            len(processlist))
-            
+
             # Loop to display processes
             for processes in range(0, proc_num):
                 # VMS
@@ -3936,7 +3936,7 @@ class GlancesInstance():
         return getTimeSinceLastUpdate(IOType)
 
     def getNetTimeSinceLastUpdate(self):
-        return getTimeSinceLastUpdate('net')        
+        return getTimeSinceLastUpdate('net')
 
     def getDiskTimeSinceLastUpdate(self):
         return getTimeSinceLastUpdate('net')
