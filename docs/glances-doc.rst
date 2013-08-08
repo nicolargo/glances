@@ -439,6 +439,8 @@ If you also want to monitor the PHP-FPM daemon processes, you should add another
     list_1_countmin=1
     list_1_countmax=20
 
+In the client/server mode, the list is define on the server side. A new method (getAllMonitored) is available in the API and get the JSON representation of the monitored processes list.
+
 Logs
 ----
 

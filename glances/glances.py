@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7RC1"
+__version__ = "1.7RC2"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -384,6 +384,12 @@ class monitorList:
                 return None
         else:
             return None
+
+    def getAll(self):
+        return self.__monitor_list
+
+    def setAll(self, newlist):
+        self.__monitor_list = newlist
 
     def description(self, item):
         """
@@ -3853,6 +3859,10 @@ class GlancesInstance():
         # Return all the limits
         return json.dumps(limits.getAll())
 
+    def getAllMonitored(self):
+        # Return the processes monitored list
+        return json.dumps(monitors.getAll())
+
     def getSystem(self):
         # Return operating system info
         # No need to update...
@@ -4015,6 +4025,14 @@ class GlancesClient():
             return {}
         else:
             return serverlimits
+
+    def client_get_monitored(self):
+        try:
+            servermonitored = json.loads(self.client.getAllMonitored())
+        except:
+            return []
+        else:
+            return servermonitored
 
     def client_get(self):
         try:
@@ -4344,9 +4362,6 @@ def main():
 
         # Init monitor list
         monitors = monitorList()
-        # print monitors
-        # print "*** End debug ***"
-        # sys.exit(2)
 
         # Init Logs
         logs = glancesLogs()
@@ -4379,6 +4394,11 @@ def main():
         server_limits = client.client_get_limits()
         if server_limits != {}:
             limits.setAll(server_limits)
+
+        # Set the monitored pocesses list to the server one
+        server_monitored = client.client_get_monitored()
+        if server_monitored != []:
+            monitors.setAll(server_monitored)
 
         # Start the client (CLI) loop
         while True:
