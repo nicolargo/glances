@@ -476,7 +476,7 @@ Footer
 
 Glances displays the current date & time and access to the embedded help screen.
 
-If one or mode batteries were found on your machine and if the batinfo Python lib [2]_ is installed on your system then Glances display the available percent capacity in the middle on the footer.
+If one or mode batteries were found on your machine and if the batinfo Python lib [3]_ is installed on your system then Glances display the available percent capacity in the middle on the footer.
 
 .. image:: images/battery.png
 
