@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7RC4"
+__version__ = "1.7RC5"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -687,17 +687,26 @@ class glancesLogs:
         """
 
         # Add Top process sort depending on alert type
+        sortby = 'none'
         if item_type.startswith("MEM"):
             # Sort TOP process by memory_percent
             sortby = 'memory_percent'
         elif item_type.startswith("CPU IO") and is_Linux:
             # Sort TOP process by io_counters (only for Linux OS)
             sortby = 'io_counters'
+        elif item_type.startswith("MON"):
+            # Do no sort process for monitored prcesses list
+            sortby = 'none'
         else:
             # Default TOP process sort is cpu_percent
             sortby = 'cpu_percent'
-        topprocess = sorted(proc_list, key=lambda process: process[sortby],
-                            reverse=True)
+
+        # Sort processes
+        if (sortby != 'none'):
+            topprocess = sorted(proc_list, key=lambda process: process[sortby],
+                                reverse=True)
+        else:
+            topprocess = proc_list
 
         # Add or update the log
         item_index = self.__itemexist__(item_type)
@@ -2977,11 +2986,21 @@ class glancesScreen:
                     logmark = '~'
                     logmsg += " > " + "%19s" % "___________________"
                 if log[logcount][3][:3] == "MEM":
+                    # Special display for MEMORY
                     logmsg += " {0} ({1}/{2}/{3})".format(
                         log[logcount][3],
                         self.__autoUnit(log[logcount][6]),
                         self.__autoUnit(log[logcount][5]),
                         self.__autoUnit(log[logcount][4]))
+                elif log[logcount][3][:3] == "MON":
+                    # Special display for monitored pocesses list
+                    if (log[logcount][5] == 0):
+                        logmsg += " No running process"
+                    elif (log[logcount][5] == 1):
+                        logmsg += " One running process"
+                    else:
+                        logmsg += " {0} running processes".format(
+                            self.__autoUnit(log[logcount][5]))
                 else:
                     logmsg += " {0} ({1:.1f}/{2:.1f}/{3:.1f})".format(
                         log[logcount][3], log[logcount][6],
