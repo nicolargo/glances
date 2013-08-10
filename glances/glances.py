@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7RC5"
+__version__ = "1.7RC6"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -2267,7 +2267,7 @@ class glancesScreen:
                                     diskio_count + fs_count +
                                     hddtemp_count)
         self.displayProcess(processcount, processlist, stats.getSortedBy(),
-                            log_count=log_count, core=stats.getCore())
+                            log_count=log_count, core=stats.getCore(), cs_status=cs_status)
         self.displayCaption(cs_status=cs_status)
         self.displayHelp(core=stats.getCore())
         self.displayBat(stats.getBatPercent())
@@ -3035,7 +3035,18 @@ class glancesScreen:
             return 0
 
     def displayProcess(self, processcount, processlist,
-                       sortedby='', log_count=0, core=1):
+                       sortedby='', log_count=0, core=1, 
+                       cs_status="None"):
+        """
+        Display the processese:
+        * summary
+        * monitored processes list (optionnal)
+        * processes detailed list
+        cs_status:
+            "None": standalone or server mode
+            "Connected": Client is connected to the server
+            "Disconnected": Client is disconnected from the server
+        """
         # Process
         if not processcount:
             return 0
@@ -3117,7 +3128,8 @@ class glancesScreen:
                                                                   monitors.countmax(item)))
                 # Build and print optional message
                 if (len(monitoredlist) > 0):
-                    if (monitors.command(item) != None):
+                    if (cs_status.lower() == "none"
+                        and monitors.command(item) != None):
                         # Execute the user command line
                         try:
                             cmdret = subprocess.check_output(monitors.command(item), shell = True)
