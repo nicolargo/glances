@@ -36,7 +36,7 @@ setup(
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-1.7a.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-1.7.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=['psutil>=0.4.1'],
