@@ -29,7 +29,7 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 setup(
-    name='Glances',
+    name='glances',
     version='1.7',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
