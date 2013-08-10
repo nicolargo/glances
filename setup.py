@@ -30,13 +30,13 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
 
 setup(
     name='Glances',
-    version='1.7a',
+    version='1.7',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    download_url='https://s3.amazonaws.com/glances/glances-1.7a.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-1.7a.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=['psutil>=0.4.1'],
