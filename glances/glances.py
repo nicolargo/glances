@@ -955,7 +955,11 @@ class glancesGrabHDDTemp:
                         hddtemp_current['value'] = 0                        
                     else:
                         hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
-                        hddtemp_current['value'] = int(temperature)
+                        try:
+                            hddtemp_current['value'] = int(temperature)
+                        except TypeError:
+                            hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
+                            hddtemp_current['value'] = 0
                     self.hddtemp_list.append(hddtemp_current)
 
     def get(self):
