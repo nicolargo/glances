@@ -2149,7 +2149,7 @@ class glancesScreen:
             else:
                 return 'WARNING'
         else:
-            if countmin == 0:
+            if int(countmin) == 0:
                 return 'OK'
             else:
                 return 'CRITICAL'
@@ -3157,6 +3157,9 @@ class glancesScreen:
                                     sum([p['memory_percent'] for p in monitoredlist]))
                 else:
                     cmdret = ""
+                    # cmdret = "{0} / {1} / {2}".format(len(monitoredlist),
+                    #                                   monitors.countmin(item),
+                    #                                   monitors.countmax(item))
 
                 monitormsg2 = "{0}".format(cmdret)
                 self.term_window.addnstr(monitor_y, self.process_x + 35,
