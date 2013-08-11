@@ -945,8 +945,14 @@ class glancesGrabHDDTemp:
                     hddtemp_current = {}
                     temperature = fields[offset + 3]
                     if temperature == "ERR":
-                        hddtemp_current['label'] = "hddtemp error"
+                        hddtemp_current['label'] = _("hddtemp error")
                         hddtemp_current['value'] = 0
+                    elif temperature == "SLP":
+                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is sleeping"
+                        hddtemp_current['value'] = 0                        
+                    elif temperature == "UNK":
+                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
+                        hddtemp_current['value'] = 0                        
                     else:
                         hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
                         hddtemp_current['value'] = int(temperature)
