@@ -30,7 +30,7 @@ Requirements
 Installation
 ============
 
-Pipy: The simple way
+PyPI: The simple way
 --------------------
 
 Glances is on `PyPI`_. To install, simply use `pip`_:
@@ -39,9 +39,11 @@ Glances is on `PyPI`_. To install, simply use `pip`_:
 
     pip install Glances
 
-*Note*: On Debian/Ubuntu, you need to install first the `python-dev` package.
+*Note*:
 
-*Note*: On CentOS/Fedora, you need to install first the `python-devel` package (from the EPEL repository).
+On Debian/Ubuntu, you need to install first the *python-dev* package.
+
+On CentOS/Fedora, you need to install first the *python-devel* package (from the EPEL repository).
 
 To upgrade Glances to the latest version:
 
@@ -111,16 +113,16 @@ Windows
 
 Windows only support Glances in server mode. Glances will automatically run in server mode on it.
 
-Thanks to `Nicolas Bourges`, Glances can be easily installed using a Windows installer:
+Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:
 
 - glances-1.6.1-x86.exe_ (32-bit, md5sum: 13d5be664599f80152f8f1ae47400576)
 - glances-1.6.1-x64.exe_ (64-bit, md5sum: a347ec5097d6d4d5039c7233872757a8)
 
 Otherwise, you have to follow these steps:
 
-- Install `Python for Windows`: http://www.python.org/getit/
-- Install the `psutil` library: https://code.google.com/p/psutil/downloads/list
-- Download `Glances` from here: http://nicolargo.github.io/glances/
+- Install Python for Windows: http://www.python.org/getit/
+- Install the psutil library: https://code.google.com/p/psutil/downloads/list
+- Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
 ------
@@ -134,7 +136,11 @@ To install Glances from source:
     $ cd glances-*
     # python setup.py install
 
-*Note*: On Debian/Ubuntu, you need to install first the `python-dev` package.
+*Note*:
+
+On Debian/Ubuntu, you need to install first the *python-dev* package.
+
+On CentOS/Fedora, you need to install first the *python-devel* package (from the EPEL repository).
 
 Puppet
 ------
