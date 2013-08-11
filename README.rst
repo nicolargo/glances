@@ -30,6 +30,9 @@ Requirements
 Installation
 ============
 
+Pipy: The simple way
+--------------------
+
 Glances is on `PyPI`_. To install, simply use `pip`_:
 
 .. code-block:: console
@@ -37,6 +40,14 @@ Glances is on `PyPI`_. To install, simply use `pip`_:
     pip install Glances
 
 *Note*: On Debian/Ubuntu, you need to install first the `python-dev` package.
+
+*Note*: On CentOS/Fedora, you need to install first the `python-devel` package (from the EPEL repository).
+
+To upgrade Glances to the latest version:
+
+.. code-block:: console
+
+    pip install --upgrade Glances
 
 Linux
 -----
