@@ -2149,7 +2149,10 @@ class glancesScreen:
             else:
                 return 'WARNING'
         else:
-            return 'CRITICAL'
+            if countmin == 0:
+                return 'OK'
+            else:
+                return 'CRITICAL'
 
     def __getMonitoredColor(self, nbprocess=0, countmin=1, countmax=1):
         return self.__colors_list2[self.__getMonitoredAlert(nbprocess, countmin, countmax)]
