@@ -2373,8 +2373,9 @@ class glancesScreen:
                      cpu['user'], proclist)
             logs.add(self.__getCpuAlert(cpu['system'], stat = "SYSTEM"), "CPU system",
                      cpu['system'], proclist)
-            logs.add(self.__getCpuAlert(cpu['iowait'], stat = "IOWAIT"), "CPU IOwait",
-                     cpu['iowait'], proclist)
+            if 'iowait' in cpu:
+                logs.add(self.__getCpuAlert(cpu['iowait'], stat = "IOWAIT"), "CPU IOwait",
+                        cpu['iowait'], proclist)
 
         # Display per-CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
