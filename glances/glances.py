@@ -889,7 +889,6 @@ class glancesGrabHDDTemp:
     """
     Get hddtemp stats using a socket connection
     """
-
     cache = ""
     address = "127.0.0.1"
     port = 7634
@@ -898,7 +897,6 @@ class glancesGrabHDDTemp:
         """
         Init hddtemp stats
         """
-
         try:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sck.connect((self.address, self.port))
@@ -912,7 +910,6 @@ class glancesGrabHDDTemp:
         """
         Update the stats
         """
-
         # Reset the list
         self.hddtemp_list = []
 
@@ -938,8 +935,8 @@ class glancesGrabHDDTemp:
                     else:
                         data = self.cache
                 self.cache = data
-                fields = data.split("|")
-                devices = (len(fields) - 1) / 5
+                fields = data.decode('utf-8').split("|")
+                devices = (len(fields) - 1) // 5
                 for i in range(0, devices):
                     offset = i * 5
                     hddtemp_current = {}
@@ -949,10 +946,10 @@ class glancesGrabHDDTemp:
                         hddtemp_current['value'] = 0
                     elif temperature == "SLP":
                         hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is sleeping"
-                        hddtemp_current['value'] = 0                        
+                        hddtemp_current['value'] = 0
                     elif temperature == "UNK":
                         hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
-                        hddtemp_current['value'] = 0                        
+                        hddtemp_current['value'] = 0
                     else:
                         hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
                         try:
