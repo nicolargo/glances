@@ -1,30 +1,29 @@
-.TH glances 1  "April, 2013" "version 1.7" "USER COMMANDS"
+.TH glances 1  "August, 2013" "version 1.7.1" "USER COMMANDS"
 .SH NAME
 glances \- A cross-platform curses-based monitoring tool
 .SH SYNOPSIS
 .B glances
-[\-bdehmnrsvyz] [\-B bind] [\-c server] [\-C conffile] [\-f file] [\-o output] [\-p port] [\-P password] [\-t refresh]
+[\-bdehmnrsvyz1] [\-B bind] [\-c server] [\-C conffile] [\-f file] [\-o output] [\-p port] [\-P password] [\-t refresh]
 .SH DESCRIPTION
 Glances is a free (LGPL) cross-platform curses-based monitoring tool which aims to present a maximum of information
 in a minimum of space, ideally to fit in a classical 80x24 terminal or higher to have additionnal information.
-Glances can adapt dynamically the displayed information depending on the terminal size.
-It can also work in a client/server mode for remote monitoring.
 .PP
-This tool is written in Python and uses psutil to fetch the statistical values from key elements.
+Glances can adapt dynamically the displayed information depending on the terminal size. It can also
+work in a client/server mode for remote monitoring.
 .PP
-The current version grab the following stats: CPU, Load, Memory, Network rate, Disk I/O, file system,
-process number and details.
+This tool is written in Python and uses the psutil library to fetch the statistical values from key elements,
+like CPU, load average, memory, network, disks, file systems, processes, etc.
 .SH COMMAND-LINE OPTIONS
 The command-line options are the following:
 .TP
 .B \-b
-Display network rate in Byte per second
+Display network rate in Byte per second (default: bit per second)
 .TP
 .B \-B @IP|host
-Bind server to the given IP or hostname
+Bind server to the given IPv4/IPv6 address or hostname
 .TP
 .B \-c @IP|host
-Connect to a Glances server
+Connect to a Glances server by IPv4/IPv6 address or hostname
 .TP
 .B \-C file
 Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
@@ -33,10 +32,10 @@ Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
 Disable disk I/O module
 .TP
 .B \-e
-Enable the sensors module (Linux-only)
+Enable sensors module (requires pysensors, Linux-only)
 .TP
 .B \-f file
-Set the output folder (HTML) or file (CSV)
+Set the HTML output folder or CSV file
 .TP
 .B \-h
 Display the help and exit
@@ -51,57 +50,60 @@ Disable network module
 Define additional output (available: HTML or CSV)
 .TP
 .B \-p PORT
-Define the client or server TCP port (default: 61209)
+Define the client/server TCP port (default: 61209)
 .TP
 .B \-P password
 Define a client/server password
 .TP
 .B \-r
-Do not list processes
+Disable process list (for low CPU consumption)
 .TP
 .B \-s
 Run Glances in server mode
 .TP
-.B \-t sec
-Set the refresh time in seconds (default: 3)
+.B \-t seconds
+Set refresh time in seconds (default: 3 sec)
 .TP
 .B \-v
 Display the version and exit
 .TP
 .B \-y
-Enable the hddtemp module (requires running hddtemp daemon)
+Enable hddtemp module (requires hddtemp)
 .TP
 .B \-z
 Do not use the bold color attribute
+.TP
+.B \-1
+Start Glances in per-CPU mode
 .SH INTERACTIVE COMMANDS
 You can use the following keys while in Glances:
 .TP
 .B a
-Automatic mode. The process list is sorted automatically
+Sort process list automatically
 .TP
 .B b
-Switch between bit/s or Byte/s for network IO
+Switch between bit/s or Byte/s for network I/O
 .TP
 .B c
-Sort processes by CPU%
+Sort processes by CPU usage
 .TP
 .B d
-Show/hide disk IO stats
+Show/hide disk I/O stats
 .TP
 .B f
 Show/hide file system stats
 .TP
 .B h
-Show/hide the help message
+Show/hide the help screen
 .TP
 .B i
-Sort processes by IO rate
+Sort processes by I/O rate
 .TP
 .B l
 Show/hide log messages
 .TP
 .B m
-Sort processes by MEM%
+Sort processes by MEM usage
 .TP
 .B n
 Show/hide network stats
@@ -109,14 +111,17 @@ Show/hide network stats
 .B p
 Sort processes by name
 .TP
+.B q
+Quit
+.TP
 .B s
-Show/hide sensors stats (Linux-only)
+Show/hide sensors stats (only available with -e flag)
 .TP
 .B t
-View network IO as combination
+View network I/O as combination
 .TP
 .B u
-View cumulative network IO
+View cumulative network I/O
 .TP
 .B w
 Delete finished warning log messages
@@ -124,11 +129,11 @@ Delete finished warning log messages
 .B x
 Delete finished warning and critical log messages
 .TP
+.B y
+Show/hide hddtemp stats (only available with -y flag)
+.TP
 .B 1
 Switch between global CPU and per-CPU stats
-.TP
-.B q
-Quit
 .SH EXAMPLES
 .TP
 Refresh information every 5 seconds:

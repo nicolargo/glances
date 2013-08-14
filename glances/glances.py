@@ -3541,7 +3541,7 @@ class glancesScreen:
                             [_("c"), _("Sort processes by CPU%")],
                             [_("m"), _("Sort processes by MEM%")],
                             [_("p"), _("Sort processes by name")],
-                            [_("i"), _("Sort processes by IO rate")],
+                            [_("i"), _("Sort processes by I/O rate")],
                             [_("d"), _("Show/hide disk I/O stats")],
                             [_("f"), _("Show/hide file system stats")],
                             [_("n"), _("Show/hide network stats")],
@@ -3558,14 +3558,14 @@ class glancesScreen:
                 key_table_y += 1
 
                 # key table (right column)
-                key_col_right = [[_("l"), _("Show/hide log messages")],
-                                 [_("b"), _("Bits or Bytes for network IO")],
+                key_col_right = [[_("l"), _("Show/hide logs")],
+                                 [_("b"), _("Bytes or bits for network I/O")],
                                  [_("w"), _("Delete warning logs")],
                                  [_("x"), _("Delete warning and critical logs")],
                                  [_("1"), _("Global CPU or per-CPU stats")],
-                                 [_("h"), _("Show/hide this help message")],
-                                 [_("t"), _("View network IO as combination")],
-                                 [_("u"), _("View cumulative network IO")],
+                                 [_("h"), _("Show/hide this help screen")],
+                                 [_("t"), _("View network I/O as combination")],
+                                 [_("u"), _("View cumulative network I/O")],
                                  [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
 
             key_table_x = self.help_x + 38
@@ -4110,28 +4110,28 @@ def printVersion():
 
 def printSyntax():
     printVersion()
-    print(_("Usage: glances [opt]"))
-    print(_(" with opt:"))
+    print(_("Usage: glances [options]"))
+    print(_("\nOptions:"))
     print(_("\t-b\t\tDisplay network rate in Byte per second"))
-    print(_("\t-B @IP|host\tBind server to the given IP or host NAME"))
-    print(_("\t-c @IP|host\tConnect to a Glances server"))
+    print(_("\t-B @IP|host\tBind server to the given IPv4/IPv6 address or hostname"))
+    print(_("\t-c @IP|host\tConnect to a Glances server by IPv4/IPv6 address or hostname"))
     print(_("\t-C file\t\tPath to the configuration file"))
     print(_("\t-d\t\tDisable disk I/O module"))
-    print(_("\t-e\t\tEnable the sensors module (Linux-only)"))
-    print(_("\t-f file\t\tSet the output folder (HTML) or file (CSV)"))
-    print(_("\t-h\t\tDisplay the syntax and exit"))
+    print(_("\t-e\t\tEnable sensors module"))
+    print(_("\t-f file\t\tSet the HTML output folder or CSV file"))
+    print(_("\t-h\t\tDisplay the help and exit"))
     print(_("\t-m\t\tDisable mount module"))
     print(_("\t-n\t\tDisable network module"))
     print(_("\t-o output\tDefine additional output (available: HTML or CSV)"))
-    print(_("\t-p PORT\t\tDefine the client or server TCP port (default: %d)" %
+    print(_("\t-p PORT\t\tDefine the client/server TCP port (default: %d)" %
             server_port))
-    print(_("\t-P password\tClient/server password"))
-    print(_("\t-r\t\tDo not list processes (significant CPU use reduction)"))
+    print(_("\t-P password\tDefine a client/server password"))
+    print(_("\t-r\t\tDisable process list"))
     print(_("\t-s\t\tRun Glances in server mode"))
-    print(_("\t-t sec\t\tSet the refresh time in seconds (default: %d)" %
+    print(_("\t-t seconds\tSet refresh time in seconds (default: %d sec)" %
             refresh_time))
     print(_("\t-v\t\tDisplay the version and exit"))
-    print(_("\t-y\t\tEnable the hddtemp module (needs running hddtemp daemon)"))
+    print(_("\t-y\t\tEnable hddtemp module"))
     print(_("\t-z\t\tDo not use the bold color attribute"))
     print(_("\t-1\t\tStart Glances in per CPU mode"))
 

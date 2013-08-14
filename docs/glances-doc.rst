@@ -70,7 +70,7 @@ In client/server mode, limits are set by the server side.
 
 You can also set a password to access to the server ``-P password``.
 
-Glances is ``IPv6`` compatible. Just use the ``-B ::1`` option to bind to all IPv6 addresses.
+Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to all IPv6 addresses.
 
 Command reference
 =================
@@ -78,26 +78,26 @@ Command reference
 Command-line options
 --------------------
 
--b           Display network rate in Bytes per second (default: Bits per second)
--B IP        Bind server to the given IP or hostname (IPv4 or IPv6)
--c IP        Connect to a Glances server by IP or hostname (IPv4 or IPv6)
+-b           Display network rate in Byte per second (default: bit per second)
+-B IP        Bind server to the given IPv4/IPv6 address or hostname
+-c IP        Connect to a Glances server by IPv4/IPv6 address or hostname
 -C file      Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
 -d           Disable disk I/O module
--e           Enable the sensors module (Linux-only)
--f file      Set the output folder (HTML) or file (CSV)
+-e           Enable sensors module (requires pysensors, Linux-only)
+-f file      Set the HTML output folder or CSV file
 -h           Display the help and exit
 -m           Disable mount module
 -n           Disable network module
 -o output    Define additional output (available: HTML or CSV)
--p PORT      Define the client or server TCP port (default: 61209)
+-p PORT      Define the client/server TCP port (default: 61209)
 -P password  Define a client/server password
--r           Do not list processes (for low CPU consumption)
+-r           Disable process list (for low CPU consumption)
 -s           Run Glances in server mode
--t sec       Set the refresh time in seconds (default: 3 seconds)
+-t seconds   Set refresh time in seconds (default: 3 sec)
 -v           Display the version and exit
--y           Enable the hddtemp module (needs running hddtemp daemon)
+-y           Enable hddtemp module (requires hddtemp)
 -z           Do not use the bold color attribute
--1           Start Glances in per CPU mode
+-1           Start Glances in per-CPU mode
 
 Interactive commands
 --------------------
@@ -106,45 +106,47 @@ The following commands (key pressed) are supported while in Glances:
 
 
 ``a``
-    Automatic mode. The processes are sorted automatically.
+    Sort process list automatically
 
-    - If CPU iowait ``>60%``, sort processes by IO read and write
+    - If CPU iowait ``>60%``, sort processes by I/O read and write
     - If CPU ``>70%``, sort processes by CPU usage
     - If MEM ``>70%``, sort processes by memory usage
 ``b``
-    Switch between bit/s or Byte/s for network IO
+    Switch between bit/s or Byte/s for network I/O
 ``c``
-    Sort processes by CPU%
+    Sort processes by CPU usage
 ``d``
     Show/hide disk I/O stats
 ``f``
     Show/hide file system stats
 ``h``
-    Show/hide the help message (with the keys you can press and the limits)
+    Show/hide the help screen
 ``i``
-    Sort processes by IO rate (need root account on some OS)
+    Sort processes by I/O rate (may need root privileges on some OSes)
 ``l``
     Show/hide log messages
 ``m``
-    Sort processes by MEM%
+    Sort processes by MEM usage
 ``n``
     Show/hide network stats
 ``p``
     Sort processes by name
+``q``
+    Quit
 ``s``
-    Show/hide sensors stats (only available with -e flag; pysensors library is needed; Linux-only)
+    Show/hide sensors stats (only available with -e flag)
 ``t``
-    View network IO as combination
+    View network I/O as combination
 ``u``
-    View cumulative network IO
+    View cumulative network I/O
 ``w``
     Delete finished warning log messages
 ``x``
     Delete finished warning and critical log messages
+``y``
+    Show/hide hddtemp stats (only available with -y flag)
 ``1``
     Switch between global CPU and per-CPU stats
-``q``
-    Quit
 
 Configuration
 =============
@@ -476,7 +478,7 @@ Footer
 
 Glances displays the current date & time and access to the embedded help screen.
 
-If one or mode batteries were found on your machine and if the batinfo Python lib [3]_ is installed on your system then Glances display the available percent capacity in the middle on the footer.
+If one or mode batteries were found on your machine and if the batinfo Python library [3]_ is installed on your system then Glances displays the available percent capacity in the middle on the footer.
 
 .. image:: images/battery.png
 
