@@ -1,6 +1,5 @@
-.. image:: https://badge.fury.io/py/glances.png
-    :target: http://badge.fury.io/py/glances
-    :alt: Latest version
+.. image:: https://badge.fury.io/py/Glances.png
+    :target: http://badge.fury.io/py/Glances
 .. image:: https://api.flattr.com/button/flattr-badge-large.png
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
