@@ -96,9 +96,10 @@ except ImportError:
     sys.exit(1)
 
 psutil_version = tuple([int(num) for num in psutil.__version__.split('.')])
-if psutil_version < (0, 4, 1):
+# this is not a mistake: psutil 0.5.1 is detected as 0.5.0
+if psutil_version < (0, 5, 0):
     print(_('PsUtil version %s detected.') % psutil.__version__)
-    print(_('PsUtil 0.4.1 or higher is needed. Glances cannot start.'))
+    print(_('PsUtil 0.5.1 or higher is needed. Glances cannot start.'))
     sys.exit(1)
 
 try:
@@ -995,12 +996,7 @@ class GlancesGrabProcesses:
         procstat['status'] = str(proc.status)[:1].upper()
         procstat['cpu_times'] = proc.get_cpu_times()
         procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
-
-        if hasattr(proc, 'get_nice'):
-            # deprecated in psutil 0.5.0+
-            procstat['nice'] = proc.get_nice()
-        elif hasattr(proc, 'nice'):
-            procstat['nice'] = proc.nice
+        procstat['nice'] = proc.get_nice()
 
         # procstat['io_counters'] is a list:
         # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]

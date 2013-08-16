@@ -39,11 +39,11 @@ setup(
     # download_url='https://s3.amazonaws.com/glances/glances-1.7.1.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
-    install_requires=['psutil>=0.4.1'],
+    install_requires=['psutil>=0.5.1'],
     extras_require={
-        'HTML': ['jinja2>=2.0'],
-        'SENSORS': ['pysensors>=0.0.2'],
-        'BATINFO': ['batinfo>=0.1.3']
+        'HTML': ['jinja2'],
+        'SENSORS': ['pysensors'],
+        'BATINFO': ['batinfo']
     },
     packages=['glances'],
     include_package_data=True,
