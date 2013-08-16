@@ -85,21 +85,21 @@ if not is_Windows:
         import curses
         import curses.panel
     except ImportError:
-        print(_('Curses module not found. Glances cannot start.'))
+        print('Curses module not found. Glances cannot start.')
         sys.exit(1)
 
 try:
     # psutil is the main library used to grab stats
     import psutil
 except ImportError:
-    print(_('PsUtil module not found. Glances cannot start.'))
+    print('PsUtil module not found. Glances cannot start.')
     sys.exit(1)
 
 psutil_version = tuple([int(num) for num in psutil.__version__.split('.')])
 # this is not a mistake: psutil 0.5.1 is detected as 0.5.0
 if psutil_version < (0, 5, 0):
-    print(_('PsUtil version %s detected.') % psutil.__version__)
-    print(_('PsUtil 0.5.1 or higher is needed. Glances cannot start.'))
+    print('PsUtil version %s detected.' % psutil.__version__)
+    print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
 try:
