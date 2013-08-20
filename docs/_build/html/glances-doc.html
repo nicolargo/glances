@@ -1,0 +1,646 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Glances &mdash; Glances 1.7.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Glances 1.7.1 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to Glances’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Glances’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Glances 1.7.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="glances">
+<h1><a class="toc-backref" href="#id7">Glances</a><a class="headerlink" href="#glances" title="Permalink to this headline">¶</a></h1>
+<p>This manual describes <em>Glances</em> version 1.7.1.</p>
+<p>Copyright © 2012-2013 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#37;&#52;&#48;nicolargo&#46;com">nicolas<span>&#64;</span>nicolargo<span>&#46;</span>com</a>&gt;</p>
+<p>August 2013</p>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#glances" id="id7">Glances</a><ul>
+<li><a class="reference internal" href="#introduction" id="id8">Introduction</a></li>
+<li><a class="reference internal" href="#usage" id="id9">Usage</a><ul>
+<li><a class="reference internal" href="#standalone-mode" id="id10">Standalone mode</a></li>
+<li><a class="reference internal" href="#client-server-mode" id="id11">Client/Server mode</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#command-reference" id="id12">Command reference</a><ul>
+<li><a class="reference internal" href="#command-line-options" id="id13">Command-line options</a></li>
+<li><a class="reference internal" href="#interactive-commands" id="id14">Interactive commands</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration" id="id15">Configuration</a></li>
+<li><a class="reference internal" href="#anatomy-of-the-application" id="id16">Anatomy of the application</a><ul>
+<li><a class="reference internal" href="#legend" id="id17">Legend</a></li>
+<li><a class="reference internal" href="#header" id="id18">Header</a></li>
+<li><a class="reference internal" href="#cpu" id="id19">CPU</a></li>
+<li><a class="reference internal" href="#load" id="id20">Load</a></li>
+<li><a class="reference internal" href="#memory" id="id21">Memory</a></li>
+<li><a class="reference internal" href="#network" id="id22">Network</a></li>
+<li><a class="reference internal" href="#sensors" id="id23">Sensors</a></li>
+<li><a class="reference internal" href="#disk-i-o" id="id24">Disk I/O</a></li>
+<li><a class="reference internal" href="#file-system" id="id25">File system</a></li>
+<li><a class="reference internal" href="#processes-list" id="id26">Processes list</a></li>
+<li><a class="reference internal" href="#monitored-processes-list" id="id27">Monitored processes list</a></li>
+<li><a class="reference internal" href="#logs" id="id28">Logs</a></li>
+<li><a class="reference internal" href="#footer" id="id29">Footer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-documentation" id="id30">API documentation</a></li>
+<li><a class="reference internal" href="#support" id="id31">Support</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id8">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Glances is a cross-platform curses-based monitoring tool which aims to
+present a maximum of information in a minimum of space, ideally to fit
+in a classical 80x24 terminal or higher to have additional information.</p>
+<p>Glances can adapt dynamically the displayed information depending on the
+terminal size. It can also work in a client/server mode for remote monitoring.</p>
+<p>Glances is written in Python and uses the <a class="reference external" href="https://code.google.com/p/psutil/">psutil</a> library to get information from your system.</p>
+<p>Console (80x24)</p>
+<img alt="_images/screenshot.png" src="_images/screenshot.png" />
+<p>Full view (&gt;80x24)</p>
+<img alt="_images/screenshot-wide.png" src="_images/screenshot-wide.png" />
+</div>
+<div class="section" id="usage">
+<h2><a class="toc-backref" href="#id9">Usage</a><a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="standalone-mode">
+<h3><a class="toc-backref" href="#id10">Standalone mode</a><a class="headerlink" href="#standalone-mode" title="Permalink to this headline">¶</a></h3>
+<p>Simply run:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> glances
+</pre></div>
+</div>
+</div>
+<div class="section" id="client-server-mode">
+<h3><a class="toc-backref" href="#id11">Client/Server mode</a><a class="headerlink" href="#client-server-mode" title="Permalink to this headline">¶</a></h3>
+<p>If you want to remotely monitor a machine, called <tt class="docutils literal"><span class="pre">server</span></tt>, from another one, called <tt class="docutils literal"><span class="pre">client</span></tt>,
+just run on the server:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">server$ glances -s</span>
+</pre></div>
+</div>
+<p>and on the client:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">client$ glances -c @server</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">&#64;server</span></tt> is the IP address or hostname of the server.</p>
+<p>In server mode, you can set the bind address <tt class="docutils literal"><span class="pre">-B</span> <span class="pre">ADDRESS</span></tt> and listening TCP port <tt class="docutils literal"><span class="pre">-p</span> <span class="pre">PORT</span></tt>.</p>
+<p>In client mode, you can set the TCP port of the server <tt class="docutils literal"><span class="pre">-p</span> <span class="pre">PORT</span></tt>.</p>
+<p>Default binding address is <tt class="docutils literal"><span class="pre">0.0.0.0</span></tt> (Glances will listen on all the network interfaces) and TCP port is <tt class="docutils literal"><span class="pre">61209</span></tt>.</p>
+<p>In client/server mode, limits are set by the server side.</p>
+<p>You can also set a password to access to the server <tt class="docutils literal"><span class="pre">-P</span> <span class="pre">password</span></tt>.</p>
+<p>Glances is <tt class="docutils literal"><span class="pre">IPv6</span></tt> compatible. Just use the <tt class="docutils literal"><span class="pre">-B</span> <span class="pre">::</span></tt> option to bind to all IPv6 addresses.</p>
+</div>
+</div>
+<div class="section" id="command-reference">
+<h2><a class="toc-backref" href="#id12">Command reference</a><a class="headerlink" href="#command-reference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="command-line-options">
+<h3><a class="toc-backref" href="#id13">Command-line options</a><a class="headerlink" href="#command-line-options" title="Permalink to this headline">¶</a></h3>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-b</span></kbd></td>
+<td>Display network rate in Byte per second (default: bit per second)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-B <var>IP</var></span></kbd></td>
+<td>Bind server to the given IPv4/IPv6 address or hostname</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-c <var>IP</var></span></kbd></td>
+<td>Connect to a Glances server by IPv4/IPv6 address or hostname</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-C <var>file</var></span></kbd></td>
+<td>Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-d</span></kbd></td>
+<td>Disable disk I/O module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-e</span></kbd></td>
+<td>Enable sensors module (requires pysensors, Linux-only)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-f <var>file</var></span></kbd></td>
+<td>Set the HTML output folder or CSV file</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-h</span></kbd></td>
+<td>Display the help and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-m</span></kbd></td>
+<td>Disable mount module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-n</span></kbd></td>
+<td>Disable network module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-o <var>output</var></span></kbd></td>
+<td>Define additional output (available: HTML or CSV)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p <var>PORT</var></span></kbd></td>
+<td>Define the client/server TCP port (default: 61209)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-P <var>password</var></span></kbd></td>
+<td>Define a client/server password</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span></kbd></td>
+<td>Disable process list (for low CPU consumption)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span></kbd></td>
+<td>Run Glances in server mode</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-t <var>seconds</var></span></kbd></td>
+<td>Set refresh time in seconds (default: 3 sec)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-v</span></kbd></td>
+<td>Display the version and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-y</span></kbd></td>
+<td>Enable hddtemp module (requires hddtemp)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-z</span></kbd></td>
+<td>Do not use the bold color attribute</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-1</span></kbd></td>
+<td>Start Glances in per-CPU mode</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interactive-commands">
+<h3><a class="toc-backref" href="#id14">Interactive commands</a><a class="headerlink" href="#interactive-commands" title="Permalink to this headline">¶</a></h3>
+<p>The following commands (key pressed) are supported while in Glances:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">a</span></tt></dt>
+<dd><p class="first">Sort process list automatically</p>
+<ul class="last simple">
+<li>If CPU iowait <tt class="docutils literal"><span class="pre">&gt;60%</span></tt>, sort processes by I/O read and write</li>
+<li>If CPU <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, sort processes by CPU usage</li>
+<li>If MEM <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, sort processes by memory usage</li>
+</ul>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">b</span></tt></dt>
+<dd>Switch between bit/s or Byte/s for network I/O</dd>
+<dt><tt class="docutils literal"><span class="pre">c</span></tt></dt>
+<dd>Sort processes by CPU usage</dd>
+<dt><tt class="docutils literal"><span class="pre">d</span></tt></dt>
+<dd>Show/hide disk I/O stats</dd>
+<dt><tt class="docutils literal"><span class="pre">f</span></tt></dt>
+<dd>Show/hide file system stats</dd>
+<dt><tt class="docutils literal"><span class="pre">h</span></tt></dt>
+<dd>Show/hide the help screen</dd>
+<dt><tt class="docutils literal"><span class="pre">i</span></tt></dt>
+<dd>Sort processes by I/O rate (may need root privileges on some OSes)</dd>
+<dt><tt class="docutils literal"><span class="pre">l</span></tt></dt>
+<dd>Show/hide log messages</dd>
+<dt><tt class="docutils literal"><span class="pre">m</span></tt></dt>
+<dd>Sort processes by MEM usage</dd>
+<dt><tt class="docutils literal"><span class="pre">n</span></tt></dt>
+<dd>Show/hide network stats</dd>
+<dt><tt class="docutils literal"><span class="pre">p</span></tt></dt>
+<dd>Sort processes by name</dd>
+<dt><tt class="docutils literal"><span class="pre">q</span></tt></dt>
+<dd>Quit</dd>
+<dt><tt class="docutils literal"><span class="pre">s</span></tt></dt>
+<dd>Show/hide sensors stats (only available with -e flag)</dd>
+<dt><tt class="docutils literal"><span class="pre">t</span></tt></dt>
+<dd>View network I/O as combination</dd>
+<dt><tt class="docutils literal"><span class="pre">u</span></tt></dt>
+<dd>View cumulative network I/O</dd>
+<dt><tt class="docutils literal"><span class="pre">w</span></tt></dt>
+<dd>Delete finished warning log messages</dd>
+<dt><tt class="docutils literal"><span class="pre">x</span></tt></dt>
+<dd>Delete finished warning and critical log messages</dd>
+<dt><tt class="docutils literal"><span class="pre">y</span></tt></dt>
+<dd>Show/hide hddtemp stats (only available with -y flag)</dd>
+<dt><tt class="docutils literal"><span class="pre">1</span></tt></dt>
+<dd>Switch between global CPU and per-CPU stats</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2><a class="toc-backref" href="#id15">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>No configuration file is mandatory to use Glances.</p>
+<p>Furthermore a configuration file is needed for setup limits and/or monitored processes list.</p>
+<p>By default, the configuration file is under:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">/etc/glances/glances.conf (Linux)</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">/usr/local/etc/glances/glances.conf (*BSD and OS X)</span>
+</pre></div>
+</div>
+<p>To override the default configuration, you can copy the <tt class="docutils literal"><span class="pre">glances.conf</span></tt> file to
+your <tt class="docutils literal"><span class="pre">$XDG_CONFIG_HOME</span></tt> directory (e.g. Linux):</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">mkdir -p $XDG_CONFIG_HOME/glances</span>
+<span class="go">cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
+</pre></div>
+</div>
+<p>On OS X, you should copy the configuration file to <tt class="docutils literal"><span class="pre">~/Library/Application</span> <span class="pre">Support/glances/</span></tt>.</p>
+</div>
+<div class="section" id="anatomy-of-the-application">
+<h2><a class="toc-backref" href="#id16">Anatomy of the application</a><a class="headerlink" href="#anatomy-of-the-application" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="legend">
+<h3><a class="toc-backref" href="#id17">Legend</a><a class="headerlink" href="#legend" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><tt class="docutils literal"><span class="pre">GREEN</span></tt> stat counter is <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">BLUE</span></tt> stat counter is <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">MAGENTA</span></tt> stat counter is <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">RED</span></tt> stat counter is <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+</div>
+<div class="section" id="header">
+<h3><a class="toc-backref" href="#id18">Header</a><a class="headerlink" href="#header" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/header.png" src="_images/header.png" />
+<p>The header shows the OS name, release version, platform architecture and the hostname.
+On Linux, it shows also the kernel version.</p>
+</div>
+<div class="section" id="cpu">
+<h3><a class="toc-backref" href="#id19">CPU</a><a class="headerlink" href="#cpu" title="Permalink to this headline">¶</a></h3>
+<p>Short view:</p>
+<img alt="_images/cpu.png" src="_images/cpu.png" />
+<p>If enough horizontal space is available, extended CPU informations are displayed.</p>
+<p>Extended view:</p>
+<img alt="_images/cpu-wide.png" src="_images/cpu-wide.png" />
+<p>To switch to per-CPU stats, just hit the <tt class="docutils literal"><span class="pre">1</span></tt> key:</p>
+<img alt="_images/per-cpu.png" src="_images/per-cpu.png" />
+<p>The CPU stats are shown as a percentage and for the configured refresh time.
+The total CPU usage is displayed on the first line.</p>
+<div class="line-block">
+<div class="line">If user|system|nice CPU is <tt class="docutils literal"><span class="pre">&lt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If user|system|nice CPU is <tt class="docutils literal"><span class="pre">&gt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line">If user|system|nice CPU is <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line">If user|system|nice CPU is <tt class="docutils literal"><span class="pre">&gt;90%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under the <tt class="docutils literal"><span class="pre">[cpu]</span></tt> section.</p>
+</div>
+<div class="section" id="load">
+<h3><a class="toc-backref" href="#id20">Load</a><a class="headerlink" href="#load" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/load.png" src="_images/load.png" />
+<p>On the <em>No Sheep</em> blog, <em>Zachary Tirrell</em> defines the average load <a class="footnote-reference" href="#id4" id="id1">[1]</a>:</p>
+<blockquote>
+<div>&#8220;In short it is the average sum of the number of processes
+waiting in the run-queue plus the number currently executing
+over 1, 5, and 15 minute time periods.&#8221;</div></blockquote>
+<p>Glances gets the number of CPU core to adapt the alerts.
+Alerts on average load are only set on 5 and 15 min.
+The first line also display the number of CPU core.</p>
+<div class="line-block">
+<div class="line">If average load is <tt class="docutils literal"><span class="pre">&lt;0.7*core</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If average load is <tt class="docutils literal"><span class="pre">&gt;0.7*core</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line">If average load is <tt class="docutils literal"><span class="pre">&gt;1*core</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line">If average load is <tt class="docutils literal"><span class="pre">&gt;5*core</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under the <tt class="docutils literal"><span class="pre">[load]</span></tt> section.</p>
+</div>
+<div class="section" id="memory">
+<h3><a class="toc-backref" href="#id21">Memory</a><a class="headerlink" href="#memory" title="Permalink to this headline">¶</a></h3>
+<p>Glances uses two columns: one for the <tt class="docutils literal"><span class="pre">RAM</span></tt> and another one for the <tt class="docutils literal"><span class="pre">Swap</span></tt>.</p>
+<img alt="_images/mem.png" src="_images/mem.png" />
+<p>If enough space is available, Glances displays extended informations:</p>
+<img alt="_images/mem-wide.png" src="_images/mem-wide.png" />
+<p>With Glances, alerts are only set for on used memory and used swap.</p>
+<div class="line-block">
+<div class="line">If memory is <tt class="docutils literal"><span class="pre">&lt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If memory is <tt class="docutils literal"><span class="pre">&gt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line">If memory is <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line">If memory is <tt class="docutils literal"><span class="pre">&gt;90%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under the <tt class="docutils literal"><span class="pre">[memory]</span></tt> and <tt class="docutils literal"><span class="pre">[swap]</span></tt> sections.</p>
+</div>
+<div class="section" id="network">
+<h3><a class="toc-backref" href="#id22">Network</a><a class="headerlink" href="#network" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/network.png" src="_images/network.png" />
+<p>Glances displays the network interface bit rate. The unit is adapted
+dynamically (bits per second, kbits per second, Mbits per second, etc).</p>
+<p>Alerts are only set if the network interface maximum speed is available.</p>
+<p>For example, on a 100 Mbps ethernet interface, the warning status is set
+if the bit rate is higher than 70 Mbps.</p>
+<div class="line-block">
+<div class="line">If bit rate is <tt class="docutils literal"><span class="pre">&lt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If bit rate is <tt class="docutils literal"><span class="pre">&gt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line">If bit rate is <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line">If bit rate is <tt class="docutils literal"><span class="pre">&gt;90%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+</div>
+<div class="section" id="sensors">
+<h3><a class="toc-backref" href="#id23">Sensors</a><a class="headerlink" href="#sensors" title="Permalink to this headline">¶</a></h3>
+<p>Glances can displays the sensors informations trough <cite>lm-sensors</cite> (only
+available on Linux). As of lm-sensors, a filter is processed in order to display temperature only:</p>
+<img alt="_images/sensors.png" src="_images/sensors.png" />
+<p>Glances can also grab hard disk temperature through the <cite>hddtemp</cite> daemon (see here <a class="footnote-reference" href="#id5" id="id2">[2]</a> to install hddtemp on your system):</p>
+<img alt="_images/hddtemp.png" src="_images/hddtemp.png" />
+<p>To enable the lm-sensors module:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> glances -e
+</pre></div>
+</div>
+<p>To enable the hddtemp module:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> glances -y
+</pre></div>
+</div>
+<p>There is no alert on this information.</p>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under the <tt class="docutils literal"><span class="pre">[temperature]</span></tt> and <tt class="docutils literal"><span class="pre">[hddtemperature]</span></tt> sections.</p>
+</div>
+<div class="section" id="disk-i-o">
+<h3><a class="toc-backref" href="#id24">Disk I/O</a><a class="headerlink" href="#disk-i-o" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/diskio.png" src="_images/diskio.png" />
+<p>Glances displays the disk I/O throughput. The unit is adapted dynamically.</p>
+<p><em>Note</em>: There is no alert on this information.</p>
+</div>
+<div class="section" id="file-system">
+<h3><a class="toc-backref" href="#id25">File system</a><a class="headerlink" href="#file-system" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/fs.png" src="_images/fs.png" />
+<p>Glances displays the used and total file system disk space. The unit is
+adapted dynamically.</p>
+<p>Alerts are set for used disk space:</p>
+<div class="line-block">
+<div class="line">If disk used is <tt class="docutils literal"><span class="pre">&lt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If disk used is <tt class="docutils literal"><span class="pre">&gt;50%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CAREFUL&quot;</span></tt></div>
+<div class="line">If disk used is <tt class="docutils literal"><span class="pre">&gt;70%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+<div class="line">If disk used is <tt class="docutils literal"><span class="pre">&gt;90%</span></tt>, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+</div>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under <tt class="docutils literal"><span class="pre">[filesystem]</span></tt> section.</p>
+</div>
+<div class="section" id="processes-list">
+<h3><a class="toc-backref" href="#id26">Processes list</a><a class="headerlink" href="#processes-list" title="Permalink to this headline">¶</a></h3>
+<p>Compact view:</p>
+<img alt="_images/processlist.png" src="_images/processlist.png" />
+<p>Full view:</p>
+<img alt="_images/processlist-wide.png" src="_images/processlist-wide.png" />
+<p>Three views are available for processes:</p>
+<ul class="simple">
+<li>Processes summary</li>
+<li>Optional monitored processes list (new in 1.7)</li>
+<li>Processes list</li>
+</ul>
+<p>By default, or if you hit the <tt class="docutils literal"><span class="pre">a</span></tt> key, the processes list is automatically
+sorted by CPU of memory usage.</p>
+<p><em>Note</em>: limit values can be overwritten in the configuration file under the <tt class="docutils literal"><span class="pre">[process]</span></tt> section.</p>
+<p>The number of processes in the list is adapted to the screen size.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">VIRT</span></tt></dt>
+<dd>Virtual memory size</dd>
+<dt><tt class="docutils literal"><span class="pre">RES</span></tt></dt>
+<dd>Resident memory</dd>
+<dt><tt class="docutils literal"><span class="pre">CPU%</span></tt></dt>
+<dd>% of CPU used by the process</dd>
+<dt><tt class="docutils literal"><span class="pre">MEM%</span></tt></dt>
+<dd>% of MEM used by the process</dd>
+<dt><tt class="docutils literal"><span class="pre">PID</span></tt></dt>
+<dd>Process ID</dd>
+<dt><tt class="docutils literal"><span class="pre">USER</span></tt></dt>
+<dd>User ID per process</dd>
+<dt><tt class="docutils literal"><span class="pre">NI</span></tt></dt>
+<dd>Nice level of the process</dd>
+<dt><tt class="docutils literal"><span class="pre">S</span></tt></dt>
+<dd>Process status</dd>
+<dt><tt class="docutils literal"><span class="pre">TIME+</span></tt></dt>
+<dd>Cumulative CPU time used</dd>
+<dt><tt class="docutils literal"><span class="pre">IOR/s</span></tt></dt>
+<dd>Per process IO read rate (in Byte/s)</dd>
+<dt><tt class="docutils literal"><span class="pre">IOW/s</span></tt></dt>
+<dd>Per process IO write rate (in Byte/s)</dd>
+<dt><tt class="docutils literal"><span class="pre">NAME</span></tt></dt>
+<dd>Process name or command line</dd>
+</dl>
+<p>Process status legend:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">R</span></tt></dt>
+<dd>running</dd>
+<dt><tt class="docutils literal"><span class="pre">S</span></tt></dt>
+<dd>sleeping (may be interrupted)</dd>
+<dt><tt class="docutils literal"><span class="pre">D</span></tt></dt>
+<dd>disk sleep (may not be interrupted)</dd>
+<dt><tt class="docutils literal"><span class="pre">T</span></tt></dt>
+<dd>traced/stopped</dd>
+<dt><tt class="docutils literal"><span class="pre">Z</span></tt></dt>
+<dd>zombie</dd>
+</dl>
+</div>
+<div class="section" id="monitored-processes-list">
+<h3><a class="toc-backref" href="#id27">Monitored processes list</a><a class="headerlink" href="#monitored-processes-list" title="Permalink to this headline">¶</a></h3>
+<p>New in version 1.7. Optional.</p>
+<p>The monitored processes list allows user, through the configuration file,
+to group processes and quickly show if the number of running process is not good.</p>
+<img alt="_images/monitored.png" src="_images/monitored.png" />
+<p>Each item is defined by:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">description</span></tt>: description of the processes (max 16 chars).</li>
+<li><tt class="docutils literal"><span class="pre">regex</span></tt>: regular expression of the processes to monitor.</li>
+<li><tt class="docutils literal"><span class="pre">command</span></tt> (optional): full path to shell command/script for extended stat. Should return a single line string. Use with caution.</li>
+<li><tt class="docutils literal"><span class="pre">countmin</span></tt> (optional): minimal number of processes. A warning will be displayed if number of processes &lt; count.</li>
+<li><tt class="docutils literal"><span class="pre">countmax</span></tt> (optional): maximum number of processes. A warning will be displayed if number of processes &gt; count.</li>
+</ul>
+<p>Up to 10 items can be defined.</p>
+<p>For example, if you want to monitor the NGINX processes on a Web server, the following definition should do the job:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">[monitor]</span>
+<span class="go">list_1_description=NGINX server</span>
+<span class="go">list_1_regex=.*nginx.*</span>
+<span class="go">list_1_command=nginx -v</span>
+<span class="go">list_1_countmin=1</span>
+<span class="go">list_1_countmax=4</span>
+</pre></div>
+</div>
+<p>If you also want to monitor the PHP-FPM daemon processes, you should add another item:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">[monitor]</span>
+<span class="go">list_1_description=NGINX server</span>
+<span class="go">list_1_regex=.*nginx.*</span>
+<span class="go">list_1_command=nginx -v</span>
+<span class="go">list_1_countmin=1</span>
+<span class="go">list_1_countmax=4</span>
+<span class="go">list_1_description=PHP-FPM</span>
+<span class="go">list_1_regex=.*php-fpm.*</span>
+<span class="go">list_1_countmin=1</span>
+<span class="go">list_1_countmax=20</span>
+</pre></div>
+</div>
+<p>In the client/server mode, the list is define on the server side. A new method (getAllMonitored) is available in the API and get the JSON representation of the monitored processes list.</p>
+<p>Alerts are set following:</p>
+<div class="line-block">
+<div class="line">If number of processes is 0, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
+<div class="line">If number of processes is min &lt; curent &lt; max, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">Else status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
+</div>
+</div>
+<div class="section" id="logs">
+<h3><a class="toc-backref" href="#id28">Logs</a><a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/logs.png" src="_images/logs.png" />
+<p>A log messages list is displayed in the bottom of the screen if (and only if):</p>
+<ul class="simple">
+<li>at least one <tt class="docutils literal"><span class="pre">WARNING</span></tt> or <tt class="docutils literal"><span class="pre">CRITICAL</span></tt> alert was occurred</li>
+<li>space is available in the bottom of the console/terminal</li>
+</ul>
+<p>Each alert message displays the following information:</p>
+<ol class="arabic simple">
+<li>start date</li>
+<li>end date</li>
+<li>alert name</li>
+<li>{min/avg/max} values or number of running pocesses for monitored processes list alerts</li>
+</ol>
+</div>
+<div class="section" id="footer">
+<h3><a class="toc-backref" href="#id29">Footer</a><a class="headerlink" href="#footer" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/footer.png" src="_images/footer.png" />
+<p>Glances displays the current date &amp; time and access to the embedded help screen.</p>
+<p>If one or mode batteries were found on your machine and if the batinfo Python library <a class="footnote-reference" href="#id6" id="id3">[3]</a> is installed on your system then Glances displays the available percent capacity in the middle on the footer.</p>
+<img alt="_images/battery.png" src="_images/battery.png" />
+<p>If you have ran Glances in client mode <tt class="docutils literal"><span class="pre">-c</span></tt>, you can also see if the client is connected to the server.</p>
+<p>If client is connected:</p>
+<img alt="_images/client-connected.png" src="_images/client-connected.png" />
+<p>else:</p>
+<img alt="_images/client-disconnected.png" src="_images/client-disconnected.png" />
+<p>On the left, you can easily see if you are connected to a Glances server.</p>
+</div>
+</div>
+<div class="section" id="api-documentation">
+<h2><a class="toc-backref" href="#id30">API documentation</a><a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h2>
+<p>Glances uses a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and can be used by another client software.</p>
+<p>API documentation is available at <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To">https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To</a></p>
+</div>
+<div class="section" id="support">
+<h2><a class="toc-backref" href="#id31">Support</a><a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>To report a bug or a feature request use the bug tracking system at <a class="reference external" href="https://github.com/nicolargo/glances/issues">https://github.com/nicolargo/glances/issues</a></p>
+<p>Feel free to contribute!</p>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://nosheep.net/story/defining-unix-load-average/">http://nosheep.net/story/defining-unix-load-average/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="http://www.cyberciti.biz/tips/howto-monitor-hard-drive-temperature.html">http://www.cyberciti.biz/tips/howto-monitor-hard-drive-temperature.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="https://github.com/nicolargo/batinfo">https://github.com/nicolargo/batinfo</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Glances</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#standalone-mode">Standalone mode</a></li>
+<li><a class="reference internal" href="#client-server-mode">Client/Server mode</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#command-reference">Command reference</a><ul>
+<li><a class="reference internal" href="#command-line-options">Command-line options</a></li>
+<li><a class="reference internal" href="#interactive-commands">Interactive commands</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#anatomy-of-the-application">Anatomy of the application</a><ul>
+<li><a class="reference internal" href="#legend">Legend</a></li>
+<li><a class="reference internal" href="#header">Header</a></li>
+<li><a class="reference internal" href="#cpu">CPU</a></li>
+<li><a class="reference internal" href="#load">Load</a></li>
+<li><a class="reference internal" href="#memory">Memory</a></li>
+<li><a class="reference internal" href="#network">Network</a></li>
+<li><a class="reference internal" href="#sensors">Sensors</a></li>
+<li><a class="reference internal" href="#disk-i-o">Disk I/O</a></li>
+<li><a class="reference internal" href="#file-system">File system</a></li>
+<li><a class="reference internal" href="#processes-list">Processes list</a></li>
+<li><a class="reference internal" href="#monitored-processes-list">Monitored processes list</a></li>
+<li><a class="reference internal" href="#logs">Logs</a></li>
+<li><a class="reference internal" href="#footer">Footer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-documentation">API documentation</a></li>
+<li><a class="reference internal" href="#support">Support</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Glances&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/glances-doc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Glances’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Glances 1.7.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nicolas Hennion.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
