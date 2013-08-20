@@ -126,6 +126,7 @@ Otherwise, you have to follow these steps:
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://code.google.com/p/psutil/downloads/list
+- Install the colorconsole library: http://code.google.com/p/colorconsole/downloads/list
 - Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
