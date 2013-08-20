@@ -1407,6 +1407,8 @@ class GlancesStats:
                     self.network_old = get_net_io_counters
                 except IOError:
                     self.network_error_tag = True
+                except UnboundLocalError:
+                	self.network_error_tag = True
             else:
                 self.network_new = get_net_io_counters
                 for net in self.network_new:
