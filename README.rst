@@ -115,7 +115,9 @@ MacPorts
 Windows
 -------
 
-Windows only support Glances in server mode. Glances will automatically run in server mode on it.
+Glances 1.7.2 proposes a Windows client based on the `colorconsole`_ Python librairy.
+
+Version < 1.7.2 only support Glances in server mode. Glances will automatically run in server mode on it.
 
 Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:
 
@@ -126,6 +128,7 @@ Otherwise, you have to follow these steps:
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://code.google.com/p/psutil/downloads/list
+- Install the colorconsole library: http://code.google.com/p/colorconsole/downloads/list
 - Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
@@ -183,5 +186,6 @@ LGPL. See ``COPYING`` for more details.
 .. _MacPorts: https://www.macports.org/
 .. _glances-1.6.1-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x86.exe
 .. _glances-1.6.1-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x64.exe
+.. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
