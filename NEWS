@@ -1,7 +1,12 @@
 Version 1.7.1
 =============
 
-    * ...
+    * Fix IoWait error on FreeBSD / Mac OS
+    * HDDTemp module is now Python v3 compatible
+    * Don't warn a process is not running if countmin=0
+    * Add Pypi badge on the README.rst
+    * Update documentation
+    * Add document structure for http://readthedocs.org
 
 Version 1.7
 ===========
