@@ -1391,10 +1391,16 @@ class GlancesStats:
 
             if psutil_net_io_counters:
                 # psutil >= 1.0.0
-                get_net_io_counters = psutil.net_io_counters(pernic=True)
+                try:
+                	get_net_io_counters = psutil.net_io_counters(pernic=True)
+                except IOError:
+                    self.network_error_tag = True                
             else:
                 # psutil < 1.0.0
-                get_net_io_counters = psutil.network_io_counters(pernic=True)
+                try:
+                	get_net_io_counters = psutil.network_io_counters(pernic=True)
+                except IOError:
+                    self.network_error_tag = True                
 
             if not hasattr(self, 'network_old'):
                 try:
