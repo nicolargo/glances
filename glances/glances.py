@@ -89,7 +89,6 @@ if not is_Windows:
         sys.exit(1)
 
 is_ColorConsole = False
-############### ADD BY FAO ####################################################
 if is_Windows:
     try:
         import colorconsole, colorconsole.terminal
@@ -4313,7 +4312,6 @@ def main():
     html_tag = False
     csv_tag = False
     client_tag = False
-    print is_Windows, is_ColorConsole
     if is_Windows and not is_ColorConsole:
         # Force server mode for Windows OS without Colorconsole
         server_tag = True
