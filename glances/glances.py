@@ -88,6 +88,128 @@ if not is_Windows:
         print('Curses module not found. Glances cannot start.')
         sys.exit(1)
 
+is_ColorConsole = False
+############### ADD BY FAO ####################################################
+if is_Windows:
+    try:
+        import colorconsole, colorconsole.terminal
+
+        class Screen():
+
+            COLOR_DEFAULT_WIN = '0F'#07'#'0F'
+            COLOR_BK_DEFAULT = colorconsole.terminal.colors["BLACK"]
+            COLOR_FG_DEFAULT = colorconsole.terminal.colors["WHITE"]
+
+            def __init__(self, nc):
+                self.nc = nc
+                self.term = colorconsole.terminal.get_terminal()
+                if os.name == "nt":
+                    os.system('color %s' % self.COLOR_DEFAULT_WIN)
+                self.term.clear()
+
+            def subwin(self, x, y):
+                return self
+
+            def keypad(self, id):
+                return None
+
+            def nodelay(self, id):
+                return None
+
+            def getch(self):
+                return 27
+                #return self.term.getch()
+
+            def erase(self):
+                self.reset()
+                return None
+
+            def addnstr(self, y, x, msg, ln, typo= 0):
+                try:
+                    fgs, bks = self.nc.colors[typo]
+                except:
+                    fgs, bks = self.COLOR_FG_DEFAULT, self.COLOR_BK_DEFAULT
+                self.term.set_color(fg=fgs, bk=bks)
+                self.term.print_at(x, y, msg.ljust(ln))
+                self.term.set_color(fg=self.COLOR_FG_DEFAULT, bk=self.COLOR_BK_DEFAULT)
+
+            def getmaxyx(self):
+                x = self.term._Terminal__get_console_info().srWindow.Right - self.term._Terminal__get_console_info().srWindow.Left +1
+                y = self.term._Terminal__get_console_info().srWindow.Bottom - self.term._Terminal__get_console_info().srWindow.Top +1
+                return [y,x]
+
+            def reset(self):
+                self.term.clear()
+                self.term.reset()
+                return None
+
+            def restore_buffered_mode(self):
+                self.term.restore_buffered_mode()
+                return None
+
+        class WCurseLight():
+
+            COLOR_WHITE = colorconsole.terminal.colors["WHITE"]
+            COLOR_RED = colorconsole.terminal.colors["RED"]
+            COLOR_GREEN = colorconsole.terminal.colors["GREEN"]
+            COLOR_BLUE = colorconsole.terminal.colors["LBLUE"]
+            COLOR_MAGENTA = colorconsole.terminal.colors["LPURPLE"]
+            COLOR_BLACK = colorconsole.terminal.colors["BLACK"]
+            A_UNDERLINE = 0
+            A_BOLD = 0
+            COLOR_PAIRS = 9
+            colors = {}
+
+            def __init__(self):
+                self.term = Screen(self)
+
+            def initscr(self):
+                return self.term
+
+            def start_color(self):
+                return None
+
+            def use_default_colors(self):
+                return None
+
+            def noecho(self):
+                return None
+
+            def cbreak(self):
+                return None
+
+            def curs_set(self, y):
+                return None
+
+            def has_colors(self):
+                return True
+
+            def echo(self):
+                return None
+                
+            def nocbreak(self):
+                return None
+
+            def endwin(self):
+                self.term.reset()
+                self.term.restore_buffered_mode()
+                return None
+
+            def napms(self, t):
+                time.sleep(t/1000 if t > 1000 else 1)
+
+            def init_pair(self, id, fg, bk):
+                self.colors[id] = [max(fg, 0), max(bk, 0)]
+
+            def color_pair(self, id):
+                return id
+
+        curses = WCurseLight()
+        is_ColorConsole = True
+    except Exception:
+        pass
+
+
 try:
     # psutil is the main library used to grab stats
     import psutil
@@ -4191,8 +4313,9 @@ def main():
     html_tag = False
     csv_tag = False
     client_tag = False
-    if is_Windows:
-        # Force server mode for Windows OS
+    print is_Windows, is_ColorConsole
+    if is_Windows and not is_ColorConsole:
+        # Force server mode for Windows OS without Colorconsole
         server_tag = True
     else:
         server_tag = False
