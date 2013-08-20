@@ -1548,13 +1548,13 @@ class GlancesStats:
             if psutil_net_io_counters:
                 # psutil >= 1.0.0
                 try:
-                	get_net_io_counters = psutil.net_io_counters(pernic=True)
+                    get_net_io_counters = psutil.net_io_counters(pernic=True)
                 except IOError:
                     self.network_error_tag = True                
             else:
                 # psutil < 1.0.0
                 try:
-                	get_net_io_counters = psutil.network_io_counters(pernic=True)
+                    get_net_io_counters = psutil.network_io_counters(pernic=True)
                 except IOError:
                     self.network_error_tag = True                
 
@@ -1564,7 +1564,7 @@ class GlancesStats:
                 except IOError:
                     self.network_error_tag = True
                 except UnboundLocalError:
-                	self.network_error_tag = True
+                    self.network_error_tag = True
             else:
                 self.network_new = get_net_io_counters
                 for net in self.network_new:
