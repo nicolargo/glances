@@ -92,6 +92,38 @@ is_ColorConsole = False
 if is_Windows:
     try:
         import colorconsole, colorconsole.terminal
+        import threading
+        import msvcrt
+
+        try:
+            # Python 2
+            import Queue as queue
+        except ImportError:
+            # Python 3
+            import queue
+
+        class ListenGetch(threading.Thread):
+            def __init__(self, nom = ''):
+                threading.Thread.__init__(self)
+                self.Terminated = False
+                self.q = queue.Queue()
+
+            def run(self):
+                while not self.Terminated:
+                    char = msvcrt.getch()
+                    self.q.put(char)
+
+            def stop(self):
+                self.Terminated = True
+                msvcrt.putch(' ')
+                while not self.q.empty():
+                    self.q.get()
+
+            def get(self, default=None):
+                try:
+                    return ord(self.q.get_nowait())
+                except:
+                    return default
 
         class Screen():
 
@@ -104,6 +136,9 @@ if is_Windows:
                 self.term = colorconsole.terminal.get_terminal()
                 if os.name == "nt":
                     os.system('color %s' % self.COLOR_DEFAULT_WIN)
+                self.listen = ListenGetch()
+                self.listen.start()
+
                 self.term.clear()
 
             def subwin(self, x, y):
@@ -116,7 +151,7 @@ if is_Windows:
                 return None
 
             def getch(self):
-                return 27
+                return self.listen.get(27)
                 #return self.term.getch()
 
             def erase(self):
@@ -192,7 +227,7 @@ if is_Windows:
             def endwin(self):
                 self.term.reset()
                 self.term.restore_buffered_mode()
-                return None
+                self.term.listen.stop()
 
             def napms(self, t):
                 time.sleep(t/1000 if t > 1000 else 1)
@@ -2379,31 +2414,32 @@ class glancesScreen:
         # Get stats for processes (used in another functions for logs)
         processcount = stats.getProcessCount()
         processlist = stats.getProcessList(screen.getProcessSortedBy())
-
-        # Display stats
-        self.displaySystem(stats.getHost(), stats.getSystem())
-        cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
-        load_offset = self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
-        self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, load_offset)
-        network_count = self.displayNetwork(stats.getNetwork(), error=stats.network_error_tag)
-        sensors_count = self.displaySensors(stats.getSensors(),
-                                            self.network_y + network_count)
-        hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
-                                            self.network_y + network_count + sensors_count)
-        diskio_count = self.displayDiskIO(stats.getDiskIO(),
-                                          offset_y=self.network_y + sensors_count +
-                                          network_count + hddtemp_count,
-                                          error=stats.diskio_error_tag)
-        fs_count = self.displayFs(stats.getFs(),
-                                  self.network_y + sensors_count +
-                                  network_count + diskio_count +
-                                  hddtemp_count)
-        log_count = self.displayLog(self.network_y + sensors_count + network_count +
-                                    diskio_count + fs_count +
-                                    hddtemp_count)
-        self.displayProcess(processcount, processlist, stats.getSortedBy(),
-                            log_count=log_count, core=stats.getCore(), cs_status=cs_status)
-        self.displayCaption(cs_status=cs_status)
+        
+        if not self.help_tag:
+            # Display stats
+            self.displaySystem(stats.getHost(), stats.getSystem())
+            cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
+            load_offset = self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
+            self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
+            network_count = self.displayNetwork(stats.getNetwork(), error=stats.network_error_tag)
+            sensors_count = self.displaySensors(stats.getSensors(),
+                                                self.network_y + network_count)
+            hddtemp_count = self.displayHDDTemp(stats.getHDDTemp(),
+                                                self.network_y + network_count + sensors_count)
+            diskio_count = self.displayDiskIO(stats.getDiskIO(),
+                                              offset_y=self.network_y + sensors_count +
+                                              network_count + hddtemp_count,
+                                              error=stats.diskio_error_tag)
+            fs_count = self.displayFs(stats.getFs(),
+                                      self.network_y + sensors_count +
+                                      network_count + diskio_count +
+                                      hddtemp_count)
+            log_count = self.displayLog(self.network_y + sensors_count + network_count +
+                                        diskio_count + fs_count +
+                                        hddtemp_count)
+            self.displayProcess(processcount, processlist, stats.getSortedBy(),
+                                log_count=log_count, core=stats.getCore(), cs_status=cs_status)
+            self.displayCaption(cs_status=cs_status)
         self.displayHelp(core=stats.getCore())
         self.displayBat(stats.getBatPercent())
         self.displayNow(stats.getNow())
@@ -2480,13 +2516,13 @@ class glancesScreen:
         # Do you want it ?
         # If yes then tag_percpu = True
         if self.percpu_tag:
-            tag_percpu = screen_x > self.cpu_x + 79 + (len(percpu) - 1) * 10
+            tag_percpu = screen_x > self.cpu_x + 79 +  max(0,(len(percpu) - 3)) * 10
         else:
             tag_percpu = False
 
         # compute x offset
         if tag_percpu:
-            offset_x = (len(percpu) - 1) * 8
+            offset_x = max(0,(len(percpu) - 3)) * 8
         elif tag_extendedcpu:
             offset_x = 16
         else:
