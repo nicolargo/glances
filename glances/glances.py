@@ -2420,7 +2420,7 @@ class glancesScreen:
             self.displaySystem(stats.getHost(), stats.getSystem())
             cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
             load_offset = self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
-            self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, load_offset)
+            self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
             network_count = self.displayNetwork(stats.getNetwork(), error=stats.network_error_tag)
             sensors_count = self.displaySensors(stats.getSensors(),
                                                 self.network_y + network_count)
@@ -2516,13 +2516,13 @@ class glancesScreen:
         # Do you want it ?
         # If yes then tag_percpu = True
         if self.percpu_tag:
-            tag_percpu = screen_x > self.cpu_x + 79 + (len(percpu) - 1) * 10
+            tag_percpu = screen_x > self.cpu_x + 79 +  max(0,(len(percpu) - 3)) * 10
         else:
             tag_percpu = False
 
         # compute x offset
         if tag_percpu:
-            offset_x = (len(percpu) - 1) * 8
+            offset_x = max(0,(len(percpu) - 3)) * 8
         elif tag_extendedcpu:
             offset_x = 16
         else:
