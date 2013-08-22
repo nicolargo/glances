@@ -2516,13 +2516,13 @@ class glancesScreen:
         # Do you want it ?
         # If yes then tag_percpu = True
         if self.percpu_tag:
-            tag_percpu = screen_x > self.cpu_x + 79 +  max(0,(len(percpu) - 3)) * 10
+            tag_percpu = screen_x > self.cpu_x + 79 + (len(percpu) - 1) * 10
         else:
             tag_percpu = False
 
         # compute x offset
         if tag_percpu:
-            offset_x = max(16,(len(percpu) - 3)) * 8
+            offset_x = (len(percpu) - 1) * 8
         elif tag_extendedcpu:
             offset_x = 16
         else:
