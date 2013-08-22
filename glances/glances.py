@@ -2522,7 +2522,7 @@ class glancesScreen:
 
         # compute x offset
         if tag_percpu:
-            offset_x = max(0,(len(percpu) - 3)) * 8
+            offset_x = max(16,(len(percpu) - 3)) * 8
         elif tag_extendedcpu:
             offset_x = 16
         else:
