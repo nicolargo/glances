@@ -28,6 +28,11 @@ data_files.append((etc_path, ['glances/conf/glances.conf']))
 for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
+if sys.platform.startswith('win'):
+    requires = ['psutil>=0.5.1', 'colorconsole==0.6']
+else:
+    requires = ['psutil>=0.5.1']
+    
 setup(
     name='Glances',
     version='1.7.1',
@@ -39,7 +44,7 @@ setup(
     # Alternative download_url='https://s3.amazonaws.com/glances/glances-1.7.1.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
-    install_requires=['psutil>=0.5.1'],
+    install_requires=requires,
     extras_require={
         'HTML': ['jinja2'],
         'SENSORS': ['pysensors'],
