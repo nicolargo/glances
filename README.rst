@@ -149,6 +149,8 @@ On Debian/Ubuntu, you need to install first the *python-dev* package.
 
 On CentOS/Fedora, you need to install first the *python-devel* package (from the EPEL repository).
 
+On openSUSE/SLES/SLED, you need to install first the *python-devel* package. (from Oss repository).
+
 Puppet
 ------
 
