@@ -1145,7 +1145,10 @@ class GlancesGrabProcesses:
         try:
             procstat['username'] = proc.username
         except KeyError:
-            procstat['username'] = proc.uids.real
+            try:
+                procstat['username'] = proc.uids.real
+            except KeyError:
+                procstat['username'] = "?"
         procstat['cmdline'] = " ".join(proc.cmdline)
         procstat['memory_info'] = proc.get_memory_info()
         procstat['memory_percent'] = proc.get_memory_percent()
