@@ -1654,6 +1654,9 @@ class GlancesStats:
         # Get the number of core (CPU) (Used to display load alerts)
         self.core_number = psutil.NUM_CPUS
 
+        # get psutil version
+        self.psutil_version = psutil.__version__
+
     def update(self, input_stats={}):
         # Update the stats
         self.__update__(input_stats)
@@ -1780,6 +1783,9 @@ class GlancesStats:
         # Return the sorted list
         return listsorted
 
+    def getPsutilVersion(self):
+        return self.psutil_version
+
     def getNow(self):
         return self.now
 
@@ -1816,6 +1822,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["processcount"] = self.processcount if process_tag else 0
         self.all_stats["process"] = self.process if process_tag else []
         self.all_stats["core_number"] = self.core_number
+        self.all_stats["psutil_version"] = self.psutil_version
 
         # Get the current date/time
         self.now = datetime.now()
@@ -1868,6 +1875,7 @@ class GlancesStatsClient(GlancesStats):
             self.processcount = input_stats["processcount"]
             self.process = input_stats["process"]
             self.core_number = input_stats["core_number"]
+            self.psutil_version = input_stats["psutil_version"]
 
         # Get the current date/time
         self.now = datetime.now()
@@ -2728,6 +2736,10 @@ class glancesScreen:
         memblocksize = 45
         extblocksize = 15
 
+        # get the psutil version installed on the server, if in client mode
+        if client_tag:
+            server_psutil_version = stats.getPsutilVersion()
+
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + memblocksize - extblocksize):
 
@@ -2769,8 +2781,8 @@ class glancesScreen:
             y = 0
             if screen_x > self.mem_x + offset_x + memblocksize:
                 # active and inactive (UNIX; only available for psutil >= 0.6)
-                if psutil_mem_vm:
-                    if not is_Windows:
+                if not is_Windows:
+                    if server_psutil_version >= '0.6.0' or psutil_mem_vm:
                         self.term_window.addnstr(self.mem_y + y,
                                                  self.mem_x + offset_x + 14,
                                                  _("active:"), 7)
@@ -4522,7 +4534,7 @@ def main():
 
     if client_tag:
         psutil_get_io_counter_tag = True
-        psutil_mem_vm = True
+        psutil_mem_vm = False
         fs_tag = True
         diskio_tag = True
         network_tag = True
