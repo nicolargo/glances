@@ -2739,6 +2739,8 @@ class glancesScreen:
         # get the psutil version installed on the server, if in client mode
         if client_tag:
             server_psutil_version = stats.getPsutilVersion()
+        else:
+            server_psutil_version = ""
 
         if (screen_y > self.mem_y + 5 and
             screen_x > self.mem_x + offset_x + memblocksize - extblocksize):
