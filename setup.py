@@ -25,7 +25,7 @@ if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
 elif 'darwin' in sys.platform:
     etc_path = os.path.join('/usr/local', 'etc', 'glances')
 elif sys.platform.startswith('win'):
-    etc_path = os.path.join(get_python_lib(), 'glances')
+    etc_path = os.path.join(os.environ['APPDATA'], 'glances')
 data_files.append((etc_path, ['glances/conf/glances.conf']))
 
 for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
