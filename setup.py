@@ -5,6 +5,7 @@ import sys
 import glob
 
 from setuptools import setup
+from distutils.sysconfig import get_python_lib
 
 data_files = [
     ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
@@ -23,6 +24,8 @@ if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
     etc_path = os.path.join('/etc', 'glances')
 elif 'darwin' in sys.platform:
     etc_path = os.path.join('/usr/local', 'etc', 'glances')
+elif sys.platform.startswith('win'):
+    etc_path = os.path.join(os.environ['APPDATA'], 'glances')
 data_files.append((etc_path, ['glances/conf/glances.conf']))
 
 for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
