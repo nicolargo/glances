@@ -401,6 +401,7 @@ class Config:
         * Linux: ~/.config/glances, /etc/glances
         * BSD: ~/.config/glances, /usr/local/etc/glances
         * Mac: ~/Library/Application Support/glances, /usr/local/etc/glances
+        * Windows: %APPDATA%\glances
 
         The config file will be searched in the following order of priority:
             * /path/to/file (via -C flag)
@@ -425,6 +426,9 @@ class Config:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
                 __appname__, self.filename))
+        elif is_Windows:
+            paths.append(os.path.join(
+                os.environ.get('APPDATA'), __appname__, self.filename))
 
         if is_Linux:
             paths.append(os.path.join('/etc', __appname__, self.filename))
