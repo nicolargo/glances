@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Glances &mdash; Glances 1.7.1 documentation</title>
+    <title>Glances &mdash; Glances 1.7.2 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.7.1',
+        VERSION:     '1.7.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Glances 1.7.1 documentation" href="index.html" />
+    <link rel="top" title="Glances 1.7.2 documentation" href="index.html" />
     <link rel="prev" title="Welcome to Glances’s documentation!" href="index.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to Glances’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Glances 1.7.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Glances 1.7.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,9 +49,9 @@
             
   <div class="section" id="glances">
 <h1><a class="toc-backref" href="#id7">Glances</a><a class="headerlink" href="#glances" title="Permalink to this headline">¶</a></h1>
-<p>This manual describes <em>Glances</em> version 1.7.1.</p>
+<p>This manual describes <em>Glances</em> version 1.7.2.</p>
 <p>Copyright © 2012-2013 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#37;&#52;&#48;nicolargo&#46;com">nicolas<span>&#64;</span>nicolargo<span>&#46;</span>com</a>&gt;</p>
-<p>August 2013</p>
+<p>September 2013</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -151,7 +151,7 @@ just run on the server:</p>
 <td>Connect to a Glances server by IPv4/IPv6 address or hostname</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-C <var>file</var></span></kbd></td>
-<td>Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)</td></tr>
+<td>Path to the configuration file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-d</span></kbd></td>
 <td>Disable disk I/O module</td></tr>
@@ -259,15 +259,29 @@ just run on the server:</p>
 <p>No configuration file is mandatory to use Glances.</p>
 <p>Furthermore a configuration file is needed for setup limits and/or monitored processes list.</p>
 <p>By default, the configuration file is under:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="go">/etc/glances/glances.conf (Linux)</span>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Linux:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/etc/glances/glances.conf</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">*BSD and OS X:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/usr/local/etc/glances/glances.conf</span></tt></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Windows:</th><td class="field-body"><tt class="docutils literal"><span class="pre">%APPDATA%\glances\glances.conf</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p>On Windows XP, the <tt class="docutils literal"><span class="pre">%APPDATA%</span></tt> path is:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">C:\Documents and Settings\&lt;User&gt;\Application Data</span>
 </pre></div>
 </div>
-<p>or:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="go">/usr/local/etc/glances/glances.conf (*BSD and OS X)</span>
+<p>Since Windows Vista and newer versions:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">C:\Users\&lt;User&gt;\AppData\Roaming</span>
 </pre></div>
 </div>
-<p>To override the default configuration, you can copy the <tt class="docutils literal"><span class="pre">glances.conf</span></tt> file to
-your <tt class="docutils literal"><span class="pre">$XDG_CONFIG_HOME</span></tt> directory (e.g. Linux):</p>
+<p>You can override the default configuration, located in one of the above
+directories on your system, except for Windows.</p>
+<p>Just copy the <tt class="docutils literal"><span class="pre">glances.conf</span></tt> file to your <tt class="docutils literal"><span class="pre">$XDG_CONFIG_HOME</span></tt> directory, e.g. Linux:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="go">mkdir -p $XDG_CONFIG_HOME/glances</span>
 <span class="go">cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 </pre></div>
@@ -361,8 +375,8 @@ if the bit rate is higher than 70 Mbps.</p>
 </div>
 <div class="section" id="sensors">
 <h3><a class="toc-backref" href="#id23">Sensors</a><a class="headerlink" href="#sensors" title="Permalink to this headline">¶</a></h3>
-<p>Glances can displays the sensors informations trough <cite>lm-sensors</cite> (only
-available on Linux). As of lm-sensors, a filter is processed in order to display temperature only:</p>
+<p>Glances can displays the sensors informations trough <cite>lm-sensors</cite> (only available on Linux).</p>
+<p>As of lm-sensors, a filter is processed in order to display temperature only:</p>
 <img alt="_images/sensors.png" src="_images/sensors.png" />
 <p>Glances can also grab hard disk temperature through the <cite>hddtemp</cite> daemon (see here <a class="footnote-reference" href="#id5" id="id2">[2]</a> to install hddtemp on your system):</p>
 <img alt="_images/hddtemp.png" src="_images/hddtemp.png" />
@@ -468,9 +482,9 @@ to group processes and quickly show if the number of running process is not good
 <li><tt class="docutils literal"><span class="pre">countmax</span></tt> (optional): maximum number of processes. A warning will be displayed if number of processes &gt; count.</li>
 </ul>
 <p>Up to 10 items can be defined.</p>
-<p>For example, if you want to monitor the NGINX processes on a Web server, the following definition should do the job:</p>
+<p>For example, if you want to monitor the Nginx processes on a Web server, the following definition should do the job:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="go">[monitor]</span>
-<span class="go">list_1_description=NGINX server</span>
+<span class="go">list_1_description=Nginx server</span>
 <span class="go">list_1_regex=.*nginx.*</span>
 <span class="go">list_1_command=nginx -v</span>
 <span class="go">list_1_countmin=1</span>
@@ -479,7 +493,7 @@ to group processes and quickly show if the number of running process is not good
 </div>
 <p>If you also want to monitor the PHP-FPM daemon processes, you should add another item:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="go">[monitor]</span>
-<span class="go">list_1_description=NGINX server</span>
+<span class="go">list_1_description=Nginx server</span>
 <span class="go">list_1_regex=.*nginx.*</span>
 <span class="go">list_1_command=nginx -v</span>
 <span class="go">list_1_countmin=1</span>
@@ -490,11 +504,12 @@ to group processes and quickly show if the number of running process is not good
 <span class="go">list_1_countmax=20</span>
 </pre></div>
 </div>
-<p>In the client/server mode, the list is define on the server side. A new method (getAllMonitored) is available in the API and get the JSON representation of the monitored processes list.</p>
-<p>Alerts are set following:</p>
+<p>In client/server mode, the list is defined on the server side.
+A new method, called getAllMonitored, is available in the APIs and get the JSON representation of the monitored processes list.</p>
+<p>Alerts are set as following:</p>
 <div class="line-block">
 <div class="line">If number of processes is 0, then status is set to <tt class="docutils literal"><span class="pre">&quot;CRITICAL&quot;</span></tt></div>
-<div class="line">If number of processes is min &lt; curent &lt; max, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
+<div class="line">If number of processes is min &lt; current &lt; max, then status is set to <tt class="docutils literal"><span class="pre">&quot;OK&quot;</span></tt></div>
 <div class="line">Else status is set to <tt class="docutils literal"><span class="pre">&quot;WARNING&quot;</span></tt></div>
 </div>
 </div>
@@ -511,14 +526,15 @@ to group processes and quickly show if the number of running process is not good
 <li>start date</li>
 <li>end date</li>
 <li>alert name</li>
-<li>{min/avg/max} values or number of running pocesses for monitored processes list alerts</li>
+<li>{min/avg/max} values or number of running processes for monitored processes list alerts</li>
 </ol>
 </div>
 <div class="section" id="footer">
 <h3><a class="toc-backref" href="#id29">Footer</a><a class="headerlink" href="#footer" title="Permalink to this headline">¶</a></h3>
 <img alt="_images/footer.png" src="_images/footer.png" />
 <p>Glances displays the current date &amp; time and access to the embedded help screen.</p>
-<p>If one or mode batteries were found on your machine and if the batinfo Python library <a class="footnote-reference" href="#id6" id="id3">[3]</a> is installed on your system then Glances displays the available percent capacity in the middle on the footer.</p>
+<p>If one or mode batteries were found on your machine and if the batinfo Python library <a class="footnote-reference" href="#id6" id="id3">[3]</a>
+is installed on your system then Glances displays the available percent capacity in the middle on the footer.</p>
 <img alt="_images/battery.png" src="_images/battery.png" />
 <p>If you have ran Glances in client mode <tt class="docutils literal"><span class="pre">-c</span></tt>, you can also see if the client is connected to the server.</p>
 <p>If client is connected:</p>
@@ -635,7 +651,7 @@ to group processes and quickly show if the number of running process is not good
         <li class="right" >
           <a href="index.html" title="Welcome to Glances’s documentation!"
              >previous</a> |</li>
-        <li><a href="index.html">Glances 1.7.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Glances 1.7.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

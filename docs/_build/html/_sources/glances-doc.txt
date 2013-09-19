@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.1.
+This manual describes *Glances* version 1.7.2.
 
 Copyright © 2012-2013 Nicolas Hennion <nicolas@nicolargo.com>
 
-August 2013
+September 2013
 
 .. contents:: Table of Contents
 
@@ -81,7 +81,7 @@ Command-line options
 -b           Display network rate in Byte per second (default: bit per second)
 -B IP        Bind server to the given IPv4/IPv6 address or hostname
 -c IP        Connect to a Glances server by IPv4/IPv6 address or hostname
--C file      Path to the configuration file (default: {/usr/local,}/etc/glances/glances.conf)
+-C file      Path to the configuration file
 -d           Disable disk I/O module
 -e           Enable sensors module (requires pysensors, Linux-only)
 -f file      Set the HTML output folder or CSV file
@@ -157,18 +157,26 @@ Furthermore a configuration file is needed for setup limits and/or monitored pro
 
 By default, the configuration file is under:
 
+:Linux: ``/etc/glances/glances.conf``
+:\*BSD and OS X: ``/usr/local/etc/glances/glances.conf``
+:Windows: ``%APPDATA%\glances\glances.conf``
+
+On Windows XP, the ``%APPDATA%`` path is:
+
 .. code-block:: console
 
-    /etc/glances/glances.conf (Linux)
+    C:\Documents and Settings\<User>\Application Data
 
-or:
+Since Windows Vista and newer versions:
 
 .. code-block:: console
 
-    /usr/local/etc/glances/glances.conf (*BSD and OS X)
+    C:\Users\<User>\AppData\Roaming
 
-To override the default configuration, you can copy the ``glances.conf`` file to
-your ``$XDG_CONFIG_HOME`` directory (e.g. Linux):
+You can override the default configuration, located in one of the above
+directories on your system, except for Windows.
+
+Just copy the ``glances.conf`` file to your ``$XDG_CONFIG_HOME`` directory, e.g. Linux:
 
 .. code-block:: console
 
@@ -286,8 +294,9 @@ if the bit rate is higher than 70 Mbps.
 Sensors
 -------
 
-Glances can displays the sensors informations trough `lm-sensors` (only
-available on Linux). As of lm-sensors, a filter is processed in order to display temperature only:
+Glances can displays the sensors informations trough `lm-sensors` (only available on Linux).
+
+As of lm-sensors, a filter is processed in order to display temperature only:
 
 .. image:: images/sensors.png
 
@@ -420,12 +429,12 @@ Each item is defined by:
 
 Up to 10 items can be defined.
 
-For example, if you want to monitor the NGINX processes on a Web server, the following definition should do the job:
+For example, if you want to monitor the Nginx processes on a Web server, the following definition should do the job:
 
 .. code-block:: console
 
     [monitor]
-    list_1_description=NGINX server
+    list_1_description=Nginx server
     list_1_regex=.*nginx.*
     list_1_command=nginx -v
     list_1_countmin=1
@@ -436,7 +445,7 @@ If you also want to monitor the PHP-FPM daemon processes, you should add another
 .. code-block:: console
 
     [monitor]
-    list_1_description=NGINX server
+    list_1_description=Nginx server
     list_1_regex=.*nginx.*
     list_1_command=nginx -v
     list_1_countmin=1
@@ -446,12 +455,13 @@ If you also want to monitor the PHP-FPM daemon processes, you should add another
     list_1_countmin=1
     list_1_countmax=20
 
-In the client/server mode, the list is define on the server side. A new method (getAllMonitored) is available in the API and get the JSON representation of the monitored processes list.
+In client/server mode, the list is defined on the server side.
+A new method, called getAllMonitored, is available in the APIs and get the JSON representation of the monitored processes list.
 
-Alerts are set following:
+Alerts are set as following:
 
 | If number of processes is 0, then status is set to ``"CRITICAL"``
-| If number of processes is min < curent < max, then status is set to ``"OK"``
+| If number of processes is min < current < max, then status is set to ``"OK"``
 | Else status is set to ``"WARNING"``
 
 Logs
@@ -469,7 +479,7 @@ Each alert message displays the following information:
 1. start date
 2. end date
 3. alert name
-4. {min/avg/max} values or number of running pocesses for monitored processes list alerts
+4. {min/avg/max} values or number of running processes for monitored processes list alerts
 
 Footer
 ------
@@ -478,7 +488,8 @@ Footer
 
 Glances displays the current date & time and access to the embedded help screen.
 
-If one or mode batteries were found on your machine and if the batinfo Python library [3]_ is installed on your system then Glances displays the available percent capacity in the middle on the footer.
+If one or mode batteries were found on your machine and if the batinfo Python library [3]_
+is installed on your system then Glances displays the available percent capacity in the middle on the footer.
 
 .. image:: images/battery.png
 
