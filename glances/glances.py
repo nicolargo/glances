@@ -88,161 +88,14 @@ if not is_Windows:
         print('Curses module not found. Glances cannot start.')
         sys.exit(1)
 
-is_ColorConsole = False
 if is_Windows:
     try:
         import colorconsole
         import colorconsole.terminal
-        import threading
-        import msvcrt
-
-        try:
-            # Python 2
-            import Queue as queue
-        except ImportError:
-            # Python 3
-            import queue
-
-        class ListenGetch(threading.Thread):
-            def __init__(self, nom=''):
-                threading.Thread.__init__(self)
-                self.Terminated = False
-                self.q = queue.Queue()
-
-            def run(self):
-                while not self.Terminated:
-                    char = msvcrt.getch()
-                    self.q.put(char)
-
-            def stop(self):
-                self.Terminated = True
-                while not self.q.empty():
-                    self.q.get()
-
-            def get(self, default=None):
-                try:
-                    return ord(self.q.get_nowait())
-                except Exception:
-                    return default
-
-        class Screen():
-
-            COLOR_DEFAULT_WIN = '0F'#07'#'0F'
-            COLOR_BK_DEFAULT = colorconsole.terminal.colors["BLACK"]
-            COLOR_FG_DEFAULT = colorconsole.terminal.colors["WHITE"]
-
-            def __init__(self, nc):
-                self.nc = nc
-                self.term = colorconsole.terminal.get_terminal()
-                if os.name == "nt":
-                    os.system('color %s' % self.COLOR_DEFAULT_WIN)
-                self.listen = ListenGetch()
-                self.listen.start()
-
-                self.term.clear()
-
-            def subwin(self, x, y):
-                return self
-
-            def keypad(self, id):
-                return None
-
-            def nodelay(self, id):
-                return None
-
-            def getch(self):
-                return self.listen.get(27)
-
-            def erase(self):
-                self.reset()
-                return None
-
-            def addnstr(self, y, x, msg, ln, typo=0):
-                try:
-                    fgs, bks = self.nc.colors[typo]
-                except Exception:
-                    fgs, bks = self.COLOR_FG_DEFAULT, self.COLOR_BK_DEFAULT
-                self.term.set_color(fg=fgs, bk=bks)
-                self.term.print_at(x, y, msg.ljust(ln))
-                self.term.set_color(fg=self.COLOR_FG_DEFAULT, bk=self.COLOR_BK_DEFAULT)
-
-            def getmaxyx(self):
-                x = (self.term._Terminal__get_console_info().srWindow.Right -
-                     self.term._Terminal__get_console_info().srWindow.Left + 1)
-                y = (self.term._Terminal__get_console_info().srWindow.Bottom -
-                     self.term._Terminal__get_console_info().srWindow.Top + 1)
-                return [y, x]
-
-            def reset(self):
-                self.term.clear()
-                self.term.reset()
-                return None
-
-            def restore_buffered_mode(self):
-                self.term.restore_buffered_mode()
-                return None
-
-        class WCurseLight():
-
-            COLOR_WHITE = colorconsole.terminal.colors["WHITE"]
-            COLOR_RED = colorconsole.terminal.colors["RED"]
-            COLOR_GREEN = colorconsole.terminal.colors["GREEN"]
-            COLOR_BLUE = colorconsole.terminal.colors["LBLUE"]
-            COLOR_MAGENTA = colorconsole.terminal.colors["LPURPLE"]
-            COLOR_BLACK = colorconsole.terminal.colors["BLACK"]
-            A_UNDERLINE = 0
-            A_BOLD = 0
-            COLOR_PAIRS = 9
-            colors = {}
-
-            def __init__(self):
-                self.term = Screen(self)
-
-            def initscr(self):
-                return self.term
-
-            def start_color(self):
-                return None
-
-            def use_default_colors(self):
-                return None
-
-            def noecho(self):
-                return None
-
-            def cbreak(self):
-                return None
-
-            def curs_set(self, y):
-                return None
-
-            def has_colors(self):
-                return True
-
-            def echo(self):
-                return None
-
-            def nocbreak(self):
-                return None
-
-            def endwin(self):
-                self.term.reset()
-                self.term.restore_buffered_mode()
-                self.term.listen.stop()
-
-            def napms(self, t):
-                time.sleep(t / 1000 if t > 1000 else 1)
-
-            def init_pair(self, id, fg, bk):
-                self.colors[id] = [max(fg, 0), max(bk, 0)]
-
-            def color_pair(self, id):
-                return id
-
-        curses = WCurseLight()
-        is_ColorConsole = True
-    except Exception:
-        pass
+    except ImportError:
+        is_colorConsole = False
+    else:
+        is_colorConsole = True
 
 try:
     # psutil is the main library used to grab stats
@@ -353,6 +206,152 @@ last_update_times = {}
 
 # Classes
 #========
+if is_Windows and is_colorConsole:
+    import msvcrt
+    import threading
+    try:
+        import Queue as queue
+    except ImportError:
+        import queue
+
+    class ListenGetch(threading.Thread):
+
+        def __init__(self, nom=''):
+            threading.Thread.__init__(self)
+            self.Terminated = False
+            self.q = queue.Queue()
+
+        def run(self):
+            while not self.Terminated:
+                char = msvcrt.getch()
+                self.q.put(char)
+
+        def stop(self):
+            self.Terminated = True
+            while not self.q.empty():
+                self.q.get()
+
+        def get(self, default=None):
+            try:
+                return ord(self.q.get_nowait())
+            except Exception:
+                return default
+
+    class Screen():
+
+        COLOR_DEFAULT_WIN = '0F'#07'#'0F'
+        COLOR_BK_DEFAULT = colorconsole.terminal.colors["BLACK"]
+        COLOR_FG_DEFAULT = colorconsole.terminal.colors["WHITE"]
+
+        def __init__(self, nc):
+            self.nc = nc
+            self.term = colorconsole.terminal.get_terminal()
+            # os.system('color %s' % self.COLOR_DEFAULT_WIN)
+            self.listen = ListenGetch()
+            self.listen.start()
+
+            self.term.clear()
+
+        def subwin(self, x, y):
+            return self
+
+        def keypad(self, id):
+            return None
+
+        def nodelay(self, id):
+            return None
+
+        def getch(self):
+            return self.listen.get(27)
+
+        def erase(self):
+            self.reset()
+            return None
+
+        def addnstr(self, y, x, msg, ln, typo=0):
+            try:
+                fgs, bks = self.nc.colors[typo]
+            except Exception:
+                fgs, bks = self.COLOR_FG_DEFAULT, self.COLOR_BK_DEFAULT
+            self.term.set_color(fg=fgs, bk=bks)
+            self.term.print_at(x, y, msg.ljust(ln))
+            self.term.set_color(fg=self.COLOR_FG_DEFAULT, bk=self.COLOR_BK_DEFAULT)
+
+        def getmaxyx(self):
+            x = (self.term._Terminal__get_console_info().srWindow.Right -
+                 self.term._Terminal__get_console_info().srWindow.Left + 1)
+            y = (self.term._Terminal__get_console_info().srWindow.Bottom -
+                 self.term._Terminal__get_console_info().srWindow.Top + 1)
+            return [y, x]
+
+        def reset(self):
+            self.term.clear()
+            self.term.reset()
+            return None
+
+        def restore_buffered_mode(self):
+            self.term.restore_buffered_mode()
+            return None
+
+    class WCurseLight():
+
+        COLOR_WHITE = colorconsole.terminal.colors["WHITE"]
+        COLOR_RED = colorconsole.terminal.colors["RED"]
+        COLOR_GREEN = colorconsole.terminal.colors["GREEN"]
+        COLOR_BLUE = colorconsole.terminal.colors["LBLUE"]
+        COLOR_MAGENTA = colorconsole.terminal.colors["LPURPLE"]
+        COLOR_BLACK = colorconsole.terminal.colors["BLACK"]
+        A_UNDERLINE = 0
+        A_BOLD = 0
+        COLOR_PAIRS = 9
+        colors = {}
+
+        def __init__(self):
+            self.term = Screen(self)
+
+        def initscr(self):
+            return self.term
+
+        def start_color(self):
+            return None
+
+        def use_default_colors(self):
+            return None
+
+        def noecho(self):
+            return None
+
+        def cbreak(self):
+            return None
+
+        def curs_set(self, y):
+            return None
+
+        def has_colors(self):
+            return True
+
+        def echo(self):
+            return None
+
+        def nocbreak(self):
+            return None
+
+        def endwin(self):
+            self.term.reset()
+            self.term.restore_buffered_mode()
+            self.term.listen.stop()
+
+        def napms(self, t):
+            time.sleep(t / 1000 if t > 1000 else 1)
+
+        def init_pair(self, id, fg, bk):
+            self.colors[id] = [max(fg, 0), max(bk, 0)]
+
+        def color_pair(self, id):
+            return id
+
+    curses = WCurseLight()
+
 
 class Timer:
     """
@@ -4321,8 +4320,8 @@ def main():
     html_tag = False
     csv_tag = False
     client_tag = False
-    if is_Windows and not is_ColorConsole:
-        # Force server mode for Windows OS without Colorconsole
+    if is_Windows and not is_colorConsole:
+        # Force server mode for Windows OS without colorconsole
         server_tag = True
     else:
         server_tag = False
