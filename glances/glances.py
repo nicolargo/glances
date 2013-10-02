@@ -1260,7 +1260,10 @@ class glancesGrabBat:
         # and Loop over batteries (yes a computer could have more than 1 battery)
         bsum = 0
         for bcpt in range(len(self.get())):
-            bsum = bsum + int(self.bat_list[bcpt].capacity)
+            try:
+                bsum = bsum + int(self.bat_list[bcpt].capacity)
+            except ValueError:
+                return []
         bcpt = bcpt + 1
         # Return the global percent
         return int(bsum / bcpt)
