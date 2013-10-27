@@ -1,3 +1,12 @@
+Version 1.7.2
+=============
+
+    * Console interface is now Microsoft Windows compatible (thk to @fraoustin)
+    * Update documentation and Wiki regarding the API
+    * Added package name for python sources/headers in openSUSE/SLES/SLED
+    * Add FreeBSD packager
+    * Bugs corrected
+
 Version 1.7.1
 =============
 
