@@ -3,7 +3,7 @@
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://badge.fury.io/py/Glances.png
-    :target: http://badge.fury.io/py/Glances
+        :target: http://badge.fury.io/py/Glances
 .. image:: https://pypip.in/d/Glances/badge.png
         :target: https://crate.io/packages/Glances
 
@@ -121,7 +121,7 @@ Thanks to Nicolas Bourges, Glances can be easily installed using a Windows insta
 Otherwise, you have to follow these steps:
 
 - Install Python for Windows: http://www.python.org/getit/
-- Install the psutil library: https://code.google.com/p/psutil/downloads/list
+- Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
 - Install the colorconsole library: http://code.google.com/p/colorconsole/downloads/list
 - Download Glances from here: http://nicolargo.github.io/glances/
 
