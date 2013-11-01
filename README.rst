@@ -24,7 +24,7 @@ Requirements
 ============
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
-- ``psutil >= 0.5.1`` (recommended version >= 0.6)
+- ``psutil >= 0.5.1`` (recommended version >= 1.1.0)
 - ``jinja`` (optional for HTML output)
 - ``pysensors`` (optional for HW monitoring support) [Linux-only]
 - ``hddtemp`` (optional for HDD temperature monitoring support)

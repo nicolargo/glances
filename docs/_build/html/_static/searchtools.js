@@ -239,8 +239,13 @@ var Search = {
   },
 
   loadIndex : function(url) {
-    $.ajax({type: "GET", url: url, data: null, success: null,
-            dataType: "script", cache: true});
+    $.ajax({type: "GET", url: url, data: null,
+            dataType: "script", cache: true,
+            complete: function(jqxhr, textstatus) {
+              if (textstatus != "success") {
+                document.getElementById("searchindexloader").src = url;
+              }
+            }});
   },
 
   setIndex : function(index) {
@@ -301,7 +306,7 @@ var Search = {
   },
 
   query : function(query) {
-    var stopwords = ["and","then","into","it","as","are","in","if","for","no","there","their","was","is","be","to","that","but","they","not","such","with","by","a","on","these","of","will","this","near","the","or","at"];
+    var stopwords = ["a","and","are","as","at","be","but","by","for","if","in","into","is","it","near","no","not","of","on","or","such","that","the","their","then","there","these","they","this","to","was","will","with"];
 
     // Stem the searchterms and add them to the correct list
     var stemmer = new Stemmer();
@@ -457,16 +462,18 @@ var Search = {
             displayNextItem();
           });
         } else if (DOCUMENTATION_OPTIONS.HAS_SOURCE) {
-          $.get(DOCUMENTATION_OPTIONS.URL_ROOT + '_sources/' +
-                item[0] + '.txt', function(data) {
-            if (data != '') {
-              listItem.append($.makeSearchSummary(data, searchterms, hlterms));
-              Search.output.append(listItem);
-            }
-            listItem.slideDown(5, function() {
-              displayNextItem();
-            });
-          }, "text");
+          $.ajax({url: DOCUMENTATION_OPTIONS.URL_ROOT + '_sources/' + item[0] + '.txt',
+                  dataType: "text",
+                  complete: function(jqxhr, textstatus) {
+                    var data = jqxhr.responseText;
+                    if (data !== '') {
+                      listItem.append($.makeSearchSummary(data, searchterms, hlterms));
+                    }
+                    Search.output.append(listItem);
+                    listItem.slideDown(5, function() {
+                      displayNextItem();
+                    });
+                  }});
         } else {
           // no source available, just display title
           Search.output.append(listItem);

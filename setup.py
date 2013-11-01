@@ -37,7 +37,7 @@ else:
 
 setup(
     name='Glances',
-    version='1.7.1',
+    version='1.7.2',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',

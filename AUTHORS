@@ -25,7 +25,7 @@ http://packages.debian.org/fr/sid/glances
 
 gasol.wu@gmail.com for the FreeBSD port
 
-Nicolas Bourges for the Windows installer
+Frederic Aoustin (https://github.com/fraoustin) and Nicolas Bourges (installer) for the Windows port
 
 Aljaž Srebrnič for the MacPorts package
 http://www.macports.org/ports.php?by=name&substr=glances
