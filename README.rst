@@ -115,8 +115,7 @@ Glances < 1.7.2 only works in server mode. It will run in server mode automatica
 
 Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:
 
-- glances-1.6.1-x86.exe_ (32-bit, md5sum: 13d5be664599f80152f8f1ae47400576)
-- glances-1.6.1-x64.exe_ (64-bit, md5sum: a347ec5097d6d4d5039c7233872757a8)
+Glances-1.7.2-win32.msi_ (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)
 
 Otherwise, you have to follow these steps:
 
@@ -178,8 +177,7 @@ LGPL. See ``COPYING`` for more details.
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://mxcl.github.com/homebrew/
 .. _MacPorts: https://www.macports.org/
-.. _glances-1.6.1-x86.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x86.exe
-.. _glances-1.6.1-x64.exe: https://s3.amazonaws.com/glances/glances-1.6.1-x64.exe
+.. Glances-1.7.2-win32.msi: http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
