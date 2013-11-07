@@ -177,7 +177,7 @@ LGPL. See ``COPYING`` for more details.
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://mxcl.github.com/homebrew/
 .. _MacPorts: https://www.macports.org/
-.. Glances-1.7.2-win32.msi: http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi
+.. _Glances-1.7.2-win32.msi: http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
