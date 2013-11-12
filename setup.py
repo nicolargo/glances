@@ -19,7 +19,7 @@ data_files = [
 
 if hasattr(sys, 'real_prefix') or 'bsd' in sys.platform:
     conf_path = os.path.join(sys.prefix, 'etc', 'glances')
-if not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
+elif not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
     conf_path = os.path.join('/etc', 'glances')
 elif 'darwin' in sys.platform:
     conf_path = os.path.join('/usr/local', 'etc', 'glances')
