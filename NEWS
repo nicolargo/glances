@@ -1,3 +1,10 @@
+Version 1.7.3
+=============
+
+    * Add --password argument to enter the client/server password from the prompt
+    * Fix an issue with the configuration file path
+    * ...
+
 Version 1.7.2
 =============
 

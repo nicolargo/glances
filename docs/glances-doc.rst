@@ -78,26 +78,27 @@ Command reference
 Command-line options
 --------------------
 
--b           Display network rate in Byte per second (default: bit per second)
--B IP        Bind server to the given IPv4/IPv6 address or hostname
--c IP        Connect to a Glances server by IPv4/IPv6 address or hostname
--C file      Path to the configuration file
--d           Disable disk I/O module
--e           Enable sensors module (requires pysensors, Linux-only)
--f file      Set the HTML output folder or CSV file
--h           Display the help and exit
--m           Disable mount module
--n           Disable network module
--o output    Define additional output (available: HTML or CSV)
--p PORT      Define the client/server TCP port (default: 61209)
--P password  Define a client/server password
--r           Disable process list (for low CPU consumption)
--s           Run Glances in server mode
--t seconds   Set refresh time in seconds (default: 3 sec)
--v           Display the version and exit
--y           Enable hddtemp module (requires hddtemp)
--z           Do not use the bold color attribute
--1           Start Glances in per-CPU mode
+-b             Display network rate in Byte per second (default: bit per second)
+-B IP          Bind server to the given IPv4/IPv6 address or hostname
+-c IP          Connect to a Glances server by IPv4/IPv6 address or hostname
+-C file        Path to the configuration file
+-d             Disable disk I/O module
+-e             Enable sensors module (requires pysensors, Linux-only)
+-f file        Set the HTML output folder or CSV file
+-h             Display the help and exit
+-m             Disable mount module
+-n             Disable network module
+-o output      Define additional output (available: HTML or CSV)
+-p PORT        Define the client/server TCP port (default: 61209)
+-P password    Define the client/server password
+or --password  Define the client/server password from the prompt
+-r             Disable process list (for low CPU consumption)
+-s             Run Glances in server mode
+-t seconds     Set refresh time in seconds (default: 3 sec)
+-v             Display the version and exit
+-y             Enable hddtemp module (requires hddtemp)
+-z             Do not use the bold color attribute
+-1             Start Glances in per-CPU mode
 
 Interactive commands
 --------------------
