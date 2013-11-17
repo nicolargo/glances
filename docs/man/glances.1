@@ -19,13 +19,13 @@ The command-line options are the following:
 .B \-b
 Display network rate in Byte per second (default: bit per second)
 .TP
-.B \-B @IP|host
+.B \-B @IP|HOST
 Bind server to the given IPv4/IPv6 address or hostname
 .TP
-.B \-c @IP|host
+.B \-c @IP|HOST
 Connect to a Glances server by IPv4/IPv6 address or hostname
 .TP
-.B \-C file
+.B \-C FILE
 Path to the configuration file
 .TP
 .B \-d
@@ -34,7 +34,7 @@ Disable disk I/O module
 .B \-e
 Enable sensors module (requires pysensors, Linux-only)
 .TP
-.B \-f file
+.B \-f FILE
 Set the HTML output folder or CSV file
 .TP
 .B \-h
@@ -46,14 +46,17 @@ Disable mount module
 .B \-n
 Disable network module
 .TP
-.B \-o output
+.B \-o OUTPUT
 Define additional output (available: HTML or CSV)
 .TP
 .B \-p PORT
 Define the client/server TCP port (default: 61209)
 .TP
-.B \-P password
+.B \-P PASSWORD
 Define a client/server password
+.TP
+.B\---password
+Define a client/server password from the prompt
 .TP
 .B \-r
 Disable process list (for low CPU consumption)
@@ -61,7 +64,7 @@ Disable process list (for low CPU consumption)
 .B \-s
 Run Glances in server mode
 .TP
-.B \-t seconds
+.B \-t SECONDS
 Set refresh time in seconds (default: 3 sec)
 .TP
 .B \-v

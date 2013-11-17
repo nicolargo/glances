@@ -123,9 +123,9 @@ td.option-group {
 <div class="document" id="glances">
 <h1 class="title">Glances</h1>
 
-<p>This manual describes <em>Glances</em> version 1.7.2.</p>
+<p>This manual describes <em>Glances</em> version 1.7.3.</p>
 <p>Copyright © 2012-2013 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>September 2013</p>
+<p>November 2013</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -221,7 +221,7 @@ just run on the server:</p>
 <kbd><span class="option">-c <var>IP</var></span></kbd></td>
 <td>Connect to a Glances server by IPv4/IPv6 address or hostname</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-C <var>file</var></span></kbd></td>
+<kbd><span class="option">-C <var>FILE</var></span></kbd></td>
 <td>Path to the configuration file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-d</span></kbd></td>
@@ -230,7 +230,7 @@ just run on the server:</p>
 <kbd><span class="option">-e</span></kbd></td>
 <td>Enable sensors module (requires pysensors, Linux-only)</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-f <var>file</var></span></kbd></td>
+<kbd><span class="option">-f <var>FILE</var></span></kbd></td>
 <td>Set the HTML output folder or CSV file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-h</span></kbd></td>
@@ -242,14 +242,17 @@ just run on the server:</p>
 <kbd><span class="option">-n</span></kbd></td>
 <td>Disable network module</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-o <var>output</var></span></kbd></td>
+<kbd><span class="option">-o <var>OUTPUT</var></span></kbd></td>
 <td>Define additional output (available: HTML or CSV)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-p <var>PORT</var></span></kbd></td>
 <td>Define the client/server TCP port (default: 61209)</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-P <var>password</var></span></kbd></td>
+<kbd><span class="option">-P <var>PASSWORD</var></span></kbd></td>
 <td>Define a client/server password</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--password</span></kbd></td>
+<td>Define a client/server password from the prompt</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-r</span></kbd></td>
 <td>Disable process list (for low CPU consumption)</td></tr>
@@ -257,7 +260,7 @@ just run on the server:</p>
 <kbd><span class="option">-s</span></kbd></td>
 <td>Run Glances in server mode</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-t <var>seconds</var></span></kbd></td>
+<kbd><span class="option">-t <var>SECONDS</var></span></kbd></td>
 <td>Set refresh time in seconds (default: 3 sec)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-v</span></kbd></td>
