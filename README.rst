@@ -7,6 +7,8 @@
 .. image:: https://pypip.in/d/Glances/badge.png
         :target: https://crate.io/packages/Glances
 
+Follow Glances on twitter: @`glances_system`_
+
 ===============================
 Glances - An eye on your system
 ===============================
@@ -171,8 +173,8 @@ License
 
 LGPL. See ``COPYING`` for more details.
 
-
 .. _psutil: https://code.google.com/p/psutil/
+.. _glances_system: https://twitter.com/glances_system
 .. _PyPI: https://pypi.python.org/pypi
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://mxcl.github.com/homebrew/
