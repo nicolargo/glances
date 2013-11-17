@@ -4304,26 +4304,26 @@ def signal_handler(signal, frame):
     end()
 
 
-def getpassword(description = "", confirm = False):
+def getpassword(description='', confirm=False):
     """
     Read a password from the command line (with confirmation if confirm = True)
     """
     import getpass
 
-    if (description != ""): 
+    if description != '':
         sys.stdout.write("%s\n" % description)
-        
-    password1 = getpass.getpass(_("Password: "));
-    if (confirm):
+
+    password1 = getpass.getpass(_("Password: "))
+    if confirm:
         password2 = getpass.getpass(_("Password (confirm): "))
     else:
         return password1
 
-    if (password1 == password2):
+    if password1 == password2:
         return password1
     else:
         sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
-        return getpassword(description = description, confirm = confirm)
+        return getpassword(description=description, confirm=confirm)
 
 
 def main():
@@ -4482,8 +4482,8 @@ def main():
         if html_tag or csv_tag:
             print(_("Error: Cannot use both -s and -o flag"))
             sys.exit(2)
-        if (password == ''):
-            password = getpassword(description = _("Define the password for the Glances server"), confirm = True)
+        if password == '':
+            password = getpassword(description=_("Define the password for the Glances server"), confirm=True)
 
     if client_tag:
         if html_tag or csv_tag:
@@ -4493,8 +4493,8 @@ def main():
             print(_("Error: Cannot use both -c and -C flag"))
             print(_("       Limits are set based on the server ones"))
             sys.exit(2)
-        if (password == ''):
-            password = getpassword(description = _("Enter the Glances server password"), confirm = False)
+        if password == '':
+            password = getpassword(description=_("Enter the Glances server password"), confirm=False)
 
     if html_tag:
         if not html_lib_tag:
