@@ -107,7 +107,7 @@ except ImportError:
 psutil_version = tuple([int(num) for num in psutil.__version__.split('.')])
 # this is not a mistake: psutil 0.5.1 is detected as 0.5.0
 if psutil_version < (0, 5, 0):
-    print('PsUtil version %s detected.' % psutil.__version__)
+    print('PsUtil version {} detected.'.format(psutil.__version__))
     print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
@@ -246,7 +246,7 @@ if is_Windows and is_colorConsole:
         def __init__(self, nc):
             self.nc = nc
             self.term = colorconsole.terminal.get_terminal()
-            # os.system('color %s' % self.COLOR_DEFAULT_WIN)
+            # os.system('color {}'.format(self.COLOR_DEFAULT_WIN))
             self.listen = ListenGetch()
             self.listen.start()
 
@@ -393,7 +393,7 @@ class Config:
                     else:
                         self.parser.read(path)
                 except UnicodeDecodeError as e:
-                    print(_("Error decoding config file '%s': %s") % (path, e))
+                    print(_("Error decoding config file '{}': {}").format(path, e))
                     sys.exit(1)
 
                 break
@@ -679,7 +679,7 @@ class glancesLimits:
         """
         value = config.get_option(section, alert)
 
-        #~ print("%s / %s = %s -> %s" % (section, alert, value, stat))
+        #~ print("{} / {} = {} -> {}".format(section, alert, value, stat))
         if alert.endswith('careful'):
             self.__limits_list[stat][0] = value
         elif alert.endswith('warning'):
@@ -3737,7 +3737,7 @@ class glancesScreen:
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         # Build the message to display
-        bat_msg = "%d%%" % batpercent
+        bat_msg = "{}%".format(batpercent)
         # Display the message (if possible)
         if (screen_y > self.bat_y and
             screen_x > self.bat_x + len(bat_msg)):
@@ -3922,7 +3922,7 @@ class glancesCsv:
 
         # Set the ouput (CSV) path
         try:
-            self.__cvsfile_fd = open("%s" % cvsfile, "wb")
+            self.__cvsfile_fd = open("{}".format(cvsfile), "wb")
             self.__csvfile = csv.writer(self.__cvsfile_fd)
         except IOError as error:
             print("Cannot create the output CSV file: ", error[1])
@@ -4025,7 +4025,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
-            print(_("Couldn't open socket: %s") % e)
+            print(_("Couldn't open socket: {}").format(e))
             sys.exit(1)
 
         SimpleXMLRPCServer.__init__(self, (bind_address, bind_port),
@@ -4195,15 +4195,15 @@ class GlancesClient():
                  username="glances", password=""):
         # Build the URI
         if password != "":
-            uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
+            uri = 'http://{}:{}@{}:{}'.format(username, password, server_address, server_port)
         else:
-            uri = 'http://%s:%d' % (server_address, server_port)
+            uri = 'http://{}:{}'.format(server_address, server_port)
 
         # Try to connect to the URI
         try:
             self.client = ServerProxy(uri)
         except Exception:
-            print(_("Error: creating client socket") + " %s" % uri)
+            print(_("Error: creating client socket") + " {}".format(uri))
             pass
         return
 
@@ -4267,14 +4267,12 @@ def printSyntax():
     print(_("\t-m\t\tDisable mount module"))
     print(_("\t-n\t\tDisable network module"))
     print(_("\t-o OUTPUT\tDefine additional output (available: HTML or CSV)"))
-    print(_("\t-p PORT\t\tDefine the client/server TCP port (default: %d)" %
-            server_port))
+    print(_("\t-p PORT\t\tDefine the client/server TCP port (default: {})".format(server_port)))
     print(_("\t-P PASSWORD\tDefine a client/server password"))
     print(_("\t--password\tDefine a client/server password from the prompt"))
     print(_("\t-r\t\tDisable process list"))
     print(_("\t-s\t\tRun Glances in server mode"))
-    print(_("\t-t SECONDS\tSet refresh time in seconds (default: %d sec)" %
-            refresh_time))
+    print(_("\t-t SECONDS\tSet refresh time in seconds (default: {} sec)".format(refresh_time)))
     print(_("\t-v\t\tDisplay the version and exit"))
     print(_("\t-y\t\tEnable hddtemp module"))
     print(_("\t-z\t\tDo not use the bold color attribute"))
@@ -4311,7 +4309,7 @@ def getpassword(description='', confirm=False):
     import getpass
 
     if description != '':
-        sys.stdout.write("%s\n" % description)
+        sys.stdout.write("{}\n".format(description))
 
     password1 = getpass.getpass(_("Password: "))
     if confirm:
@@ -4430,7 +4428,7 @@ def main():
             elif arg.lower() == "csv":
                 csv_tag = True
             else:
-                print(_("Error: Unknown output %s" % arg))
+                print(_("Error: Unknown output {}".format(arg)))
                 printSyntax()
                 sys.exit(2)
         elif opt in ("-e", "--sensors"):
@@ -4542,7 +4540,7 @@ def main():
     # Init Glances depending of the mode (standalone, client, server)
     if server_tag:
         # Init the server
-        print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
+        print(_("Glances server is running on") + " {}:{}".format(bind_ip, server_port))
         server = GlancesServer(bind_ip, int(server_port), GlancesXMLRPCHandler, cached_time)
 
         # Set the server login/password (if -P tag)
