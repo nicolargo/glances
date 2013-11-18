@@ -31,7 +31,11 @@
       </header>
       <section>
         <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="https://api.flattr.com/button/flattr-badge-large.png"</img></a>
-           <a href="https://travis-ci.org/nicolargo/glances"><img src="https://travis-ci.org/nicolargo/glances.png?branch=master"</img></a></p>
+           <a href="https://travis-ci.org/nicolargo/glances"><img src="https://travis-ci.org/nicolargo/glances.png?branch=master"</img></a>
+           <a href="http://badge.fury.io/py/Glances"><img src="https://badge.fury.io/py/Glances.png"></img></a>
+           <a href="https://crate.io/packages/Glances"><img src="https://pypip.in/d/Glances/badge.png"></img></a></p>
+
+        <p>Follow Glances on Twitter: <a href="https://twitter.com/glances_system">@glances_system</a></p>
 
 <h1>Glances - An eye on your system</h1>
 
@@ -46,42 +50,30 @@
 <h1>Requirements</h1>
 
 <ul>
-<li>
-<code>python &gt;= 2.6</code> (tested with version 2.6, 2.7, 3.2, 3.3)</li>
-<li>
-<code>psutil &gt;= 0.4.1</code> (recommended version &gt;= 0.6)</li>
-<li>
-<code>jinja</code> (optional for HTML output)</li>
-<li>
-<code>pysensors</code> (optional for HW monitoring support) [Linux-only]</li>
-<li>
-<code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
-<li>
-<code>batinfo</code> (optional for battery monitoring support) [Linux-only]</li>
-<li><code>setuptools</code></li>
-</ul><h1>Installation</h1>
+  <li><code>python &gt;= 2.6</code> (tested with version 2.6, 2.7, 3.2, 3.3)</li>
+  <li><code>psutil &gt;= 0.5.1</code> (recommended version &gt;= 1.1.0)</li>
+  <li><code>jinja</code> (optional for HTML output)</li>
+  <li><code>pysensors</code> (optional for HW monitoring support) [Linux-only]</li>
+  <li><code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
+  <li><code>batinfo</code> (optional for battery monitoring support) [Linux-only]</li>
+  <li><code>setuptools</code></li>
+</ul>
 
-<h2>Pipy: The easy way...</h2>
+<h1>Installation</h1>
+
+<h2>PyPI: The simple way</h2>
 
 <p>Glances is on <a href="https://pypi.python.org/pypi">PyPI</a>. To install, simply use <a href="http://www.pip-installer.org/">pip</a>:</p>
 
-<pre><code>pip install Glances
-</code></pre>
-
-<p><em>Note</em>: On Debian/Ubuntu, you need to install first the <em>python-dev</em> package.</p>
-
-<p><em>Note</em>: On Fedora/CentOS/RH, you need to install first the <em>python-devel</em> package (from the EPEL repository).</p>
-
-<p><em>Note</em>: On openSUSE/SLES/SLED, you need to install first the <em>python-devel</em> package (from the Oss repository).</p>
+<pre><code>pip install Glances</code></pre>
 
 <p>To upgrade Glances to the latest version:</p>
 
-<pre><code>pip install --upgrade Glances
-</code></pre>
+<pre><code>pip install --upgrade Glances</code></pre>
 
 <h2>Linux</h2>
 
-<p>Actually, packages exist for Arch Linux, Fedora / CentOS / RHEL,
+<p>Actually, packages exist for Arch Linux, Fedora/CentOS/RHEL,
 Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
 install it using your favorite package manager.</p>
 
@@ -89,8 +81,7 @@ install it using your favorite package manager.</p>
 
 <p>To install the precompiled binary package:</p>
 
-<pre><code># pkg_add -r py27-glances
-</code></pre>
+<pre><code># pkg_add -r py27-glances</code></pre>
 
 <p>To install Glances from ports:<p>
 
@@ -122,28 +113,28 @@ $ brew link Glances
 
 <h3>MacPorts</h3>
 
-<pre><code>$ sudo port install glances
-</code></pre>
+<pre><code>$ sudo port install glances</code></pre>
 
 <h2>Windows</h2>
 
-<p>Windows only support Glances in server mode. Glances will automatically run in server mode on it.</p>
+<p>Glances 1.7.2 proposes a Windows client based on the colorconsole Python library.</p>
 
-<p>Thanks to <code>Nicolas Bourges</code>, Glances can be easily installed using a Windows installer:</p>
+<p>Glances &lt; 1.7.2 only works in server mode. It will run in server mode automatically.</p>
+
+<p>Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:</p>
+
+<p><a href="http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi">Glances-1.7.2-win32.msi</a> (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)</p>
+
+<p>Otherwise, you have to follow these steps:</p>
 
 <ul>
-<li><a href="https://s3.amazonaws.com/glances/glances-1.6.1-x86.exe">glances-1.6.1-x86.exe</a> (32-bit, md5sum: 13d5be664599f80152f8f1ae47400576)</li>
-<li><a href="https://s3.amazonaws.com/glances/glances-1.6.1-x64.exe">glances-1.6.1-x64.exe</a> (64-bit, md5sum: a347ec5097d6d4d5039c7233872757a8)</li>
-</ul><p>Otherwise, you have to follow these steps:</p>
+  <li>Install Python for Windows: <a href="http://www.python.org/getit/">http://www.python.org/getit/</a></li>
+  <li>Install the psutil library: <a href="https://pypi.python.org/pypi?:action=display&name=psutil#downloads">https://pypi.python.org/pypi?:action=display&name=psutil#downloads</a></li>
+  <li>Install the colorconsole library: <a href="http://code.google.com/p/colorconsole/downloads/list">http://code.google.com/p/colorconsole/downloads/list</a></li>
+  <li>Download Glances from here: <a href="http://nicolargo.github.io/glances/">http://nicolargo.github.io/glances/</a></li>
+</ul>
 
-<ul>
-<li>Install <code>Python for Windows</code>: <a href="http://www.python.org/getit/">http://www.python.org/getit/</a>
-</li>
-<li>Install the <code>psutil</code> library: <a href="https://code.google.com/p/psutil/downloads/list">https://code.google.com/p/psutil/downloads/list</a>
-</li>
-<li>Download <code>Glances</code> from here: <a href="http://nicolargo.github.io/glances/">http://nicolargo.github.io/glances/</a>
-</li>
-</ul><h2>Source</h2>
+<h2>Source</h2>
 
 <p>To install Glances from source:</p>
 
@@ -153,7 +144,13 @@ $ cd glances-*
 # python setup.py install
 </code></pre>
 
-<p><em>Note</em>: On Debian/Ubuntu, you need to install first the <em>python-dev</em> package.</p>
+<p><em>Note</em>: Python headers are required to install psutil. For example, you need to install first:</p>
+
+<ul>
+  <li>On Debian/Ubuntu, the <em>python-dev</em> package</li>
+  <li>On CentOS/Fedora, the <em>python-devel</em> package (from the EPEL repository)</li>
+  <li>On openSUSE/SLES/SLED, the <em>python-devel</em> package (from Oss repository)</li>
+</ul>
 
 <h2>Puppet</h2>
 
@@ -163,8 +160,7 @@ $ cd glances-*
 
 <p>Just run:</p>
 
-<pre><code>$ glances
-</code></pre>
+<pre><code>$ glances</code></pre>
 
 <h1>Documentation</h1>
 
@@ -172,7 +168,7 @@ $ cd glances-*
 
 <h1>Author</h1>
 
-<p>Nicolas Hennion (<a href="https://github.com/nicolargo" class="user-mention">@nicolargo</a>) <a href="mailto:nicolas@nicolargo.com">nicolas@nicolargo.com</a></p>
+<p>Nicolas Hennion (@nicolargo) <a href="mailto:nicolas@nicolargo.com">&lt;nicolas@nicolargo.com&gt;</a></p>
 
 <h1>License</h1>
 
