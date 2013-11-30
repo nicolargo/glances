@@ -214,6 +214,7 @@ if is_Windows and is_colorConsole:
     except ImportError:
         import queue
 
+
     class ListenGetch(threading.Thread):
 
         def __init__(self, nom=''):
@@ -237,9 +238,10 @@ if is_Windows and is_colorConsole:
             except Exception:
                 return default
 
+
     class Screen():
 
-        COLOR_DEFAULT_WIN = '0F'#07'#'0F'
+        COLOR_DEFAULT_WIN = '0F'  # 07'#'0F'
         COLOR_BK_DEFAULT = colorconsole.terminal.colors["BLACK"]
         COLOR_FG_DEFAULT = colorconsole.terminal.colors["WHITE"]
 
@@ -292,6 +294,7 @@ if is_Windows and is_colorConsole:
         def restore_buffered_mode(self):
             self.term.restore_buffered_mode()
             return None
+
 
     class WCurseLight():
 
@@ -357,6 +360,7 @@ class Timer:
     """
     The timer class
     """
+
     def __init__(self, duration):
         self.started(duration)
 
@@ -374,6 +378,7 @@ class Config:
     :param location: the custom path to search for config file
     :type location: str or None
     """
+
     def __init__(self, location=None):
         self.location = location
         self.filename = 'glances.conf'
@@ -802,6 +807,7 @@ class glancesLogs:
     Logs is a list of list (stored in the self.logs_list var)
     See item description in the add function
     """
+
     def __init__(self):
         """
         Init the logs classe
@@ -949,6 +955,7 @@ class glancesGrabFs:
     """
     Get FS stats
     """
+
     def __init__(self):
         """
         Init FS stats
@@ -1005,6 +1012,7 @@ class glancesGrabSensors:
     """
     Get sensors stats using the PySensors library
     """
+
     def __init__(self):
         """
         Init sensors stats
@@ -1125,6 +1133,7 @@ class GlancesGrabProcesses:
     """
     Get processed stats using the PsUtil lib
     """
+
     def __init__(self):
         """
         Init the io dict
@@ -1155,6 +1164,14 @@ class GlancesGrabProcesses:
         procstat['cpu_times'] = proc.get_cpu_times()
         procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
         procstat['nice'] = proc.get_nice()
+
+        try:
+            # !!! High CPU consumption
+            procstat['tcp'] = len(proc.get_connections(kind="tcp"))
+            procstat['udp'] = len(proc.get_connections(kind="udp"))
+        except:
+            procstat['tcp'] = 0
+            procstat['udp'] = 0
 
         # procstat['io_counters'] is a list:
         # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
@@ -1228,6 +1245,7 @@ class glancesGrabBat:
     """
     Get batteries stats using the Batinfo librairie
     """
+
     def __init__(self):
         """
         Init batteries stats
@@ -1281,6 +1299,7 @@ class GlancesStats:
     """
     This class store, update and give stats
     """
+
     def __init__(self):
         """
         Init the stats
@@ -3342,6 +3361,7 @@ class glancesScreen:
             tag_status = False
             tag_proc_time = False
             tag_io = False
+            tag_tcpudp = False
 
             if screen_x > process_x + 55:
                 tag_pid = True
@@ -3355,9 +3375,10 @@ class glancesScreen:
                 tag_proc_time = True
             if screen_x > process_x + 92:
                 tag_io = True
-
             if not psutil_get_io_counter_tag:
                 tag_io = False
+            if screen_x > process_x + 107:
+                tag_tcpudp = True
 
             # VMS
             self.term_window.addnstr(
@@ -3420,6 +3441,18 @@ class glancesScreen:
                     monitor_y + 2, process_x + process_name_x,
                     format(_("IOW/s"), '>5'), 5,
                     self.getProcessColumnColor('io_counters', sortedby))
+                process_name_x += 6
+            # TCP/UDP
+            if tag_tcpudp:
+                self.term_window.addnstr(
+                    monitor_y + 2, process_x + process_name_x,
+                    format(_("TCP"), '>5'), 5,
+                    self.getProcessColumnColor('tcp', sortedby))
+                process_name_x += 6
+                self.term_window.addnstr(
+                    monitor_y + 2, process_x + process_name_x,
+                    format(_("UDP"), '>5'), 5,
+                    self.getProcessColumnColor('udp', sortedby))
                 process_name_x += 6
             # PROCESS NAME
             self.term_window.addnstr(
@@ -3542,8 +3575,21 @@ class glancesScreen:
                             monitor_y + 3 + processes, process_x + 62,
                             format(self.__autoUnit(io_ws, low_precision=True),
                                    '>5'), 5)
-
-                # display process command line
+                # TCP/UDP connexion number
+                if tag_tcpudp:
+                    try:
+                        processlist[processes]['tcp']
+                        processlist[processes]['udp']
+                    except:
+                        pass
+                    else:
+                        self.term_window.addnstr(
+                            monitor_y + 3 + processes, process_x + 68,
+                            format(processlist[processes]['tcp'], '>5'), 5)
+                        self.term_window.addnstr(
+                            monitor_y + 3 + processes, process_x + 74,
+                            format(processlist[processes]['udp'], '>5'), 5)
+                # Display process command line
                 max_process_name = screen_x - process_x - process_name_x
                 process_name = processlist[processes]['name']
                 process_cmdline = processlist[processes]['cmdline']
@@ -3765,6 +3811,7 @@ class glancesHtml:
     """
     This class manages the HTML output
     """
+
     def __init__(self, html_path, refresh_time=1):
         html_filename = 'glances.html'
         html_template = 'default.html'
@@ -3916,6 +3963,7 @@ class glancesCsv:
     """
     This class manages the CSV output
     """
+
     def __init__(self, cvsfile="./glances.csv", refresh_time=1):
         # Init refresh time
         self.__refresh_time = refresh_time
@@ -3957,7 +4005,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
     """
     Main XMLRPC handler
     """
-    rpc_paths = ('/RPC2',)
+    rpc_paths = ('/RPC2', )
 
     def end_headers(self):
         # Hack to add a specific header
@@ -4019,6 +4067,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
     """
     Init a SimpleXMLRPCServer instance (IPv6-ready)
     """
+
     def __init__(self, bind_address, bind_port=61209,
                  requestHandler=GlancesXMLRPCHandler):
 
@@ -4036,6 +4085,7 @@ class GlancesInstance():
     """
     All the methods of this class are published as XML RPC methods
     """
+
     def __init__(self, cached_time=1):
         # cached_time is the minimum time interval between stats updates
         # i.e. XML/RPC calls will not retrieve updated info until the time
@@ -4160,6 +4210,7 @@ class GlancesServer():
     """
     This class creates and manages the TCP client
     """
+
     def __init__(self, bind_address, bind_port=61209,
                  requestHandler=GlancesXMLRPCHandler, cached_time=1):
         self.server = GlancesXMLRPCServer(bind_address, bind_port, requestHandler)
@@ -4191,6 +4242,7 @@ class GlancesClient():
     """
     This class creates and manages the TCP client
     """
+
     def __init__(self, server_address, server_port=61209,
                  username="glances", password=""):
         # Build the URI
@@ -4243,10 +4295,8 @@ class GlancesClient():
         else:
             return stats
 
-
 # Global def
 #===========
-
 
 def printVersion():
     print(_("Glances version ") + __version__ + _(" with PsUtil ") + psutil.__version__)

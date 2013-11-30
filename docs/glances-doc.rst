@@ -373,9 +373,9 @@ sorted by CPU of memory usage.
 The number of processes in the list is adapted to the screen size.
 
 ``VIRT``
-    Virtual memory size
+    Total program size (VMS)
 ``RES``
-    Resident memory
+    Resident set size (RSS)
 ``CPU%``
     % of CPU used by the process
 ``MEM%``
