@@ -1165,13 +1165,13 @@ class GlancesGrabProcesses:
         procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
         procstat['nice'] = proc.get_nice()
 
-        try:
-            # !!! High CPU consumption
-            procstat['tcp'] = len(proc.get_connections(kind="tcp"))
-            procstat['udp'] = len(proc.get_connections(kind="udp"))
-        except:
-            procstat['tcp'] = 0
-            procstat['udp'] = 0
+        # try:
+        #     # !!! High CPU consumption
+        #     procstat['tcp'] = len(proc.get_connections(kind="tcp"))
+        #     procstat['udp'] = len(proc.get_connections(kind="udp"))
+        # except:
+        #     procstat['tcp'] = 0
+        #     procstat['udp'] = 0
 
         # procstat['io_counters'] is a list:
         # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
@@ -3361,7 +3361,7 @@ class glancesScreen:
             tag_status = False
             tag_proc_time = False
             tag_io = False
-            tag_tcpudp = False
+            # tag_tcpudp = False
 
             if screen_x > process_x + 55:
                 tag_pid = True
@@ -3377,8 +3377,8 @@ class glancesScreen:
                 tag_io = True
             if not psutil_get_io_counter_tag:
                 tag_io = False
-            if screen_x > process_x + 107:
-                tag_tcpudp = True
+            # if screen_x > process_x + 107:
+            #     tag_tcpudp = True
 
             # VMS
             self.term_window.addnstr(
@@ -3443,17 +3443,17 @@ class glancesScreen:
                     self.getProcessColumnColor('io_counters', sortedby))
                 process_name_x += 6
             # TCP/UDP
-            if tag_tcpudp:
-                self.term_window.addnstr(
-                    monitor_y + 2, process_x + process_name_x,
-                    format(_("TCP"), '>5'), 5,
-                    self.getProcessColumnColor('tcp', sortedby))
-                process_name_x += 6
-                self.term_window.addnstr(
-                    monitor_y + 2, process_x + process_name_x,
-                    format(_("UDP"), '>5'), 5,
-                    self.getProcessColumnColor('udp', sortedby))
-                process_name_x += 6
+            # if tag_tcpudp:
+            #     self.term_window.addnstr(
+            #         monitor_y + 2, process_x + process_name_x,
+            #         format(_("TCP"), '>5'), 5,
+            #         self.getProcessColumnColor('tcp', sortedby))
+            #     process_name_x += 6
+            #     self.term_window.addnstr(
+            #         monitor_y + 2, process_x + process_name_x,
+            #         format(_("UDP"), '>5'), 5,
+            #         self.getProcessColumnColor('udp', sortedby))
+            #     process_name_x += 6
             # PROCESS NAME
             self.term_window.addnstr(
                 monitor_y + 2, process_x + process_name_x,
@@ -3576,19 +3576,19 @@ class glancesScreen:
                             format(self.__autoUnit(io_ws, low_precision=True),
                                    '>5'), 5)
                 # TCP/UDP connexion number
-                if tag_tcpudp:
-                    try:
-                        processlist[processes]['tcp']
-                        processlist[processes]['udp']
-                    except:
-                        pass
-                    else:
-                        self.term_window.addnstr(
-                            monitor_y + 3 + processes, process_x + 68,
-                            format(processlist[processes]['tcp'], '>5'), 5)
-                        self.term_window.addnstr(
-                            monitor_y + 3 + processes, process_x + 74,
-                            format(processlist[processes]['udp'], '>5'), 5)
+                # if tag_tcpudp:
+                #     try:
+                #         processlist[processes]['tcp']
+                #         processlist[processes]['udp']
+                #     except:
+                #         pass
+                #     else:
+                #         self.term_window.addnstr(
+                #             monitor_y + 3 + processes, process_x + 68,
+                #             format(processlist[processes]['tcp'], '>5'), 5)
+                #         self.term_window.addnstr(
+                #             monitor_y + 3 + processes, process_x + 74,
+                #             format(processlist[processes]['udp'], '>5'), 5)
                 # Display process command line
                 max_process_name = screen_x - process_x - process_name_x
                 process_name = processlist[processes]['name']
