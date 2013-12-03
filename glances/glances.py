@@ -4473,6 +4473,11 @@ def main():
                 sys.exit(2)
             server_ip = arg
         elif opt in ("-p", "--port"):
+            try:
+                port_number = int(arg)
+            except:
+                print("invalid port number argument: %s" % arg)
+                sys.exit(2)
             server_port = arg
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
