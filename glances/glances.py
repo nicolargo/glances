@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Glances an eye on your system
+# Glances - An eye on your system
 #
 # Copyright (C) 2013 Nicolargo <nicolas@nicolargo.com>
 #
@@ -172,16 +172,16 @@ else:
     csv_lib_tag = True
 
 # path definitions
-local_path = os.path.dirname(os.path.realpath(__file__))
+work_path = os.path.realpath(os.path.dirname(__file__))
 appname_path = os.path.split(sys.argv[0])[0]
-sys_prefix = os.path.dirname(os.path.realpath(appname_path))
+sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
 # i18n
 locale.setlocale(locale.LC_ALL, '')
 gettext_domain = __appname__
 
 # get locale directory
-i18n_path = os.path.join(local_path, '..', 'i18n')
+i18n_path = os.path.realpath(os.path.join(work_path, '..', 'i18n'))
 sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 
 if os.path.exists(i18n_path):
@@ -214,7 +214,6 @@ if is_Windows and is_colorConsole:
     except ImportError:
         import queue
 
-
     class ListenGetch(threading.Thread):
 
         def __init__(self, nom=''):
@@ -237,7 +236,6 @@ if is_Windows and is_colorConsole:
                 return ord(self.q.get_nowait())
             except Exception:
                 return default
-
 
     class Screen():
 
@@ -294,7 +292,6 @@ if is_Windows and is_colorConsole:
         def restore_buffered_mode(self):
             self.term.restore_buffered_mode()
             return None
-
 
     class WCurseLight():
 
@@ -408,7 +405,7 @@ class Config:
         Get a list of config file paths, taking into account of the OS,
         priority and location.
 
-        * running from source: /path/to/glances/glances/conf
+        * running from source: /path/to/glances/conf
         * Linux: ~/.config/glances, /etc/glances
         * BSD: ~/.config/glances, /usr/local/etc/glances
         * Mac: ~/Library/Application Support/glances, /usr/local/etc/glances
@@ -416,18 +413,18 @@ class Config:
 
         The config file will be searched in the following order of priority:
             * /path/to/file (via -C flag)
-            * /path/to/glances/glances/conf
+            * /path/to/glances/conf
             * user's home directory (per-user settings)
             * {/usr/local,}/etc directory (system-wide settings)
         """
         paths = []
-        conf_path = os.path.join(local_path, 'conf', self.filename)
+        conf_path = os.path.realpath(os.path.join(work_path, '..', 'conf'))
 
         if self.location is not None:
             paths.append(self.location)
 
         if os.path.exists(conf_path):
-            paths.append(conf_path)
+            paths.append(os.path.join(conf_path, self.filename))
 
         if is_Linux or is_BSD:
             paths.append(os.path.join(
@@ -3820,11 +3817,11 @@ class glancesHtml:
         # Set the HTML output file
         self.html_file = os.path.join(html_path, html_filename)
 
-        # Get the working path
-        self.work_path = self.get_work_path()
+        # Get data path
+        data_path = os.path.join(work_path, 'data')
 
-        # Set the templates path
-        template_path = os.path.join(self.work_path, 'html')
+        # Set the template path
+        template_path = os.path.join(data_path, 'html')
         environment = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_path),
             extensions=['jinja2.ext.loopcontrols'])
@@ -3840,27 +3837,6 @@ class glancesHtml:
             'WARNING': "bgcwarning fgcwarning",
             'CRITICAL': "bgcritical fgcritical"
         }
-
-    def get_work_path(self):
-        """
-        Get the working path
-
-        The data files will be searched in the following paths:
-            * /path/to/glances/glances/data (local)
-            * {/usr,/usr/local}/share/glances (system-wide)
-        """
-        # get local and system-wide data paths
-        data_path = os.path.join(local_path, 'data')
-        sys_data_path = os.path.join(sys_prefix, 'share', __appname__)
-
-        if os.path.exists(data_path):
-            work_path = data_path
-        elif os.path.exists(sys_data_path):
-            work_path = sys_data_path
-        else:
-            work_path = ""
-
-        return work_path
 
     def __getAlert(self, current=0, max=100):
         # If current < CAREFUL of max then alert = OK
@@ -4297,6 +4273,7 @@ class GlancesClient():
 
 # Global def
 #===========
+
 
 def printVersion():
     print(_("Glances version ") + __version__ + _(" with PsUtil ") + psutil.__version__)
