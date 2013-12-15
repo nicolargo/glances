@@ -26,7 +26,7 @@ Requirements
 ============
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
-- ``psutil >= 0.5.1`` (recommended version >= 1.1.0)
+- ``psutil >= 0.5.1`` (recommended version >= 1.2.1)
 - ``jinja`` (optional for HTML output)
 - ``pysensors`` (optional for HW monitoring support) [Linux-only]
 - ``hddtemp`` (optional for HDD temperature monitoring support)
@@ -111,7 +111,7 @@ MacPorts
 Windows
 -------
 
-Glances 1.7.2 proposes a Windows client based on the `colorconsole`_ Python library.
+Glances proposes a Windows client based on the `colorconsole`_ Python library.
 
 Glances < 1.7.2 only works in server mode. It will run in server mode automatically.
 
@@ -157,6 +157,8 @@ Just run:
 .. code-block:: console
 
     $ glances
+
+and RTFM...
 
 Documentation
 =============

@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.2.
+This manual describes *Glances* version 1.7.3.
 
 Copyright © 2012-2013 Nicolas Hennion <nicolas@nicolargo.com>
 
-September 2013
+November 2013
 
 .. contents:: Table of Contents
 
@@ -78,26 +78,27 @@ Command reference
 Command-line options
 --------------------
 
--b           Display network rate in Byte per second (default: bit per second)
--B IP        Bind server to the given IPv4/IPv6 address or hostname
--c IP        Connect to a Glances server by IPv4/IPv6 address or hostname
--C file      Path to the configuration file
--d           Disable disk I/O module
--e           Enable sensors module (requires pysensors, Linux-only)
--f file      Set the HTML output folder or CSV file
--h           Display the help and exit
--m           Disable mount module
--n           Disable network module
--o output    Define additional output (available: HTML or CSV)
--p PORT      Define the client/server TCP port (default: 61209)
--P password  Define a client/server password
--r           Disable process list (for low CPU consumption)
--s           Run Glances in server mode
--t seconds   Set refresh time in seconds (default: 3 sec)
--v           Display the version and exit
--y           Enable hddtemp module (requires hddtemp)
--z           Do not use the bold color attribute
--1           Start Glances in per-CPU mode
+-b             Display network rate in Byte per second (default: bit per second)
+-B IP          Bind server to the given IPv4/IPv6 address or hostname
+-c IP          Connect to a Glances server by IPv4/IPv6 address or hostname
+-C FILE        Path to the configuration file
+-d             Disable disk I/O module
+-e             Enable sensors module (requires pysensors, Linux-only)
+-f FILE        Set the HTML output folder or CSV file
+-h             Display the help and exit
+-m             Disable mount module
+-n             Disable network module
+-o OUTPUT      Define additional output (available: HTML or CSV)
+-p PORT        Define the client/server TCP port (default: 61209)
+-P PASSWORD    Define a client/server password
+--password     Define a client/server password from the prompt
+-r             Disable process list (for low CPU consumption)
+-s             Run Glances in server mode
+-t SECONDS     Set refresh time in seconds (default: 3 sec)
+-v             Display the version and exit
+-y             Enable hddtemp module (requires hddtemp)
+-z             Do not use the bold color attribute
+-1             Start Glances in per-CPU mode
 
 Interactive commands
 --------------------
@@ -372,9 +373,9 @@ sorted by CPU of memory usage.
 The number of processes in the list is adapted to the screen size.
 
 ``VIRT``
-    Virtual memory size
+    Total program size (VMS)
 ``RES``
-    Resident memory
+    Resident set size (RSS)
 ``CPU%``
     % of CPU used by the process
 ``MEM%``

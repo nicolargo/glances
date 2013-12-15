@@ -33,13 +33,13 @@ else:
 
 setup(
     name='Glances',
-    version='1.7.2',
+    version='1.7.3',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-1.7.1.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-1.7.3.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=requires,

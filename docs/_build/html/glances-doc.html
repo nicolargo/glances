@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Glances &mdash; Glances 1.7.2 documentation</title>
+    <title>Glances &mdash; Glances 1.7.3 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.7.2',
+        VERSION:     '1.7.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Glances 1.7.2 documentation" href="index.html" />
+    <link rel="top" title="Glances 1.7.3 documentation" href="index.html" />
     <link rel="prev" title="Welcome to Glances’s documentation!" href="index.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to Glances’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Glances 1.7.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Glances 1.7.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,9 +49,9 @@
             
   <div class="section" id="glances">
 <h1><a class="toc-backref" href="#id7">Glances</a><a class="headerlink" href="#glances" title="Permalink to this headline">¶</a></h1>
-<p>This manual describes <em>Glances</em> version 1.7.2.</p>
+<p>This manual describes <em>Glances</em> version 1.7.3.</p>
 <p>Copyright © 2012-2013 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#37;&#52;&#48;nicolargo&#46;com">nicolas<span>&#64;</span>nicolargo<span>&#46;</span>com</a>&gt;</p>
-<p>September 2013</p>
+<p>November 2013</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -150,7 +150,7 @@ just run on the server:</p>
 <kbd><span class="option">-c <var>IP</var></span></kbd></td>
 <td>Connect to a Glances server by IPv4/IPv6 address or hostname</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-C <var>file</var></span></kbd></td>
+<kbd><span class="option">-C <var>FILE</var></span></kbd></td>
 <td>Path to the configuration file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-d</span></kbd></td>
@@ -159,7 +159,7 @@ just run on the server:</p>
 <kbd><span class="option">-e</span></kbd></td>
 <td>Enable sensors module (requires pysensors, Linux-only)</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-f <var>file</var></span></kbd></td>
+<kbd><span class="option">-f <var>FILE</var></span></kbd></td>
 <td>Set the HTML output folder or CSV file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-h</span></kbd></td>
@@ -171,14 +171,17 @@ just run on the server:</p>
 <kbd><span class="option">-n</span></kbd></td>
 <td>Disable network module</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-o <var>output</var></span></kbd></td>
+<kbd><span class="option">-o <var>OUTPUT</var></span></kbd></td>
 <td>Define additional output (available: HTML or CSV)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-p <var>PORT</var></span></kbd></td>
 <td>Define the client/server TCP port (default: 61209)</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-P <var>password</var></span></kbd></td>
+<kbd><span class="option">-P <var>PASSWORD</var></span></kbd></td>
 <td>Define a client/server password</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--password</span></kbd></td>
+<td>Define a client/server password from the prompt</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-r</span></kbd></td>
 <td>Disable process list (for low CPU consumption)</td></tr>
@@ -186,7 +189,7 @@ just run on the server:</p>
 <kbd><span class="option">-s</span></kbd></td>
 <td>Run Glances in server mode</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-t <var>seconds</var></span></kbd></td>
+<kbd><span class="option">-t <var>SECONDS</var></span></kbd></td>
 <td>Set refresh time in seconds (default: 3 sec)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-v</span></kbd></td>
@@ -429,9 +432,9 @@ sorted by CPU of memory usage.</p>
 <p>The number of processes in the list is adapted to the screen size.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">VIRT</span></tt></dt>
-<dd>Virtual memory size</dd>
+<dd>Total program size (VMS)</dd>
 <dt><tt class="docutils literal"><span class="pre">RES</span></tt></dt>
-<dd>Resident memory</dd>
+<dd>Resident set size (RSS)</dd>
 <dt><tt class="docutils literal"><span class="pre">CPU%</span></tt></dt>
 <dd>% of CPU used by the process</dd>
 <dt><tt class="docutils literal"><span class="pre">MEM%</span></tt></dt>
@@ -651,7 +654,7 @@ is installed on your system then Glances displays the available percent capacity
         <li class="right" >
           <a href="index.html" title="Welcome to Glances’s documentation!"
              >previous</a> |</li>
-        <li><a href="index.html">Glances 1.7.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Glances 1.7.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

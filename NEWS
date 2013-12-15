@@ -2,8 +2,8 @@ Version 1.7.3
 =============
 
     * Add --password argument to enter the client/server password from the prompt
-    * Fix an issue with the configuration file path
-    * ...
+    * Fix an issue with the configuration file path (#296)
+    * Fix an issue with the HTML template (#301)
 
 Version 1.7.2
 =============
