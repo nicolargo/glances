@@ -84,8 +84,7 @@ Homebrew
 
 .. code-block:: console
 
-    $ brew install brew-pip
-    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
+    $ brew install python
     $ pip install Glances
 
 If you get the following error:
