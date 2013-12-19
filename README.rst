@@ -4,10 +4,8 @@
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://badge.fury.io/py/Glances.png
         :target: http://badge.fury.io/py/Glances
-.. image:: https://pypip.in/d/Glances/badge.png
-        :target: https://crate.io/packages/Glances
 
-Follow Glances on twitter: `glances_system`_
+Follow Glances on twitter: `nicolargo`_ or `glances_system`_
 
 ===============================
 Glances - An eye on your system
@@ -84,9 +82,8 @@ Homebrew
 
 .. code-block:: console
 
-    $ brew install brew-pip
-    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-    $ brew pip Glances
+    $ brew install python
+    $ pip install Glances
 
 If you get the following error:
 
@@ -176,6 +173,7 @@ License
 LGPL. See ``COPYING`` for more details.
 
 .. _psutil: https://code.google.com/p/psutil/
+.. _nicolargo: https://twitter.com/nicolargo
 .. _glances_system: https://twitter.com/glances_system
 .. _PyPI: https://pypi.python.org/pypi
 .. _pip: http://www.pip-installer.org/
