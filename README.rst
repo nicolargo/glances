@@ -4,8 +4,6 @@
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://badge.fury.io/py/Glances.png
         :target: http://badge.fury.io/py/Glances
-.. image:: https://pypip.in/d/Glances/badge.png
-        :target: https://crate.io/packages/Glances
 
 Follow Glances on twitter: `nicolargo`_ or `glances_system`_
 
