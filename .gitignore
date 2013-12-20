@@ -34,3 +34,6 @@ local.properties
 
 # PDT-specific
 .buildpath
+
+# ctags
+.tags*
