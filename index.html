@@ -32,10 +32,11 @@
       <section>
         <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="https://api.flattr.com/button/flattr-badge-large.png"</img></a>
            <a href="https://travis-ci.org/nicolargo/glances"><img src="https://travis-ci.org/nicolargo/glances.png?branch=master"</img></a>
-           <a href="http://badge.fury.io/py/Glances"><img src="https://badge.fury.io/py/Glances.png"></img></a>
-           <a href="https://crate.io/packages/Glances"><img src="https://pypip.in/d/Glances/badge.png"></img></a></p>
+           <a href="http://badge.fury.io/py/Glances"><img src="https://badge.fury.io/py/Glances.png"></img></a></p>
 
-        <p>Follow Glances on Twitter: <a href="https://twitter.com/glances_system">@glances_system</a></p>
+        <p>Follow Glances on Twitter:
+          <a href="https://twitter.com/nicolargo">@nicolargo</a> or
+          <a href="https://twitter.com/glances_system">@glances_system</a></p>
 
 <h1>Glances - An eye on your system</h1>
 
@@ -73,7 +74,7 @@
 
 <h2>Linux</h2>
 
-<p>Actually, packages exist for Arch Linux, Fedora/CentOS/RHEL,
+<p>At the moment, packages exist for Arch Linux, Gentoo, Fedora/CentOS/RHEL,
 Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
 install it using your favorite package manager.</p>
 
@@ -91,24 +92,12 @@ install it using your favorite package manager.</p>
 
 <h2>OS X</h2>
 
-<p>OS X users can also install Glances using <a href="http://mxcl.github.com/homebrew/">Homebrew</a> or <a href="https://www.macports.org/">MacPorts</a>.</p>
+<p>OS X users can also install Glances using <a href="http://brew.sh/">Homebrew</a> or <a href="https://www.macports.org/">MacPorts</a>.</p>
 
 <h3>Homebrew</h3>
 
-<pre><code>$ brew install brew-pip
-$ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-$ brew pip Glances
-</code></pre>
-
-<p>If you get the following error:</p>
-
-<pre><code>Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
-</code></pre>
-
-<p>Try to run:</p>
-
-<pre><code>$ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
-$ brew link Glances
+<pre><code>$ brew install python
+$ pip install Glances
 </code></pre>
 
 <h3>MacPorts</h3>
@@ -161,6 +150,8 @@ $ cd glances-*
 <p>Just run:</p>
 
 <pre><code>$ glances</code></pre>
+
+<p>and RTFM, always.</p>
 
 <h1>Documentation</h1>
 
