@@ -8,7 +8,7 @@
 # Run this script
 #
 
-LANG_LIST='es fr it pt_BR zh_CN'
+LANG_LIST='es fr it pt_BR zh_CN de'
 
 xgettext --language=Python --keyword=_ --output=./i18n/glances.pot ./glances/glances.py
 
