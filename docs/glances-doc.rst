@@ -365,6 +365,14 @@ Three views are available for processes:
 * Optional monitored processes list (new in 1.7)
 * Processes list
 
+The processes summary line display:
+
+* Tasks number (total number of processes)
+* Threads number 
+* Running tasks number
+* Sleeping tasks number
+* Other tasks number (not running or sleeping)
+
 By default, or if you hit the ``a`` key, the processes list is automatically
 sorted by CPU of memory usage.
 

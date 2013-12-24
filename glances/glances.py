@@ -1202,7 +1202,7 @@ class GlancesGrabProcesses:
 
     def update(self):
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0}
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         time_since_update = getTimeSinceLastUpdate('process_disk')
         # For each existing process...
@@ -1217,7 +1217,7 @@ class GlancesGrabProcesses:
                     is_Windows and procstat['name'] == 'System Idle Process' or
                     is_Mac and procstat['name'] == 'kernel_task'):
                     continue
-                # Update processcount (global stattistics)
+                # Update processcount (global statistics)
                 try:
                     self.processcount[str(proc.status)] += 1
                 except KeyError:
@@ -1225,6 +1225,12 @@ class GlancesGrabProcesses:
                     self.processcount[str(proc.status)] = 1
                 else:
                     self.processcount['total'] += 1
+                # Update thread number
+                # sum([psutil.Process(p).get_num_threads() for p in psutil.get_pid_list()])
+                try:
+                    self.processcount['thread'] += proc.get_num_threads()
+                except:
+                    pass
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
             else:
@@ -3257,22 +3263,31 @@ class glancesScreen:
                                      curses.A_UNDERLINE)
             return 0
         if screen_y > self.process_y + 4 and screen_x > process_x + 48:
-            self.term_window.addnstr(self.process_y, process_x, _("Processes"),
-                                     9, self.title_color if self.hascolors else
-                                     curses.A_UNDERLINE)
+            # Compute others processes
             other = (processcount['total'] -
                      stats.getProcessCount()['running'] -
                      stats.getProcessCount()['sleeping'])
+            # Thread is only available in Glances 1.7.4 or higher
+            try:
+                thread = processcount['thread']
+            except KeyError:
+                thread = '?'
+            # Display the summary
+            self.term_window.addnstr(self.process_y, process_x, _("Tasks"),
+                                     9, self.title_color if self.hascolors else
+                                     curses.A_UNDERLINE)
             self.term_window.addnstr(
-                self.process_y, process_x + 10,
-                '{0:>3}, {1:>2} {2}, {3:>3} {4}, {5:>2} {6}'.format(
+                self.process_y, process_x + 8,
+                '{0:>3} ({1:>3} {2}), {3:>2} {4}, {5:>3} {6}, {7:>2} {8}'.format(
                     str(processcount['total']),
+                    str(thread),
+                    _("thr"),
                     str(processcount['running']),
-                    _("running"),
+                    _("run"),
                     str(processcount['sleeping']),
-                    _("sleeping"),
+                    _("slp"),
                     str(other),
-                    _("other")), 42)
+                    _("oth")), 42)
 
         # Sort info
         # self.getProcessSortedBy() -> User sort choice
