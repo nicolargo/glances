@@ -1388,6 +1388,8 @@ class GlancesStats:
             cputime_total += cputime.irq
         if hasattr(cputime, 'softirq'):
             cputime_total += cputime.softirq
+        if hasattr(cputime, 'steal'):
+            cputime_total += cputime.steal
         if not hasattr(self, 'cputime_old'):
             self.cputime_old = cputime
             self.cputime_total_old = cputime_total
