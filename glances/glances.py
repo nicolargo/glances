@@ -636,9 +636,9 @@ class glancesLimits:
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_careful')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_warning')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_critical')
-            self.__setLimits('CPU_STEAL', 'cpu', 'cpusteal_careful')
-            self.__setLimits('CPU_STEAL', 'cpu', 'cpusteal_warning')
-            self.__setLimits('CPU_STEAL', 'cpu', 'cpusteal_critical')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_careful')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_warning')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_critical')
         if config.has_section('load'):
             # Read LOAD limits
             self.__setLimits('LOAD', 'load', 'careful')
