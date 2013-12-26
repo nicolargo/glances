@@ -5,7 +5,7 @@
 .. image:: https://badge.fury.io/py/Glances.png
         :target: http://badge.fury.io/py/Glances
 .. image:: https://d2weczhvl823v0.cloudfront.net/nicolargo/glances/trend.png
-        :target: https://bitdeli.com/nicolargo 
+        :target: https://bitdeli.com/nicolargo
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
@@ -26,7 +26,7 @@ Requirements
 ============
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
-- ``psutil >= 0.5.1`` (recommended version >= 1.2.1)
+- ``psutil >= 1.2.1`` (recommended version >= 1.2.1)
 - ``jinja`` (optional for HTML output)
 - ``pysensors`` (optional for HW monitoring support) [Linux-only]
 - ``hddtemp`` (optional for HDD temperature monitoring support)
