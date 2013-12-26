@@ -599,6 +599,7 @@ class glancesLimits:
 
     STD is for defaults limits (CPU/MEM/SWAP/FS)
     CPU_IOWAIT limits (iowait in %)
+    CPU_STEAL limits (steal in %)
     LOAD is for LOAD limits (5 min/15 min)
     TEMP is for sensors limits (temperature in °C)
     HDDTEMP is for hddtemp limits (temperature in °C)
@@ -607,6 +608,7 @@ class glancesLimits:
                      'CPU_USER': [50, 70, 90],
                      'CPU_SYSTEM': [50, 70, 90],
                      'CPU_IOWAIT': [40, 60, 80],
+                     'CPU_STEAL': [10, 15, 20],
                      'LOAD': [0.7, 1.0, 5.0],
                      'MEM': [50, 70, 90],
                      'SWAP': [50, 70, 90],
@@ -634,6 +636,9 @@ class glancesLimits:
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_careful')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_warning')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_critical')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_careful')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_warning')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_critical')
         if config.has_section('load'):
             # Read LOAD limits
             self.__setLimits('LOAD', 'load', 'careful')
@@ -1388,6 +1393,8 @@ class GlancesStats:
             cputime_total += cputime.irq
         if hasattr(cputime, 'softirq'):
             cputime_total += cputime.softirq
+        if hasattr(cputime, 'steal'):
+            cputime_total += cputime.steal
         if not hasattr(self, 'cputime_old'):
             self.cputime_old = cputime
             self.cputime_total_old = cputime_total
@@ -1413,6 +1420,9 @@ class GlancesStats:
                 if hasattr(self.cputime_new, 'irq'):
                     self.cpu['irq'] = (self.cputime_new.irq -
                                        self.cputime_old.irq) * percent
+                if hasattr(self.cputime_new, 'steal'):
+                    self.cpu['steal'] = (self.cputime_new.steal -
+                                         self.cputime_old.steal) * percent
                 self.cputime_old = self.cputime_new
                 self.cputime_total_old = self.cputime_total_new
             except Exception:
@@ -2606,7 +2616,7 @@ class glancesScreen:
                         format(percpu[i]['idle'] / 100, '>6.1%'), 6)
 
         # display CPU summary information
-        elif screen_y > self.cpu_y + 5 and screen_x > self.cpu_x + 18:
+        elif screen_y > self.cpu_y + 6 and screen_x > self.cpu_x + 18:
             self.term_window.addnstr(self.cpu_y, self.cpu_x, _("CPU"), 3,
                                      self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
@@ -2645,9 +2655,19 @@ class glancesScreen:
             y += 1
 
             # display extended CPU stats when space is available
-            if screen_y > self.cpu_y + 5 and tag_extendedcpu:
+            if screen_y > self.cpu_y + 6 and tag_extendedcpu:
 
-                y = 1
+                y = 0
+
+                if 'steal' in cpu:
+                    # Steal time (Linux) for VM guests
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
+                                             _("steal:"), 6)
+                    self.term_window.addnstr(
+                        self.cpu_y + y, self.cpu_x + 24,
+                        format(cpu['steal'] / 100, '>6.1%'), 6,
+                        self.__getCpuColor(cpu['steal'], stat='steal'))
+                y += 1
                 if 'nice' in cpu:
                     # nice
                     self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
@@ -2669,10 +2689,10 @@ class glancesScreen:
 
                 if 'irq' in cpu:
                     # irq (Linux, FreeBSD)
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
                                              _("irq:"), 4)
                     self.term_window.addnstr(
-                        self.cpu_y + 3, self.cpu_x + 24,
+                        self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['irq'] / 100, '>6.1%'), 6)
                     y += 1
 
