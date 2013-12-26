@@ -4,6 +4,12 @@
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://badge.fury.io/py/Glances.png
         :target: http://badge.fury.io/py/Glances
+.. image:: https://pypip.in/d/Glances/badge.png
+        :target: https://pypi.python.org/pypi/Glances/
+        :alt: Downloads
+.. image:: https://pypip.in/license/Glances/badge.png
+        :target: https://pypi.python.org/pypi/Glances/
+        :alt: License
 .. image:: https://d2weczhvl823v0.cloudfront.net/nicolargo/glances/trend.png
         :target: https://bitdeli.com/nicolargo 
 
