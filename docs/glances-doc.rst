@@ -154,7 +154,7 @@ Configuration
 
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed for setup limits and/or monitored processes list.
+Furthermore a configuration file is needed for setup limits, disks or network interfaces to hide and/or monitored processes list.
 
 By default, the configuration file is under:
 
@@ -292,6 +292,8 @@ if the bit rate is higher than 70 Mbps.
 | If bit rate is ``>70%``, then status is set to ``"WARNING"``
 | If bit rate is ``>90%``, then status is set to ``"CRITICAL"``
 
+*Note*: In the configuration file, you can define a list of network interfaces to hide.
+
 Sensors
 -------
 
@@ -330,6 +332,8 @@ Disk I/O
 Glances displays the disk I/O throughput. The unit is adapted dynamically.
 
 *Note*: There is no alert on this information.
+
+*Note*: In the configuration file, you can define a list of disk to hide.
 
 File system
 -----------

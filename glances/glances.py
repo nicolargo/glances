@@ -592,7 +592,9 @@ class monitorList:
 
 class glancesLimits:
     """
-    Manage the limit OK, CAREFUL, WARNING, CRITICAL for each stats
+    Manage limits for each stats. A limit can be:
+    * a set of careful, warning and critical values
+    * a filter (for example: hide some network interfaces) 
 
     The limit list is stored in an hash table:
     __limits_list[STAT] = [CAREFUL, WARNING, CRITICAL]
@@ -602,6 +604,9 @@ class glancesLimits:
     LOAD is for LOAD limits (5 min/15 min)
     TEMP is for sensors limits (temperature in °C)
     HDDTEMP is for hddtemp limits (temperature in °C)
+    FS is for partitions space limits
+    IODISK_HIDE is a list of disk (name) to hide
+    NETWORK_HIDE is a list of network interface (name) to hide
     """
     __limits_list = {'STD': [50, 70, 90],
                      'CPU_USER': [50, 70, 90],
@@ -614,7 +619,9 @@ class glancesLimits:
                      'HDDTEMP': [45, 52, 60],
                      'FS': [50, 70, 90],
                      'PROCESS_CPU': [50, 70, 90],
-                     'PROCESS_MEM': [50, 70, 90]}
+                     'PROCESS_MEM': [50, 70, 90],
+                     'IODISK_HIDE': [],
+                     'NETWORK_HIDE': []}
 
     def __init__(self):
         # Test if the configuration file has a limits section
@@ -672,6 +679,24 @@ class glancesLimits:
             self.__setLimits('PROCESS_MEM', 'process', 'mem_careful')
             self.__setLimits('PROCESS_MEM', 'process', 'mem_warning')
             self.__setLimits('PROCESS_MEM', 'process', 'mem_critical')
+        if config.has_section('iodisk'):
+            # Hidden disks' list
+            self.__setHidden('IODISK_HIDE', 'iodisk', 'hide')
+        if config.has_section('network'):
+            # Network interfaces' list
+            self.__setHidden('NETWORK_HIDE', 'network', 'hide')
+
+    def __setHidden(self, stat, section, alert='hide'):
+        """
+        stat: 'IODISK', 'NETWORK'
+        section: 'iodisk', 'network'
+        alert: 'hide'
+        """
+        value = config.get_raw_option(section, alert)
+
+        # print("%s / %s = %s -> %s" % (section, alert, value, stat))
+        if (value is not None):
+            self.__limits_list[stat] = value.split(",")
 
     def __setLimits(self, stat, section, alert):
         """
@@ -681,7 +706,7 @@ class glancesLimits:
         """
         value = config.get_option(section, alert)
 
-        #~ print("%s / %s = %s -> %s" % (section, alert, value, stat))
+        # print("%s / %s = %s -> %s" % (section, alert, value, stat))
         if alert.endswith('careful'):
             self.__limits_list[stat][0] = value
         elif alert.endswith('warning'):
@@ -695,6 +720,9 @@ class glancesLimits:
 
     def getAll(self):
         return self.__limits_list
+
+    def getHide(self, stat):
+        return self.__limits_list[stat]
 
     def getCareful(self, stat):
         return self.__limits_list[stat][0]
@@ -2913,70 +2941,73 @@ class glancesScreen:
                 return 3
 
             # Adapt the maximum interface to the screen
-            ret = 2
-            net_num = min(screen_y - self.network_y - 3, len(network))
-            for i in range(0, net_num):
+            net_max = min(screen_y - self.network_y - 3, len(network))
+            net_count = 0
+            for i in range(0, net_max):
                 elapsed_time = max(1, self.__refresh_time)
 
                 # network interface name
                 #~ ifname = network[i]['interface_name'].encode('ascii', 'ignore').split(':')[0]
                 ifname = network[i]['interface_name'].split(':')[0]
-                if len(ifname) > 8:
-                    ifname = '_' + ifname[-8:]
-                self.term_window.addnstr(self.network_y + 1 + i,
-                                         self.network_x, ifname, 8)
 
-                # Byte/s or bit/s
-                if self.net_byteps_tag:
-                    rx_per_sec = self.__autoUnit(network[i]['rx'] // elapsed_time)
-                    tx_per_sec = self.__autoUnit(network[i]['tx'] // elapsed_time)
-                    # Combined, or total network traffic
-                    # cx is combined rx + tx
-                    cx_per_sec = self.__autoUnit(network[i]['cx'] // elapsed_time)
-                    cumulative_rx = self.__autoUnit(network[i]['cumulative_rx'])
-                    cumulative_tx = self.__autoUnit(network[i]['cumulative_tx'])
-                    cumulative_cx = self.__autoUnit(network[i]['cumulative_cx'])
+                if (ifname not in limits.getHide('NETWORK_HIDE')):
+                    net_count += 1
 
-                else:
-                    rx_per_sec = self.__autoUnit(
-                        network[i]['rx'] // elapsed_time * 8) + "b"
-                    tx_per_sec = self.__autoUnit(
-                        network[i]['tx'] // elapsed_time * 8) + "b"
-                    # cx is combined rx + tx
-                    cx_per_sec = self.__autoUnit(
-                        network[i]['cx'] // elapsed_time * 8) + "b"
-                    cumulative_rx = self.__autoUnit(
-                        network[i]['cumulative_rx'] * 8) + "b"
-                    cumulative_tx = self.__autoUnit(
-                        network[i]['cumulative_tx'] * 8) + "b"
-                    cumulative_cx = self.__autoUnit(
-                        network[i]['cumulative_cx'] * 8) + "b"
+                    if len(ifname) > 8:
+                        ifname = '_' + ifname[-8:]
+                    self.term_window.addnstr(self.network_y + net_count,
+                                             self.network_x, ifname, 8)
 
-                if self.network_stats_cumulative:
-                    rx = cumulative_rx
-                    tx = cumulative_tx
-                    cx = cumulative_cx
-                else:
-                    rx = rx_per_sec
-                    tx = tx_per_sec
-                    cx = cx_per_sec
+                    # Byte/s or bit/s
+                    if self.net_byteps_tag:
+                        rx_per_sec = self.__autoUnit(network[i]['rx'] // elapsed_time)
+                        tx_per_sec = self.__autoUnit(network[i]['tx'] // elapsed_time)
+                        # Combined, or total network traffic
+                        # cx is combined rx + tx
+                        cx_per_sec = self.__autoUnit(network[i]['cx'] // elapsed_time)
+                        cumulative_rx = self.__autoUnit(network[i]['cumulative_rx'])
+                        cumulative_tx = self.__autoUnit(network[i]['cumulative_tx'])
+                        cumulative_cx = self.__autoUnit(network[i]['cumulative_cx'])
 
-                if not self.network_stats_combined:
-                    # rx/s
-                    self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 8,
-                                             format(rx, '>7'), 7)
-                    # tx/s
-                    self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 16,
-                                             format(tx, '>7'), 7)
-                else:
-                    # cx/s (Combined, or total)
-                    self.term_window.addnstr(self.network_y + 1 + i,
-                                             self.network_x + 16,
-                                             format(cx, '>7'), 7)
-                ret = ret + 1
-            return ret
+                    else:
+                        rx_per_sec = self.__autoUnit(
+                            network[i]['rx'] // elapsed_time * 8) + "b"
+                        tx_per_sec = self.__autoUnit(
+                            network[i]['tx'] // elapsed_time * 8) + "b"
+                        # cx is combined rx + tx
+                        cx_per_sec = self.__autoUnit(
+                            network[i]['cx'] // elapsed_time * 8) + "b"
+                        cumulative_rx = self.__autoUnit(
+                            network[i]['cumulative_rx'] * 8) + "b"
+                        cumulative_tx = self.__autoUnit(
+                            network[i]['cumulative_tx'] * 8) + "b"
+                        cumulative_cx = self.__autoUnit(
+                            network[i]['cumulative_cx'] * 8) + "b"
+
+                    if self.network_stats_cumulative:
+                        rx = cumulative_rx
+                        tx = cumulative_tx
+                        cx = cumulative_cx
+                    else:
+                        rx = rx_per_sec
+                        tx = tx_per_sec
+                        cx = cx_per_sec
+
+                    if not self.network_stats_combined:
+                        # rx/s
+                        self.term_window.addnstr(self.network_y + net_count,
+                                                 self.network_x + 8,
+                                                 format(rx, '>7'), 7)
+                        # tx/s
+                        self.term_window.addnstr(self.network_y + net_count,
+                                                 self.network_x + 16,
+                                                 format(tx, '>7'), 7)
+                    else:
+                        # cx/s (Combined, or total)
+                        self.term_window.addnstr(self.network_y + net_count,
+                                                 self.network_x + 16,
+                                                 format(cx, '>7'), 7)
+            return net_count +2
         return 0
 
     def displaySensors(self, sensors, offset_y=0):
@@ -3074,28 +3105,28 @@ class glancesScreen:
                 return 3
 
             # Adapt the maximum disk to the screen
-            disk = 0
-            disk_num = min(screen_y - self.diskio_y - 3, len(diskio))
-            for disk in range(0, disk_num):
+            disk_cpt = 0
+            disk_max = min(screen_y - self.diskio_y - 3, len(diskio))
+            for disk in range(0, disk_max):
                 elapsed_time = max(1, self.__refresh_time)
 
-                # partition name
-                self.term_window.addnstr(
-                    self.diskio_y + 1 + disk, self.diskio_x,
-                    diskio[disk]['disk_name'], 8)
-
-                # in/s
-                ins = diskio[disk]['write_bytes'] // elapsed_time
-                self.term_window.addnstr(
-                    self.diskio_y + 1 + disk, self.diskio_x + 10,
-                    format(self.__autoUnit(ins), '>5'), 5)
-
-                # out/s
-                outs = diskio[disk]['read_bytes'] // elapsed_time
-                self.term_window.addnstr(
-                    self.diskio_y + 1 + disk, self.diskio_x + 18,
-                    format(self.__autoUnit(outs), '>5'), 5)
-            return disk + 3
+                if (diskio[disk]['disk_name'] not in limits.getHide('IODISK_HIDE')):
+                    disk_cpt += 1
+                    # partition name
+                    self.term_window.addnstr(
+                        self.diskio_y + disk_cpt, self.diskio_x,
+                        diskio[disk]['disk_name'], 8)
+                    # in/s
+                    ins = diskio[disk]['write_bytes'] // elapsed_time
+                    self.term_window.addnstr(
+                        self.diskio_y + disk_cpt, self.diskio_x + 10,
+                        format(self.__autoUnit(ins), '>5'), 5)
+                    # out/s
+                    outs = diskio[disk]['read_bytes'] // elapsed_time
+                    self.term_window.addnstr(
+                        self.diskio_y + disk_cpt, self.diskio_x + 18,
+                        format(self.__autoUnit(outs), '>5'), 5)
+            return disk_cpt + 2
         return 0
 
     def displayFs(self, fs, offset_y=0):
