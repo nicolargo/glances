@@ -518,12 +518,35 @@ else:
 
 On the left, you can easily see if you are connected to a Glances server.
 
+
 API documentation
 =================
 
 Glances uses a `XML-RPC server`_ and can be used by another client software.
 
 API documentation is available at https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To
+
+Others outputs
+==============
+
+Thanks to the -o option, it is possible to export statistics to CSV or HTML files.
+
+.. code-block:: console
+
+    $ glances -o CSV -f /tmp/glances.csv
+
+CSV files have on line per stats:
+
+- load,load1,load5,load15
+- mem,total,used,free
+- swap,total,used,free
+- cpu,user,system,nice,idel,iowait,irq
+
+.. code-block:: console
+
+    $ glances -o HTML -f /tmp
+
+Note: The css and img folders (glances/data) should be in the /tmp folder
 
 Support
 =======

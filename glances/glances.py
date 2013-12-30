@@ -4005,8 +4005,12 @@ class glancesCsv:
         if stats.getCpu():
             # Update CSV with the CPU stats
             cpu = stats.getCpu()
-            self.__csvfile.writerow(["cpu", cpu['user'], cpu['system'],
-                                     cpu['nice']])
+            # Standard CPU stats
+            l = ["cpu", cpu['user'], cpu['system'], cpu['nice']]
+            # Extra CPU stats
+            for s in ('idle', 'iowait', 'irq'):
+                l.append(cpu[s] if cpu.has_key(s) else None)
+            self.__csvfile.writerow(l)
         if stats.getLoad():
             # Update CSV with the LOAD stats
             load = stats.getLoad()
