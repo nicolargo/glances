@@ -722,7 +722,12 @@ class glancesLimits:
         return self.__limits_list
 
     def getHide(self, stat):
-        return self.__limits_list[stat]
+        try:
+            self.__limits_list[stat]
+        except KeyError:
+            return []
+        else:
+            return self.__limits_list[stat]
 
     def getCareful(self, stat):
         return self.__limits_list[stat][0]
