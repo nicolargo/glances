@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.3.
+This manual describes *Glances* version 1.7.4.
 
-Copyright © 2012-2013 Nicolas Hennion <nicolas@nicolargo.com>
+Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-November 2013
+January 2014
 
 .. contents:: Table of Contents
 
@@ -202,7 +202,7 @@ Header
 
 .. image:: images/header.png
 
-The header shows the OS name, release version, platform architecture and the hostname.
+The header shows the hostname, OS name, release version, platform architecture and system uptime.
 On Linux, it shows also the kernel version.
 
 CPU

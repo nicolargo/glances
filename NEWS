@@ -1,6 +1,7 @@
 Version 1.7.4
 =============
 
+    * Add system uptime (#276)
     * You can hide disk from the IOdisk view using the conf file
     * You can hide network interface from the Network view using the conf file
     * ...

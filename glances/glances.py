@@ -1698,6 +1698,15 @@ class GlancesStats:
                 self.processcount = processcount
                 self.process = process
 
+        # Uptime
+        try:
+            # For PsUtil >= 0.7.0
+            self.uptime = datetime.now() - datetime.fromtimestamp(psutil.get_boot_time())
+        except:
+            self.uptime = datetime.now() - datetime.fromtimestamp(psutil.BOOT_TIME)
+        # Convert uptime to string (because datetime is not JSONifi)
+        self.uptime = str(self.uptime).split('.')[0]
+
         # Get the current date/time
         self.now = datetime.now()
 
@@ -1835,6 +1844,9 @@ class GlancesStats:
     def getNow(self):
         return self.now
 
+    def getUptime(self):
+        return self.uptime
+
 
 class GlancesStatsServer(GlancesStats):
 
@@ -1868,6 +1880,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats["process"] = self.process if process_tag else []
         self.all_stats["core_number"] = self.core_number
         self.all_stats["psutil_version"] = self.psutil_version
+        self.all_stats["uptime"] = self.uptime
 
         # Get the current date/time
         self.now = datetime.now()
@@ -1920,6 +1933,10 @@ class GlancesStatsClient(GlancesStats):
             self.process = input_stats["process"]
             self.core_number = input_stats["core_number"]
             self.psutil_version = input_stats["psutil_version"]
+            try:
+                self.uptime = input_stats["uptime"]
+            except Exception:
+                self.uptime = None
 
         # Get the current date/time
         self.now = datetime.now()
@@ -1943,6 +1960,8 @@ class glancesScreen:
         self.term_h = 24
         self.system_x = 0
         self.system_y = 0
+        self.uptime_x = 79
+        self.uptime_y = 0
         self.cpu_x = 0
         self.cpu_y = 2
         self.load_x = 17
@@ -2469,7 +2488,7 @@ class glancesScreen:
 
         if not self.help_tag:
             # Display stats
-            self.displaySystem(stats.getHost(), stats.getSystem())
+            self.displaySystem(stats.getHost(), stats.getSystem(), stats.getUptime())
             cpu_offset = self.displayCpu(stats.getCpu(), stats.getPerCpu(), processlist)
             self.displayLoad(stats.getLoad(), stats.getCore(), processlist, cpu_offset)
             self.displayMem(stats.getMem(), stats.getMemSwap(), processlist, cpu_offset)
@@ -2529,26 +2548,44 @@ class glancesScreen:
             # Wait 100ms...
             curses.napms(100)
 
-    def displaySystem(self, host, system):
+    def displaySystem(self, host, system, uptime):
         # System information
         if not host or not system:
             return 0
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+        # Host + OS informations
         if host['os_name'] == "Linux":
-            system_msg = _("{0} {1} with {2} {3} on {4}").format(
+            system_msg = _("{0} ({1} {2} / {3} {4})").format(
+                host['hostname'],
                 system['linux_distro'], system['platform'],
-                system['os_name'], system['os_version'],
-                host['hostname'])
+                system['os_name'], system['os_version'])
         else:
-            system_msg = _("{0} {1} {2} on {3}").format(
+            system_msg = _("{0} ({1} {2} {3})").format(
+                host['hostname'],
                 system['os_name'], system['os_version'],
-                system['platform'], host['hostname'])
-        if (screen_y > self.system_y and
-            screen_x > self.system_x + len(system_msg)):
-            center = (screen_x // 2) - len(system_msg) // 2
-            self.term_window.addnstr(self.system_y, self.system_x + center,
-                                     system_msg, 80, curses.A_UNDERLINE)
+                system['platform'])
+        # System uptime
+        if uptime:
+            uptime_msg = _("Uptime: {0}").format(uptime)
+        else:
+            uptime_msg = ""
+        # Display
+        if (screen_y > self.system_y):
+            if (screen_x > self.system_x + len(system_msg) + len(uptime_msg)):
+                center = ((screen_x - len(uptime_msg)) // 2) - len(system_msg) // 2
+                self.term_window.addnstr(self.system_y, self.system_x + center,
+                                         system_msg, 80, curses.A_UNDERLINE)
+                self.term_window.addnstr(self.uptime_y, screen_x - len(uptime_msg),
+                                         uptime_msg, 80)
+                return len(system_msg) + len(uptime_msg)
+            elif (screen_x > self.system_x + len(system_msg)):
+                center = (screen_x // 2) - len(system_msg) // 2
+                self.term_window.addnstr(self.system_y, self.system_x + center,
+                                         system_msg, 80, curses.A_UNDERLINE)
+                return len(system_msg)
+            else:
+                return 0
 
     def displayCpu(self, cpu, percpu, proclist):
         # Get screen size
@@ -4222,6 +4259,11 @@ class GlancesInstance():
         # Update and return current date/hour
         self.__update__()
         return json.dumps(stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
+
+    def getUptime(self):
+        # Update and return system uptime
+        self.__update__()
+        return json.dumps(stats.getUptime().strftime(_("%Y-%m-%d %H:%M:%S")))
 
     def __getTimeSinceLastUpdate(self, IOType):
         assert(IOType in ['net', 'disk', 'process_disk'])
