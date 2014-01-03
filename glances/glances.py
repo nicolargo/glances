@@ -3737,9 +3737,14 @@ class glancesScreen:
                     command = process_name
                 else:
                     command = process_cmdline
-                self.term_window.addnstr(monitor_y + 3 + processes,
-                                         process_x + process_name_x,
-                                         command, max_process_name)
+                try:
+                    self.term_window.addnstr(monitor_y + 3 + processes,
+                                             process_x + process_name_x,
+                                             command, max_process_name)
+                except UnicodeEncodeError:
+                    self.term_window.addnstr(monitor_y + 3 + processes,
+                                             process_x + process_name_x,
+                                             process_name, max_process_name)                    
 
     def displayCaption(self, cs_status="None"):
         """
