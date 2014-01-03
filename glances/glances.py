@@ -359,10 +359,17 @@ class Timer:
     """
 
     def __init__(self, duration):
-        self.started(duration)
+        self.duration = duration
+        self.start()
 
-    def started(self, duration):
-        self.target = time.time() + duration
+    def start(self):
+        self.target = time.time() + self.duration
+
+    def reset(self):
+        self.start()
+
+    def set(self, duration):
+        self.duration = duration
 
     def finished(self):
         return time.time() > self.target
@@ -1164,12 +1171,20 @@ class GlancesGrabProcesses:
     Get processed stats using the PsUtil lib
     """
 
-    def __init__(self):
+    def __init__(self, cache_timeout = 60):
         """
-        Init the io dict
-        key = pid
-        value = [ read_bytes_old, write_bytes_old ]
+        Init the class to collect stats about processes
         """
+        # Add internals caches because PSUtil do not cache all the stats
+        # See: https://code.google.com/p/psutil/issues/detail?id=462
+        self.username_cache = {}
+        self.cmdline_cache = {}
+        # The internals caches will be cleaned each 'cache_timeout' seconds
+        self.cache_timeout = cache_timeout
+        self.cache_timer = Timer(self.cache_timeout)
+        # Init the io dict
+        # key = pid
+        # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
 
     def __get_process_stats(self, proc):
@@ -1178,31 +1193,56 @@ class GlancesGrabProcesses:
         """
         procstat = {}
 
-        procstat['name'] = proc.name
+        # Process ID
         procstat['pid'] = proc.pid
+
+        # Process name (cached by PSUtil)
+        procstat['name'] = proc.name
+
+        # Process username (cached with internal cache)
         try:
-            procstat['username'] = proc.username
-        except KeyError:
+            self.username_cache[procstat['pid']]
+        except:
             try:
-                procstat['username'] = proc.uids.real
+                self.username_cache[procstat['pid']] = proc.username
             except KeyError:
-                procstat['username'] = "?"
-        procstat['cmdline'] = ' '.join(proc.cmdline)
-        procstat['memory_info'] = proc.get_memory_info()
-        procstat['memory_percent'] = proc.get_memory_percent()
+                try:
+                    self.username_cache[procstat['pid']] = proc.uids.real
+                except KeyError:
+                    self.username_cache[procstat['pid']] = "?"
+        procstat['username'] = self.username_cache[procstat['pid']]
+
+        # Process command line (cached with internal cache)
+        try:
+            self.cmdline_cache[procstat['pid']]
+        except:
+            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline)
+        procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
+
+        # Process status
         procstat['status'] = str(proc.status)[:1].upper()
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+
+        # Process nice
         procstat['nice'] = proc.get_nice()
 
+        # Process memory
+        procstat['memory_info'] = proc.get_memory_info()
+        procstat['memory_percent'] = proc.get_memory_percent()
+
+        # Process CPU
+        procstat['cpu_times'] = proc.get_cpu_times()
+        procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+
+        # Process network connections (TCP and UDP) (Experimental)
+        # !!! High CPU consumption
         # try:
-        #     # !!! High CPU consumption
         #     procstat['tcp'] = len(proc.get_connections(kind="tcp"))
         #     procstat['udp'] = len(proc.get_connections(kind="udp"))
         # except:
         #     procstat['tcp'] = 0
         #     procstat['udp'] = 0
 
+        # Process IO
         # procstat['io_counters'] is a list:
         # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
         # If io_tag = 0 > Access denied (display "?")
@@ -1237,11 +1277,15 @@ class GlancesGrabProcesses:
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
+        # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
+
         # For each existing process...
         for proc in psutil.process_iter():
             try:
+                # Get stats using the PSUtil
                 procstat = self.__get_process_stats(proc)
+                # Add a specific time_since_update stats for bitrate
                 procstat['time_since_update'] = time_since_update
                 # ignore the 'idle' process on Windows and *BSD
                 # ignore the 'kernel_task' process on OS X
@@ -1258,8 +1302,7 @@ class GlancesGrabProcesses:
                     self.processcount[str(proc.status)] = 1
                 else:
                     self.processcount['total'] += 1
-                # Update thread number
-                # sum([psutil.Process(p).get_num_threads() for p in psutil.get_pid_list()])
+                # Update thread number (global statistics)
                 try:
                     self.processcount['thread'] += proc.get_num_threads()
                 except:
@@ -1269,6 +1312,13 @@ class GlancesGrabProcesses:
             else:
                 # Update processlist
                 self.processlist.append(procstat)
+
+        # Clean internals caches if timeout is reached
+        if (self.cache_timer.finished()):
+            self.username_cache = {}
+            self.cmdline_cache = {}
+            # Restart the timer
+            self.cache_timer.reset()
 
     def getcount(self):
         return self.processcount

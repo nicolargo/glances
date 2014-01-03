@@ -1,9 +1,11 @@
 Version 1.7.4
 =============
 
+    * Add threads number in the task summary line
     * Add system uptime (#276)
     * You can hide disk from the IOdisk view using the conf file
     * You can hide network interface from the Network view using the conf file
+    * Optimisation of CPU consumption ~10%
     * ...
 
 Version 1.7.3
