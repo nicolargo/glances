@@ -2626,9 +2626,13 @@ class glancesScreen:
                 center = ((screen_x - len(uptime_msg)) // 2) - len(system_msg) // 2
                 self.term_window.addnstr(self.system_y, self.system_x + center,
                                          system_msg, 80, curses.A_UNDERLINE)
-                self.term_window.addnstr(self.uptime_y, screen_x - len(uptime_msg),
-                                         uptime_msg, 80)
-                return len(system_msg) + len(uptime_msg)
+                try:
+                    self.term_window.addnstr(self.uptime_y, screen_x - len(uptime_msg),
+                                             uptime_msg, 80)
+                except:
+                    return len(system_msg)
+                else:
+                    return len(system_msg) + len(uptime_msg)
             elif (screen_x > self.system_x + len(system_msg)):
                 center = (screen_x // 2) - len(system_msg) // 2
                 self.term_window.addnstr(self.system_y, self.system_x + center,
