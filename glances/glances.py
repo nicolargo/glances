@@ -4478,7 +4478,7 @@ def signal_handler(signal, frame):
     end()
 
 
-def getpassword(description='', confirm=False):
+def get_password(description='', confirm=False):
     """
     Read a password from the command line (with confirmation if confirm = True)
     """
@@ -4497,7 +4497,7 @@ def getpassword(description='', confirm=False):
         return password1
     else:
         sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
-        return getpassword(description=description, confirm=confirm)
+        return get_password(description=description, confirm=confirm)
 
 
 def main():
@@ -4528,6 +4528,8 @@ def main():
     html_tag = False
     csv_tag = False
     client_tag = False
+    password_tag = False
+    password_prompt = False
     if is_Windows and not is_colorConsole:
         # Force server mode for Windows OS without colorconsole
         server_tag = True
@@ -4574,13 +4576,16 @@ def main():
             sys.exit(0)
         elif opt in ("-s", "--server"):
             server_tag = True
-        elif opt in ("-P", "--password"):
+        elif opt in ("-P"):
             try:
                 arg
             except NameError:
                 print(_("Error: -P flag need an argument (password)"))
                 sys.exit(2)
+            password_tag = True
             password = arg
+        elif opt in ("--password"):
+            password_prompt = True
         elif opt in ("-B", "--bind"):
             try:
                 arg
@@ -4654,6 +4659,10 @@ def main():
             sys.exit(0)
 
     # Check options
+    if password_tag and password_prompt:
+        print(_("Error: Cannot use both -P and --password flag"))
+        sys.exit(2)
+
     if server_tag:
         if client_tag:
             print(_("Error: Cannot use both -s and -c flag"))
@@ -4661,8 +4670,8 @@ def main():
         if html_tag or csv_tag:
             print(_("Error: Cannot use both -s and -o flag"))
             sys.exit(2)
-        if password == '':
-            password = getpassword(description=_("Define the password for the Glances server"), confirm=True)
+        if password_prompt:
+            password = get_password(description=_("Define the password for the Glances server"), confirm=True)
 
     if client_tag:
         if html_tag or csv_tag:
@@ -4672,8 +4681,8 @@ def main():
             print(_("Error: Cannot use both -c and -C flag"))
             print(_("       Limits are set based on the server ones"))
             sys.exit(2)
-        if password == '':
-            password = getpassword(description=_("Enter the Glances server password"), confirm=False)
+        if password_prompt:
+            password = get_password(description=_("Enter the Glances server password"), confirm=False)
 
     if html_tag:
         if not html_lib_tag:
@@ -4724,7 +4733,7 @@ def main():
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
         server = GlancesServer(bind_ip, int(server_port), GlancesXMLRPCHandler, cached_time)
 
-        # Set the server login/password (if -P tag)
+        # Set the server login/password (if -P/--password tag)
         if password != "":
             server.add_user(username, password)
 
