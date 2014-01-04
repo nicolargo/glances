@@ -1496,6 +1496,9 @@ class GlancesStats:
                 if hasattr(self.cputime_new, 'irq'):
                     self.cpu['irq'] = (self.cputime_new.irq -
                                        self.cputime_old.irq) * percent
+                if hasattr(self.cputime_new, 'softirq'):
+                    self.cpu['softirq'] = (self.cputime_new.softirq -
+                                           self.cputime_old.softirq) * percent
                 self.cputime_old = self.cputime_new
                 self.cputime_total_old = self.cputime_total_new
             except Exception:
