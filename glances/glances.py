@@ -601,13 +601,14 @@ class glancesLimits:
     """
     Manage limits for each stats. A limit can be:
     * a set of careful, warning and critical values
-    * a filter (for example: hide some network interfaces) 
+    * a filter (for example: hide some network interfaces)
 
     The limit list is stored in an hash table:
     __limits_list[STAT] = [CAREFUL, WARNING, CRITICAL]
 
     STD is for defaults limits (CPU/MEM/SWAP/FS)
     CPU_IOWAIT limits (iowait in %)
+    CPU_STEAL limits (steal in %)
     LOAD is for LOAD limits (5 min/15 min)
     TEMP is for sensors limits (temperature in °C)
     HDDTEMP is for hddtemp limits (temperature in °C)
@@ -619,6 +620,7 @@ class glancesLimits:
                      'CPU_USER': [50, 70, 90],
                      'CPU_SYSTEM': [50, 70, 90],
                      'CPU_IOWAIT': [40, 60, 80],
+                     'CPU_STEAL': [10, 15, 20],
                      'LOAD': [0.7, 1.0, 5.0],
                      'MEM': [50, 70, 90],
                      'SWAP': [50, 70, 90],
@@ -648,6 +650,9 @@ class glancesLimits:
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_careful')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_warning')
             self.__setLimits('CPU_IOWAIT', 'cpu', 'iowait_critical')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_careful')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_warning')
+            self.__setLimits('CPU_STEAL', 'cpu', 'steal_critical')
         if config.has_section('load'):
             # Read LOAD limits
             self.__setLimits('LOAD', 'load', 'careful')
@@ -1471,6 +1476,8 @@ class GlancesStats:
             cputime_total += cputime.irq
         if hasattr(cputime, 'softirq'):
             cputime_total += cputime.softirq
+        if hasattr(cputime, 'steal'):
+            cputime_total += cputime.steal
         if not hasattr(self, 'cputime_old'):
             self.cputime_old = cputime
             self.cputime_total_old = cputime_total
@@ -1499,6 +1506,9 @@ class GlancesStats:
                 if hasattr(self.cputime_new, 'softirq'):
                     self.cpu['softirq'] = (self.cputime_new.softirq -
                                            self.cputime_old.softirq) * percent
+                if hasattr(self.cputime_new, 'steal'):
+                    self.cpu['steal'] = (self.cputime_new.steal -
+                                         self.cputime_old.steal) * percent
                 self.cputime_old = self.cputime_new
                 self.cputime_total_old = self.cputime_total_new
             except Exception:
@@ -1524,6 +1534,9 @@ class GlancesStats:
         for i in range(len(percputime)):
             if hasattr(percputime[i], 'softirq'):
                 percputime_total[i] += percputime[i].softirq
+        for i in range(len(percputime)):
+            if hasattr(percputime[i], 'steal'):
+                percputime_total[i] += percputime[i].steal
         if not hasattr(self, 'percputime_old'):
             self.percputime_old = percputime
             self.percputime_total_old = percputime_total
@@ -1555,6 +1568,9 @@ class GlancesStats:
                     if hasattr(self.percputime_new[i], 'softirq'):
                         cpu['softirq'] = (self.percputime_new[i].softirq -
                                           self.percputime_old[i].softirq) * perpercent[i]
+                    if hasattr(self.percputime_new[i], 'steal'):
+                        cpu['steal'] = (self.percputime_new[i].steal -
+                                        self.percputime_old[i].steal) * perpercent[i]
                     self.percpu.append(cpu)
                 self.percputime_old = self.percputime_new
                 self.percputime_total_old = self.percputime_total_new
@@ -2215,7 +2231,7 @@ class glancesScreen:
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
-        # stat is USER, SYSTEM or IOWAIT
+        # stat is USER, SYSTEM, IOWAIT or STEAL
         try:
             variable = (current * 100) / max
         except ZeroDivisionError:
@@ -2677,6 +2693,9 @@ class glancesScreen:
             if 'iowait' in cpu:
                 logs.add(self.__getCpuAlert(cpu['iowait'], stat="IOWAIT"), "CPU IOwait",
                          cpu['iowait'], proclist)
+            if 'steal' in cpu:
+                logs.add(self.__getCpuAlert(cpu['steal'], stat="STEAL"), "CPU steal",
+                         cpu['steal'], proclist)
 
         # Display per-CPU stats
         if screen_y > self.cpu_y + 5 and tag_percpu:
@@ -2773,8 +2792,17 @@ class glancesScreen:
 
             # display extended CPU stats when space is available
             if screen_y > self.cpu_y + 5 and tag_extendedcpu:
+                y = 0
+                if 'steal' in cpu:
+                    # Steal time (Linux) for VM guests
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
+                                             _("steal:"), 6)
+                    self.term_window.addnstr(
+                        self.cpu_y + y, self.cpu_x + 24,
+                        format(cpu['steal'] / 100, '>6.1%'), 6,
+                        self.__getCpuColor(cpu['steal'], stat='steal'))
 
-                y = 1
+                y += 1
                 if 'nice' in cpu:
                     # nice
                     self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
@@ -2796,10 +2824,10 @@ class glancesScreen:
 
                 if 'irq' in cpu:
                     # irq (Linux, FreeBSD)
-                    self.term_window.addnstr(self.cpu_y + 3, self.cpu_x + 16,
+                    self.term_window.addnstr(self.cpu_y + y, self.cpu_x + 16,
                                              _("irq:"), 4)
                     self.term_window.addnstr(
-                        self.cpu_y + 3, self.cpu_x + 24,
+                        self.cpu_y + y, self.cpu_x + 24,
                         format(cpu['irq'] / 100, '>6.1%'), 6)
                     y += 1
 
@@ -3809,78 +3837,92 @@ class glancesScreen:
 
             # display the limits table
             limits_table_x = self.help_x
-            limits_table_y = self.help_y + 1
-            self.term_window.addnstr(limits_table_y, limits_table_x + 18,
-                                     format(_("OK"), '^8'), 8,
-                                     self.default_color)
-            self.term_window.addnstr(limits_table_y, limits_table_x + 26,
-                                     format(_("CAREFUL"), '^8'), 8,
-                                     self.ifCAREFUL_color),
-            self.term_window.addnstr(limits_table_y, limits_table_x + 34,
-                                     format(_("WARNING"), '^8'), 8,
-                                     self.ifWARNING_color),
-            self.term_window.addnstr(limits_table_y, limits_table_x + 42,
-                                     format(_("CRITICAL"), '^8'), 8,
-                                     self.ifCRITICAL_color),
-
-            # display the stat labels
-            stat_labels = [_("CPU user %"), _("CPU system %"),
-                           _("CPU iowait %"), _("Load"),
-                           _("RAM memory %"), _("Swap memory %"),
-                           _("Temp °C"), _("HDD Temp °C"),
-                           _("Filesystem %"), _("CPU process %"),
-                           _("MEM process %")]
-
-            width = 8
-            limits_table_x = self.help_x + 2
             limits_table_y = self.help_y + 2
-            for label in stat_labels:
+            self.term_window.addnstr(limits_table_y, limits_table_x + 15,
+                                     format(_("CAREFUL"), '7'), 7,
+                                     self.ifCAREFUL_color),
+            self.term_window.addnstr(limits_table_y, limits_table_x + 22,
+                                     format(_("WARNING"), '7'), 7,
+                                     self.ifWARNING_color),
+            self.term_window.addnstr(limits_table_y, limits_table_x + 29,
+                                     format(_("CRITICAL"), '8'), 8,
+                                     self.ifCRITICAL_color)
+
+            # stats labels and limit values (left column)
+            stats_labels_left = [_("CPU user %"), _("CPU system %"),
+                                 _("CPU iowait %"), _("CPU steal %"),
+                                 _("Load"), _("RAM %")]
+            limits_table_x = self.help_x + 2
+            limits_table_y = self.help_y + 3
+            for label in stats_labels_left:
                 self.term_window.addnstr(limits_table_y, limits_table_x,
-                                         format(label, '<14'), 14)
+                                         format(label, '<13'), 13)
                 limits_table_y += 1
 
-            # display the limit values
-            limit_values = [[0, limits.getCPUCareful(stat='user'),
-                             limits.getCPUWarning(stat='user'),
-                             limits.getCPUCritical(stat='user')],
-                            [0, limits.getCPUCareful(stat='system'),
-                             limits.getCPUWarning(stat='system'),
-                             limits.getCPUCritical(stat='system')],
-                            [0, limits.getCPUCareful(stat='iowait'),
-                             limits.getCPUWarning(stat='iowait'),
-                             limits.getCPUCritical(stat='iowait')],
-                            [0, limits.getLOADCareful() * core,
-                             limits.getLOADWarning() * core,
-                             limits.getLOADCritical() * core],
-                            [0, limits.getMEMCareful(),
-                             limits.getMEMWarning(),
-                             limits.getMEMCritical()],
-                            [0, limits.getSWAPCareful(),
-                             limits.getSWAPWarning(),
-                             limits.getSWAPCritical()],
-                            [0, limits.getTEMPCareful(),
-                             limits.getTEMPWarning(),
-                             limits.getTEMPCritical()],
-                            [0, limits.getHDDTEMPCareful(),
-                             limits.getHDDTEMPWarning(),
-                             limits.getHDDTEMPCritical()],
-                            [0, limits.getFSCareful(),
-                             limits.getFSWarning(),
-                             limits.getFSCritical()],
-                            [0, limits.getProcessCareful(stat='CPU', core=core),
-                             limits.getProcessWarning(stat='CPU', core=core),
-                             limits.getProcessCritical(stat='CPU', core=core)],
-                            [0, limits.getProcessCareful(stat='MEM'),
-                             limits.getProcessWarning(stat='MEM'),
-                             limits.getProcessCritical(stat='MEM')]]
-
-            limits_table_x = self.help_x + 15
-            limits_table_y = self.help_y + 2
-            for value in limit_values:
+            limit_values_left = [[limits.getCPUCareful(stat='user'),
+                                  limits.getCPUWarning(stat='user'),
+                                  limits.getCPUCritical(stat='user')],
+                                 [limits.getCPUCareful(stat='system'),
+                                  limits.getCPUWarning(stat='system'),
+                                  limits.getCPUCritical(stat='system')],
+                                 [limits.getCPUCareful(stat='iowait'),
+                                  limits.getCPUWarning(stat='iowait'),
+                                  limits.getCPUCritical(stat='iowait')],
+                                 [limits.getCPUCareful(stat='steal'),
+                                  limits.getCPUWarning(stat='steal'),
+                                  limits.getCPUCritical(stat='steal')],
+                                 [limits.getLOADCareful() * core,
+                                  limits.getLOADWarning() * core,
+                                  limits.getLOADCritical() * core],
+                                 [limits.getMEMCareful(),
+                                  limits.getMEMWarning(),
+                                  limits.getMEMCritical()]]
+            width = 6
+            limits_table_x = self.help_x + 16
+            limits_table_y = self.help_y + 3
+            for value in limit_values_left:
                 self.term_window.addnstr(
                     limits_table_y, limits_table_x,
-                    '{0:>{width}}{1:>{width}}{2:>{width}}{3:>{width}}'.format(
-                        *value, width=width), 32)
+                    '{0:>{width}}{1:>{width}}{2:>{width}}'.format(
+                        *value, width=width), 18)
+                limits_table_y += 1
+
+            # stats labels and limit values (right column)
+            stats_labels_right = [_("Swap %"), _("Temp °C"),
+                                  _("HDD Temp °C"), _("Filesystem %"),
+                                  _("CPU process %"), _("MEM process %")]
+            limits_table_x = self.help_x + 38
+            limits_table_y = self.help_y + 3
+            for label in stats_labels_right:
+                self.term_window.addnstr(limits_table_y, limits_table_x,
+                                         format(label, '<13'), 13)
+                limits_table_y += 1
+
+            limit_values_right = [[limits.getSWAPCareful(),
+                                   limits.getSWAPWarning(),
+                                   limits.getSWAPCritical()],
+                                  [limits.getTEMPCareful(),
+                                   limits.getTEMPWarning(),
+                                   limits.getTEMPCritical()],
+                                  [limits.getHDDTEMPCareful(),
+                                   limits.getHDDTEMPWarning(),
+                                   limits.getHDDTEMPCritical()],
+                                  [limits.getFSCareful(),
+                                   limits.getFSWarning(),
+                                   limits.getFSCritical()],
+                                  [limits.getProcessCareful(stat='CPU', core=core),
+                                   limits.getProcessWarning(stat='CPU', core=core),
+                                   limits.getProcessCritical(stat='CPU', core=core)],
+                                  [limits.getProcessCareful(stat='MEM'),
+                                   limits.getProcessWarning(stat='MEM'),
+                                   limits.getProcessCritical(stat='MEM')]]
+            limits_table_x = self.help_x + 53
+            limits_table_y = self.help_y + 3
+            for value in limit_values_right:
+                self.term_window.addnstr(
+                    limits_table_y, limits_table_x,
+                    '{0:>{width}}{1:>{width}}{2:>{width}}'.format(
+                        *value, width=width), 18)
                 limits_table_y += 1
 
             # key table (left column)
@@ -3904,17 +3946,16 @@ class glancesScreen:
                     '{0:{width}}{1}'.format(*key, width=width), 38)
                 key_table_y += 1
 
-                # key table (right column)
-                key_col_right = [[_("l"), _("Show/hide logs")],
-                                 [_("b"), _("Bytes or bits for network I/O")],
-                                 [_("w"), _("Delete warning logs")],
-                                 [_("x"), _("Delete warning and critical logs")],
-                                 [_("1"), _("Global CPU or per-CPU stats")],
-                                 [_("h"), _("Show/hide this help screen")],
-                                 [_("t"), _("View network I/O as combination")],
-                                 [_("u"), _("View cumulative network I/O")],
-                                 [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
-
+            # key table (right column)
+            key_col_right = [[_("l"), _("Show/hide logs")],
+                             [_("b"), _("Bytes or bits for network I/O")],
+                             [_("w"), _("Delete warning logs")],
+                             [_("x"), _("Delete warning and critical logs")],
+                             [_("1"), _("Global CPU or per-CPU stats")],
+                             [_("h"), _("Show/hide this help screen")],
+                             [_("t"), _("View network I/O as combination")],
+                             [_("u"), _("View cumulative network I/O")],
+                             [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
             key_table_x = self.help_x + 38
             key_table_y = limits_table_y + 1
             for key in key_col_right:
