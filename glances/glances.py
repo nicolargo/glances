@@ -4637,7 +4637,7 @@ def main():
                 sys.exit(2)
             password_tag = True
             password = arg
-        elif opt in ("--password"):
+        elif opt in ("--password", "--password"):
             password_prompt = True
         elif opt in ("-B", "--bind"):
             try:
