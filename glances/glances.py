@@ -3432,10 +3432,10 @@ class glancesScreen:
                 thread = '?'
             # Display the summary
             self.term_window.addnstr(self.process_y, process_x, _("Tasks"),
-                                     9, self.title_color if self.hascolors else
+                                     5, self.title_color if self.hascolors else
                                      curses.A_UNDERLINE)
             self.term_window.addnstr(
-                self.process_y, process_x + 8,
+                self.process_y, process_x + 7,
                 '{0:>3} ({1:>3} {2}), {3:>2} {4}, {5:>3} {6}, {7:>2} {8}'.format(
                     str(processcount['total']),
                     str(thread),
@@ -3445,7 +3445,7 @@ class glancesScreen:
                     str(processcount['sleeping']),
                     _("slp"),
                     str(other),
-                    _("oth")), 42)
+                    _("oth")), 38)
 
         # Sort info
         # self.getProcessSortedBy() -> User sort choice
@@ -3455,8 +3455,8 @@ class glancesScreen:
         else:
             sortmsg = _("sorted by ") + sortedby
         if (screen_y > self.process_y + 4 and
-            screen_x > process_x + 49 + len(sortmsg)):
-            self.term_window.addnstr(self.process_y, 76, sortmsg, len(sortmsg))
+            screen_x > process_x + 48 + len(sortmsg)):
+            self.term_window.addnstr(self.process_y, 73, sortmsg, len(sortmsg))
 
         #*************************
         # Monitored processes list
