@@ -1,12 +1,16 @@
 Version 1.7.4
 =============
 
-    * Add threads number in the task summary line
+    * Add threads number in the task summary line (#308)
     * Add system uptime (#276)
-    * You can hide disk from the IOdisk view using the conf file
+    * Add CPU steal % to cpu extended stats (#309)
+    * You can hide disk from the IOdisk view using the conf file (#304)
     * You can hide network interface from the Network view using the conf file
-    * Optimisation of CPU consumption ~10%
-    * ...
+    * Optimisation of CPU consumption (around ~10%)
+    * Correct issue #314: Client/server mode always asks for password
+    * Correct issue #315: Defining password in client/server mode doesn't work as intended 
+    * Correct issue #316: Crash in client server mode 
+    * Correct issue #318: Argument parser, try-except blocks never get triggered 
 
 Version 1.7.3
 =============
