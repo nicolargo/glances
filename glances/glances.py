@@ -4620,7 +4620,21 @@ def main():
                                     "nobold", "noproc", "percpu"])
     except getopt.GetoptError as err:
         # Print help information and exit:
-        print(str(err))
+        if (err.opt == 'P') and ('requires argument' in err.msg):
+            print(_("Error: -P flag need an argument (password)"))
+        elif (err.opt == 'B') and ('requires argument' in err.msg):
+            print(_("Error: -B flag need an argument (bind IP address)"))
+        elif (err.opt == 'c') and ('requires argument' in err.msg):
+            print(_("Error: -c flag need an argument (server IP address/name)"))
+        elif (err.opt == 'p') and ('requires argument' in err.msg):
+            print(_("Error: -p flag need an argument (port number)"))
+        elif (err.opt == 'o') and ('requires argument' in err.msg):
+            print(_("Error: -o flag need an argument (HTML or CSV)"))
+        elif (err.opt == 't') and ('requires argument' in err.msg):
+            print(_("Error: -t flag need an argument (refresh time)"))
+        else:
+            print(str(err))
+        print
         printSyntax()
         sys.exit(2)
     for opt, arg in opts:
@@ -4630,37 +4644,25 @@ def main():
         elif opt in ("-s", "--server"):
             server_tag = True
         elif opt in ("-P"):
-            try:
-                arg
-            except NameError:
-                print(_("Error: -P flag need an argument (password)"))
-                sys.exit(2)
             password_tag = True
             password = arg
         elif opt in ("--password", "--password"):
             password_prompt = True
         elif opt in ("-B", "--bind"):
-            try:
-                arg
-            except NameError:
-                print(_("Error: -B flag need an argument (bind IP address)"))
-                sys.exit(2)
             bind_ip = arg
         elif opt in ("-c", "--client"):
             client_tag = True
-            try:
-                arg
-            except NameError:
-                print(_("Error: -c flag need an argument (server IP address/name)"))
-                sys.exit(2)
             server_ip = arg
         elif opt in ("-p", "--port"):
             try:
                 port_number = int(arg)
             except:
-                print("invalid port number argument: %s" % arg)
+                print("Error: Invalid port number (%s)" % arg)
                 sys.exit(2)
-            server_port = arg
+            if (port_number < 1) or (port_number > 65535):
+                print(_("Error: Port number should be a positive integer (1 <-> 65535)"))
+                sys.exit(2)
+            server_port = port_number
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
                 html_tag = True
@@ -4668,7 +4670,6 @@ def main():
                 csv_tag = True
             else:
                 print(_("Error: Unknown output %s" % arg))
-                printSyntax()
                 sys.exit(2)
         elif opt in ("-e", "--sensors"):
             if is_Linux:
@@ -4679,15 +4680,19 @@ def main():
                     sensors_tag = True
             else:
                 print(_("Error: Sensors module is only available on Linux"))
+                sys.exit(2)
         elif opt in ("-y", "--hddtemp"):
             hddtemp_tag = True
         elif opt in ("-f", "--file"):
             output_file = arg
             output_folder = arg
         elif opt in ("-t", "--time"):
-            if int(arg) >= 1:
+            try:
                 refresh_time = int(arg)
-            else:
+            except:
+                print("Error: Invalid refresh time (%s)" % arg)
+                sys.exit(2)
+            if (refresh_time < 1):
                 print(_("Error: Refresh time should be a positive integer"))
                 sys.exit(2)
         elif opt in ("-d", "--diskio"):
