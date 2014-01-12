@@ -26,6 +26,5 @@ __license__ = "LGPL"
 from .core.glances_core import GlancesCore
 
 def main(argv=None):
-    print "!!! %s" % argv
     glances_instance = GlancesCore()
     glances_instance.start()
