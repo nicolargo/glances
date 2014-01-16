@@ -5,8 +5,10 @@ If you are lookink for user manual, please follow this link: https://github.com/
 
 ===
 
-glances_main.py         Main script to rule them up...
+__init__.py             Global module init
+__main__.py             Entry point for module
 core/
+    glances_core.py     Main script to rule them up...
     glances_client.py   Glances client
     glances_config.py   Script to manage configuration file
     glances_server.py   Glances_server    
