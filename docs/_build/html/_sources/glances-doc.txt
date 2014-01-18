@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.3.
+This manual describes *Glances* version 1.7.4.
 
-Copyright © 2012-2013 Nicolas Hennion <nicolas@nicolargo.com>
+Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-November 2013
+January 2014
 
 .. contents:: Table of Contents
 
@@ -154,7 +154,7 @@ Configuration
 
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed for setup limits and/or monitored processes list.
+Furthermore a configuration file is needed for setup limits, disks or network interfaces to hide and/or monitored processes list.
 
 By default, the configuration file is under:
 
@@ -202,7 +202,7 @@ Header
 
 .. image:: images/header.png
 
-The header shows the OS name, release version, platform architecture and the hostname.
+The header shows the hostname, OS name, release version, platform architecture and system uptime.
 On Linux, it shows also the kernel version.
 
 CPU
@@ -292,6 +292,8 @@ if the bit rate is higher than 70 Mbps.
 | If bit rate is ``>70%``, then status is set to ``"WARNING"``
 | If bit rate is ``>90%``, then status is set to ``"CRITICAL"``
 
+*Note*: In the configuration file, you can define a list of network interfaces to hide.
+
 Sensors
 -------
 
@@ -331,6 +333,8 @@ Glances displays the disk I/O throughput. The unit is adapted dynamically.
 
 *Note*: There is no alert on this information.
 
+*Note*: In the configuration file, you can define a list of disk to hide.
+
 File system
 -----------
 
@@ -364,6 +368,14 @@ Three views are available for processes:
 * Processes summary
 * Optional monitored processes list (new in 1.7)
 * Processes list
+
+The processes summary line display:
+
+* Tasks number (total number of processes)
+* Threads number 
+* Running tasks number
+* Sleeping tasks number
+* Other tasks number (not running or sleeping)
 
 By default, or if you hit the ``a`` key, the processes list is automatically
 sorted by CPU of memory usage.
@@ -506,12 +518,35 @@ else:
 
 On the left, you can easily see if you are connected to a Glances server.
 
+
 API documentation
 =================
 
 Glances uses a `XML-RPC server`_ and can be used by another client software.
 
 API documentation is available at https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To
+
+Others outputs
+==============
+
+Thanks to the -o option, it is possible to export statistics to CSV or HTML files.
+
+.. code-block:: console
+
+    $ glances -o CSV -f /tmp/glances.csv
+
+CSV files have on line per stats:
+
+- load,load1,load5,load15
+- mem,total,used,free
+- swap,total,used,free
+- cpu,user,system,nice,idel,iowait,irq
+
+.. code-block:: console
+
+    $ glances -o HTML -f /tmp
+
+Note: The css and img folders (glances/data) should be in the /tmp folder
 
 Support
 =======

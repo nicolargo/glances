@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2013 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7.4_RC1"
+__version__ = "1.7.4"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -4654,15 +4654,7 @@ def main():
             client_tag = True
             server_ip = arg
         elif opt in ("-p", "--port"):
-            try:
-                port_number = int(arg)
-            except:
-                print("Error: Invalid port number (%s)" % arg)
-                sys.exit(2)
-            if (port_number < 1) or (port_number > 65535):
-                print(_("Error: Port number should be a positive integer (1 <-> 65535)"))
-                sys.exit(2)
-            server_port = port_number
+            server_port = arg
         elif opt in ("-o", "--output"):
             if arg.lower() == "html":
                 html_tag = True
@@ -4788,8 +4780,12 @@ def main():
     # Init Glances depending of the mode (standalone, client, server)
     if server_tag:
         # Init the server
+        try:
+            server = GlancesServer(bind_ip, int(server_port), GlancesXMLRPCHandler, cached_time)
+        except (ValueError, socket.error) as err:
+            print(_("Error: Invalid port number: %s") % err)
+            sys.exit(2)
         print(_("Glances server is running on") + " %s:%s" % (bind_ip, server_port))
-        server = GlancesServer(bind_ip, int(server_port), GlancesXMLRPCHandler, cached_time)
 
         # Set the server login/password (if -P/--password tag)
         if password != "":
@@ -4806,7 +4802,11 @@ def main():
         stats.update({})
     elif client_tag:
         # Init the client (displaying server stat in the CLI)
-        client = GlancesClient(server_ip, int(server_port), username, password)
+        try:
+            client = GlancesClient(server_ip, int(server_port), username, password)
+        except (ValueError, socket.error) as err:
+            print(_("Error: Invalid port number: %s") % err)
+            sys.exit(2)
 
         # Test if client and server are in the same major version
         if not client.client_init():

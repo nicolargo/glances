@@ -123,9 +123,9 @@ td.option-group {
 <div class="document" id="glances">
 <h1 class="title">Glances</h1>
 
-<p>This manual describes <em>Glances</em> version 1.7.3.</p>
-<p>Copyright © 2012-2013 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>November 2013</p>
+<p>This manual describes <em>Glances</em> version 1.7.4.</p>
+<p>Copyright © 2012-2014 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
+<p>January 2014</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -158,7 +158,8 @@ td.option-group {
 </ul>
 </li>
 <li><a class="reference internal" href="#api-documentation" id="id29">API documentation</a></li>
-<li><a class="reference internal" href="#support" id="id30">Support</a></li>
+<li><a class="reference internal" href="#others-outputs" id="id30">Others outputs</a></li>
+<li><a class="reference internal" href="#support" id="id31">Support</a></li>
 </ul>
 </div>
 <div class="section" id="introduction">
@@ -331,7 +332,7 @@ just run on the server:</p>
 <div class="section" id="configuration">
 <h1><a class="toc-backref" href="#id14">Configuration</a></h1>
 <p>No configuration file is mandatory to use Glances.</p>
-<p>Furthermore a configuration file is needed for setup limits and/or monitored processes list.</p>
+<p>Furthermore a configuration file is needed for setup limits, disks or network interfaces to hide and/or monitored processes list.</p>
 <p>By default, the configuration file is under:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -376,7 +377,7 @@ cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 <div class="section" id="header">
 <h2><a class="toc-backref" href="#id17">Header</a></h2>
 <img alt="images/header.png" src="images/header.png" />
-<p>The header shows the OS name, release version, platform architecture and the hostname.
+<p>The header shows the hostname, OS name, release version, platform architecture and system uptime.
 On Linux, it shows also the kernel version.</p>
 </div>
 <div class="section" id="cpu">
@@ -446,6 +447,7 @@ if the bit rate is higher than 70 Mbps.</p>
 <div class="line">If bit rate is <tt class="docutils literal">&gt;70%</tt>, then status is set to <tt class="docutils literal">&quot;WARNING&quot;</tt></div>
 <div class="line">If bit rate is <tt class="docutils literal">&gt;90%</tt>, then status is set to <tt class="docutils literal">&quot;CRITICAL&quot;</tt></div>
 </div>
+<p><em>Note</em>: In the configuration file, you can define a list of network interfaces to hide.</p>
 </div>
 <div class="section" id="sensors">
 <h2><a class="toc-backref" href="#id22">Sensors</a></h2>
@@ -470,6 +472,7 @@ if the bit rate is higher than 70 Mbps.</p>
 <img alt="images/diskio.png" src="images/diskio.png" />
 <p>Glances displays the disk I/O throughput. The unit is adapted dynamically.</p>
 <p><em>Note</em>: There is no alert on this information.</p>
+<p><em>Note</em>: In the configuration file, you can define a list of disk to hide.</p>
 </div>
 <div class="section" id="file-system">
 <h2><a class="toc-backref" href="#id24">File system</a></h2>
@@ -496,6 +499,14 @@ adapted dynamically.</p>
 <li>Processes summary</li>
 <li>Optional monitored processes list (new in 1.7)</li>
 <li>Processes list</li>
+</ul>
+<p>The processes summary line display:</p>
+<ul class="simple">
+<li>Tasks number (total number of processes)</li>
+<li>Threads number</li>
+<li>Running tasks number</li>
+<li>Sleeping tasks number</li>
+<li>Other tasks number (not running or sleeping)</li>
 </ul>
 <p>By default, or if you hit the <tt class="docutils literal">a</tt> key, the processes list is automatically
 sorted by CPU of memory usage.</p>
@@ -623,8 +634,26 @@ is installed on your system then Glances displays the available percent capacity
 <p>Glances uses a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and can be used by another client software.</p>
 <p>API documentation is available at <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To">https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To</a></p>
 </div>
+<div class="section" id="others-outputs">
+<h1><a class="toc-backref" href="#id30">Others outputs</a></h1>
+<p>Thanks to the -o option, it is possible to export statistics to CSV or HTML files.</p>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances -o CSV -f /tmp/glances.csv
+</pre>
+<p>CSV files have on line per stats:</p>
+<ul class="simple">
+<li>load,load1,load5,load15</li>
+<li>mem,total,used,free</li>
+<li>swap,total,used,free</li>
+<li>cpu,user,system,nice,idel,iowait,irq</li>
+</ul>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances -o HTML -f /tmp
+</pre>
+<p>Note: The css and img folders (glances/data) should be in the /tmp folder</p>
+</div>
 <div class="section" id="support">
-<h1><a class="toc-backref" href="#id30">Support</a></h1>
+<h1><a class="toc-backref" href="#id31">Support</a></h1>
 <p>To report a bug or a feature request use the bug tracking system at <a class="reference external" href="https://github.com/nicolargo/glances/issues">https://github.com/nicolargo/glances/issues</a></p>
 <p>Feel free to contribute!</p>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
