@@ -18,11 +18,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__appname__ = 'glances'
-__version__ = "2.0_Alpha"
-__author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
-__license__ = "LGPL"
-
 from .core.glances_core import GlancesCore
 
 def main(argv=None):

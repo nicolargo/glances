@@ -215,7 +215,7 @@ class GlancesCore(object):
 
         # Bold attribute for Curse display (not supported by all terminal)
         self.parser.add_argument('-z', '--no_bold',
-                                 help=_('disable process module'), 
+                                 help=_('disable bold mode in the terminal'), 
                                  action='store_false')
         # Per CPU display tag
         self.parser.add_argument('-1', '--percpu',
@@ -301,9 +301,6 @@ class GlancesCore(object):
 
         # !!! Debug
         print args
-        # print "self.sensors_tag=%s" % self.sensors_tag
-        # print "self.html_tag=%s" % self.html_tag
-        # print "self.csv_tag=%s" % self.csv_tag
 
     def get_password(self, description='', confirm=False):
         """
