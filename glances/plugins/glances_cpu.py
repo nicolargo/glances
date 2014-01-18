@@ -18,9 +18,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from ..plugins.glances_plugin import GlancesPlugin
+# from ..plugins.glances_plugin import GlancesPlugin
+from glances_plugin import GlancesPlugin
 
-class CpuPlugin(GlancesPlugin):
+class Plugin(GlancesPlugin):
 	"""
 	Glances' Cpu Plugin
 

@@ -18,42 +18,26 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Glances informations
 __appname__ = 'glances'
 __version__ = "2.0_Alpha"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __license__ = "LGPL"
 
+# Import system libs
 import sys
 import os
-import gettext
-import locale
+import signal
 import argparse
 
-# path definitions
-work_path = os.path.realpath(os.path.dirname(__file__))
-appname_path = os.path.split(sys.argv[0])[0]
-sys_prefix = os.path.realpath(os.path.dirname(appname_path))
-
-# i18n
-locale.setlocale(locale.LC_ALL, '')
-gettext_domain = __appname__
-# get locale directory
-i18n_path = os.path.realpath(os.path.join(work_path, '..', 'i18n'))
-sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
-if os.path.exists(i18n_path):
-    locale_dir = i18n_path
-elif os.path.exists(sys_i18n_path):
-    locale_dir = sys_i18n_path
-else:
-    locale_dir = None
-gettext.install(gettext_domain, locale_dir)
-
-# Operating system flag
-# Note: Somes libs depends of OS
-is_BSD = sys.platform.find('bsd') != -1
-is_Linux = sys.platform.startswith('linux')
-is_Mac = sys.platform.startswith('darwin')
-is_Windows = sys.platform.startswith('win')
+# Import Glances libs
+# !!! Todo: rename class
+# GlancesExemple
+from ..core.glances_globals import *
+from ..core.glances_config import Config
+from ..core.glances_limits import glancesLimits
+from ..core.glances_monitor_list import monitorList
+from ..core.glances_stats import GlancesStats, GlancesStatsServer
 
 # Import PSUtil
 # !!! Is it mandatory for client ?
@@ -125,6 +109,7 @@ class GlancesCore(object):
     # Default stats' refresh time is 3 seconds
     refresh_time = 3
     # Set the default cache lifetime to 1 second (only for server)
+    # !!! Todo: configuration from the command line
     cached_time = 1    
     # Default network bitrate is display in bit per second
     network_bytepersec_tag = False
@@ -160,15 +145,73 @@ class GlancesCore(object):
 
 
     def __init__(self):
-        self.parser = argparse.ArgumentParser(
-                            prog=__appname__,
-                            description='Glances, an eye on your system.')
+        # Init and manage command line arguments
         self.init_arg()
+        self.parse_arg()
+
+        # Read the configuration file
+        if (self.conf_file_tag):
+            self.config = Config(self.conf_file)
+        else:
+            self.config = Config()
+
+        # Init the limits
+        self.limits = glancesLimits(self.config)
+
+        # Init the monitoring list
+        self.monitors = monitorList(self.config)
+
+        # Init stats
+        stats = GlancesStatsServer()
+
+        # Catch the CTRL-C signal
+        signal.signal(signal.SIGINT, self.__signal_handler)
+
+
+    def __signal_handler(self, signal, frame):
+        self.end()
+
+
+    def end(self):
+        """
+        Stop the Glances core and exit
+        """
+
+        if (self.is_standalone()):
+            # Stop the classical CLI loop
+            # !!! Uncomment
+            # screen.end()
+            pass
+        elif (self.is_client()):
+            # Stop the client loop
+            #~ client.client_quit()
+            pass
+        elif (self.is_server()):
+            # Stop the server loop
+            # !!! Uncomment
+            # server.server_close()
+            pass
+
+        # !!! Uncomment
+        # if (self.csv_tag):
+        #     csvoutput.exit()
+
+        # !! Todo for htmloutput too
+        # The exit should generate a new HTML page
+        # to inform the user that data are not refreshed anymore
+
+        # The end...
+        sys.exit(0)
+
 
     def init_arg(self):
         """
         Init all the command line arguments
         """
+
+        self.parser = argparse.ArgumentParser(
+                            prog=__appname__,
+                            description='Glances, an eye on your system.')
 
         # Version
         self.parser.add_argument('-v', '--version', 
@@ -250,11 +293,10 @@ class GlancesCore(object):
                                  choices=self.output_list)
         # Define output type flag to False (default is no output)
         for o in self.output_list:
-            setattr(self, o+"_tag", False)
+            setattr(self, o + "_tag", False)
         # Output file/folder
         self.parser.add_argument('-f', '--file',
                                  help=_('set the html output folder or csv file'))
-
 
     def parse_arg(self):
         """
@@ -264,6 +306,7 @@ class GlancesCore(object):
         args = self.parser.parse_args()
 
         # Change global variables regarding to user args
+        # !!! To be refactor to use directly the args list in the code
         if (args.time is not None): self.refresh_time = args.time 
         self.network_bytepersec_tag = args.byte
         self.diskio_tag = args.disable_diskio
@@ -300,7 +343,7 @@ class GlancesCore(object):
             output_folder = args.file
 
         # !!! Debug
-        print args
+        # print args
 
     def get_password(self, description='', confirm=False):
         """
@@ -323,10 +366,21 @@ class GlancesCore(object):
             sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
             return self.get_password(description=description, confirm=confirm)
 
-    def start(self):
+    def is_standalone(self):
         """
-        Start the instance
-        It is the 'real' main function for Glances
+        Return True if Glances is running in standalone mode
         """
+        return not self.client_tag and not self.server_tag
 
-        self.parse_arg()
+    def is_client(self):
+        """
+        Return True if Glances is running in client mode
+        """
+        return self.client_tag and not self.server_tag
+
+    def is_server(self):
+        """
+        Return True if Glances is running in sserver mode
+        """
+        return not self.client_tag and self.server_tag
+
