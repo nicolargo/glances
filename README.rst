@@ -14,10 +14,9 @@ Glances - An eye on your system
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
 .. image:: https://d2weczhvl823v0.cloudfront.net/nicolargo/glances/trend.png
-        :target: https://bitdeli.com/nicolargo 
+        :target: https://bitdeli.com/nicolargo
 .. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
         :width: 128
-        :align: center
 
 **Glances** is a cross-platform curses-based monitoring tool written in Python.
 
@@ -30,11 +29,14 @@ Requirements
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
 - ``psutil >= 0.5.1`` (recommended version >= 1.2.1)
-- ``jinja`` (optional for HTML output)
-- ``pysensors`` (optional for HW monitoring support) [Linux-only]
-- ``hddtemp`` (optional for HDD temperature monitoring support)
-- ``batinfo`` (optional for battery monitoring support) [Linux-only]
 - ``setuptools``
+
+Optional dependencies:
+
+- ``jinja2`` (for HTML output)
+- ``pysensors`` (for HW monitoring support) [Linux-only]
+- ``hddtemp`` (for HDD temperature monitoring support)
+- ``batinfo`` (for battery monitoring support) [Linux-only]
 
 Installation
 ============
@@ -57,18 +59,31 @@ To upgrade Glances to the latest version:
 Linux
 -----
 
-At the moment, packages exist for Arch Linux, Gentoo, Fedora/CentOS/RHEL,
-Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
-install it using your favorite package manager.
+At the moment, packages exist for the following distributions:
+
+- Arch Linux
+- Debian (Testing/Sid)
+- Fedora/CentOS/RHEL
+- Gentoo
+- Ubuntu (13.04+)
+- Void Linux
+
+So you should be able to install it using your favorite package manager.
 
 FreeBSD
 -------
 
-To install the precompiled binary package:
+To install the binary package:
 
 .. code-block:: console
 
     # pkg_add -r py27-glances
+
+Using pkgng:
+
+.. code-block:: console
+
+    # pkg install py27-glances
 
 To install Glances from ports:
 
@@ -101,12 +116,11 @@ Windows
 -------
 
 Glances proposes a Windows client based on the `colorconsole`_ Python library.
+Glances version < 1.7.2 only works in server mode.
 
-Glances < 1.7.2 only works in server mode. It will run in server mode automatically.
+Thanks to Nicolas Bourges, a Windows installer is available:
 
-Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:
-
-Glances-1.7.2-win32.msi_ (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)
+- Glances-1.7.2-win32.msi_ (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)
 
 Otherwise, you have to follow these steps:
 
