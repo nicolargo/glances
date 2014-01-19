@@ -19,10 +19,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 class GlancesPlugin(object):
-	"""
-	Main class for Glances' plugin
-	"""
+    """
+    Main class for Glances' plugin
+    """
 
-	def __init__(self):
-		# Init the stat list
-		self.stats = None
+    def __init__(self):
+        # Init the stat list
+        self.stats = None
+    
+    def __str__(self):
+        # Return the human-readable stats
+        return str(self.stats)
+
+    def get_stats(self):
+        # Return the stats object
+        return self.stats

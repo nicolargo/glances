@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import Glances libs
+# Note: others Glances libs will be imported optionnaly
 from .core.glances_core import GlancesCore
 
 def main(argv=None):
@@ -45,10 +47,8 @@ def main(argv=None):
         if (core.password != ""):
             server.add_user(core.username, core.password)
 
-        # Init stats
-        # !!! Uncomment
-        # stats = GlancesStatsServer()
-        # stats.update({})
+        # Start the server loop
+        server.serve_forever()
 
         # Shutdown the server
         # !!! How to close the server with CTRL-C

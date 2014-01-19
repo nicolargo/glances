@@ -21,9 +21,13 @@
 # Import system libs
 import sys
 import socket
+import json
 
+# Import Glances libs
+from ..core.glances_stats import GlancesStatsServer
 from ..core.glances_timer import Timer
 
+# Other imports
 try:
     # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -127,6 +131,12 @@ class GlancesInstance():
     """
 
     def __init__(self, cached_time=1):
+        # Init stats
+        self.stats = GlancesStatsServer()
+
+        # Initial update
+        self.stats.update({})
+
         # cached_time is the minimum time interval between stats updates
         # i.e. XML/RPC calls will not retrieve updated info until the time
         # since last update is passed (will retrieve old cached info instead)
@@ -136,7 +146,7 @@ class GlancesInstance():
     def __update__(self):
         # Never update more than 1 time per cached_time
         if self.timer.finished():
-            stats.update()
+            self.stats.update()
             self.timer = Timer(self.cached_time)
 
     def init(self):
@@ -146,7 +156,7 @@ class GlancesInstance():
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        return json.dumps(stats.getAll())
+        return json.dumps(self.stats.getAll())
 
     def getAllLimits(self):
         # Return all the limits
@@ -160,82 +170,82 @@ class GlancesInstance():
         # Return operating system info
         # No need to update...
         #~ self.__update__()
-        return json.dumps(stats.getSystem())
+        return json.dumps(self.stats.getSystem())
 
     def getCore(self):
         # Update and return number of Core
         self.__update__()
-        return json.dumps(stats.getCore())
+        return json.dumps(self.stats.getCore())
 
     def getCpu(self):
         # Update and return CPU stats
         self.__update__()
-        return json.dumps(stats.getCpu())
+        return json.dumps(self.stats.getCpu())
 
     def getLoad(self):
         # Update and return LOAD stats
         self.__update__()
-        return json.dumps(stats.getLoad())
+        return json.dumps(self.stats.getLoad())
 
     def getMem(self):
         # Update and return MEM stats
         self.__update__()
-        return json.dumps(stats.getMem())
+        return json.dumps(self.stats.getMem())
 
     def getMemSwap(self):
         # Update and return MEMSWAP stats
         self.__update__()
-        return json.dumps(stats.getMemSwap())
+        return json.dumps(self.stats.getMemSwap())
 
     def getSensors(self):
         # Update and return SENSORS stats
         self.__update__()
-        return json.dumps(stats.getSensors())
+        return json.dumps(self.stats.getSensors())
 
     def getHDDTemp(self):
         # Update and return HDDTEMP stats
         self.__update__()
-        return json.dumps(stats.getHDDTemp())
+        return json.dumps(self.stats.getHDDTemp())
 
     def getNetwork(self):
         # Update and return NET stats
         self.__update__()
-        return json.dumps(stats.getNetwork())
+        return json.dumps(self.stats.getNetwork())
 
     def getDiskIO(self):
         # Update and return DISK IO stats
         self.__update__()
-        return json.dumps(stats.getDiskIO())
+        return json.dumps(self.stats.getDiskIO())
 
     def getFs(self):
         # Update and return FS stats
         self.__update__()
-        return json.dumps(stats.getFs())
+        return json.dumps(self.stats.getFs())
 
     def getProcessCount(self):
         # Update and return ProcessCount stats
         self.__update__()
-        return json.dumps(stats.getProcessCount())
+        return json.dumps(self.stats.getProcessCount())
 
     def getProcessList(self):
         # Update and return ProcessList stats
         self.__update__()
-        return json.dumps(stats.getProcessList())
+        return json.dumps(self.stats.getProcessList())
 
     def getBatPercent(self):
         # Update and return total batteries percent stats
         self.__update__()
-        return json.dumps(stats.getBatPercent())
+        return json.dumps(self.stats.getBatPercent())
 
     def getNow(self):
         # Update and return current date/hour
         self.__update__()
-        return json.dumps(stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
+        return json.dumps(self.stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
 
     def getUptime(self):
         # Update and return system uptime
         self.__update__()
-        return json.dumps(stats.getUptime().strftime(_("%Y-%m-%d %H:%M:%S")))
+        return json.dumps(self.stats.getUptime().strftime(_("%Y-%m-%d %H:%M:%S")))
 
     def __getTimeSinceLastUpdate(self, IOType):
         assert(IOType in ['net', 'disk', 'process_disk'])
@@ -270,6 +280,7 @@ class GlancesServer():
         # By default, no auth is needed
         self.server.user_dict = {}
         self.server.isAuth = False
+
         # Register functions
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(cached_time))
