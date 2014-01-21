@@ -22,8 +22,28 @@ msgstr ""
 msgid "Error decoding config file '%s': %s"
 msgstr ""
 
-#: glances/glances.py:1107
+#: glances/glances.py:1123
 msgid "hddtemp error"
+msgstr ""
+
+#: glances/glances.py:1124
+msgid "{0} is sleeping"
+msgstr ""
+
+#: glances/glances.py:1125
+msgid "{0} has no sensors"
+msgstr ""
+
+#: glances/glances.py:1126
+msgid "{0} not applicable"
+msgstr ""
+
+#: glances/glances.py:1127
+msgid "{0} is unknown"
+msgstr ""
+
+#: glances/glances.py:1143
+msgid "hddtemp is gone"
 msgstr ""
 
 #: glances/glances.py:1939
