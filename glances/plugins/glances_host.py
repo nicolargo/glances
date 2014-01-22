@@ -58,4 +58,3 @@ class Plugin(GlancesPlugin):
             self.stats['os_version'] = ' '.join(os_version[::2])
         else:
             self.stats['os_version'] = ""
-

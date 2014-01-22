@@ -166,99 +166,122 @@ class GlancesInstance():
         # Return the processes monitored list
         return json.dumps(monitors.getAll())
 
-    def getSystem(self):
-        # Return operating system info
-        # No need to update...
-        #~ self.__update__()
-        return json.dumps(self.stats.getSystem())
+    def __getattr__(self, item):
+        """
+        Overwrite the getattr in case of attribute is not found 
+        The goal is to dynamicaly generate the API get'Stats'() methods
+        """
+        
+        header = 'get'
+        # Check if the attribute starts with 'get'
+        if (item.startswith(header)):
+            try:
+                # !!! Update the stat
+                self.stats.update()
+                # Return the attribute
+                return getattr(self.stats, item)
+            except Exception, e:
+                # The method is not found for the plugin
+                raise AttributeError(item)
+        else:
+            # Default behavior
+            raise AttributeError(item)
 
-    def getCore(self):
-        # Update and return number of Core
-        self.__update__()
-        return json.dumps(self.stats.getCore())
+    # !!! Check the 2.0 cover before deleted the following comments
+    
+    # def getSystem(self):
+    #     # Return operating system info
+    #     # No need to update...
+    #     #~ self.__update__()
+    #     return json.dumps(self.stats.getSystem())
 
-    def getCpu(self):
-        # Update and return CPU stats
-        self.__update__()
-        return json.dumps(self.stats.getCpu())
+    # def getCore(self):
+    #     # Update and return number of Core
+    #     self.__update__()
+    #     return json.dumps(self.stats.getCore())
 
-    def getLoad(self):
-        # Update and return LOAD stats
-        self.__update__()
-        return json.dumps(self.stats.getLoad())
+    # def getCpu(self):
+    #     # Update and return CPU stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getCpu())
 
-    def getMem(self):
-        # Update and return MEM stats
-        self.__update__()
-        return json.dumps(self.stats.getMem())
+    # def getLoad(self):
+    #     # Update and return LOAD stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getLoad())
 
-    def getMemSwap(self):
-        # Update and return MEMSWAP stats
-        self.__update__()
-        return json.dumps(self.stats.getMemSwap())
+    # def getMem(self):
+    #     # Update and return MEM stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getMem())
 
-    def getSensors(self):
-        # Update and return SENSORS stats
-        self.__update__()
-        return json.dumps(self.stats.getSensors())
+    # def getMemSwap(self):
+    #     # Update and return MEMSWAP stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getMemSwap())
 
-    def getHDDTemp(self):
-        # Update and return HDDTEMP stats
-        self.__update__()
-        return json.dumps(self.stats.getHDDTemp())
+    # def getSensors(self):
+    #     # Update and return SENSORS stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getSensors())
 
-    def getNetwork(self):
-        # Update and return NET stats
-        self.__update__()
-        return json.dumps(self.stats.getNetwork())
+    # def getHDDTemp(self):
+    #     # Update and return HDDTEMP stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getHDDTemp())
 
-    def getDiskIO(self):
-        # Update and return DISK IO stats
-        self.__update__()
-        return json.dumps(self.stats.getDiskIO())
+    # def getNetwork(self):
+    #     # Update and return NET stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getNetwork())
 
-    def getFs(self):
-        # Update and return FS stats
-        self.__update__()
-        return json.dumps(self.stats.getFs())
+    # def getDiskIO(self):
+    #     # Update and return DISK IO stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getDiskIO())
 
-    def getProcessCount(self):
-        # Update and return ProcessCount stats
-        self.__update__()
-        return json.dumps(self.stats.getProcessCount())
+    # def getFs(self):
+    #     # Update and return FS stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getFs())
 
-    def getProcessList(self):
-        # Update and return ProcessList stats
-        self.__update__()
-        return json.dumps(self.stats.getProcessList())
+    # def getProcessCount(self):
+    #     # Update and return ProcessCount stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getProcessCount())
 
-    def getBatPercent(self):
-        # Update and return total batteries percent stats
-        self.__update__()
-        return json.dumps(self.stats.getBatPercent())
+    # def getProcessList(self):
+    #     # Update and return ProcessList stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getProcessList())
 
-    def getNow(self):
-        # Update and return current date/hour
-        self.__update__()
-        return json.dumps(self.stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
+    # def getBatPercent(self):
+    #     # Update and return total batteries percent stats
+    #     self.__update__()
+    #     return json.dumps(self.stats.getBatPercent())
 
-    def getUptime(self):
-        # Update and return system uptime
-        self.__update__()
-        return json.dumps(self.stats.getUptime().strftime(_("%Y-%m-%d %H:%M:%S")))
+    # def getNow(self):
+    #     # Update and return current date/hour
+    #     self.__update__()
+    #     return json.dumps(self.stats.getNow().strftime(_("%Y-%m-%d %H:%M:%S")))
 
-    def __getTimeSinceLastUpdate(self, IOType):
-        assert(IOType in ['net', 'disk', 'process_disk'])
-        return getTimeSinceLastUpdate(IOType)
+    # def getUptime(self):
+    #     # Update and return system uptime
+    #     self.__update__()
+    #     return json.dumps(self.stats.getUptime().strftime(_("%Y-%m-%d %H:%M:%S")))
 
-    def getNetTimeSinceLastUpdate(self):
-        return getTimeSinceLastUpdate('net')
+    # def __getTimeSinceLastUpdate(self, IOType):
+    #     assert(IOType in ['net', 'disk', 'process_disk'])
+    #     return getTimeSinceLastUpdate(IOType)
 
-    def getDiskTimeSinceLastUpdate(self):
-        return getTimeSinceLastUpdate('net')
+    # def getNetTimeSinceLastUpdate(self):
+    #     return getTimeSinceLastUpdate('net')
 
-    def getProcessDiskTimeSinceLastUpdate(self):
-        return getTimeSinceLastUpdate('process_disk')
+    # def getDiskTimeSinceLastUpdate(self):
+    #     return getTimeSinceLastUpdate('net')
+
+    # def getProcessDiskTimeSinceLastUpdate(self):
+    #     return getTimeSinceLastUpdate('process_disk')
 
 
 class GlancesServer():
