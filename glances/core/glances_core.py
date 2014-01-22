@@ -57,14 +57,6 @@ if psutil_version < (0, 5, 0):
     sys.exit(1)
 
 try:
-    # psutil.virtual_memory() only available from psutil >= 0.6
-    psutil.virtual_memory()
-except Exception:
-    psutil_mem_vm = False
-else:
-    psutil_mem_vm = True
-
-try:
     # psutil.net_io_counters() only available from psutil >= 1.0.0
     psutil.net_io_counters()
 except Exception:

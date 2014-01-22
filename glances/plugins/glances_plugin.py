@@ -18,6 +18,23 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from time import time
+
+last_update_times = {}
+
+def getTimeSinceLastUpdate(IOType):
+    global last_update_times
+    # assert(IOType in ['net', 'disk', 'process_disk'])
+    current_time = time()
+    last_time = last_update_times.get(IOType)
+    if not last_time:
+        time_since_update = 1
+    else:
+        time_since_update = current_time - last_time
+    last_update_times[IOType] = current_time
+    return time_since_update
+
+
 class GlancesPlugin(object):
     """
     Main class for Glances' plugin
@@ -32,5 +49,6 @@ class GlancesPlugin(object):
         return str(self.stats)
 
     def get_stats(self):
-        # Return the stats object
-        return self.stats
+        # Return the stats object for the RPC API
+        # Had to convert it to string
+        return str(self.stats)
