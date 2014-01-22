@@ -56,41 +56,11 @@ if psutil_version < (0, 5, 0):
     print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
-try:
-    # psutil.net_io_counters() only available from psutil >= 1.0.0
-    psutil.net_io_counters()
-except Exception:
-    psutil_net_io_counters = False
-else:
-    psutil_net_io_counters = True
-
 if not is_Mac:
     psutil_get_io_counter_tag = True
 else:
     # get_io_counters() not available on OS X
     psutil_get_io_counter_tag = False
-
-# sensors library (optional; Linux-only)
-if is_Linux:
-    try:
-        import sensors
-    except ImportError:
-        sensors_lib_tag = False
-    else:
-        sensors_lib_tag = True
-else:
-    sensors_lib_tag = False
-
-# batinfo library (optional; Linux-only)
-if is_Linux:
-    try:
-        import batinfo
-    except ImportError:
-        batinfo_lib_tag = False
-    else:
-        batinfo_lib_tag = True
-else:
-    batinfo_lib_tag = False
 
 
 class GlancesCore(object):
@@ -306,7 +276,7 @@ class GlancesCore(object):
         self.hddtemp_flag = args.disable_hddtemp 
         self.network_tag = args.disable_network
         self.process_tag = args.disable_process
-        self.sensors_tag = args.disable_sensors and is_Linux and sensors_lib_tag
+        self.sensors_tag = args.disable_sensors and is_Linux # and sensors_lib_tag
         self.use_bold = args.no_bold
         self.percpu_tag = args.percpu
         if (args.config is not None):

@@ -19,16 +19,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-# Check for PSUtil already done in the glances_core script
-import psutil
-
 try:
-    # psutil.net_io_counters() only available from psutil >= 1.0.0
-    psutil.net_io_counters()
-except Exception:
-    psutil_net_io_counters = False
-else:
-    psutil_net_io_counters = True
+    # psutil >= 1.0.0
+    from psutil import net_io_counters
+except:
+    # psutil < 1.0.0
+    try:
+        from psutil import network_io_counters
+    except:
+        pass
 
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
@@ -54,21 +53,18 @@ class Plugin(GlancesPlugin):
         # for users of the API
         time_since_update = getTimeSinceLastUpdate('net')
 
-        if psutil_net_io_counters:
-            # psutil >= 1.0.0
-            try:
-                get_net_io_counters = psutil.net_io_counters(pernic=True)
-            except IOError:
-                pass
-        else:
+        # psutil >= 1.0.0
+        try:
+            get_net_io_counters = net_io_counters(pernic=True)
+        except IOError:
             # psutil < 1.0.0
             try:
-                get_net_io_counters = psutil.network_io_counters(pernic=True)
+                get_net_io_counters = network_io_counters(pernic=True)
             except IOError:
                 pass
 
         network = []
-        
+
         # Previous network interface stats are stored in the network_old variable
         if not hasattr(self, 'network_old'):
             # First call, we init the network_old var
@@ -100,3 +96,10 @@ class Plugin(GlancesPlugin):
             self.network_old = network_new
 
         self.stats = network
+
+
+    def get_stats(self):
+        # Return the stats object for the RPC API
+        # Sort it by interface name
+        # Convert it to string
+        return str(sorted(self.stats, key=lambda network: network['interface_name']))

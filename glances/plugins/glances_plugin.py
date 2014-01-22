@@ -20,7 +20,9 @@
 
 from time import time
 
+# Global list to manage the elapsed time
 last_update_times = {}
+
 
 def getTimeSinceLastUpdate(IOType):
     global last_update_times
