@@ -56,13 +56,6 @@ if psutil_version < (0, 5, 0):
     print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
-if not is_Mac:
-    psutil_get_io_counter_tag = True
-else:
-    # get_io_counters() not available on OS X
-    psutil_get_io_counter_tag = False
-
-
 class GlancesCore(object):
     """
     Main class to manage Glances instance

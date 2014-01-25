@@ -48,10 +48,7 @@ class Plugin(GlancesPlugin):
         Update network stats
         """
 
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        time_since_update = getTimeSinceLastUpdate('net')
+        network = []
 
         # psutil >= 1.0.0
         try:
@@ -63,7 +60,10 @@ class Plugin(GlancesPlugin):
             except IOError:
                 pass
 
-        network = []
+        # By storing time data we enable Rx/s and Tx/s calculations in the
+        # XML/RPC API, which would otherwise be overly difficult work
+        # for users of the API
+        time_since_update = getTimeSinceLastUpdate('net')
 
         # Previous network interface stats are stored in the network_old variable
         if not hasattr(self, 'network_old'):
