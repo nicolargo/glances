@@ -20,7 +20,12 @@
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
-from psutil import NUM_CPUS
+try:
+    from psutil import get_boot_time
+except:
+    from putil import BOOT_TIME
+
+from datetime import datetime
 
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
@@ -28,9 +33,9 @@ from glances_plugin import GlancesPlugin
 class Plugin(GlancesPlugin):
     """
     Glances' Core Plugin
-    Get stats about CPU core number
+    Get stats about uptime
 
-    stats is integer (number of core)
+    stats is date (string)
     """
 
     def __init__(self):
@@ -39,12 +44,15 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """
-        Update core stats
+        Update uptime stat
         """
 
-        # !!! Note: The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
-        # !!! TODO: We had to return a dict (with both hys and log cpu number) instead of a integer
+        # Uptime
         try:
-            self.stats = NUM_CPUS
-        except Exception, e:
-            self.stats = None
+            # For PsUtil >= 0.7.0
+            self.uptime = datetime.now() - datetime.fromtimestamp(get_boot_time())
+        except:
+            self.uptime = datetime.now() - datetime.fromtimestamp(BOOT_TIME)
+        
+        # Convert uptime to string (because datetime is not JSONifi)
+        self.stats = str(self.uptime).split('.')[0]

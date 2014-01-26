@@ -19,8 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import NUM_CPUS
+from datetime import datetime
 
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
@@ -28,9 +27,9 @@ from glances_plugin import GlancesPlugin
 class Plugin(GlancesPlugin):
     """
     Glances' Core Plugin
-    Get stats about CPU core number
+    Get current date/time
 
-    stats is integer (number of core)
+    stats is date (string)
     """
 
     def __init__(self):
@@ -39,12 +38,8 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """
-        Update core stats
+        Update current date/time
         """
 
-        # !!! Note: The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
-        # !!! TODO: We had to return a dict (with both hys and log cpu number) instead of a integer
-        try:
-            self.stats = NUM_CPUS
-        except Exception, e:
-            self.stats = None
+        # Now
+        self.stats = datetime.now()

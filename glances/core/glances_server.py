@@ -176,7 +176,8 @@ class GlancesInstance():
         # Check if the attribute starts with 'get'
         if (item.startswith(header)):
             try:
-                # !!! Update the stat
+                # Update the stat
+                # !!! All the stat are updated before one grab (not optimized)
                 self.stats.update()
                 # Return the attribute
                 return getattr(self.stats, item)

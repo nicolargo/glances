@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from psutil import disk_partitions, disk_usage
-from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
+from glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
