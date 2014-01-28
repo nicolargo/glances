@@ -90,3 +90,4 @@ class Plugin(GlancesPlugin):
                           'cached': cached}
         else:
             self.stats = {}
+

@@ -27,7 +27,7 @@ from glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
     """
-    Glances' Host Plugin
+    Glances' Host/System Plugin
 
     stats is a dict
     """

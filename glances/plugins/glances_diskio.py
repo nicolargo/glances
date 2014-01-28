@@ -81,6 +81,7 @@ class Plugin(GlancesPlugin):
 
     def get_stats(self):
         # Return the stats object for the RPC API
-        # Sort it by disk name
-        # Convert it to string
-        return str(sorted(self.stats, key=lambda network: network['disk_name']))
+        # !!! Sort it by disk name (why do it here ? Better in client side ?)
+        self.stats = sorted(self.stats, key=lambda network: network['disk_name'])
+        return GlancesPlugin.get_stats(self)
+    

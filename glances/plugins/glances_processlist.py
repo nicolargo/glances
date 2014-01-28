@@ -18,18 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# !!! Not optimized because both processcount and processlist
-# !!! grab all processes.
-# !!! Action: create a new file globalprocesses.py with a global
-# !!! variable instance of GlancesGrabProcesses classes and share
-# !!! it between the two plugins
-
-from psutil import process_iter, AccessDenied, NoSuchProcess
-
-from glances.core.glances_globals import is_BSD, is_Mac, is_Windows
-from glances.core.glances_timer import Timer
-from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
-from glances_processcount import GlancesGrabProcesses
+from glances_plugin import GlancesPlugin
+from _processes import processes
 
 
 class Plugin(GlancesPlugin):
@@ -42,8 +32,8 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
-        # Init the process class
-        self.glancesgrabprocesses = GlancesGrabProcesses()
+        # Nothing else to do...
+        # 'processes' is already init in the _processes.py script
 
 
     def update(self):
@@ -51,20 +41,7 @@ class Plugin(GlancesPlugin):
         Update processes stats
         """
 
-        self.glancesgrabprocesses.update()
-        self.stats = self.glancesgrabprocesses.getlist()
+        # !!! Update is call twisse (one for processcount and one for processlist)
+        processes.update()
+        self.stats = processes.getlist()
 
-        # processcount = self.glancesgrabprocesses.getcount()
-        # process = self.glancesgrabprocesses.getlist()
-        # if not hasattr(self, 'process'):
-        #     self.processcount = {}
-        #     self.process = []
-        # else:
-        #     self.processcount = processcount
-        #     self.process = process
-
-
-    def get_stats(self):
-        # Return the stats object for the RPC API
-        # Convert it to string
-        return str(self.stats)

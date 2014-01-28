@@ -8,7 +8,7 @@ If you are lookink for user manual, please follow this link: https://github.com/
 __init__.py             Global module init
 __main__.py             Entry point for module
 core/
-    glances_core.py     Main script to rule them up...
+    glances_main.py     Main script to rule them up...
     glances_globals.py  Share variables uppon modules
     glances_config.py   Manage configuration file
     glances_timer.py    Manage timer

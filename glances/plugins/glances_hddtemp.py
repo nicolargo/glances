@@ -47,9 +47,9 @@ class Plugin(GlancesPlugin):
 
     def get_stats(self):
         # Return the stats object for the RPC API
-        # Sort it by label name
-        # Convert it to string
-        return str(sorted(self.stats, key=lambda sensors: sensors['label']))
+        # !!! Sort it by label name (why do it here ? Better in client side ?)
+        self.stats = sorted(self.stats, key=lambda sensors: sensors['label'])
+        return GlancesPlugin.get_stats(self)
 
 
 class glancesGrabHDDTemp:

@@ -19,6 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
+import json
+
 try:
     # psutil >= 1.0.0
     from psutil import net_io_counters
@@ -100,6 +102,6 @@ class Plugin(GlancesPlugin):
 
     def get_stats(self):
         # Return the stats object for the RPC API
-        # Sort it by interface name
-        # Convert it to string
-        return str(sorted(self.stats, key=lambda network: network['interface_name']))
+        # !!! Sort it by interface name (why do it here ? Better in client side ?)
+        self.stats = sorted(self.stats, key=lambda network: network['interface_name'])
+        return GlancesPlugin.get_stats(self)

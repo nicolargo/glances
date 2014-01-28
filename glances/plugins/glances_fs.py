@@ -46,9 +46,9 @@ class Plugin(GlancesPlugin):
 
     def get_stats(self):
         # Return the stats object for the RPC API
-        # Sort it by mount name
-        # Convert it to string
-        return str(sorted(self.stats, key=lambda network: network['mnt_point']))
+        # !!! Sort it by mount name (why do it here ? Better in client side ?)
+        self.stats = sorted(self.stats, key=lambda network: network['mnt_point'])
+        return GlancesPlugin.get_stats(self)
 
 
 class glancesGrabFs:

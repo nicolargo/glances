@@ -19,6 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
+from sets import Set
 # sensors library (optional; Linux-only)
 try:
     import sensors
@@ -52,9 +53,9 @@ class Plugin(GlancesPlugin):
 
     def get_stats(self):
         # Return the stats object for the RPC API
-        # Sort it by label name
-        # Convert it to string
-        return str(sorted(self.stats, key=lambda sensors: sensors['label']))
+        # !!! Sort it by label name (why do it here ? Better in client side ?)
+        self.stats = sorted(self.stats, key=lambda sensors: sensors['label'])
+        return GlancesPlugin.get_stats(self)
 
 
 class glancesGrabSensors:
@@ -73,6 +74,9 @@ class glancesGrabSensors:
         else:
             self.initok = True
 
+        self.sensors_list = []
+
+
     def __update__(self):
         """
         Update the stats
@@ -89,10 +93,12 @@ class glancesGrabSensors:
                         sensors_current['label'] = feature.label[:20]
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
+        
 
     def get(self):
         self.__update__()
         return self.sensors_list
+
 
     def quit(self):
         if self.initok:

@@ -29,7 +29,7 @@ class Plugin(GlancesPlugin):
     Glances' Core Plugin
     Get current date/time
 
-    stats is date (string)
+    stats is (string)
     """
 
     def __init__(self):
@@ -42,4 +42,6 @@ class Plugin(GlancesPlugin):
         """
 
         # Now
-        self.stats = datetime.now()
+        # Had to convert it to string because datetime is not JSON serializable
+        self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
+

@@ -20,11 +20,11 @@
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionnaly
-from .core.glances_core import GlancesCore
+from .core.glances_main import GlancesMain
 
 def main(argv=None):
-    # Create the Glances core instance
-    core = GlancesCore()
+    # Create the Glances main instance
+    core = GlancesMain()
 
     # Glances can be ran in standalone, client or server mode
     if (core.is_standalone()):

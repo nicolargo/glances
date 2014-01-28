@@ -56,7 +56,7 @@ if psutil_version < (0, 5, 0):
     print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
-class GlancesCore(object):
+class GlancesMain(object):
     """
     Main class to manage Glances instance
     """
