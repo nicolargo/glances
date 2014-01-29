@@ -58,6 +58,11 @@ class GlancesPlugin(object):
         return str(self.stats)
 
 
+    def get_raw(self):
+        # Return the stats object
+        return self.stats
+
+
     def get_stats(self):
         # Return the stats object in JSON format for the RPC API
         return json.dumps(self.stats)

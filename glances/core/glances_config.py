@@ -45,6 +45,7 @@ class Config:
     def __init__(self, location=None):
         self.location = location
         self.filename = 'glances.conf'
+        self.config_path = None
 
         self.parser = RawConfigParser()
         self.load()
@@ -60,10 +61,18 @@ class Config:
                         self.parser.read(path, encoding='utf-8')
                     else:
                         self.parser.read(path)
+                    # print(_("Read configuration file %s") % path)
+                    self.config_path = path
                 except UnicodeDecodeError as e:
                     print(_("Error decoding config file '%s': %s") % (path, e))
                     sys.exit(1)
                 break
+
+    def get_config_path(self):
+        """
+        Return the readed configuration file path
+        """
+        return self.config_path
 
     def get_paths_list(self):
         """

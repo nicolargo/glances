@@ -104,9 +104,11 @@ class GlancesStats:
         # For each plugins, call the update method
         for p in self._plugins:
             self._plugins[p].update()
-            # !!! Debug
-            # print "Update plugin %s" % p
-            # print self._plugins[p].get_stats()
+
+
+    def update(self, input_stats={}):
+        # Update the stats
+        self.__update__(input_stats)
 
 
 class GlancesStatsServer(GlancesStats):
@@ -128,8 +130,9 @@ class GlancesStatsServer(GlancesStats):
         # Update the stats
         GlancesStats.__update__(self, input_stats)
 
+        # Build the all_stats with the get_raw() method of the plugins
         for p in self._plugins:
-            self.all_stats[p] = self._plugins[p].get_stats()
+            self.all_stats[p] = self._plugins[p].get_raw()
             
 
     def getAll(self):

@@ -41,7 +41,9 @@ class monitorList:
         Init the monitoring list from the configuration file
         """
 
-        if config.has_section('monitor'):
+        self.config = config 
+
+        if self.config.has_section('monitor'):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')
 
@@ -54,12 +56,13 @@ class monitorList:
             value = {}
             key = "list_" + str(l) + "_"
             try:
-                description = config.get_raw_option(section, key + "description")
-                regex = config.get_raw_option(section, key + "regex")
-                command = config.get_raw_option(section, key + "command")
-                countmin = config.get_raw_option(section, key + "countmin")
-                countmax = config.get_raw_option(section, key + "countmax")
-            except Exception:
+                description = self.config.get_raw_option(section, key + "description")
+                regex = self.config.get_raw_option(section, key + "regex")
+                command = self.config.get_raw_option(section, key + "command")
+                countmin = self.config.get_raw_option(section, key + "countmin")
+                countmax = self.config.get_raw_option(section, key + "countmax")
+            except Exception,e:
+                print(_("Error reading monitored list: %s" % e))
                 pass
             else:
                 if description is not None and regex is not None:

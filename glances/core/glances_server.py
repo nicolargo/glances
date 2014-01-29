@@ -24,6 +24,9 @@ import socket
 import json
 
 # Import Glances libs
+from ..core.glances_globals import __version__
+from ..core.glances_limits import glancesLimits
+from ..core.glances_monitor_list import monitorList
 from ..core.glances_stats import GlancesStatsServer
 from ..core.glances_timer import Timer
 
@@ -130,7 +133,13 @@ class GlancesInstance():
     All the methods of this class are published as XML RPC methods
     """
 
-    def __init__(self, cached_time=1):
+    def __init__(self, cached_time=1, config=None):
+        # Init the limits
+        self.limits = glancesLimits(config)
+
+        # Init the monitoring list
+        self.monitors = monitorList(config)
+
         # Init stats
         self.stats = GlancesStatsServer()
 
@@ -156,18 +165,17 @@ class GlancesInstance():
     def getAll(self):
         # Update and return all the stats
         self.__update__()
-        # !!! Not work has expected compare to v1
         return json.dumps(self.stats.getAll())
 
     def getAllLimits(self):
         # Return all the limits
         # !!! Not implemented
-        return json.dumps(limits.getAll())
+        return json.dumps(self.limits.getAll())
 
     def getAllMonitored(self):
         # Return the processes monitored list
         # !!! Not implemented
-        return json.dumps(monitors.getAll())
+        return json.dumps(self.monitors.getAll())
 
     def __getattr__(self, item):
         """
@@ -211,11 +219,14 @@ class GlancesInstance():
 
 class GlancesServer():
     """
-    This class creates and manages the TCP client
+    This class creates and manages the TCP server
     """
 
-    def __init__(self, bind_address="0.0.0.0", bind_port=61209,
-                 requestHandler=GlancesXMLRPCHandler, cached_time=1):
+    def __init__(self, bind_address="0.0.0.0", 
+                 bind_port=61209,
+                 requestHandler=GlancesXMLRPCHandler, 
+                 cached_time=1,
+                 config=None):
         # Init the XML RPC server
         try:
             self.server = GlancesXMLRPCServer(bind_address, bind_port, requestHandler)
@@ -231,7 +242,7 @@ class GlancesServer():
 
         # Register functions
         self.server.register_introspection_functions()
-        self.server.register_instance(GlancesInstance(cached_time))
+        self.server.register_instance(GlancesInstance(cached_time, config))
 
     def add_user(self, username, password):
         """

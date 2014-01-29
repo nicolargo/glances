@@ -18,12 +18,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Glances informations
-__appname__ = 'glances'
-__version__ = "2.0_Alpha"
-__author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
-__license__ = "LGPL"
-
 # Import system libs
 import sys
 import os
@@ -33,28 +27,10 @@ import argparse
 # Import Glances libs
 # !!! Todo: rename class
 # GlancesExemple
+from ..core.glances_globals import __appname__, __version__, __author__, __license__
 from ..core.glances_globals import *
 from ..core.glances_config import Config
-from ..core.glances_limits import glancesLimits
-from ..core.glances_monitor_list import monitorList
 from ..core.glances_stats import GlancesStats, GlancesStatsServer
-
-# Import PSUtil
-# !!! Is it mandatory for client ?
-try:
-    # psutil is the main library used to grab stats
-    import psutil
-except ImportError:
-    print('PsUtil module not found. Glances cannot start.')
-    sys.exit(1)
-
-# PSutil version
-psutil_version = tuple([int(num) for num in psutil.__version__.split('.')])
-# Note: this is not a mistake: psutil 0.5.1 is detected as 0.5.0
-if psutil_version < (0, 5, 0):
-    print('PsUtil version %s detected.' % psutil.__version__)
-    print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
-    sys.exit(1)
 
 class GlancesMain(object):
     """
@@ -110,15 +86,6 @@ class GlancesMain(object):
         else:
             self.config = Config()
 
-        # Init the limits
-        self.limits = glancesLimits(self.config)
-
-        # Init the monitoring list
-        self.monitors = monitorList(self.config)
-
-        # Init stats
-        stats = GlancesStatsServer()
-
         # Catch the CTRL-C signal
         signal.signal(signal.SIGINT, self.__signal_handler)
 
@@ -172,7 +139,7 @@ class GlancesMain(object):
         self.parser.add_argument('-v', '--version', 
                                  action='version', 
                                  version=_('%s v%s with PsUtil v%s') 
-                                 % (__appname__, __version__, psutil.__version__))
+                                 % (__appname__.capitalize(), __version__, psutil_version))
         # Client mode: set the client IP/name
         self.parser.add_argument('-C', '--config',
                                  help=_('path to the configuration file'))
@@ -284,11 +251,11 @@ class GlancesMain(object):
         if (args.password_arg is not None): self.password = args.password_arg
         if (args.password):
             if (self.server_tag): 
-                self.password = self.get_password(
+                self.password = self.__get_password(
                                   description=_("Define the password for the Glances server"), 
                                   confirm=True)
             elif (self.client_tag):
-                self.password = self.get_password(
+                self.password = self.__get_password(
                                   description=_("Enter the Glances server password"), 
                                   confirm=False)
         if (args.output is not None):
@@ -300,7 +267,7 @@ class GlancesMain(object):
         # !!! Debug
         # print args
 
-    def get_password(self, description='', confirm=False):
+    def __get_password(self, description='', confirm=False):
         """
         Read a password from the command line (with confirmation if confirm = True)
         """
@@ -319,7 +286,7 @@ class GlancesMain(object):
             return password1
         else:
             sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
-            return self.get_password(description=description, confirm=confirm)
+            return self.__get_password(description=description, confirm=confirm)
 
     def is_standalone(self):
         """
@@ -339,3 +306,8 @@ class GlancesMain(object):
         """
         return not self.client_tag and self.server_tag
 
+    def get_config(self):
+        """
+        Return configuration file object
+        """
+        return self.config

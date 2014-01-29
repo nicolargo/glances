@@ -18,11 +18,36 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Glances informations
+__appname__ = 'glances'
+__version__ = "2.0_Alpha"
+__author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
+__license__ = "LGPL"
+
 # Import system libs
 import sys
 import os
 import gettext
 import locale
+
+# Import PsUtil
+try:
+    from psutil import __version__ as __psutil_version__
+except ImportError:
+    print('PsUtil module not found. Glances cannot start.')
+    sys.exit(1)
+
+# PSutil version
+psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
+
+# Check PsUtil version
+# !!! Move this check outside the globals script
+# !!! PsUtil is not necessary on client side
+# Note: this is not a mistake: psutil 0.5.1 is detected as 0.5.0
+if psutil_version < (0, 5, 0):
+    print('PsUtil version %s detected.' % '.'.join(psutil_version))
+    print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
+    sys.exit(1)  
 
 # Path definitions
 work_path = os.path.realpath(os.path.dirname(__file__))

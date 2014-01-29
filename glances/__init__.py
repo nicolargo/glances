@@ -28,8 +28,17 @@ def main(argv=None):
 
     # Glances can be ran in standalone, client or server mode
     if (core.is_standalone()):
-        # !!!
-        print "Standalone mode"
+        # Import the Glances standalone module
+        from .core.glances_standalone import GlancesStandalone
+
+        # Init the standalone mode
+        standalone = GlancesStandalone(config=core.config,
+                                       refresh_time=core.refresh_time,
+                                       use_bold=core.use_bold)
+
+        # Start the standalone (CLI) loop
+        standalone.serve_forever()
+
     elif (core.is_client()):
         # !!!
         print "Client mode"
@@ -40,8 +49,10 @@ def main(argv=None):
         # Init the server
         server = GlancesServer(bind_address=core.bind_ip, 
                                bind_port=int(core.server_port), 
-                               cached_time=core.cached_time)
-        print(_("Glances server is running on") + " %s:%s" % (core.bind_ip, core.server_port))
+                               cached_time=core.cached_time,
+                               config=core.config)
+        # print(_("Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
+        print(_("Glances server is running on %s:%s") % (core.bind_ip, core.server_port))
 
         # Set the server login/password (if -P/--password tag)
         if (core.password != ""):
@@ -54,8 +65,3 @@ def main(argv=None):
         # !!! How to close the server with CTRL-C
         # !!! Call core.end() with parameters ?
         server.server_close()
-
-
-
-
-
