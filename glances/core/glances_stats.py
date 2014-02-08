@@ -26,7 +26,7 @@ import collections
 # Import Glances libs
 from ..core.glances_globals import *
 
-class GlancesStats:
+class GlancesStats(object):
     """
     This class store, update and give stats
     """
@@ -35,13 +35,16 @@ class GlancesStats:
     _plugins = {}
 
 
-    def __init__(self):
+    def __init__(self, config=None):
         """
         Init the stats
         """
 
         # Load the plugins
         self.load_plugins()
+
+        # Load the limits
+        self.load_limits(config)
 
 
     def __getattr__(self, item):
@@ -100,6 +103,16 @@ class GlancesStats:
                 # generate self._plugins_list["xxx"] = ...
                 plugname = os.path.basename(plug)[len(header):-3].lower()
                 self._plugins[plugname] = m.Plugin()
+
+
+    def load_limits(self, config):
+        """
+        Load the stats limits
+        """
+
+        # For each plugins, call the init_limits method
+        for p in self._plugins:
+            self._plugins[p].load_limits(config)
 
 
     def __update__(self, input_stats):

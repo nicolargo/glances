@@ -44,9 +44,33 @@ class GlancesPlugin(object):
     """
 
     def __init__(self):
-        # Init the stat list
+        # Plugin name (= module name without glances_)
+        self.plugin_name = self.__class__.__module__[len('glances_'):]
+
+        # Init the stats list
         self.stats = None
-    
+
+        # Init the limits dictionnary
+        self.limits = dict()
+
+
+    def load_limits(self, config):
+        """
+        Load the limits from the configuration file
+        """
+
+        if (config.has_section(self.plugin_name)):
+            # print ">>> Load limits for %s" % self.plugin_name
+            # Read LOAD limits
+            for s in [ 'careful', 'warning', 'critical' ]:
+                try:
+                    value = config.get_option(self.plugin_name, s)
+                except:
+                    pass
+                else:
+                    self.limits[self.plugin_name + '_' + s] = value
+                    # print ">>> %s = %s" % (self.plugin_name + '_' + s, value)
+
 
     def __repr__(self):
         # Return the raw stats
@@ -66,6 +90,45 @@ class GlancesPlugin(object):
     def get_stats(self):
         # Return the stats object in JSON format for the RPC API
         return json.dumps(self.stats)
+
+
+    def get_limits(self):
+        # Return the limits object
+        return self.limits
+
+
+    def get_alert(self, current=0, min=0, max=100):
+        # Return the alert status relative to a current value
+        # If current < CAREFUL of max then alert = OK
+        # If current > CAREFUL of max then alert = CAREFUL
+        # If current > WARNING of max then alert = WARNING
+        # If current > CRITICAL of max then alert = CRITICAL
+        # stat is USER, SYSTEM, IOWAIT or STEAL
+        try:
+            value = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if (value > self.get_limit_critical()):
+            return 'CRITICAL'
+        elif (value > self.get_limit_warning()):
+            return 'WARNING'
+        elif (value > self.get_limit_careful()):
+            return 'CAREFUL'
+
+        return 'OK'
+
+
+    def get_limit_critical(self):
+        return self.limits[self.plugin_name + '_' + 'critical']
+
+
+    def get_limit_warning(self):
+        return self.limits[self.plugin_name + '_' + 'warning']
+
+
+    def get_limit_careful(self):
+        return self.limits[self.plugin_name + '_' + 'careful']
 
 
     def msg_curse(self):

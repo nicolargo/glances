@@ -82,9 +82,13 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # 1min load
-        msg = "{0:7} {1}".format(
+        # msg = "{0:7} {1}".format(
+        #             _("1 min:"),
+        #             format(self.stats['min1'], '>5.2f'))
+        msg = "{0:7} {1} {2}".format(
                     _("1 min:"),
-                    format(self.stats['min1'], '>5.2f'))
+                    format(self.stats['min1'], '>5.2f'),
+                    str(self.get_alert(self.stats['min1'], max=100*self.core_plugin.update())))
         ret.append(self.curse_add_line(msg, "NORMAL"))
         # New line
         ret.append(self.curse_new_line())
@@ -100,5 +104,10 @@ class Plugin(GlancesPlugin):
                     _("15 min:"),
                     format(self.stats['min15'], '>5.2f'))
         ret.append(self.curse_add_line(msg, "NORMAL"))
-      
+        
+        # !!! Limits (debug only)
+        ret.append(self.curse_new_line())
+        msg = str(self.get_limits())
+        ret.append(self.curse_add_line(msg, "NORMAL"))
+
         return ret

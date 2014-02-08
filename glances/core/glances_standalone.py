@@ -46,7 +46,7 @@ class GlancesStandalone():
         self.monitors = monitorList(config)
 
         # Init stats
-        self.stats = GlancesStats()
+        self.stats = GlancesStats(config)
 
         # Initial update
         self.stats.update()
