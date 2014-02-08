@@ -66,3 +66,55 @@ class GlancesPlugin(object):
     def get_stats(self):
         # Return the stats object in JSON format for the RPC API
         return json.dumps(self.stats)
+
+
+    def msg_curse(self):
+        """
+        Return default string to display in the curse interface
+        """
+        return [ self.curse_add_line(str(self.stats)) ]
+
+
+    def get_curse(self):
+        # Return a dict with all the information needed to display the stat
+        # key     | description
+        #----------------------------
+        # display | Display the stat (True or False)
+        # msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
+        # column  | column number
+        # line    | Line number
+
+        display_curse = False
+        column_curse = -1
+        line_curse = -1
+
+        if (hasattr(self, 'display_curse')):
+            display_curse = self.display_curse
+        if (hasattr(self, 'column_curse')):
+            column_curse = self.column_curse
+        if (hasattr(self, 'line_curse')):
+            line_curse = self.line_curse
+
+        return { 'display': display_curse,
+                 'msgdict': self.msg_curse(),
+                 'column': column_curse,
+                 'line': line_curse }
+
+
+    def curse_add_line(self, msg, decoration="NORMAL"):
+        """
+        Return a dict with: { 'msg': msg, 'decoration': decoration }
+        with:
+            msg: string
+            decoration: NORMAL (no decoration), UNDERLINE, BOLD, REVERSE
+        """ 
+
+        return { 'msg': msg, 'decoration': decoration }
+
+
+    def curse_new_line(self):
+        """
+        Go to a new line
+        """ 
+
+        return self.curse_add_line('\n')

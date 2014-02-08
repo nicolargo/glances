@@ -36,6 +36,10 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
+        # We dot not want to display the stat in the curse interface
+        # The core number is displayed by the load plugin
+        self.display_curse = False
+
 
     def update(self):
         """
@@ -48,3 +52,5 @@ class Plugin(GlancesPlugin):
             self.stats = NUM_CPUS
         except Exception, e:
             self.stats = None
+
+        return self.stats

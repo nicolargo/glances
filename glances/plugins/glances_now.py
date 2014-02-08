@@ -35,6 +35,15 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = -1
+        # Enter -1 to diplay bottom
+        self.line_curse = -1
+
 
     def update(self):
         """
@@ -44,4 +53,6 @@ class Plugin(GlancesPlugin):
         # Now
         # Had to convert it to string because datetime is not JSON serializable
         self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
+
+        return self.stats
 

@@ -32,7 +32,7 @@ from glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
     """
-    Glances' Core Plugin
+    Glances' Uptime Plugin
     Get stats about uptime
 
     stats is date (string)
@@ -41,6 +41,14 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = -1
+        # Enter -1 to diplay bottom
+        self.line_curse = 0
 
     def update(self):
         """

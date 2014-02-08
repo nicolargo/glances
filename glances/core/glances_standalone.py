@@ -27,6 +27,7 @@ import json
 from ..core.glances_limits import glancesLimits
 from ..core.glances_monitor_list import monitorList
 from ..core.glances_stats import GlancesStats
+from ..outputs.glances_curses import glancesCurses
 
 
 class GlancesStandalone():
@@ -67,17 +68,17 @@ class GlancesStandalone():
         # Init screen
         # !!! TODO
         # !!! Is refresh_time mandatory for this class ?
-        # self.screen = glancesScreen(refresh_time=refresh_time,
-        #                             use_bold=use_bold)
+        self.screen = glancesCurses(refresh_time=refresh_time,
+                                    use_bold=use_bold)
 
 
     def serve_forever(self):
         while True:
-            # Get system informations
-            self.update()
+            # Update system informations
+            self.stats.update()
 
             # Update the screen
-            self.display()
+            self.screen.update(self.stats)
 
             # Update the HTML output
             # !!! TODO
@@ -88,17 +89,3 @@ class GlancesStandalone():
             # !!! TODO
             # if csv_tag:
             #     csvoutput.update(stats)
-
-
-    def update(self):
-        """
-        Update the stats
-        """
-        self.stats.update({})
-
-
-    def display(self):
-        import time
-        time.sleep(self.refresh_time)
-        print self.stats.getCpu()
-

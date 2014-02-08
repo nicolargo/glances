@@ -24,6 +24,7 @@ from os import getloadavg
 
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
+from glances_core import Plugin as CorePlugin
 
 class Plugin(GlancesPlugin):
     """
@@ -34,6 +35,18 @@ class Plugin(GlancesPlugin):
 
     def __init__(self):
         GlancesPlugin.__init__(self)
+
+        # Instance for the CorePlugin in order to display the core number
+        self.core_plugin = CorePlugin()
+
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 1
+        # Enter -1 to diplay bottom
+        self.line_curse = 1
 
 
     def update(self):
@@ -48,3 +61,44 @@ class Plugin(GlancesPlugin):
                           'min15': load[2]}
         except Exception, err:
             self.stats = {}
+
+        return self.stats
+
+
+    def msg_curse(self):
+        """
+        Return the dict to display in the curse interface
+        """
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # Header
+        msg = "{0:4} ".format(_("LOAD"))
+        ret.append(self.curse_add_line(msg, "BOLD"))
+        # Core number
+        msg = "{0:3}-core".format(self.core_plugin.update())
+        ret.append(self.curse_add_line(msg, "NORMAL"))
+        # New line
+        ret.append(self.curse_new_line())
+        # 1min load
+        msg = "{0:7} {1}".format(
+                    _("1 min:"),
+                    format(self.stats['min1'], '>5.2f'))
+        ret.append(self.curse_add_line(msg, "NORMAL"))
+        # New line
+        ret.append(self.curse_new_line())
+        # 5min load
+        msg = "{0:7} {1}".format(
+                    _("5 min:"),
+                    format(self.stats['min5'], '>5.2f'))
+        ret.append(self.curse_add_line(msg, "NORMAL"))
+        # New line
+        ret.append(self.curse_new_line())
+        # 15min load
+        msg = "{0:7} {1}".format(
+                    _("15 min:"),
+                    format(self.stats['min15'], '>5.2f'))
+        ret.append(self.curse_add_line(msg, "NORMAL"))
+      
+        return ret

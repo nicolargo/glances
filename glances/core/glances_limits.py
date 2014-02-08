@@ -18,6 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# !!!
+# Each plugin define its limits
+# This class only browse all plugin and propose 
+# an API interface to display all the limits
+# /!!!
+
+
 class glancesLimits:
     """
     Manage limits for each stats. A limit can be:

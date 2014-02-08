@@ -47,28 +47,34 @@ class GlancesStats:
     def __getattr__(self, item):
         """
         Overwrite the getattr in case of attribute is not found 
-        The goal is to dynamicaly generate the API get'Stats'() methods
+        The goal is to dynamicaly generate the following methods:
+        - getPlugname(): return Plugname stat in JSON format
+        - cursePlugname(): return Plugname stat in STR (for curses)
         """
         
-        # print "!!! __getattr__ in the GlancesStats classe"
-        # print "!!! Method: %s" % item
-        header = 'get'
         # Check if the attribute starts with 'get'
-        if (item.startswith(header)):
+        if (item.startswith('get')):
             # Get the plugin name
-            plugname = item[len(header):].lower()
+            plugname = item[len('get'):].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
-            # !!! Debug
-            # print "Check if method get_stats exist for plugin %s" % plugname
-            # print self._plugins
-            # print plugin
             if (hasattr(plugin, 'get_stats')):
                 # The method get_stats exist, return it
                 return getattr(plugin, 'get_stats')
             else:
                 # The method get_stats is not found for the plugin
                 raise AttributeError(item)
+        elif (item.startswith('curse')):
+            # Get the plugin name
+            plugname = item[len('curse'):].lower()
+            # Get the plugin instance
+            plugin = self._plugins[plugname]
+            if (hasattr(plugin, 'get_curse')):
+                # The method get_curse exist, return it
+                return getattr(plugin, 'get_curse')
+            else:
+                # The method get_curse is not found for the plugin
+                raise AttributeError(item)            
         else:
             # Default behavior
             raise AttributeError(item)

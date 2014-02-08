@@ -34,9 +34,21 @@ class Plugin(GlancesPlugin):
 
     def __init__(self):
         GlancesPlugin.__init__(self)
-        # self.update()
+
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 0
+        # Enter -1 to diplay bottom
+        self.line_curse = 0
+
 
     def update(self):
+        """
+        Update the host/system info
+        """
         self.stats = {}
         self.stats['os_name'] = platform.system()
         self.stats['hostname'] = platform.node()
@@ -58,3 +70,34 @@ class Plugin(GlancesPlugin):
             self.stats['os_version'] = ' '.join(os_version[::2])
         else:
             self.stats['os_version'] = ""
+
+
+    def msg_curse(self):
+        """
+        Return the string to display in the curse interface
+        """
+
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        if (self.stats['os_name'] == "Linux"):
+            msg = _("{0} ({1} {2} / {3} {4})").format(
+                    self.stats['hostname'],
+                    self.stats['linux_distro'], 
+                    self.stats['platform'],
+                    self.stats['os_name'], 
+                    self.stats['os_version'])
+        else:
+            msg = _("{0} ({1} {2} {3})").format(
+                    self.stats['hostname'],
+                    self.stats['os_name'], 
+                    self.stats['os_version'],
+                    self.stats['platform'])
+
+        # Add the line with decoration
+        ret.append(self.curse_add_line(msg, "UNDERLINE"))
+        
+        # Return the message with decoration 
+        return ret
+        
