@@ -75,39 +75,32 @@ class Plugin(GlancesPlugin):
         # Build the string message
         # Header
         msg = "{0:4} ".format(_("LOAD"))
-        ret.append(self.curse_add_line(msg, "BOLD"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         msg = "{0:3}-core".format(self.core_plugin.update())
-        ret.append(self.curse_add_line(msg, "NORMAL"))
+        ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 1min load
-        # msg = "{0:7} {1}".format(
-        #             _("1 min:"),
-        #             format(self.stats['min1'], '>5.2f'))
-        msg = "{0:7} {1} {2}".format(
-                    _("1 min:"),
-                    format(self.stats['min1'], '>5.2f'),
-                    str(self.get_alert(self.stats['min1'], max=100*self.core_plugin.update())))
-        ret.append(self.curse_add_line(msg, "NORMAL"))
+        msg = "{0:8}".format(_("1 min:"))
+        ret.append(self.curse_add_line(msg))
+        msg = "{0}".format(format(self.stats['min1'], '>5.2f'))
+        ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 5min load
-        msg = "{0:7} {1}".format(
-                    _("5 min:"),
-                    format(self.stats['min5'], '>5.2f'))
-        ret.append(self.curse_add_line(msg, "NORMAL"))
+        msg = "{0:8}".format(_("5 min:"))
+        ret.append(self.curse_add_line(msg))
+        msg = "{0}".format(format(self.stats['min5'], '>5.2f'))
+        ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['min5'], 
+                                                               max=100*self.core_plugin.update())))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
-        msg = "{0:7} {1}".format(
-                    _("15 min:"),
-                    format(self.stats['min15'], '>5.2f'))
-        ret.append(self.curse_add_line(msg, "NORMAL"))
+        msg = "{0:8}".format(_("15 min:"))
+        ret.append(self.curse_add_line(msg))
+        msg = "{0}".format(format(self.stats['min15'], '>5.2f'))
+        ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['min15'], 
+                                                               max=100*self.core_plugin.update())))
         
-        # !!! Limits (debug only)
-        ret.append(self.curse_new_line())
-        msg = str(self.get_limits())
-        ret.append(self.curse_add_line(msg, "NORMAL"))
-
         return ret

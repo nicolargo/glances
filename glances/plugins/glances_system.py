@@ -96,7 +96,7 @@ class Plugin(GlancesPlugin):
                     self.stats['platform'])
 
         # Add the line with decoration
-        ret.append(self.curse_add_line(msg, "UNDERLINE"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
         
         # Return the message with decoration 
         return ret

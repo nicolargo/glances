@@ -99,6 +99,7 @@ class GlancesPlugin(object):
 
     def get_alert(self, current=0, min=0, max=100):
         # Return the alert status relative to a current value
+        # Use this function for minor stat
         # If current < CAREFUL of max then alert = OK
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
@@ -117,6 +118,29 @@ class GlancesPlugin(object):
             return 'CAREFUL'
 
         return 'OK'
+
+
+    def get_alert_log(self, current=0, min=0, max=100):
+        # Return the alert status relative to a current value
+        # Use this function for major stat
+        # If current < CAREFUL of max then alert = OK_LOG
+        # If current > CAREFUL of max then alert = CAREFUL_LOG
+        # If current > WARNING of max then alert = WARNING_LOG
+        # If current > CRITICAL of max then alert = CRITICAL_LOG
+        # stat is USER, SYSTEM, IOWAIT or STEAL
+        try:
+            value = (current * 100) / max
+        except ZeroDivisionError:
+            return 'DEFAULT'
+
+        if (value > self.get_limit_critical()):
+            return 'CRITICAL_LOG'
+        elif (value > self.get_limit_warning()):
+            return 'WARNING_LOG'
+        elif (value > self.get_limit_careful()):
+            return 'CAREFUL_LOG'
+
+        return 'OK_LOG'
 
 
     def get_limit_critical(self):
@@ -164,12 +188,24 @@ class GlancesPlugin(object):
                  'line': line_curse }
 
 
-    def curse_add_line(self, msg, decoration="NORMAL"):
+    def curse_add_line(self, msg, decoration="DEFAULT"):
         """
         Return a dict with: { 'msg': msg, 'decoration': decoration }
         with:
             msg: string
-            decoration: NORMAL (no decoration), UNDERLINE, BOLD, REVERSE
+            decoration: 
+                DEFAULT: no decoration
+                UNDERLINE: underline
+                BOLD: bold
+                TITLE: for stat title
+                OK: Value is OK and non logged
+                OK_LOG: Value is OK and logged
+                CAREFUL: Value is CAREFUL and non logged
+                CAREFUL_LOG: Value is CAREFUL and logged
+                WARINING: Value is WARINING and non logged
+                WARINING_LOG: Value is WARINING and logged
+                CRITICAL: Value is CRITICAL and non logged
+                CRITICAL_LOG: Value is CRITICAL and logged
         """ 
 
         return { 'msg': msg, 'decoration': decoration }
@@ -181,3 +217,52 @@ class GlancesPlugin(object):
         """ 
 
         return self.curse_add_line('\n')
+
+
+    def auto_unit(self, val, low_precision=False):
+        """
+        Make a nice human readable string out of val
+        Number of decimal places increases as quantity approaches 1
+
+        examples:
+        CASE: 613421788        RESULT:       585M low_precision:       585M
+        CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
+        CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
+        CASE: 838471403472     RESULT:       781G low_precision:       781G
+        CASE: 9683209690677    RESULT:      8.81T low_precision:       8.8T
+        CASE: 1073741824       RESULT:      1024M low_precision:      1024M
+        CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
+
+        parameter 'low_precision=True' returns less decimal places.
+        potentially sacrificing precision for more readability
+        """
+        symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+        prefix = {
+            'Y': 1208925819614629174706176,
+            'Z': 1180591620717411303424,
+            'E': 1152921504606846976,
+            'P': 1125899906842624,
+            'T': 1099511627776,
+            'G': 1073741824,
+            'M': 1048576,
+            'K': 1024
+        }
+
+        for key in reversed(symbols):
+            value = float(val) / prefix[key]
+            if value > 1:
+                fixed_decimal_places = 0
+                if value < 10:
+                    fixed_decimal_places = 2
+                elif value < 100:
+                    fixed_decimal_places = 1
+                if low_precision:
+                    if key in 'MK':
+                        fixed_decimal_places = 0
+                    else:
+                        fixed_decimal_places = min(1, fixed_decimal_places)
+                elif key in 'K':
+                    fixed_decimal_places = 0
+                formatter = "{0:.%df}{1}" % fixed_decimal_places
+                return formatter.format(value, key)
+        return "{0!s}".format(val)

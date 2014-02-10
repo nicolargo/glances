@@ -114,49 +114,48 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:7} ".format(_("CPU"))
-        ret.append(self.curse_add_line(msg, "BOLD"))
+        msg = "{0:8}".format(_("CPU"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
         # Total CPU usage
         msg = "{0}".format(format((100 - self.stats['idle']) / 100, '>6.1%'))
-        ret.append(self.curse_add_line(msg, "NORMAL"))
+        ret.append(self.curse_add_line(msg))
         # Steal CPU usage
-        # !!! TODO: if steal not available
         if ('steal' in self.stats):
-            msg = "  {0:7} {1}".format(
-                    _("steal:"),
-                    format(self.stats['steal'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            msg = "  {0:8}".format(_("steal:"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(format(self.stats['steal'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert(self.stats['steal'])))
         else:
             msg = "{0:>16}".format(" ")
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # User CPU
         if ('user' in self.stats):
-            msg = "{0:7} {1}".format(
-                    _("user:"),
-                    format(self.stats['user'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            msg = "{0:8}".format(_("user:"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(format(self.stats['user'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'])))
         # Nice CPU
         if ('nice' in self.stats):
             msg = "  {0:7} {1}".format(
                     _("nice:"), 
-                    format(self.stats['user'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+                    format(self.stats['nice'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, "DEFAULT"))
         # New line
         ret.append(self.curse_new_line())
         # System CPU
         if ('system' in self.stats):
-            msg = "{0:7} {1}".format(
-                    _("system:"),
-                    format(self.stats['system'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            msg = "{0:8}".format(_("system:"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(format(self.stats['system'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['system'])))
         # IOWait CPU
         if ('iowait' in self.stats):
-            msg = "  {0:7} {1}".format(
-                    _("iowait:"),
-                    format(self.stats['iowait'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            msg = "  {0:8}".format(_("iowait:"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(format(self.stats['iowait'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['iowait'])))
         # New line
         ret.append(self.curse_new_line())
         # Idles CPU
@@ -164,13 +163,13 @@ class Plugin(GlancesPlugin):
             msg = "{0:7} {1}".format(
                     _("idle:"),
                     format(self.stats['idle'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            ret.append(self.curse_add_line(msg, "DEFAULT"))
         # IRQ CPU
         if ('irq' in self.stats):
             msg = "  {0:7} {1}".format(
                     _("irq:"),
                     format(self.stats['irq'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, "NORMAL"))
+            ret.append(self.curse_add_line(msg, "DEFAULT"))
   
         # Return the message with decoration 
         return ret
