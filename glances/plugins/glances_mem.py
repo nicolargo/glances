@@ -118,12 +118,9 @@ class Plugin(GlancesPlugin):
         # Active memory usage
         if ('active' in self.stats):
             msg = "  {0:8}".format(_("actif:"))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.auto_unit(self.stats['active']), '>6'))
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = "{0:>16}".format(" ")
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
@@ -134,12 +131,9 @@ class Plugin(GlancesPlugin):
         # Inactive memory usage
         if ('inactive' in self.stats):
             msg = "  {0:8}".format(_("inactif:"))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.auto_unit(self.stats['inactive']), '>6'))
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = "{0:>16}".format(" ")
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
@@ -152,12 +146,9 @@ class Plugin(GlancesPlugin):
         # Buffers memory usage
         if ('buffers' in self.stats):
             msg = "  {0:8}".format(_("buffers:"))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.auto_unit(self.stats['buffers']), '>6'))
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = "{0:>16}".format(" ")
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
@@ -168,10 +159,8 @@ class Plugin(GlancesPlugin):
         # Cached memory usage
         if ('free' in self.stats):
             msg = "  {0:8}".format(_("cached:"))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.auto_unit(self.stats['cached']), '>6'))
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = "{0:>16}".format(" ")
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
+            
         return ret

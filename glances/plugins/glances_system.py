@@ -81,22 +81,22 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Build the string message
+        # Hostanme is mandatory
+        msg = _("{0}").format(self.stats['hostname'])
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        # System info
         if (self.stats['os_name'] == "Linux"):
-            msg = _("{0} ({1} {2} / {3} {4})").format(
-                    self.stats['hostname'],
+            msg = _(" ({0} {1} / {2} {3})").format(
                     self.stats['linux_distro'], 
                     self.stats['platform'],
                     self.stats['os_name'], 
                     self.stats['os_version'])
         else:
-            msg = _("{0} ({1} {2} {3})").format(
-                    self.stats['hostname'],
+            msg = _(" ({0} {1} {2})").format(
                     self.stats['os_name'], 
                     self.stats['os_version'],
                     self.stats['platform'])
-
-        # Add the line with decoration
-        ret.append(self.curse_add_line(msg, "TITLE"))
+        ret.append(self.curse_add_line(msg, optional=True))
         
         # Return the message with decoration 
         return ret

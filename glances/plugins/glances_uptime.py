@@ -50,6 +50,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 0
 
+
     def update(self):
         """
         Update uptime stat
@@ -64,3 +65,18 @@ class Plugin(GlancesPlugin):
         
         # Convert uptime to string (because datetime is not JSONifi)
         self.stats = str(self.uptime).split('.')[0]
+
+
+    def msg_curse(self):
+        """
+        Return the string to display in the curse interface
+        """
+
+        # Init the return message
+        ret = []
+
+        # Add the line with decoration
+        ret.append(self.curse_add_line("Uptime: %s" % self.stats))
+        
+        # Return the message with decoration 
+        return ret

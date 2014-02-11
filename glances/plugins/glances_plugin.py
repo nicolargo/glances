@@ -188,9 +188,9 @@ class GlancesPlugin(object):
                  'line': line_curse }
 
 
-    def curse_add_line(self, msg, decoration="DEFAULT"):
+    def curse_add_line(self, msg, decoration="DEFAULT", optional=False):
         """
-        Return a dict with: { 'msg': msg, 'decoration': decoration }
+        Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }
         with:
             msg: string
             decoration: 
@@ -206,9 +206,10 @@ class GlancesPlugin(object):
                 WARINING_LOG: Value is WARINING and logged
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
+            optional: True if the stat is optional (display only if space is available)
         """ 
 
-        return { 'msg': msg, 'decoration': decoration }
+        return { 'msg': msg, 'decoration': decoration, 'optional': optional }
 
 
     def curse_new_line(self):
