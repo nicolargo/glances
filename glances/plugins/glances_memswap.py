@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
             self.stats = {}
 
 
-    def msg_curse(self):
+    def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
         """

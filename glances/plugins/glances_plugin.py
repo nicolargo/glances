@@ -155,14 +155,14 @@ class GlancesPlugin(object):
         return self.limits[self.plugin_name + '_' + 'careful']
 
 
-    def msg_curse(self):
+    def msg_curse(self, args):
         """
         Return default string to display in the curse interface
         """
         return [ self.curse_add_line(str(self.stats)) ]
 
 
-    def get_curse(self):
+    def get_curse(self, args=None):
         # Return a dict with all the information needed to display the stat
         # key     | description
         #----------------------------
@@ -183,7 +183,7 @@ class GlancesPlugin(object):
             line_curse = self.line_curse
 
         return { 'display': display_curse,
-                 'msgdict': self.msg_curse(),
+                 'msgdict': self.msg_curse(args),
                  'column': column_curse,
                  'line': line_curse }
 

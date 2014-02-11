@@ -52,7 +52,6 @@ class GlancesStats(object):
         Overwrite the getattr in case of attribute is not found 
         The goal is to dynamicaly generate the following methods:
         - getPlugname(): return Plugname stat in JSON format
-        - cursePlugname(): return Plugname stat in STR (for curses)
         """
         
         # Check if the attribute starts with 'get'
@@ -67,17 +66,6 @@ class GlancesStats(object):
             else:
                 # The method get_stats is not found for the plugin
                 raise AttributeError(item)
-        elif (item.startswith('curse')):
-            # Get the plugin name
-            plugname = item[len('curse'):].lower()
-            # Get the plugin instance
-            plugin = self._plugins[plugname]
-            if (hasattr(plugin, 'get_curse')):
-                # The method get_curse exist, return it
-                return getattr(plugin, 'get_curse')
-            else:
-                # The method get_curse is not found for the plugin
-                raise AttributeError(item)            
         else:
             # Default behavior
             raise AttributeError(item)
@@ -128,6 +116,19 @@ class GlancesStats(object):
     def update(self, input_stats={}):
         # Update the stats
         self.__update__(input_stats)
+
+
+    def get_plugin_list(self):
+        # Return the plugin list
+        self._plugins
+
+
+    def get_plugin(self, plugin_name):
+        # Return the plugin name
+        if (plugin_name in self._plugins):
+            return self._plugins[plugin_name]
+        else:
+            return None
 
 
 class GlancesStatsServer(GlancesStats):

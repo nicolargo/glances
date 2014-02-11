@@ -37,6 +37,7 @@ class GlancesStandalone():
 
     def __init__(self, 
                  config=None,
+                 args=None,
                  refresh_time=3,
                  use_bold=True):
         # Init the limits
@@ -52,7 +53,7 @@ class GlancesStandalone():
         # !!! The first time Glances display wrong CPU information
         self.stats.update()
 
-        self.refresh_time = refresh_time
+        self.refresh_time = args.time
 
         # Init HTML output
         # !!! TODO
@@ -67,10 +68,7 @@ class GlancesStandalone():
         #                            refresh_time=refresh_time)
 
         # Init screen
-        # !!! TODO
-        # !!! Is refresh_time mandatory for this class ?
-        self.screen = glancesCurses(refresh_time=refresh_time,
-                                    use_bold=use_bold)
+        self.screen = glancesCurses(args=args)
 
 
     def serve_forever(self):

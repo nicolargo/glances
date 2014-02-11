@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
         self.stats = str(self.uptime).split('.')[0]
 
 
-    def msg_curse(self):
+    def msg_curse(self, args=None):
         """
         Return the string to display in the curse interface
         """

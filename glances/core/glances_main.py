@@ -78,7 +78,7 @@ class GlancesMain(object):
     def __init__(self):
         # Init and manage command line arguments
         self.init_arg()
-        self.parse_arg()
+        self.args = self.parse_arg()
 
         # Read the configuration file
         if (self.conf_file_tag):
@@ -220,6 +220,7 @@ class GlancesMain(object):
         self.parser.add_argument('-f', '--file',
                                  help=_('set the html output folder or csv file'))
 
+
     def parse_arg(self):
         """
         Parse command line argument
@@ -227,7 +228,10 @@ class GlancesMain(object):
 
         args = self.parser.parse_args()
 
-        # Change global variables regarding to user args
+        # Default refresh time is 3 seconds
+        if (args.time is None): args.time = 3
+
+        # !!! Change global variables regarding to user args
         # !!! To be refactor to use directly the args list in the code
         if (args.time is not None): self.refresh_time = args.time 
         self.network_bytepersec_tag = args.byte
@@ -263,9 +267,10 @@ class GlancesMain(object):
         if (args.file is not None):
             output_file = args.file
             output_folder = args.file
+        # /!!!
 
-        # !!! Debug
-        # print args
+        return args
+
 
     def __get_password(self, description='', confirm=False):
         """
@@ -288,11 +293,13 @@ class GlancesMain(object):
             sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
             return self.__get_password(description=description, confirm=confirm)
 
+
     def is_standalone(self):
         """
         Return True if Glances is running in standalone mode
         """
         return not self.client_tag and not self.server_tag
+
 
     def is_client(self):
         """
@@ -300,14 +307,23 @@ class GlancesMain(object):
         """
         return self.client_tag and not self.server_tag
 
+
     def is_server(self):
         """
         Return True if Glances is running in sserver mode
         """
         return not self.client_tag and self.server_tag
 
+
     def get_config(self):
         """
         Return configuration file object
         """
         return self.config
+
+
+    def get_args(self):
+        """
+        Return the arguments
+        """
+        return self.args

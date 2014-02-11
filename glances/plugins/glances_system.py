@@ -72,7 +72,7 @@ class Plugin(GlancesPlugin):
             self.stats['os_version'] = ""
 
 
-    def msg_curse(self):
+    def msg_curse(self, args=None):
         """
         Return the string to display in the curse interface
         """

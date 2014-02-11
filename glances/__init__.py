@@ -32,7 +32,8 @@ def main(argv=None):
         from .core.glances_standalone import GlancesStandalone
 
         # Init the standalone mode
-        standalone = GlancesStandalone(config=core.config,
+        standalone = GlancesStandalone(config=core.get_config(),
+                                       args=core.get_args(),
                                        refresh_time=core.refresh_time,
                                        use_bold=core.use_bold)
 
