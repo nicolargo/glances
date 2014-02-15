@@ -150,7 +150,6 @@ class GlancesPlugin(object):
     def get_limit_warning(self):
         return self.limits[self.plugin_name + '_' + 'warning']
 
-
     def get_limit_careful(self):
         return self.limits[self.plugin_name + '_' + 'careful']
 

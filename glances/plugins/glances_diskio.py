@@ -33,6 +33,15 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 0
+        # Enter -1 to diplay bottom
+        self.line_curse = 3
+
 
     def update(self):
         """
@@ -79,9 +88,34 @@ class Plugin(GlancesPlugin):
         self.stats = self.diskio
 
 
-    def get_stats(self):
-        # Return the stats object for the RPC API
-        # !!! Sort it by disk name (why do it here ? Better in client side ?)
-        self.stats = sorted(self.stats, key=lambda network: network['disk_name'])
-        return GlancesPlugin.get_stats(self)
-    
+    def msg_curse(self, args=None):
+        """
+        Return the dict to display in the curse interface
+        """
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # Header
+        msg = "{0:8}".format(_("DISK I/O"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = " {0:>6}".format(_("In/s"))
+        ret.append(self.curse_add_line(msg))
+        msg = "  {0:>6}".format(_("Out/s"))
+        ret.append(self.curse_add_line(msg))
+        # Disk list (sorted by name)
+        for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
+            # !!! TODO: manage the hide tag 
+
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:8}".format(i['disk_name'])
+            ret.append(self.curse_add_line(msg))
+            rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
+            txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
+            msg = " {0:>6}".format(rxps)
+            ret.append(self.curse_add_line(msg))
+            msg = "  {0:>6}".format(txps)
+            ret.append(self.curse_add_line(msg))
+
+        return ret

@@ -35,6 +35,15 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 0
+        # Enter -1 to diplay bottom
+        self.line_curse = 1
+
 
     def update(self):
         """
@@ -105,3 +114,54 @@ class Plugin(GlancesPlugin):
                 self.percputime_total_old = self.percputime_total_new
             except Exception, err:
                 self.stats = []
+
+    def msg_curse(self, args=None):
+        """
+        Return the dict to display in the curse interface
+        """
+
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # Header
+        msg = "{0:8}".format(_("PER CPU"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
+
+        # Total CPU usage
+        for cpu in self.stats:
+            msg = " {0}".format(format((100 - cpu['idle']) / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg))
+
+        # User CPU
+        if ('user' in self.stats[0]):
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:8}".format(_("user:"))
+            ret.append(self.curse_add_line(msg))
+            for cpu in self.stats:
+                msg = " {0}".format(format(cpu['user'] / 100, '>6.1%'))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['user'])))
+
+        # System CPU
+        if ('user' in self.stats[0]):
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:8}".format(_("system:"))
+            ret.append(self.curse_add_line(msg))
+            for cpu in self.stats:
+                msg = " {0}".format(format(cpu['system'] / 100, '>6.1%'))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'])))
+
+        # IoWait CPU
+        if ('user' in self.stats[0]):
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:8}".format(_("iowait:"))
+            ret.append(self.curse_add_line(msg))
+            for cpu in self.stats:
+                msg = " {0}".format(format(cpu['iowait'] / 100, '>6.1%'))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'])))
+    
+        # Return the message with decoration 
+        return ret

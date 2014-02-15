@@ -170,4 +170,3 @@ class Plugin(GlancesPlugin):
   
         # Return the message with decoration 
         return ret
- 

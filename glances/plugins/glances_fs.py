@@ -22,38 +22,10 @@ from psutil import disk_partitions, disk_usage
 from glances_plugin import GlancesPlugin
 
 
-class Plugin(GlancesPlugin):
-    """
-    Glances's File System (fs) Plugin
-
-    stats is a list
-    """
-
-    def __init__(self):
-        GlancesPlugin.__init__(self)
-
-        # Init the FS class
-        self.glancesgrabfs = glancesGrabFs()
-
-
-    def update(self):
-        """
-        Update  stats
-        """
-
-        self.stats = self.glancesgrabfs.get()
-
-
-    def get_stats(self):
-        # Return the stats object for the RPC API
-        # !!! Sort it by mount name (why do it here ? Better in client side ?)
-        self.stats = sorted(self.stats, key=lambda network: network['mnt_point'])
-        return GlancesPlugin.get_stats(self)
-
-
 class glancesGrabFs:
     """
     Get FS stats
+    Did not exist in PSUtil, so had to create it from scratch
     """
 
     def __init__(self):
@@ -102,7 +74,78 @@ class glancesGrabFs:
             fs_current['used'] = fs_usage.used
             fs_current['avail'] = fs_usage.free
             self.fs_list.append(fs_current)
+        
 
     def get(self):
         self.__update__()
         return self.fs_list
+
+
+class Plugin(GlancesPlugin):
+    """
+    Glances's File System (fs) Plugin
+
+    stats is a list
+    """
+
+    def __init__(self):
+        GlancesPlugin.__init__(self)
+
+        # Init the FS class
+        self.glancesgrabfs = glancesGrabFs()
+
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 0
+        # Enter -1 to diplay bottom
+        self.line_curse = 4
+
+
+    def update(self):
+        """
+        Update  stats
+        """
+
+        self.stats = self.glancesgrabfs.get()
+
+
+    def msg_curse(self, args=None):
+        """
+        Return the dict to display in the curse interface
+        """
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # Header
+        msg = "{0:8}".format(_("MOUNT"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = " {0:>6}".format(_("Used"))
+        ret.append(self.curse_add_line(msg))
+        msg = "  {0:>6}".format(_("Total"))
+        ret.append(self.curse_add_line(msg))
+
+        # Disk list (sorted by name)
+        for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
+            # New line
+            ret.append(self.curse_new_line())
+            # Cut mount point name if it is too long
+            if (len(i['mnt_point']) > 8):
+                mnt_point = '_' + i['mnt_point'][-7:]
+            else:
+                mnt_point = i['mnt_point']
+            msg = "{0:8}".format(mnt_point)
+            ret.append(self.curse_add_line(msg))
+            msg = " {0:>6}".format(self.auto_unit(i['used']))
+            ret.append(self.curse_add_line(msg, 
+                                           self.get_alert(i['used'],
+                                                          max=i['size'])))
+            msg = "  {0:>6}".format(self.auto_unit(i['size']))
+            ret.append(self.curse_add_line(msg))
+
+        return ret
+
+

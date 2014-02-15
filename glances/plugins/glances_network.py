@@ -118,9 +118,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:6}".format(_("NETWORK"))
+        msg = "{0:8}".format(_("NETWORK"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = "{0:>7} {1:>7}".format(_("Rx/s"), _("Tx/s"))
+        msg = " {0:>6}".format(_("Rx/s"))
+        ret.append(self.curse_add_line(msg))
+        msg = "  {0:>6}".format(_("Tx/s"))
         ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
@@ -137,9 +139,11 @@ class Plugin(GlancesPlugin):
 
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:7}".format(ifname)
+            msg = "{0:8}".format(ifname)
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>7} {1:>7}".format(rxps, txps)
+            msg = " {0:>6}".format(rxps)
+            ret.append(self.curse_add_line(msg))
+            msg = "  {0:>6}".format(txps)
             ret.append(self.curse_add_line(msg))
 
         return ret
