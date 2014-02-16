@@ -56,3 +56,17 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
+    def msg_curse(self, args=None):
+        """
+        Return the string to display in the curse interface
+        """
+
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # 23 is the padding for the process list
+        msg = _("{0:23}").format(self.stats)
+        ret.append(self.curse_add_line(msg))
+
+        return ret
