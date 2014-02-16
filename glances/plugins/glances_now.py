@@ -40,7 +40,7 @@ class Plugin(GlancesPlugin):
         # Set the message position
         # It is NOT the curse position but the Glances column/line
         # Enter -1 to right align 
-        self.column_curse = -1
+        self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = -1
 

@@ -36,6 +36,10 @@ class Plugin(GlancesPlugin):
         # Init the sensor class
         self.glancesgrabhddtemp = glancesGrabHDDTemp()
 
+        # We do not want to display the stat in a dedicated area
+        # The HDD temp is displayed within the sensors plugin
+        self.display_curse = False
+
 
     def update(self):
         """
@@ -43,13 +47,6 @@ class Plugin(GlancesPlugin):
         """
 
         self.stats = self.glancesgrabhddtemp.get()
-
-
-    def get_stats(self):
-        # Return the stats object for the RPC API
-        # !!! Sort it by label name (why do it here ? Better in client side ?)
-        self.stats = sorted(self.stats, key=lambda sensors: sensors['label'])
-        return GlancesPlugin.get_stats(self)
 
 
 class glancesGrabHDDTemp:

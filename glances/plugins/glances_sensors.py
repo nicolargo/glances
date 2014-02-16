@@ -27,35 +27,7 @@ except:
     pass
 
 from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
-
-
-class Plugin(GlancesPlugin):
-    """
-    Glances's sensors Plugin
-
-    stats is a list
-    """
-
-    def __init__(self):
-        GlancesPlugin.__init__(self)
-
-        # Init the sensor class
-        self.glancesgrabsensors = glancesGrabSensors()
-
-
-    def update(self):
-        """
-        Update Sensors stats
-        """
-
-        self.stats = self.glancesgrabsensors.get()
-
-
-    def get_stats(self):
-        # Return the stats object for the RPC API
-        # !!! Sort it by label name (why do it here ? Better in client side ?)
-        self.stats = sorted(self.stats, key=lambda sensors: sensors['label'])
-        return GlancesPlugin.get_stats(self)
+from glances_hddtemp import Plugin as HddTempPlugin
 
 
 class glancesGrabSensors:
@@ -103,3 +75,73 @@ class glancesGrabSensors:
     def quit(self):
         if self.initok:
             sensors.cleanup()
+
+
+class Plugin(GlancesPlugin):
+    """
+    Glances's sensors Plugin
+
+    stats is a list
+    """
+
+    def __init__(self):
+        GlancesPlugin.__init__(self)
+
+        # Init the sensor class
+        self.glancesgrabsensors = glancesGrabSensors()
+
+        # Instance for the CorePlugin in order to display the core number
+        self.hddtemp_plugin = HddTempPlugin()
+
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+        # Set the message position
+        # It is NOT the curse position but the Glances column/line
+        # Enter -1 to right align 
+        self.column_curse = 0
+        # Enter -1 to diplay bottom
+        self.line_curse = 5
+
+
+    def update(self):
+        """
+        Update Sensors stats
+        """
+
+        self.stats = self.glancesgrabsensors.get()
+
+
+    def msg_curse(self, args=None):
+        """
+        Return the dict to display in the curse interface
+        """
+        # Init the return message
+        ret = []
+
+        # Build the string message
+        # Header
+        msg = "{0:8}".format(_("SENSORS"))
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = "{0:>16}".format(_("Temp °C"))
+        ret.append(self.curse_add_line(msg))
+        # Sensors list (sorted by name): Sensors
+        sensor_list = sorted(self.stats, key=lambda sensors: sensors['label'])
+        for i in sensor_list:
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:<15}".format(i['label'])
+            ret.append(self.curse_add_line(msg))
+            msg = "{0:>8}".format(i['value'])
+            ret.append(self.curse_add_line(msg))
+        # Sensors list (sorted by name): HDDTemp
+        self.hddtemp_plugin.update()
+        sensor_list = sorted(self.hddtemp_plugin.stats, key=lambda sensors: sensors['label'])
+        for i in sensor_list:
+            # New line
+            ret.append(self.curse_new_line())
+            msg = "{0:<15}".format("Disk " + i['label'])
+            ret.append(self.curse_add_line(msg))
+            msg = "{0:>8}".format(i['value'])
+            ret.append(self.curse_add_line(msg))
+
+        return ret
