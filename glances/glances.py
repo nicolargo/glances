@@ -79,15 +79,6 @@ except ImportError:
     # Python 3
     from xmlrpc.client import ServerProxy, ProtocolError
 
-if not is_Windows:
-    # curses did not exist on Windows (shame on it)
-    try:
-        import curses
-        import curses.panel
-    except ImportError:
-        print('Curses module not found. Glances cannot start.')
-        sys.exit(1)
-
 if is_Windows:
     try:
         import colorconsole
@@ -96,6 +87,14 @@ if is_Windows:
         is_colorConsole = False
     else:
         is_colorConsole = True
+else:
+    # curses did not exist on Windows (shame on it)
+    try:
+        import curses
+        import curses.panel
+    except ImportError:
+        print('Curses module not found. Glances cannot start.')
+        sys.exit(1)
 
 try:
     # psutil is the main library used to grab stats
