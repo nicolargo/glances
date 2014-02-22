@@ -50,6 +50,7 @@ class Config:
         self.parser = RawConfigParser()
         self.load()
 
+
     def load(self):
         """
         Load a config file from the list of paths, if it exists
@@ -68,11 +69,13 @@ class Config:
                     sys.exit(1)
                 break
 
+
     def get_config_path(self):
         """
         Return the readed configuration file path
         """
         return self.config_path
+
 
     def get_paths_list(self):
         """
@@ -123,11 +126,20 @@ class Config:
 
         return paths
 
+
+    def items(self, section):
+        """
+        Return the items list of a section
+        """
+        return self.parser.items(section)
+
+
     def has_section(self, section):
         """
         Return info about the existence of a section
         """
         return self.parser.has_section(section)
+
 
     def get_option(self, section, option):
         """
@@ -139,6 +151,7 @@ class Config:
             return
         else:
             return value
+
 
     def get_raw_option(self, section, option):
         """

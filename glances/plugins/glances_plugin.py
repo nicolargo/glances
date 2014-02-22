@@ -60,16 +60,11 @@ class GlancesPlugin(object):
         """
 
         if (config.has_section(self.plugin_name)):
-            # print ">>> Load limits for %s" % self.plugin_name
-            # Read LOAD limits
-            for s in [ 'careful', 'warning', 'critical' ]:
-                try:
-                    value = config.get_option(self.plugin_name, s)
-                except:
-                    pass
-                else:
-                    self.limits[self.plugin_name + '_' + s] = value
-                    # print ">>> %s = %s" % (self.plugin_name + '_' + s, value)
+            # print "Load limits for %s" % self.plugin_name
+            for s, v in config.items(self.plugin_name):
+                # Read limits
+                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
+                self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
 
 
     def __repr__(self):
@@ -97,7 +92,7 @@ class GlancesPlugin(object):
         return self.limits
 
 
-    def get_alert(self, current=0, min=0, max=100):
+    def get_alert(self, current=0, min=0, max=100, header="", log=False):
         # Return the alert status relative to a current value
         # Use this function for minor stat
         # If current < CAREFUL of max then alert = OK
@@ -105,53 +100,64 @@ class GlancesPlugin(object):
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
         # stat is USER, SYSTEM, IOWAIT or STEAL
+        #
+        # If defined 'header' is added between the plugin name and the status
+        # Only usefull for stats with several alert status
+        #
+        # If log=True than return the logged status
+
+        # Compute the %
         try:
             value = (current * 100) / max
         except ZeroDivisionError:
             return 'DEFAULT'
 
-        if (value > self.get_limit_critical()):
-            return 'CRITICAL'
-        elif (value > self.get_limit_warning()):
-            return 'WARNING'
-        elif (value > self.get_limit_careful()):
-            return 'CAREFUL'
+        # If log is enable than add _LOG to the return string
+        if (log):
+            log_str = "_LOG"
+        else:
+            log_str = ""
 
-        return 'OK'
+        # if (self.plugin_name == "processlist"):
+        #     print "*"*300
+        #     print self.limits
+        #     sys.exit(0)
 
+        # Manage limits
+        if (value > self.get_limit_critical(header=header)):
+            return 'CRITICAL'+log_str
+        elif (value > self.get_limit_warning(header=header)):
+            return 'WARNING'+log_str
+        elif (value > self.get_limit_careful(header=header)):
+            return 'CAREFUL'+log_str
 
-    def get_alert_log(self, current=0, min=0, max=100):
-        # Return the alert status relative to a current value
-        # Use this function for major stat
-        # If current < CAREFUL of max then alert = OK_LOG
-        # If current > CAREFUL of max then alert = CAREFUL_LOG
-        # If current > WARNING of max then alert = WARNING_LOG
-        # If current > CRITICAL of max then alert = CRITICAL_LOG
-        # stat is USER, SYSTEM, IOWAIT or STEAL
-        try:
-            value = (current * 100) / max
-        except ZeroDivisionError:
-            return 'DEFAULT'
-
-        if (value > self.get_limit_critical()):
-            return 'CRITICAL_LOG'
-        elif (value > self.get_limit_warning()):
-            return 'WARNING_LOG'
-        elif (value > self.get_limit_careful()):
-            return 'CAREFUL_LOG'
-
-        return 'OK_LOG'
+        # Default is ok
+        return 'OK'+log_str
 
 
-    def get_limit_critical(self):
-        return self.limits[self.plugin_name + '_' + 'critical']
+    def get_alert_log(self, current=0, min=0, max=100, header=""):
+        return self.get_alert(current, min, max, header, log=True)
 
 
-    def get_limit_warning(self):
-        return self.limits[self.plugin_name + '_' + 'warning']
+    def get_limit_critical(self, header=""):
+        if (header == ""):
+            return self.limits[self.plugin_name + '_' + 'critical']
+        else:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
 
-    def get_limit_careful(self):
-        return self.limits[self.plugin_name + '_' + 'careful']
+
+    def get_limit_warning(self, header=""):
+        if (header == ""):
+            return self.limits[self.plugin_name + '_' + 'warning']
+        else:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
+
+
+    def get_limit_careful(self, header=""):
+        if (header == ""):
+            return self.limits[self.plugin_name + '_' + 'careful']
+        else:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
 
     def msg_curse(self, args):
@@ -201,8 +207,8 @@ class GlancesPlugin(object):
                 OK_LOG: Value is OK and logged
                 CAREFUL: Value is CAREFUL and non logged
                 CAREFUL_LOG: Value is CAREFUL and logged
-                WARINING: Value is WARINING and non logged
-                WARINING_LOG: Value is WARINING and logged
+                WARNING: Value is WARINING and non logged
+                WARNING_LOG: Value is WARINING and logged
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)

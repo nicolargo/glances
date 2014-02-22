@@ -103,10 +103,10 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             # CPU
             msg = "{0:>6}".format(format(p['cpu_percent'], '>5.1f'))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_alert(p['cpu_percent'], header="cpu")))
             # MEM
             msg = "{0:>6}".format(format(p['memory_percent'], '>5.1f'))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_alert(p['memory_percent'], header="mem")))
             # VMS
             msg = "{0:>6}".format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
