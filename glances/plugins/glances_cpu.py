@@ -25,6 +25,7 @@ from psutil import cpu_times, cpu_times_percent
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Cpu Plugin
@@ -51,7 +52,10 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab CPU using the PSUtil cpu_times_percent method (PSUtil 0.7 or higher)
-        cputimespercent = cpu_times_percent(interval=0, percpu=False)
+        try:
+            cputimespercent = cpu_times_percent(interval=0, percpu=False)
+        except:
+            return self.update_deprecated()
 
         self.stats = {}
         for cpu in ['user', 'system', 'idle', 'nice', 
@@ -64,8 +68,8 @@ class Plugin(GlancesPlugin):
 
     def update_deprecated(self):
         """
-        !!! Not used anymore...
         Update CPU stats
+        Only used if cpu_times_percent failed
         """
 
         # Grab CPU using the PSUtil cpu_times method

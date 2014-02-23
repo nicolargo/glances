@@ -1,0 +1,181 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Glances - An eye on your system
+#
+# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+#
+# Glances is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Glances is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Import system libs
+import time
+from datetime import datetime
+
+class glancesLogs:
+    """
+    Manage logs inside the Glances software
+    Logs is a list of list (stored in the self.logs_list var)
+
+    item_state = "OK|CAREFUL|WARNING|CRITICAL"
+    item_type = "CPU*|LOAD|MEM|MON"
+    item_value = value
+    Item is defined by:
+      ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
+       MAX, AVG, MIN, SUM, COUNT,
+       [top3 process list],
+       "Processes description"]
+    """
+
+    def __init__(self):
+        """
+        Init the logs class
+        """
+
+        # Maximum size of the logs list
+        self.logs_max = 10
+
+        # Init the logs list
+        self.logs_list = []
+
+        # Automaticaly define the sort to apply on the processes list
+        self.sort_process_by = 'none'
+
+
+    def get(self):
+        """
+        Return the logs list (RAW)
+        """
+        return self.logs_list
+
+
+    def len(self):
+        """
+        Return the number of item in the log list
+        """
+        return self.logs_list.__len__()
+
+
+    def __itemexist__(self, item_type):
+        """
+        An item exist in the list if:
+        * end is < 0
+        * item_type is matching
+        """
+        for i in range(self.len()):
+            if self.logs_list[i][1] < 0 and self.logs_list[i][3] == item_type:
+                return i
+        return -1
+
+
+    def add(self, item_state, item_type, item_value, proc_list=[], proc_desc=""):
+        """
+        If item is a 'new one':
+          Add the new item at the beginning of the logs list
+        Else:
+          Update the existing item
+        """
+        # Add Top process sort depending on alert type
+        self.sort_process_by = 'none'
+        if (item_type.startswith("MEM")):
+            # Sort TOP process by memory_percent
+            self.sort_process_by = 'memory_percent'
+        elif (item_type.startswith("CPU IO")):
+            # Sort TOP process by io_counters (only for Linux OS)
+            self.sort_process_by = 'io_counters'
+        elif (item_type.startswith("MON")):
+            # Do no sort process for monitored prcesses list
+            self.sort_process_by = 'none'
+        else:
+            # Default TOP process sort is cpu_percent
+            self.sort_process_by = 'cpu_percent'
+
+        # Sort processes
+        if (self.sort_process_by != 'none'):
+            topprocess = sorted(proc_list, key=lambda process: process[self.sort_process_by],
+                                reverse=True)
+        else:
+            topprocess = proc_list
+
+        # Add or update the log
+        item_index = self.__itemexist__(item_type)
+        if (item_index < 0):
+            # Item did not exist, add if WARNING or CRITICAL
+            if ((item_state == "WARNING") or (item_state == "CRITICAL")):
+                # Time is stored in Epoch format
+                # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
+                item = []
+                # START DATE
+                item.append(time.mktime(datetime.now().timetuple()))
+                # END DATE
+                item.append(-1)
+                item.append(item_state)       # STATE: WARNING|CRITICAL
+                item.append(item_type)        # TYPE: CPU, LOAD, MEM...
+                item.append(item_value)       # MAX
+                item.append(item_value)       # AVG
+                item.append(item_value)       # MIN
+                item.append(item_value)       # SUM
+                item.append(1)                # COUNT
+                item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
+                item.append(proc_desc)        # MONITORED PROCESSES DESC
+                self.logs_list.insert(0, item)
+                if self.len() > self.logs_max:
+                    self.logs_list.pop()
+        else:
+            # Item exist, update
+            if ((item_state == "OK") or (item_state == "CAREFUL")):
+                # Close the item
+                self.logs_list[item_index][1] = time.mktime(
+                    datetime.now().timetuple())
+                # TOP PROCESS LIST
+                self.logs_list[item_index][9] = []
+            else:
+                # Update the item
+                # State
+                if (item_state == "CRITICAL"):
+                    self.logs_list[item_index][2] = item_state
+                # Value
+                if (item_value > self.logs_list[item_index][4]):
+                    # MAX
+                    self.logs_list[item_index][4] = item_value
+                elif (item_value < self.logs_list[item_index][6]):
+                    # MIN
+                    self.logs_list[item_index][6] = item_value
+                # AVG
+                self.logs_list[item_index][7] += item_value
+                self.logs_list[item_index][8] += 1
+                self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
+                                                 self.logs_list[item_index][8])
+                # TOP PROCESS LIST
+                self.logs_list[item_index][9] = topprocess[0:3]
+                # MONITORED PROCESSES DESC
+                self.logs_list[item_index][10] = proc_desc
+
+        return self.len()
+
+
+    def clean(self, critical=False):
+        """
+        Clean the log list by deleting finished item
+        By default, only delete WARNING message
+        If critical = True, also delete CRITICAL message
+        """
+        # Create a new clean list
+        clean_logs_list = []
+        while self.len() > 0:
+            item = self.logs_list.pop()
+            if item[1] < 0 or (not critical and item[2] == "CRITICAL"):
+                clean_logs_list.insert(0, item)
+        # The list is now the clean one
+        self.logs_list = clean_logs_list
+        return self.len()

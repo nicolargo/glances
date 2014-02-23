@@ -18,8 +18,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system lib
 from psutil import disk_io_counters
 
+# Import Glances lib
 from glances.core.glances_globals import is_Mac
 from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
 

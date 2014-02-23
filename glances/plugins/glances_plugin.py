@@ -18,12 +18,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system libs
 import json
 from time import time
 
+# Import Glances lib
+from glances.core.glances_globals import glances_logs
+
 # Global list to manage the elapsed time
 last_update_times = {}
-
 
 def getTimeSinceLastUpdate(IOType):
     global last_update_times
@@ -112,27 +115,31 @@ class GlancesPlugin(object):
         except ZeroDivisionError:
             return 'DEFAULT'
 
-        # If log is enable than add _LOG to the return string
-        if (log):
-            log_str = "_LOG"
-        else:
-            log_str = ""
-
-        # if (self.plugin_name == "processlist"):
-        #     print "*"*300
-        #     print self.limits
-        #     sys.exit(0)
-
         # Manage limits
+        ret = 'OK'
         if (value > self.get_limit_critical(header=header)):
-            return 'CRITICAL'+log_str
+            ret = 'CRITICAL'
         elif (value > self.get_limit_warning(header=header)):
-            return 'WARNING'+log_str
+            ret = 'WARNING'
         elif (value > self.get_limit_careful(header=header)):
-            return 'CAREFUL'+log_str
+            ret = 'CAREFUL'
+
+        # Manage log (if needed)
+        log_str = ""
+        if (log):
+            # Add _LOG to the return string
+            # So stats will be highlited with a specific color
+            log_str = "_LOG"
+            # Get the stat_name = plugin_name (+ header)
+            if (header == ""):
+                stat_name = self.plugin_name
+            else:
+                stat_name = self.plugin_name + '_' + header
+            # !!! TODO: Manage the process list (last param => [])
+            glances_logs.add(ret, stat_name.upper(), value, [])
 
         # Default is ok
-        return 'OK'+log_str
+        return ret + log_str
 
 
     def get_alert_log(self, current=0, min=0, max=100, header=""):

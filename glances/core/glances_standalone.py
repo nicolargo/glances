@@ -50,7 +50,7 @@ class GlancesStandalone():
         self.stats = GlancesStats(config)
 
         # Initial update
-        # !!! The first time Glances display wrong CPU information
+        # !!! The first time Glances display wrong CPU/MEM information
         self.stats.update()
 
         self.refresh_time = args.time

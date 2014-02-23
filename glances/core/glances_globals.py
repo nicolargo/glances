@@ -30,6 +30,9 @@ import os
 import gettext
 import locale
 
+# Import Glances libs
+from ..core.glances_logs import glancesLogs
+
 # Import PsUtil
 try:
     from psutil import __version__ as __psutil_version__
@@ -74,3 +77,6 @@ elif os.path.exists(sys_i18n_path):
 else:
     locale_dir = None
 gettext.install(gettext_domain, locale_dir)
+
+# Logs instance share between all scripts
+glances_logs = glancesLogs()
