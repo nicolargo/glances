@@ -71,9 +71,11 @@ class glancesLogs:
         An item exist in the list if:
         * end is < 0
         * item_type is matching
+        Return the item position if exist 
+        -1 if the item is not found
         """
         for i in range(self.len()):
-            if self.logs_list[i][1] < 0 and self.logs_list[i][3] == item_type:
+            if ((self.logs_list[i][1] < 0) and (self.logs_list[i][3] == item_type)):
                 return i
         return -1
 
@@ -117,8 +119,7 @@ class glancesLogs:
                 item = []
                 # START DATE
                 item.append(time.mktime(datetime.now().timetuple()))
-                # END DATE
-                item.append(-1)
+                item.append(-1)               # END DATE
                 item.append(item_state)       # STATE: WARNING|CRITICAL
                 item.append(item_type)        # TYPE: CPU, LOAD, MEM...
                 item.append(item_value)       # MAX

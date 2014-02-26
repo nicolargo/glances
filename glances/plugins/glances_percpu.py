@@ -141,7 +141,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
                 msg = " {0}".format(format(cpu['user'] / 100, '>6.1%'))
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu['user'])))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['user'], header="user")))
 
         # System CPU
         if ('user' in self.stats[0]):
@@ -151,7 +151,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
                 msg = " {0}".format(format(cpu['system'] / 100, '>6.1%'))
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'])))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'], header="system")))
 
         # IoWait CPU
         if ('user' in self.stats[0]):
@@ -161,7 +161,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
                 msg = " {0}".format(format(cpu['iowait'] / 100, '>6.1%'))
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'])))
+                ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'], header="iowait")))
     
         # Return the message with decoration 
         return ret

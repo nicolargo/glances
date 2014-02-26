@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system lib
+from datetime import datetime, timedelta
+
 # Import Glances lib
 from glances_plugin import GlancesPlugin
 from glances.core.glances_globals import glances_logs
@@ -62,10 +65,51 @@ class Plugin(GlancesPlugin):
         # Build the string message
         # Header
         if (self.stats == []):
-            msg = "{0:8}".format(_("No alert detected"))
+            msg = "{0}".format(_("No warning or critical alert detected"))
             ret.append(self.curse_add_line(msg, "TITLE"))
         else:
-            msg = "{0:8}".format(_("ALERT"))
+            # Header
+            msg = "{0}".format(_("Warning or critical alerts"))
             ret.append(self.curse_add_line(msg, "TITLE"))
+            logs_len = glances_logs.len()
+            if (logs_len > 1):
+                msg = " {0}".format(_("(lasts %s entries)") % logs_len)
+            else:
+                msg = " {0}".format(_("(one entry)"))
+            ret.append(self.curse_add_line(msg, "TITLE"))
+            # Loop over alerts
+            for alert in glances_logs.get():
+                # New line
+                ret.append(self.curse_new_line())
+                # Start
+                msg = "{0}".format(datetime.fromtimestamp(alert[0]))
+                ret.append(self.curse_add_line(msg))
+                # Duration
+                if (alert[1] > 0):
+                    # If finished display duration
+                    msg = " ({0})".format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
+                else:
+                    msg = _(" (ongoing)")
+                ret.append(self.curse_add_line(msg))                    
+                ret.append(self.curse_add_line(" - "))
+                # Infos
+                if (alert[1] > 0):
+                    # If finished do not display status
+                    msg = "{0} {1} {2}".format(alert[2], _("on"), alert[3])
+                    ret.append(self.curse_add_line(msg))
+                else:
+                    msg = "{0}".format(alert[3])
+                    ret.append(self.curse_add_line(msg, decoration=alert[2]))
+                # Min / Mean / Max
+                msg = " ({0:2}/{1:2}/{2:2})".format(alert[6], alert[5], alert[4])
+                ret.append(self.curse_add_line(msg))
+
+                # else:
+                #     msg = " {0}".format(_("Running..."))
+                #     ret.append(self.curse_add_line(msg))
+
+                # !!! Debug only
+                # msg = " | {0}".format(alert)
+                # ret.append(self.curse_add_line(msg))
 
         return ret
