@@ -57,10 +57,12 @@ class Plugin(GlancesPlugin):
         Just return the global glances_log
         """
 
-        # !!! It is not just a get 
-        # !!! An update should be done on the server side before
-        # !!! New in v2: the monitor list is executed on the server side !
+        # Update the monitored list (result of command)
+        glances_monitors.update()
+        # Put it on the stats var
         self.stats = glances_monitors.get()
+
+        return self.stats
 
 
     def msg_curse(self, args=None):

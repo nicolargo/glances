@@ -25,7 +25,7 @@ from glances_plugin import getTimeSinceLastUpdate
 from glances.core.glances_timer import Timer
 
 
-class GlancesGrabProcesses:
+class glancesProcesses:
     """
     Get processed stats using the PsUtil lib
     """
@@ -193,7 +193,5 @@ class GlancesGrabProcesses:
     def getlist(self):
         return self.processlist
 
-
-# Create a GlancesGrabProcesses instance shared between
-# processcount and processlist plugins
-processes = GlancesGrabProcesses()
+# Processcount and processlist plugins
+processes = glancesProcesses()

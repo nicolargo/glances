@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system lib
+import subprocess
+
 class monitorList:
     """
     This class describes the optionnal monitored processes list
@@ -36,6 +39,7 @@ class monitorList:
     # The list
     __monitor_list = []
 
+
     def __init__(self, config):
         """
         Init the monitoring list from the configuration file
@@ -46,6 +50,7 @@ class monitorList:
         if self.config.has_section('monitor'):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')
+
 
     def __setMonitorList(self, section, key):
         """
@@ -65,34 +70,41 @@ class monitorList:
                 print(_("Error reading monitored list: %s" % e))
                 pass
             else:
-                if description is not None and regex is not None:
+                if ((description is not None) 
+                     and (regex is not None)):
                     # Build the new item
                     value["description"] = description
                     value["regex"] = regex
                     value["command"] = command
                     value["countmin"] = countmin
                     value["countmax"] = countmax
+                    value["result"] = None
                     # Add the item to the list
                     self.__monitor_list.append(value)
+
 
     def __str__(self):
         return str(self.__monitor_list)
 
+
     def __repr__(self):
         return self.__monitor_list
+
 
     def __getitem__(self, item):
         return self.__monitor_list[item]
 
+
     def __len__(self):
         return len(self.__monitor_list)
+
 
     def __get__(self, item, key):
         """
         Meta function to return key value of item
         None if not defined or item > len(list)
         """
-        if item < len(self.__monitor_list):
+        if (item < len(self.__monitor_list)):
             try:
                 return self.__monitor_list[item][key]
             except Exception:
@@ -100,19 +112,68 @@ class monitorList:
         else:
             return None
 
-    def get(self):
+
+    def update(self):
+        """
+        Update the command result attributed
+        """
+
+        # Only continue if monitor list is not empty
+        if (len(self.__monitor_list) == 0):
+            return self.__monitor_list
+
+        # Iter uppon the monitored list
+        for i in range(0, len(self.get())):
+            if (self.command(i) is None):
+                # !!! How to get the processes instance ?
+                # !!! Put it on the glances_globals ?
+                # # If there is no command specified in the conf file
+                # # then display CPU and MEM %
+
+                # # Search monitored processes by a regular expression
+                # processlist = processes.getlist()
+                # monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
+
+                # self.__monitor_list[i]['result'] = "CPU: {0:.1f}% / MEM: {1:.1f}%".format(
+                #                         sum([p['cpu_percent'] for p in monitoredlist]),
+                #                         sum([p['memory_percent'] for p in monitoredlist]))
+                continue
+            else:
+                # Execute the user command line
+                try:
+                    self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i), 
+                                                                               shell=True)
+                except subprocess.CalledProcessError:
+                    self.__monitor_list[i]['result'] = _("Error: ") + self.command(i)
+                except Exception:
+                    self.__monitor_list[i]['result'] = _("Cannot execute command")
+
         return self.__monitor_list
 
-    def getAll(self):
-        # To be deprecated
+
+    def get(self):
+        """
+        Return the monitored list (list of dict)
+        """
         return self.__monitor_list
+
 
     def set(self, newlist):
+        """
+        Set the monitored list (list of dict)
+        """
         self.__monitor_list = newlist
 
+
+    def getAll(self):
+        # Deprecated: use get()
+        return self.get()
+
+
     def setAll(self, newlist):
-        # To be deprecated
-        self.__monitor_list = newlist
+        # Deprecated: use set()
+        self.set(newlist)
+
 
     def description(self, item):
         """
@@ -120,11 +181,13 @@ class monitorList:
         """
         return self.__get__(item, "description")
 
+
     def regex(self, item):
         """
         Return the regular expression of the item number (item)
         """
         return self.__get__(item, "regex")
+
 
     def command(self, item):
         """
@@ -132,11 +195,20 @@ class monitorList:
         """
         return self.__get__(item, "command")
 
+
+    def result(self, item):
+        """
+        Return the reult command of the item number (item)
+        """
+        return self.__get__(item, "result")
+
+
     def countmin(self, item):
         """
         Return the minimum number of processes of the item number (item)
         """
         return self.__get__(item, "countmin")
+
 
     def countmax(self, item):
         """
