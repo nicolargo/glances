@@ -242,11 +242,10 @@ class glancesCurses:
         curses.endwin()
 
 
-    def display(self, stats, monitors=None, cs_status="None"):
+    def display(self, stats, cs_status="None"):
         """
         Display stats on the screen
         stats: Stats database to display
-        monitors: The monitored list
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
@@ -391,32 +390,30 @@ class glancesCurses:
         self.term_window.erase()
 
 
-    def flush(self, stats, monitors=None, cs_status="None"):
+    def flush(self, stats, cs_status="None"):
         """
         Clear and update screen
         stats: Stats database to display
-        monitors: The monitored list
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
         """
         self.erase()
-        self.display(stats, monitors=monitors, cs_status=cs_status)
+        self.display(stats, cs_status=cs_status)
 
 
-    def update(self, stats, monitors=None, cs_status="None"):
+    def update(self, stats, cs_status="None"):
         """
         Update the screen and wait __refresh_time sec / catch key every 100 ms
         stats: Stats database to display
-        monitors: The monitored list
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
         """
         # Flush display
-        self.flush(stats, monitors=monitors, cs_status=cs_status)
+        self.flush(stats, cs_status=cs_status)
 
         # Wait
         countdown = Timer(self.__refresh_time)
@@ -424,7 +421,7 @@ class glancesCurses:
             # Getkey
             if self.__catchKey() > -1:
                 # flush display
-                self.flush(stats, monitors=monitors, cs_status=cs_status)
+                self.flush(stats, cs_status=cs_status)
             # Wait 100ms...
             curses.napms(100)
 
