@@ -53,7 +53,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to right align 
         self.column_curse = 1
         # Enter -1 to diplay bottom
-        self.line_curse = 3
+        self.line_curse = 4
 
 
     def msg_curse(self, args=None):

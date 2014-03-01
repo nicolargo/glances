@@ -40,8 +40,6 @@ class GlancesStandalone():
                  args=None,
                  refresh_time=3,
                  use_bold=True):
-        # Init the limits
-        self.limits = glancesLimits(config)
 
         # Init the monitoring list
         self.monitors = monitorList(config)
@@ -77,7 +75,7 @@ class GlancesStandalone():
             self.stats.update()
 
             # Update the screen
-            self.screen.update(self.stats)
+            self.screen.update(self.stats, monitors=self.monitors)
 
             # Update the HTML output
             # !!! TODO

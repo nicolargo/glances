@@ -142,8 +142,9 @@ class Plugin(GlancesPlugin):
         msg = "{0}".format(format((100 - self.stats['idle']) / 100, '>6.1%'))
         ret.append(self.curse_add_line(msg))
         # Steal CPU usage
+        ret.append(self.curse_add_line("  ", optional=True))
         if ('steal' in self.stats):
-            msg = "  {0:8}".format(_("steal:"))
+            msg = "{0:8}".format(_("steal:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.stats['steal'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, 
@@ -158,9 +159,10 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, 
                                            self.get_alert_log(self.stats['user'], header="user")))
         # IOWait CPU
+        ret.append(self.curse_add_line("  ", optional=True))
         if ('iowait' in self.stats):
-            msg = "  {0:8}".format(_("iowait:"))
-            ret.append(self.curse_add_line(msg))
+            msg = "{0:8}".format(_("iowait:"))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.stats['iowait'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, 
                                            self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
@@ -174,8 +176,9 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, 
                                            self.get_alert_log(self.stats['system'], header="system")))
         # IRQ CPU
+        ret.append(self.curse_add_line("  ", optional=True))
         if ('irq' in self.stats):
-            msg = "  {0:7} {1}".format(
+            msg = "{0:7} {1}".format(
                     _("irq:"),
                     format(self.stats['irq'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, optional=True))
@@ -188,8 +191,9 @@ class Plugin(GlancesPlugin):
                     format(self.stats['nice'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, optional=True))
         # Idles CPU
+        ret.append(self.curse_add_line("  ", optional=True))
         if ('idle' in self.stats):
-            msg = "  {0:7} {1}".format(
+            msg = "{0:7} {1}".format(
                     _("idle:"),
                     format(self.stats['idle'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg))

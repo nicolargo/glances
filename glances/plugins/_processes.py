@@ -45,6 +45,9 @@ class GlancesGrabProcesses:
         # key = pid
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
+        # Init
+        self.processlist = []
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
 
     def __get_process_stats(self, proc):

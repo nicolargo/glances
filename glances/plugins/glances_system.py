@@ -81,7 +81,15 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Build the string message
-        # Hostanme is mandatory
+        if (args.client):
+            # Client mode
+            if cs_status.lower() == "connected":
+                msg = _("Connected to ") + format(server_ip)
+            elif cs_status.lower() == "disconnected":
+                msg = _("Disconnected from ") + format(server_ip)
+            ret.append(self.curse_add_line(msg))
+
+        # Hostname is mandatory
         msg = _("{0}").format(self.stats['hostname'])
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info

@@ -169,12 +169,10 @@ class GlancesInstance():
 
     def getAllLimits(self):
         # Return all the limits
-        # !!! Not implemented
         return json.dumps(self.limits.getAll())
 
     def getAllMonitored(self):
         # Return the processes monitored list
-        # !!! Not implemented
         return json.dumps(self.monitors.getAll())
 
     def __getattr__(self, item):

@@ -43,7 +43,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to right align 
         self.column_curse = 1
         # Enter -1 to diplay bottom
-        self.line_curse = 4
+        self.line_curse = 5
 
 
     def update(self):
@@ -101,7 +101,7 @@ class Plugin(GlancesPlugin):
                     msg = "{0}".format(alert[3])
                     ret.append(self.curse_add_line(msg, decoration=alert[2]))
                 # Min / Mean / Max
-                msg = " ({0:2}/{1:2}/{2:2})".format(alert[6], alert[5], alert[4])
+                msg = " ({0:.1f}/{1:.1f}/{2:.1f})".format(alert[6], alert[5], alert[4])
                 ret.append(self.curse_add_line(msg))
 
                 # else:

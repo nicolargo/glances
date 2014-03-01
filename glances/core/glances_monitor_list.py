@@ -100,10 +100,18 @@ class monitorList:
         else:
             return None
 
-    def getAll(self):
+    def get(self):
         return self.__monitor_list
 
+    def getAll(self):
+        # To be deprecated
+        return self.__monitor_list
+
+    def set(self, newlist):
+        self.__monitor_list = newlist
+
     def setAll(self, newlist):
+        # To be deprecated
         self.__monitor_list = newlist
 
     def description(self, item):

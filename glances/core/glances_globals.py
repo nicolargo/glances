@@ -30,9 +30,6 @@ import os
 import gettext
 import locale
 
-# Import Glances libs
-from ..core.glances_logs import glancesLogs
-
 # Import PsUtil
 try:
     from psutil import __version__ as __psutil_version__
@@ -78,5 +75,15 @@ else:
     locale_dir = None
 gettext.install(gettext_domain, locale_dir)
 
-# Logs instance share between all scripts
+# Import Glances libs
+from ..core.glances_config import Config as glancesConfig
+from ..core.glances_logs import glancesLogs
+from ..core.glances_monitor_list import monitorList as glancesMonitorList
+
+# Instances shared between all scripts
+# The global instance for the configuration file
+glances_config = glancesConfig()
+# The global instance for the logs
 glances_logs = glancesLogs()
+# The global instance for the monitored list
+glances_monitors = glancesMonitorList(glances_config)

@@ -28,6 +28,7 @@ from glances.core.glances_globals import glances_logs
 # Global list to manage the elapsed time
 last_update_times = {}
 
+
 def getTimeSinceLastUpdate(IOType):
     global last_update_times
     # assert(IOType in ['net', 'disk', 'process_disk'])
@@ -62,7 +63,8 @@ class GlancesPlugin(object):
         Load the limits from the configuration file
         """
 
-        if (config.has_section(self.plugin_name)):
+        if (hasattr(config, 'has_section') 
+            and config.has_section(self.plugin_name)):
             # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
