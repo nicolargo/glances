@@ -18,11 +18,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system lib
 from psutil import process_iter, AccessDenied, NoSuchProcess
 
+# Import Glances lib
 from glances.core.glances_globals import is_BSD, is_Mac, is_Windows
-from glances_plugin import getTimeSinceLastUpdate
-from glances.core.glances_timer import Timer
+from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
 
 class glancesProcesses:

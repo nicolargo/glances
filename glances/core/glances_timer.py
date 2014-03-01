@@ -18,7 +18,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import time
+from time import time
+
+# Global list to manage the elapsed time
+last_update_times = {}
+
+
+def getTimeSinceLastUpdate(IOType):
+    global last_update_times
+    # assert(IOType in ['net', 'disk', 'process_disk'])
+    current_time = time()
+    last_time = last_update_times.get(IOType)
+    if not last_time:
+        time_since_update = 1
+    else:
+        time_since_update = current_time - last_time
+    last_update_times[IOType] = current_time
+    return time_since_update
+
 
 class Timer:
     """
@@ -31,7 +48,7 @@ class Timer:
         self.start()
 
     def start(self):
-        self.target = time.time() + self.duration
+        self.target = time() + self.duration
 
     def reset(self):
         self.start()
@@ -40,5 +57,5 @@ class Timer:
         self.duration = duration
 
     def finished(self):
-        return time.time() > self.target
+        return time() > self.target
 

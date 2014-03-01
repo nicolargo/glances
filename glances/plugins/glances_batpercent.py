@@ -25,7 +25,9 @@ try:
 except:
     pass
 
-from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
+# Import Glances lib
+from glances_plugin import GlancesPlugin 
+from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
 class Plugin(GlancesPlugin):

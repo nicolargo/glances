@@ -23,7 +23,9 @@ from psutil import disk_io_counters
 
 # Import Glances lib
 from glances.core.glances_globals import is_Mac
-from glances_plugin import GlancesPlugin, getTimeSinceLastUpdate
+from glances_plugin import GlancesPlugin
+from glances.core.glances_timer import getTimeSinceLastUpdate
+
 
 class Plugin(GlancesPlugin):
     """
