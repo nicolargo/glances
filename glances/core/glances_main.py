@@ -80,6 +80,7 @@ class GlancesMain(object):
         self.init_arg()
         self.args = self.parse_arg()
 
+        # !!! Why did not use the global glances_logs instance ?
         # Read the configuration file
         if (self.conf_file_tag):
             self.config = Config(self.conf_file)
