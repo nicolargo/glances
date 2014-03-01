@@ -25,10 +25,8 @@ import json
 
 # Import Glances libs
 from ..core.glances_limits import glancesLimits
-from ..core.glances_monitor_list import monitorList
 from ..core.glances_stats import GlancesStats
 from ..outputs.glances_curses import glancesCurses
-
 
 class GlancesStandalone():
     """
@@ -40,9 +38,6 @@ class GlancesStandalone():
                  args=None,
                  refresh_time=3,
                  use_bold=True):
-
-        # Init the monitoring list
-        self.monitors = monitorList(config)
 
         # Init stats
         self.stats = GlancesStats(config)
@@ -75,7 +70,7 @@ class GlancesStandalone():
             self.stats.update()
 
             # Update the screen
-            self.screen.update(self.stats, monitors=self.monitors)
+            self.screen.update(self.stats)
 
             # Update the HTML output
             # !!! TODO
