@@ -65,6 +65,24 @@ class Plugin(GlancesPlugin):
         return self.stats
 
 
+    def get_alert(self, nbprocess=0, countmin=None, countmax=None):
+        # Return the alert status relative to the process number
+        if (countmin is None):
+            countmin = nbprocess
+        if (countmax is None):
+            countmax = nbprocess
+        if (nbprocess > 0):
+            if (int(countmin) <= int(nbprocess) <= int(countmax)):
+                return 'OK'
+            else:
+                return 'WARNING'
+        else:
+            if (int(countmin) == 0):
+                return 'OK'
+            else:
+                return 'CRITICAL'
+
+
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
@@ -73,12 +91,22 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Build the string message
-        if (self.stats != []):
-            msg = "{0}".format(_("Monitored list"))
-            ret.append(self.curse_add_line(msg, "TITLE"))
-            for m in self.stats:
-                ret.append(self.curse_new_line())
-                msg = "{0}".format(str(m))
-                ret.append(self.curse_add_line(msg))
+        for m in self.stats:
+            msg = "{0:<16} ".format(str(m['description']))
+            ret.append(self.curse_add_line(msg, 
+                self.get_alert(m['count'], m['countmin'], m['countmax'])))
+            msg = "{0:<3} ".format(m['count'] if (m['count'] > 1) else "")
+            ret.append(self.curse_add_line(msg))
+            msg = "{0:13} ".format(_("RUNNING") if (m['count'] >= 1) else _("NOT RUNNING"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(m['result'] if (m['count'] >= 1) else "")
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
 
+        # Delete the last empty line
+        try:
+            ret.pop()
+        except IndexError:
+            pass
+            
         return ret

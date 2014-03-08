@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from glances_plugin import GlancesPlugin
-from _processes import processes
+from glances.core.glances_globals import glances_processes, process_auto_by
 
 
 class Plugin(GlancesPlugin):
@@ -51,9 +51,9 @@ class Plugin(GlancesPlugin):
         """
 
         # Here, update is call for processcount AND processlist
-        processes.update()
+        glances_processes.update()
 
-        self.stats = processes.getcount()
+        self.stats = glances_processes.getcount()
 
 
     def msg_curse(self, args=None):
@@ -93,9 +93,12 @@ class Plugin(GlancesPlugin):
         # Display sort information
         if (args.process_sorted_by == 'auto'):
             msg = "{0}".format(_("sorted automatically"))
+            ret.append(self.curse_add_line(msg))
+            msg = " {0} {1}".format(_("by"), process_auto_by)
+            ret.append(self.curse_add_line(msg))
         else:
-            msg = "{0}".format(_("sorted by ") + args.process_sorted_by)
-        ret.append(self.curse_add_line(msg, 'UNDERLINE'))
+            msg = "{0} {1}".format(_("sorted by"), args.process_sorted_by)
+            ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration 
         return ret

@@ -22,6 +22,10 @@
 import time
 from datetime import datetime
 
+# Import Glances libs
+from glances.core.glances_globals import process_auto_by
+
+
 class glancesLogs:
     """
     Manage logs inside the Glances software
@@ -31,7 +35,10 @@ class glancesLogs:
     item_type = "CPU*|LOAD|MEM|MON"
     item_value = value
     Item is defined by:
-      ["begin", "end", "WARNING|CRITICAL", "CPU|LOAD|MEM",
+      ["begin", 
+       "end", 
+       "WARNING|CRITICAL", 
+       "CPU|LOAD|MEM",
        MAX, AVG, MIN, SUM, COUNT,
        [top3 process list],
        "Processes description"]
@@ -87,26 +94,28 @@ class glancesLogs:
         Else:
           Update the existing item
         """
+
         # Add Top process sort depending on alert type
-        self.sort_process_by = 'none'
+        process_auto_by = 'cpu_percent'
         if (item_type.startswith("MEM")):
             # Sort TOP process by memory_percent
-            self.sort_process_by = 'memory_percent'
+            process_auto_by = 'memory_percent'
         elif (item_type.startswith("CPU IO")):
             # Sort TOP process by io_counters (only for Linux OS)
-            self.sort_process_by = 'io_counters'
+            process_auto_by = 'io_counters'
         elif (item_type.startswith("MON")):
+            # !!! Never in v2 because MON are not logged...
             # Do no sort process for monitored prcesses list
             self.sort_process_by = 'none'
-        else:
-            # Default TOP process sort is cpu_percent
-            self.sort_process_by = 'cpu_percent'
 
         # Sort processes
-        if (self.sort_process_by != 'none'):
-            topprocess = sorted(proc_list, key=lambda process: process[self.sort_process_by],
+        if (process_auto_by != 'none'):
+            # !!! Process list is sorted twise ???
+            # !!! Here and in the processlist plugin
+            topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
                                 reverse=True)
         else:
+            # !!! Never in v2 because MON are not logged...
             topprocess = proc_list
 
         # Add or update the log

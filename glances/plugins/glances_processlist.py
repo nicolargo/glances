@@ -21,7 +21,7 @@
 from datetime import timedelta
 
 from glances_plugin import GlancesPlugin
-from _processes import processes
+from glances.core.glances_globals import glances_processes, process_auto_by
 
 
 class Plugin(GlancesPlugin):
@@ -45,7 +45,7 @@ class Plugin(GlancesPlugin):
 
         # Note: Update is done in the processcount plugin
 
-        self.stats = processes.getlist()
+        self.stats = glances_processes.getlist()
         # We want to display the stat in the curse interface
         self.display_curse = True
         # Set the message position
@@ -64,13 +64,20 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Compute the sort key
+        if (args.process_sorted_by == 'auto'):
+            process_sort_key = process_auto_by
+        else:
+            process_sort_key = args.process_sorted_by
+        sort_style = 'BOLD'
+
         # Header
         msg="{0:15}".format(_(""))
         ret.append(self.curse_add_line(msg))
         msg="{0:>6}".format(_("CPU%"))
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
         msg="{0:>6}".format(_("MEM%"))
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
         msg="{0:>6}".format(_("VIRT"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg="{0:>6}".format(_("RES"))
@@ -86,17 +93,17 @@ class Plugin(GlancesPlugin):
         msg="{0:>9}".format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg="{0:>6}".format(_("IOr/s"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
         msg="{0:>6}".format(_("IOw/s"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
         msg=" {0:8}".format(_("Command"))
         ret.append(self.curse_add_line(msg, optional=True))
  
         # Trying to display proc time
         tag_proc_time = True
 
-        # Loop over processes (sorted by args.process_sorted_by)
-        for p in sorted(self.stats, key=lambda process: process['cpu_percent'], reverse=True):
+        # Loop over processes (sorted by the sort key previously compute)
+        for p in glances_processes.getlist(process_sort_key):
             ret.append(self.curse_new_line())
             # Name
             msg="{0:15}".format(p['name'][:15])
@@ -146,12 +153,19 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True))
             # IO read
             io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
-            msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
+            if (io_rs == 0):
+                msg ="{0:>6}".format("0")
+            else:
+                msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # IO write
             io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
-            msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
+            if (io_ws == 0):
+                msg ="{0:>6}".format("0")
+            else:
+                msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
+            # Command line
             msg = " {0}".format(p['cmdline'])
             ret.append(self.curse_add_line(msg, optional=True))
 

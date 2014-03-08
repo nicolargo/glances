@@ -191,8 +191,43 @@ class glancesProcesses:
         return self.processcount
 
 
-    def getlist(self):
-        return self.processlist
+    def getlist(self, sortedby=None):
+        """
+        Return the processlist 
+        """
+        # if (sorted_by is not None):
+        #     # Need to sort ?
+        #     self.processlist = sorted(self.processlist, key=lambda process: process[sorted_by], reverse=True)
+        # return self.processlist
 
-# Processcount and processlist plugins
-processes = glancesProcesses()
+        if (sortedby is None):
+            # No need to sort...
+            return self.processlist
+
+        sortedreverse = True
+        if (sortedby == 'name'):
+            sortedreverse = False
+        
+        if (sortedby == 'io_counters'):
+            # Specific case for io_counters
+            # Sum of io_r + io_w
+            try:
+                # Sort process by IO rate (sum IO read + IO write)
+                listsorted = sorted(self.processlist,
+                                    key=lambda process: process[sortedby][0] -
+                                    process[sortedby][2] + process[sortedby][1] -
+                                    process[sortedby][3], 
+                                    reverse=sortedreverse)
+            except Exception:
+                listsorted = sorted(self.processlist, 
+                                    key=lambda process: process['cpu_percent'],
+                                    reverse=sortedreverse)
+        else:
+            # Others sorts
+            listsorted = sorted(self.processlist, 
+                                key=lambda process: process[sortedby],
+                                reverse=sortedreverse)
+
+        self.processlist = listsorted
+
+        return self.processlist

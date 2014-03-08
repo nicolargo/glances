@@ -75,15 +75,20 @@ else:
     locale_dir = None
 gettext.install(gettext_domain, locale_dir)
 
-# Import Glances libs
-from ..core.glances_config import Config as glancesConfig
-from ..core.glances_logs import glancesLogs
-from ..core.glances_monitor_list import monitorList as glancesMonitorList
+# Instances shared between all Glances's scripts
+#===============================================
 
-# Instances shared between all scripts
 # The global instance for the configuration file
+from ..core.glances_config import Config as glancesConfig
 glances_config = glancesConfig()
-# The global instance for the logs
-glances_logs = glancesLogs()
+# Processcount and processlist plugins
+from ..core.glances_processes import glancesProcesses
+glances_processes = glancesProcesses()
+# Default auto process sort is 'cpu_percent'
+process_auto_by = 'cpu_percent'
 # The global instance for the monitored list
+from ..core.glances_monitor_list import monitorList as glancesMonitorList
 glances_monitors = glancesMonitorList(glances_config)
+# The global instance for the logs
+from ..core.glances_logs import glancesLogs
+glances_logs = glancesLogs()

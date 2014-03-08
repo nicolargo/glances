@@ -20,6 +20,11 @@
 
 # Import system lib
 import subprocess
+import re
+
+# Import Glances lib
+from glances.core.glances_globals import glances_processes
+
 
 class monitorList:
     """
@@ -125,20 +130,21 @@ class monitorList:
         # Iter uppon the monitored list
         for i in range(0, len(self.get())):
             if (self.command(i) is None):
-                # !!! How to get the processes instance ?
-                # !!! Put it on the glances_globals ?
-                # # If there is no command specified in the conf file
-                # # then display CPU and MEM %
+                # If there is no command specified in the conf file
+                # then display CPU and MEM %
 
-                # # Search monitored processes by a regular expression
-                # processlist = processes.getlist()
-                # monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
+                # Search monitored processes by a regular expression
+                processlist = glances_processes.getlist()
+                monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
 
-                # self.__monitor_list[i]['result'] = "CPU: {0:.1f}% / MEM: {1:.1f}%".format(
-                #                         sum([p['cpu_percent'] for p in monitoredlist]),
-                #                         sum([p['memory_percent'] for p in monitoredlist]))
+                self.__monitor_list[i]['count'] = len(monitoredlist)
+                self.__monitor_list[i]['result'] = "CPU: {0:.1f}% | MEM: {1:.1f}%".format(
+                                        sum([p['cpu_percent'] for p in monitoredlist]),
+                                        sum([p['memory_percent'] for p in monitoredlist]))
                 continue
             else:
+                # No process to count
+                self.__monitor_list[i]['count'] = 1
                 # Execute the user command line
                 try:
                     self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i), 

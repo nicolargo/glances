@@ -99,6 +99,8 @@ class GlancesPlugin(object):
             value = (current * 100) / max
         except ZeroDivisionError:
             return 'DEFAULT'
+        except TypeError:
+            return 'DEFAULT'
 
         # Manage limits
         ret = 'OK'

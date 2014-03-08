@@ -50,8 +50,9 @@ class Plugin(GlancesPlugin):
         """
         Nothing to do here
         Just return the global glances_log
-        """
+        """        
 
+        # Set the stats to the glances_logs
         self.stats = glances_logs.get()
 
 
@@ -78,7 +79,7 @@ class Plugin(GlancesPlugin):
                 msg = " {0}".format(_("(one entry)"))
             ret.append(self.curse_add_line(msg, "TITLE"))
             # Loop over alerts
-            for alert in glances_logs.get():
+            for alert in self.stats:
                 # New line
                 ret.append(self.curse_new_line())
                 # Start

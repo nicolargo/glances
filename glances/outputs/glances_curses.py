@@ -196,9 +196,11 @@ class glancesCurses:
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.help_tag = not self.help_tag
-        elif self.pressedkey == ord('i') and psutil_get_io_counter_tag:
+        elif self.pressedkey == ord('i'):
+        # elif self.pressedkey == ord('i') and psutil_get_io_counter_tag:
+            # !!! Manage IORate (non existing) on Mac OS
             # 'i' > Sort processes by IO rate (not available on OS X)
-            self.args.process_sorted_by = 'io_counter'
+            self.args.process_sorted_by = 'io_counters'
         elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
             self.log_tag = not self.log_tag
