@@ -108,16 +108,6 @@ class glancesLogs:
             # Do no sort process for monitored prcesses list
             self.sort_process_by = 'none'
 
-        # Sort processes
-        if (process_auto_by != 'none'):
-            # !!! Process list is sorted twise ???
-            # !!! Here and in the processlist plugin
-            topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                                reverse=True)
-        else:
-            # !!! Never in v2 because MON are not logged...
-            topprocess = proc_list
-
         # Add or update the log
         item_index = self.__itemexist__(item_type)
         if (item_index < 0):
@@ -136,6 +126,10 @@ class glancesLogs:
                 item.append(item_value)       # MIN
                 item.append(item_value)       # SUM
                 item.append(1)                # COUNT
+                # Process list is sorted automaticaly
+                # Overwrite the user choise
+                topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                                    reverse=True)
                 item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
                 item.append(proc_desc)        # MONITORED PROCESSES DESC
                 self.logs_list.insert(0, item)
@@ -166,6 +160,10 @@ class glancesLogs:
                 self.logs_list[item_index][8] += 1
                 self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
                                                  self.logs_list[item_index][8])
+                # Process list is sorted automaticaly
+                # Overwrite the user choise
+                topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                                    reverse=True)
                 # TOP PROCESS LIST
                 self.logs_list[item_index][9] = topprocess[0:3]
                 # MONITORED PROCESSES DESC

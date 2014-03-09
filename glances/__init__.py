@@ -42,7 +42,8 @@ def main(argv=None):
 
     elif (core.is_client()):
         # !!!
-        print "Client mode"
+        print(_("Glances client connected to %s:%s") % (core.server_ip, core.server_port))
+        print("TODO...")
     elif (core.is_server()):
         # Import the Glances server module
         from .core.glances_server import GlancesServer
@@ -51,7 +52,7 @@ def main(argv=None):
         server = GlancesServer(bind_address=core.bind_ip, 
                                bind_port=int(core.server_port), 
                                cached_time=core.cached_time,
-                               config=core.config)
+                               config=core.get_config())
         # print(_("Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
         print(_("Glances server is running on %s:%s") % (core.bind_ip, core.server_port))
 

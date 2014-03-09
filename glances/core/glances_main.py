@@ -102,11 +102,10 @@ class GlancesMain(object):
 
         if (self.is_standalone()):
             # Stop the classical CLI loop
-            # !!! Uncomment
-            # screen.end()
-            pass
+            screen.end()
         elif (self.is_client()):
             # Stop the client loop
+            # !!! Uncomment
             #~ client.client_quit()
             pass
         elif (self.is_server()):

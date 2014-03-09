@@ -195,10 +195,6 @@ class glancesProcesses:
         """
         Return the processlist 
         """
-        # if (sorted_by is not None):
-        #     # Need to sort ?
-        #     self.processlist = sorted(self.processlist, key=lambda process: process[sorted_by], reverse=True)
-        # return self.processlist
 
         if (sortedby is None):
             # No need to sort...

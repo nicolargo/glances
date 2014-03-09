@@ -199,7 +199,7 @@ class GlancesInstance():
             # Default behavior
             raise AttributeError(item)
 
-        #!!! How to implement theses method in v2 ?
+        # !!! How to implement theses method in v2 ?
 
         # def __getTimeSinceLastUpdate(self, IOType):
         #     assert(IOType in ['net', 'disk', 'process_disk'])
