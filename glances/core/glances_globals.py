@@ -47,7 +47,7 @@ psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
 if psutil_version < (0, 5, 0):
     print('PsUtil version %s detected.' % '.'.join(psutil_version))
     print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
-    sys.exit(1)  
+    sys.exit(1)
 
 # Path definitions
 work_path = os.path.realpath(os.path.dirname(__file__))
@@ -65,7 +65,7 @@ is_Windows = sys.platform.startswith('win')
 locale.setlocale(locale.LC_ALL, '')
 gettext_domain = 'glances'
 # get locale directory
-i18n_path = os.path.realpath(os.path.join(work_path, '..', 'i18n'))
+i18n_path = os.path.realpath(os.path.join(work_path, '..', '..', 'i18n'))
 sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 if os.path.exists(i18n_path):
     locale_dir = i18n_path
