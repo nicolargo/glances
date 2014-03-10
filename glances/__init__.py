@@ -28,6 +28,7 @@ def main(argv=None):
 
     # Glances can be ran in standalone, client or server mode
     if (core.is_standalone()):
+
         # Import the Glances standalone module
         from .core.glances_standalone import GlancesStandalone
 
@@ -41,10 +42,32 @@ def main(argv=None):
         standalone.serve_forever()
 
     elif (core.is_client()):
-        # !!!
+
+        # Import the Glances client module
+        from .core.glances_client import GlancesClient
+
+        # Init the client
+        client = GlancesClient(args=core.get_args(), 
+                               server_address=core.server_ip, server_port=int(core.server_port), 
+                               username=core.username, password=core.password)
+
+        # Test if client and server are in the same major version
+        if (not client.login()):
+            print(_("Error: The server version is not compatible"))
+            sys.exit(2)
+
         print(_("Glances client connected to %s:%s") % (core.server_ip, core.server_port))
-        print("TODO...")
+
+        # Start the client loop
+        client.serve_forever()
+
+        # Shutdown the client
+        # !!! How to close the server with CTRL-C
+        # !!! Call core.end() with parameters ?
+        client.server_close()
+
     elif (core.is_server()):
+
         # Import the Glances server module
         from .core.glances_server import GlancesServer
 

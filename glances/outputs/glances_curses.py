@@ -262,6 +262,9 @@ class glancesCurses:
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
+        # Update the client server status 
+        self.args.cs_status = cs_status
+
         # Display first line (system+uptime)
         stats_system = stats.get_plugin('system').get_curse(args=self.args)
         stats_uptime = stats.get_plugin('uptime').get_curse()
@@ -419,7 +422,7 @@ class glancesCurses:
 
         # Wait
         countdown = Timer(self.__refresh_time)
-        while not countdown.finished():
+        while (not countdown.finished()):
             # Getkey
             if self.__catchKey() > -1:
                 # flush display

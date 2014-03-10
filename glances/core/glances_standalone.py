@@ -46,6 +46,7 @@ class GlancesStandalone():
         # !!! The first time Glances display wrong CPU/MEM information
         self.stats.update()
 
+        # !!! Usefull ?
         self.refresh_time = args.time
 
         # Init HTML output

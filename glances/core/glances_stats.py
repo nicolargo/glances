@@ -26,6 +26,7 @@ import collections
 # Import Glances libs
 from ..core.glances_globals import *
 
+
 class GlancesStats(object):
     """
     This class store, update and give stats
@@ -108,12 +109,23 @@ class GlancesStats(object):
         Update the stats
         """
 
-        # For each plugins, call the update method
-        for p in self._plugins:
-            self._plugins[p].update()
+        if (input_stats == {}):
+            # For standalone and server modes
+            # For each plugins, call the update method
+            for p in self._plugins:
+                self._plugins[p].update()
+        else:
+            # For client mode
+            # Update plugin stats with items sent by the server
+            for p in input_stats:
+                # print "Set: %s" % p
+                # print "Input: %s" % input_stats[p]
+                # print "Plugins: %s" % self._plugins
+                self._plugins[p].set(input_stats[p])
 
 
     def update(self, input_stats={}):
+        # !!! Why __update__ and update method ?
         # Update the stats
         self.__update__(input_stats)
 
@@ -157,4 +169,32 @@ class GlancesStatsServer(GlancesStats):
 
     def getAll(self):
         return self.all_stats
+
+
+class GlancesStatsClient(GlancesStats):
+
+    def __init__(self):
+        # Init the stats
+        # !!! Is it necessary ?
+        GlancesStats.__init__(self)
+
+        # Init the all_stats dict used by the server
+        # all_stats is a dict of dicts filled by the server
+        self.all_stats = collections.defaultdict(dict)
+
+
+    def update(self, input_stats = {}):
+        """
+        Update the stats
+        """
         
+        # Update the stats
+        GlancesStats.__update__(self, input_stats)
+
+        # Build the all_stats with the get_raw() method of the plugins
+        for p in self._plugins:
+            self.all_stats[p] = self._plugins[p].get_raw()
+            
+
+    def getAll(self):
+        return self.all_stats

@@ -18,27 +18,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
+# # Import system libs
 import sys
 import socket
 import json
 
-# Import Glances libs
+# # Import Glances libs
 from ..core.glances_globals import __version__
-from ..core.glances_limits import glancesLimits
-from ..core.glances_monitor_list import monitorList
-from ..core.glances_stats import GlancesStatsServer
-from ..core.glances_timer import Timer
-
-# Other imports
-try:
-    # Python 2
-    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
-except ImportError:
-    # Python 3
-    from xmlrpc.server import SimpleXMLRPCRequestHandler
-    from xmlrpc.server import SimpleXMLRPCServer
+from ..outputs.glances_curses import glancesCurses
+from ..core.glances_stats import GlancesStatsClient
+# from ..core.glances_limits import glancesLimits
+# from ..core.glances_monitor_list import monitorList
+# from ..core.glances_timer import Timer
 
 try:
     # Python 2
@@ -53,10 +44,12 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, server_address, server_port=61209,
+    def __init__(self, 
+                 args=None,
+                 server_address="localhost", server_port=61209,
                  username="glances", password=""):
         # Build the URI
-        if password != "":
+        if (password != ""):
             uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
         else:
             uri = 'http://%s:%d' % (server_address, server_port)
@@ -67,40 +60,65 @@ class GlancesClient():
         except Exception:
             print(_("Error: creating client socket") + " %s" % uri)
             pass
-        return
 
-    def client_init(self):
+        # Init stats
+        self.stats = GlancesStatsClient()
+
+        # Init screen
+        self.screen = glancesCurses(args=args)
+
+
+    def login(self):
         try:
             client_version = self.client.init()
+        except socket.error as err:
+            print("{} ({})".format(_("Error: Connection to server failed"), err))
+            sys.exit(2)
         except ProtocolError as err:
-            if str(err).find(" 401 ") > 0:
-                print(_("Error: Connection to server failed. Bad password."))
-                sys.exit(-1)
+            if (str(err).find(" 401 ") > 0):
+                print("{} ({})".format(_("Error: Connection to server failed"), _("Bad password")))
             else:
-                print(_("Error: Connection to server failed. Unknown error."))
-                sys.exit(-1)
+                print("{} ({})".format(_("Error: Connection to server failed"), err))
+            sys.exit(2)
+        # Debug
+        # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
         return __version__[:3] == client_version[:3]
 
-    def client_get_limits(self):
-        try:
-            serverlimits = json.loads(self.client.getAllLimits())
-        except Exception:
-            return {}
-        else:
-            return serverlimits
 
-    def client_get_monitored(self):
-        try:
-            servermonitored = json.loads(self.client.getAllMonitored())
-        except Exception:
-            return []
-        else:
-            return servermonitored
+    # def client_get_limits(self):
+    #     try:
+    #         serverlimits = json.loads(self.client.getAllLimits())
+    #     except Exception:
+    #         return {}
+    #     else:
+    #         return serverlimits
 
-    def client_get(self):
+
+    # def client_get_monitored(self):
+    #     try:
+    #         servermonitored = json.loads(self.client.getAllMonitored())
+    #     except Exception:
+    #         return []
+    #     else:
+    #         return servermonitored
+
+
+    def update(self):
+        # Get stats from server
         try:
-            stats = json.loads(self.client.getAll())
+            server_stats = json.loads(self.client.getAll())
         except Exception:
-            return {}
-        else:
-            return stats
+            server_stats = {}
+
+        # Put it in the internal dict
+        self.stats.update(server_stats)
+
+
+    def serve_forever(self):
+        while True:
+            # Update the stats
+            self.update()
+            # print self.stats.getAll()
+
+            # Update the screen
+            self.screen.update(self.stats, cs_status="Connected")
