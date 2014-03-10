@@ -19,7 +19,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-from sets import Set
 # sensors library (optional; Linux-only)
 try:
     import sensors

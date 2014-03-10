@@ -111,7 +111,7 @@ class Plugin(GlancesPlugin):
                     self.stats.append(cpu)
                 self.percputime_old = self.percputime_new
                 self.percputime_total_old = self.percputime_total_new
-            except Exception, err:
+            except Exception:
                 self.stats = []
 
     def msg_curse(self, args=None):

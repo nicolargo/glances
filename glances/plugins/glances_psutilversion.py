@@ -43,5 +43,5 @@ class Plugin(GlancesPlugin):
         # Return PsUtil version as a tuple
         try:
             self.stats = tuple([int(num) for num in __psutil_version__.split('.')])
-        except Exception, e:
+        except Exception:
             self.stats = None

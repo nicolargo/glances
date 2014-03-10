@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
             self.stats = {'min1': load[0],
                           'min5': load[1],
                           'min15': load[2]}
-        except Exception, err:
+        except Exception:
             self.stats = {}
 
         return self.stats

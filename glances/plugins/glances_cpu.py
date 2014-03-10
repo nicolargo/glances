@@ -118,7 +118,7 @@ class Plugin(GlancesPlugin):
                                            self.cputime_old.steal) * percent
                 self.cputime_old = self.cputime_new
                 self.cputime_total_old = self.cputime_total_new
-            except Exception, err:
+            except Exception:
                 self.stats = {}
 
         return self.stats
