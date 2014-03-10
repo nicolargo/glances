@@ -24,6 +24,7 @@ from datetime import datetime
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Core Plugin
@@ -39,18 +40,15 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = -1
-
 
     def update(self):
         """
         Update current date/time
         """
-
-        # Now
         # Had to convert it to string because datetime is not JSON serializable
         self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
 

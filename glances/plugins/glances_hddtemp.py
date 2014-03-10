@@ -23,7 +23,7 @@ import socket
 
 # Import Glances lib
 from glances_plugin import GlancesPlugin
-from glances.core.glances_timer import getTimeSinceLastUpdate
+# from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
 class Plugin(GlancesPlugin):
@@ -43,12 +43,10 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-
     def update(self):
         """
         Update Sensors stats
         """
-
         self.stats = self.glancesgrabhddtemp.get()
 
 

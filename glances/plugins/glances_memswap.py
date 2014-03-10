@@ -25,6 +25,7 @@ import psutil
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances's swap memory Plugin
@@ -39,11 +40,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 3
         # Enter -1 to diplay bottom
         self.line_curse = 1
-
 
     def update(self):
         """
@@ -74,7 +74,6 @@ class Plugin(GlancesPlugin):
         else:
             self.stats = {}
 
-
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
@@ -102,9 +101,8 @@ class Plugin(GlancesPlugin):
         msg = "{0:8}".format(_("used:"))
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.auto_unit(self.stats['used'], '>6')))
-        ret.append(self.curse_add_line(msg, 
-                                       self.get_alert_log(self.stats['used'], 
-                                                          max=self.stats['total'])))
+        ret.append(self.curse_add_line(
+            msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage

@@ -30,6 +30,7 @@ from datetime import datetime
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Uptime Plugin
@@ -45,27 +46,23 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = -1
         # Enter -1 to diplay bottom
         self.line_curse = 0
-
 
     def update(self):
         """
         Update uptime stat
         """
-
-        # Uptime
         try:
             # For PsUtil >= 0.7.0
             self.uptime = datetime.now() - datetime.fromtimestamp(get_boot_time())
         except:
             self.uptime = datetime.now() - datetime.fromtimestamp(BOOT_TIME)
-        
+
         # Convert uptime to string (because datetime is not JSONifi)
         self.stats = str(self.uptime).split('.')[0]
-
 
     def msg_curse(self, args=None):
         """
@@ -77,6 +74,6 @@ class Plugin(GlancesPlugin):
 
         # Add the line with decoration
         ret.append(self.curse_add_line("Uptime: %s" % self.stats))
-        
-        # Return the message with decoration 
+
+        # Return the message with decoration
         return ret

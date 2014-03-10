@@ -39,11 +39,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 2
-        
 
     def update(self):
         """
@@ -54,7 +53,6 @@ class Plugin(GlancesPlugin):
         glances_processes.update()
 
         self.stats = glances_processes.getcount()
-
 
     def msg_curse(self, args=None):
         """
@@ -72,16 +70,16 @@ class Plugin(GlancesPlugin):
         other = self.stats['total']
         msg = "{0}".format(str(self.stats['total']))
         ret.append(self.curse_add_line(msg))
-        
+
         if ('thread' in self.stats):
             msg = " ({0} {1}),".format(str(self.stats['thread']), _("thr"))
             ret.append(self.curse_add_line(msg))
-        
+
         if ('running' in self.stats):
             other -= self.stats['running']
             msg = " {0} {1},".format(str(self.stats['running']), _("run"))
             ret.append(self.curse_add_line(msg))
-        
+
         if ('sleeping' in self.stats):
             other -= self.stats['sleeping']
             msg = " {0} {1},".format(str(self.stats['sleeping']), _("slp"))
@@ -100,5 +98,5 @@ class Plugin(GlancesPlugin):
             msg = "{0} {1}".format(_("sorted by"), args.process_sorted_by)
             ret.append(self.curse_add_line(msg))
 
-        # Return the message with decoration 
+        # Return the message with decoration
         return ret

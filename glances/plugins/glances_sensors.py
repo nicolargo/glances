@@ -29,8 +29,7 @@ except:
 # Import Glances lib
 from glances_hddtemp import Plugin as HddTempPlugin
 from glances_plugin import GlancesPlugin
-from glances.core.glances_timer import getTimeSinceLastUpdate
-
+# from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
 class glancesGrabSensors:
@@ -51,7 +50,6 @@ class glancesGrabSensors:
 
         self.sensors_list = []
 
-
     def __update__(self):
         """
         Update the stats
@@ -68,12 +66,10 @@ class glancesGrabSensors:
                         sensors_current['label'] = feature.label[:20]
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
-        
 
     def get(self):
         self.__update__()
         return self.sensors_list
-
 
     def quit(self):
         if self.initok:
@@ -100,19 +96,16 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 5
 
-
     def update(self):
         """
-        Update Sensors stats
+        Update sensors stats
         """
-
         self.stats = self.glancesgrabsensors.get()
-
 
     def msg_curse(self, args=None):
         """
@@ -125,7 +118,7 @@ class Plugin(GlancesPlugin):
         # Header
         msg = "{0:8}".format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = "{0:>16}".format(_("Temp °C"))
+        msg = "{0:>16}".format(_("°C"))
         ret.append(self.curse_add_line(msg))
         # Sensors list (sorted by name): Sensors
         sensor_list = sorted(self.stats, key=lambda sensors: sensors['label'])

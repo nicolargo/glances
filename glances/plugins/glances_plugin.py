@@ -40,45 +40,37 @@ class GlancesPlugin(object):
         # Init the limits dictionnary
         self.limits = dict()
 
-
     def load_limits(self, config):
         """
         Load the limits from the configuration file
         """
-
-        if (hasattr(config, 'has_section') 
-            and config.has_section(self.plugin_name)):
+        if (hasattr(config, 'has_section') and
+            config.has_section(self.plugin_name)):
             # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
                 # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
                 self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
 
-
     def __repr__(self):
         # Return the raw stats
         return self.stats
-        
 
     def __str__(self):
         # Return the human-readable stats
         return str(self.stats)
 
-
     def get_raw(self):
         # Return the stats object
         return self.stats
-
 
     def get_stats(self):
         # Return the stats object in JSON format for the RPC API
         return json.dumps(self.stats)
 
-
     def get_limits(self):
         # Return the limits object
         return self.limits
-
 
     def get_alert(self, current=0, min=0, max=100, header="", log=False):
         # Return the alert status relative to a current value
@@ -128,10 +120,8 @@ class GlancesPlugin(object):
         # Default is ok
         return ret + log_str
 
-
     def get_alert_log(self, current=0, min=0, max=100, header=""):
         return self.get_alert(current, min, max, header, log=True)
-
 
     def get_limit_critical(self, header=""):
         if (header == ""):
@@ -139,13 +129,11 @@ class GlancesPlugin(object):
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
 
-
     def get_limit_warning(self, header=""):
         if (header == ""):
             return self.limits[self.plugin_name + '_' + 'warning']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
-
 
     def get_limit_careful(self, header=""):
         if (header == ""):
@@ -153,13 +141,11 @@ class GlancesPlugin(object):
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
-
     def msg_curse(self, args):
         """
         Return default string to display in the curse interface
         """
-        return [ self.curse_add_line(str(self.stats)) ]
-
+        return [self.curse_add_line(str(self.stats))]
 
     def get_curse(self, args=None):
         # Return a dict with all the information needed to display the stat
@@ -181,18 +167,17 @@ class GlancesPlugin(object):
         if (hasattr(self, 'line_curse')):
             line_curse = self.line_curse
 
-        return { 'display': display_curse,
-                 'msgdict': self.msg_curse(args),
-                 'column': column_curse,
-                 'line': line_curse }
-
+        return {'display': display_curse,
+                'msgdict': self.msg_curse(args),
+                'column': column_curse,
+                'line': line_curse}
 
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False):
         """
         Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }
         with:
             msg: string
-            decoration: 
+            decoration:
                 DEFAULT: no decoration
                 UNDERLINE: underline
                 BOLD: bold
@@ -206,18 +191,15 @@ class GlancesPlugin(object):
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)
-        """ 
+        """
 
-        return { 'msg': msg, 'decoration': decoration, 'optional': optional }
-
+        return {'msg': msg, 'decoration': decoration, 'optional': optional}
 
     def curse_new_line(self):
         """
         Go to a new line
-        """ 
-
+        """
         return self.curse_add_line('\n')
-
 
     def auto_unit(self, val, low_precision=False):
         """

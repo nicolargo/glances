@@ -37,33 +37,28 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 3
-
 
     def load_limits(self, config):
         """
         No limit...
         """
-    
         pass
-
 
     def update(self):
         """
         Nothing to do here
         Just return the global glances_log
         """
-
         # Update the monitored list (result of command)
         glances_monitors.update()
         # Put it on the stats var
         self.stats = glances_monitors.get()
 
         return self.stats
-
 
     def get_alert(self, nbprocess=0, countmin=None, countmax=None):
         # Return the alert status relative to the process number
@@ -82,7 +77,6 @@ class Plugin(GlancesPlugin):
             else:
                 return 'CRITICAL'
 
-
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
@@ -93,8 +87,8 @@ class Plugin(GlancesPlugin):
         # Build the string message
         for m in self.stats:
             msg = "{0:<16} ".format(str(m['description']))
-            ret.append(self.curse_add_line(msg, 
-                self.get_alert(m['count'], m['countmin'], m['countmax'])))
+            ret.append(self.curse_add_line(
+                msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
             msg = "{0:<3} ".format(m['count'] if (m['count'] > 1) else "")
             ret.append(self.curse_add_line(msg))
             msg = "{0:13} ".format(_("RUNNING") if (m['count'] >= 1) else _("NOT RUNNING"))
@@ -108,5 +102,5 @@ class Plugin(GlancesPlugin):
             ret.pop()
         except IndexError:
             pass
-            
+
         return ret

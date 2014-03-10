@@ -40,11 +40,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 1
-
 
     def update(self):
         """
@@ -58,13 +57,12 @@ class Plugin(GlancesPlugin):
             return self.update_deprecated()
 
         self.stats = {}
-        for cpu in ['user', 'system', 'idle', 'nice', 
+        for cpu in ['user', 'system', 'idle', 'nice',
                     'iowait', 'irq', 'softirq', 'steal']:
             if hasattr(cputimespercent, cpu):
                 self.stats[cpu] = getattr(cputimespercent, cpu)
 
         return self.stats
-
 
     def update_deprecated(self):
         """
@@ -98,10 +96,10 @@ class Plugin(GlancesPlugin):
                 percent = 100 / (self.cputime_total_new -
                                  self.cputime_total_old)
                 self.stats = {'user': (self.cputime_new.user -
-                                      self.cputime_old.user) * percent,
-                               'system': (self.cputime_new.system -
+                                       self.cputime_old.user) * percent,
+                              'system': (self.cputime_new.system -
                                          self.cputime_old.system) * percent,
-                               'idle': (self.cputime_new.idle -
+                              'idle': (self.cputime_new.idle -
                                        self.cputime_old.idle) * percent}
                 if hasattr(self.cputime_new, 'nice'):
                     self.stats['nice'] = (self.cputime_new.nice -
@@ -125,12 +123,10 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
         """
-
         # Init the return message
         ret = []
 
@@ -147,8 +143,7 @@ class Plugin(GlancesPlugin):
             msg = "{0:8}".format(_("steal:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.stats['steal'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, 
-                                           self.get_alert(self.stats['steal'], header="steal"), optional=True))
+            ret.append(self.curse_add_line(msg, self.get_alert(self.stats['steal'], header="steal"), optional=True))
         # New line
         ret.append(self.curse_new_line())
         # User CPU
@@ -156,16 +151,14 @@ class Plugin(GlancesPlugin):
             msg = "{0:8}".format(_("user:"))
             ret.append(self.curse_add_line(msg))
             msg = "{0}".format(format(self.stats['user'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, 
-                                           self.get_alert_log(self.stats['user'], header="user")))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))
         # IOWait CPU
         ret.append(self.curse_add_line("  ", optional=True))
         if ('iowait' in self.stats):
             msg = "{0:8}".format(_("iowait:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.stats['iowait'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, 
-                                           self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
         # New line
         ret.append(self.curse_new_line())
         # System CPU
@@ -173,30 +166,23 @@ class Plugin(GlancesPlugin):
             msg = "{0:8}".format(_("system:"))
             ret.append(self.curse_add_line(msg))
             msg = "{0}".format(format(self.stats['system'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, 
-                                           self.get_alert_log(self.stats['system'], header="system")))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['system'], header="system")))
         # IRQ CPU
         ret.append(self.curse_add_line("  ", optional=True))
         if ('irq' in self.stats):
-            msg = "{0:7} {1}".format(
-                    _("irq:"),
-                    format(self.stats['irq'] / 100, '>6.1%'))
+            msg = "{0:7} {1}".format(_("irq:"), format(self.stats['irq'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Nice CPU
         if ('nice' in self.stats):
-            msg = "{0:7} {1}".format(
-                    _("nice:"), 
-                    format(self.stats['nice'] / 100, '>6.1%'))
+            msg = "{0:7} {1}".format(_("nice:"), format(self.stats['nice'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, optional=True))
         # Idles CPU
         ret.append(self.curse_add_line("  ", optional=True))
         if ('idle' in self.stats):
-            msg = "{0:7} {1}".format(
-                    _("idle:"),
-                    format(self.stats['idle'] / 100, '>6.1%'))
+            msg = "{0:7} {1}".format(_("idle:"), format(self.stats['idle'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg))
-  
-        # Return the message with decoration 
+
+        # Return the message with decoration
         return ret

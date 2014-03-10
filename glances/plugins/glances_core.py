@@ -25,6 +25,7 @@ from psutil import NUM_CPUS
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Core Plugin
@@ -39,7 +40,6 @@ class Plugin(GlancesPlugin):
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin
         self.display_curse = False
-
 
     def update(self):
         """
