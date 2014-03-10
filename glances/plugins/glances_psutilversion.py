@@ -25,6 +25,7 @@ from psutil import __version__ as __psutil_version__
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' PsUtil version Plugin
@@ -35,14 +36,12 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
-
     def update(self):
         """
         Update core stats
         """
-
         # Return PsUtil version as a tuple
         try:
             self.stats = tuple([int(num) for num in __psutil_version__.split('.')])
-        except Exception, e:
+        except Exception:
             self.stats = None

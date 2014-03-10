@@ -37,7 +37,6 @@ class Plugin(GlancesPlugin):
         # Nothing else to do...
         # 'processes' is already init in the _processes.py script
 
-
     def update(self):
         """
         Update processes stats
@@ -50,11 +49,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 4
-
 
     def msg_curse(self, args=None):
         """
@@ -72,33 +70,33 @@ class Plugin(GlancesPlugin):
         sort_style = 'BOLD'
 
         # Header
-        msg="{0:15}".format(_(""))
+        msg = "{0:15}".format(_(""))
         ret.append(self.curse_add_line(msg))
-        msg="{0:>6}".format(_("CPU%"))
+        msg = "{0:>6}".format(_("CPU%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg="{0:>6}".format(_("MEM%"))
+        msg = "{0:>6}".format(_("MEM%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg="{0:>6}".format(_("VIRT"))
+        msg = "{0:>6}".format(_("VIRT"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg="{0:>6}".format(_("RES"))
+        msg = "{0:>6}".format(_("RES"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg="{0:>6}".format(_("PID"))
+        msg = "{0:>6}".format(_("PID"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg=" {0:10}".format(_("USER"))
+        msg = " {0:10}".format(_("USER"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg="{0:>3}".format(_("NI"))
+        msg = "{0:>3}".format(_("NI"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg=" {0:1}".format(_("S"))
+        msg = " {0:1}".format(_("S"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg="{0:>9}".format(_("TIME+"))
+        msg = "{0:>9}".format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg="{0:>6}".format(_("IOr/s"))
+        msg = "{0:>6}".format(_("IOR/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
-        msg="{0:>6}".format(_("IOw/s"))
+        msg = "{0:>6}".format(_("IOW/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
-        msg=" {0:8}".format(_("Command"))
+        msg = " {0:8}".format(_("Command"))
         ret.append(self.curse_add_line(msg, optional=True))
- 
+
         # Trying to display proc time
         tag_proc_time = True
 
@@ -106,15 +104,15 @@ class Plugin(GlancesPlugin):
         for p in glances_processes.getlist(process_sort_key):
             ret.append(self.curse_new_line())
             # Name
-            msg="{0:15}".format(p['name'][:15])
+            msg = "{0:15}".format(p['name'][:15])
             ret.append(self.curse_add_line(msg))
             # CPU
             msg = "{0:>6}".format(format(p['cpu_percent'], '>5.1f'))
-            ret.append(self.curse_add_line(msg, 
+            ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['cpu_percent'], header="cpu")))
             # MEM
             msg = "{0:>6}".format(format(p['memory_percent'], '>5.1f'))
-            ret.append(self.curse_add_line(msg, 
+            ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['memory_percent'], header="mem")))
             # VMS
             msg = "{0:>6}".format(self.auto_unit(p['memory_info'][1], low_precision=False))
@@ -143,10 +141,9 @@ class Plugin(GlancesPlugin):
                     # See https://github.com/nicolargo/glances/issues/87
                     tag_proc_time = False
                 else:
-                    msg = "{0}:{1}.{2}".format(
-                            str(dtime.seconds // 60 % 60),
-                            str(dtime.seconds % 60).zfill(2),
-                            str(dtime.microseconds)[:2].zfill(2))
+                    msg = "{0}:{1}.{2}".format(str(dtime.seconds // 60 % 60),
+                                               str(dtime.seconds % 60).zfill(2),
+                                               str(dtime.microseconds)[:2].zfill(2))
             else:
                 msg = " "
             msg = "{0:>9}".format(msg)
@@ -154,14 +151,14 @@ class Plugin(GlancesPlugin):
             # IO read
             io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
             if (io_rs == 0):
-                msg ="{0:>6}".format("0")
+                msg = "{0:>6}".format("0")
             else:
                 msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # IO write
             io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
             if (io_ws == 0):
-                msg ="{0:>6}".format("0")
+                msg = "{0:>6}".format("0")
             else:
                 msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
@@ -169,5 +166,5 @@ class Plugin(GlancesPlugin):
             msg = " {0}".format(p['cmdline'])
             ret.append(self.curse_add_line(msg, optional=True))
 
-        # Return the message with decoration 
+        # Return the message with decoration
         return ret

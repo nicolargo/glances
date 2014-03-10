@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system lib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Import Glances lib
 from glances_plugin import GlancesPlugin
@@ -40,21 +40,18 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 5
-
 
     def update(self):
         """
         Nothing to do here
         Just return the global glances_log
-        """        
-
+        """
         # Set the stats to the glances_logs
         self.stats = glances_logs.get()
-
 
     def msg_curse(self, args=None):
         """
@@ -91,7 +88,7 @@ class Plugin(GlancesPlugin):
                     msg = " ({0})".format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
                 else:
                     msg = _(" (ongoing)")
-                ret.append(self.curse_add_line(msg))                    
+                ret.append(self.curse_add_line(msg))
                 ret.append(self.curse_add_line(" - "))
                 # Infos
                 if (alert[1] > 0):

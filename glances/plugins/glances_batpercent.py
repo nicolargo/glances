@@ -26,8 +26,8 @@ except:
     pass
 
 # Import Glances lib
-from glances_plugin import GlancesPlugin 
-from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances_plugin import GlancesPlugin
+# from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
 class Plugin(GlancesPlugin):
@@ -42,7 +42,6 @@ class Plugin(GlancesPlugin):
 
         # Init the sensor class
         self.glancesgrabbat = glancesGrabBat()
-
 
     def update(self):
         """

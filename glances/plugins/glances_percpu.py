@@ -25,6 +25,7 @@ from psutil import cpu_times
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' PerCpu Plugin
@@ -39,17 +40,15 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 1
-
 
     def update(self):
         """
         Update Per CPU stats
         """
-
         # Grab CPU using the PSUtil cpu_times method
         # Per-CPU
         percputime = cpu_times(percpu=True)
@@ -58,7 +57,7 @@ class Plugin(GlancesPlugin):
             percputime_total.append(percputime[i].user +
                                     percputime[i].system +
                                     percputime[i].idle)
-        
+
         # Only available on some OS
         for i in range(len(percputime)):
             if hasattr(percputime[i], 'nice'):
@@ -112,7 +111,7 @@ class Plugin(GlancesPlugin):
                     self.stats.append(cpu)
                 self.percputime_old = self.percputime_new
                 self.percputime_total_old = self.percputime_total_new
-            except Exception, err:
+            except Exception:
                 self.stats = []
 
     def msg_curse(self, args=None):
@@ -162,6 +161,6 @@ class Plugin(GlancesPlugin):
             for cpu in self.stats:
                 msg = " {0}".format(format(cpu['iowait'] / 100, '>6.1%'))
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'], header="iowait")))
-    
-        # Return the message with decoration 
+
+        # Return the message with decoration
         return ret

@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system lib
-import subprocess
 import re
+import subprocess
 
 # Import Glances lib
 from glances.core.glances_globals import glances_processes
@@ -44,18 +44,16 @@ class monitorList:
     # The list
     __monitor_list = []
 
-
     def __init__(self, config):
         """
         Init the monitoring list from the configuration file
         """
 
-        self.config = config 
+        self.config = config
 
         if self.config.has_section('monitor'):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')
-
 
     def __setMonitorList(self, section, key):
         """
@@ -71,12 +69,12 @@ class monitorList:
                 command = self.config.get_raw_option(section, key + "command")
                 countmin = self.config.get_raw_option(section, key + "countmin")
                 countmax = self.config.get_raw_option(section, key + "countmax")
-            except Exception,e:
+            except Exception as e:
                 print(_("Error reading monitored list: %s" % e))
                 pass
             else:
-                if ((description is not None) 
-                     and (regex is not None)):
+                if ((description is not None) and
+                    (regex is not None)):
                     # Build the new item
                     value["description"] = description
                     value["regex"] = regex
@@ -87,22 +85,17 @@ class monitorList:
                     # Add the item to the list
                     self.__monitor_list.append(value)
 
-
     def __str__(self):
         return str(self.__monitor_list)
-
 
     def __repr__(self):
         return self.__monitor_list
 
-
     def __getitem__(self, item):
         return self.__monitor_list[item]
 
-
     def __len__(self):
         return len(self.__monitor_list)
-
 
     def __get__(self, item, key):
         """
@@ -116,7 +109,6 @@ class monitorList:
                 return None
         else:
             return None
-
 
     def update(self):
         """
@@ -139,15 +131,15 @@ class monitorList:
 
                 self.__monitor_list[i]['count'] = len(monitoredlist)
                 self.__monitor_list[i]['result'] = "CPU: {0:.1f}% | MEM: {1:.1f}%".format(
-                                        sum([p['cpu_percent'] for p in monitoredlist]),
-                                        sum([p['memory_percent'] for p in monitoredlist]))
+                    sum([p['cpu_percent'] for p in monitoredlist]),
+                    sum([p['memory_percent'] for p in monitoredlist]))
                 continue
             else:
                 # No process to count
                 self.__monitor_list[i]['count'] = 1
                 # Execute the user command line
                 try:
-                    self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i), 
+                    self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i),
                                                                                shell=True)
                 except subprocess.CalledProcessError:
                     self.__monitor_list[i]['result'] = _("Error: ") + self.command(i)
@@ -156,13 +148,11 @@ class monitorList:
 
         return self.__monitor_list
 
-
     def get(self):
         """
         Return the monitored list (list of dict)
         """
         return self.__monitor_list
-
 
     def set(self, newlist):
         """
@@ -170,16 +160,13 @@ class monitorList:
         """
         self.__monitor_list = newlist
 
-
     def getAll(self):
         # Deprecated: use get()
         return self.get()
 
-
     def setAll(self, newlist):
         # Deprecated: use set()
         self.set(newlist)
-
 
     def description(self, item):
         """
@@ -187,13 +174,11 @@ class monitorList:
         """
         return self.__get__(item, "description")
 
-
     def regex(self, item):
         """
         Return the regular expression of the item number (item)
         """
         return self.__get__(item, "regex")
-
 
     def command(self, item):
         """
@@ -201,13 +186,11 @@ class monitorList:
         """
         return self.__get__(item, "command")
 
-
     def result(self, item):
         """
         Return the reult command of the item number (item)
         """
         return self.__get__(item, "result")
-
 
     def countmin(self, item):
         """
@@ -215,10 +198,8 @@ class monitorList:
         """
         return self.__get__(item, "countmin")
 
-
     def countmax(self, item):
         """
         Return the maximum number of processes of the item number (item)
         """
         return self.__get__(item, "countmax")
-

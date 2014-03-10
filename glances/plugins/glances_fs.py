@@ -74,7 +74,6 @@ class glancesGrabFs:
             fs_current['used'] = fs_usage.used
             fs_current['avail'] = fs_usage.free
             self.fs_list.append(fs_current)
-        
 
     def get(self):
         self.__update__()
@@ -98,19 +97,16 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 4
-
 
     def update(self):
         """
         Update  stats
         """
-
         self.stats = self.glancesgrabfs.get()
-
 
     def msg_curse(self, args=None):
         """
@@ -140,12 +136,8 @@ class Plugin(GlancesPlugin):
             msg = "{0:8}".format(mnt_point)
             ret.append(self.curse_add_line(msg))
             msg = " {0:>6}".format(self.auto_unit(i['used']))
-            ret.append(self.curse_add_line(msg, 
-                                           self.get_alert(i['used'],
-                                                          max=i['size'])))
+            ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
             msg = "  {0:>6}".format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
         return ret
-
-

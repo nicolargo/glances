@@ -41,11 +41,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 3
-
 
     def update(self):
         """
@@ -91,7 +90,6 @@ class Plugin(GlancesPlugin):
 
         self.stats = self.diskio
 
-
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
@@ -109,8 +107,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
-            # !!! TODO: manage the hide tag 
-
+            # !!! TODO: manage the hide tag
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(i['disk_name'])

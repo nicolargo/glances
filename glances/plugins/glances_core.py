@@ -25,6 +25,7 @@ from psutil import NUM_CPUS
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Core Plugin
@@ -40,7 +41,6 @@ class Plugin(GlancesPlugin):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
-
     def update(self):
         """
         Update core stats
@@ -50,7 +50,7 @@ class Plugin(GlancesPlugin):
         # !!! TODO: We had to return a dict (with both hys and log cpu number) instead of a integer
         try:
             self.stats = NUM_CPUS
-        except Exception, e:
+        except Exception:
             self.stats = None
 
         return self.stats

@@ -25,6 +25,7 @@ import platform
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances_plugin import GlancesPlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Host/System Plugin
@@ -39,11 +40,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 0
-
 
     def update(self):
         """
@@ -71,7 +71,6 @@ class Plugin(GlancesPlugin):
         else:
             self.stats['os_version'] = ""
 
-
     def msg_curse(self, args=None):
         """
         Return the string to display in the curse interface
@@ -94,18 +93,15 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info
         if (self.stats['os_name'] == "Linux"):
-            msg = _(" ({0} {1} / {2} {3})").format(
-                    self.stats['linux_distro'], 
-                    self.stats['platform'],
-                    self.stats['os_name'], 
-                    self.stats['os_version'])
+            msg = _(" ({0} {1} / {2} {3})").format(self.stats['linux_distro'],
+                                                   self.stats['platform'],
+                                                   self.stats['os_name'],
+                                                   self.stats['os_version'])
         else:
-            msg = _(" ({0} {1} {2})").format(
-                    self.stats['os_name'], 
-                    self.stats['os_version'],
-                    self.stats['platform'])
+            msg = _(" ({0} {1} {2})").format(self.stats['os_name'],
+                                             self.stats['os_version'],
+                                             self.stats['platform'])
         ret.append(self.curse_add_line(msg, optional=True))
-        
-        # Return the message with decoration 
+
+        # Return the message with decoration
         return ret
-        

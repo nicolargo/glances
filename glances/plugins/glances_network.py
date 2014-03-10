@@ -19,8 +19,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-import json
-
 try:
     # psutil >= 1.0.0
     from psutil import net_io_counters
@@ -50,17 +48,15 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 2
-
 
     def update(self):
         """
         Update network stats
         """
-
         network = []
 
         # psutil >= 1.0.0
@@ -110,7 +106,6 @@ class Plugin(GlancesPlugin):
 
         self.stats = network
 
-
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
@@ -136,9 +131,7 @@ class Plugin(GlancesPlugin):
             else:
                 rxps = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
                 txps = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"
-
-            # !!! TODO: manage the hide tag 
-
+            # !!! TODO: manage the hide tag
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(ifname)

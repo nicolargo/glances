@@ -31,7 +31,7 @@ class glancesProcesses:
     Get processed stats using the PsUtil lib
     """
 
-    def __init__(self, cache_timeout = 60):
+    def __init__(self, cache_timeout=60):
         """
         Init the class to collect stats about processes
         """
@@ -49,7 +49,6 @@ class glancesProcesses:
         # Init
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
-
 
     def __get_process_stats(self, proc):
         """
@@ -138,7 +137,6 @@ class glancesProcesses:
 
         return procstat
 
-
     def update(self):
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
@@ -186,16 +184,13 @@ class glancesProcesses:
             # Restart the timer
             self.cache_timer.reset()
 
-
     def getcount(self):
         return self.processcount
 
-
     def getlist(self, sortedby=None):
         """
-        Return the processlist 
+        Return the processlist
         """
-
         if (sortedby is None):
             # No need to sort...
             return self.processlist
@@ -203,7 +198,7 @@ class glancesProcesses:
         sortedreverse = True
         if (sortedby == 'name'):
             sortedreverse = False
-        
+
         if (sortedby == 'io_counters'):
             # Specific case for io_counters
             # Sum of io_r + io_w
@@ -212,15 +207,15 @@ class glancesProcesses:
                 listsorted = sorted(self.processlist,
                                     key=lambda process: process[sortedby][0] -
                                     process[sortedby][2] + process[sortedby][1] -
-                                    process[sortedby][3], 
+                                    process[sortedby][3],
                                     reverse=sortedreverse)
             except Exception:
-                listsorted = sorted(self.processlist, 
+                listsorted = sorted(self.processlist,
                                     key=lambda process: process['cpu_percent'],
                                     reverse=sortedreverse)
         else:
             # Others sorts
-            listsorted = sorted(self.processlist, 
+            listsorted = sorted(self.processlist,
                                 key=lambda process: process[sortedby],
                                 reverse=sortedreverse)
 

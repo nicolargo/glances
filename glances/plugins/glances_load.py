@@ -26,6 +26,7 @@ from os import getloadavg
 from glances_plugin import GlancesPlugin
 from glances_core import Plugin as CorePlugin
 
+
 class Plugin(GlancesPlugin):
     """
     Glances's Load Plugin
@@ -43,11 +44,10 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
         # Set the message position
         # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align 
+        # Enter -1 to right align
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 1
-
 
     def update(self):
         """
@@ -59,11 +59,10 @@ class Plugin(GlancesPlugin):
             self.stats = {'min1': load[0],
                           'min5': load[1],
                           'min15': load[2]}
-        except Exception, err:
+        except Exception:
             self.stats = {}
 
         return self.stats
-
 
     def msg_curse(self, args=None):
         """
@@ -92,15 +91,15 @@ class Plugin(GlancesPlugin):
         msg = "{0:8}".format(_("5 min:"))
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.stats['min5'], '>5.2f'))
-        ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['min5'], 
-                                                               max=100*self.core_plugin.update())))
+        ret.append(self.curse_add_line(
+            msg, self.get_alert_log(self.stats['min5'], max=100 * self.core_plugin.update())))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
         msg = "{0:8}".format(_("15 min:"))
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.stats['min15'], '>5.2f'))
-        ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['min15'], 
-                                                               max=100*self.core_plugin.update())))
-        
+        ret.append(self.curse_add_line(
+            msg, self.get_alert_log(self.stats['min15'], max=100 * self.core_plugin.update())))
+
         return ret
