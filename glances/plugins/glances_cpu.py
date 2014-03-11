@@ -23,8 +23,7 @@ Glances CPU plugin
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
-from psutil import cpu_times, cpu_times_percent
-import time
+from psutil import cpu_times_percent
 
 # from ..plugins.glances_plugin import GlancesPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
