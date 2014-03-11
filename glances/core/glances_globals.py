@@ -41,12 +41,10 @@ except ImportError:
 psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
 
 # Check PsUtil version
-# !!! Move this check outside the globals script
-# !!! PsUtil is not necessary on client side
-# Note: this is not a mistake: psutil 0.5.1 is detected as 0.5.0
-if psutil_version < (0, 5, 0):
-    print('PsUtil version %s detected.' % '.'.join(psutil_version))
-    print('PsUtil 0.5.1 or higher is needed. Glances cannot start.')
+psutil_min_version = (2, 0, 0)
+if (psutil_version < psutil_min_version):
+    print('PsUtil version %s detected.' % __psutil_version__)
+    print('PsUtil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
 # Path definitions
