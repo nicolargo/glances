@@ -60,6 +60,11 @@ class GlancesPlugin(object):
         # Return the human-readable stats
         return str(self.stats)
 
+    def set_stats(self, input_stats):
+        # Set the stats to input_stats
+        self.stats = input_stats
+        return self.stats
+
     def get_raw(self):
         # Return the stats object
         return self.stats

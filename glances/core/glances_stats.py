@@ -121,7 +121,7 @@ class GlancesStats(object):
                 # print "Set: %s" % p
                 # print "Input: %s" % input_stats[p]
                 # print "Plugins: %s" % self._plugins
-                self._plugins[p].set(input_stats[p])
+                self._plugins[p].set_stats(input_stats[p])
 
 
     def update(self, input_stats={}):

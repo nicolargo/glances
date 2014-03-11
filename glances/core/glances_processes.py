@@ -60,17 +60,17 @@ class glancesProcesses:
         procstat['pid'] = proc.pid
 
         # Process name (cached by PSUtil)
-        procstat['name'] = proc.name
+        procstat['name'] = proc.name()
 
         # Process username (cached with internal cache)
         try:
             self.username_cache[procstat['pid']]
         except:
             try:
-                self.username_cache[procstat['pid']] = proc.username
+                self.username_cache[procstat['pid']] = proc.username()
             except KeyError:
                 try:
-                    self.username_cache[procstat['pid']] = proc.uids.real
+                    self.username_cache[procstat['pid']] = proc.uids().real
                 except KeyError:
                     self.username_cache[procstat['pid']] = "?"
         procstat['username'] = self.username_cache[procstat['pid']]
@@ -79,11 +79,11 @@ class glancesProcesses:
         try:
             self.cmdline_cache[procstat['pid']]
         except:
-            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline)
+            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
         procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
         # Process status
-        procstat['status'] = str(proc.status)[:1].upper()
+        procstat['status'] = str(proc.status())[:1].upper()
 
         # Process nice
         procstat['nice'] = proc.get_nice()

@@ -23,7 +23,7 @@
 try:
     from psutil import get_boot_time
 except:
-    from putil import BOOT_TIME
+    from psutil import BOOT_TIME
 
 from datetime import datetime
 
