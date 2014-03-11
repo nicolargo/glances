@@ -17,13 +17,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Glances system plugin
+"""
 
 # Import system libs
 import os
 import platform
 
 # from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -48,6 +51,7 @@ class Plugin(GlancesPlugin):
     def update(self):
         """
         Update the host/system info
+        Return the stats (dict)
         """
         self.stats = {}
         self.stats['os_name'] = platform.system()
@@ -70,6 +74,7 @@ class Plugin(GlancesPlugin):
             self.stats['os_version'] = ' '.join(os_version[::2])
         else:
             self.stats['os_version'] = ""
+        return self.stats
 
     def msg_curse(self, args=None):
         """
