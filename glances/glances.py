@@ -4438,6 +4438,9 @@ class GlancesClient():
     def client_init(self):
         try:
             client_version = self.client.init()
+        except socket.error as err:
+            print(_("Couldn't create socket: %s") % err)
+            sys.exit(-1)
         except ProtocolError as err:
             if str(err).find(" 401 ") > 0:
                 print(_("Error: Connection to server failed. Bad password."))
@@ -4610,32 +4613,18 @@ def main():
     username = "glances"
     password = ""
 
-    # Manage args
+    # Manage options/arguments
     try:
         opts, args = getopt.getopt(sys.argv[1:], "B:bdeymnho:f:t:vsc:p:C:P:zr1",
                                    ["bind", "bytepersec", "diskio", "mount",
-                                    "sensors", "hddtemp", "netrate", "help", "output",
-                                    "file", "time", "version", "server",
-                                    "client", "port", "config", "password",
-                                    "nobold", "noproc", "percpu"])
+                                    "sensors", "hddtemp", "netrate", "help",
+                                    "output", "file", "time", "version",
+                                    "server", "client", "port", "config",
+                                    "password", "nobold", "noproc", "percpu"])
     except getopt.GetoptError as err:
-        # Print help information and exit:
-        if (err.opt == 'P') and ('requires argument' in err.msg):
-            print(_("Error: -P flag need an argument (password)"))
-        elif (err.opt == 'B') and ('requires argument' in err.msg):
-            print(_("Error: -B flag need an argument (bind IP address)"))
-        elif (err.opt == 'c') and ('requires argument' in err.msg):
-            print(_("Error: -c flag need an argument (server IP address/name)"))
-        elif (err.opt == 'p') and ('requires argument' in err.msg):
-            print(_("Error: -p flag need an argument (port number)"))
-        elif (err.opt == 'o') and ('requires argument' in err.msg):
-            print(_("Error: -o flag need an argument (HTML or CSV)"))
-        elif (err.opt == 't') and ('requires argument' in err.msg):
-            print(_("Error: -t flag need an argument (refresh time)"))
-        else:
-            print(str(err))
-        print
-        printSyntax()
+        # Print help information and exit
+        print(str(err))
+        print(_("Try 'glances -h' for more information."))
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-v", "--version"):
@@ -4661,32 +4650,20 @@ def main():
             elif arg.lower() == "csv":
                 csv_tag = True
             else:
-                print(_("Error: Unknown output %s" % arg))
+                print(_("Error: Unknown output %s") % arg)
                 sys.exit(2)
         elif opt in ("-e", "--sensors"):
-            if is_Linux:
-                if not sensors_lib_tag:
-                    print(_("Error: PySensors library not found"))
-                    sys.exit(2)
-                else:
-                    sensors_tag = True
-            else:
-                print(_("Error: Sensors module is only available on Linux"))
-                sys.exit(2)
+            sensors_tag = True
         elif opt in ("-y", "--hddtemp"):
             hddtemp_tag = True
         elif opt in ("-f", "--file"):
             output_file = arg
             output_folder = arg
         elif opt in ("-t", "--time"):
-            try:
-                refresh_time = int(arg)
-            except:
-                print("Error: Invalid refresh time (%s)" % arg)
-                sys.exit(2)
-            if (refresh_time < 1):
+            if not (arg.isdigit() and int(arg) > 0):
                 print(_("Error: Refresh time should be a positive integer"))
                 sys.exit(2)
+            refresh_time = int(arg)
         elif opt in ("-d", "--diskio"):
             diskio_tag = False
         elif opt in ("-m", "--mount"):
@@ -4729,7 +4706,7 @@ def main():
             sys.exit(2)
         if conf_file_tag:
             print(_("Error: Cannot use both -c and -C flag"))
-            print(_("       Limits are set based on the server ones"))
+            print(_("Limits are set based on the server ones"))
             sys.exit(2)
         if password_prompt:
             password = get_password(description=_("Enter the Glances server password"), confirm=False)
@@ -4737,7 +4714,6 @@ def main():
     if html_tag:
         if not html_lib_tag:
             print(_("Error: Need Jinja2 library to export into HTML"))
-            print(_("Try to install the python-jinja2 package"))
             sys.exit(2)
         try:
             output_folder
