@@ -44,7 +44,7 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self, 
+    def __init__(self,
                  args=None,
                  server_address="localhost", server_port=61209,
                  username="glances", password=""):
@@ -67,7 +67,6 @@ class GlancesClient():
         # Init screen
         self.screen = glancesCurses(args=args)
 
-
     def login(self):
         try:
             client_version = self.client.init()
@@ -84,7 +83,6 @@ class GlancesClient():
         # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
         return __version__[:3] == client_version[:3]
 
-
     # def client_get_limits(self):
     #     try:
     #         serverlimits = json.loads(self.client.getAllLimits())
@@ -93,7 +91,6 @@ class GlancesClient():
     #     else:
     #         return serverlimits
 
-
     # def client_get_monitored(self):
     #     try:
     #         servermonitored = json.loads(self.client.getAllMonitored())
@@ -101,7 +98,6 @@ class GlancesClient():
     #         return []
     #     else:
     #         return servermonitored
-
 
     def update(self):
         # Get stats from server
@@ -112,7 +108,6 @@ class GlancesClient():
 
         # Put it in the internal dict
         self.stats.update(server_stats)
-
 
     def serve_forever(self):
         while True:

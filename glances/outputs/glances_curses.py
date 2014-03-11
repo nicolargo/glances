@@ -148,7 +148,6 @@ class glancesCurses:
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
-
     def __getkey(self, window):
         """
         A getKey function to catch ESC key AND Numlock key (issue #163)
@@ -162,7 +161,6 @@ class glancesCurses:
             return -1
         else:
             return keycode[0]
-
 
     def __catchKey(self):
         # Get key
@@ -235,14 +233,12 @@ class glancesCurses:
         # Return the key code
         return self.pressedkey
 
-
     def end(self):
         # Shutdown the curses window
         curses.echo()
         curses.nocbreak()
         curses.curs_set(1)
         curses.endwin()
-
 
     def display(self, stats, cs_status="None"):
         """
@@ -262,7 +258,7 @@ class glancesCurses:
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
-        # Update the client server status 
+        # Update the client server status
         self.args.cs_status = cs_status
 
         # Display first line (system+uptime)
@@ -271,7 +267,7 @@ class glancesCurses:
         l = self.get_curse_width(stats_system) + self.get_curse_width(stats_uptime) + self.space_between_column
         self.display_plugin(stats_system, display_optional=(screen_x >= l))
         self.display_plugin(stats_uptime)
-        
+
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
         if (self.args.percpu):
@@ -318,10 +314,7 @@ class glancesCurses:
             self.display_plugin(stats_processlist, max_y=(screen_y - self.get_curse_height(stats_alert) - 3))
             self.display_plugin(stats_alert)
 
-
-    def display_plugin(self, plugin_stats, 
-                       display_optional=True,
-                       max_y=65535):
+    def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
         """
         Display the plugin_stats on the screen
         If display_optional=True display the optional stats
@@ -373,9 +366,9 @@ class glancesCurses:
             # Is it possible to display the stat with the current screen size
             # !!! Crach if not try/except... Why ???
             try:
-                self.term_window.addnstr(y, x, 
-                                         m['msg'], 
-                                         screen_x - x, # Do not disply outside the screen
+                self.term_window.addnstr(y, x,
+                                         m['msg'],
+                                         screen_x - x,  # Do not disply outside the screen
                                          self.__colors_list[m['decoration']])
             except:
                 pass
@@ -385,15 +378,13 @@ class glancesCurses:
 
         # Compute the next Glances column/line position
         if (plugin_stats['column'] > -1):
-            self.column_to_x[plugin_stats['column'] + 1] =  x + self.space_between_column
+            self.column_to_x[plugin_stats['column'] + 1] = x + self.space_between_column
         if (plugin_stats['line'] > -1):
             self.line_to_y[plugin_stats['line'] + 1] = y + self.space_between_line
-
 
     def erase(self):
         # Erase the content of the screen
         self.term_window.erase()
-
 
     def flush(self, stats, cs_status="None"):
         """
@@ -406,7 +397,6 @@ class glancesCurses:
         """
         self.erase()
         self.display(stats, cs_status=cs_status)
-
 
     def update(self, stats, cs_status="None"):
         """
@@ -430,32 +420,30 @@ class glancesCurses:
             # Wait 100ms...
             curses.napms(100)
 
-
     def get_curse_width(self, curse_msg, without_option=False):
         # Return the width of the formated curses message
-        # The height is defined by the maximum line 
+        # The height is defined by the maximum line
 
         try:
             if (without_option):
                 # Size without options
-                c = len(max(''.join([ (i['msg'] if not i['optional'] else "") 
-                        for i in curse_msg['msgdict'] ]).split('\n'), key=len))
+                c = len(max(''.join([(i['msg'] if not i['optional'] else "")
+                        for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
-                c = len(max(''.join([ i['msg'] 
-                        for i in curse_msg['msgdict'] ]).split('\n'), key=len))
+                c = len(max(''.join([i['msg']
+                        for i in curse_msg['msgdict']]).split('\n'), key=len))
         except:
             return 0
         else:
             return c
-
 
     def get_curse_height(self, curse_msg):
         # Return the height of the formated curses message
         # The height is defined by the number of '\n'
 
         try:
-            c = [ i['msg'] for i in curse_msg['msgdict']].count('\n')
+            c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
         except:
             return 0
         else:

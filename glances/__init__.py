@@ -22,6 +22,7 @@
 # Note: others Glances libs will be imported optionnaly
 from .core.glances_main import GlancesMain
 
+
 def main(argv=None):
     # Create the Glances main instance
     core = GlancesMain()
@@ -47,8 +48,8 @@ def main(argv=None):
         from .core.glances_client import GlancesClient
 
         # Init the client
-        client = GlancesClient(args=core.get_args(), 
-                               server_address=core.server_ip, server_port=int(core.server_port), 
+        client = GlancesClient(args=core.get_args(),
+                               server_address=core.server_ip, server_port=int(core.server_port),
                                username=core.username, password=core.password)
 
         # Test if client and server are in the same major version
@@ -72,8 +73,8 @@ def main(argv=None):
         from .core.glances_server import GlancesServer
 
         # Init the server
-        server = GlancesServer(bind_address=core.bind_ip, 
-                               bind_port=int(core.server_port), 
+        server = GlancesServer(bind_address=core.bind_ip,
+                               bind_port=int(core.server_port),
                                cached_time=core.cached_time,
                                config=core.get_config())
         # print(_("Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
