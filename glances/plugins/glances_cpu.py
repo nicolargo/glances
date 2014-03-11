@@ -17,13 +17,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Glances CPU plugin
+"""
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
 from psutil import cpu_times, cpu_times_percent
+import time
 
 # from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -45,88 +49,53 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 1
 
+        # Init stats
+        self.first_call = True
+        self.stats = {}
+
     def update(self):
         """
         Update CPU stats
         """
 
-        # Grab CPU using the PSUtil cpu_times_percent method (PSUtil 0.7 or higher)
-        try:
-            cputimespercent = cpu_times_percent(interval=0, percpu=False)
-        except:
-            return self.update_deprecated()
+        # Grab CPU using the PSUtil cpu_times_percent method
+        # !!! the first time this function is called with interval = 0.0 or None 
+        # !!! it will return a meaningless 0.0 value which you are supposed to ignore
+        cputimespercent = cpu_times_percent(interval=0, percpu=False)
 
-        self.stats = {}
+        # Get all possible value for CPU stats
+        # user
+        # system
+        # idle
+        # nice (UNIX)
+        # iowait (Linux)
+        # irq (Linux, FreeBSD)
+        # softirq (Linux)
+        # steal (Linux >= 2.6.11)
+        # The following stats are returned by the API but not displayed in the UI:
+        # guest (Linux >= 2.6.24)
+        # guest_nice (Linux >= 3.2.0)
+        cpu_stats = {}
         for cpu in ['user', 'system', 'idle', 'nice',
-                    'iowait', 'irq', 'softirq', 'steal']:
+                    'iowait', 'irq', 'softirq', 'steal',
+                    'guest', 'guest_nice']:
             if hasattr(cputimespercent, cpu):
-                self.stats[cpu] = getattr(cputimespercent, cpu)
+                cpu_stats[cpu] = getattr(cputimespercent, cpu)
 
-        return self.stats
-
-    def update_deprecated(self):
-        """
-        Update CPU stats
-        Only used if cpu_times_percent failed
-        """
-
-        # Grab CPU using the PSUtil cpu_times method
-        cputime = cpu_times(percpu=False)
-        cputime_total = cputime.user + cputime.system + cputime.idle
-
-        # Only available on some OS
-        if hasattr(cputime, 'nice'):
-            cputime_total += cputime.nice
-        if hasattr(cputime, 'iowait'):
-            cputime_total += cputime.iowait
-        if hasattr(cputime, 'irq'):
-            cputime_total += cputime.irq
-        if hasattr(cputime, 'softirq'):
-            cputime_total += cputime.softirq
-        if hasattr(cputime, 'steal'):
-            cputime_total += cputime.steal
-        if not hasattr(self, 'cputime_old'):
-            self.cputime_old = cputime
-            self.cputime_total_old = cputime_total
-            self.stats = {}
-        else:
-            self.cputime_new = cputime
-            self.cputime_total_new = cputime_total
-            try:
-                percent = 100 / (self.cputime_total_new -
-                                 self.cputime_total_old)
-                self.stats = {'user': (self.cputime_new.user -
-                                       self.cputime_old.user) * percent,
-                              'system': (self.cputime_new.system -
-                                         self.cputime_old.system) * percent,
-                              'idle': (self.cputime_new.idle -
-                                       self.cputime_old.idle) * percent}
-                if hasattr(self.cputime_new, 'nice'):
-                    self.stats['nice'] = (self.cputime_new.nice -
-                                          self.cputime_old.nice) * percent
-                if hasattr(self.cputime_new, 'iowait'):
-                    self.stats['iowait'] = (self.cputime_new.iowait -
-                                            self.cputime_old.iowait) * percent
-                if hasattr(self.cputime_new, 'irq'):
-                    self.stats['irq'] = (self.cputime_new.irq -
-                                         self.cputime_old.irq) * percent
-                if hasattr(self.cputime_new, 'softirq'):
-                    self.stats['softirq'] = (self.cputime_new.softirq -
-                                             self.cputime_old.softirq) * percent
-                if hasattr(self.cputime_new, 'steal'):
-                    self.stats['steal'] = (self.cputime_new.steal -
-                                           self.cputime_old.steal) * percent
-                self.cputime_old = self.cputime_new
-                self.cputime_total_old = self.cputime_total_new
-            except Exception:
-                self.stats = {}
+        # Set the global variable to the new stats
+        self.stats = cpu_stats
 
         return self.stats
 
     def msg_curse(self, args=None):
         """
-        Return the dict to display in the curse interface
+        Return the list to display in the curse interface
         """
+
+        # Only process if stats exist...
+        if (self.stats == {}):
+            return []
+
         # Init the return message
         ret = []
 
