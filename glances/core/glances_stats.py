@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-import sys
 import os
+import sys
 import collections
 
 # Import Glances libs
@@ -35,7 +35,6 @@ class GlancesStats(object):
     # Internal dictionnary with all plugins instances
     _plugins = {}
 
-
     def __init__(self, config=None):
         """
         Init the stats
@@ -47,14 +46,13 @@ class GlancesStats(object):
         # Load the limits
         self.load_limits(config)
 
-
     def __getattr__(self, item):
         """
-        Overwrite the getattr in case of attribute is not found 
+        Overwrite the getattr in case of attribute is not found
         The goal is to dynamicaly generate the following methods:
         - getPlugname(): return Plugname stat in JSON format
         """
-        
+
         # Check if the attribute starts with 'get'
         if (item.startswith('get')):
             # Get the plugin name
@@ -71,13 +69,12 @@ class GlancesStats(object):
             # Default behavior
             raise AttributeError(item)
 
-
     def load_plugins(self):
         """
         Load all plugins in the "plugins" folder
         """
 
-        plug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../plugins")   
+        plug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../plugins")
         sys.path.insert(0, plug_dir)
 
         header = "glances_"
@@ -93,7 +90,6 @@ class GlancesStats(object):
                 plugname = os.path.basename(plug)[len(header):-3].lower()
                 self._plugins[plugname] = m.Plugin()
 
-
     def load_limits(self, config):
         """
         Load the stats limits
@@ -102,7 +98,6 @@ class GlancesStats(object):
         # For each plugins, call the init_limits method
         for p in self._plugins:
             self._plugins[p].load_limits(config)
-
 
     def __update__(self, input_stats):
         """
@@ -123,17 +118,14 @@ class GlancesStats(object):
                 # print "Plugins: %s" % self._plugins
                 self._plugins[p].set(input_stats[p])
 
-
     def update(self, input_stats={}):
         # !!! Why __update__ and update method ?
         # Update the stats
         self.__update__(input_stats)
 
-
     def get_plugin_list(self):
         # Return the plugin list
         self._plugins
-
 
     def get_plugin(self, plugin_name):
         # Return the plugin name
@@ -153,19 +145,17 @@ class GlancesStatsServer(GlancesStats):
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
 
-
-    def update(self, input_stats = {}):
+    def update(self, input_stats={}):
         """
         Update the stats
         """
-        
+
         # Update the stats
         GlancesStats.__update__(self, input_stats)
 
         # Build the all_stats with the get_raw() method of the plugins
         for p in self._plugins:
             self.all_stats[p] = self._plugins[p].get_raw()
-            
 
     def getAll(self):
         return self.all_stats
@@ -182,19 +172,17 @@ class GlancesStatsClient(GlancesStats):
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
 
-
-    def update(self, input_stats = {}):
+    def update(self, input_stats={}):
         """
         Update the stats
         """
-        
+
         # Update the stats
         GlancesStats.__update__(self, input_stats)
 
         # Build the all_stats with the get_raw() method of the plugins
         for p in self._plugins:
             self.all_stats[p] = self._plugins[p].get_raw()
-            
 
     def getAll(self):
         return self.all_stats

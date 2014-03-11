@@ -18,26 +18,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
-import sys
-import socket
-import json
-
 # Import Glances libs
-from ..core.glances_limits import glancesLimits
 from ..core.glances_stats import GlancesStats
 from ..outputs.glances_curses import glancesCurses
+
 
 class GlancesStandalone():
     """
     This class creates and manages the Glances standalone session
     """
 
-    def __init__(self, 
-                 config=None,
-                 args=None,
-                 refresh_time=3,
-                 use_bold=True):
+    def __init__(self, config=None, args=None, refresh_time=3, use_bold=True):
 
         # Init stats
         self.stats = GlancesStats(config)
@@ -63,7 +54,6 @@ class GlancesStandalone():
 
         # Init screen
         self.screen = glancesCurses(args=args)
-
 
     def serve_forever(self):
         while True:
