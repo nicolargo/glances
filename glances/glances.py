@@ -79,15 +79,6 @@ except ImportError:
     # Python 3
     from xmlrpc.client import ServerProxy, ProtocolError
 
-if not is_Windows:
-    # curses did not exist on Windows (shame on it)
-    try:
-        import curses
-        import curses.panel
-    except ImportError:
-        print('Curses module not found. Glances cannot start.')
-        sys.exit(1)
-
 if is_Windows:
     try:
         import colorconsole
@@ -96,6 +87,14 @@ if is_Windows:
         is_colorConsole = False
     else:
         is_colorConsole = True
+else:
+    # curses did not exist on Windows (shame on it)
+    try:
+        import curses
+        import curses.panel
+    except ImportError:
+        print('Curses module not found. Glances cannot start.')
+        sys.exit(1)
 
 try:
     # psutil is the main library used to grab stats
@@ -134,6 +133,7 @@ else:
     psutil_get_io_counter_tag = False
 
 # sensors library (optional; Linux-only)
+# batinfo library (optional; Linux-only)
 if is_Linux:
     try:
         import sensors
@@ -141,11 +141,6 @@ if is_Linux:
         sensors_lib_tag = False
     else:
         sensors_lib_tag = True
-else:
-    sensors_lib_tag = False
-
-# batinfo library (optional; Linux-only)
-if is_Linux:
     try:
         import batinfo
     except ImportError:
@@ -153,6 +148,7 @@ if is_Linux:
     else:
         batinfo_lib_tag = True
 else:
+    sensors_lib_tag = False
     batinfo_lib_tag = False
 
 try:
@@ -437,22 +433,19 @@ class Config:
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
                 __appname__, self.filename))
+            if is_Linux:
+                paths.append(os.path.join('/etc', __appname__, self.filename))
+            else:
+                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.filename))
         elif is_Mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
                 __appname__, self.filename))
+            paths.append(os.path.join(
+                sys_prefix, 'etc', __appname__, self.filename))
         elif is_Windows:
             paths.append(os.path.join(
                 os.environ.get('APPDATA'), __appname__, self.filename))
-
-        if is_Linux:
-            paths.append(os.path.join('/etc', __appname__, self.filename))
-        elif is_BSD:
-            paths.append(os.path.join(
-                sys.prefix, 'etc', __appname__, self.filename))
-        elif is_Mac:
-            paths.append(os.path.join(
-                sys_prefix, 'etc', __appname__, self.filename))
 
         return paths
 
@@ -3775,7 +3768,7 @@ class glancesScreen:
                 except UnicodeEncodeError:
                     self.term_window.addnstr(monitor_y + 3 + processes,
                                              process_x + process_name_x,
-                                             process_name, max_process_name)                    
+                                             process_name, max_process_name)
 
     def displayCaption(self, cs_status="None"):
         """
