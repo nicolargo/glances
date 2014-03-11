@@ -27,19 +27,19 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 if sys.platform.startswith('win'):
-    requires = ['psutil>=0.5.1', 'colorconsole==0.6']
+    requires = ['psutil>=0.5.1,<=1.2.1', 'colorconsole==0.6']
 else:
-    requires = ['psutil>=0.5.1']
+    requires = ['psutil>=0.5.1,<=1.2.1']
 
 setup(
     name='Glances',
-    version='1.7.4',
+    version='1.7.5',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-1.7.4.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-1.7.5.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=requires,
