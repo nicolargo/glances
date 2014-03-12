@@ -41,6 +41,8 @@ class glancesCurses:
 
         # Init args
         self.args = args
+        # By default, display bitrate instead of cumulative in the network plugin
+        self.args.network_stats_cumulative = False
 
         # Init windows positions
         self.term_w = 80
@@ -219,7 +221,7 @@ class glancesCurses:
             self.network_stats_combined = not self.network_stats_combined
         elif self.pressedkey == ord('u'):
             # 'u' > View cumulative network IO
-            self.network_stats_cumulative = not self.network_stats_cumulative
+            self.args.network_stats_cumulative = not self.args.network_stats_cumulative
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()

@@ -17,20 +17,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Glances Network interface plugin
+"""
 
 # Import system libs
-try:
-    # psutil >= 1.0.0
-    from psutil import net_io_counters
-except:
-    # psutil < 1.0.0
-    try:
-        from psutil import network_io_counters
-    except:
-        pass
+from psutil import net_io_counters
 
 # Import Glances lib
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
@@ -53,36 +48,35 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 2
 
+        # Init stats
+        self.network_old = []
+
+
     def update(self):
         """
         Update network stats
+        Stats is a list of dict (one dict per interface)
         """
-        network = []
 
-        # psutil >= 1.0.0
-        try:
-            get_net_io_counters = net_io_counters(pernic=True)
-        except IOError:
-            # psutil < 1.0.0
-            try:
-                get_net_io_counters = network_io_counters(pernic=True)
-            except IOError:
-                pass
-
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        time_since_update = getTimeSinceLastUpdate('net')
+        # Grab network interface stat using the PsUtil net_io_counter method
+        netiocounters = net_io_counters(pernic=True)
 
         # Previous network interface stats are stored in the network_old variable
-        if not hasattr(self, 'network_old'):
+        network = []
+        if (self.network_old == []):
             # First call, we init the network_old var
             try:
-                self.network_old = get_net_io_counters
+                self.network_old = netiocounters
             except (IOError, UnboundLocalError):
                 pass
         else:
-            network_new = get_net_io_counters
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            time_since_update = getTimeSinceLastUpdate('net')
+
+            # Loop over interfaces
+            network_new = netiocounters
             for net in network_new:
                 try:
                     # Try necessary to manage dynamic network interface
@@ -98,7 +92,7 @@ class Plugin(GlancesPlugin):
                     netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
                                                 netstat['cumulative_tx'])
                     netstat['cx'] = netstat['rx'] + netstat['tx']
-                except Exception:
+                except KeyError:
                     continue
                 else:
                     network.append(netstat)
@@ -106,10 +100,16 @@ class Plugin(GlancesPlugin):
 
         self.stats = network
 
+        return self.stats
+
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
         """
+
+        #!!! TODO: Add alert on network interface bitrate
+        #!!! TODO: Manage the hide tag to hide a list of net interface
+
         # Init the return message
         ret = []
 
@@ -117,21 +117,36 @@ class Plugin(GlancesPlugin):
         # Header
         msg = "{0:8}".format(_("NETWORK"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = " {0:>6}".format(_("Rx/s"))
-        ret.append(self.curse_add_line(msg))
-        msg = "  {0:>6}".format(_("Tx/s"))
-        ret.append(self.curse_add_line(msg))
+        if (args.network_stats_cumulative):
+            # Cumulative stats
+            msg = " {0:>6}".format(_("Rx"))
+            ret.append(self.curse_add_line(msg))
+            msg = "  {0:>6}".format(_("Tx"))
+            ret.append(self.curse_add_line(msg))
+        else:
+            # Bitrate stats
+            msg = " {0:>6}".format(_("Rx/s"))
+            ret.append(self.curse_add_line(msg))
+            msg = "  {0:>6}".format(_("Tx/s"))
+            ret.append(self.curse_add_line(msg))            
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
             # Format stats
             ifname = i['interface_name'].split(':')[0]
             if (args.byte):
-                rxps = self.auto_unit(int(i['rx'] // i['time_since_update']))
-                txps = self.auto_unit(int(i['tx'] // i['time_since_update']))
+                if (args.network_stats_cumulative):
+                    rxps = self.auto_unit(int(i['cumulative_rx']))
+                    txps = self.auto_unit(int(i['cumulative_tx']))
+                else:
+                    rxps = self.auto_unit(int(i['rx'] // i['time_since_update']))
+                    txps = self.auto_unit(int(i['tx'] // i['time_since_update']))
             else:
-                rxps = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
-                txps = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"
-            # !!! TODO: manage the hide tag
+                if (args.network_stats_cumulative):
+                    rxps = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
+                    txps = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
+                else:
+                    rxps = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
+                    txps = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"                    
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(ifname)
