@@ -100,7 +100,7 @@ class Plugin(GlancesPlugin):
         msg = "{0}".format(format(self.auto_unit(self.stats['used'], '>6')))
         ret.append(self.curse_add_line(
             msg, self.get_alert_log(self.stats['used'], 
-            ax=self.stats['total'])))
+            max=self.stats['total'])))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
