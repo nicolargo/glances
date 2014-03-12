@@ -50,9 +50,7 @@ class Plugin(GlancesPlugin):
         Update MEM (RAM) stats
         """
 
-        # Grab CPU using the PSUtil cpu_times_percent method
-        # !!! the first time this function is called with interval = 0.0 or None 
-        # !!! it will return a meaningless 0.0 value which you are supposed to ignore
+        # Grab MEM using the PSUtil virtual_memory method
         vm_stats = virtual_memory()
 
         # Get all the memory stats (copy/paste of the PsUtil documentation)

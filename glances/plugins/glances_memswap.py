@@ -20,10 +20,10 @@
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
-import psutil
+from psutil import swap_memory
 
 # from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -50,29 +50,26 @@ class Plugin(GlancesPlugin):
         Update MEM (SWAP) stats
         """
 
-        # SWAP
-        # psutil >= 0.6
-        if hasattr(psutil, 'swap_memory'):
-            # Try... is an hack for issue #152
-            try:
-                virtmem = psutil.swap_memory()
-            except Exception:
-                self.stats = {}
-            else:
-                self.stats = {'total': virtmem.total,
-                              'used': virtmem.used,
-                              'free': virtmem.free,
-                              'percent': virtmem.percent}
+        # Grab SWAP using the PSUtil swap_memory method
+        sm_stats = swap_memory()
 
-        # psutil < 0.6
-        elif hasattr(psutil, 'virtmem_usage'):
-            virtmem = psutil.virtmem_usage()
-            self.stats = {'total': virtmem.total,
-                          'used': virtmem.used,
-                          'free': virtmem.free,
-                          'percent': virtmem.percent}
-        else:
-            self.stats = {}
+        # Get all the swap stats (copy/paste of the PsUtil documentation)
+        # total: total swap memory in bytes
+        # used: used swap memory in bytes
+        # free: free swap memory in bytes
+        # percent: the percentage usage
+        # sin: the number of bytes the system has swapped in from disk (cumulative)
+        # sout: the number of bytes the system has swapped out from disk (cumulative)
+        swap_stats = {}
+        for swap in ['total', 'used', 'free', 'percent',
+                     'sin', 'sout']:
+            if (hasattr(sm_stats, swap)):
+                swap_stats[swap] = getattr(sm_stats, swap)
+
+        # Set the global variable to the new stats
+        self.stats = swap_stats
+
+        return self.stats
 
     def msg_curse(self, args=None):
         """
