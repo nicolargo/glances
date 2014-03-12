@@ -19,12 +19,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-# Check for PSUtil already done in the glances_core script
 from os import getloadavg
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
-from glances_core import Plugin as CorePlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.glances_core import Plugin as CorePlugin
 
 
 class Plugin(GlancesPlugin):
@@ -53,14 +52,16 @@ class Plugin(GlancesPlugin):
         """
         Update load stats
         """
+
+        # Get the load using the os standard lib
         try:
             load = getloadavg()
-
+        except OSError:
+            self.stats = {}
+        else:
             self.stats = {'min1': load[0],
                           'min5': load[1],
                           'min15': load[2]}
-        except Exception:
-            self.stats = {}
 
         return self.stats
 
@@ -68,8 +69,13 @@ class Plugin(GlancesPlugin):
         """
         Return the dict to display in the curse interface
         """
+
         # Init the return message
         ret = []
+
+        # Only process if stats exist...
+        if (self.stats == {}):
+            return ret
 
         # Build the string message
         # Header

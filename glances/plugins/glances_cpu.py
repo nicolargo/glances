@@ -25,7 +25,7 @@ Glances CPU plugin
 # Check for PSUtil already done in the glances_core script
 from psutil import cpu_times_percent
 
-# from ..plugins.glances_plugin import GlancesPlugin
+# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -91,12 +91,12 @@ class Plugin(GlancesPlugin):
         Return the list to display in the curse interface
         """
 
-        # Only process if stats exist...
-        if (self.stats == {}):
-            return []
-
         # Init the return message
         ret = []
+
+        # Only process if stats exist...
+        if (self.stats == {}):
+            return ret
 
         # Build the string message
         # Header
