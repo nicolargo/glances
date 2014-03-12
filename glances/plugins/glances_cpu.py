@@ -78,7 +78,7 @@ class Plugin(GlancesPlugin):
         for cpu in ['user', 'system', 'idle', 'nice',
                     'iowait', 'irq', 'softirq', 'steal',
                     'guest', 'guest_nice']:
-            if hasattr(cputimespercent, cpu):
+            if (hasattr(cputimespercent, cpu)):
                 cpu_stats[cpu] = getattr(cputimespercent, cpu)
 
         # Set the global variable to the new stats

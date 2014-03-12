@@ -20,10 +20,10 @@
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
-import psutil
+from psutil import virtual_memory
 
 # from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -50,55 +50,45 @@ class Plugin(GlancesPlugin):
         Update MEM (RAM) stats
         """
 
-        # RAM
-        # psutil >= 0.6
-        if hasattr(psutil, 'virtual_memory'):
-            phymem = psutil.virtual_memory()
+        # Grab CPU using the PSUtil cpu_times_percent method
+        # !!! the first time this function is called with interval = 0.0 or None 
+        # !!! it will return a meaningless 0.0 value which you are supposed to ignore
+        vm_stats = virtual_memory()
 
-            # buffers and cached (Linux, BSD)
-            buffers = getattr(phymem, 'buffers', 0)
-            cached = getattr(phymem, 'cached', 0)
+        # Get all the memory stats (copy/paste of the PsUtil documentation)
+        # total: total physical memory available.
+        # available: the actual amount of available memory that can be given instantly to processes that request more memory in bytes; this is calculated by summing different memory values depending on the platform (e.g. free + buffers + cached on Linux) and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
+        # percent: the percentage usage calculated as (total - available) / total * 100.
+        # used: memory used, calculated differently depending on the platform and designed for informational purposes only.
+        # free: memory not being used at all (zeroed) that is readily available; note that this doesn’t reflect the actual memory available (use ‘available’ instead).
+        # Platform-specific fields:
+        # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
+        # inactive: (UNIX): memory that is marked as not used.
+        # buffers: (Linux, BSD): cache for things like file system metadata.
+        # cached: (Linux, BSD): cache for various things.
+        # wired: (BSD, OSX): memory that is marked to always stay in RAM. It is never moved to disk.
+        # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
+        mem_stats = {}
+        for mem in ['total', 'available', 'percent', 'used', 'free',
+                    'active', 'inactive', 'buffers', 'cached',
+                    'wired', 'shared']:
+            if (hasattr(vm_stats, mem)):
+                mem_stats[mem] = getattr(vm_stats, mem)
 
-            # active and inactive not available on Windows
-            active = getattr(phymem, 'active', 0)
-            inactive = getattr(phymem, 'inactive', 0)
+        # Use the 'free'/htop calculation
+        # free=available+buffer+cached
+        mem_stats['free'] = mem_stats['available']
+        if (hasattr(mem_stats, 'buffer')):
+            mem_stats['free'] += mem_stats['buffer']
+        if (hasattr(mem_stats, 'cached')):
+            mem_stats['free'] += mem_stats['cached']
+        # used=total-free
+        mem_stats['used'] = mem_stats['total'] - mem_stats['free']
 
-            # phymem free and usage
-            total = phymem.total
-            free = phymem.available  # phymem.free + buffers + cached
-            used = total - free
+        # Set the global variable to the new stats
+        self.stats = mem_stats
 
-            self.stats = {'total': total,
-                          'percent': phymem.percent,
-                          'used': used,
-                          'free': free,
-                          'active': active,
-                          'inactive': inactive,
-                          'buffers': buffers,
-                          'cached': cached}
-
-        # psutil < 0.6
-        elif hasattr(psutil, 'phymem_usage'):
-            phymem = psutil.phymem_usage()
-
-            # buffers and cached (Linux, BSD)
-            buffers = getattr(psutil, 'phymem_buffers', 0)()
-            cached = getattr(psutil, 'cached_phymem', 0)()
-
-            # phymem free and usage
-            total = phymem.total
-            free = phymem.free + buffers + cached
-            used = total - free
-
-            # active and inactive not available for psutil < 0.6
-            self.stats = {'total': total,
-                          'percent': phymem.percent,
-                          'used': used,
-                          'free': free,
-                          'buffers': buffers,
-                          'cached': cached}
-        else:
-            self.stats = {}
+        return self.stats
 
     def msg_curse(self, args=None):
         """
