@@ -52,6 +52,9 @@ work_path = os.path.realpath(os.path.dirname(__file__))
 appname_path = os.path.split(sys.argv[0])[0]
 sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
+# Is this Python 3?
+is_python3 = sys.version_info >= (3, 2)
+
 # Operating system flag
 # Note: Somes libs depends of OS
 is_BSD = sys.platform.find('bsd') != -1

@@ -34,7 +34,7 @@ Requirements
 Optional dependencies:
 
 - ``jinja2`` (for HTML output)
-- ``pysensors`` (for HW monitoring support) [Linux-only]
+- ``py3sensors`` (for HW monitoring support) [Linux-only]
 - ``hddtemp`` (for HDD temperature monitoring support)
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 

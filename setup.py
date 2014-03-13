@@ -45,7 +45,7 @@ setup(
     install_requires=requires,
     extras_require={
         'HTML': ['jinja2'],
-        'SENSORS': ['pysensors'],
+        'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo']
     },
     packages=['glances'],

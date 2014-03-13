@@ -26,6 +26,7 @@ except:
     pass
 
 # Import Glances lib
+from glances.core.glances_globals import is_python3
 from glances_hddtemp import Plugin as HddTempPlugin
 from glances_plugin import GlancesPlugin
 # from glances.core.glances_timer import getTimeSinceLastUpdate
@@ -61,7 +62,7 @@ class glancesGrabSensors:
             for chip in sensors.iter_detected_chips():
                 for feature in chip:
                     sensors_current = {}
-                    if feature.name.startswith('temp'):
+                    if feature.name.startswith(b'temp'):
                         sensors_current['label'] = feature.label[:20]
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
@@ -117,7 +118,10 @@ class Plugin(GlancesPlugin):
         # Header
         msg = "{0:8}".format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = "{0:>16}".format(_("°C"))
+        if is_python3:
+            msg = "{0:>15}".format(_("°C"))
+        else:
+            msg = "{0:>16}".format(_("°C"))
         ret.append(self.curse_add_line(msg))
         # Sensors list (sorted by name): Sensors
         sensor_list = sorted(self.stats, key=lambda sensors: sensors['label'])

@@ -57,7 +57,7 @@ class Config:
         for path in self.get_paths_list():
             if (os.path.isfile(path) and os.path.getsize(path) > 0):
                 try:
-                    if (sys.version_info >= (3, 2)):
+                    if is_python3:
                         self.parser.read(path, encoding='utf-8')
                     else:
                         self.parser.read(path)
