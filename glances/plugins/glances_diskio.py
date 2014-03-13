@@ -17,13 +17,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Glances CPU plugin
+"""
 
 # Import system lib
 from psutil import disk_io_counters
 
-# Import Glances lib
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_globals import is_Mac
-from glances_plugin import GlancesPlugin
 from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
@@ -46,56 +49,75 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 3
 
+        # Init stats
+        self.diskio_old = []
+
+
     def update(self):
         """
         Update disk IO stats
         """
 
-        self.diskio = []
+        # Grab the stat using the PsUtil disk_io_counters method
+        # read_count: number of reads
+        # write_count: number of writes
+        # read_bytes: number of bytes read
+        # write_bytes: number of bytes written
+        # read_time: time spent reading from disk (in milliseconds)
+        # write_time: time spent writing to disk (in milliseconds)
+        diskiocounters = disk_io_counters(perdisk=True)
 
-        # Disk IO stat not available on Mac OS
-        if is_Mac:
-            self.stats = self.diskio
-            return self.stats
-
-        # By storing time data we enable Rx/s and Tx/s calculations in the
-        # XML/RPC API, which would otherwise be overly difficult work
-        # for users of the API
-        time_since_update = getTimeSinceLastUpdate('disk')
-
-        if not hasattr(self, 'diskio_old'):
+        # Previous disk IO stats are stored in the diskio_old variable
+        diskio = []
+        if (self.diskio_old == []):
+            # First call, we init the network_old var
             try:
-                self.diskio_old = disk_io_counters(perdisk=True)
-            except IOError:
-                self.diskio_error_tag = True
+                self.diskio_old = diskiocounters
+            except (IOError, UnboundLocalError):
+                pass
         else:
-            self.diskio_new = disk_io_counters(perdisk=True)
-            for disk in self.diskio_new:
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            time_since_update = getTimeSinceLastUpdate('disk')
+
+            diskio_new = diskiocounters
+            for disk in diskio_new:
                 try:
                     # Try necessary to manage dynamic disk creation/del
                     diskstat = {}
                     diskstat['time_since_update'] = time_since_update
                     diskstat['disk_name'] = disk
                     diskstat['read_bytes'] = (
-                        self.diskio_new[disk].read_bytes -
+                        diskio_new[disk].read_bytes -
                         self.diskio_old[disk].read_bytes)
                     diskstat['write_bytes'] = (
-                        self.diskio_new[disk].write_bytes -
+                        diskio_new[disk].write_bytes -
                         self.diskio_old[disk].write_bytes)
-                except Exception:
+                except KeyError:
                     continue
                 else:
-                    self.diskio.append(diskstat)
-            self.diskio_old = self.diskio_new
+                    diskio.append(diskstat)
+            self.diskio_old = diskio_new
 
-        self.stats = self.diskio
+        self.stats = diskio
+
+        return self.stats
 
     def msg_curse(self, args=None):
         """
         Return the dict to display in the curse interface
         """
+
+        #!!! TODO: Add alert on disk IO
+        #!!! TODO: manage the hide tag for disk IO list
+
         # Init the return message
         ret = []
+
+        # Only process if stats exist...
+        if (self.stats == []):
+            return ret
 
         # Build the string message
         # Header
@@ -107,7 +129,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
-            # !!! TODO: manage the hide tag
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(i['disk_name'])

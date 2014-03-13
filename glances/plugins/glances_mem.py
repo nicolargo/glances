@@ -98,6 +98,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if stats exist...
+        if (self.stats == {}):
+            return ret
+
         # Build the string message
         # Header
         msg = "{0:5} ".format(_("MEM"))
