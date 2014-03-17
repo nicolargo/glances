@@ -81,11 +81,14 @@ class GlancesMain(object):
         self.args = self.parse_arg()
 
         # !!! Why did not use the global glances_logs instance ?
-        # Read the configuration file
+        # Init the configuration file object
         if (self.conf_file_tag):
+            # Init
             self.config = Config(self.conf_file)
         else:
             self.config = Config()
+        # Load the configuration file
+        self.config.load()
 
         # Catch the CTRL-C signal
         signal.signal(signal.SIGINT, self.__signal_handler)

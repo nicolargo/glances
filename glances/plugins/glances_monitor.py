@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import Glances lib
-from glances_plugin import GlancesPlugin
-from glances.core.glances_globals import glances_monitors
+from glances.plugins.glances_plugin import GlancesPlugin
+from glances.core.glances_monitor_list import monitorList as glancesMonitorList
 
 
 class Plugin(GlancesPlugin):
@@ -44,9 +44,9 @@ class Plugin(GlancesPlugin):
 
     def load_limits(self, config):
         """
-        No limit...
+        Load the monitored list from the conf file
         """
-        pass
+        self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
         """
@@ -54,9 +54,9 @@ class Plugin(GlancesPlugin):
         Just return the global glances_log
         """
         # Update the monitored list (result of command)
-        glances_monitors.update()
+        self.glances_monitors.update()
         # Put it on the stats var
-        self.stats = glances_monitors.get()
+        self.stats = self.glances_monitors.get()
 
         return self.stats
 
