@@ -1247,15 +1247,15 @@ class GlancesGrabProcesses:
 
         # Process memory
         procstat['memory_info'] = getattr(proc, 'get_memory_info',
-                                  getattr(proc, 'memory_info'))()
+                                  getattr(proc, 'memory_info', None))()
         procstat['memory_percent'] = getattr(proc, 'get_memory_percent',
-                                     getattr(proc, 'memory_percent'))()
+                                     getattr(proc, 'memory_percent', None))()
 
         # Process CPU
         procstat['cpu_times'] = getattr(proc, 'get_cpu_times',
-                                getattr(proc, 'cpu_times'))()
+                                getattr(proc, 'cpu_times', None))()
         procstat['cpu_percent'] = getattr(proc, 'get_cpu_percent',
-                                  getattr(proc, 'cpu_percent'))(interval=0)
+                                  getattr(proc, 'cpu_percent', None))(interval=0)
 
         # Process network connections (TCP and UDP) (Experimental)
         # !!! High CPU consumption
@@ -1275,7 +1275,7 @@ class GlancesGrabProcesses:
             try:
                 # Get the process IO counters
                 proc_io = getattr(proc, 'get_io_counters',
-                          getattr(proc, 'io_counters'))()
+                          getattr(proc, 'io_counters', None))()
                 io_new = [proc_io.read_bytes, proc_io.write_bytes]
             except psutil.AccessDenied:
                 # Access denied to process IO (no root account)
