@@ -1204,7 +1204,7 @@ class GlancesGrabProcesses:
         # Process name (cached by PSUtil)
         try:
             procstat['name'] = proc.name()
-        except AttributeError:
+        except TypeError:
             procstat['name'] = proc.name
             
 
@@ -1214,7 +1214,7 @@ class GlancesGrabProcesses:
         except:
             try:
                 self.username_cache[procstat['pid']] = proc.username()
-            except AttributeError:
+            except TypeError:
                 self.username_cache[procstat['pid']] = proc.username
             except KeyError:
                 try:
@@ -1238,7 +1238,7 @@ class GlancesGrabProcesses:
         # Process status
         try:
             procstat['status'] = str(proc.status())[:1].upper()
-        except AttributeError:
+        except TypeError:
             procstat['status'] = str(proc.status)[:1].upper()
 
         # Process nice
