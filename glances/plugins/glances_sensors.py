@@ -22,7 +22,7 @@
 # sensors library (optional; Linux-only)
 try:
     import sensors
-except:
+except ImportError:
     pass
 
 # Import Glances lib
@@ -78,9 +78,11 @@ class glancesGrabSensors:
 
 class Plugin(GlancesPlugin):
     """
-    Glances's sensors Plugin
+    Glances' sensors plugin
 
-    stats is a list
+    The stats list includes both sensors and hard disks stats, if any
+    The sensors are already grouped by chip type and then sorted by name
+    The hard disks are already sorted by name
     """
 
     def __init__(self):
@@ -105,7 +107,9 @@ class Plugin(GlancesPlugin):
         """
         Update sensors stats
         """
+        self.hddtemp_plugin.update()
         self.stats = self.glancesgrabsensors.get()
+        self.stats.extend(self.hddtemp_plugin.stats)
 
     def msg_curse(self, args=None):
         """
@@ -113,6 +117,10 @@ class Plugin(GlancesPlugin):
         """
         # Init the return message
         ret = []
+
+        # Only process if stats exist...
+        if self.stats == []:
+            return ret
 
         # Build the string message
         # Header
@@ -123,24 +131,13 @@ class Plugin(GlancesPlugin):
         else:
             msg = "{0:>16}".format(_("°C"))
         ret.append(self.curse_add_line(msg))
-        # Sensors list (sorted by name): Sensors
-        sensor_list = sorted(self.stats, key=lambda sensors: sensors['label'])
-        for i in sensor_list:
+
+        for item in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:<15}".format(i['label'])
+            msg = "{0:<15}".format(item['label'])
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>8}".format(i['value'])
-            ret.append(self.curse_add_line(msg))
-        # Sensors list (sorted by name): HDDTemp
-        self.hddtemp_plugin.update()
-        sensor_list = sorted(self.hddtemp_plugin.stats, key=lambda sensors: sensors['label'])
-        for i in sensor_list:
-            # New line
-            ret.append(self.curse_new_line())
-            msg = "{0:<15}".format("Disk " + i['label'])
-            ret.append(self.curse_add_line(msg))
-            msg = "{0:>8}".format(i['value'])
+            msg = "{0:>8}".format(item['value'])
             ret.append(self.curse_add_line(msg))
 
         return ret
