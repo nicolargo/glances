@@ -146,6 +146,8 @@ The following commands (key pressed) are supported while in Glances:
     Delete finished warning and critical log messages
 ``y``
     Show/hide hddtemp stats (only available with -y flag)
+``Z``
+    Show/hide processes list(for low CPU consumption)
 ``1``
     Switch between global CPU and per-CPU stats
 

@@ -3987,6 +3987,7 @@ class glancesScreen:
                              [_("h"), _("Show/hide this help screen")],
                              [_("t"), _("View network I/O as combination")],
                              [_("u"), _("View cumulative network I/O")],
+                             [_("z"), _("Show/hide processes list (low CPU usage)")],                             
                              [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
             key_table_x = self.help_x + 38
             key_table_y = limits_table_y + 1
