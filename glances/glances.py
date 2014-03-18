@@ -2540,6 +2540,9 @@ class glancesScreen:
         elif self.pressedkey == ord('n') and network_tag:
             # 'n' > Show/hide network stats
             self.network_tag = not self.network_tag
+        elif self.pressedkey == ord('z'):
+            # 'z' > Show/Hide process list
+            self.process_tag = not self.process_tag
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.setProcessSortedBy('name')
