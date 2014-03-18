@@ -1632,8 +1632,12 @@ class GlancesStats:
                 phymem = psutil.phymem_usage()
 
                 # buffers and cached (Linux, BSD)
-                buffers = getattr(psutil, 'phymem_buffers', 0)()
-                cached = getattr(psutil, 'cached_phymem', 0)()
+                try:
+                    buffers = getattr(psutil, 'phymem_buffers', 0)()
+                    cached = getattr(psutil, 'cached_phymem', 0)()
+                except TypeError:
+                    buffers = 0
+                    cached = 0
 
                 # phymem free and usage
                 total = phymem.total
