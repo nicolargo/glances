@@ -27,9 +27,9 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 if sys.platform.startswith('win'):
-    requires = ['psutil>=0.5.1,<=2.0.0', 'colorconsole==0.6']
+    requires = ['psutil>=0.5.1', 'colorconsole==0.6']
 else:
-    requires = ['psutil>=0.5.1,<=2.0.0']
+    requires = ['psutil>=0.5.1']
 
 setup(
     name='Glances',
