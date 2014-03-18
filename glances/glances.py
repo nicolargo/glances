@@ -1202,16 +1202,24 @@ class GlancesGrabProcesses:
         procstat['pid'] = proc.pid
 
         # Process name (cached by PSUtil)
-        procstat['name'] = proc.name
+        try:
+            procstat['name'] = proc.name()
+        except TypeError:
+            procstat['name'] = proc.name
+            
 
         # Process username (cached with internal cache)
         try:
             self.username_cache[procstat['pid']]
         except:
             try:
+                self.username_cache[procstat['pid']] = proc.username()
+            except TypeError:
                 self.username_cache[procstat['pid']] = proc.username
             except KeyError:
                 try:
+                    self.username_cache[procstat['pid']] = proc.uids().real
+                except AttributeError:
                     self.username_cache[procstat['pid']] = proc.uids.real
                 except KeyError:
                     self.username_cache[procstat['pid']] = "?"
@@ -1221,28 +1229,39 @@ class GlancesGrabProcesses:
         try:
             self.cmdline_cache[procstat['pid']]
         except:
-            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline)
+            try:
+                self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+            except TypeError:
+                self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline)
         procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
         # Process status
-        procstat['status'] = str(proc.status)[:1].upper()
+        try:
+            procstat['status'] = str(proc.status())[:1].upper()
+        except TypeError:
+            procstat['status'] = str(proc.status)[:1].upper()
 
         # Process nice
-        procstat['nice'] = proc.get_nice()
+        procstat['nice'] = getattr(proc, 'get_nice',
+                           getattr(proc, 'nice'))()
 
         # Process memory
-        procstat['memory_info'] = proc.get_memory_info()
-        procstat['memory_percent'] = proc.get_memory_percent()
+        procstat['memory_info'] = getattr(proc, 'get_memory_info',
+                                  getattr(proc, 'memory_info', None))()
+        procstat['memory_percent'] = getattr(proc, 'get_memory_percent',
+                                     getattr(proc, 'memory_percent', None))()
 
         # Process CPU
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+        procstat['cpu_times'] = getattr(proc, 'get_cpu_times',
+                                getattr(proc, 'cpu_times', None))()
+        procstat['cpu_percent'] = getattr(proc, 'get_cpu_percent',
+                                  getattr(proc, 'cpu_percent', None))(interval=0)
 
         # Process network connections (TCP and UDP) (Experimental)
         # !!! High CPU consumption
         # try:
-        #     procstat['tcp'] = len(proc.get_connections(kind="tcp"))
-        #     procstat['udp'] = len(proc.get_connections(kind="udp"))
+        #     procstat['tcp'] = len(proc.connections(kind="tcp"))
+        #     procstat['udp'] = len(proc.connections(kind="udp"))
         # except:
         #     procstat['tcp'] = 0
         #     procstat['udp'] = 0
@@ -1255,7 +1274,8 @@ class GlancesGrabProcesses:
         if psutil_get_io_counter_tag:
             try:
                 # Get the process IO counters
-                proc_io = proc.get_io_counters()
+                proc_io = getattr(proc, 'get_io_counters',
+                          getattr(proc, 'io_counters', None))()
                 io_new = [proc_io.read_bytes, proc_io.write_bytes]
             except psutil.AccessDenied:
                 # Access denied to process IO (no root account)
@@ -1309,7 +1329,8 @@ class GlancesGrabProcesses:
                     self.processcount['total'] += 1
                 # Update thread number (global statistics)
                 try:
-                    self.processcount['thread'] += proc.get_num_threads()
+                    self.processcount['thread'] += getattr(proc, 'get_num_threads',
+                                                   getattr(proc, 'num_threads'))()
                 except:
                     pass
             except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -1773,10 +1794,11 @@ class GlancesStats:
 
         # Uptime
         try:
-            # For PsUtil >= 0.7.0
-            self.uptime = datetime.now() - datetime.fromtimestamp(psutil.get_boot_time())
-        except:
-            self.uptime = datetime.now() - datetime.fromtimestamp(psutil.BOOT_TIME)
+            boot_time = getattr(psutil, 'get_boot_time',
+                        getattr(psutil, 'boot_time'))()
+        except AttributeError:
+            boot_time = psutil.BOOT_TIME
+        self.uptime = datetime.now() - datetime.fromtimestamp(boot_time)
         # Convert uptime to string (because datetime is not JSONifi)
         self.uptime = str(self.uptime).split('.')[0]
 
@@ -1784,7 +1806,10 @@ class GlancesStats:
         self.now = datetime.now()
 
         # Get the number of core (CPU) (Used to display load alerts)
-        self.core_number = psutil.NUM_CPUS
+        try:
+            self.core_number = psutil.cpu_count()
+        except AttributeError:
+            self.core_number = psutil.NUM_CPUS
 
         # get psutil version
         self.psutil_version = psutil.__version__
