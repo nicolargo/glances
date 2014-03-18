@@ -195,7 +195,7 @@ class glancesCurses:
             self.fs_tag = not self.fs_tag
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
-            self.help_tag = not self.help_tag
+            self.args.help_tag = not self.args.help_tag
         elif self.pressedkey == ord('i'):
         # elif self.pressedkey == ord('i') and psutil_get_io_counter_tag:
             # !!! Manage IORate (non existing) on Mac OS
@@ -245,11 +245,16 @@ class glancesCurses:
     def display(self, stats, cs_status="None"):
         """
         Display stats on the screen
+
         stats: Stats database to display
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
+
+        Return:
+            True if the stats have been displayed
+            False if the help have been displayed
         """
 
         # Init the internal line/column dict for Glances Curses
@@ -259,6 +264,12 @@ class glancesCurses:
         # Get the screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+
+        if (self.args.help_tag):
+            # Display the stats...
+            self.display_plugin(stats.get_plugin('help').get_curse(args=self.args))
+            # ... and exit
+            return False
 
         # Update the client server status
         self.args.cs_status = cs_status
@@ -315,6 +326,8 @@ class glancesCurses:
             self.display_plugin(stats_monitor)
             self.display_plugin(stats_processlist, max_y=(screen_y - self.get_curse_height(stats_alert) - 3))
             self.display_plugin(stats_alert)
+
+        return True
 
     def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
         """

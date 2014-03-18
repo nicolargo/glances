@@ -234,6 +234,9 @@ class GlancesMain(object):
         # Default refresh time is 3 seconds
         if (args.time is None): args.time = 3
 
+        # By default Help is hidden
+        args.help_tag = False
+
         # !!! Change global variables regarding to user args
         # !!! To be refactor to use directly the args list in the code
         if (args.time is not None): self.refresh_time = args.time 
