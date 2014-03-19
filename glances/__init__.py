@@ -18,9 +18,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import system lib
+import sys
+
 # Import Glances libs
 # Note: others Glances libs will be imported optionnaly
-from .core.glances_main import GlancesMain
+from glances.core.glances_main import GlancesMain
 
 
 def main(argv=None):
@@ -31,7 +34,7 @@ def main(argv=None):
     if (core.is_standalone()):
 
         # Import the Glances standalone module
-        from .core.glances_standalone import GlancesStandalone
+        from glances.core.glances_standalone import GlancesStandalone
 
         # Init the standalone mode
         standalone = GlancesStandalone(config=core.get_config(),
@@ -45,7 +48,7 @@ def main(argv=None):
     elif (core.is_client()):
 
         # Import the Glances client module
-        from .core.glances_client import GlancesClient
+        from glances.core.glances_client import GlancesClient
 
         # Init the client
         client = GlancesClient(args=core.get_args(),
@@ -57,7 +60,7 @@ def main(argv=None):
             print(_("Error: The server version is not compatible"))
             sys.exit(2)
 
-        print(_("Glances client connected to %s:%s") % (core.server_ip, core.server_port))
+        print("{} {}:{}".format(_("Glances client connected"), core.server_ip, core.server_port))
 
         # Start the client loop
         client.serve_forever()
@@ -65,20 +68,20 @@ def main(argv=None):
         # Shutdown the client
         # !!! How to close the server with CTRL-C
         # !!! Call core.end() with parameters ?
-        client.server_close()
+        client.close()
 
     elif (core.is_server()):
 
         # Import the Glances server module
-        from .core.glances_server import GlancesServer
+        from glances.core.glances_server import GlancesServer
 
         # Init the server
         server = GlancesServer(bind_address=core.bind_ip,
                                bind_port=int(core.server_port),
                                cached_time=core.cached_time,
                                config=core.get_config())
-        # print(_("Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
-        print(_("Glances server is running on %s:%s") % (core.bind_ip, core.server_port))
+        # print(_("DEBUG: Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
+        print("{} {}:{}".format(_("Glances server is running on"), core.bind_ip, core.server_port))
 
         # Set the server login/password (if -P/--password tag)
         if (core.password != ""):

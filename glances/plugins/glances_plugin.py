@@ -40,18 +40,6 @@ class GlancesPlugin(object):
         # Init the limits dictionnary
         self.limits = dict()
 
-    def load_limits(self, config):
-        """
-        Load the limits from the configuration file
-        """
-        if (hasattr(config, 'has_section') and
-            config.has_section(self.plugin_name)):
-            # print "Load limits for %s" % self.plugin_name
-            for s, v in config.items(self.plugin_name):
-                # Read limits
-                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
-                self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
-
     def __repr__(self):
         # Return the raw stats
         return self.stats
@@ -72,6 +60,23 @@ class GlancesPlugin(object):
     def get_stats(self):
         # Return the stats object in JSON format for the RPC API
         return json.dumps(self.stats)
+
+    def load_limits(self, config):
+        """
+        Load the limits from the configuration file
+        """
+        if (hasattr(config, 'has_section') and
+            config.has_section(self.plugin_name)):
+            # print "Load limits for %s" % self.plugin_name
+            for s, v in config.items(self.plugin_name):
+                # Read limits
+                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
+                self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
+
+    def set_limits(self, input_limits):
+        # Set the limits to input_limits
+        self.limits = input_limits
+        return self.limits
 
     def get_limits(self):
         # Return the limits object

@@ -24,7 +24,7 @@ import sys
 import collections
 
 # Import Glances libs
-from ..core.glances_globals import *
+from glances.core.glances_globals import *
 
 
 class GlancesStats(object):
@@ -32,13 +32,13 @@ class GlancesStats(object):
     This class store, update and give stats
     """
 
-    # Internal dictionnary with all plugins instances
-    _plugins = {}
-
     def __init__(self, config=None):
         """
         Init the stats
         """
+
+        # Init the plugin list dict
+        self._plugins = collections.defaultdict(dict)
 
         # Load the plugins
         self.load_plugins()
@@ -90,7 +90,7 @@ class GlancesStats(object):
                 plugname = os.path.basename(plug)[len(header):-3].lower()
                 self._plugins[plugname] = m.Plugin()
 
-    def load_limits(self, config):
+    def load_limits(self, config=None):
         """
         Load the stats limits
         """
@@ -158,19 +158,65 @@ class GlancesStatsServer(GlancesStats):
             self.all_stats[p] = self._plugins[p].get_raw()
 
     def getAll(self):
+        """
+        Return the stats as a dict
+        """
         return self.all_stats
+
+    def getAllPlugins(self):
+        """
+        Return the plugin list
+        """
+        return [p for p in self._plugins]
 
 
 class GlancesStatsClient(GlancesStats):
 
     def __init__(self):
-        # Init the stats
-        # !!! Is it necessary ?
-        GlancesStats.__init__(self)
-
+        
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
+
+        # Load the plugins
+        self.load_plugins()
+
+        # Load the limits
+        self.load_limits()
+
+
+    def load_plugins(self):
+        """
+        Load all plugins serve by the Glances' server
+        """
+        #!!! TODO: call the getAllPlugins() server method
+        #!!! Build the plugins list
+
+        # plug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../plugins")
+        # sys.path.insert(0, plug_dir)
+
+        # header = "glances_"
+        # for plug in os.listdir(plug_dir):
+        #     if (plug.startswith(header) and plug.endswith(".py") and
+        #         plug != (header + "plugin.py")):
+        #         # Import the plugin
+        #         m = __import__(os.path.basename(plug)[:-3])
+        #         # Add the plugin to the dictionnary
+        #         # The key is the plugin name
+        #         # for example, the file glances_xxx.py
+        #         # generate self._plugins_list["xxx"] = ...
+        #         plugname = os.path.basename(plug)[len(header):-3].lower()
+        #         self._plugins[plugname] = m.Plugin()
+        pass
+
+    def load_limits(self, config=None):
+        """
+        Load the limits serve by the Glances' server
+        """
+        # For each plugins, call the init_limits method
+        # for p in self._plugins:
+        #     self._plugins[p].load_limits(config)
+        pass
 
     def update(self, input_stats={}):
         """

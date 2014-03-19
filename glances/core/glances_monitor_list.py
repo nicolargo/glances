@@ -51,9 +51,12 @@ class monitorList:
 
         self.config = config
 
-        if self.config.has_section('monitor'):
+        if ((self.config != None) 
+            and self.config.has_section('monitor')):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')
+        else:
+            self.__monitor_list = []
 
     def __setMonitorList(self, section, key):
         """

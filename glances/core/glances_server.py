@@ -24,11 +24,11 @@ import socket
 import json
 
 # Import Glances libs
-from ..core.glances_globals import __version__
-from ..core.glances_limits import glancesLimits
-from ..core.glances_monitor_list import monitorList
-from ..core.glances_stats import GlancesStatsServer
-from ..core.glances_timer import Timer
+from glances.core.glances_globals import __version__
+from glances.core.glances_limits import glancesLimits
+from glances.core.glances_monitor_list import monitorList
+from glances.core.glances_stats import GlancesStatsServer
+from glances.core.glances_timer import Timer
 
 # Other imports
 try:
@@ -166,6 +166,10 @@ class GlancesInstance():
         # Update and return all the stats
         self.__update__()
         return json.dumps(self.stats.getAll())
+
+    def getAllPlugins(self):
+        # Return the plugins list
+        return json.dumps(self.stats.getAllPlugins())
 
     def getAllLimits(self):
         # Return all the limits

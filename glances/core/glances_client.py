@@ -17,19 +17,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Manage the Glances' client 
+"""
 
-# # Import system libs
+# Import system libs
 import sys
 import socket
 import json
 
-# # Import Glances libs
-from ..core.glances_globals import __version__
-from ..outputs.glances_curses import glancesCurses
-from ..core.glances_stats import GlancesStatsClient
-# from ..core.glances_limits import glancesLimits
-# from ..core.glances_monitor_list import monitorList
-# from ..core.glances_timer import Timer
+# Import Glances libs
+from glances.core.glances_globals import __version__
+from glances.outputs.glances_curses import glancesCurses
+from glances.core.glances_stats import GlancesStatsClient
 
 try:
     # Python 2
@@ -68,6 +68,9 @@ class GlancesClient():
         self.screen = glancesCurses(args=args)
 
     def login(self):
+        """
+        Logon to the server
+        """
         try:
             client_version = self.client.init()
         except socket.error as err:
@@ -83,24 +86,10 @@ class GlancesClient():
         # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
         return __version__[:3] == client_version[:3]
 
-    # def client_get_limits(self):
-    #     try:
-    #         serverlimits = json.loads(self.client.getAllLimits())
-    #     except Exception:
-    #         return {}
-    #     else:
-    #         return serverlimits
-
-    # def client_get_monitored(self):
-    #     try:
-    #         servermonitored = json.loads(self.client.getAllMonitored())
-    #     except Exception:
-    #         return []
-    #     else:
-    #         return servermonitored
-
     def update(self):
-        # Get stats from server
+        """
+        Get stats from server
+        """
         try:
             server_stats = json.loads(self.client.getAll())
         except Exception:
@@ -110,10 +99,18 @@ class GlancesClient():
         self.stats.update(server_stats)
 
     def serve_forever(self):
+        """
+        Main loop
+        """
         while True:
             # Update the stats
             self.update()
-            # print self.stats.getAll()
 
             # Update the screen
             self.screen.update(self.stats, cs_status="Connected")
+
+    def close(self):
+        """
+        End of the client session
+        """
+        pass
