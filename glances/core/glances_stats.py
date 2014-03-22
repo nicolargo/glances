@@ -98,6 +98,7 @@ class GlancesStats(object):
 
         # For each plugins, call the init_limits method
         for p in self._plugins:
+            # print "DEBUG: Load limits for %s" % p
             self._plugins[p].load_limits(config)
 
     def __update__(self, input_stats):
@@ -109,12 +110,11 @@ class GlancesStats(object):
             # For standalone and server modes
             # For each plugins, call the update method
             for p in self._plugins:
+                # print "DEBUG: Update %s stats" % p
                 self._plugins[p].update()
         else:
             # For client mode
             # Update plugin stats with items sent by the server
-            # print input_stats['processcount']
-            # sys.exit(2)
             for p in input_stats:
                 self._plugins[p].set_stats(input_stats[p])
 
@@ -139,9 +139,9 @@ class GlancesStatsServer(GlancesStats):
     This class store, update and give stats for the server
     """
 
-    def __init__(self):
+    def __init__(self, config=None):
         # Init the stats
-        GlancesStats.__init__(self)
+        GlancesStats.__init__(self, config)
 
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server
@@ -153,7 +153,7 @@ class GlancesStatsServer(GlancesStats):
         """
 
         # Update the stats
-        GlancesStats.__update__(self, input_stats)
+        GlancesStats.update(self)
 
         # Build the all_stats with the get_raw() method of the plugins
         for p in self._plugins:

@@ -26,7 +26,6 @@ import json
 # Import Glances libs
 from glances.core.glances_globals import __version__
 from glances.core.glances_limits import glancesLimits
-from glances.core.glances_monitor_list import monitorList
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 
@@ -137,14 +136,11 @@ class GlancesInstance():
         # Init the limits
         self.limits = glancesLimits(config)
 
-        # Init the monitoring list
-        self.monitors = monitorList(config)
-
         # Init stats
-        self.stats = GlancesStatsServer()
+        self.stats = GlancesStatsServer(config)
 
         # Initial update
-        self.stats.update({})
+        self.stats.update()
 
         # cached_time is the minimum time interval between stats updates
         # i.e. XML/RPC calls will not retrieve updated info until the time
@@ -177,7 +173,8 @@ class GlancesInstance():
 
     def getAllMonitored(self):
         # Return the processes monitored list
-        return json.dumps(self.monitors.getAll())
+        # return json.dumps(self.monitors.getAll())
+        return json.dumps(self.stats.getAll()['monitor'])
 
     def __getattr__(self, item):
         """

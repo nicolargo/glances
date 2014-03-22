@@ -84,9 +84,12 @@ class GlancesClient():
 
         # Test if client and server are "compatible"
         if (__version__[:3] == client_version[:3]):
-            # Init stats and limits
+            # Init stats
             self.stats = GlancesStatsClient()
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+
+            # Load limits from the configuration file
+            # Each client can choose its owns limits 
             self.stats.load_limits(self.config)
 
             # Init screen
@@ -104,9 +107,11 @@ class GlancesClient():
         Return the client/server connection status:
         - Connected: Connection OK
         - Disconnected: Connection NOK
-        """        
+        """ 
+        # Update the stats
         try:
             server_stats = json.loads(self.client.getAll())
+            server_stats['monitor'] = json.loads(self.client.getAllMonitored())
         except socket.error as e:
             # Client can not get server stats
             return "Disconnected"

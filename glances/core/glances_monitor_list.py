@@ -84,6 +84,7 @@ class monitorList:
                     value["command"] = command
                     value["countmin"] = countmin
                     value["countmax"] = countmax
+                    value["count"] = None
                     value["result"] = None
                     # Add the item to the list
                     self.__monitor_list.append(value)

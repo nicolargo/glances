@@ -46,6 +46,7 @@ class Plugin(GlancesPlugin):
         """
         Load the monitored list from the conf file
         """
+        # print "DEBUG: Monitor plugin load config file %s" % config
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
@@ -55,6 +56,7 @@ class Plugin(GlancesPlugin):
         """
         # Update the monitored list (result of command)
         self.glances_monitors.update()
+
         # Put it on the stats var
         self.stats = self.glances_monitors.get()
 
@@ -62,6 +64,8 @@ class Plugin(GlancesPlugin):
 
     def get_alert(self, nbprocess=0, countmin=None, countmax=None):
         # Return the alert status relative to the process number
+        if (nbprocess is None):
+            return 'OK'
         if (countmin is None):
             countmin = nbprocess
         if (countmax is None):
