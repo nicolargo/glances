@@ -191,6 +191,12 @@ class glancesProcesses:
         """
         Return the processlist
         """
+        return self.processlist
+
+    def getsortlist(self, sortedby=None):
+        """
+        Return the processlist
+        """
         if (sortedby is None):
             # No need to sort...
             return self.processlist

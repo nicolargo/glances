@@ -43,7 +43,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 4
 
-        # Note 'processes' is already init in the _processes.py script
+        # Note: 'glances_processes' is already init in the glances_processes.py script
 
     def update(self):
         """
@@ -51,8 +51,11 @@ class Plugin(GlancesPlugin):
         """
 
         # Note: Update is done in the processcount plugin
+
+        # Just return the processes list
         self.stats = glances_processes.getlist()
 
+        return self.stats
 
     def msg_curse(self, args=None):
         """
@@ -101,7 +104,7 @@ class Plugin(GlancesPlugin):
         tag_proc_time = True
 
         # Loop over processes (sorted by the sort key previously compute)
-        for p in glances_processes.getlist(process_sort_key):
+        for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # Name
             msg = "{0:15}".format(p['name'][:15])
@@ -168,3 +171,39 @@ class Plugin(GlancesPlugin):
 
         # Return the message with decoration
         return ret
+
+    def sortlist(self, sortedby=None):
+        """
+        Return the self.stats sorted by sortedby
+        """
+        if (sortedby is None):
+            # No need to sort...
+            return self.stats
+
+        sortedreverse = True
+        if (sortedby == 'name'):
+            sortedreverse = False
+
+        if (sortedby == 'io_counters'):
+            # Specific case for io_counters
+            # Sum of io_r + io_w
+            try:
+                # Sort process by IO rate (sum IO read + IO write)
+                listsorted = sorted(self.stats,
+                                    key=lambda process: process[sortedby][0] -
+                                    process[sortedby][2] + process[sortedby][1] -
+                                    process[sortedby][3],
+                                    reverse=sortedreverse)
+            except Exception:
+                listsorted = sorted(self.stats,
+                                    key=lambda process: process['cpu_percent'],
+                                    reverse=sortedreverse)
+        else:
+            # Others sorts
+            listsorted = sorted(self.stats,
+                                key=lambda process: process[sortedby],
+                                reverse=sortedreverse)
+
+        self.stats = listsorted
+
+        return self.stats
