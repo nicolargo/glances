@@ -47,7 +47,8 @@ class GlancesClient():
     def __init__(self,
                  args=None,
                  server_address="localhost", server_port=61209,
-                 username="glances", password=""):
+                 username="glances", password="",
+                 config=None):
         # Build the URI
         if (password != ""):
             uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
@@ -61,11 +62,9 @@ class GlancesClient():
             print(_("Error: creating client socket") + " %s" % uri)
             pass
 
-        # Init stats
-        self.stats = GlancesStatsClient()
-
-        # Init screen
-        self.screen = glancesCurses(args=args)
+        # Store the arg/config
+        self.args = args
+        self.config = config
 
     def login(self):
         """
@@ -82,21 +81,38 @@ class GlancesClient():
             else:
                 print("{} ({})".format(_("Error: Connection to server failed"), err))
             sys.exit(2)
-        # Debug
-        # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
-        return __version__[:3] == client_version[:3]
+
+        if (__version__[:3] == client_version[:3]):
+            # Init stats and limits
+            self.stats = GlancesStatsClient()
+            self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+            self.stats.load_limits(self.config)
+
+            # Init screen
+            self.screen = glancesCurses(args=self.args)
+
+            # Debug
+            # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
+            return True
+        else:
+            return False
 
     def update(self):
         """
         Get stats from server
-        """
+        Return the client/server connection status:
+        - Connected: Connection OK
+        - Disconnected: Connection NOK
+        """        
         try:
             server_stats = json.loads(self.client.getAll())
-        except Exception:
-            server_stats = {}
-
-        # Put it in the internal dict
-        self.stats.update(server_stats)
+        except socket.error as e:
+            # Client can not get server stats
+            return "Disconnected"
+        else:
+            # Put it in the internal dict
+            self.stats.update(server_stats)
+            return "Connected"
 
     def serve_forever(self):
         """
@@ -104,10 +120,10 @@ class GlancesClient():
         """
         while True:
             # Update the stats
-            self.update()
+            cs_status = self.update()
 
             # Update the screen
-            self.screen.update(self.stats, cs_status="Connected")
+            self.screen.update(self.stats, cs_status=cs_status)
 
     def close(self):
         """

@@ -51,6 +51,9 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 1
 
+        # Init stats
+        self.stats = {}
+
     def update(self):
         """
         Update load stats

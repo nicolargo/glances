@@ -53,14 +53,12 @@ def main(argv=None):
         # Init the client
         client = GlancesClient(args=core.get_args(),
                                server_address=core.server_ip, server_port=int(core.server_port),
-                               username=core.username, password=core.password)
+                               username=core.username, password=core.password, config=core.get_config())
 
         # Test if client and server are in the same major version
         if (not client.login()):
-            print(_("Error: The server version is not compatible"))
+            print(_("Error: The server version is not compatible with the client"))
             sys.exit(2)
-
-        print("{} {}:{}".format(_("Glances client connected"), core.server_ip, core.server_port))
 
         # Start the client loop
         client.serve_forever()
