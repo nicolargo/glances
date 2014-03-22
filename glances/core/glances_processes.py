@@ -160,10 +160,10 @@ class glancesProcesses:
                     continue
                 # Update processcount (global statistics)
                 try:
-                    self.processcount[str(proc.status)] += 1
+                    self.processcount[str(proc.status())] += 1
                 except KeyError:
                     # Key did not exist, create it
-                    self.processcount[str(proc.status)] = 1
+                    self.processcount[str(proc.status())] = 1
                 else:
                     self.processcount['total'] += 1
                 # Update thread number (global statistics)

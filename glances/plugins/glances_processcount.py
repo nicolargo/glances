@@ -33,7 +33,7 @@ class Plugin(GlancesPlugin):
         GlancesPlugin.__init__(self)
 
         # Nothing else to do...
-        # 'processes' is already init in the _processes.py script
+        # 'processes' is already init in the glances_processes.py script
 
         # We want to display the stat in the curse interface
         self.display_curse = True

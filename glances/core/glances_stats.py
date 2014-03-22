@@ -113,14 +113,12 @@ class GlancesStats(object):
         else:
             # For client mode
             # Update plugin stats with items sent by the server
+            # print input_stats['processcount']
+            # sys.exit(2)
             for p in input_stats:
-                # print "Set: %s" % p
-                # print "Input: %s" % input_stats[p]
-                # print "Plugins: %s" % self._plugins
                 self._plugins[p].set_stats(input_stats[p])
 
     def update(self, input_stats={}):
-        # !!! Why __update__ and update method ?
         # Update the stats
         self.__update__(input_stats)
 
@@ -137,6 +135,9 @@ class GlancesStats(object):
 
 
 class GlancesStatsServer(GlancesStats):
+    """
+    This class store, update and give stats for the server
+    """
 
     def __init__(self):
         # Init the stats
@@ -172,14 +173,13 @@ class GlancesStatsServer(GlancesStats):
 
 
 class GlancesStatsClient(GlancesStats):
+    """
+    This class store, update and give stats for the client
+    """
 
     def __init__(self):        
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
-
-        # Init the all_stats dict used by the server
-        # all_stats is a dict of dicts filled by the server
-        self.all_stats = collections.defaultdict(dict)
 
     def set_plugins(self, input_plugins):
         """
@@ -198,19 +198,5 @@ class GlancesStatsClient(GlancesStats):
             # The key is the plugin name
             # for example, the file glances_xxx.py
             # generate self._plugins_list["xxx"] = ...
+            # print "DEBUG: Init %s plugin" % plug
             self._plugins[plug] = m.Plugin()
-
-    def update(self, input_stats={}):
-        """
-        Update the stats
-        """
-
-        # Update the stats
-        GlancesStats.__update__(self, input_stats)
-
-        # Build the all_stats with the get_raw() method of the plugins
-        for p in self._plugins:
-            self.all_stats[p] = self._plugins[p].get_raw()
-
-    def getAll(self):
-        return self.all_stats

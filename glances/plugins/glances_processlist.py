@@ -34,17 +34,6 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
-        # Nothing else to do...
-        # 'processes' is already init in the _processes.py script
-
-    def update(self):
-        """
-        Update processes stats
-        """
-
-        # Note: Update is done in the processcount plugin
-
-        self.stats = glances_processes.getlist()
         # We want to display the stat in the curse interface
         self.display_curse = True
         # Set the message position
@@ -53,6 +42,17 @@ class Plugin(GlancesPlugin):
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = 4
+
+        # Note 'processes' is already init in the _processes.py script
+
+    def update(self):
+        """
+        Update processes stats
+        """
+
+        # Note: Update is done in the processcount plugin
+        self.stats = glances_processes.getlist()
+
 
     def msg_curse(self, args=None):
         """

@@ -58,9 +58,9 @@ class GlancesClient():
         # Try to connect to the URI
         try:
             self.client = ServerProxy(uri)
-        except Exception:
-            print(_("Error: creating client socket") + " %s" % uri)
-            pass
+        except Exception as e:
+            print("{} {} ({})".format(_("Error: creating client socket"), uri, e))
+            sys.exit(2)
 
         # Store the arg/config
         self.args = args
@@ -82,6 +82,7 @@ class GlancesClient():
                 print("{} ({})".format(_("Error: Connection to server failed"), err))
             sys.exit(2)
 
+        # Test if client and server are "compatible"
         if (__version__[:3] == client_version[:3]):
             # Init stats and limits
             self.stats = GlancesStatsClient()
@@ -116,7 +117,7 @@ class GlancesClient():
 
     def serve_forever(self):
         """
-        Main loop
+        Main client loop
         """
         while True:
             # Update the stats
