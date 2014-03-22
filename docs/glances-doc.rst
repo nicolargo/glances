@@ -147,7 +147,7 @@ The following commands (key pressed) are supported while in Glances:
 ``y``
     Show/hide hddtemp stats (only available with -y flag)
 ``z``
-    Show/hide processes list(for low CPU consumption)
+    Show/hide processes list (for low CPU consumption)
 ``1``
     Switch between global CPU and per-CPU stats
 

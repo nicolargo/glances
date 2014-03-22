@@ -1206,7 +1206,7 @@ class GlancesGrabProcesses:
             procstat['name'] = proc.name()
         except TypeError:
             procstat['name'] = proc.name
-            
+
 
         # Process username (cached with internal cache)
         try:
@@ -3811,7 +3811,7 @@ class glancesScreen:
                 except UnicodeEncodeError:
                     self.term_window.addnstr(monitor_y + 3 + processes,
                                              process_x + process_name_x,
-                                             process_name, max_process_name)                    
+                                             process_name, max_process_name)
 
     def displayCaption(self, cs_status="None"):
         """
@@ -3991,7 +3991,7 @@ class glancesScreen:
                              [_("h"), _("Show/hide this help screen")],
                              [_("t"), _("View network I/O as combination")],
                              [_("u"), _("View cumulative network I/O")],
-                             [_("z"), _("Show/hide processes list (low CPU usage)")],                             
+                             [_("z"), _("Show/hide processes list")],
                              [_("q"), _("Quit (Esc and Ctrl-C also work)")]]
             key_table_x = self.help_x + 38
             key_table_y = limits_table_y + 1
