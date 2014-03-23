@@ -150,7 +150,7 @@ class Plugin(GlancesPlugin):
         msg = "{0}".format(format(self.auto_unit(self.stats['free'], '>6')))
         ret.append(self.curse_add_line(msg))
         # Cached memory usage
-        if ('free' in self.stats):
+        if ('cached' in self.stats):
             msg = "  {0:8}".format(_("cached:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.auto_unit(self.stats['cached']), '>6'))

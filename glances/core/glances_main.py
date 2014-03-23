@@ -27,10 +27,10 @@ import argparse
 # Import Glances libs
 # !!! Todo: rename class
 # GlancesExemple
-from ..core.glances_globals import __appname__, __version__, __author__, __license__
-from ..core.glances_globals import *
-from ..core.glances_config import Config
-from ..core.glances_stats import GlancesStats, GlancesStatsServer
+from glances.core.glances_globals import __appname__, __version__, __author__, __license__
+from glances.core.glances_globals import *
+from glances.core.glances_config import Config
+from glances.core.glances_stats import GlancesStats, GlancesStatsServer
 
 class GlancesMain(object):
     """

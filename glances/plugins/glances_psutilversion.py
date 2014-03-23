@@ -22,8 +22,8 @@
 # Check for PSUtil already done in the glances_core script
 from psutil import __version__ as __psutil_version__
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -43,5 +43,5 @@ class Plugin(GlancesPlugin):
         # Return PsUtil version as a tuple
         try:
             self.stats = tuple([int(num) for num in __psutil_version__.split('.')])
-        except Exception:
+        except NameError:
             self.stats = None

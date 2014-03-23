@@ -17,17 +17,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Batinfo (batterie) plugin
+"""
 
 # Import system libs
 # batinfo library (optional; Linux-only)
 try:
     import batinfo
-except:
+except ImportError:
     pass
 
-# Import Glances lib
-from glances_plugin import GlancesPlugin
-# from glances.core.glances_timer import getTimeSinceLastUpdate
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -39,6 +41,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self):
         GlancesPlugin.__init__(self)
+
+        #!!! TODO: display plugin...
 
         # Init the sensor class
         self.glancesgrabbat = glancesGrabBat()
@@ -63,6 +67,7 @@ class glancesGrabBat:
         try:
             self.bat = batinfo.batteries()
             self.initok = True
+            self.bat_list = []
             self.__update__()
         except Exception:
             self.initok = False
@@ -97,6 +102,6 @@ class glancesGrabBat:
                 bsum = bsum + int(self.bat_list[bcpt].capacity)
             except ValueError:
                 return []
-        bcpt = bcpt + 1
+            bcpt = bcpt + 1
         # Return the global percent
         return int(bsum / bcpt)

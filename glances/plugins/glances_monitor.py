@@ -26,8 +26,6 @@ from glances.core.glances_monitor_list import monitorList as glancesMonitorList
 class Plugin(GlancesPlugin):
     """
     Glances's monitor Plugin
-
-    Only for display
     """
 
     def __init__(self):
@@ -42,6 +40,10 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 3
 
+        # Init stats
+        self.glances_monitors = None
+        self.stats = []
+
     def load_limits(self, config):
         """
         Load the monitored list from the conf file
@@ -54,6 +56,10 @@ class Plugin(GlancesPlugin):
         Nothing to do here
         Just return the global glances_log
         """
+        # Check if the glances_monitor instance is init
+        if (self.glances_monitors == None):
+            return self.stats
+
         # Update the monitored list (result of command)
         self.glances_monitors.update()
 
@@ -62,7 +68,7 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_alert(self, nbprocess=0, countmin=None, countmax=None):
+    def get_alert(self, nbprocess=0, countmin=None, countmax=None, header="", log=False):
         # Return the alert status relative to the process number
         if (nbprocess is None):
             return 'OK'
@@ -87,6 +93,10 @@ class Plugin(GlancesPlugin):
         """
         # Init the return message
         ret = []
+
+        # Stats exist ?
+        if (self.stats == []):
+            return ret
 
         # Build the string message
         for m in self.stats:

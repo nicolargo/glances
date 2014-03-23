@@ -20,10 +20,10 @@
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
-from psutil import NUM_CPUS
+from psutil import cpu_count
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -41,16 +41,26 @@ class Plugin(GlancesPlugin):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
+        # Return a dict (with both physical and log cpu number) instead of a integer
+        self.stats = None
+
     def update(self):
         """
         Update core stats
         """
 
-        # !!! Note: The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
-        # !!! TODO: We had to return a dict (with both hys and log cpu number) instead of a integer
+        # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
+        # Return a dict with:
+        # - phys: physical cores only (hyper thread CPUs are excluded)
+        # - log: logical CPUs in the system
+        # Return None if undefine
+        core_stats = {}
         try:
-            self.stats = NUM_CPUS
-        except Exception:
-            self.stats = None
+            core_stats["phys"] = cpu_count(logical=False)
+            core_stats["log"] = cpu_count()
+        except NameError:
+            core_stats = None
+        
+        self.stats = core_stats
 
         return self.stats

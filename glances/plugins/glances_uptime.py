@@ -27,8 +27,8 @@ except:
 
 from datetime import datetime
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -57,12 +57,14 @@ class Plugin(GlancesPlugin):
         """
         try:
             # For PsUtil >= 0.7.0
-            self.uptime = datetime.now() - datetime.fromtimestamp(get_boot_time())
-        except:
-            self.uptime = datetime.now() - datetime.fromtimestamp(BOOT_TIME)
+            uptime = datetime.now() - datetime.fromtimestamp(get_boot_time())
+        except NameError:
+            uptime = datetime.now() - datetime.fromtimestamp(BOOT_TIME)
+        else:
+            uptime = '.UNKNOW'
 
         # Convert uptime to string (because datetime is not JSONifi)
-        self.stats = str(self.uptime).split('.')[0]
+        self.stats = str(uptime).split('.')[0]
 
     def msg_curse(self, args=None):
         """

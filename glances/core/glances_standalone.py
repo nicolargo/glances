@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import Glances libs
-from ..core.glances_stats import GlancesStats
-from ..outputs.glances_curses import glancesCurses
+from glances.core.glances_stats import GlancesStats
+from glances.outputs.glances_curses import glancesCurses
 
 
 class GlancesStandalone():

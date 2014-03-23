@@ -17,13 +17,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+CPU stats (per cpu)
+"""
 
 # Import system libs
 # Check for PSUtil already done in the glances_core script
 from psutil import cpu_times
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -44,6 +47,11 @@ class Plugin(GlancesPlugin):
         self.column_curse = 0
         # Enter -1 to diplay bottom
         self.line_curse = 1
+
+        # Init stats
+        self.stats = []
+        self.percputime_total_new = []
+        self.percputime_new = []
 
     def update(self):
         """

@@ -17,6 +17,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+Init the Glances software
+"""
 
 # Import system lib
 import sys
@@ -26,7 +29,7 @@ import sys
 from glances.core.glances_main import GlancesMain
 
 
-def main(argv=None):
+def main():
     # Create the Glances main instance
     core = GlancesMain()
 

@@ -25,7 +25,7 @@ Glances system plugin
 import os
 import platform
 
-# from ..plugins.glances_plugin import GlancesPlugin
+# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

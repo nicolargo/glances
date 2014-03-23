@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_globals import glances_processes, process_auto_by
 
 

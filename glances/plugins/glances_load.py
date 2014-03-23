@@ -88,7 +88,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:4} ".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        msg = "{0:3}-core".format(self.core_plugin.update())
+        msg = "{0:3}-core".format(self.core_plugin.update()["log"])
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
@@ -104,7 +104,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.stats['min5'], '>5.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min5'], max=100 * self.core_plugin.update())))
+            msg, self.get_alert_log(self.stats['min5'], max=100 * self.core_plugin.update()["log"])))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
@@ -112,6 +112,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.stats['min15'], '>5.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min15'], max=100 * self.core_plugin.update())))
+            msg, self.get_alert_log(self.stats['min15'], max=100 * self.core_plugin.update()["log"])))
 
         return ret

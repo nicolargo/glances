@@ -27,8 +27,8 @@ except ImportError:
 
 # Import Glances lib
 from glances.core.glances_globals import is_python3
-from glances_hddtemp import Plugin as HddTempPlugin
-from glances_plugin import GlancesPlugin
+from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 # from glances.core.glances_timer import getTimeSinceLastUpdate
 
 

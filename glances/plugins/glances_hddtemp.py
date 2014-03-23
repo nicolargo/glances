@@ -21,9 +21,8 @@
 # Import system libs
 import socket
 
-# Import Glances lib
-from glances_plugin import GlancesPlugin
-# from glances.core.glances_timer import getTimeSinceLastUpdate
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -70,6 +69,7 @@ class glancesGrabHDDTemp:
             self.initok = False
         else:
             self.initok = True
+            self.hddtemp_list = []
 
     def __update__(self):
         """

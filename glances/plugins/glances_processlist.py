@@ -18,9 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import sys libs
 from datetime import timedelta
 
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_globals import glances_processes, process_auto_by
 
 
@@ -73,7 +75,7 @@ class Plugin(GlancesPlugin):
         sort_style = 'BOLD'
 
         # Header
-        msg = "{0:15}".format(_(""))
+        msg = "{0:15}".format(" ")
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(_("CPU%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
@@ -151,20 +153,26 @@ class Plugin(GlancesPlugin):
                 msg = " "
             msg = "{0:>9}".format(msg)
             ret.append(self.curse_add_line(msg, optional=True))
-            # IO read
-            io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
-            if (io_rs == 0):
-                msg = "{0:>6}".format("0")
+            # IO read/write
+            if ('io_counters' in p):
+                # IO read
+                io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
+                if (io_rs == 0):
+                    msg = "{0:>6}".format("0")
+                else:
+                    msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
+                ret.append(self.curse_add_line(msg, optional=True))
+                # IO write
+                io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
+                if (io_ws == 0):
+                    msg = "{0:>6}".format("0")
+                else:
+                    msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
+                ret.append(self.curse_add_line(msg, optional=True))
             else:
-                msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
-            # IO write
-            io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
-            if (io_ws == 0):
-                msg = "{0:>6}".format("0")
-            else:
-                msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
+                msg = "{0:>6}".format("?")
+                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg, optional=True))
             # Command line
             msg = " {0}".format(p['cmdline'])
             ret.append(self.curse_add_line(msg, optional=True))

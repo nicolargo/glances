@@ -20,7 +20,8 @@
 
 __appname__ = 'glances'
 
-from ..core.glances_globals import *
+# Import Glances lib
+from glances.core.glances_globals import *
 
 # Import system libs
 import os

@@ -21,8 +21,8 @@
 # Import system libs
 from datetime import datetime
 
-# from ..plugins.glances_plugin import GlancesPlugin
-from glances_plugin import GlancesPlugin
+# Import Glances libs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

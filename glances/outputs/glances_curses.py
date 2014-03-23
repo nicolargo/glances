@@ -28,8 +28,8 @@ except ImportError:
     sys.exit(1)
 
 # Import Glances lib
-from ..core.glances_timer import Timer
-from ..core.glances_globals import glances_logs
+from glances.core.glances_timer import Timer
+from glances.core.glances_globals import glances_logs
 
 
 class glancesCurses:
@@ -100,7 +100,7 @@ class glancesCurses:
         if self.hascolors:
             # Colors text styles
             self.no_color = curses.color_pair(1)
-            self.default_color = curses.color_pair(3) | A_BOLD
+            self.default_color = curses.color_pair(3) | A_BOLD 
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD

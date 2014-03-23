@@ -21,6 +21,9 @@
 # Execute with
 # $ python glances/__main__.py (2.6+)
 # $ python -m glances          (2.7+)
+"""
+Allow user to run Glances as a module from a dir or zip file
+"""
 
 import sys
 
