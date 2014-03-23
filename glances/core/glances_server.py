@@ -178,10 +178,10 @@ class GlancesInstance():
 
     def __getattr__(self, item):
         """
-        Overwrite the getattr in case of attribute is not found 
+        Overwrite the getattr in case of attribute is not found
         The goal is to dynamicaly generate the API get'Stats'() methods
         """
-        
+
         # print "DEBUG: Call method: %s" % item
         header = 'get'
         # Check if the attribute starts with 'get'
@@ -192,28 +192,29 @@ class GlancesInstance():
                 self.stats.update()
                 # Return the attribute
                 return getattr(self.stats, item)
-            except Exception, e:
+            except Exception:
                 # The method is not found for the plugin
                 raise AttributeError(item)
         else:
             # Default behavior
             raise AttributeError(item)
 
+
 class GlancesServer():
     """
     This class creates and manages the TCP server
     """
 
-    def __init__(self, bind_address="0.0.0.0", 
+    def __init__(self, bind_address="0.0.0.0",
                  bind_port=61209,
-                 requestHandler=GlancesXMLRPCHandler, 
+                 requestHandler=GlancesXMLRPCHandler,
                  cached_time=1,
                  config=None):
         # Init the XML RPC server
         try:
             self.server = GlancesXMLRPCServer(bind_address, bind_port, requestHandler)
-        except Exception, err:
-            print(_("Error: Can not start Glances server (%s)") % err)
+        except Exception as err:
+            print(_("Error: Cannot start Glances server (%s)") % err)
             sys.exit(2)
 
         # The users dict
