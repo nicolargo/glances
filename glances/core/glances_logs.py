@@ -23,7 +23,7 @@ import time
 from datetime import datetime
 
 # Import Glances libs
-from glances.core.glances_globals import process_auto_by
+from glances.core.glances_globals import glances_processes
 
 
 class glancesLogs:
@@ -55,23 +55,17 @@ class glancesLogs:
         # Init the logs list
         self.logs_list = []
 
-        # Automaticaly define the sort to apply on the processes list
-        self.sort_process_by = 'none'
-
-
     def get(self):
         """
         Return the logs list (RAW)
         """
         return self.logs_list
 
-
     def len(self):
         """
         Return the number of item in the log list
         """
         return self.logs_list.__len__()
-
 
     def __itemexist__(self, item_type):
         """
@@ -86,6 +80,35 @@ class glancesLogs:
                 return i
         return -1
 
+    def set_process_sort(self, item_type):
+        """
+        Define the process auto sort key from the alert type
+        """
+        # Process sort depending on alert type
+        if (item_type.startswith("MEM")):
+            # Sort TOP process by memory_percent
+            process_auto_by = 'memory_percent'
+        elif (item_type.startswith("CPU_IOWAIT")):
+            # Sort TOP process by io_counters (only for Linux OS)
+            process_auto_by = 'io_counters'
+        else:
+            # Default sort is...
+            process_auto_by = 'cpu_percent'
+
+        glances_processes.setsortkey(process_auto_by)
+
+        return process_auto_by
+
+    def reset_process_sort(self):
+        """
+        Reset the process_auto_by variable
+        """
+        # Default sort is...
+        process_auto_by = 'cpu_percent'
+
+        glances_processes.setsortkey(process_auto_by)
+
+        return process_auto_by
 
     def add(self, item_state, item_type, item_value, proc_list=[], proc_desc=""):
         """
@@ -94,25 +117,15 @@ class glancesLogs:
         Else:
           Update the existing item
         """
-
-        # Add Top process sort depending on alert type
-        process_auto_by = 'cpu_percent'
-        if (item_type.startswith("MEM")):
-            # Sort TOP process by memory_percent
-            process_auto_by = 'memory_percent'
-        elif (item_type.startswith("CPU IO")):
-            # Sort TOP process by io_counters (only for Linux OS)
-            process_auto_by = 'io_counters'
-        elif (item_type.startswith("MON")):
-            # !!! Never in v2 because MON are not logged...
-            # Do no sort process for monitored prcesses list
-            self.sort_process_by = 'none'
-
         # Add or update the log
         item_index = self.__itemexist__(item_type)
         if (item_index < 0):
             # Item did not exist, add if WARNING or CRITICAL
             if ((item_state == "WARNING") or (item_state == "CRITICAL")):
+                # Define the automatic process sort key
+                self.set_process_sort(item_type)
+
+                # Create the new log item
                 # Time is stored in Epoch format
                 # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
                 item = []
@@ -126,23 +139,27 @@ class glancesLogs:
                 item.append(item_value)       # MIN
                 item.append(item_value)       # SUM
                 item.append(1)                # COUNT
-                # Process list is sorted automaticaly
+                # Process list is sorted automaticaly 
                 # Overwrite the user choise
-                topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                                    reverse=True)
-                item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
+                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                #                     reverse=True)
+                # item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
+                item.append([])               # TOP 3 PROCESS LIST
                 item.append(proc_desc)        # MONITORED PROCESSES DESC
+
+                # Add the item to the list
                 self.logs_list.insert(0, item)
                 if self.len() > self.logs_max:
                     self.logs_list.pop()
         else:
             # Item exist, update
             if ((item_state == "OK") or (item_state == "CAREFUL")):
+                # Reset the automatic process sort key
+                self.reset_process_sort()
+
                 # Close the item
                 self.logs_list[item_index][1] = time.mktime(
                     datetime.now().timetuple())
-                # TOP PROCESS LIST
-                self.logs_list[item_index][9] = []
             else:
                 # Update the item
                 # State
@@ -160,17 +177,18 @@ class glancesLogs:
                 self.logs_list[item_index][8] += 1
                 self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
                                                  self.logs_list[item_index][8])
-                # Process list is sorted automaticaly
-                # Overwrite the user choise
-                topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                                    reverse=True)
                 # TOP PROCESS LIST
-                self.logs_list[item_index][9] = topprocess[0:3]
+                # # Process list is sorted automaticaly
+                # # Overwrite the user choise
+                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                #                     reverse=True)
+                # # TOP PROCESS LIST
+                # self.logs_list[item_index][9] = topprocess[0:3]
+                self.logs_list[item_index][9] = []
                 # MONITORED PROCESSES DESC
                 self.logs_list[item_index][10] = proc_desc
 
         return self.len()
-
 
     def clean(self, critical=False):
         """

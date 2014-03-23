@@ -47,6 +47,7 @@ class glancesProcesses:
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
         # Init
+        self.processsort = 'cpu_percent'
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
@@ -192,6 +193,19 @@ class glancesProcesses:
         Return the processlist
         """
         return self.processlist
+
+    def getsortkey(self):
+        """
+        Return the current sort key for automatic sort
+        """
+        return self.processsort
+
+    def setsortkey(self, sortedby):
+        """
+        Return the current sort key for automatic sort
+        """
+        self.processsort = sortedby
+        return self.processsort
 
     def getsortlist(self, sortedby=None):
         """

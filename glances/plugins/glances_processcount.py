@@ -20,7 +20,7 @@
 
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_globals import glances_processes, process_auto_by
+from glances.core.glances_globals import glances_processes
 
 
 class Plugin(GlancesPlugin):
@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
         if (args.process_sorted_by == 'auto'):
             msg = "{0}".format(_("sorted automatically"))
             ret.append(self.curse_add_line(msg))
-            msg = " {0} {1}".format(_("by"), process_auto_by)
+            msg = " {0} {1}".format(_("by"), glances_processes.getsortkey())
             ret.append(self.curse_add_line(msg))
         else:
             msg = "{0} {1}".format(_("sorted by"), args.process_sorted_by)

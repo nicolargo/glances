@@ -23,7 +23,7 @@ from datetime import timedelta
 
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_globals import glances_processes, process_auto_by
+from glances.core.glances_globals import glances_processes
 
 
 class Plugin(GlancesPlugin):
@@ -69,7 +69,7 @@ class Plugin(GlancesPlugin):
 
         # Compute the sort key
         if (args.process_sorted_by == 'auto'):
-            process_sort_key = process_auto_by
+            process_sort_key = glances_processes.getsortkey()
         else:
             process_sort_key = args.process_sorted_by
         sort_style = 'BOLD'
