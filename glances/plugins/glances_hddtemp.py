@@ -27,11 +27,10 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
     """
-    Glances's HDD temperature sensors Plugin
+    Glances' HDD temperature sensors plugin
 
     stats is a list
     """
-
     def __init__(self):
         GlancesPlugin.__init__(self)
 
@@ -44,7 +43,7 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """
-        Update Sensors stats
+        Update HDD stats
         """
         self.stats = self.glancesgrabhddtemp.get()
 
@@ -53,23 +52,14 @@ class glancesGrabHDDTemp:
     """
     Get hddtemp stats using a socket connection
     """
-    cache = ""
-    address = "127.0.0.1"
-    port = 7634
-
-    def __init__(self):
+    def __init__(self, host="127.0.0.1", port=7634):
         """
         Init hddtemp stats
         """
-        try:
-            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sck.connect((self.address, self.port))
-            sck.close()
-        except Exception:
-            self.initok = False
-        else:
-            self.initok = True
-            self.hddtemp_list = []
+        self.host = host
+        self.port = port
+        self.cache = ""
+        self.hddtemp_list = []
 
     def __update__(self):
         """
@@ -78,51 +68,47 @@ class glancesGrabHDDTemp:
         # Reset the list
         self.hddtemp_list = []
 
-        if self.initok:
+        # Fetch the data
+        data = self.fetch()
+
+        # Exit if no data
+        if data == "":
+            return
+
+        # Safety check to avoid malformed data
+        # Considering the size of "|/dev/sda||0||" as the minimum
+        if len(data) < 14:
+            data = self.cache if len(self.cache) > 0 else self.fetch()
+        self.cache = data
+
+        try:
+            fields = data.split(b'|')
+        except TypeError:
+            fields = ""
+        devices = (len(fields) - 1) // 5
+        for item in range(devices):
+            offset = item * 5
+            hddtemp_current = {}
+            device = fields[offset + 1].split(b'/dev/')[-1]
+            temperature = fields[offset + 3]
+            hddtemp_current['label'] = device.decode('utf-8')
+            hddtemp_current['value'] = temperature.decode('utf-8')
+            self.hddtemp_list.append(hddtemp_current)
+
+    def fetch(self):
+        """
+        Fetch the data from hddtemp daemon
+        """
+        # Taking care of sudden deaths/stops of hddtemp daemon
+        try:
+            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sck.connect((self.host, self.port))
+            data = sck.recv(4096)
+            sck.close()
+        except ConnectionRefusedError:
             data = ""
-            # Taking care of sudden deaths/stops of hddtemp daemon
-            try:
-                sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sck.connect((self.address, self.port))
-                data = sck.recv(4096)
-                sck.close()
-            except Exception:
-                hddtemp_current = {}
-                hddtemp_current['label'] = "hddtemp is gone"
-                hddtemp_current['value'] = 0
-                self.hddtemp_list.append(hddtemp_current)
-                return
-            else:
-                # Considering the size of "|/dev/sda||0||" as the minimum
-                if len(data) < 14:
-                    if len(self.cache) == 0:
-                        data = "|hddtemp error||0||"
-                    else:
-                        data = self.cache
-                self.cache = data
-                fields = data.decode('utf-8').split("|")
-                devices = (len(fields) - 1) // 5
-                for i in range(0, devices):
-                    offset = i * 5
-                    hddtemp_current = {}
-                    temperature = fields[offset + 3]
-                    if temperature == "ERR":
-                        hddtemp_current['label'] = _("hddtemp error")
-                        hddtemp_current['value'] = 0
-                    elif temperature == "SLP":
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is sleeping"
-                        hddtemp_current['value'] = 0
-                    elif temperature == "UNK":
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
-                        hddtemp_current['value'] = 0
-                    else:
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
-                        try:
-                            hddtemp_current['value'] = int(temperature)
-                        except TypeError:
-                            hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
-                            hddtemp_current['value'] = 0
-                    self.hddtemp_list.append(hddtemp_current)
+
+        return data
 
     def get(self):
         self.__update__()
