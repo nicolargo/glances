@@ -1099,6 +1099,7 @@ class glancesGrabHDDTemp:
     cache = ""
     address = "127.0.0.1"
     port = 7634
+    labels = {}
 
     def __init__(self):
         """
@@ -1119,6 +1120,14 @@ class glancesGrabHDDTemp:
         """
         # Reset the list
         self.hddtemp_list = []
+        if not self.labels:
+            self.labels = {
+                "ERR": _("hddtemp error"),
+                "SLP": _("{0} is sleeping"),
+                "NOS": _("{0} has no sensors"),
+                "NA": _("{0} not applicable"),
+                "UNK": _("{0} is unknown")
+            }
 
         if self.initok:
             data = ""
@@ -1130,7 +1139,7 @@ class glancesGrabHDDTemp:
                 sck.close()
             except Exception:
                 hddtemp_current = {}
-                hddtemp_current['label'] = "hddtemp is gone"
+                hddtemp_current['label'] = _("hddtemp is gone")
                 hddtemp_current['value'] = 0
                 self.hddtemp_list.append(hddtemp_current)
                 return
@@ -1148,21 +1157,17 @@ class glancesGrabHDDTemp:
                     offset = i * 5
                     hddtemp_current = {}
                     temperature = fields[offset + 3]
-                    if temperature == "ERR":
-                        hddtemp_current['label'] = _("hddtemp error")
-                        hddtemp_current['value'] = 0
-                    elif temperature == "SLP":
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is sleeping"
-                        hddtemp_current['value'] = 0
-                    elif temperature == "UNK":
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
+                    device = fields[offset + 1].split("/")[-1]
+
+                    if temperature in self.labels:
+                        hddtemp_current['label'] = self.labels[temperature].format(device)
                         hddtemp_current['value'] = 0
                     else:
-                        hddtemp_current['label'] = fields[offset + 1].split("/")[-1]
+                        hddtemp_current['label'] = device
                         try:
                             hddtemp_current['value'] = int(temperature)
                         except TypeError:
-                            hddtemp_current['label'] = fields[offset + 1].split("/")[-1] + " is unknown"
+                            hddtemp_current['label'] = self.labels["UNK"].format(device)
                             hddtemp_current['value'] = 0
                     self.hddtemp_list.append(hddtemp_current)
 
