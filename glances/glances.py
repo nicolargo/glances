@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 __appname__ = 'glances'
-__version__ = "1.7.5"
+__version__ = "1.7.6"
 __author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
 __licence__ = "LGPL"
 
@@ -903,7 +903,7 @@ class glancesLogs:
         if item_type.startswith("MEM"):
             # Sort TOP process by memory_percent
             sortby = 'memory_percent'
-        elif item_type.startswith("CPU IO") and is_Linux:
+        elif item_type.startswith("CPU_IO") and is_Linux:
             # Sort TOP process by io_counters (only for Linux OS)
             sortby = 'io_counters'
         elif item_type.startswith("MON"):

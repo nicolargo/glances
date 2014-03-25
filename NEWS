@@ -1,3 +1,11 @@
+Version 1.7.6
+=============
+
+    *  Adapt to psutil 2.0.0 API
+    *  Fixed psutil 0.5.x support on Windows
+    *  Fix help screen in 80x24 terminal size
+    *  Implement toggle of process list display ('z' key)
+
 Version 1.7.5
 =============
 

@@ -28,7 +28,7 @@ Requirements
 ============
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
-- ``psutil >= 0.5.1`` (recommended version >= 1.2.1)
+- ``psutil >= 0.5.1`` (recommended version >= 2.0)
 - ``setuptools``
 
 Optional dependencies:

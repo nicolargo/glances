@@ -1,24 +1,17 @@
+.. Glances documentation master file, created by
+   sphinx-quickstart on Tue Mar 25 19:57:21 2014.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
 Welcome to Glances's documentation!
 ===================================
 
-**Glances** is a cross-platform curses-based monitoring tool written in Python.
-
-It uses the psutil library and some internal code to get information from your system.
-
-.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
-
-Get the code
-------------
-
-The `source <http://github.com/nicolargo/glances>`_ is available on GitHub.
-
-Contents
---------
+Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   glances-doc
+
 
 Indices and tables
 ==================
@@ -26,3 +19,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
