@@ -21,7 +21,7 @@ msgstr ""
 #: glances/glances.py:405
 #, python-format
 msgid "Error decoding config file '%s': %s"
-msgstr "Fehler beim Decodieren der Konfig-Datei '%s': %s"
+msgstr "Fehler beim Dekodieren der Konfig-Datei '%s': %s"
 
 #: glances/glances.py:1152
 msgid "hddtemp error"
