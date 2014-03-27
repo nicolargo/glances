@@ -54,8 +54,7 @@ case "$OPERATION" in
 		# Actual generation
 		mkdir -p ${ROOT}i18n/$1/LC_MESSAGES/
 		gen_pot
-		msginit --input=${ROOT}i18n/glances.pot --output=${ROOT}i18n/XX/LC_MESSAGES/glances.po
-		echo "${ROOT}i18n/XX/LC_MESSAGES/glances.po successful created"
+		msginit --locale="$1" --input=${ROOT}i18n/glances.pot --output=${ROOT}i18n/$1/LC_MESSAGES/glances.po
 		exit 0
 		;;
 	update)
