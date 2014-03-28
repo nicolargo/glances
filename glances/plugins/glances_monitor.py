@@ -53,8 +53,7 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """
-        Nothing to do here
-        Just return the global glances_log
+        Update the monitored list
         """
         # Check if the glances_monitor instance is init
         if (self.glances_monitors == None):
