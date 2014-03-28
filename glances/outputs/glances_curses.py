@@ -314,11 +314,10 @@ class glancesCurses:
         self.display_plugin(stats.get_plugin('diskio').get_curse(args=self.args))
         self.display_plugin(stats.get_plugin('fs').get_curse(args=self.args))
         self.display_plugin(stats.get_plugin('sensors').get_curse(args=self.args))
-
         # Display last line (currenttime)
         self.display_plugin(stats.get_plugin('now').get_curse())
 
-        # Display right sidebar (PROCESS_COUNT)
+        # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
         if (screen_x > 52):
             stats_processcount = stats.get_plugin('processcount').get_curse(args=self.args)
             stats_processlist = stats.get_plugin('processlist').get_curse(args=self.args)
@@ -326,7 +325,8 @@ class glancesCurses:
             stats_monitor = stats.get_plugin('monitor').get_curse(args=self.args)
             self.display_plugin(stats_processcount)
             self.display_plugin(stats_monitor)
-            self.display_plugin(stats_processlist, max_y=(screen_y - self.get_curse_height(stats_alert) - 3))
+            self.display_plugin(stats_processlist, 
+                                max_y=(screen_y - self.get_curse_height(stats_alert) - 3))
             self.display_plugin(stats_alert)
 
         return True
@@ -337,8 +337,18 @@ class glancesCurses:
         If display_optional=True display the optional stats
         max_y do not display line > max_y
         """
-        # Exit if the display tag = False
-        if (not plugin_stats['display']):
+        # Exit if:
+        # - the plugin_stats message is empty
+        # - the display tag = False
+        if ((plugin_stats['msgdict'] == []) 
+            or (not plugin_stats['display'])):
+            # Display the next plugin at the current plugin position
+            try:
+                self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
+                self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
+            except Exception, e:
+                pass
+            # Exit
             return 0
 
         # Get the screen size
