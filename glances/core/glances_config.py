@@ -50,9 +50,6 @@ class Config:
 
         self.parser = RawConfigParser()
 
-        #!!! Is it necessary ???
-        # self.load()
-
     def load(self):
         """
         Load a config file from the list of paths, if it exists
@@ -64,7 +61,7 @@ class Config:
                         self.parser.read(path, encoding='utf-8')
                     else:
                         self.parser.read(path)
-                    print(_("DEBUG: Read configuration file %s") % path)
+                    # print(_("DEBUG: Read configuration file %s") % path)
                     self.config_path = path
                 except UnicodeDecodeError as e:
                     print(_("Error decoding config file '%s': %s") % (path, e))

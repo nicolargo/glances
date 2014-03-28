@@ -104,7 +104,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0}".format(format(self.stats['min5'], '>5.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min5'], max=100 * self.core_plugin.update()["log"])))
+            msg, self.get_alert(self.stats['min5'], max=100 * self.core_plugin.update()["log"])))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
