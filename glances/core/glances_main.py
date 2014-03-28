@@ -44,12 +44,12 @@ class GlancesMain(object):
     # Default network bitrate is display in bit per second
     network_bytepersec_tag = False
     # Display (or not) module
-    diskio_tag = True
-    fs_tag = True
-    hddtemp_flag = True
-    network_tag = True
+    # diskio_tag = True
+    # fs_tag = True
+    # hddtemp_flag = True
+    # network_tag = True
+    # sensors_tag = True
     process_tag = True
-    sensors_tag = True
     # Display property 
     use_bold = True
     percpu_tag = False
@@ -120,27 +120,27 @@ class GlancesMain(object):
         # Disable DiskIO module
         self.parser.add_argument('--disable_diskio',
                                  help=_('disable disk I/O module'), 
-                                 action='store_false')
-        # Disable HDD temperature module
-        self.parser.add_argument('--disable_hddtemp',
-                                 help=_('disable HDD temperature module'), 
-                                 action='store_false')
+                                 action='store_true')
         # Disable mount module
-        self.parser.add_argument('--disable_mount',
-                                 help=_('disable mount module'), 
-                                 action='store_false')
+        self.parser.add_argument('--disable_fs',
+                                 help=_('disable file system (mount) module'), 
+                                 action='store_true')
         # Disable network module
         self.parser.add_argument('--disable_network',
                                  help=_('disable network module'), 
-                                 action='store_false')
+                                 action='store_true')
         # Enable sensors module
         self.parser.add_argument('--disable_sensors',
                                  help=_('disable sensors module'), 
-                                 action='store_false')
+                                 action='store_true')
         # Disable process module
         self.parser.add_argument('--disable_process',
                                  help=_('disable process module'), 
-                                 action='store_false')
+                                 action='store_true')
+        # Disable log module
+        self.parser.add_argument('--disable_log',
+                                 help=_('disable log module'), 
+                                 action='store_true')
 
         # Bold attribute for Curse display (not supported by all terminal)
         self.parser.add_argument('-z', '--no_bold',
@@ -202,12 +202,12 @@ class GlancesMain(object):
         # !!! To be refactor to use directly the args list in the code
         if (args.time is not None): self.refresh_time = args.time 
         self.network_bytepersec_tag = args.byte
-        self.diskio_tag = args.disable_diskio
-        self.fs_tag = args.disable_mount
-        self.hddtemp_flag = args.disable_hddtemp 
-        self.network_tag = args.disable_network
+        # self.diskio_tag = args.disable_diskio
+        # self.fs_tag = args.disable_mount
+        # self.hddtemp_flag = args.disable_hddtemp 
+        # self.network_tag = args.disable_network
         self.process_tag = args.disable_process
-        self.sensors_tag = args.disable_sensors and is_Linux # and sensors_lib_tag
+        # self.sensors_tag = args.disable_sensors and is_Linux # and sensors_lib_tag
         self.use_bold = args.no_bold
         self.percpu_tag = args.percpu
         if (args.config is not None):

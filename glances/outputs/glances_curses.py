@@ -189,35 +189,33 @@ class glancesCurses:
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             self.args.process_sorted_by = 'cpu_percent'
-        elif self.pressedkey == ord('d') and diskio_tag:
+        elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
-            self.diskio_tag = not self.diskio_tag
-        elif self.pressedkey == ord('f') and fs_tag:
+            self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs stats
-            self.fs_tag = not self.fs_tag
+            self.args.disable_fs = not self.args.disable_fs
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.args.help_tag = not self.args.help_tag
         elif self.pressedkey == ord('i'):
-        # elif self.pressedkey == ord('i') and psutil_get_io_counter_tag:
-            # !!! Manage IORate (non existing) on Mac OS
             # 'i' > Sort processes by IO rate (not available on OS X)
             self.args.process_sorted_by = 'io_counters'
         elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
-            self.log_tag = not self.log_tag
+            self.args.disable_log = not self.args.disable_log
         elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
             self.args.process_sorted_by = 'memory_percent'
-        elif self.pressedkey == ord('n') and network_tag:
+        elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
-            self.network_tag = not self.network_tag
+            self.args.disable_network = not self.args.disable_network
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.args.process_sorted_by = 'name'
         elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
-            self.sensors_tag = not self.sensors_tag
+            self.args.disable_sensors = not self.args.disable_sensors
         elif self.pressedkey == ord('t'):
             # 't' > View network traffic as combination
             self.network_stats_combined = not self.network_stats_combined
@@ -230,9 +228,6 @@ class glancesCurses:
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
-        elif self.pressedkey == ord('y'):
-            # 'y' > Show/hide hddtemp stats
-            self.hddtemp_tag = not self.hddtemp_tag
 
         # Return the key code
         return self.pressedkey

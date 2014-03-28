@@ -60,6 +60,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if display plugin enable...
+        if (args.disable_log):
+            return ret
+
         # Build the string message
         # Header
         if (self.stats == []):

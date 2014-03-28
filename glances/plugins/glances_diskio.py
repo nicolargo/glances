@@ -108,14 +108,11 @@ class Plugin(GlancesPlugin):
         Return the dict to display in the curse interface
         """
 
-        #!!! TODO: Add alert on disk IO
-        #!!! TODO: manage the hide tag for disk IO list
-
         # Init the return message
         ret = []
 
-        # Only process if stats exist...
-        if (self.stats == []):
+        # Only process if stats exist and display plugin enable...
+        if ((self.stats == []) or (args.disable_diskio)):
             return ret
 
         # Build the string message

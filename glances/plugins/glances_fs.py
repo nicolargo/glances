@@ -111,13 +111,13 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        # Only process if stats exist...
-        if (self.stats == []):
+        # Only process if stats exist and display plugin enable...
+        if ((self.stats == []) or (args.disable_fs)):
             return ret
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("MOUNT"))
+        msg = "{0:8}".format(_("FILE SYS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = " {0:>6}".format(_("Used"))
         ret.append(self.curse_add_line(msg))
