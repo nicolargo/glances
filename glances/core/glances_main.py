@@ -21,7 +21,6 @@
 # Import system libs
 import sys
 import os
-import signal
 import argparse
 
 # Import Glances libs
@@ -89,44 +88,6 @@ class GlancesMain(object):
             self.config = Config()
         # Load the configuration file
         self.config.load()
-
-        # Catch the CTRL-C signal
-        signal.signal(signal.SIGINT, self.__signal_handler)
-
-
-    def __signal_handler(self, signal, frame):
-        self.end()
-
-
-    def end(self):
-        """
-        Stop the Glances core and exit
-        """
-
-        if (self.is_standalone()):
-            # Stop the classical CLI loop
-            screen.end()
-        elif (self.is_client()):
-            # Stop the client loop
-            # !!! Uncomment
-            #~ client.client_quit()
-            pass
-        elif (self.is_server()):
-            # Stop the server loop
-            # !!! Uncomment
-            # server.server_close()
-            pass
-
-        # !!! Uncomment
-        # if (self.csv_tag):
-        #     csvoutput.exit()
-
-        # !! Todo for htmloutput too
-        # The exit should generate a new HTML page
-        # to inform the user that data are not refreshed anymore
-
-        # The end...
-        sys.exit(0)
 
 
     def init_arg(self):

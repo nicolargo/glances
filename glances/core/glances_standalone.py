@@ -56,6 +56,9 @@ class GlancesStandalone():
         self.screen = glancesCurses(args=args)
 
     def serve_forever(self):
+        """
+        Main loop for the CLI
+        """
         while True:
             # Update system informations
             self.stats.update()
@@ -72,3 +75,9 @@ class GlancesStandalone():
             # !!! TODO
             # if csv_tag:
             #     csvoutput.update(stats)
+
+    def end(self):
+        """
+        End of the CLI
+        """
+        self.screen.end()

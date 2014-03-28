@@ -235,7 +235,16 @@ class GlancesServer():
         self.server.isAuth = True
 
     def serve_forever(self):
+        """
+        Call the main loop
+        """
         self.server.serve_forever()
 
     def server_close(self):
         self.server.server_close()
+
+    def end(self):
+        """
+        End of the Glances server session
+        """
+        self.server_close()

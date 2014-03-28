@@ -131,8 +131,8 @@ class GlancesClient():
             # Update the screen
             self.screen.update(self.stats, cs_status=cs_status)
 
-    def close(self):
+    def end(self):
         """
         End of the client session
         """
-        pass
+        self.screen.end()

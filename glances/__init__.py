@@ -23,15 +23,54 @@ Init the Glances software
 
 # Import system lib
 import sys
+import signal
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionnaly
 from glances.core.glances_main import GlancesMain
 
 
+def __signal_handler(signal, frame):
+    """
+    Call back for CTRL-C
+    """
+    end()
+
+
+def end():
+    """
+    Stop Glances 
+    """
+
+    if (core.is_standalone()):
+        # Stop the standalone (CLI)
+        standalone.end()
+    elif (core.is_client()):
+        # Stop the client
+        client.end()
+    elif (core.is_server()):
+        # Stop the server
+        server.end()
+
+    # The end...
+    sys.exit(0)
+
+
 def main():
+    """
+    Main entry point for Glances
+    Select the mode (standalone, client or server)
+    Run it...
+    """
+
+    # Share global var
+    global core, standalone, client, server
+
     # Create the Glances main instance
     core = GlancesMain()
+
+    # Catch the CTRL-C signal
+    signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
     if (core.is_standalone()):
