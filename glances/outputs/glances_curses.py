@@ -41,6 +41,7 @@ class glancesCurses:
 
         # Init args
         self.args = args
+
         # By default, display bitrate instead of cumulative in the network plugin
         self.args.network_stats_cumulative = False
 
@@ -56,6 +57,7 @@ class glancesCurses:
         self.screen = curses.initscr()
         if not self.screen:
             print(_("Error: Cannot init the curses library.\n"))
+            sys.exit(1)
 
         # Set curses options
         if hasattr(curses, 'start_color'):

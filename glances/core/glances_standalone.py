@@ -33,12 +33,8 @@ class GlancesStandalone():
         # Init stats
         self.stats = GlancesStats(config)
 
-        # Initial update
-        # !!! The first time Glances display wrong CPU/MEM information
+        # Initial system informations update
         self.stats.update()
-
-        # !!! Usefull ?
-        self.refresh_time = args.time
 
         # Init HTML output
         # !!! TODO

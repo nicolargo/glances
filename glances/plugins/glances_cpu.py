@@ -58,9 +58,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab CPU using the PSUtil cpu_times_percent method
-        # !!! the first time this function is called with interval = 0.0 or None 
-        # !!! it will return a meaningless 0.0 value which you are supposed to ignore
-        cputimespercent = cpu_times_percent(interval=0, percpu=False)
+        cputimespercent = cpu_times_percent(interval=0.0, percpu=False)
 
         # Get all possible value for CPU stats
         # user
