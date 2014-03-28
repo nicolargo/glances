@@ -65,6 +65,18 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if stats exist and display plugin enable...
+        # if ((self.stats == {}) or (args.disable_process)):
+        #     return ret
+
+        if (args.disable_process):
+            msg = "{0} ".format(_("PROCESSES DISABLED (press 'z' to display)"))
+            ret.append(self.curse_add_line(msg))
+            return ret
+
+        if (self.stats == {}):
+            return ret
+
         # Build the string message
         # Header
         msg = "{0} ".format(_("TASKS"))

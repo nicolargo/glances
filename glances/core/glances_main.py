@@ -49,7 +49,7 @@ class GlancesMain(object):
     # hddtemp_flag = True
     # network_tag = True
     # sensors_tag = True
-    process_tag = True
+    # process_tag = True
     # Display property 
     use_bold = True
     percpu_tag = False
@@ -206,7 +206,7 @@ class GlancesMain(object):
         # self.fs_tag = args.disable_mount
         # self.hddtemp_flag = args.disable_hddtemp 
         # self.network_tag = args.disable_network
-        self.process_tag = args.disable_process
+        # self.process_tag = args.disable_process
         # self.sensors_tag = args.disable_sensors and is_Linux # and sensors_lib_tag
         self.use_bold = args.no_bold
         self.percpu_tag = args.percpu

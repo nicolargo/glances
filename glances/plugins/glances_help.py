@@ -113,7 +113,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         msg = msg_col.format(_("s"), _("Show/hide sensors stats"))
         ret.append(self.curse_add_line(msg))
-        msg = msg_col2.format(_("z"), _("Disable all processes stats"))                             
+        msg = msg_col2.format(_("z"), _("Enable/Disable processes stats"))                             
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         msg = msg_col.format(_("q"), _("Quit (Esc and Ctrl-C also work)"))

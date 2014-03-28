@@ -67,6 +67,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if stats exist and display plugin enable...
+        if ((self.stats == []) or (args.disable_process)):
+            return ret
+
         # Compute the sort key
         if (args.process_sorted_by == 'auto'):
             process_sort_key = glances_processes.getsortkey()

@@ -29,7 +29,7 @@ except ImportError:
 
 # Import Glances lib
 from glances.core.glances_timer import Timer
-from glances.core.glances_globals import glances_logs
+from glances.core.glances_globals import glances_logs, glances_processes
 
 
 class glancesCurses:
@@ -228,7 +228,15 @@ class glancesCurses:
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
-
+        elif self.pressedkey == ord('z'):
+            # 'z' > Enable/Disable processes stats (count + list + monitor)
+            # Enable/Disable display
+            self.args.disable_process = not self.args.disable_process
+            # Enable/Disable update
+            if (self.args.disable_process):
+                glances_processes.disable()
+            else:
+                glances_processes.enable()
         # Return the key code
         return self.pressedkey
 

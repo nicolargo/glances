@@ -39,17 +39,37 @@ class glancesProcesses:
         # See: https://code.google.com/p/psutil/issues/detail?id=462
         self.username_cache = {}
         self.cmdline_cache = {}
+        
         # The internals caches will be cleaned each 'cache_timeout' seconds
         self.cache_timeout = cache_timeout
         self.cache_timer = Timer(self.cache_timeout)
+        
         # Init the io dict
         # key = pid
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
-        # Init
+        
+        # Init stats
         self.processsort = 'cpu_percent'
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+
+        # Tag to enable/disable the processes stats (to reduce the Glances CPU comsumption)
+        # Default is to enable the processes stats
+        self.disable_tag = False
+
+    def enable(self):
+        """
+        Enable process stats
+        """
+        self.disable_tag = False
+        self.update()
+
+    def disable(self):
+        """
+        Enable process stats
+        """
+        self.disable_tag = True
 
     def __get_process_stats(self, proc):
         """
@@ -139,8 +159,17 @@ class glancesProcesses:
         return procstat
 
     def update(self):
+        """
+        Update the processes sats
+        """
+
+        # Reset the stats
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+
+        # Do not process if disable tag is set
+        if (self.disable_tag):
+           return 
 
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
