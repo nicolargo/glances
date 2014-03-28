@@ -25,7 +25,6 @@ import json
 
 # Import Glances libs
 from glances.core.glances_globals import __version__
-from glances.core.glances_limits import glancesLimits
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 
@@ -133,9 +132,6 @@ class GlancesInstance():
     """
 
     def __init__(self, cached_time=1, config=None):
-        # Init the limits
-        self.limits = glancesLimits(config)
-
         # Init stats
         self.stats = GlancesStatsServer(config)
 
@@ -168,8 +164,8 @@ class GlancesInstance():
         return json.dumps(self.stats.getAllPlugins())
 
     def getAllLimits(self):
-        # Return all the limits
-        return json.dumps(self.limits.getAll())
+        # Return all the plugins limits
+        return json.dumps(self.stats.getAllLimits())
 
     def getAllMonitored(self):
         # Return the processes monitored list

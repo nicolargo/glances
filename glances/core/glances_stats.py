@@ -167,9 +167,15 @@ class GlancesStatsServer(GlancesStats):
 
     def getAllPlugins(self):
         """
-        Return the plugin list
+        Return the plugins list
         """
         return [p for p in self._plugins]
+
+    def getAllLimits(self):
+        """
+        Return the plugins limits list
+        """
+        return [self._plugins[p].get_limits() for p in self._plugins]
 
 
 class GlancesStatsClient(GlancesStats):
