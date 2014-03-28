@@ -135,6 +135,9 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))            
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
+            # Do not display hidden interfaces
+            if (self.is_hide(i['interface_name'])):
+                continue
             # Format stats
             ifname = i['interface_name'].split(':')[0]
             if (args.byte):
