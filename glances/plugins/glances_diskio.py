@@ -128,6 +128,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
+            # Do not display hidden interfaces
+            if (self.is_hide(i['disk_name'])):
+                continue
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(i['disk_name'])
