@@ -42,9 +42,6 @@ class glancesCurses:
         # Init args
         self.args = args
 
-        # By default, display bitrate instead of cumulative in the network plugin
-        self.args.network_stats_cumulative = False
-
         # Init windows positions
         self.term_w = 80
         self.term_h = 24
