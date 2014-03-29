@@ -21,13 +21,25 @@
 Tests suite...
 """
 
+import os
+import sys
 import unittest
+
+test_root = os.path.dirname(os.path.abspath(__file__))
+os.chdir(test_root)
+sys.path.insert(0, os.path.dirname(test_root))
+sys.path.insert(0, test_root)
+
 import glances
 
 class testGlances(unittest.TestCase):
     """
     Test glances class
     """
+
+    def setUp(self):
+        self.core = glances.GlancesMain()
+        print dir(self.core)
 
     def test_init(self):
         """
