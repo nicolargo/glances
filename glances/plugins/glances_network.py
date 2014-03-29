@@ -121,18 +121,29 @@ class Plugin(GlancesPlugin):
         # Header
         msg = "{0:8}".format(_("NETWORK"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if (args.network_stats_cumulative):
+        if (args.network_cumul):
             # Cumulative stats
-            msg = " {0:>6}".format(_("Rx"))
-            ret.append(self.curse_add_line(msg))
-            msg = "  {0:>6}".format(_("Tx"))
-            ret.append(self.curse_add_line(msg))
+            if (args.network_sum):
+                # Sum stats
+                msg = " {0:>14}".format(_("Rx+Tx"))
+                ret.append(self.curse_add_line(msg))
+            else:
+                # Rx/Tx stats
+                msg = " {0:>6}".format(_("Rx"))
+                ret.append(self.curse_add_line(msg))
+                msg = "  {0:>6}".format(_("Tx"))
+                ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
-            msg = " {0:>6}".format(_("Rx/s"))
-            ret.append(self.curse_add_line(msg))
-            msg = "  {0:>6}".format(_("Tx/s"))
-            ret.append(self.curse_add_line(msg))            
+            if (args.network_sum):
+                # Sum stats
+                msg = " {0:>14}".format(_("Rx+Tx/s"))
+                ret.append(self.curse_add_line(msg))
+            else:
+                msg = " {0:>6}".format(_("Rx/s"))
+                ret.append(self.curse_add_line(msg))
+                msg = "  {0:>6}".format(_("Tx/s"))
+                ret.append(self.curse_add_line(msg))            
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
             # Do not display hidden interfaces
@@ -141,26 +152,38 @@ class Plugin(GlancesPlugin):
             # Format stats
             ifname = i['interface_name'].split(':')[0]
             if (args.byte):
-                if (args.network_stats_cumulative):
-                    rxps = self.auto_unit(int(i['cumulative_rx']))
-                    txps = self.auto_unit(int(i['cumulative_tx']))
+                if (args.network_cumul):
+                    rx = self.auto_unit(int(i['cumulative_rx']))
+                    tx = self.auto_unit(int(i['cumulative_tx']))
+                    sx = self.auto_unit(int(i['cumulative_tx']) 
+                                        + int(i['cumulative_tx']))
                 else:
-                    rxps = self.auto_unit(int(i['rx'] // i['time_since_update']))
-                    txps = self.auto_unit(int(i['tx'] // i['time_since_update']))
+                    rx = self.auto_unit(int(i['rx'] // i['time_since_update']))
+                    tx = self.auto_unit(int(i['tx'] // i['time_since_update']))
+                    sx = self.auto_unit(int(i['rx'] // i['time_since_update']) 
+                                        + int(i['tx'] // i['time_since_update']))
             else:
-                if (args.network_stats_cumulative):
-                    rxps = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
-                    txps = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
+                if (args.network_cumul):
+                    rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
+                    tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
+                    sx = self.auto_unit(int(i['cumulative_rx'] * 8) 
+                                        + int(i['cumulative_tx'] * 8)) + "b"
                 else:
-                    rxps = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
-                    txps = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"                    
+                    rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
+                    tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"                    
+                    sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8) +
+                                        int(i['tx'] // i['time_since_update'] * 8)) + "b"
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(ifname)
             ret.append(self.curse_add_line(msg))
-            msg = " {0:>6}".format(rxps)
-            ret.append(self.curse_add_line(msg))
-            msg = "  {0:>6}".format(txps)
-            ret.append(self.curse_add_line(msg))
+            if (args.network_sum):
+                msg = " {0:>14}".format(sx)
+                ret.append(self.curse_add_line(msg))
+            else:
+                msg = " {0:>6}".format(rx)
+                ret.append(self.curse_add_line(msg))
+                msg = "  {0:>6}".format(tx)
+                ret.append(self.curse_add_line(msg))
 
         return ret

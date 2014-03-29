@@ -197,10 +197,14 @@ class GlancesMain(object):
         # By default Help is hidden
         args.help_tag = False
 
+        # Display Rx and Tx, not the sum for the network
+        args.network_sum = False
+        args.network_cumul = False
+
         # !!! Change global variables regarding to user args
         # !!! To be refactor to use directly the args list in the code
         if (args.time is not None): self.refresh_time = args.time 
-        self.network_bytepersec_tag = args.byte
+        # self.network_bytepersec_tag = args.byte
         # self.diskio_tag = args.disable_diskio
         # self.fs_tag = args.disable_mount
         # self.hddtemp_flag = args.disable_hddtemp 

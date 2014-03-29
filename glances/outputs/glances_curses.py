@@ -217,11 +217,11 @@ class glancesCurses:
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
         elif self.pressedkey == ord('t'):
-            # 't' > View network traffic as combination
-            self.network_stats_combined = not self.network_stats_combined
+            # 't' > View network traffic as sum Rx+Tx
+            self.args.network_sum = not self.args.network_sum
         elif self.pressedkey == ord('u'):
-            # 'u' > View cumulative network IO
-            self.args.network_stats_cumulative = not self.args.network_stats_cumulative
+            # 'u' > View cumulative network IO (instead of bitrate)
+            self.args.network_cumul = not self.args.network_cumul
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
