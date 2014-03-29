@@ -383,7 +383,9 @@ class glancesCurses:
                 x = display_x
                 continue
             # Do not display outside the screen
-            if ((x < 0) or (x + len(m['msg']) > screen_x)):
+            if (x < 0):
+                continue
+            if ((not m['splittable']) and (x + len(m['msg']) > screen_x)):
                 continue
             if ((y < 0) or (y + 1 > screen_y) or (y > max_y)):
                 break

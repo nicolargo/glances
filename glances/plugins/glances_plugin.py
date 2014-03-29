@@ -210,7 +210,7 @@ class GlancesPlugin(object):
                 'column': column_curse,
                 'line': line_curse}
 
-    def curse_add_line(self, msg, decoration="DEFAULT", optional=False):
+    def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
         """
         Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }
         with:
@@ -229,9 +229,10 @@ class GlancesPlugin(object):
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)
+            spittable: Line can be splitted to fit on the screen (default is not)
         """
 
-        return {'msg': msg, 'decoration': decoration, 'optional': optional}
+        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'splittable': splittable}
 
     def curse_new_line(self):
         """
