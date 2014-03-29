@@ -169,7 +169,7 @@ class glancesProcesses:
 
         # Do not process if disable tag is set
         if (self.disable_tag):
-           return 
+            return 
 
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')

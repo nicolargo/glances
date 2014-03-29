@@ -51,7 +51,6 @@ class Plugin(GlancesPlugin):
         # Init stats
         self.diskio_old = []
 
-
     def update(self):
         """
         Update disk IO stats

@@ -60,7 +60,7 @@ class Plugin(GlancesPlugin):
             core_stats["log"] = cpu_count()
         except NameError:
             core_stats = None
-        
+
         self.stats = core_stats
 
         return self.stats

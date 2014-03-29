@@ -39,7 +39,7 @@ def __signal_handler(signal, frame):
 
 def end():
     """
-    Stop Glances 
+    Stop Glances
     """
 
     if (core.is_standalone()):
