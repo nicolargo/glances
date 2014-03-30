@@ -75,7 +75,23 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Add the line with decoration
-        ret.append(self.curse_add_line("Uptime: %s" % self.stats))
+        ret.append(self.curse_add_line(_("Uptime: {}").format(self.stats)))
 
         # Return the message with decoration
         return ret
+
+    def msg_bottle(self, args=None):
+        """
+        Return the Bottle template
+        """
+
+        tpl = """ \
+                %#Template for Bottle
+                <div class="plugin" id="uptime">   
+              """
+        tpl += _("Uptime: {}").format(self.stats)
+        tpl += """ \
+                </div>   
+                %#End Template for Bottle
+               """
+        return tpl

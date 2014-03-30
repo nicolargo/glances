@@ -52,7 +52,7 @@ class glancesBottle:
         self._app = Bottle()
         self._route()
 
-        # Update the template path
+        # Update the template path (glances/outputs/bottle)
         TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
 
     def _route(self):
@@ -83,16 +83,13 @@ class glancesBottle:
         Display stats on the screen
 
         stats: Stats database to display
-        cs_status:
-            "None": standalone or server mode
-            "Connected": Client is connected to the server
-            "Disconnected": Client is disconnected from the server
-
         """
-        print TEMPLATE_PATH
         html = template('header')
+        html += template('newline')
         html += template(self.stats.get_plugin('system').get_bottle(self.args), 
                          **self.stats.get_plugin('system').get_raw())
+        html += template(self.stats.get_plugin('uptime').get_bottle(self.args))
+        html += template('endline')
         html += template('footer')
 
         return html
