@@ -19,9 +19,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system lib
+import os
 import sys
 try:
-    from bottle import Bottle, template
+    from bottle import Bottle, template, static_file, TEMPLATE_PATH
 except ImportError:
     print('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(1)
@@ -51,6 +52,9 @@ class glancesBottle:
         self._app = Bottle()
         self._route()
 
+        # Update the template path
+        TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
+
     def _route(self):
         """
         Define route
@@ -69,10 +73,12 @@ class glancesBottle:
         pass
 
     def _index(self):
-        print "DEBUG: %s " % self.stats.get_plugin('system')
-        return "Hello Glances"
+        # Update the stat
+        self.stats.update()
+        # Display
+        return self.display(self.stats)
 
-    def display(self, stats, cs_status="None"):
+    def display(self, stats):
         """
         Display stats on the screen
 
@@ -82,42 +88,11 @@ class glancesBottle:
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
 
-        Return:
-            True if the stats have been displayed
-            False if the help have been displayed
         """
-        pass
+        print TEMPLATE_PATH
+        html = template('header')
+        html += template(self.stats.get_plugin('system').get_bottle(self.args), 
+                         **self.stats.get_plugin('system').get_raw())
+        html += template('footer')
 
-
-    def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
-        """
-        Display the plugin_stats on the screen
-        If display_optional=True display the optional stats
-        max_y do not display line > max_y
-        """
-        # Exit if:
-        # - the plugin_stats message is empty
-        # - the display tag = False
-        if ((plugin_stats['msgdict'] == []) 
-            or (not plugin_stats['display'])):
-            # Display the next plugin at the current plugin position
-            try:
-                self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
-                self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
-            except Exception, e:
-                pass
-            # Exit
-            return 0
-
-        pass
-
-    def update(self, stats, cs_status="None"):
-        """
-        Update the Web interface
-        stats: Stats database to display
-        cs_status:
-            "None": standalone or server mode
-            "Connected": Client is connected to the server
-            "Disconnected": Client is disconnected from the server
-        """
-        pass
+        return html

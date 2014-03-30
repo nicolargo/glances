@@ -111,3 +111,28 @@ class Plugin(GlancesPlugin):
 
         # Return the message with decoration
         return ret
+
+    def msg_bottle(self, args=None):
+        """
+        Return the Bottle template
+        """
+
+        tpl = """ \
+                %#Template for Bottle
+                <div class="plugin" id="system">   
+              """
+        tpl += "<b>{{hostname}}</b>"
+        if (self.stats['os_name'] == "Linux"):
+            tpl += _(" ({0} {1} / {2} {3})").format('{{linux_distro}}',
+                                                    '{{platform}}',
+                                                    '{{os_name}}',
+                                                    '{{os_version}}')
+        else:
+            tpl += _(" ({0} {1} {2})").format('{{os_name}}',
+                                              '{{os_version}}',
+                                              '{{platform}}')
+        tpl += """ \
+                </div>   
+                %#End Template for Bottle
+               """
+        return tpl

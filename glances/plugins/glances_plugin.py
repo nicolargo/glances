@@ -210,6 +210,16 @@ class GlancesPlugin(object):
                 'column': column_curse,
                 'line': line_curse}
 
+    def get_bottle(self, args=None):
+        # Return the HTML representation of the plugin
+
+        if (hasattr(self, 'msg_bottle')):
+            msg_bottle = self.msg_bottle(args)
+        else:
+            msg_bottle = None
+
+        return msg_bottle
+
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
         """
         Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }
