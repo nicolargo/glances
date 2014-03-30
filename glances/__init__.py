@@ -134,3 +134,15 @@ def main():
         # !!! How to close the server with CTRL-C
         # !!! Call core.end() with parameters ?
         server.server_close()
+
+    elif (core.is_webserver()):
+
+        # Import the Glances web server module
+        from glances.core.glances_webserver import GlancesWebServer
+
+        # Init the web server mode
+        webserver = GlancesWebServer(config=core.get_config(),
+                                     args=core.get_args())
+
+        # Start the web server loop
+        webserver.serve_forever()

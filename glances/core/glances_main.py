@@ -160,6 +160,10 @@ class GlancesMain(object):
         self.parser.add_argument('-s', '--server',
                                  help=_('run Glances in server mode'),
                                  action='store_true')
+        # Web Server mode
+        self.parser.add_argument('-w', '--webserver',
+                                 help=_('run Glances in Web Server mode'),
+                                 action='store_true')
         # Server bind IP/name
         self.parser.add_argument('-B', '--bind',
                                  help=_('bind server to the given IPv4/IPv6 address or hostname'))
@@ -223,6 +227,7 @@ class GlancesMain(object):
         if (args.client is not None):
             self.client_tag = True
             self.server_ip = args.client
+        self.webserver_tag = args.webserver
         self.server_tag = args.server
         if (args.port is not None): self.server_port = args.port 
         if (args.password_arg is not None): self.password = args.password_arg
@@ -271,7 +276,7 @@ class GlancesMain(object):
         """
         Return True if Glances is running in standalone mode
         """
-        return not self.client_tag and not self.server_tag
+        return not self.client_tag and not self.server_tag and not self.webserver_tag
 
 
     def is_client(self):
@@ -283,17 +288,21 @@ class GlancesMain(object):
 
     def is_server(self):
         """
-        Return True if Glances is running in sserver mode
+        Return True if Glances is running in server mode
         """
         return not self.client_tag and self.server_tag
 
+    def is_webserver(self):
+        """
+        Return True if Glances is running in Web server mode
+        """
+        return not self.client_tag and self.webserver_tag
 
     def get_config(self):
         """
         Return configuration file object
         """
         return self.config
-
 
     def get_args(self):
         """
