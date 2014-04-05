@@ -124,20 +124,17 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("SENSORS"))
+        msg = "{0:9}".format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if is_python3:
-            msg = "{0:>15}".format(_("°C"))
-        else:
-            msg = "{0:>16}".format(_("°C"))
+        msg = "{0:>15}".format(_("°C"))
         ret.append(self.curse_add_line(msg))
 
         for item in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:<15}".format(item['label'])
+            msg = "{0:9}".format(item['label'])
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>8}".format(item['value'])
+            msg = "{0:>14}".format(item['value'])
             ret.append(self.curse_add_line(msg))
 
         return ret

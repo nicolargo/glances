@@ -117,30 +117,30 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("FILE SYS"))
+        msg = "{0:9}".format(_("FILE SYS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = " {0:>6}".format(_("Used"))
+        msg = "{0:>7}".format(_("Used"))
         ret.append(self.curse_add_line(msg))
-        msg = "  {0:>6}".format(_("Total"))
+        msg = "{0:>7}".format(_("Total"))
         ret.append(self.curse_add_line(msg))
 
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if ((len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 5):
+            if ((len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 6):
                 # If possible concatenate mode info... Glances touch inside :) 
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif (len(i['mnt_point']) > 8):
+            elif (len(i['mnt_point']) > 9):
                 # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-7:]
+                mnt_point = '_' + i['mnt_point'][-8:]
             else:
                 mnt_point = i['mnt_point']
-            msg = "{0:8}".format(mnt_point)
+            msg = "{0:9}".format(mnt_point)
             ret.append(self.curse_add_line(msg))
-            msg = " {0:>6}".format(self.auto_unit(i['used']))
+            msg = "{0:>7}".format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
-            msg = "  {0:>6}".format(self.auto_unit(i['size']))
+            msg = "{0:>7}".format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
         return ret

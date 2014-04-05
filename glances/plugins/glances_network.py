@@ -119,30 +119,30 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("NETWORK"))
+        msg = "{0:9}".format(_("NETWORK"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         if (args.network_cumul):
             # Cumulative stats
             if (args.network_sum):
                 # Sum stats
-                msg = " {0:>14}".format(_("Rx+Tx"))
+                msg = "{0:>14}".format(_("Rx+Tx"))
                 ret.append(self.curse_add_line(msg))
             else:
                 # Rx/Tx stats
-                msg = " {0:>6}".format(_("Rx"))
+                msg = "{0:>7}".format(_("Rx"))
                 ret.append(self.curse_add_line(msg))
-                msg = "  {0:>6}".format(_("Tx"))
+                msg = "{0:>7}".format(_("Tx"))
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
             if (args.network_sum):
                 # Sum stats
-                msg = " {0:>14}".format(_("Rx+Tx/s"))
+                msg = "{0:>14}".format(_("Rx+Tx/s"))
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = " {0:>6}".format(_("Rx/s"))
+                msg = "{0:>7}".format(_("Rx/s"))
                 ret.append(self.curse_add_line(msg))
-                msg = "  {0:>6}".format(_("Tx/s"))
+                msg = "{0:>7}".format(_("Tx/s"))
                 ret.append(self.curse_add_line(msg))            
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
@@ -175,15 +175,15 @@ class Plugin(GlancesPlugin):
                                         int(i['tx'] // i['time_since_update'] * 8)) + "b"
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:8}".format(ifname)
+            msg = "{0:9}".format(ifname)
             ret.append(self.curse_add_line(msg))
             if (args.network_sum):
-                msg = " {0:>14}".format(sx)
+                msg = "{0:>14}".format(sx)
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = " {0:>6}".format(rx)
+                msg = "{0:>7}".format(rx)
                 ret.append(self.curse_add_line(msg))
-                msg = "  {0:>6}".format(tx)
+                msg = "{0:>7}".format(tx)
                 ret.append(self.curse_add_line(msg))
 
         return ret

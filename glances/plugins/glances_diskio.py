@@ -129,13 +129,13 @@ class Plugin(GlancesPlugin):
                 continue
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:8}".format(i['disk_name'])
+            msg = "{0:9}".format(i['disk_name'])
             ret.append(self.curse_add_line(msg))
             txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
             rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
-            msg = "  {0:>6}".format(txps)
+            msg = "{0:>7}".format(txps)
             ret.append(self.curse_add_line(msg))
-            msg = " {0:>6}".format(rxps)
+            msg = "{0:>7}".format(rxps)
             ret.append(self.curse_add_line(msg))
 
         return ret

@@ -55,6 +55,23 @@ class glancesBottle:
         # Update the template path (glances/outputs/bottle)
         TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
 
+        # Define the style (CSS) list (hash table) for stats
+        self.__style_list = {
+            'DEFAULT': '',
+            'UNDERLINE': 'underline',
+            'BOLD': 'bold',
+            'OK': 'ok',
+            'TITLE': 'title',
+            'CAREFUL': 'careful',
+            'WARNING': 'warning',
+            'CRITICAL': 'critical',
+            'OK_LOG': 'ok_log',
+            'CAREFUL_LOG': 'careful_log',
+            'WARNING_LOG': 'warning_log',
+            'CRITICAL_LOG': 'critical_log'
+        }
+
+
     def _route(self):
         """
         Define route
@@ -80,16 +97,80 @@ class glancesBottle:
 
     def display(self, stats):
         """
-        Display stats on the screen
+        Display stats on the Webpage
 
         stats: Stats database to display
         """
+        # html = template('header')
+        # html += "<header>"
+        # html += template(self.stats.get_plugin('system').get_bottle(self.args), 
+        #                  **self.stats.get_plugin('system').get_raw())
+        # html += template(self.stats.get_plugin('uptime').get_bottle(self.args))
+        # html += "</header>"
+        # html += template('newline')
+        # html += "<section>"
+        # html += template(self.stats.get_plugin('cpu').get_bottle(self.args), 
+        #                  **self.stats.get_plugin('cpu').get_raw())
+        # html += "</section>"
+        # html += template('footer')
+
         html = template('header')
+        html += "<header>"
+        html += self.display_plugin('system', self.stats.get_plugin('system').get_curse(args=self.args))
+        html += self.display_plugin('uptime', self.stats.get_plugin('uptime').get_curse(args=self.args))
+        html += "</header>"
         html += template('newline')
-        html += template(self.stats.get_plugin('system').get_bottle(self.args), 
-                         **self.stats.get_plugin('system').get_raw())
-        html += template(self.stats.get_plugin('uptime').get_bottle(self.args))
-        html += template('endline')
+        html += "<section>"
+        html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_curse(args=self.args))
+        html += self.display_plugin('load', self.stats.get_plugin('load').get_curse(args=self.args))
+        html += self.display_plugin('mem', self.stats.get_plugin('mem').get_curse(args=self.args))
+        html += self.display_plugin('memswap', self.stats.get_plugin('memswap').get_curse(args=self.args))
+        html += "</section>"
+        html += template('newline')
+        html += "<section>"
+        html += "<aside>"
+        html += self.display_plugin('network', self.stats.get_plugin('network').get_curse(args=self.args))
+        html += template('newline')
+        html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_curse(args=self.args))
+        html += template('newline')
+        html += self.display_plugin('fs', self.stats.get_plugin('fs').get_curse(args=self.args))
+        html += template('newline')
+        html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_curse(args=self.args))
+        html += "</aside>"
+        html += "<aside>"
+        html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_curse(args=self.args))
+        html += "</aside>"
+        html += "</section>"
         html += template('footer')
 
         return html
+
+    def display_plugin(self, plugin_name, plugin_stats):
+        """
+        Generate the Bootle template for the plugin_stats
+        """
+
+        # Template header
+        tpl = """ \
+                %#Template for Bottle
+              """
+        tpl += '<article class="plugin" id="%s">' % plugin_name
+
+        tpl += '<div id="table">'
+        tpl += '<div class="row">'
+        for m in plugin_stats['msgdict']:
+            # New line
+            if (m['msg'].startswith('\n')):
+                tpl += '</div>'
+                tpl += '<div class="row">'
+                continue
+            tpl += '<span class="cell" id="%s">%s</span>' % (self.__style_list[m['decoration']] , 
+                                                                               m['msg'].replace(' ', '&nbsp;'))
+        tpl += '</div>'
+        tpl += '</div>'
+        
+        tpl += """ \
+                </article>   
+                %#End Template for Bottle
+               """
+        return template(tpl)        
