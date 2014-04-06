@@ -80,6 +80,7 @@ class glancesBottle:
         Define route
         """
         self._app.route('/', method="GET", callback=self._index)
+        self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
 
     def start(self, stats):
@@ -93,14 +94,19 @@ class glancesBottle:
         # End the Bottle
         pass
 
-    def _index(self):
+    def _index(self, refresh_time=None):
         """
         Bottle callback for index.html (/) file
         """
+        # Manage parameter
+        if (refresh_time is None):
+            refresh_time = self.args.time
+
         # Update the stat
         self.stats.update()
+        
         # Display
-        return self.display(self.stats)
+        return self.display(self.stats, refresh_time=refresh_time)
 
     def _css(self, filename):
         """
@@ -109,14 +115,14 @@ class glancesBottle:
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
 
-    def display(self, stats):
+    def display(self, stats, refresh_time=None):
         """
         Display stats on the Webpage
 
         stats: Stats database to display
         """
 
-        html = template('header')
+        html = template('header', refresh_time=refresh_time)
         html += "<header>"
         html += self.display_plugin('system', self.stats.get_plugin('system').get_curse(args=self.args))
         html += self.display_plugin('uptime', self.stats.get_plugin('uptime').get_curse(args=self.args))
@@ -140,6 +146,8 @@ class glancesBottle:
         html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_curse(args=self.args))
         html += "</aside>"
         html += "<aside>"
+        html += self.display_plugin('alert', self.stats.get_plugin('alert').get_curse(args=self.args))
+        html += template('newline')
         html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_curse(args=self.args))
         html += template('newline')
         html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_curse(args=self.args))

@@ -198,8 +198,14 @@ class GlancesMain(object):
 
         args = self.parser.parse_args()
 
-        # Default refresh time is 3 seconds
-        if (args.time is None): args.time = 3
+        # Default refresh time:
+        # - is 3 seconds for CLI
+        # - is 5 seconds for Web (Bottle)
+        if (args.time is None): 
+            if (args.webserver):
+                args.time = 5
+            else:
+                args.time = 3
 
         # By default Help is hidden
         args.help_tag = False
