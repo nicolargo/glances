@@ -72,6 +72,10 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Compute the sort key
+        try:
+            args.process_sorted_by
+        except AttributeError:
+            args.process_sorted_by = 'cpu_percent'        
         if (args.process_sorted_by == 'auto'):
             process_sort_key = glances_processes.getsortkey()
         else:

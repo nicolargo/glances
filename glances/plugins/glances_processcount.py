@@ -107,7 +107,7 @@ class Plugin(GlancesPlugin):
         try:
             args.process_sorted_by
         except AttributeError:
-            args.process_sorted_by = 'cpu'
+            args.process_sorted_by = 'cpu_percent'
         if (args.process_sorted_by == 'auto'):
             msg = "{0}".format(_("sorted automatically"))
             ret.append(self.curse_add_line(msg))

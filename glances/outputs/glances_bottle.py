@@ -55,6 +55,9 @@ class glancesBottle:
         # Update the template path (glances/outputs/bottle)
         TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
 
+        # Path where the statics files are stored
+        self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
+
         # Define the style (CSS) list (hash table) for stats
         self.__style_list = {
             'DEFAULT': '',
@@ -77,6 +80,7 @@ class glancesBottle:
         Define route
         """
         self._app.route('/', method="GET", callback=self._index)
+        self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
 
     def start(self, stats):
         # Init stats
@@ -90,10 +94,20 @@ class glancesBottle:
         pass
 
     def _index(self):
+        """
+        Bottle callback for index.html (/) file
+        """
         # Update the stat
         self.stats.update()
         # Display
         return self.display(self.stats)
+
+    def _css(self, filename):
+        """
+        Bottle callback for *.css files
+        """
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
 
     def display(self, stats):
         """
@@ -101,18 +115,6 @@ class glancesBottle:
 
         stats: Stats database to display
         """
-        # html = template('header')
-        # html += "<header>"
-        # html += template(self.stats.get_plugin('system').get_bottle(self.args), 
-        #                  **self.stats.get_plugin('system').get_raw())
-        # html += template(self.stats.get_plugin('uptime').get_bottle(self.args))
-        # html += "</header>"
-        # html += template('newline')
-        # html += "<section>"
-        # html += template(self.stats.get_plugin('cpu').get_bottle(self.args), 
-        #                  **self.stats.get_plugin('cpu').get_raw())
-        # html += "</section>"
-        # html += template('footer')
 
         html = template('header')
         html += "<header>"
@@ -139,6 +141,10 @@ class glancesBottle:
         html += "</aside>"
         html += "<aside>"
         html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_curse(args=self.args))
+        html += template('newline')
+        html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_curse(args=self.args))
+        html += template('newline')
+        html += self.display_plugin('processlist', self.stats.get_plugin('processlist').get_curse(args=self.args))
         html += "</aside>"
         html += "</section>"
         html += template('footer')
