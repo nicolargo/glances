@@ -63,6 +63,7 @@ class glancesBottle:
             'DEFAULT': '',
             'UNDERLINE': 'underline',
             'BOLD': 'bold',
+            'SORT': 'sort',
             'OK': 'ok',
             'TITLE': 'title',
             'CAREFUL': 'careful',

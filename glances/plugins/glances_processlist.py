@@ -75,12 +75,12 @@ class Plugin(GlancesPlugin):
         try:
             args.process_sorted_by
         except AttributeError:
-            args.process_sorted_by = 'cpu_percent'        
+            args.process_sorted_by = glances_processes.getsortkey()        
         if (args.process_sorted_by == 'auto'):
             process_sort_key = glances_processes.getsortkey()
         else:
             process_sort_key = args.process_sorted_by
-        sort_style = 'BOLD'
+        sort_style = 'SORT'
 
         # Header
         msg = "{0:15}".format(" ")

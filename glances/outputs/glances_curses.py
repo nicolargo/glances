@@ -124,6 +124,7 @@ class glancesCurses:
             'DEFAULT': self.no_color,
             'UNDERLINE': curses.A_UNDERLINE,
             'BOLD': A_BOLD,
+            'SORT': A_BOLD,
             'OK': self.default_color2,
             'TITLE': self.title_color,
             'CAREFUL': self.ifCAREFUL_color2,
