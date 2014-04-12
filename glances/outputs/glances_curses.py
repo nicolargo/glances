@@ -270,7 +270,7 @@ class glancesCurses:
 
         if (self.args.help_tag):
             # Display the stats...
-            self.display_plugin(stats.get_plugin('help').get_curse(args=self.args))
+            self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
             return False
 
@@ -278,24 +278,24 @@ class glancesCurses:
         self.args.cs_status = cs_status
 
         # Display first line (system+uptime)
-        stats_system = stats.get_plugin('system').get_curse(args=self.args)
-        stats_uptime = stats.get_plugin('uptime').get_curse()
-        l = self.get_curse_width(stats_system) + self.get_curse_width(stats_uptime) + self.space_between_column
+        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
+        stats_uptime = stats.get_plugin('uptime').get_stats_display()
+        l = self.get_stats_display_width(stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
         self.display_plugin(stats_system, display_optional=(screen_x >= l))
         self.display_plugin(stats_uptime)
 
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
         if (self.args.percpu):
-            stats_percpu = stats.get_plugin('percpu').get_curse()
-            l = self.get_curse_width(stats_percpu)
+            stats_percpu = stats.get_plugin('percpu').get_stats_display()
+            l = self.get_stats_display_width(stats_percpu)
         else:
-            stats_cpu = stats.get_plugin('cpu').get_curse()
-            l = self.get_curse_width(stats_cpu)
-        stats_load = stats.get_plugin('load').get_curse()
-        stats_mem = stats.get_plugin('mem').get_curse()
-        stats_memswap = stats.get_plugin('memswap').get_curse()
-        l += self.get_curse_width(stats_load) + self.get_curse_width(stats_mem) + self.get_curse_width(stats_memswap)
+            stats_cpu = stats.get_plugin('cpu').get_stats_display()
+            l = self.get_stats_display_width(stats_cpu)
+        stats_load = stats.get_plugin('load').get_stats_display()
+        stats_mem = stats.get_plugin('mem').get_stats_display()
+        stats_memswap = stats.get_plugin('memswap').get_stats_display()
+        l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
         if (screen_x > (3 * self.space_between_column + l)):
             self.space_between_column = int((screen_x - l) / 3)
@@ -311,23 +311,23 @@ class glancesCurses:
         self.space_between_column = 3
 
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS)
-        self.display_plugin(stats.get_plugin('network').get_curse(args=self.args))
-        self.display_plugin(stats.get_plugin('diskio').get_curse(args=self.args))
-        self.display_plugin(stats.get_plugin('fs').get_curse(args=self.args))
-        self.display_plugin(stats.get_plugin('sensors').get_curse(args=self.args))
+        self.display_plugin(stats.get_plugin('network').get_stats_display(args=self.args))
+        self.display_plugin(stats.get_plugin('diskio').get_stats_display(args=self.args))
+        self.display_plugin(stats.get_plugin('fs').get_stats_display(args=self.args))
+        self.display_plugin(stats.get_plugin('sensors').get_stats_display(args=self.args))
         # Display last line (currenttime)
-        self.display_plugin(stats.get_plugin('now').get_curse())
+        self.display_plugin(stats.get_plugin('now').get_stats_display())
 
         # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
         if (screen_x > 52):
-            stats_processcount = stats.get_plugin('processcount').get_curse(args=self.args)
-            stats_processlist = stats.get_plugin('processlist').get_curse(args=self.args)
-            stats_alert = stats.get_plugin('alert').get_curse(args=self.args)
-            stats_monitor = stats.get_plugin('monitor').get_curse(args=self.args)
+            stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
+            stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
+            stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
+            stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
             self.display_plugin(stats_processcount)
             self.display_plugin(stats_monitor)
             self.display_plugin(stats_processlist, 
-                                max_y=(screen_y - self.get_curse_height(stats_alert) - 3))
+                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 3))
             self.display_plugin(stats_alert)
 
         return True
@@ -359,14 +359,14 @@ class glancesCurses:
         # Set the upper/left position of the message
         if (plugin_stats['column'] < 0):
             # Right align (last column)
-            display_x = screen_x - self.get_curse_width(plugin_stats)
+            display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
             if (plugin_stats['column'] not in self.column_to_x):
                 self.column_to_x[plugin_stats['column']] = plugin_stats['column']
             display_x = self.column_to_x[plugin_stats['column']]
         if (plugin_stats['line'] < 0):
             # Bottom (last line)
-            display_y = screen_y - self.get_curse_height(plugin_stats)
+            display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
             if (plugin_stats['line'] not in self.line_to_y):
                 self.line_to_y[plugin_stats['line']] = plugin_stats['line']
@@ -450,7 +450,7 @@ class glancesCurses:
             # Wait 100ms...
             curses.napms(100)
 
-    def get_curse_width(self, curse_msg, without_option=False):
+    def get_stats_display_width(self, curse_msg, without_option=False):
         # Return the width of the formated curses message
         # The height is defined by the maximum line
 
@@ -468,7 +468,7 @@ class glancesCurses:
         else:
             return c
 
-    def get_curse_height(self, curse_msg):
+    def get_stats_display_height(self, curse_msg):
         # Return the height of the formated curses message
         # The height is defined by the number of '\n'
 

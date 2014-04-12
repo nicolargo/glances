@@ -185,7 +185,7 @@ class GlancesPlugin(object):
         """
         return [self.curse_add_line(str(self.stats))]
 
-    def get_curse(self, args=None):
+    def get_stats_display(self, args=None):
         # Return a dict with all the information needed to display the stat
         # key     | description
         #----------------------------
@@ -209,16 +209,6 @@ class GlancesPlugin(object):
                 'msgdict': self.msg_curse(args),
                 'column': column_curse,
                 'line': line_curse}
-
-    def get_bottle(self, args=None):
-        # Return the HTML representation of the plugin
-
-        if (hasattr(self, 'msg_bottle')):
-            msg_bottle = self.msg_bottle(args)
-        else:
-            msg_bottle = None
-
-        return msg_bottle
 
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
         """

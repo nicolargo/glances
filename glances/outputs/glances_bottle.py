@@ -133,29 +133,29 @@ class glancesBottle:
 
         html = template('header', refresh_time=refresh_time)
         html += '<header>'
-        html += self.display_plugin('system', self.stats.get_plugin('system').get_curse(args=self.args))
-        html += self.display_plugin('uptime', self.stats.get_plugin('uptime').get_curse(args=self.args))
+        html += self.display_plugin('system', self.stats.get_plugin('system').get_stats_display(args=self.args))
+        html += self.display_plugin('uptime', self.stats.get_plugin('uptime').get_stats_display(args=self.args))
         html += '</header>'
         html += template('newline')
         html += '<section>'
-        html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_curse(args=self.args))
-        html += self.display_plugin('load', self.stats.get_plugin('load').get_curse(args=self.args))
-        html += self.display_plugin('mem', self.stats.get_plugin('mem').get_curse(args=self.args))
-        html += self.display_plugin('memswap', self.stats.get_plugin('memswap').get_curse(args=self.args))
+        html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_stats_display(args=self.args))
+        html += self.display_plugin('load', self.stats.get_plugin('load').get_stats_display(args=self.args))
+        html += self.display_plugin('mem', self.stats.get_plugin('mem').get_stats_display(args=self.args))
+        html += self.display_plugin('memswap', self.stats.get_plugin('memswap').get_stats_display(args=self.args))
         html += '</section>'
         html += template('newline')
         html += '<div>'
         html += '<aside>'
-        html += self.display_plugin('network', self.stats.get_plugin('network').get_curse(args=self.args))
-        html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_curse(args=self.args))
-        html += self.display_plugin('fs', self.stats.get_plugin('fs').get_curse(args=self.args))
-        html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_curse(args=self.args))
+        html += self.display_plugin('network', self.stats.get_plugin('network').get_stats_display(args=self.args))
+        html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_stats_display(args=self.args))
+        html += self.display_plugin('fs', self.stats.get_plugin('fs').get_stats_display(args=self.args))
+        html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_stats_display(args=self.args))
         html += '</aside>'
         html += '<section>'
-        html += self.display_plugin('alert', self.stats.get_plugin('alert').get_curse(args=self.args))
-        html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_curse(args=self.args))
-        html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_curse(args=self.args))
-        html += self.display_plugin('processlist', self.stats.get_plugin('processlist').get_curse(args=self.args))
+        html += self.display_plugin('alert', self.stats.get_plugin('alert').get_stats_display(args=self.args))
+        html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_stats_display(args=self.args))
+        html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_stats_display(args=self.args))
+        html += self.display_plugin('processlist', self.stats.get_plugin('processlist').get_stats_display(args=self.args))
         html += '</section>'
         html += '</div>'
         html += template('newline')
