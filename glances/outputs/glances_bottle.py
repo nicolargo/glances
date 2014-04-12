@@ -83,6 +83,7 @@ class glancesBottle:
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
+        self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
 
     def start(self, stats):
         # Init stats
@@ -115,6 +116,13 @@ class glancesBottle:
         """
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
+
+    def _js(self, filename):
+        """
+        Bottle callback for *.js files
+        """
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
     def display(self, stats, refresh_time=None):
         """
@@ -178,6 +186,10 @@ class glancesBottle:
             if (m['msg'].startswith('\n')):
                 tpl += '</div>'
                 tpl += '<div class="row">'
+                continue
+            # Do not display splittable
+            if (m['splittable']):
+                tpl += '<span></span>'
                 continue
             tpl += '<span class="cell" id="%s">%s</span>' % (self.__style_list[m['decoration']] , 
                                                                                m['msg'].replace(' ', '&nbsp;'))
