@@ -22,6 +22,8 @@
 import sys
 import socket
 import json
+from base64 import b64decode
+from hashlib import md5
 
 # Import Glances libs
 from glances.core.glances_globals import __version__
@@ -201,14 +203,13 @@ class GlancesServer():
     This class creates and manages the TCP server
     """
 
-    def __init__(self, bind_address="0.0.0.0",
-                 bind_port=61209,
-                 requestHandler=GlancesXMLRPCHandler,
+    def __init__(self, requestHandler=GlancesXMLRPCHandler,
                  cached_time=1,
-                 config=None):
+                 config=None,
+                 args=None):
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(bind_address, bind_port, requestHandler)
+            self.server = GlancesXMLRPCServer(args.bind, args.port, requestHandler)
         except Exception as err:
             print(_("Error: Cannot start Glances server (%s)") % err)
             sys.exit(2)

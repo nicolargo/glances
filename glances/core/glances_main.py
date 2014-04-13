@@ -67,6 +67,8 @@ class GlancesMain(object):
     server_ip = None
     # Server TCP port number (default is 61209)
     server_port = 61209
+    # Web Server TCP port number (default is 61208)
+    web_server_port = 61208
     # Default username/password for client/server mode
     username = "glances"
     password = ""
@@ -206,6 +208,8 @@ class GlancesMain(object):
                 args.time = 5
             else:
                 args.time = 3
+        # !!! Usefull ? Default refresh time
+        if (args.time is not None): self.refresh_time = args.time 
 
         # By default Help is hidden
         args.help_tag = False
@@ -214,38 +218,46 @@ class GlancesMain(object):
         args.network_sum = False
         args.network_cumul = False
 
+        # Bind address/port
+        if (args.bind is None): 
+            args.bind = self.bind_ip  
+        if (args.port is None): 
+            if (args.webserver):
+                args.port = self.web_server_port
+            else:
+                args.port = self.server_port
+        else:
+            args.port = int(args.port)
+
+        # Server or client login/password
+        args.username = self.username
+        if (args.password_arg is not None):
+            # Password is passed as an argument 
+            args.password = args.password_arg
+        elif (args.password):
+            # Interactive password
+            if (args.server): 
+                args.password = self.__get_password(
+                                  description=_("Define the password for the Glances server"), 
+                                  confirm=True)
+            elif (args.client):
+                args.password = self.__get_password(
+                                  description=_("Enter the Glances server password"), 
+                                  confirm=False)
+        else:
+            # Default is no password
+            args.password = self.password
+
         # !!! Change global variables regarding to user args
         # !!! To be refactor to use directly the args list in the code
-        if (args.time is not None): self.refresh_time = args.time 
-        # self.network_bytepersec_tag = args.byte
-        # self.diskio_tag = args.disable_diskio
-        # self.fs_tag = args.disable_mount
-        # self.hddtemp_flag = args.disable_hddtemp 
-        # self.network_tag = args.disable_network
-        # self.process_tag = args.disable_process
-        # self.sensors_tag = args.disable_sensors and is_Linux # and sensors_lib_tag
-        self.use_bold = args.no_bold
-        self.percpu_tag = args.percpu
         if (args.config is not None):
             self.conf_file_tag = True
             self.conf_file = args.config
-        if (args.bind is not None): self.bind_ip = args.bind 
         if (args.client is not None):
             self.client_tag = True
             self.server_ip = args.client
         self.webserver_tag = args.webserver
         self.server_tag = args.server
-        if (args.port is not None): self.server_port = args.port 
-        if (args.password_arg is not None): self.password = args.password_arg
-        if (args.password):
-            if (self.server_tag): 
-                self.password = self.__get_password(
-                                  description=_("Define the password for the Glances server"), 
-                                  confirm=True)
-            elif (self.client_tag):
-                self.password = self.__get_password(
-                                  description=_("Enter the Glances server password"), 
-                                  confirm=False)
         if (args.output is not None):
             setattr(self, args.output+"_tag", True)
         if (args.file is not None):

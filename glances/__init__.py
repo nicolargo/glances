@@ -80,9 +80,7 @@ def main():
 
         # Init the standalone mode
         standalone = GlancesStandalone(config=core.get_config(),
-                                       args=core.get_args(),
-                                       refresh_time=core.refresh_time,
-                                       use_bold=core.use_bold)
+                                       args=core.get_args())
 
         # Start the standalone (CLI) loop
         standalone.serve_forever()
@@ -93,9 +91,8 @@ def main():
         from glances.core.glances_client import GlancesClient
 
         # Init the client
-        client = GlancesClient(args=core.get_args(),
-                               server_address=core.server_ip, server_port=int(core.server_port),
-                               username=core.username, password=core.password, config=core.get_config())
+        client = GlancesClient(config=core.get_config(),
+                               args=core.get_args())
 
         # Test if client and server are in the same major version
         if (not client.login()):
@@ -106,8 +103,6 @@ def main():
         client.serve_forever()
 
         # Shutdown the client
-        # !!! How to close the server with CTRL-C
-        # !!! Call core.end() with parameters ?
         client.close()
 
     elif (core.is_server()):
@@ -116,16 +111,21 @@ def main():
         from glances.core.glances_server import GlancesServer
 
         # Init the server
-        server = GlancesServer(bind_address=core.bind_ip,
-                               bind_port=int(core.server_port),
-                               cached_time=core.cached_time,
-                               config=core.get_config())
-        # print(_("DEBUG: Glances server is running on %s:%s with config file %s") % (core.bind_ip, core.server_port, core.config.get_config_path()))
-        print("{} {}:{}".format(_("Glances server is running on"), core.bind_ip, core.server_port))
+        # server = GlancesServer(bind_address=core.bind_ip,
+        #                        bind_port=int(core.server_port),
+        #                        cached_time=core.cached_time,
+        #                        config=core.get_config())
+
+        args = core.get_args()
+
+        server = GlancesServer(cached_time=core.cached_time,
+                               config=core.get_config(),
+                               args=args)
+        print("{} {}:{}".format(_("Glances server is running on"), args.bind, args.port))
 
         # Set the server login/password (if -P/--password tag)
-        if (core.password != ""):
-            server.add_user(core.username, core.password)
+        if (args.password != ""):
+            server.add_user(args.username, args.password)
 
         # Start the server loop
         server.serve_forever()

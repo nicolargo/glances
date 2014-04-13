@@ -47,8 +47,6 @@ class glancesBottle:
         self.stats = None
 
         # Init Bottle
-        self._host = 'localhost'
-        self._port = 8080
         self._app = Bottle()
         self._route()
 
@@ -90,7 +88,7 @@ class glancesBottle:
         self.stats = stats
 
         # Start the Bottle
-        self._app.run(host=self._host, port=self._port)
+        self._app.run(host=self.args.bind, port=self.args.port)
 
     def end(self):
         # End the Bottle

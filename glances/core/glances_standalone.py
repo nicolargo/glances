@@ -28,7 +28,7 @@ class GlancesStandalone():
     This class creates and manages the Glances standalone session
     """
 
-    def __init__(self, config=None, args=None, refresh_time=3, use_bold=True):
+    def __init__(self, config=None, args=None):
 
         # Init stats
         self.stats = GlancesStats(config)

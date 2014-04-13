@@ -45,15 +45,17 @@ class GlancesClient():
     """
 
     def __init__(self,
-                 args=None,
-                 server_address="localhost", server_port=61209,
-                 username="glances", password="",
-                 config=None):
+                 config=None,
+                 args=None):
+        # Store the arg/config
+        self.args = args
+        self.config = config
+
         # Build the URI
-        if (password != ""):
-            uri = 'http://%s:%s@%s:%d' % (username, password, server_address, server_port)
+        if (args.password != ""):
+            uri = 'http://%s:%s@%s:%d' % (args.username, args.password, args.bind, args.port)
         else:
-            uri = 'http://%s:%d' % (server_address, server_port)
+            uri = 'http://%s:%d' % (args.bind, args.port)
 
         # Try to connect to the URI
         try:
@@ -61,10 +63,6 @@ class GlancesClient():
         except Exception as e:
             print("{} {} ({})".format(_("Error: creating client socket"), uri, e))
             sys.exit(2)
-
-        # Store the arg/config
-        self.args = args
-        self.config = config
 
     def login(self):
         """

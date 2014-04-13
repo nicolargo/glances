@@ -103,7 +103,10 @@ class Plugin(GlancesPlugin):
                     msg = "{0}".format(alert[3])
                     ret.append(self.curse_add_line(msg, decoration=alert[2]))
                 # Min / Mean / Max
-                msg = " ({0:.1f}/{1:.1f}/{2:.1f})".format(alert[6], alert[5], alert[4])
+                if (alert[6] == alert[4]):
+                    msg = " ({0:.1f})".format(alert[5])
+                else:
+                    msg = " (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})".format(alert[6], alert[5], alert[4])
                 ret.append(self.curse_add_line(msg))
 
                 # else:

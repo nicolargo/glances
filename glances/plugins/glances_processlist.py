@@ -182,7 +182,10 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, optional=True))
                 ret.append(self.curse_add_line(msg, optional=True))
             # Command line
-            msg = " {0}".format(p['cmdline'])
+            try:
+                msg = " {0}".format(p['cmdline'])
+            except UnicodeEncodeError:
+                msg = ""
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
 
         # Return the message with decoration
