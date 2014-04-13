@@ -20,16 +20,21 @@
 
 # Import system lib
 import sys
-try:
-    import curses
-    import curses.panel
-except ImportError:
-    print('Curses module not found. Glances cannot start in standalone mode.')
-    sys.exit(1)
 
 # Import Glances lib
 from glances.core.glances_timer import Timer
-from glances.core.glances_globals import glances_logs, glances_processes
+from glances.core.glances_globals import glances_logs, glances_processes, is_Windows
+
+# Import curses lib for "normal" operating system and consolelog for Windows
+if (not is_Windows):
+    try:
+        import curses
+        import curses.panel
+    except ImportError:
+        print('Curses module not found. Glances cannot start in standalone mode.')
+        sys.exit(1)
+else:
+    from glances.outputs.glances_colorconsole import WCurseLight as curses
 
 
 class glancesCurses:

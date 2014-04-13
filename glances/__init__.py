@@ -110,12 +110,6 @@ def main():
         # Import the Glances server module
         from glances.core.glances_server import GlancesServer
 
-        # Init the server
-        # server = GlancesServer(bind_address=core.bind_ip,
-        #                        bind_port=int(core.server_port),
-        #                        cached_time=core.cached_time,
-        #                        config=core.get_config())
-
         args = core.get_args()
 
         server = GlancesServer(cached_time=core.cached_time,
@@ -130,9 +124,7 @@ def main():
         # Start the server loop
         server.serve_forever()
 
-        # Shutdown the server
-        # !!! How to close the server with CTRL-C
-        # !!! Call core.end() with parameters ?
+        # Shutdown the server?
         server.server_close()
 
     elif (core.is_webserver()):

@@ -8,7 +8,8 @@ from setuptools import setup
 
 data_files = [
     ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                           'conf/glances.conf', 'docs/glances-doc.html']),
+                           'conf/glances.conf', 'docs/glances-doc.rst', 
+                           'docs/glances-doc.html']),
     ('share/doc/glances/images', glob.glob('docs/images/*.png')),
     ('share/man/man1', ['man/glances.1'])
 ]
@@ -27,24 +28,24 @@ for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
 if sys.platform.startswith('win'):
-    requires = ['psutil>=0.5.1', 'colorconsole==0.6']
+    requires = ['psutil>=2.0.0', 'colorconsole==0.6']
 else:
-    requires = ['psutil>=0.5.1']
+    requires = ['psutil>=2.0.0']
 
 setup(
     name='Glances',
-    version='1.7.4',
+    version='2.0',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-1.7.4.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-2.0.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=requires,
     extras_require={
-        'HTML': ['jinja2'],
+        'WEB': ['bottle'],
         'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo']
     },
