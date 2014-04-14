@@ -104,7 +104,7 @@ class glancesCurses:
         if self.hascolors:
             # Colors text styles
             self.no_color = curses.color_pair(1)
-            self.default_color = curses.color_pair(3) | A_BOLD 
+            self.default_color = curses.color_pair(3) | A_BOLD
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
@@ -331,7 +331,7 @@ class glancesCurses:
             stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
             self.display_plugin(stats_processcount)
             self.display_plugin(stats_monitor)
-            self.display_plugin(stats_processlist, 
+            self.display_plugin(stats_processlist,
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 3))
             self.display_plugin(stats_alert)
 
@@ -346,13 +346,13 @@ class glancesCurses:
         # Exit if:
         # - the plugin_stats message is empty
         # - the display tag = False
-        if ((plugin_stats['msgdict'] == []) 
+        if ((plugin_stats['msgdict'] == [])
             or (not plugin_stats['display'])):
             # Display the next plugin at the current plugin position
             try:
                 self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
                 self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
-            except Exception, e:
+            except Exception:
                 pass
             # Exit
             return 0

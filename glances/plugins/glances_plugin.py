@@ -77,7 +77,7 @@ class GlancesPlugin(object):
                 # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
                 try:
                     self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
-                except ValueError, e:
+                except ValueError:
                     self.limits[self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
 
     def set_limits(self, input_limits):
@@ -159,19 +159,19 @@ class GlancesPlugin(object):
         if (header == ""):
             try:
                 return self.limits[self.plugin_name + '_' + 'hide']
-            except Exception, e:
+            except Exception:
                 return []
         else:
             try:
-                return self.limits[self.plugin_name + '_' + header + '_' + 'hide']        
-            except Exception, e:
+                return self.limits[self.plugin_name + '_' + header + '_' + 'hide']
+            except Exception:
                 return []
 
     def is_hide(self, value, header=""):
         """
         Return True if the value is in the hide configuration list
         """
-        return value in self.get_hide(header=header) 
+        return value in self.get_hide(header=header)
 
     def get_limit_careful(self, header=""):
         if (header == ""):
