@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Glances - An eye on your system
+# This file is part of Glances.
 #
 # Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
 #

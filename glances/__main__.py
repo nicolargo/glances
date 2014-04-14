@@ -37,4 +37,3 @@ import glances
 
 if __name__ == '__main__':
     glances.main()
-    
