@@ -105,7 +105,7 @@ class glancesGrabHDDTemp:
             sck.connect((self.host, self.port))
             data = sck.recv(4096)
             sck.close()
-        except ConnectionRefusedError:
+        except socket.error:
             data = ""
 
         return data
