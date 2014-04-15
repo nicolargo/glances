@@ -8,8 +8,7 @@ from setuptools import setup
 
 data_files = [
     ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                           'conf/glances.conf', 'docs/glances-doc.rst', 
-                           'docs/glances-doc.html']),
+                           'conf/glances.conf', 'docs/glances-doc.html']),
     ('share/doc/glances/images', glob.glob('docs/images/*.png')),
     ('share/man/man1', ['man/glances.1'])
 ]
@@ -31,6 +30,9 @@ if sys.platform.startswith('win'):
     requires = ['psutil>=2.0.0', 'colorconsole==0.6']
 else:
     requires = ['psutil>=2.0.0']
+
+if sys.version_info < (2, 7):
+    requires += ['argparse']
 
 setup(
     name='Glances',

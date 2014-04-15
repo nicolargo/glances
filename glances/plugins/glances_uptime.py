@@ -65,7 +65,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Add the line with decoration
-        ret.append(self.curse_add_line(_("Uptime: {}").format(self.stats)))
+        ret.append(self.curse_add_line(_("Uptime: {0}").format(self.stats)))
 
         # Return the message with decoration
         return ret
