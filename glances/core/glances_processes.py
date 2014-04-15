@@ -38,16 +38,16 @@ class glancesProcesses:
         # See: https://code.google.com/p/psutil/issues/detail?id=462
         self.username_cache = {}
         self.cmdline_cache = {}
-        
+
         # The internals caches will be cleaned each 'cache_timeout' seconds
         self.cache_timeout = cache_timeout
         self.cache_timer = Timer(self.cache_timeout)
-        
+
         # Init the io dict
         # key = pid
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
-        
+
         # Init stats
         self.processsort = 'cpu_percent'
         self.processlist = []
@@ -106,21 +106,21 @@ class glancesProcesses:
         procstat['status'] = str(proc.status())[:1].upper()
 
         # Process nice
-        procstat['nice'] = proc.get_nice()
+        procstat['nice'] = proc.nice()
 
         # Process memory
-        procstat['memory_info'] = proc.get_memory_info()
-        procstat['memory_percent'] = proc.get_memory_percent()
+        procstat['memory_info'] = proc.memory_info()
+        procstat['memory_percent'] = proc.memory_percent()
 
         # Process CPU
-        procstat['cpu_times'] = proc.get_cpu_times()
-        procstat['cpu_percent'] = proc.get_cpu_percent(interval=0)
+        procstat['cpu_times'] = proc.cpu_times()
+        procstat['cpu_percent'] = proc.cpu_percent(interval=0)
 
         # Process network connections (TCP and UDP) (Experimental)
         # !!! High CPU consumption
         # try:
-        #     procstat['tcp'] = len(proc.get_connections(kind="tcp"))
-        #     procstat['udp'] = len(proc.get_connections(kind="udp"))
+        #     procstat['tcp'] = len(proc.connections(kind="tcp"))
+        #     procstat['udp'] = len(proc.connections(kind="udp"))
         # except:
         #     procstat['tcp'] = 0
         #     procstat['udp'] = 0
@@ -134,7 +134,7 @@ class glancesProcesses:
         if not is_Mac:
             try:
                 # Get the process IO counters
-                proc_io = proc.get_io_counters()
+                proc_io = proc.io_counters()
                 io_new = [proc_io.read_bytes, proc_io.write_bytes]
             except AccessDenied:
                 # Access denied to process IO (no root account)
@@ -168,7 +168,7 @@ class glancesProcesses:
 
         # Do not process if disable tag is set
         if (self.disable_tag):
-            return 
+            return
 
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
@@ -197,7 +197,7 @@ class glancesProcesses:
                     self.processcount['total'] += 1
                 # Update thread number (global statistics)
                 try:
-                    self.processcount['thread'] += proc.get_num_threads()
+                    self.processcount['thread'] += proc.num_threads()
                 except:
                     pass
             except (NoSuchProcess, AccessDenied):

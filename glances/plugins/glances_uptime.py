@@ -18,13 +18,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-# Check for PSUtil already done in the glances_core script
-try:
-    from psutil import get_boot_time
-except:
-    from psutil import BOOT_TIME
-
 from datetime import datetime
+
+# Check for psutil already done in the glances_core script
+import psutil
 
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -54,13 +51,7 @@ class Plugin(GlancesPlugin):
         """
         Update uptime stat
         """
-        try:
-            # For PsUtil >= 0.7.0
-            uptime = datetime.now() - datetime.fromtimestamp(get_boot_time())
-        except NameError:
-            uptime = datetime.now() - datetime.fromtimestamp(BOOT_TIME)
-        else:
-            uptime = '.UNKNOW'
+        uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
 
         # Convert uptime to string (because datetime is not JSONifi)
         self.stats = str(uptime).split('.')[0]
