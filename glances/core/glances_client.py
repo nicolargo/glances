@@ -56,8 +56,8 @@ class GlancesClient():
         # Try to connect to the URI
         try:
             self.client = ServerProxy(uri)
-        except Exception as e:
-            print("{} {} ({})".format(_("Error: creating client socket"), uri, e))
+        except Exception as err:
+            print(_("Error: Couldn't create socket {0}: {1}").format(uri, err))
             sys.exit(2)
 
     def login(self):
@@ -67,13 +67,13 @@ class GlancesClient():
         try:
             client_version = self.client.init()
         except socket.error as err:
-            print("{} ({})".format(_("Error: Connection to server failed"), err))
+            print(_("Error: Connection to server failed: {0}").format(err))
             sys.exit(2)
         except ProtocolError as err:
             if (str(err).find(" 401 ") > 0):
-                print("{} ({})".format(_("Error: Connection to server failed"), _("Bad password")))
+                print(_("Error: Connection to server failed: Bad password"))
             else:
-                print("{} ({})".format(_("Error: Connection to server failed"), err))
+                print(_("Error: Connection to server failed: {0}").format(err))
             sys.exit(2)
 
         # Test if client and server are "compatible"
@@ -90,7 +90,7 @@ class GlancesClient():
             self.screen = glancesCurses(args=self.args)
 
             # Debug
-            # print "Server version: {}\nClient version: {}\n".format(__version__, client_version)
+            # print "Server version: {0}\nClient version: {1}\n".format(__version__, client_version)
             return True
         else:
             return False
