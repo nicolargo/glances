@@ -17,13 +17,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
+import collections
 import os
 import sys
-import collections
-
-# Import Glances libs
-from glances.core.glances_globals import *
 
 
 class GlancesStats(object):
@@ -182,7 +178,7 @@ class GlancesStatsClient(GlancesStats):
     This class store, update and give stats for the client
     """
 
-    def __init__(self):        
+    def __init__(self):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 

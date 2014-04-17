@@ -17,11 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
 from psutil import __version__ as __psutil_version__
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

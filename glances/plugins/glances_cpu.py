@@ -20,11 +20,8 @@
 Glances CPU plugin
 """
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import cpu_times_percent
+import psutil
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -57,7 +54,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab CPU using the PSUtil cpu_times_percent method
-        cputimespercent = cpu_times_percent(interval=0.0, percpu=False)
+        cputimespercent = psutil.cpu_times_percent(interval=0.0, percpu=False)
 
         # Get all possible value for CPU stats
         # user

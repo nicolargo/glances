@@ -21,8 +21,8 @@
 from datetime import datetime
 
 # Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_globals import glances_logs
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

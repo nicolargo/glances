@@ -22,8 +22,12 @@ Just a stupid plugin to display the help screen
 """
 
 # Import Glances libs
+from glances.core.glances_globals import (
+    __appname__,
+    __psutil_version__,
+    __version__
+)
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_globals import __appname__, __version__, __psutil_version__
 
 
 class Plugin(GlancesPlugin):

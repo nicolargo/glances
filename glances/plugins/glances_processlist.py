@@ -21,8 +21,8 @@
 from datetime import timedelta
 
 # Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_globals import glances_processes
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
         try:
             args.process_sorted_by
         except AttributeError:
-            args.process_sorted_by = glances_processes.getsortkey()        
+            args.process_sorted_by = glances_processes.getsortkey()
         if (args.process_sorted_by == 'auto'):
             process_sort_key = glances_processes.getsortkey()
         else:

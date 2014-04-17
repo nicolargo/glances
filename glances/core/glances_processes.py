@@ -17,8 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system lib
-from psutil import process_iter, AccessDenied, NoSuchProcess
+import psutil
 
 # Import Glances lib
 from glances.core.glances_globals import is_BSD, is_Mac, is_Windows
@@ -136,7 +135,7 @@ class glancesProcesses:
                 # Get the process IO counters
                 proc_io = proc.io_counters()
                 io_new = [proc_io.read_bytes, proc_io.write_bytes]
-            except AccessDenied:
+            except psutil.AccessDenied:
                 # Access denied to process IO (no root account)
                 # Put 0 in all values (for sort) and io_tag = 0 (for display)
                 procstat['io_counters'] = [0, 0] + [0, 0]
@@ -174,7 +173,7 @@ class glancesProcesses:
         time_since_update = getTimeSinceLastUpdate('process_disk')
 
         # For each existing process...
-        for proc in process_iter():
+        for proc in psutil.process_iter():
             try:
                 # Get stats using the PSUtil
                 procstat = self.__get_process_stats(proc)
@@ -200,7 +199,7 @@ class glancesProcesses:
                     self.processcount['thread'] += proc.num_threads()
                 except:
                     pass
-            except (NoSuchProcess, AccessDenied):
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
             else:
                 # Update processlist

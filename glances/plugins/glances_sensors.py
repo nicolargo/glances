@@ -17,8 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
-# sensors library (optional; Linux-only)
+# Sensors library (optional; Linux-only)
 try:
     import sensors
 except ImportError:
@@ -28,7 +27,6 @@ except ImportError:
 from glances.core.glances_globals import is_python3
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
-# from glances.core.glances_timer import getTimeSinceLastUpdate
 
 
 class glancesGrabSensors:

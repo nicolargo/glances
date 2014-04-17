@@ -19,31 +19,31 @@
 
 # Glances informations
 __appname__ = 'glances'
-__version__ = "2.0_Alpha02"
-__author__ = "Nicolas Hennion <nicolas@nicolargo.com>"
-__license__ = "LGPL"
+__version__ = '2.0_Alpha02'
+__author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
+__license__ = 'LGPL'
 
 # Import system libs
-import sys
-import os
 import gettext
 import locale
+import os
+import sys
 
-# Import PsUtil
+# Import psutil
 try:
     from psutil import __version__ as __psutil_version__
 except ImportError:
-    print('PsUtil module not found. Glances cannot start.')
+    print('psutil module not found. Glances cannot start.')
     sys.exit(1)
 
-# PSutil version
+# psutil version
 psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
 
-# Check PsUtil version
+# Check psutil version
 psutil_min_version = (2, 0, 0)
 if (psutil_version < psutil_min_version):
-    print('PsUtil version %s detected.' % __psutil_version__)
-    print('PsUtil 2.0 or higher is needed. Glances cannot start.')
+    print('psutil version %s detected.' % __psutil_version__)
+    print('psutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
 # Path definitions
@@ -75,8 +75,8 @@ else:
     locale_dir = None
 gettext.install(gettext_domain, locale_dir)
 
-# Instances shared between all Glances's scripts
-#===============================================
+# Instances shared between all Glances' scripts
+# ===============================================
 
 # glances_processes for processcount and processlist plugins
 from glances.core.glances_processes import glancesProcesses

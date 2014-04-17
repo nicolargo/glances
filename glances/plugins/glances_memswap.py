@@ -20,11 +20,8 @@
 Glances swap memory plugin
 """
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import swap_memory
+import psutil
 
-# from ..plugins.glances_plugin import GlancesPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -53,7 +50,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab SWAP using the PSUtil swap_memory method
-        sm_stats = swap_memory()
+        sm_stats = psutil.swap_memory()
 
         # Get all the swap stats (copy/paste of the PsUtil documentation)
         # total: total swap memory in bytes
@@ -105,7 +102,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['used'], 
+            msg, self.get_alert_log(self.stats['used'],
             max=self.stats['total'])))
         # New line
         ret.append(self.curse_new_line())

@@ -17,11 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import cpu_count
+import psutil
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -55,8 +52,8 @@ class Plugin(GlancesPlugin):
         # Return None if undefine
         core_stats = {}
         try:
-            core_stats["phys"] = cpu_count(logical=False)
-            core_stats["log"] = cpu_count()
+            core_stats["phys"] = psutil.cpu_count(logical=False)
+            core_stats["log"] = psutil.cpu_count()
         except NameError:
             core_stats = None
 

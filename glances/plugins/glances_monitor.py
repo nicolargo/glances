@@ -18,8 +18,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import Glances lib
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_monitor_list import monitorList as glancesMonitorList
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

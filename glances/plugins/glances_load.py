@@ -21,11 +21,11 @@ Glances load plugin
 """
 
 # Import system libs
-from os import getloadavg
+import os
 
 # Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.plugins.glances_core import Plugin as CorePlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -60,7 +60,7 @@ class Plugin(GlancesPlugin):
 
         # Get the load using the os standard lib
         try:
-            load = getloadavg()
+            load = os.getloadavg()
         except OSError:
             self.stats = {}
         else:

@@ -18,33 +18,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-import sys
-import socket
-import json
 from base64 import b64decode
 from hashlib import md5
+import json
+import socket
+import sys
+try:
+    from xmlrpc.server import SimpleXMLRPCRequestHandler
+    from xmlrpc.server import SimpleXMLRPCServer
+except ImportError:  # Python 2
+    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
 from glances.core.glances_globals import __version__
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
-
-# Other imports
-try:
-    # Python 2
-    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
-except ImportError:
-    # Python 3
-    from xmlrpc.server import SimpleXMLRPCRequestHandler
-    from xmlrpc.server import SimpleXMLRPCServer
-
-try:
-    # Python 2
-    from xmlrpclib import ServerProxy, ProtocolError
-except ImportError:
-    # Python 3
-    from xmlrpc.client import ServerProxy, ProtocolError
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):

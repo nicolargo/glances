@@ -17,24 +17,25 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-__appname__ = 'glances'
-
-# Import Glances lib
-from glances.core.glances_globals import *
-
 # Import system libs
 import os
 try:
-    # Python 2
-    from ConfigParser import RawConfigParser
-    from ConfigParser import NoOptionError
-except ImportError:
-    # Python 3
     from configparser import RawConfigParser
     from configparser import NoOptionError
+except ImportError:  # Python 2
+    from ConfigParser import RawConfigParser
+    from ConfigParser import NoOptionError
+
+# Import Glances lib
+from glances.core.glances_globals import (
+    __appname__,
+    is_Linux,
+    is_python3,
+    work_path
+)
 
 
-class Config:
+class Config(object):
     """
     This class is used to access/read config file, if it exists
 

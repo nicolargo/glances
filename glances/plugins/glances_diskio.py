@@ -20,12 +20,11 @@
 Glances CPU plugin
 """
 
-# Import system lib
-from psutil import disk_io_counters
+import psutil
 
 # Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -62,7 +61,7 @@ class Plugin(GlancesPlugin):
         # write_bytes: number of bytes written
         # read_time: time spent reading from disk (in milliseconds)
         # write_time: time spent writing to disk (in milliseconds)
-        diskiocounters = disk_io_counters(perdisk=True)
+        diskiocounters = psutil.disk_io_counters(perdisk=True)
 
         # Previous disk IO stats are stored in the diskio_old variable
         diskio = []

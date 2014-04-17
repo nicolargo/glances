@@ -21,11 +21,11 @@ Glances Network interface plugin
 """
 
 # Import system libs
-from psutil import net_io_counters
+import psutil
 
 # Import Glances lib
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -50,7 +50,6 @@ class Plugin(GlancesPlugin):
         # Init stats
         self.network_old = []
 
-
     def update(self):
         """
         Update network stats
@@ -58,7 +57,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab network interface stat using the PsUtil net_io_counter method
-        netiocounters = net_io_counters(pernic=True)
+        netiocounters = psutil.net_io_counters(pernic=True)
 
         # Previous network interface stats are stored in the network_old variable
         network = []
@@ -142,7 +141,7 @@ class Plugin(GlancesPlugin):
                 msg = "{0:>7}".format(_("Rx/s"))
                 ret.append(self.curse_add_line(msg))
                 msg = "{0:>7}".format(_("Tx/s"))
-                ret.append(self.curse_add_line(msg))            
+                ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
             # Do not display hidden interfaces
@@ -154,22 +153,22 @@ class Plugin(GlancesPlugin):
                 if (args.network_cumul):
                     rx = self.auto_unit(int(i['cumulative_rx']))
                     tx = self.auto_unit(int(i['cumulative_tx']))
-                    sx = self.auto_unit(int(i['cumulative_tx']) 
+                    sx = self.auto_unit(int(i['cumulative_tx'])
                                         + int(i['cumulative_tx']))
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update']))
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update']))
-                    sx = self.auto_unit(int(i['rx'] // i['time_since_update']) 
+                    sx = self.auto_unit(int(i['rx'] // i['time_since_update'])
                                         + int(i['tx'] // i['time_since_update']))
             else:
                 if (args.network_cumul):
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
-                    sx = self.auto_unit(int(i['cumulative_rx'] * 8) 
+                    sx = self.auto_unit(int(i['cumulative_rx'] * 8)
                                         + int(i['cumulative_tx'] * 8)) + "b"
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
-                    tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"                    
+                    tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"
                     sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8) +
                                         int(i['tx'] // i['time_since_update'] * 8)) + "b"
             # New line

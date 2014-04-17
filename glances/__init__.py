@@ -21,8 +21,8 @@ Init the Glances software
 """
 
 # Import system lib
-import sys
 import signal
+import sys
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionnaly

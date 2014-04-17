@@ -17,18 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system lib
 import os
 import sys
+
 try:
     from bottle import Bottle, template, static_file, TEMPLATE_PATH
 except ImportError:
     print('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(1)
-
-# Import Glances lib
-from glances.core.glances_timer import Timer
-from glances.core.glances_globals import glances_logs, glances_processes
 
 
 class glancesBottle:
@@ -103,7 +99,7 @@ class glancesBottle:
 
         # Update the stat
         self.stats.update()
-        
+
         # Display
         return self.display(self.stats, refresh_time=refresh_time)
 
@@ -183,13 +179,13 @@ class glancesBottle:
             if (m['splittable']):
                 tpl += '<span></span>'
                 continue
-            tpl += '<span class="cell" id="%s">%s</span>' % (self.__style_list[m['decoration']] , 
+            tpl += '<span class="cell" id="%s">%s</span>' % (self.__style_list[m['decoration']] ,
                                                                                m['msg'].replace(' ', '&nbsp;'))
         tpl += '</div>'
         tpl += '</div>'
-        
+
         tpl += """ \
-                </article>   
+                </article>
                 %#End Template for Bottle
                """
-        return template(tpl)        
+        return template(tpl)

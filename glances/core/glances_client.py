@@ -17,25 +17,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-Manage the Glances' client 
+Manage the Glances' client
 """
 
 # Import system libs
-import sys
-import socket
 import json
+import socket
+import sys
+try:
+    from xmlrpc.client import ServerProxy, ProtocolError
+except ImportError:  # Python 2
+    from xmlrpclib import ServerProxy, ProtocolError
 
 # Import Glances libs
 from glances.core.glances_globals import __version__
-from glances.outputs.glances_curses import glancesCurses
 from glances.core.glances_stats import GlancesStatsClient
-
-try:
-    # Python 2
-    from xmlrpclib import ServerProxy, ProtocolError
-except ImportError:
-    # Python 3
-    from xmlrpc.client import ServerProxy, ProtocolError
+from glances.outputs.glances_curses import glancesCurses
 
 
 class GlancesClient():
@@ -86,7 +83,7 @@ class GlancesClient():
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
 
             # Load limits from the configuration file
-            # Each client can choose its owns limits 
+            # Each client can choose its owns limits
             self.stats.load_limits(self.config)
 
             # Init screen
@@ -104,7 +101,7 @@ class GlancesClient():
         Return the client/server connection status:
         - Connected: Connection OK
         - Disconnected: Connection NOK
-        """ 
+        """
         # Update the stats
         try:
             server_stats = json.loads(self.client.getAll())

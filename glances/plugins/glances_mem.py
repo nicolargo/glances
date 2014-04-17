@@ -20,11 +20,8 @@
 Glances virtual memory plugin
 """
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import virtual_memory
+import psutil
 
-# from ..plugins.glances_plugin import GlancesPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -53,7 +50,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab MEM using the PSUtil virtual_memory method
-        vm_stats = virtual_memory()
+        vm_stats = psutil.virtual_memory()
 
         # Get all the memory stats (copy/paste of the PsUtil documentation)
         # total: total physical memory available.

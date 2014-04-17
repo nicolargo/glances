@@ -20,9 +20,8 @@
 CPU stats (per cpu)
 """
 
-# Import system libs
-# Check for PSUtil already done in the glances_core script
-from psutil import cpu_times
+# Check for psutil already done in the glances_core script
+import psutil
 
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -58,7 +57,7 @@ class Plugin(GlancesPlugin):
         """
         # Grab CPU using the PSUtil cpu_times method
         # Per-CPU
-        percputime = cpu_times(percpu=True)
+        percputime = psutil.cpu_times(percpu=True)
         percputime_total = []
         for i in range(len(percputime)):
             percputime_total.append(percputime[i].user +

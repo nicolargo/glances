@@ -21,11 +21,11 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_timer import Timer
 from glances.core.glances_globals import glances_logs, glances_processes, is_Windows
+from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
-if (not is_Windows):
+if not is_Windows:
     try:
         import curses
         import curses.panel

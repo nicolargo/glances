@@ -20,8 +20,7 @@
 Batinfo (batterie) plugin
 """
 
-# Import system libs
-# batinfo library (optional; Linux-only)
+# Batinfo library (optional; Linux-only)
 try:
     import batinfo
 except ImportError:

@@ -17,8 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system lib
 import sys
+import threading
+import msvcrt
+
 try:
     import colorconsole
     import colorconsole.terminal
@@ -26,12 +28,10 @@ except ImportError:
     print('Colorconsole module not found. Glances cannot start in standalone mode.')
     sys.exit(1)
 
-import msvcrt
-import threading
 try:
-    import Queue as queue
-except ImportError:
     import queue
+except ImportError:  # Python 2
+    import Queue as queue
 
 
 class ListenGetch(threading.Thread):

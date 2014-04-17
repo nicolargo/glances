@@ -21,15 +21,16 @@ Main Glances script
 """
 
 # Import system libs
-import sys
-import os
 import argparse
+import sys
 
 # Import Glances libs
-from glances.core.glances_globals import __appname__, __version__, __author__, __license__
-from glances.core.glances_globals import *
-# !!! Todo: rename class
 from glances.core.glances_config import Config
+from glances.core.glances_globals import (
+    __appname__,
+    __psutil_version__,
+    __version__
+)
 
 
 class GlancesMain(object):
@@ -41,7 +42,7 @@ class GlancesMain(object):
     refresh_time = 3
     # Set the default cache lifetime to 1 second (only for server)
     # !!! Todo: configuration from the command line
-    cached_time = 1    
+    cached_time = 1
     # Default network bitrate is display in bit per second
     network_bytepersec_tag = False
     # Display (or not) module
@@ -51,7 +52,7 @@ class GlancesMain(object):
     # network_tag = True
     # sensors_tag = True
     # process_tag = True
-    # Display property 
+    # Display property
     use_bold = True
     percpu_tag = False
     # Default configuration file
@@ -62,7 +63,7 @@ class GlancesMain(object):
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
     server_tag = False
-    # Server IP address (no default value) 
+    # Server IP address (no default value)
     server_ip = None
     # Server TCP port number (default is 61209)
     server_port = 61209
@@ -75,7 +76,6 @@ class GlancesMain(object):
     output_list = ['html', 'csv']
     output_file = None
     output_folder = None
-
 
     def __init__(self):
         # Init and manage command line arguments
@@ -92,7 +92,6 @@ class GlancesMain(object):
         # Load the configuration file
         self.config.load()
 
-
     def init_arg(self):
         """
         Init all the command line arguments
@@ -103,55 +102,55 @@ class GlancesMain(object):
                             description='Glances, an eye on your system.')
 
         # Version
-        self.parser.add_argument('-v', '--version', 
-                                 action='version', 
-                                 version=_('%s v%s with PsUtil v%s') 
-                                 % (__appname__.capitalize(), __version__, psutil_version))
+        self.parser.add_argument('-v', '--version',
+                                 action='version',
+                                 version=_('%s v%s with PsUtil v%s')
+                                 % (__appname__.capitalize(), __version__, __psutil_version__))
         # Client mode: set the client IP/name
         self.parser.add_argument('-C', '--config',
                                  help=_('path to the configuration file'))
 
         # Refresh time
         self.parser.add_argument('-t', '--time',
-                                 help=_('set refresh time in seconds (default: %s sec)') % self.refresh_time, 
+                                 help=_('set refresh time in seconds (default: %s sec)') % self.refresh_time,
                                  type=int)
         # Network bitrate in byte per second (default is bit per second)
         self.parser.add_argument('-b', '--byte',
-                                 help=_('display network rate in byte per second (default is bit per second)'), 
+                                 help=_('display network rate in byte per second (default is bit per second)'),
                                  action='store_true')
 
         # Disable DiskIO module
         self.parser.add_argument('--disable_diskio',
-                                 help=_('disable disk I/O module'), 
+                                 help=_('disable disk I/O module'),
                                  action='store_true')
         # Disable mount module
         self.parser.add_argument('--disable_fs',
-                                 help=_('disable file system (mount) module'), 
+                                 help=_('disable file system (mount) module'),
                                  action='store_true')
         # Disable network module
         self.parser.add_argument('--disable_network',
-                                 help=_('disable network module'), 
+                                 help=_('disable network module'),
                                  action='store_true')
         # Enable sensors module
         self.parser.add_argument('--disable_sensors',
-                                 help=_('disable sensors module'), 
+                                 help=_('disable sensors module'),
                                  action='store_true')
         # Disable process module
         self.parser.add_argument('--disable_process',
-                                 help=_('disable process module'), 
+                                 help=_('disable process module'),
                                  action='store_true')
         # Disable log module
         self.parser.add_argument('--disable_log',
-                                 help=_('disable log module'), 
+                                 help=_('disable log module'),
                                  action='store_true')
 
         # Bold attribute for Curse display (not supported by all terminal)
         self.parser.add_argument('-z', '--no_bold',
-                                 help=_('disable bold mode in the terminal'), 
+                                 help=_('disable bold mode in the terminal'),
                                  action='store_false')
         # Per CPU display tag
         self.parser.add_argument('-1', '--percpu',
-                                 help=_('start Glances in per CPU mode)'), 
+                                 help=_('start Glances in per CPU mode)'),
                                  action='store_true')
 
         # Client mode: set the client IP/name
@@ -170,7 +169,7 @@ class GlancesMain(object):
                                  help=_('bind server to the given IPv4/IPv6 address or hostname'))
         # Server TCP port
         self.parser.add_argument('-p', '--port',
-                                 help=_('define the server TCP port (default: %d)') % self.server_port, 
+                                 help=_('define the server TCP port (default: %d)') % self.server_port,
                                  type=int)
         # Password as an argument
         self.parser.add_argument('-P', '--password_arg',
@@ -182,7 +181,7 @@ class GlancesMain(object):
 
         # Output type
         self.parser.add_argument('-o', '--output',
-                                 help=_('define additional output %s') % self.output_list, 
+                                 help=_('define additional output %s') % self.output_list,
                                  choices=self.output_list)
         # Define output type flag to False (default is no output)
         for o in self.output_list:
@@ -190,7 +189,6 @@ class GlancesMain(object):
         # Output file/folder
         self.parser.add_argument('-f', '--file',
                                  help=_('set the html output folder or csv file'))
-
 
     def parse_arg(self):
         """
@@ -202,13 +200,13 @@ class GlancesMain(object):
         # Default refresh time:
         # - is 3 seconds for CLI
         # - is 5 seconds for Web (Bottle)
-        if (args.time is None): 
+        if (args.time is None):
             if (args.webserver):
                 args.time = 5
             else:
                 args.time = 3
         # !!! Usefull ? Default refresh time
-        if (args.time is not None): self.refresh_time = args.time 
+        if (args.time is not None): self.refresh_time = args.time
 
         # By default Help is hidden
         args.help_tag = False
@@ -218,9 +216,9 @@ class GlancesMain(object):
         args.network_cumul = False
 
         # Bind address/port
-        if (args.bind is None): 
-            args.bind = self.bind_ip  
-        if (args.port is None): 
+        if (args.bind is None):
+            args.bind = self.bind_ip
+        if (args.port is None):
             if (args.webserver):
                 args.port = self.web_server_port
             else:
@@ -231,17 +229,17 @@ class GlancesMain(object):
         # Server or client login/password
         args.username = self.username
         if (args.password_arg is not None):
-            # Password is passed as an argument 
+            # Password is passed as an argument
             args.password = args.password_arg
         elif (args.password):
             # Interactive password
-            if (args.server): 
+            if (args.server):
                 args.password = self.__get_password(
-                                  description=_("Define the password for the Glances server"), 
+                                  description=_("Define the password for the Glances server"),
                                   confirm=True)
             elif (args.client):
                 args.password = self.__get_password(
-                                  description=_("Enter the Glances server password"), 
+                                  description=_("Enter the Glances server password"),
                                   confirm=False)
         else:
             # Default is no password
@@ -266,7 +264,6 @@ class GlancesMain(object):
 
         return args
 
-
     def __get_password(self, description='', confirm=False):
         """
         Read a password from the command line (with confirmation if confirm = True)
@@ -288,20 +285,17 @@ class GlancesMain(object):
             sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
             return self.__get_password(description=description, confirm=confirm)
 
-
     def is_standalone(self):
         """
         Return True if Glances is running in standalone mode
         """
         return not self.client_tag and not self.server_tag and not self.webserver_tag
 
-
     def is_client(self):
         """
         Return True if Glances is running in client mode
         """
         return self.client_tag and not self.server_tag
-
 
     def is_server(self):
         """

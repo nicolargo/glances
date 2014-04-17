@@ -18,8 +18,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-import time
 from datetime import datetime
+import time
 
 # Import Glances libs
 from glances.core.glances_globals import glances_processes
@@ -34,9 +34,9 @@ class glancesLogs:
     item_type = "CPU*|LOAD|MEM|MON"
     item_value = value
     Item is defined by:
-      ["begin", 
-       "end", 
-       "WARNING|CRITICAL", 
+      ["begin",
+       "end",
+       "WARNING|CRITICAL",
        "CPU|LOAD|MEM",
        MAX, AVG, MIN, SUM, COUNT,
        [top3 process list],
@@ -71,7 +71,7 @@ class glancesLogs:
         An item exist in the list if:
         * end is < 0
         * item_type is matching
-        Return the item position if exist 
+        Return the item position if exist
         -1 if the item is not found
         """
         for i in range(self.len()):
@@ -138,7 +138,7 @@ class glancesLogs:
                 item.append(item_value)       # MIN
                 item.append(item_value)       # SUM
                 item.append(1)                # COUNT
-                # Process list is sorted automaticaly 
+                # Process list is sorted automaticaly
                 # Overwrite the user choise
                 # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
                 #                     reverse=True)

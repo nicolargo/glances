@@ -50,7 +50,7 @@ class monitorList:
 
         self.config = config
 
-        if ((self.config != None) 
+        if ((self.config != None)
             and self.config.has_section('monitor')):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')

@@ -17,10 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system lib
-from psutil import disk_partitions, disk_usage
+import psutil
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -46,16 +44,16 @@ class glancesGrabFs:
         fs_list = []
 
         # Grab the stats using the PsUtil disk_partitions
-        # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys) 
+        # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
         # and ignore all others (e.g. memory partitions such as /dev/shm)
-        fs_stat = disk_partitions(all=False)
+        fs_stat = psutil.disk_partitions(all=False)
         for fs in range(len(fs_stat)):
             fs_current = {}
             fs_current['device_name'] = fs_stat[fs].device
             fs_current['fs_type'] = fs_stat[fs].fstype
             fs_current['mnt_point'] = fs_stat[fs].mountpoint
             # Grab the disk usage
-            fs_usage = disk_usage(fs_current['mnt_point'])
+            fs_usage = psutil.disk_usage(fs_current['mnt_point'])
             fs_current['size'] = fs_usage.total
             fs_current['used'] = fs_usage.used
             fs_current['avail'] = fs_usage.free
@@ -128,7 +126,7 @@ class Plugin(GlancesPlugin):
             # New line
             ret.append(self.curse_new_line())
             if ((len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 6):
-                # If possible concatenate mode info... Glances touch inside :) 
+                # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
             elif (len(i['mnt_point']) > 9):
                 # Cut mount point name if it is too long
