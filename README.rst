@@ -44,6 +44,12 @@ Installation
 PyPI: The simple way
 --------------------
 
+Prerequisites:
+
+.. code-block:: console
+
+    apt-get install python-dev
+
 Glances is on `PyPI`_. To install, simply use `pip`_:
 
 .. code-block:: console
