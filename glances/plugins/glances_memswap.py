@@ -86,7 +86,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:7} ".format(_("SWAP"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
-        msg = "{0:>5}%".format(format(self.stats['percent'] / 100, '.1'))
+        msg = "{0}".format(format(self.stats['percent'] / 100, '>6.1%'))
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
