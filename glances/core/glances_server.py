@@ -18,11 +18,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-from base64 import b64decode
-from hashlib import md5
 import json
 import socket
 import sys
+from base64 import b64decode
+from hashlib import md5
 try:
     from xmlrpc.server import SimpleXMLRPCRequestHandler
     from xmlrpc.server import SimpleXMLRPCServer
@@ -197,7 +197,7 @@ class GlancesServer():
                  args=None):
         # Init the XML RPC server
         try:
-            self.server = GlancesXMLRPCServer(args.bind, args.port, requestHandler)
+            self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
         except Exception as err:
             print(_("Error: Cannot start Glances server (%s)") % err)
             sys.exit(2)

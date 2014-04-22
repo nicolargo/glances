@@ -114,7 +114,7 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print(_("Glances server is running on {0}:{1}").format(args.bind, args.port))
+        print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if (args.password != ""):

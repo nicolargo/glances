@@ -92,7 +92,7 @@ class glancesCurses:
         else:
             self.hascolors = False
 
-        if (args.no_bold):
+        if args.disable_bold:
             A_BOLD = curses.A_BOLD
         else:
             A_BOLD = 0
@@ -144,7 +144,7 @@ class glancesCurses:
         self.term_window = self.screen.subwin(0, 0)
 
         # Init refresh time
-        self.__refresh_time = args.time
+        self.__refresh_time = args.seconds
 
         # Init process sort method
         self.args.process_sorted_by = 'auto'

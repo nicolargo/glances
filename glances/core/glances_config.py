@@ -49,6 +49,7 @@ class Config(object):
         self.config_path = None
 
         self.parser = RawConfigParser()
+        self.load()
 
     def load(self):
         """

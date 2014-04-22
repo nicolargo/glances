@@ -44,7 +44,7 @@ class GlancesMain(object):
     # !!! Todo: configuration from the command line
     cached_time = 1
     # Default network bitrate is display in bit per second
-    network_bytepersec_tag = False
+    # network_bytepersec_tag = False
     # Display (or not) module
     # diskio_tag = True
     # fs_tag = True
@@ -53,18 +53,18 @@ class GlancesMain(object):
     # sensors_tag = True
     # process_tag = True
     # Display property
-    use_bold = True
-    percpu_tag = False
+    # use_bold = True
+    # percpu_tag = False
     # Default configuration file
-    conf_file_tag = True
-    conf_file = ""
+    # conf_file_tag = True
+    # conf_file = ""
     # Bind IP address (default is all interfaces)
-    bind_ip = "0.0.0.0"
+    # bind_ip = "0.0.0.0"
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
-    server_tag = False
+    # server_tag = False
     # Server IP address (no default value)
-    server_ip = None
+    # server_ip = None
     # Server TCP port number (default is 61209)
     server_port = 61209
     # Web Server TCP port number (default is 61208)
@@ -72,195 +72,120 @@ class GlancesMain(object):
     # Default username/password for client/server mode
     username = "glances"
     password = ""
-    # Output type
-    output_list = ['html', 'csv']
+    # Output type (default is no output)
+    # output_list = ['html', 'csv']
+    html_tag = False
+    csv_tag = False
     output_file = None
     output_folder = None
 
     def __init__(self):
-        # Init and manage command line arguments
-        self.init_arg()
-        self.args = self.parse_arg()
+        """Manage the command line arguments."""
+        self.args = self.parse_args()
 
-        # !!! Why did not use the global glances_logs instance ?
-        # Init the configuration file object
-        if (self.conf_file_tag):
-            # Init
-            self.config = Config(self.conf_file)
-        else:
-            self.config = Config()
-        # Load the configuration file
-        self.config.load()
+    def init_args(self):
+        """Init all the command line arguments."""
+        version = "Glances v" + __version__ + " with psutil v" + __psutil_version__
+        parser = argparse.ArgumentParser(prog=__appname__, conflict_handler='resolve')
+        parser.add_argument('--version', action='version', version=version)
+        parser.add_argument('-b', '--byte', action='store_true', default=False,
+                            dest='byte', help=_('display network rate in byte per second'))
+        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
+                            help=_('bind server to the given IPv4/IPv6 address or hostname'))
+        parser.add_argument('-c', '--client', dest='client',
+                            help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
+        parser.add_argument('-C', '--config', dest='conf_file',
+                            help=_('path to the configuration file'))
+        parser.add_argument('--disable-bold', action='store_false', default=True,
+                            dest='disable_bold', help=_('disable bold mode in the terminal'))
+        parser.add_argument('--disable-diskio', action='store_true', default=False,
+                            dest='disable_diskio', help=_('disable disk I/O module'))
+        parser.add_argument('--disable-fs', action='store_true', default=False,
+                            dest='disable_fs', help=_('disable filesystem module'))
+        parser.add_argument('--disable-network', action='store_true', default=False,
+                            dest='disable_network', help=_('disable network module'))
+        parser.add_argument('--disable-sensors', action='store_true', default=False,
+                            dest='disable_sensors', help=_('disable sensors module'))
+        parser.add_argument('--disable-process', action='store_true', default=False,
+                            dest='disable_process', help=_('disable process module'))
+        parser.add_argument('--disable-log', action='store_true', default=False,
+                            dest='disable_log', help=_('disable log module'))
+        parser.add_argument('-f', '--file', dest='file',
+                            help=_('set the HTML output folder or CSV file'))
+        parser.add_argument('-o', '--output', choices=['HTML', 'CSV'], dest='output',
+                            help=_("Define additional HTML or CSV output"))
+        parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
+                            help=_('define the client/server TCP port [default: %d]') % self.server_port)
+        parser.add_argument('-P', '--password', dest='password_arg',
+                            help=_('old method to define a client/server password'))
+        parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
+                            help=_('define a client/server password from the prompt'))
+        parser.add_argument('-s', '--server', action='store_true', default=False,
+                            dest='server', help=_('run Glances in server mode'))
+        parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
+                            dest='seconds', help=_('set refresh time in seconds [default: %s sec]') % self.refresh_time)
+        parser.add_argument('-w', '--webserver', action='store_true', default=False,
+                            dest='webserver', help=_('run Glances in web server mode'))
+        parser.add_argument('-1', '--percpu', action='store_true', default=False,
+                            dest='percpu', help=_('start Glances in per CPU mode'))
 
-    def init_arg(self):
-        """
-        Init all the command line arguments
-        """
+        return parser
 
-        self.parser = argparse.ArgumentParser(
-                            prog=__appname__,
-                            description='Glances, an eye on your system.')
+    def parse_args(self):
+        """Parse command line arguments."""
+        args = self.init_args().parse_args()
 
-        # Version
-        self.parser.add_argument('-v', '--version',
-                                 action='version',
-                                 version=_('%s v%s with PsUtil v%s')
-                                 % (__appname__.capitalize(), __version__, __psutil_version__))
-        # Client mode: set the client IP/name
-        self.parser.add_argument('-C', '--config',
-                                 help=_('path to the configuration file'))
+        # Load the configuration file, it it exists
+        self.config = Config(args.conf_file)
 
-        # Refresh time
-        self.parser.add_argument('-t', '--time',
-                                 help=_('set refresh time in seconds (default: %s sec)') % self.refresh_time,
-                                 type=int)
-        # Network bitrate in byte per second (default is bit per second)
-        self.parser.add_argument('-b', '--byte',
-                                 help=_('display network rate in byte per second (default is bit per second)'),
-                                 action='store_true')
-
-        # Disable DiskIO module
-        self.parser.add_argument('--disable_diskio',
-                                 help=_('disable disk I/O module'),
-                                 action='store_true')
-        # Disable mount module
-        self.parser.add_argument('--disable_fs',
-                                 help=_('disable file system (mount) module'),
-                                 action='store_true')
-        # Disable network module
-        self.parser.add_argument('--disable_network',
-                                 help=_('disable network module'),
-                                 action='store_true')
-        # Enable sensors module
-        self.parser.add_argument('--disable_sensors',
-                                 help=_('disable sensors module'),
-                                 action='store_true')
-        # Disable process module
-        self.parser.add_argument('--disable_process',
-                                 help=_('disable process module'),
-                                 action='store_true')
-        # Disable log module
-        self.parser.add_argument('--disable_log',
-                                 help=_('disable log module'),
-                                 action='store_true')
-
-        # Bold attribute for Curse display (not supported by all terminal)
-        self.parser.add_argument('-z', '--no_bold',
-                                 help=_('disable bold mode in the terminal'),
-                                 action='store_false')
-        # Per CPU display tag
-        self.parser.add_argument('-1', '--percpu',
-                                 help=_('start Glances in per CPU mode)'),
-                                 action='store_true')
-
-        # Client mode: set the client IP/name
-        self.parser.add_argument('-c', '--client',
-                                 help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
-        # Server mode
-        self.parser.add_argument('-s', '--server',
-                                 help=_('run Glances in server mode'),
-                                 action='store_true')
-        # Web Server mode
-        self.parser.add_argument('-w', '--webserver',
-                                 help=_('run Glances in Web Server mode'),
-                                 action='store_true')
-        # Server bind IP/name
-        self.parser.add_argument('-B', '--bind',
-                                 help=_('bind server to the given IPv4/IPv6 address or hostname'))
-        # Server TCP port
-        self.parser.add_argument('-p', '--port',
-                                 help=_('define the server TCP port (default: %d)') % self.server_port,
-                                 type=int)
-        # Password as an argument
-        self.parser.add_argument('-P', '--password_arg',
-                                 help=_('define a client/server password'))
-        # Password interactive
-        self.parser.add_argument('--password',
-                                 help=_('define a client/server password from the prompt'),
-                                 action='store_true')
-
-        # Output type
-        self.parser.add_argument('-o', '--output',
-                                 help=_('define additional output %s') % self.output_list,
-                                 choices=self.output_list)
-        # Define output type flag to False (default is no output)
-        for o in self.output_list:
-            setattr(self, o + "_tag", False)
-        # Output file/folder
-        self.parser.add_argument('-f', '--file',
-                                 help=_('set the html output folder or csv file'))
-
-    def parse_arg(self):
-        """
-        Parse command line argument
-        """
-
-        args = self.parser.parse_args()
-
-        # Default refresh time:
-        # - is 3 seconds for CLI
-        # - is 5 seconds for Web (Bottle)
-        if (args.time is None):
-            if (args.webserver):
-                args.time = 5
-            else:
-                args.time = 3
-        # !!! Usefull ? Default refresh time
-        if (args.time is not None): self.refresh_time = args.time
-
-        # By default Help is hidden
-        args.help_tag = False
-
-        # Display Rx and Tx, not the sum for the network
-        args.network_sum = False
-        args.network_cumul = False
-
-        # Bind address/port
-        if (args.bind is None):
-            args.bind = self.bind_ip
-        if (args.port is None):
-            if (args.webserver):
-                args.port = self.web_server_port
-            else:
-                args.port = self.server_port
-        else:
-            args.port = int(args.port)
+        # In web server mode, default:
+        # - refresh time: 5 sec
+        # - host port: 61208
+        if args.webserver:
+            args.time = 5
+            args.port = self.web_server_port
 
         # Server or client login/password
         args.username = self.username
-        if (args.password_arg is not None):
+        if args.password_arg is not None:
             # Password is passed as an argument
             args.password = args.password_arg
-        elif (args.password):
+        elif args.password_prompt:
             # Interactive password
-            if (args.server):
+            if args.server:
                 args.password = self.__get_password(
-                                  description=_("Define the password for the Glances server"),
-                                  confirm=True)
-            elif (args.client):
+                    description=_("Define the password for the Glances server"),
+                    confirm=True)
+            elif args.client:
                 args.password = self.__get_password(
-                                  description=_("Enter the Glances server password"),
-                                  confirm=False)
+                    description=_("Enter the Glances server password"),
+                    confirm=False)
         else:
             # Default is no password
             args.password = self.password
 
         # !!! Change global variables regarding to user args
         # !!! To be refactor to use directly the args list in the code
-        if (args.config is not None):
-            self.conf_file_tag = True
-            self.conf_file = args.config
-        if (args.client is not None):
+        self.server_tag = args.server
+        self.webserver_tag = args.webserver
+        if args.client is not None:
             self.client_tag = True
             self.server_ip = args.client
-        self.webserver_tag = args.webserver
-        self.server_tag = args.server
-        if (args.output is not None):
-            setattr(self, args.output+"_tag", True)
-        if (args.file is not None):
+
+        if args.output is not None:
+            setattr(self, args.output.lower() + '_tag', True)
+        if args.file is not None:
             output_file = args.file
             output_folder = args.file
         # /!!!
+
+        # Interactive cmds like CLI args?
+        # By default help is hidden
+        args.help_tag = False
+
+        # Display Rx and Tx, not the sum for the network
+        args.network_sum = False
+        args.network_cumul = False
 
         return args
 
