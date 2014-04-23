@@ -69,7 +69,7 @@ class GlancesPlugin(object):
         Load the limits from the configuration file
         """
         if (hasattr(config, 'has_section') and
-            config.has_section(self.plugin_name)):
+                config.has_section(self.plugin_name)):
             # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
@@ -112,21 +112,21 @@ class GlancesPlugin(object):
 
         # Manage limits
         ret = 'OK'
-        if (value > self.get_limit_critical(header=header)):
+        if value > self.get_limit_critical(header=header):
             ret = 'CRITICAL'
-        elif (value > self.get_limit_warning(header=header)):
+        elif value > self.get_limit_warning(header=header):
             ret = 'WARNING'
-        elif (value > self.get_limit_careful(header=header)):
+        elif value > self.get_limit_careful(header=header):
             ret = 'CAREFUL'
 
         # Manage log (if needed)
         log_str = ""
-        if (log):
+        if log:
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
             # Get the stat_name = plugin_name (+ header)
-            if (header == ""):
+            if header == "":
                 stat_name = self.plugin_name
             else:
                 stat_name = self.plugin_name + '_' + header
@@ -140,13 +140,13 @@ class GlancesPlugin(object):
         return self.get_alert(current, min, max, header, log=True)
 
     def get_limit_critical(self, header=""):
-        if (header == ""):
+        if header == "":
             return self.limits[self.plugin_name + '_' + 'critical']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
 
     def get_limit_warning(self, header=""):
-        if (header == ""):
+        if header == "":
             return self.limits[self.plugin_name + '_' + 'warning']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
@@ -155,7 +155,7 @@ class GlancesPlugin(object):
         """
         Return the hide configuration list key for the current plugin
         """
-        if (header == ""):
+        if header == "":
             try:
                 return self.limits[self.plugin_name + '_' + 'hide']
             except Exception:
@@ -173,7 +173,7 @@ class GlancesPlugin(object):
         return value in self.get_hide(header=header)
 
     def get_limit_careful(self, header=""):
-        if (header == ""):
+        if header == "":
             return self.limits[self.plugin_name + '_' + 'careful']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
@@ -197,11 +197,11 @@ class GlancesPlugin(object):
         column_curse = -1
         line_curse = -1
 
-        if (hasattr(self, 'display_curse')):
+        if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
-        if (hasattr(self, 'column_curse')):
+        if hasattr(self, 'column_curse'):
             column_curse = self.column_curse
-        if (hasattr(self, 'line_curse')):
+        if hasattr(self, 'line_curse'):
             line_curse = self.line_curse
 
         return {'display': display_curse,

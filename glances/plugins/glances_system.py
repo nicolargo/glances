@@ -84,12 +84,12 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Build the string message
-        if (args.client):
+        if args.client:
             # Client mode
-            if (args.cs_status.lower() == "connected"):
+            if args.cs_status.lower() == "connected":
                 msg = _("Connected to ")
                 ret.append(self.curse_add_line(msg, 'OK'))
-            elif (args.cs_status.lower() == "disconnected"):
+            elif args.cs_status.lower() == "disconnected":
                 msg = _("Disconnected from ")
                 ret.append(self.curse_add_line(msg, 'CRITICAL'))
 
@@ -97,7 +97,7 @@ class Plugin(GlancesPlugin):
         msg = _("{0}").format(self.stats['hostname'])
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info
-        if (self.stats['os_name'] == "Linux"):
+        if self.stats['os_name'] == "Linux":
             msg = _(" ({0} {1} / {2} {3})").format(self.stats['linux_distro'],
                                                    self.stats['platform'],
                                                    self.stats['os_name'],

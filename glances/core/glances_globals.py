@@ -41,7 +41,7 @@ psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
 
 # Check psutil version
 psutil_min_version = (2, 0, 0)
-if (psutil_version < psutil_min_version):
+if psutil_version < psutil_min_version:
     print('psutil version %s detected.' % __psutil_version__)
     print('psutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)

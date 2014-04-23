@@ -49,12 +49,12 @@ class GlancesStats(object):
         """
 
         # Check if the attribute starts with 'get'
-        if (item.startswith('get')):
+        if item.startswith('get'):
             # Get the plugin name
             plugname = item[len('get'):].lower()
             # Get the plugin instance
             plugin = self._plugins[plugname]
-            if (hasattr(plugin, 'get_stats')):
+            if hasattr(plugin, 'get_stats'):
                 # The method get_stats exist, return it
                 return getattr(plugin, 'get_stats')
             else:
@@ -75,8 +75,9 @@ class GlancesStats(object):
 
         header = "glances_"
         for plug in os.listdir(plug_dir):
-            if (plug.startswith(header) and plug.endswith(".py") and
-                plug != (header + "plugin.py")):
+            if (plug.startswith(header) and
+                    plug.endswith(".py") and
+                    plug != (header + "plugin.py")):
                 # Import the plugin
                 m = __import__(os.path.basename(plug)[:-3])
                 # Add the plugin to the dictionnary
@@ -101,7 +102,7 @@ class GlancesStats(object):
         Update the stats
         """
 
-        if (input_stats == {}):
+        if input_stats == {}:
             # For standalone and server modes
             # For each plugins, call the update method
             for p in self._plugins:
@@ -123,7 +124,7 @@ class GlancesStats(object):
 
     def get_plugin(self, plugin_name):
         # Return the plugin name
-        if (plugin_name in self._plugins):
+        if plugin_name in self._plugins:
             return self._plugins[plugin_name]
         else:
             return None

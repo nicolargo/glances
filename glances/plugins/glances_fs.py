@@ -109,7 +109,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if ((self.stats == []) or (args.disable_fs)):
+        if self.stats == [] or args.disable_fs:
             return ret
 
         # Build the string message
@@ -125,10 +125,10 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if ((len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 6):
+            if (len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 6:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif (len(i['mnt_point']) > 9):
+            elif len(i['mnt_point']) > 9:
                 # Cut mount point name if it is too long
                 mnt_point = '_' + i['mnt_point'][-8:]
             else:

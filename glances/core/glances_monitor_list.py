@@ -50,8 +50,7 @@ class monitorList:
 
         self.config = config
 
-        if ((self.config != None)
-            and self.config.has_section('monitor')):
+        if self.config is not None and self.config.has_section('monitor'):
             # Process monitoring list
             self.__setMonitorList('monitor', 'list')
         else:
@@ -75,8 +74,7 @@ class monitorList:
                 print(_("Error reading monitored list: %s" % e))
                 pass
             else:
-                if ((description is not None) and
-                    (regex is not None)):
+                if description is not None and regex is not None:
                     # Build the new item
                     value["description"] = description
                     value["regex"] = regex
@@ -105,7 +103,7 @@ class monitorList:
         Meta function to return key value of item
         None if not defined or item > len(list)
         """
-        if (item < len(self.__monitor_list)):
+        if item < len(self.__monitor_list):
             try:
                 return self.__monitor_list[item][key]
             except Exception:
@@ -119,7 +117,7 @@ class monitorList:
         """
 
         # Only continue if monitor list is not empty
-        if (len(self.__monitor_list) == 0):
+        if len(self.__monitor_list) == 0:
             return self.__monitor_list
 
         # Iter uppon the monitored list
@@ -129,7 +127,7 @@ class monitorList:
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
-            if (self.command(i) is None):
+            if self.command(i) is None:
                 # If there is no command specified in the conf file
                 # then display CPU and MEM %
                 self.__monitor_list[i]['result'] = "CPU: {0:.1f}% | MEM: {1:.1f}%".format(

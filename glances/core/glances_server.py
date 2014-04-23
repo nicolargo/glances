@@ -171,7 +171,7 @@ class GlancesInstance():
         # print "DEBUG: Call method: %s" % item
         header = 'get'
         # Check if the attribute starts with 'get'
-        if (item.startswith(header)):
+        if item.startswith(header):
             try:
                 # Update the stat
                 # !!! All the stat are updated before one grab (not optimized)

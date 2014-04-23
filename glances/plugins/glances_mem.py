@@ -69,15 +69,15 @@ class Plugin(GlancesPlugin):
         for mem in ['total', 'available', 'percent', 'used', 'free',
                     'active', 'inactive', 'buffers', 'cached',
                     'wired', 'shared']:
-            if (hasattr(vm_stats, mem)):
+            if hasattr(vm_stats, mem):
                 mem_stats[mem] = getattr(vm_stats, mem)
 
         # Use the 'free'/htop calculation
         # free=available+buffer+cached
         mem_stats['free'] = mem_stats['available']
-        if (hasattr(mem_stats, 'buffer')):
+        if hasattr(mem_stats, 'buffer'):
             mem_stats['free'] += mem_stats['buffer']
-        if (hasattr(mem_stats, 'cached')):
+        if hasattr(mem_stats, 'cached'):
             mem_stats['free'] += mem_stats['cached']
         # used=total-free
         mem_stats['used'] = mem_stats['total'] - mem_stats['free']
@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if (self.stats == {}):
+        if self.stats == {}:
             return ret
 
         # Build the string message
@@ -106,7 +106,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:>6}%".format(format(self.stats['percent'] / 100, '.1'))
         ret.append(self.curse_add_line(msg))
         # Active memory usage
-        if ('active' in self.stats):
+        if 'active' in self.stats:
             msg = "  {0:8}".format(_("actif:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['active']))
@@ -119,7 +119,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:>7}".format(self.auto_unit(format(self.stats['total']), '.1%'))
         ret.append(self.curse_add_line(msg))
         # Inactive memory usage
-        if ('inactive' in self.stats):
+        if 'inactive' in self.stats:
             msg = "  {0:8}".format(_("inactif:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['inactive']))
@@ -131,10 +131,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>7}".format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['used'], 
-            max=self.stats['total'])))
+            msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
         # Buffers memory usage
-        if ('buffers' in self.stats):
+        if 'buffers' in self.stats:
             msg = "  {0:8}".format(_("buffers:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['buffers']))
@@ -147,7 +146,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:>7}".format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))
         # Cached memory usage
-        if ('cached' in self.stats):
+        if 'cached' in self.stats:
             msg = "  {0:8}".format(_("cached:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['cached']))

@@ -40,15 +40,13 @@ class GlancesClient():
     This class creates and manages the TCP client
     """
 
-    def __init__(self,
-                 config=None,
-                 args=None):
+    def __init__(self, config=None, args=None):
         # Store the arg/config
         self.args = args
         self.config = config
 
         # Build the URI
-        if (args.password != ""):
+        if args.password != "":
             uri = 'http://%s:%s@%s:%d' % (args.username, args.password, args.bind_address, args.port)
         else:
             uri = 'http://%s:%d' % (args.bind_address, args.port)
@@ -70,14 +68,14 @@ class GlancesClient():
             print(_("Error: Connection to server failed: {0}").format(err))
             sys.exit(2)
         except ProtocolError as err:
-            if (str(err).find(" 401 ") > 0):
+            if str(err).find(" 401 ") > 0:
                 print(_("Error: Connection to server failed: Bad password"))
             else:
                 print(_("Error: Connection to server failed: {0}").format(err))
             sys.exit(2)
 
         # Test if client and server are "compatible"
-        if (__version__[:3] == client_version[:3]):
+        if __version__[:3] == client_version[:3]:
             # Init stats
             self.stats = GlancesStatsClient()
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))

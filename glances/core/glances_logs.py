@@ -18,8 +18,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-from datetime import datetime
 import time
+from datetime import datetime
 
 # Import Glances libs
 from glances.core.glances_globals import glances_processes
@@ -75,7 +75,7 @@ class glancesLogs:
         -1 if the item is not found
         """
         for i in range(self.len()):
-            if ((self.logs_list[i][1] < 0) and (self.logs_list[i][3] == item_type)):
+            if self.logs_list[i][1] < 0 and self.logs_list[i][3] == item_type:
                 return i
         return -1
 
@@ -84,10 +84,10 @@ class glancesLogs:
         Define the process auto sort key from the alert type
         """
         # Process sort depending on alert type
-        if (item_type.startswith("MEM")):
+        if item_type.startswith("MEM"):
             # Sort TOP process by memory_percent
             process_auto_by = 'memory_percent'
-        elif (item_type.startswith("CPU_IOWAIT")):
+        elif item_type.startswith("CPU_IOWAIT"):
             # Sort TOP process by io_counters (only for Linux OS)
             process_auto_by = 'io_counters'
         else:
@@ -118,9 +118,9 @@ class glancesLogs:
         """
         # Add or update the log
         item_index = self.__itemexist__(item_type)
-        if (item_index < 0):
+        if item_index < 0:
             # Item did not exist, add if WARNING or CRITICAL
-            if ((item_state == "WARNING") or (item_state == "CRITICAL")):
+            if item_state == "WARNING" or item_state == "CRITICAL":
                 # Define the automatic process sort key
                 self.set_process_sort(item_type)
 
@@ -152,7 +152,7 @@ class glancesLogs:
                     self.logs_list.pop()
         else:
             # Item exist, update
-            if ((item_state == "OK") or (item_state == "CAREFUL")):
+            if item_state == "OK" or item_state == "CAREFUL":
                 # Reset the automatic process sort key
                 self.reset_process_sort()
 
@@ -162,13 +162,13 @@ class glancesLogs:
             else:
                 # Update the item
                 # State
-                if (item_state == "CRITICAL"):
+                if item_state == "CRITICAL":
                     self.logs_list[item_index][2] = item_state
                 # Value
-                if (item_value > self.logs_list[item_index][4]):
+                if item_value > self.logs_list[item_index][4]:
                     # MAX
                     self.logs_list[item_index][4] = item_value
-                elif (item_value < self.logs_list[item_index][6]):
+                elif item_value < self.logs_list[item_index][6]:
                     # MIN
                     self.logs_list[item_index][6] = item_value
                 # AVG
@@ -199,7 +199,7 @@ class glancesLogs:
         clean_logs_list = []
         while (self.len() > 0):
             item = self.logs_list.pop()
-            if ((item[1] < 0) or (not critical and (item[2].startswith("CRITICAL")))):
+            if item[1] < 0 or (not critical and item[2].startswith("CRITICAL")):
                 clean_logs_list.insert(0, item)
         # The list is now the clean one
         self.logs_list = clean_logs_list

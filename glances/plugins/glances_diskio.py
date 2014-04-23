@@ -65,7 +65,7 @@ class Plugin(GlancesPlugin):
 
         # Previous disk IO stats are stored in the diskio_old variable
         diskio = []
-        if (self.diskio_old == []):
+        if self.diskio_old == []:
             # First call, we init the network_old var
             try:
                 self.diskio_old = diskiocounters
@@ -109,7 +109,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if ((self.stats == []) or (args.disable_diskio)):
+        if self.stats == [] or args.disable_diskio:
             return ret
 
         # Build the string message
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
             # Do not display hidden interfaces
-            if (self.is_hide(i['disk_name'])):
+            if self.is_hide(i['disk_name']):
                 continue
             # New line
             ret.append(self.curse_new_line())

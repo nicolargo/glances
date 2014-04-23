@@ -55,7 +55,7 @@ class Plugin(GlancesPlugin):
         Update the monitored list
         """
         # Check if the glances_monitor instance is init
-        if (self.glances_monitors == None):
+        if self.glances_monitors is None:
             return self.stats
 
         # Update the monitored list (result of command)
@@ -68,19 +68,19 @@ class Plugin(GlancesPlugin):
 
     def get_alert(self, nbprocess=0, countmin=None, countmax=None, header="", log=False):
         # Return the alert status relative to the process number
-        if (nbprocess is None):
+        if nbprocess is None:
             return 'OK'
-        if (countmin is None):
+        if countmin is None:
             countmin = nbprocess
-        if (countmax is None):
+        if countmax is None:
             countmax = nbprocess
-        if (nbprocess > 0):
-            if (int(countmin) <= int(nbprocess) <= int(countmax)):
+        if nbprocess > 0:
+            if int(countmin) <= int(nbprocess) <= int(countmax):
                 return 'OK'
             else:
                 return 'WARNING'
         else:
-            if (int(countmin) == 0):
+            if int(countmin) == 0:
                 return 'OK'
             else:
                 return 'CRITICAL'
@@ -93,7 +93,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if ((self.stats == []) or (args.disable_process)):
+        if self.stats == [] or args.disable_process:
             return ret
 
         # Build the string message
@@ -101,11 +101,11 @@ class Plugin(GlancesPlugin):
             msg = "{0:<16} ".format(str(m['description']))
             ret.append(self.curse_add_line(
                 msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
-            msg = "{0:<3} ".format(m['count'] if (m['count'] > 1) else "")
+            msg = "{0:<3} ".format(m['count'] if m['count'] > 1 else "")
             ret.append(self.curse_add_line(msg))
-            msg = "{0:13} ".format(_("RUNNING") if (m['count'] >= 1) else _("NOT RUNNING"))
+            msg = "{0:13} ".format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
             ret.append(self.curse_add_line(msg))
-            msg = "{0}".format(m['result'] if (m['count'] >= 1) else "")
+            msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_new_line())
 

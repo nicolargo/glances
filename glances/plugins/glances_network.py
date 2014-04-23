@@ -61,7 +61,7 @@ class Plugin(GlancesPlugin):
 
         # Previous network interface stats are stored in the network_old variable
         network = []
-        if (self.network_old == []):
+        if self.network_old == []:
             # First call, we init the network_old var
             try:
                 self.network_old = netiocounters
@@ -112,16 +112,16 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if ((self.stats == []) or (args.disable_network)):
+        if self.stats == [] or args.disable_network:
             return ret
 
         # Build the string message
         # Header
         msg = "{0:9}".format(_("NETWORK"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if (args.network_cumul):
+        if args.network_cumul:
             # Cumulative stats
-            if (args.network_sum):
+            if args.network_sum:
                 # Sum stats
                 msg = "{0:>14}".format(_("Rx+Tx"))
                 ret.append(self.curse_add_line(msg))
@@ -133,7 +133,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
-            if (args.network_sum):
+            if args.network_sum:
                 # Sum stats
                 msg = "{0:>14}".format(_("Rx+Tx/s"))
                 ret.append(self.curse_add_line(msg))
@@ -145,12 +145,12 @@ class Plugin(GlancesPlugin):
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=lambda network: network['interface_name']):
             # Do not display hidden interfaces
-            if (self.is_hide(i['interface_name'])):
+            if self.is_hide(i['interface_name']):
                 continue
             # Format stats
             ifname = i['interface_name'].split(':')[0]
-            if (args.byte):
-                if (args.network_cumul):
+            if args.byte:
+                if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx']))
                     tx = self.auto_unit(int(i['cumulative_tx']))
                     sx = self.auto_unit(int(i['cumulative_tx'])
@@ -161,7 +161,7 @@ class Plugin(GlancesPlugin):
                     sx = self.auto_unit(int(i['rx'] // i['time_since_update'])
                                         + int(i['tx'] // i['time_since_update']))
             else:
-                if (args.network_cumul):
+                if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
                     sx = self.auto_unit(int(i['cumulative_rx'] * 8)
@@ -175,7 +175,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_new_line())
             msg = "{0:9}".format(ifname)
             ret.append(self.curse_add_line(msg))
-            if (args.network_sum):
+            if args.network_sum:
                 msg = "{0:>14}".format(sx)
                 ret.append(self.curse_add_line(msg))
             else:

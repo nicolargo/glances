@@ -139,7 +139,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
 
         # User CPU
-        if ('user' in self.stats[0]):
+        if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(_("user:"))
@@ -149,7 +149,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['user'], header="user")))
 
         # System CPU
-        if ('user' in self.stats[0]):
+        if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(_("system:"))
@@ -159,7 +159,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'], header="system")))
 
         # IoWait CPU
-        if ('user' in self.stats[0]):
+        if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
             msg = "{0:8}".format(_("iowait:"))

@@ -79,7 +79,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if (self.stats == {}):
+        if self.stats == {}:
             return ret
 
         # Build the string message

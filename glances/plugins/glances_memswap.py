@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
         swap_stats = {}
         for swap in ['total', 'used', 'free', 'percent',
                      'sin', 'sout']:
-            if (hasattr(sm_stats, swap)):
+            if hasattr(sm_stats, swap):
                 swap_stats[swap] = getattr(sm_stats, swap)
 
         # Set the global variable to the new stats
@@ -78,7 +78,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if (self.stats == {}):
+        if self.stats == {}:
             return ret
 
         # Build the string message
@@ -102,8 +102,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['used'],
-            max=self.stats['total'])))
+            msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage

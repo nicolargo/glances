@@ -25,7 +25,7 @@ import signal
 import sys
 
 # Import Glances libs
-# Note: others Glances libs will be imported optionnaly
+# Note: others Glances libs will be imported optionally
 from glances.core.glances_main import GlancesMain
 
 
@@ -41,13 +41,13 @@ def end():
     Stop Glances
     """
 
-    if (core.is_standalone()):
+    if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
-    elif (core.is_client()):
+    elif core.is_client():
         # Stop the client
         client.end()
-    elif (core.is_server()):
+    elif core.is_server():
         # Stop the server
         server.end()
 
@@ -72,7 +72,7 @@ def main():
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if (core.is_standalone()):
+    if core.is_standalone():
 
         # Import the Glances standalone module
         from glances.core.glances_standalone import GlancesStandalone
@@ -84,7 +84,7 @@ def main():
         # Start the standalone (CLI) loop
         standalone.serve_forever()
 
-    elif (core.is_client()):
+    elif core.is_client():
 
         # Import the Glances client module
         from glances.core.glances_client import GlancesClient
@@ -94,7 +94,7 @@ def main():
                                args=core.get_args())
 
         # Test if client and server are in the same major version
-        if (not client.login()):
+        if not client.login():
             print(_("Error: The server version is not compatible with the client"))
             sys.exit(2)
 
@@ -104,7 +104,7 @@ def main():
         # Shutdown the client
         client.close()
 
-    elif (core.is_server()):
+    elif core.is_server():
 
         # Import the Glances server module
         from glances.core.glances_server import GlancesServer
@@ -117,7 +117,7 @@ def main():
         print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
-        if (args.password != ""):
+        if args.password != "":
             server.add_user(args.username, args.password)
 
         # Start the server loop
@@ -126,7 +126,7 @@ def main():
         # Shutdown the server?
         server.server_close()
 
-    elif (core.is_webserver()):
+    elif core.is_webserver():
 
         # Import the Glances web server module
         from glances.core.glances_webserver import GlancesWebServer

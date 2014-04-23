@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if ((self.stats == []) or (args.disable_process)):
+        if self.stats == [] or args.disable_process:
             return ret
 
         # Compute the sort key
@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
             args.process_sorted_by
         except AttributeError:
             args.process_sorted_by = glances_processes.getsortkey()
-        if (args.process_sorted_by == 'auto'):
+        if args.process_sorted_by == 'auto':
             process_sort_key = glances_processes.getsortkey()
         else:
             process_sort_key = args.process_sorted_by
@@ -145,7 +145,7 @@ class Plugin(GlancesPlugin):
             msg = " {0:>1}".format(p['status'])
             ret.append(self.curse_add_line(msg, optional=True))
             # TIME+
-            if (tag_proc_time):
+            if tag_proc_time:
                 try:
                     dtime = timedelta(seconds=sum(p['cpu_times']))
                 except Exception:
@@ -161,17 +161,17 @@ class Plugin(GlancesPlugin):
             msg = "{0:>9}".format(msg)
             ret.append(self.curse_add_line(msg, optional=True))
             # IO read/write
-            if ('io_counters' in p):
+            if 'io_counters' in p:
                 # IO read
                 io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
-                if (io_rs == 0):
+                if io_rs == 0:
                     msg = "{0:>6}".format("0")
                 else:
                     msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
                 ret.append(self.curse_add_line(msg, optional=True))
                 # IO write
                 io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
-                if (io_ws == 0):
+                if io_ws == 0:
                     msg = "{0:>6}".format("0")
                 else:
                     msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
@@ -194,15 +194,15 @@ class Plugin(GlancesPlugin):
         """
         Return the self.stats sorted by sortedby
         """
-        if (sortedby is None):
+        if sortedby is None:
             # No need to sort...
             return self.stats
 
         sortedreverse = True
-        if (sortedby == 'name'):
+        if sortedby == 'name':
             sortedreverse = False
 
-        if (sortedby == 'io_counters'):
+        if sortedby == 'io_counters':
             # Specific case for io_counters
             # Sum of io_r + io_w
             try:

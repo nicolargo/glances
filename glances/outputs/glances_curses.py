@@ -235,7 +235,7 @@ class glancesCurses:
             # Enable/Disable display
             self.args.disable_process = not self.args.disable_process
             # Enable/Disable update
-            if (self.args.disable_process):
+            if self.args.disable_process:
                 glances_processes.disable()
             else:
                 glances_processes.enable()
@@ -272,7 +272,7 @@ class glancesCurses:
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
-        if (self.args.help_tag):
+        if self.args.help_tag:
             # Display the stats...
             self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
@@ -290,7 +290,7 @@ class glancesCurses:
 
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
-        if (self.args.percpu):
+        if self.args.percpu:
             stats_percpu = stats.get_plugin('percpu').get_stats_display()
             l = self.get_stats_display_width(stats_percpu)
         else:
@@ -301,10 +301,10 @@ class glancesCurses:
         stats_memswap = stats.get_plugin('memswap').get_stats_display()
         l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
-        if (screen_x > (3 * self.space_between_column + l)):
+        if screen_x > (3 * self.space_between_column + l):
             self.space_between_column = int((screen_x - l) / 3)
         # Display
-        if (self.args.percpu):
+        if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
             self.display_plugin(stats_cpu, display_optional=(screen_x >= 76))
@@ -323,7 +323,7 @@ class glancesCurses:
         self.display_plugin(stats.get_plugin('now').get_stats_display())
 
         # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
-        if (screen_x > 52):
+        if screen_x > 52:
             stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
             stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
             stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
@@ -345,8 +345,7 @@ class glancesCurses:
         # Exit if:
         # - the plugin_stats message is empty
         # - the display tag = False
-        if ((plugin_stats['msgdict'] == [])
-            or (not plugin_stats['display'])):
+        if plugin_stats['msgdict'] == [] or not plugin_stats['display']:
             # Display the next plugin at the current plugin position
             try:
                 self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
@@ -361,18 +360,18 @@ class glancesCurses:
         screen_y = self.screen.getmaxyx()[0]
 
         # Set the upper/left position of the message
-        if (plugin_stats['column'] < 0):
+        if plugin_stats['column'] < 0:
             # Right align (last column)
             display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
-            if (plugin_stats['column'] not in self.column_to_x):
+            if plugin_stats['column'] not in self.column_to_x:
                 self.column_to_x[plugin_stats['column']] = plugin_stats['column']
             display_x = self.column_to_x[plugin_stats['column']]
-        if (plugin_stats['line'] < 0):
+        if plugin_stats['line'] < 0:
             # Bottom (last line)
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
-            if (plugin_stats['line'] not in self.line_to_y):
+            if plugin_stats['line'] not in self.line_to_y:
                 self.line_to_y[plugin_stats['line']] = plugin_stats['line']
             display_y = self.line_to_y[plugin_stats['line']]
 
@@ -381,21 +380,21 @@ class glancesCurses:
         y = display_y
         for m in plugin_stats['msgdict']:
             # New line
-            if (m['msg'].startswith('\n')):
+            if m['msg'].startswith('\n'):
                 # Go to the next line
                 y = y + 1
                 # Return to the first column
                 x = display_x
                 continue
             # Do not display outside the screen
-            if (x < 0):
+            if x < 0:
                 continue
-            if ((not m['splittable']) and (x + len(m['msg']) > screen_x)):
+            if not m['splittable'] and (x + len(m['msg']) > screen_x):
                 continue
-            if ((y < 0) or (y + 1 > screen_y) or (y > max_y)):
+            if y < 0 or (y + 1 > screen_y) or (y > max_y):
                 break
             # If display_optional = False do not display optional stats
-            if ((not display_optional) and m['optional']):
+            if not display_optional and m['optional']:
                 continue
             # Is it possible to display the stat with the current screen size
             # !!! Crach if not try/except... Why ???
@@ -411,9 +410,9 @@ class glancesCurses:
                 x = x + len(m['msg'])
 
         # Compute the next Glances column/line position
-        if (plugin_stats['column'] > -1):
+        if plugin_stats['column'] > -1:
             self.column_to_x[plugin_stats['column'] + 1] = x + self.space_between_column
-        if (plugin_stats['line'] > -1):
+        if plugin_stats['line'] > -1:
             self.line_to_y[plugin_stats['line'] + 1] = y + self.space_between_line
 
     def erase(self):
@@ -459,7 +458,7 @@ class glancesCurses:
         # The height is defined by the maximum line
 
         try:
-            if (without_option):
+            if without_option:
                 # Size without options
                 c = len(max(''.join([(i['msg'] if not i['optional'] else "")
                         for i in curse_msg['msgdict']]).split('\n'), key=len))

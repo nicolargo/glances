@@ -60,12 +60,12 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if display plugin enable...
-        if (args.disable_log):
+        if args.disable_log:
             return ret
 
         # Build the string message
         # Header
-        if (self.stats == []):
+        if self.stats == []:
             msg = "{0}".format(_("No warning or critical alert detected"))
             ret.append(self.curse_add_line(msg, "TITLE"))
         else:
@@ -73,7 +73,7 @@ class Plugin(GlancesPlugin):
             msg = "{0}".format(_("Warning or critical alerts"))
             ret.append(self.curse_add_line(msg, "TITLE"))
             logs_len = glances_logs.len()
-            if (logs_len > 1):
+            if logs_len > 1:
                 msg = " {0}".format(_("(lasts %s entries)") % logs_len)
             else:
                 msg = " {0}".format(_("(one entry)"))
@@ -86,7 +86,7 @@ class Plugin(GlancesPlugin):
                 msg = "{0}".format(datetime.fromtimestamp(alert[0]))
                 ret.append(self.curse_add_line(msg))
                 # Duration
-                if (alert[1] > 0):
+                if alert[1] > 0:
                     # If finished display duration
                     msg = " ({0})".format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
                 else:
@@ -94,7 +94,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
                 ret.append(self.curse_add_line(" - "))
                 # Infos
-                if (alert[1] > 0):
+                if alert[1] > 0:
                     # If finished do not display status
                     msg = "{0} {1} {2}".format(alert[2], _("on"), alert[3])
                     ret.append(self.curse_add_line(msg))
@@ -102,7 +102,7 @@ class Plugin(GlancesPlugin):
                     msg = "{0}".format(alert[3])
                     ret.append(self.curse_add_line(msg, decoration=alert[2]))
                 # Min / Mean / Max
-                if (alert[6] == alert[4]):
+                if alert[6] == alert[4]:
                     msg = " ({0:.1f})".format(alert[5])
                 else:
                     msg = " (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})".format(alert[6], alert[5], alert[4])

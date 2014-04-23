@@ -68,7 +68,6 @@ class glancesBottle:
             'CRITICAL_LOG': 'critical_log'
         }
 
-
     def _route(self):
         """
         Define route
@@ -83,7 +82,7 @@ class glancesBottle:
         self.stats = stats
 
         # Start the Bottle
-        self._app.run(host=self.args.bind, port=self.args.port)
+        self._app.run(host=self.args.bind_address, port=self.args.port)
 
     def end(self):
         # End the Bottle
@@ -94,7 +93,7 @@ class glancesBottle:
         Bottle callback for index.html (/) file
         """
         # Manage parameter
-        if (refresh_time is None):
+        if refresh_time is None:
             refresh_time = self.args.time
 
         # Update the stat
@@ -171,16 +170,16 @@ class glancesBottle:
         tpl += '<div class="row">'
         for m in plugin_stats['msgdict']:
             # New line
-            if (m['msg'].startswith('\n')):
+            if m['msg'].startswith('\n'):
                 tpl += '</div>'
                 tpl += '<div class="row">'
                 continue
             # Do not display splittable
-            if (m['splittable']):
+            if m['splittable']:
                 tpl += '<span></span>'
                 continue
-            tpl += '<span class="cell" id="%s">%s</span>' % (self.__style_list[m['decoration']] ,
-                                                                               m['msg'].replace(' ', '&nbsp;'))
+            tpl += '<span class="cell" id="%s">%s</span>' % \
+                (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
         tpl += '</div>'
         tpl += '</div>'
 

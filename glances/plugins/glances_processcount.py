@@ -65,15 +65,15 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        # if ((self.stats == {}) or (args.disable_process)):
+        # if self.stats == {} or args.disable_process:
         #     return ret
 
-        if (args.disable_process):
+        if args.disable_process:
             msg = "{0} ".format(_("PROCESSES DISABLED (press 'z' to display)"))
             ret.append(self.curse_add_line(msg))
             return ret
 
-        if (self.stats == {}):
+        if self.stats == {}:
             return ret
 
         # Build the string message
@@ -85,16 +85,16 @@ class Plugin(GlancesPlugin):
         msg = "{0}".format(str(self.stats['total']))
         ret.append(self.curse_add_line(msg))
 
-        if ('thread' in self.stats):
+        if 'thread' in self.stats:
             msg = " ({0} {1}),".format(str(self.stats['thread']), _("thr"))
             ret.append(self.curse_add_line(msg))
 
-        if ('running' in self.stats):
+        if 'running' in self.stats:
             other -= self.stats['running']
             msg = " {0} {1},".format(str(self.stats['running']), _("run"))
             ret.append(self.curse_add_line(msg))
 
-        if ('sleeping' in self.stats):
+        if 'sleeping' in self.stats:
             other -= self.stats['sleeping']
             msg = " {0} {1},".format(str(self.stats['sleeping']), _("slp"))
             ret.append(self.curse_add_line(msg))
@@ -107,7 +107,7 @@ class Plugin(GlancesPlugin):
             args.process_sorted_by
         except AttributeError:
             args.process_sorted_by = glances_processes.getsortkey()
-        if (args.process_sorted_by == 'auto'):
+        if args.process_sorted_by == 'auto':
             msg = "{0}".format(_("sorted automatically"))
             ret.append(self.curse_add_line(msg))
             msg = " {0} {1}".format(_("by"), glances_processes.getsortkey())

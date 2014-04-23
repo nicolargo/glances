@@ -166,7 +166,7 @@ class glancesProcesses:
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Do not process if disable tag is set
-        if (self.disable_tag):
+        if self.disable_tag:
             return
 
         # Get the time since last update
@@ -183,8 +183,8 @@ class glancesProcesses:
                 # ignore the 'kernel_task' process on OS X
                 # waiting for upstream patch from psutil
                 if (is_BSD and procstat['name'] == 'idle' or
-                    is_Windows and procstat['name'] == 'System Idle Process' or
-                    is_Mac and procstat['name'] == 'kernel_task'):
+                        is_Windows and procstat['name'] == 'System Idle Process' or
+                        is_Mac and procstat['name'] == 'kernel_task'):
                     continue
                 # Update processcount (global statistics)
                 try:
@@ -206,7 +206,7 @@ class glancesProcesses:
                 self.processlist.append(procstat)
 
         # Clean internals caches if timeout is reached
-        if (self.cache_timer.finished()):
+        if self.cache_timer.finished():
             self.username_cache = {}
             self.cmdline_cache = {}
             # Restart the timer
@@ -238,15 +238,15 @@ class glancesProcesses:
         """
         Return the processlist
         """
-        if (sortedby is None):
+        if sortedby is None:
             # No need to sort...
             return self.processlist
 
         sortedreverse = True
-        if (sortedby == 'name'):
+        if sortedby == 'name':
             sortedreverse = False
 
-        if (sortedby == 'io_counters'):
+        if sortedby == 'io_counters':
             # Specific case for io_counters
             # Sum of io_r + io_w
             try:
