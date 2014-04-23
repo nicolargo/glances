@@ -19,6 +19,7 @@
 
 # Import system libs
 import os
+import sys
 try:
     from configparser import RawConfigParser
     from configparser import NoOptionError
@@ -29,7 +30,10 @@ except ImportError:  # Python 2
 # Import Glances lib
 from glances.core.glances_globals import (
     __appname__,
+    is_BSD,
     is_Linux,
+    is_Mac,
+    is_Windows,
     is_python3,
     work_path
 )
@@ -65,7 +69,7 @@ class Config(object):
                     # print(_("DEBUG: Read configuration file %s") % path)
                     self.config_path = path
                 except UnicodeDecodeError as e:
-                    print(_("Error decoding config file '%s': %s") % (path, e))
+                    print(_("Error decoding config file '{0}': {1}").format(path, e))
                     sys.exit(1)
                 break
 
