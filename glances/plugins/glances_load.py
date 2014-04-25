@@ -63,6 +63,9 @@ class Plugin(GlancesPlugin):
             load = os.getloadavg()
         except OSError:
             self.stats = {}
+        except AttributeError:
+            # For Windows OS...
+            self.stats = {}
         else:
             self.stats = {'min1': load[0],
                           'min5': load[1],
