@@ -60,7 +60,8 @@ class Plugin(GlancesPlugin):
         try:
             netiocounters = psutil.net_io_counters(pernic=True)
         except UnicodeDecodeError:
-            return []
+            self.stats = []
+            return self.stats
 
         # Previous network interface stats are stored in the network_old variable
         network = []

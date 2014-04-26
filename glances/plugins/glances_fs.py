@@ -49,7 +49,8 @@ class glancesGrabFs:
         try:
             fs_stat = psutil.disk_partitions(all=False)
         except UnicodeDecodeError:
-            return []
+            self.stats = []
+            return self.stats
 
         # Loop over fs
         for fs in range(len(fs_stat)):
