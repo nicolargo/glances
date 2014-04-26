@@ -57,7 +57,10 @@ class Plugin(GlancesPlugin):
         """
 
         # Grab network interface stat using the PsUtil net_io_counter method
-        netiocounters = psutil.net_io_counters(pernic=True)
+        try:
+            netiocounters = psutil.net_io_counters(pernic=True)
+        except UnicodeDecodeError:
+            return []
 
         # Previous network interface stats are stored in the network_old variable
         network = []

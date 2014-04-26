@@ -46,7 +46,12 @@ class glancesGrabFs:
         # Grab the stats using the PsUtil disk_partitions
         # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
         # and ignore all others (e.g. memory partitions such as /dev/shm)
-        fs_stat = psutil.disk_partitions(all=False)
+        try:
+            fs_stat = psutil.disk_partitions(all=False)
+        except UnicodeDecodeError:
+            return []
+
+        # Loop over fs
         for fs in range(len(fs_stat)):
             fs_current = {}
             fs_current['device_name'] = fs_stat[fs].device
