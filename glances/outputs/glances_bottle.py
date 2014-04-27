@@ -132,7 +132,7 @@ class glancesBottle:
         html += '<section>'
         html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_stats_display(args=self.args))
         load_msg = self.stats.get_plugin('load').get_stats_display(args=self.args)
-        if (load_msg['msgdict'] != []):
+        if load_msg['msgdict'] != []:
             # Load is not available on all OS
             # Only display if stat is available
             html += self.display_plugin('load', load_msg)
@@ -141,13 +141,13 @@ class glancesBottle:
         html += '</section>'
         html += template('newline')
         html += '<div>'
-        html += '<aside>'
+        html += '<aside id="lefttstats">'
         html += self.display_plugin('network', self.stats.get_plugin('network').get_stats_display(args=self.args))
         html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_stats_display(args=self.args))
         html += self.display_plugin('fs', self.stats.get_plugin('fs').get_stats_display(args=self.args))
         html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_stats_display(args=self.args))
         html += '</aside>'
-        html += '<section>'
+        html += '<section id="rightstats">'
         html += self.display_plugin('alert', self.stats.get_plugin('alert').get_stats_display(args=self.args))
         html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_stats_display(args=self.args))
         html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_stats_display(args=self.args))

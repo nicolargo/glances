@@ -97,6 +97,7 @@ div#newline{
 #load {}
 #mem {}
 #memswap {}
+#leftstats {}
 #network {
     margin-bottom: 1em;
 }
@@ -107,19 +108,22 @@ div#newline{
     margin-bottom: 1em;
 }
 #sensors {}
+#rightstats {}
+#alert {    
+    display: block;
+}
 #processcount {
-    margin-bottom: 1em;
+    display: block;
+    margin: 1em;
 }
 #monitor {
-    margin-bottom: 1em;
+    display: block;
+    margin: 1em;
 }
 #processlist {}
 article#processlist>div>div>span:last-child {
     visibility: hidden;
     white-space: nowrap;
-}
-#alert {    
-    margin-bottom: 1em;
 }
 #now {}
 /*Responsive design*/
