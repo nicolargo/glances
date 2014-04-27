@@ -131,7 +131,11 @@ class glancesBottle:
         html += template('newline')
         html += '<section>'
         html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_stats_display(args=self.args))
-        html += self.display_plugin('load', self.stats.get_plugin('load').get_stats_display(args=self.args))
+        load_msg = self.stats.get_plugin('load').get_stats_display(args=self.args)
+        if (load_msg['msgdict'] != []):
+            # Load is not available on all OS
+            # Only display if stat is available
+            html += self.display_plugin('load', load_msg)
         html += self.display_plugin('mem', self.stats.get_plugin('mem').get_stats_display(args=self.args))
         html += self.display_plugin('memswap', self.stats.get_plugin('memswap').get_stats_display(args=self.args))
         html += '</section>'
