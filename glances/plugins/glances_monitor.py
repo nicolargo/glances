@@ -106,7 +106,7 @@ class Plugin(GlancesPlugin):
             msg = "{0:13} ".format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
             ret.append(self.curse_add_line(msg))
             msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 
         # Delete the last empty line
