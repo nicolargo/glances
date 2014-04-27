@@ -59,7 +59,12 @@ class glancesGrabFs:
             fs_current['fs_type'] = fs_stat[fs].fstype
             fs_current['mnt_point'] = fs_stat[fs].mountpoint
             # Grab the disk usage
-            fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+            try:
+                fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+            except OSError:
+                # Correct issue #346
+                # Disk is ejected during the command
+                continue
             fs_current['size'] = fs_usage.total
             fs_current['used'] = fs_usage.used
             fs_current['avail'] = fs_usage.free
