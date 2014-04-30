@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Sensors library (optional; Linux-only)
+# Py3Sensors: https://bitbucket.org/gleb_zhulik/py3sensors
 try:
     import sensors
 except ImportError:
@@ -60,7 +61,7 @@ class glancesGrabSensors:
                 for feature in chip:
                     sensors_current = {}
                     if feature.name.startswith(b'temp'):
-                        sensors_current['label'] = feature.label[:20]
+                        sensors_current['label'] = feature.label
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
 
@@ -121,20 +122,20 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:9}".format(_("SENSORS"))
+        msg = "{0:18}".format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         if is_python3:
-            msg = "{0:>14}".format(_("°C"))
+            msg = "{0:>5}".format(_("°C"))
         else:
-            msg = "{0:>15}".format(_("°C"))
+            msg = "{0:>6}".format(_("°C"))
         ret.append(self.curse_add_line(msg))
 
         for item in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:9}".format(item['label'])
+            msg = "{0:18}".format(item['label'][:18])
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>14}".format(item['value'])
+            msg = "{0:>5}".format(item['value'])
             ret.append(self.curse_add_line(msg))
 
         return ret
