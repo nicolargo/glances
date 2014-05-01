@@ -107,7 +107,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Active memory usage
         if 'active' in self.stats:
-            msg = "  {0:8}".format(_("actif:"))
+            msg = "  {0:8}".format(_("active:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['active']))
             ret.append(self.curse_add_line(msg, optional=True))
@@ -120,9 +120,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Inactive memory usage
         if 'inactive' in self.stats:
-            msg = "  {0:8}".format(_("inactif:"))
+            msg = "  {0:9}".format(_("inactive:"))
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = "{0:>7}".format(self.auto_unit(self.stats['inactive']))
+            msg = "{0:>6}".format(self.auto_unit(self.stats['inactive']))
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
