@@ -48,6 +48,7 @@ Glances is on `PyPI`_. To install, simply use `pip`_:
 
 .. code-block:: console
 
+    apt-get install python-dev
     pip install Glances
 
 To upgrade Glances to the latest version:
