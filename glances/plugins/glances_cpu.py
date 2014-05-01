@@ -99,13 +99,12 @@ class Plugin(GlancesPlugin):
         # Total CPU usage
         msg = "{0}".format(format((100 - self.stats['idle']) / 100, '>6.1%'))
         ret.append(self.curse_add_line(msg))
-        # Steal CPU usage
-        # ret.append(self.curse_add_line("  ", optional=True))
-        if 'steal' in self.stats:
-            msg = "  {0:8}".format(_("steal:"))
+        # Nice CPU
+        if 'nice' in self.stats:
+            msg = "  {0:8}".format(_("nice:"))
+            ret.append(self.curse_add_line(msg))
+            msg = "{0}".format(format(self.stats['nice'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = "{0}".format(format(self.stats['steal'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, self.get_alert(self.stats['steal'], header="steal"), optional=True))
         # New line
         ret.append(self.curse_new_line())
         # User CPU
@@ -114,13 +113,12 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = "{0}".format(format(self.stats['user'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))
-        # IOWait CPU
-        # ret.append(self.curse_add_line("  ", optional=True))
-        if 'iowait' in self.stats:
-            msg = "  {0:8}".format(_("iowait:"))
+        # IRQ CPU
+        if 'irq' in self.stats:
+            msg = "  {0:8}".format(_("irq:"))
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = "{0}".format(format(self.stats['iowait'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
+            msg = "{0}".format(format(self.stats['irq'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # System CPU
@@ -129,28 +127,26 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = "{0}".format(format(self.stats['system'] / 100, '>6.1%'))
             ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['system'], header="system")))
-        # IRQ CPU
-        # ret.append(self.curse_add_line("  ", optional=True))
-        if 'irq' in self.stats:
-            msg = "  {0:8}".format(_("irq:"))
+        # IOWait CPU
+        if 'iowait' in self.stats:
+            msg = "  {0:8}".format(_("iowait:"))
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = "{0}".format(format(self.stats['irq'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg, optional=True))
+            msg = "{0}".format(format(self.stats['iowait'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
         # New line
         ret.append(self.curse_new_line())
-        # Nice CPU
-        if 'nice' in self.stats:
-            msg = "{0:8}".format(_("nice:"))
-            ret.append(self.curse_add_line(msg))
-            msg = "{0}".format(format(self.stats['nice'] / 100, '>6.1%'))
-            ret.append(self.curse_add_line(msg))
-        # Idles CPU
-        # ret.append(self.curse_add_line("  ", optional=True))
+        # Idle CPU
         if 'idle' in self.stats:
-            msg = "  {0:8}".format(_("idle:"))
+            msg = "{0:8}".format(_("idle:"))
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0}".format(format(self.stats['idle'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg))
+        # Steal CPU usage
+        if 'steal' in self.stats:
+            msg = "  {0:8}".format(_("steal:"))
             ret.append(self.curse_add_line(msg, optional=True))
+            msg = "{0}".format(format(self.stats['steal'] / 100, '>6.1%'))
+            ret.append(self.curse_add_line(msg, self.get_alert(self.stats['steal'], header="steal"), optional=True))
 
         # Return the message with decoration
         return ret
