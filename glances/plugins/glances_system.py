@@ -92,18 +92,7 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats['os_version'] = ""
         elif input == 'snmp':
-            # Update stats using SNMP
-            from glances.core.glances_snmp import GlancesSNMPClient
-
-            # Init the SNMP request
-            clientsnmp = GlancesSNMPClient()
-
-            # Process the SNMP request
-            snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
-
-            # Build the internal dict with the SNMP result
-            for key in snmp_oid.iterkeys():
-                self.stats[key] = snmpresult[snmp_oid[key]]
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
         return self.stats
 

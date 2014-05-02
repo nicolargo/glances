@@ -56,6 +56,22 @@ class GlancesPlugin(object):
         self.stats = input_stats
         return self.stats
 
+    def set_stats_snmp(self, snmp_oid={}):
+        # Update stats using SNMP
+        from glances.core.glances_snmp import GlancesSNMPClient
+
+        # Init the SNMP request
+        clientsnmp = GlancesSNMPClient()
+
+        # Process the SNMP request
+        snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
+
+        # Build the internal dict with the SNMP result
+        for key in snmp_oid.iterkeys():
+            self.stats[key] = snmpresult[snmp_oid[key]]
+                    
+        return self.stats
+
     def get_raw(self):
         # Return the stats object
         return self.stats
