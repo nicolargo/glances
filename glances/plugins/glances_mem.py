@@ -44,46 +44,62 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 1
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update MEM (RAM) stats
+        Reset/init the stats
+        """
+        self.stats = {}
+
+    def update(self, input='local'):
+        """
+        Update MEM (RAM) stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        # Grab MEM using the PSUtil virtual_memory method
-        vm_stats = psutil.virtual_memory()
+        # Reset stats
+        self.reset()
 
-        # Get all the memory stats (copy/paste of the PsUtil documentation)
-        # total: total physical memory available.
-        # available: the actual amount of available memory that can be given instantly to processes that request more memory in bytes; this is calculated by summing different memory values depending on the platform (e.g. free + buffers + cached on Linux) and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
-        # percent: the percentage usage calculated as (total - available) / total * 100.
-        # used: memory used, calculated differently depending on the platform and designed for informational purposes only.
-        # free: memory not being used at all (zeroed) that is readily available; note that this doesn’t reflect the actual memory available (use ‘available’ instead).
-        # Platform-specific fields:
-        # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
-        # inactive: (UNIX): memory that is marked as not used.
-        # buffers: (Linux, BSD): cache for things like file system metadata.
-        # cached: (Linux, BSD): cache for various things.
-        # wired: (BSD, OSX): memory that is marked to always stay in RAM. It is never moved to disk.
-        # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
-        mem_stats = {}
-        for mem in ['total', 'available', 'percent', 'used', 'free',
-                    'active', 'inactive', 'buffers', 'cached',
-                    'wired', 'shared']:
-            if hasattr(vm_stats, mem):
-                mem_stats[mem] = getattr(vm_stats, mem)
+        if input == 'local':
+            # Update stats using the standard system lib
+            # Grab MEM using the PSUtil virtual_memory method
+            vm_stats = psutil.virtual_memory()
 
-        # Use the 'free'/htop calculation
-        # free=available+buffer+cached
-        mem_stats['free'] = mem_stats['available']
-        if hasattr(mem_stats, 'buffer'):
-            mem_stats['free'] += mem_stats['buffer']
-        if hasattr(mem_stats, 'cached'):
-            mem_stats['free'] += mem_stats['cached']
-        # used=total-free
-        mem_stats['used'] = mem_stats['total'] - mem_stats['free']
+            # Get all the memory stats (copy/paste of the PsUtil documentation)
+            # total: total physical memory available.
+            # available: the actual amount of available memory that can be given instantly to processes that request more memory in bytes; this is calculated by summing different memory values depending on the platform (e.g. free + buffers + cached on Linux) and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
+            # percent: the percentage usage calculated as (total - available) / total * 100.
+            # used: memory used, calculated differently depending on the platform and designed for informational purposes only.
+            # free: memory not being used at all (zeroed) that is readily available; note that this doesn’t reflect the actual memory available (use ‘available’ instead).
+            # Platform-specific fields:
+            # active: (UNIX): memory currently in use or very recently used, and so it is in RAM.
+            # inactive: (UNIX): memory that is marked as not used.
+            # buffers: (Linux, BSD): cache for things like file system metadata.
+            # cached: (Linux, BSD): cache for various things.
+            # wired: (BSD, OSX): memory that is marked to always stay in RAM. It is never moved to disk.
+            # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
+            self.stats = {}
+            for mem in ['total', 'available', 'percent', 'used', 'free',
+                        'active', 'inactive', 'buffers', 'cached',
+                        'wired', 'shared']:
+                if hasattr(vm_stats, mem):
+                    self.stats[mem] = getattr(vm_stats, mem)
 
-        # Set the global variable to the new stats
-        self.stats = mem_stats
+            # Use the 'free'/htop calculation
+            # free=available+buffer+cached
+            self.stats['free'] = self.stats['available']
+            if hasattr(self.stats, 'buffer'):
+                self.stats['free'] += self.stats['buffer']
+            if hasattr(self.stats, 'cached'):
+                self.stats['free'] += self.stats['cached']
+            # used=total-free
+            self.stats['used'] = self.stats['total'] - self.stats['free']
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
 
         return self.stats
 

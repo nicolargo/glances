@@ -44,29 +44,44 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 1
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update MEM (SWAP) stats
+        Reset/init the stats
+        """
+        self.stats = {}
+
+    def update(self, input='local'):
+        """
+        Update MEM (SWAP) stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        # Grab SWAP using the PSUtil swap_memory method
-        sm_stats = psutil.swap_memory()
+        # Reset stats
+        self.reset()
 
-        # Get all the swap stats (copy/paste of the PsUtil documentation)
-        # total: total swap memory in bytes
-        # used: used swap memory in bytes
-        # free: free swap memory in bytes
-        # percent: the percentage usage
-        # sin: the number of bytes the system has swapped in from disk (cumulative)
-        # sout: the number of bytes the system has swapped out from disk (cumulative)
-        swap_stats = {}
-        for swap in ['total', 'used', 'free', 'percent',
-                     'sin', 'sout']:
-            if hasattr(sm_stats, swap):
-                swap_stats[swap] = getattr(sm_stats, swap)
+        if input == 'local':
+            # Update stats using the standard system lib
+            # Grab SWAP using the PSUtil swap_memory method
+            sm_stats = psutil.swap_memory()
 
-        # Set the global variable to the new stats
-        self.stats = swap_stats
+            # Get all the swap stats (copy/paste of the PsUtil documentation)
+            # total: total swap memory in bytes
+            # used: used swap memory in bytes
+            # free: free swap memory in bytes
+            # percent: the percentage usage
+            # sin: the number of bytes the system has swapped in from disk (cumulative)
+            # sout: the number of bytes the system has swapped out from disk (cumulative)
+            for swap in ['total', 'used', 'free', 'percent',
+                         'sin', 'sout']:
+                if hasattr(sm_stats, swap):
+                    self.stats[swap] = getattr(sm_stats, swap)
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
 
         return self.stats
 

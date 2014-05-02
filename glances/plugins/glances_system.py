@@ -27,6 +27,9 @@ import platform
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+snmp_oid = { 'hostname': '1.3.6.1.2.1.1.5.0',
+             'os_name': '1.3.6.1.2.1.1.1.0' }
 
 class Plugin(GlancesPlugin):
     """
@@ -47,32 +50,61 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 0
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update the host/system info
-        Return the stats (dict)
+        Reset/init the stats
         """
         self.stats = {}
-        self.stats['os_name'] = platform.system()
-        self.stats['hostname'] = platform.node()
-        self.stats['platform'] = platform.architecture()[0]
-        is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
-        if self.stats['os_name'] == "Linux":
-            if is_archlinux:
-                self.stats['linux_distro'] = "Arch Linux"
+
+    def update(self, input='local'):
+        """
+        Update the host/system info using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
+        Return the stats (dict)
+        """
+
+        # Reset stats
+        self.reset()
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            self.stats['os_name'] = platform.system()
+            self.stats['hostname'] = platform.node()
+            self.stats['platform'] = platform.architecture()[0]
+            is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
+            if self.stats['os_name'] == "Linux":
+                if is_archlinux:
+                    self.stats['linux_distro'] = "Arch Linux"
+                else:
+                    linux_distro = platform.linux_distribution()
+                    self.stats['linux_distro'] = ' '.join(linux_distro[:2])
+                self.stats['os_version'] = platform.release()
+            elif self.stats['os_name'] == "FreeBSD":
+                self.stats['os_version'] = platform.release()
+            elif self.stats['os_name'] == "Darwin":
+                self.stats['os_version'] = platform.mac_ver()[0]
+            elif self.stats['os_name'] == "Windows":
+                os_version = platform.win32_ver()
+                self.stats['os_version'] = ' '.join(os_version[::2])
             else:
-                linux_distro = platform.linux_distribution()
-                self.stats['linux_distro'] = ' '.join(linux_distro[:2])
-            self.stats['os_version'] = platform.release()
-        elif self.stats['os_name'] == "FreeBSD":
-            self.stats['os_version'] = platform.release()
-        elif self.stats['os_name'] == "Darwin":
-            self.stats['os_version'] = platform.mac_ver()[0]
-        elif self.stats['os_name'] == "Windows":
-            os_version = platform.win32_ver()
-            self.stats['os_version'] = ' '.join(os_version[::2])
-        else:
-            self.stats['os_version'] = ""
+                self.stats['os_version'] = ""
+        elif input == 'snmp':
+            # Update stats using SNMP
+            from glances.core.glances_snmp import GlancesSNMPClient
+
+            # Init the SNMP request
+            clientsnmp = GlancesSNMPClient()
+
+            # Process the SNMP request
+            snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
+
+            # Build the internal dict with the SNMP result
+            for key in snmp_oid.iterkeys():
+                self.stats[key] = snmpresult[snmp_oid[key]]
+
         return self.stats
 
     def msg_curse(self, args=None):
@@ -103,9 +135,12 @@ class Plugin(GlancesPlugin):
                                                    self.stats['os_name'],
                                                    self.stats['os_version'])
         else:
-            msg = _(" ({0} {1} {2})").format(self.stats['os_name'],
-                                             self.stats['os_version'],
-                                             self.stats['platform'])
+            try:
+                msg = _(" ({0} {1} {2})").format(self.stats['os_name'],
+                                                 self.stats['os_version'],
+                                                 self.stats['platform'])
+            except:
+                msg = _(" ({0})").format(self.stats['os_name'])
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Return the message with decoration

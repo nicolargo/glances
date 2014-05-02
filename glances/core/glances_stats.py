@@ -221,9 +221,12 @@ class GlancesStatsClientSNMP(GlancesStats):
     This class store, update and give stats for the SNMP client
     """
 
-    def __init__(self):
+    def __init__(self, config=None):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
+
+        # Init the configuration
+        self.config = config
 
         # Load plugins
         self.load_plugins()
@@ -236,5 +239,9 @@ class GlancesStatsClientSNMP(GlancesStats):
         # For each plugins, call the update method
         for p in self._plugins:
             # print "DEBUG: Update %s stats using SNMP request" % p
-            self._plugins[p].update()
+            try:
+                self._plugins[p].update(input='snmp')
+            except:
+                # !!! try/catch only for dev
+                pass
 

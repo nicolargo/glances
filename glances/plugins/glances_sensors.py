@@ -46,6 +46,13 @@ class glancesGrabSensors:
         else:
             self.initok = True
 
+        # Init the stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
         self.sensors_list = []
 
     def __update__(self):
@@ -53,7 +60,7 @@ class glancesGrabSensors:
         Update the stats
         """
         # Reset the list
-        self.sensors_list = []
+        self.reset()
 
         # grab only temperature stats
         if self.initok:
@@ -64,6 +71,8 @@ class glancesGrabSensors:
                         sensors_current['label'] = feature.label
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
+
+        return self.sensors_list
 
     def get(self):
         self.__update__()
@@ -101,13 +110,35 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 5
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update sensors stats
+        Reset/init the stats
         """
-        self.hddtemp_plugin.update()
-        self.stats = self.glancesgrabsensors.get()
-        self.stats.extend(self.hddtemp_plugin.stats)
+        self.stats = []
+
+    def update(self, input='local'):
+        """
+        Update sensors stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
+        """
+
+        # Reset the stats
+        self.reset()        
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            self.hddtemp_plugin.update()
+            self.stats = self.glancesgrabsensors.get()
+            self.stats.extend(self.hddtemp_plugin.stats)
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
+
+        return self.stats
 
     def msg_curse(self, args=None):
         """

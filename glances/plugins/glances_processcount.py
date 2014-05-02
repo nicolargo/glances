@@ -43,16 +43,32 @@ class Plugin(GlancesPlugin):
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
-    def update(self):
+    def reset(self):
         """
-        Update processes stats
+        Reset/init the stats
+        """
+        self.stats = {}
+
+    def update(self, input='local'):
+        """
+        Update processes stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        # Here, update is call for processcount AND processlist
-        glances_processes.update()
+        # Reset stats
+        self.reset()
 
-        # Return the processes count
-        self.stats = glances_processes.getcount()
+        if input == 'local':
+            # Update stats using the standard system lib
+            # Here, update is call for processcount AND processlist
+            glances_processes.update()
+
+            # Return the processes count
+            self.stats = glances_processes.getcount()
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
 
         return self.stats
 

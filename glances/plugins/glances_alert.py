@@ -44,7 +44,16 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 5
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
+
+    def update(self, input='local'):
         """
         Nothing to do here
         Just return the global glances_log

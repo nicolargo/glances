@@ -47,61 +47,76 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 2
 
-        # Init stats
-        self.network_old = []
+        # Init the stats
+        self.reset()
+        self.network_old = self.stats        
 
-    def update(self):
+    def reset(self):
         """
-        Update network stats
+        Reset/init the stats
+        """
+        self.stats = []
+
+    def update(self, input='local'):
+        """
+        Update network stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         Stats is a list of dict (one dict per interface)
         """
 
-        # Grab network interface stat using the PsUtil net_io_counter method
-        try:
-            netiocounters = psutil.net_io_counters(pernic=True)
-        except UnicodeDecodeError:
-            self.stats = []
-            return self.stats
+        # Reset stats
+        self.reset()
 
-        # Previous network interface stats are stored in the network_old variable
-        network = []
-        if self.network_old == []:
-            # First call, we init the network_old var
+        if input == 'local':
+            # Update stats using the standard system lib
+
+            # Grab network interface stat using the PsUtil net_io_counter method
             try:
-                self.network_old = netiocounters
-            except (IOError, UnboundLocalError):
-                pass
-        else:
-            # By storing time data we enable Rx/s and Tx/s calculations in the
-            # XML/RPC API, which would otherwise be overly difficult work
-            # for users of the API
-            time_since_update = getTimeSinceLastUpdate('net')
+                netiocounters = psutil.net_io_counters(pernic=True)
+            except UnicodeDecodeError:
+                return self.stats
 
-            # Loop over interfaces
-            network_new = netiocounters
-            for net in network_new:
+            # Previous network interface stats are stored in the network_old variable
+            self.stats = []
+            if self.network_old == []:
+                # First call, we init the network_old var
                 try:
-                    # Try necessary to manage dynamic network interface
-                    netstat = {}
-                    netstat['time_since_update'] = time_since_update
-                    netstat['interface_name'] = net
-                    netstat['cumulative_rx'] = network_new[net].bytes_recv
-                    netstat['rx'] = (network_new[net].bytes_recv -
-                                     self.network_old[net].bytes_recv)
-                    netstat['cumulative_tx'] = network_new[net].bytes_sent
-                    netstat['tx'] = (network_new[net].bytes_sent -
-                                     self.network_old[net].bytes_sent)
-                    netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
-                                                netstat['cumulative_tx'])
-                    netstat['cx'] = netstat['rx'] + netstat['tx']
-                except KeyError:
-                    continue
-                else:
-                    network.append(netstat)
-            self.network_old = network_new
+                    self.network_old = netiocounters
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                # By storing time data we enable Rx/s and Tx/s calculations in the
+                # XML/RPC API, which would otherwise be overly difficult work
+                # for users of the API
+                time_since_update = getTimeSinceLastUpdate('net')
 
-        self.stats = network
-
+                # Loop over interfaces
+                network_new = netiocounters
+                for net in network_new:
+                    try:
+                        # Try necessary to manage dynamic network interface
+                        netstat = {}
+                        netstat['time_since_update'] = time_since_update
+                        netstat['interface_name'] = net
+                        netstat['cumulative_rx'] = network_new[net].bytes_recv
+                        netstat['rx'] = (network_new[net].bytes_recv -
+                                         self.network_old[net].bytes_recv)
+                        netstat['cumulative_tx'] = network_new[net].bytes_sent
+                        netstat['tx'] = (network_new[net].bytes_sent -
+                                         self.network_old[net].bytes_sent)
+                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                                    netstat['cumulative_tx'])
+                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                    except KeyError:
+                        continue
+                    else:
+                        self.stats.append(netstat)
+                self.network_old = network_new
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
+            
         return self.stats
 
     def msg_curse(self, args=None):

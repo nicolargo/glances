@@ -34,6 +34,12 @@ class glancesGrabFs:
         """
 
         # Init the stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
         self.fs_list = []
 
     def __update__(self):
@@ -41,7 +47,7 @@ class glancesGrabFs:
         Update the stats
         """
         # Reset the list
-        fs_list = []
+        self.reset()
 
         # Grab the stats using the PsUtil disk_partitions
         # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
@@ -69,10 +75,7 @@ class glancesGrabFs:
             fs_current['used'] = fs_usage.used
             fs_current['avail'] = fs_usage.free
             fs_current['percent'] = fs_usage.percent
-            fs_list.append(fs_current)
-
-        # Put the stats in the global var
-        self.fs_list = fs_list
+            self.fs_list.append(fs_current)
 
         return self.fs_list
 
@@ -80,7 +83,6 @@ class glancesGrabFs:
         """
         Update and return the stats
         """
-
         return self.__update__()
 
 
@@ -106,11 +108,33 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 4
 
-    def update(self):
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update  stats
+        Reset/init the stats
         """
-        self.stats = self.glancesgrabfs.get()
+        self.stats = []
+
+    def update(self, input='local'):
+        """
+        Update the FS stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
+        """
+
+        # Reset the stats
+        self.reset()        
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            self.stats = self.glancesgrabfs.get()
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
+
+        return self.stats
 
     def msg_curse(self, args=None):
         """
