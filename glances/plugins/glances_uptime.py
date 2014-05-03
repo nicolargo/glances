@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Check for psutil already done in the glances_core script
 import psutil
@@ -26,6 +26,8 @@ import psutil
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+snmp_oid = { '_uptime': '1.3.6.1.2.1.1.3.0' }
 
 class Plugin(GlancesPlugin):
     """
@@ -46,15 +48,41 @@ class Plugin(GlancesPlugin):
         self.column_curse = -1
         # Enter -1 to diplay bottom
         self.line_curse = 0
+        # Init the stats
+        self.reset()        
 
-    def update(self):
+    def reset(self):
         """
-        Update uptime stat
+        Reset/init the stats
         """
-        uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
+        self.stats = {}
 
-        # Convert uptime to string (because datetime is not JSONifi)
-        self.stats = str(uptime).split('.')[0]
+    def update(self, input='local'):
+        """
+        Update uptime stat using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
+        """
+
+        # Reset stats
+        self.reset()
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
+
+            # Convert uptime to string (because datetime is not JSONifi)
+            self.stats = str(uptime).split('.')[0]
+        elif input == 'snmp':
+            # Update stats using SNMP
+            uptime = self.set_stats_snmp(snmp_oid=snmp_oid)['_uptime']
+            try: 
+                # In hundredths of seconds
+                self.stats = str(timedelta(seconds=int(uptime) / 100))
+            except:
+                pass
+
+        # Return the result
+        return self.stats
 
     def msg_curse(self, args=None):
         """

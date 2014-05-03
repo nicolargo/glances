@@ -92,6 +92,7 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats['os_version'] = ""
         elif input == 'snmp':
+            # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
         return self.stats

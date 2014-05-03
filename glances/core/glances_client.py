@@ -122,17 +122,15 @@ class GlancesClient():
 
             # Test if SNMP is available on the server side
             clientsnmp = GlancesSNMPClient()
-            try:
-                # !!! Simple request with system name
-                # !!! Had to have a standard method to check SNMP server
-                clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0")
-            except:
+
+            # !!! Simple request with system name
+            # !!! Had to have a standard method to check SNMP server
+            print(_("Trying {0}...").format(self.get_mode()))
+            if (clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") == {}):
                 print(_("Error: Connection to {0} server failed").format(self.get_mode()))
                 sys.exit(2)
             
             from glances.core.glances_stats import GlancesStatsClientSNMP
-
-            print(_("Fallback to {0}").format(self.get_mode()))
 
             # Init stats
             self.stats = GlancesStatsClientSNMP()
