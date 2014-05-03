@@ -67,10 +67,11 @@ class GlancesPlugin(object):
         snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
 
         # Build the internal dict with the SNMP result
+        ret = {}
         for key in snmp_oid.iterkeys():
-            self.stats[key] = snmpresult[snmp_oid[key]]
-                    
-        return self.stats
+            ret[key] = snmpresult[snmp_oid[key]]
+
+        return ret
 
     def get_raw(self):
         # Return the stats object

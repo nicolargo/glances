@@ -27,6 +27,9 @@ import psutil
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+snmp_oid = { '_interface_name': '1.3.6.1.2.1.2.2.1.2' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -77,7 +80,6 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             # Previous network interface stats are stored in the network_old variable
-            self.stats = []
             if self.network_old == []:
                 # First call, we init the network_old var
                 try:
@@ -114,9 +116,26 @@ class Plugin(GlancesPlugin):
                 self.network_old = network_new
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
-            pass
-            
+            # !!! High CPU consumption: use getbulk request
+            # !!! http://stackoverflow.com/questions/23085205/pysnmp-query-a-select-list-of-interfaces
+            # !!!http://pysnmp.sourceforge.net/examples/current/v3arch/manager/cmdgen/getbulk-v2c.html
+            time_since_update = getTimeSinceLastUpdate('net')
+            for net in range(1, 10):
+                netstat = {}
+                net_oid = { 'interface_name': snmp_oid['_interface_name'] + '.' + str(net) }
+                netstat = self.set_stats_snmp(snmp_oid=net_oid)
+                if (str(netstat['interface_name']) == ''):
+                    continue
+                netstat['time_since_update'] = time_since_update
+                netstat['cumulative_rx'] = 0
+                netstat['rx'] = 0
+                netstat['cumulative_tx'] = 0
+                netstat['tx'] = 0
+                netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                            netstat['cumulative_tx'])
+                netstat['cx'] = netstat['rx'] + netstat['tx']                
+                self.stats.append(netstat)
+
         return self.stats
 
     def msg_curse(self, args=None):

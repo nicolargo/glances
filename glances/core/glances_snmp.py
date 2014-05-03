@@ -45,7 +45,10 @@ class GlancesSNMPClient(object):
         ret = {}
         if not (errorIndication or errorStatus):
             for name, val in varBinds:
-                ret[name.prettyPrint()] = val.prettyPrint()
+                if (str(val) == ''):
+                    ret[name.prettyPrint()] = ''
+                else:
+                    ret[name.prettyPrint()] = val.prettyPrint()
         return ret
 
     def get_by_oid(self, *oid):
