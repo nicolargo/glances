@@ -26,16 +26,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
-# raw user cpu time: .1.3.6.1.4.1.2021.11.50.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
-# raw system cpu time: .1.3.6.1.4.1.2021.11.52.0
 # percentages of idle CPU time: .1.3.6.1.4.1.2021.11.11.0
-# raw idle cpu time: .1.3.6.1.4.1.2021.11.53.0
-# raw nice cpu time: .1.3.6.1.4.1.2021.11.51.0            
 snmp_oid = { 'user': '1.3.6.1.4.1.2021.11.9.0',
              'system': '1.3.6.1.4.1.2021.11.10.0',
-             'idle': '1.3.6.1.4.1.2021.11.11.0',
-             'user_raw': '1.3.6.1.4.1.2021.11.50.0' }
+             'idle': '1.3.6.1.4.1.2021.11.11.0' }
 
 class Plugin(GlancesPlugin):
     """

@@ -27,6 +27,14 @@ import os
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
+# 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
+# 15 minute Load: .1.3.6.1.4.1.2021.10.1.3.3
+snmp_oid = { 'min1': '1.3.6.1.4.1.2021.10.1.3.1',
+             'min5': '1.3.6.1.4.1.2021.10.1.3.2',
+             'min15': '1.3.6.1.4.1.2021.10.1.3.3' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -51,25 +59,42 @@ class Plugin(GlancesPlugin):
         self.line_curse = 1
 
         # Init stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
         self.stats = {}
 
-    def update(self):
+    def update(self, input='local'):
         """
-        Update load stats
+        Update load stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        # Get the load using the os standard lib
-        try:
-            load = os.getloadavg()
-        except OSError:
-            self.stats = {}
-        except AttributeError:
-            # For Windows OS...
-            self.stats = {}
-        else:
-            self.stats = {'min1': load[0],
-                          'min5': load[1],
-                          'min15': load[2]}
+        # Reset stats
+        self.reset()
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            # Get the load using the os standard lib
+            try:
+                load = os.getloadavg()
+            except OSError:
+                self.stats = {}
+            except AttributeError:
+                # For Windows OS...
+                self.stats = {}
+            else:
+                self.stats = {'min1': load[0],
+                              'min5': load[1],
+                              'min15': load[2]}
+        elif input == 'snmp':
+            # Update stats using SNMP
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            for key in self.stats.iterkeys():
+                self.stats[key] = float(self.stats[key])
 
         return self.stats
 

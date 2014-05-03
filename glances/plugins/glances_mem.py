@@ -24,6 +24,20 @@ import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0
+# Total RAM used: .1.3.6.1.4.1.2021.4.6.0
+# Total RAM Free: .1.3.6.1.4.1.2021.4.11.0
+# Total RAM Shared: .1.3.6.1.4.1.2021.4.13.0
+# Total RAM Buffered: .1.3.6.1.4.1.2021.4.14.0
+# Total Cached Memory: .1.3.6.1.4.1.2021.4.15.0
+snmp_oid = { 'total': '1.3.6.1.4.1.2021.4.5.0',
+             # 'used': '1.3.6.1.4.1.2021.4.6.0',
+             'free': '1.3.6.1.4.1.2021.4.11.0',
+             'shared': '1.3.6.1.4.1.2021.4.13.0',
+             'buffers': '1.3.6.1.4.1.2021.4.14.0',
+             'cached': '1.3.6.1.4.1.2021.4.15.0' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -90,16 +104,26 @@ class Plugin(GlancesPlugin):
             # Use the 'free'/htop calculation
             # free=available+buffer+cached
             self.stats['free'] = self.stats['available']
-            if hasattr(self.stats, 'buffer'):
-                self.stats['free'] += self.stats['buffer']
+            if hasattr(self.stats, 'buffers'):
+                self.stats['free'] += self.stats['buffers']
             if hasattr(self.stats, 'cached'):
                 self.stats['free'] += self.stats['cached']
             # used=total-free
             self.stats['used'] = self.stats['total'] - self.stats['free']
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
-            pass
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            for key in self.stats.iterkeys():
+                self.stats[key] = float(self.stats[key]) * 1024
+
+            # Use the 'free'/htop calculation
+            self.stats['free'] = self.stats['free'] - self.stats['total'] + (self.stats['buffers'] + self.stats['cached'])
+
+            # used=total-free
+            self.stats['used'] = self.stats['total'] - self.stats['free']
+
+            # percent: the percentage usage calculated as (total - available) / total * 100.
+            self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
         return self.stats
 

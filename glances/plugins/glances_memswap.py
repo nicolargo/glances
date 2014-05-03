@@ -24,6 +24,12 @@ import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
+# Available Swap Space: .1.3.6.1.4.1.2021.4.4.0
+snmp_oid = { 'total': '1.3.6.1.4.1.2021.4.3.0',
+             'free': '1.3.6.1.4.1.2021.4.4.0' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -80,8 +86,15 @@ class Plugin(GlancesPlugin):
                     self.stats[swap] = getattr(sm_stats, swap)
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
-            pass
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            for key in self.stats.iterkeys():
+                self.stats[key] = float(self.stats[key]) * 1024
+
+            # used=total-free
+            self.stats['used'] = self.stats['total'] - self.stats['free']
+
+            # percent: the percentage usage calculated as (total - available) / total * 100.
+            self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
         return self.stats
 
