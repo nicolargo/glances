@@ -28,7 +28,11 @@ from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
-snmp_oid = { '_interface_name': '1.3.6.1.2.1.2.2.1.2' }
+# http://www.net-snmp.org/docs/mibs/interfaces.html
+snmp_oid = { 'ifNumber': '1.3.6.1.2.1.2.1.0' }
+netif_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2',
+              'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+              'cumulative_tx': '1.3.6.1.2.1.2.2.1.16' }
 
 
 class Plugin(GlancesPlugin):
@@ -52,7 +56,6 @@ class Plugin(GlancesPlugin):
 
         # Init the stats
         self.reset()
-        self.network_old = self.stats        
 
     def reset(self):
         """
@@ -80,7 +83,7 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             # Previous network interface stats are stored in the network_old variable
-            if self.network_old == []:
+            if not hasattr(self, 'network_old'):
                 # First call, we init the network_old var
                 try:
                     self.network_old = netiocounters
@@ -98,8 +101,8 @@ class Plugin(GlancesPlugin):
                     try:
                         # Try necessary to manage dynamic network interface
                         netstat = {}
-                        netstat['time_since_update'] = time_since_update
                         netstat['interface_name'] = net
+                        netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = network_new[net].bytes_recv
                         netstat['rx'] = (network_new[net].bytes_recv -
                                          self.network_old[net].bytes_recv)
@@ -113,28 +116,49 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         self.stats.append(netstat)
+                
+                # Save stats to compute next bitrate
                 self.network_old = network_new
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! High CPU consumption: use getbulk request
-            # !!! http://stackoverflow.com/questions/23085205/pysnmp-query-a-select-list-of-interfaces
-            # !!!http://pysnmp.sourceforge.net/examples/current/v3arch/manager/cmdgen/getbulk-v2c.html
+            # !!! High CPU consumption on the client side
+
             time_since_update = getTimeSinceLastUpdate('net')
-            for net in range(1, 10):
-                netstat = {}
-                net_oid = { 'interface_name': snmp_oid['_interface_name'] + '.' + str(net) }
+
+            # Get number of network interfaces
+            try:
+                ifNumber = int(self.set_stats_snmp(snmp_oid=snmp_oid)['ifNumber']) + 1
+            except:
+                return self.stats
+
+            # Loop over network interfaces
+            network_new = {}
+            ifIndex = 1
+            ifCpt = 1
+            while (ifCpt < ifNumber) or (ifIndex > 1024):
+                # Add interface index to netif OID
+                net_oid = dict((k, v + '.' + str(ifIndex)) for (k, v) in netif_oid.items())
                 netstat = self.set_stats_snmp(snmp_oid=net_oid)
-                if (str(netstat['interface_name']) == ''):
-                    continue
-                netstat['time_since_update'] = time_since_update
-                netstat['cumulative_rx'] = 0
-                netstat['rx'] = 0
-                netstat['cumulative_tx'] = 0
-                netstat['tx'] = 0
-                netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
-                                            netstat['cumulative_tx'])
-                netstat['cx'] = netstat['rx'] + netstat['tx']                
-                self.stats.append(netstat)
+                if str(netstat['interface_name']) == '':
+                    ifIndex += 1
+                    continue 
+                else:
+                    ifCpt += 1
+                network_new[ifIndex] = netstat
+                if hasattr(self, 'network_old'):
+                    netstat['time_since_update'] = time_since_update
+                    netstat['rx'] = (float(network_new[ifIndex]['cumulative_rx']) -
+                                     float(self.network_old[ifIndex]['cumulative_rx']))
+                    netstat['tx'] = (float(network_new[ifIndex]['cumulative_tx']) -
+                                     float(self.network_old[ifIndex]['cumulative_tx']))
+                    netstat['cumulative_cx'] = (float(netstat['cumulative_rx']) +
+                                                float(netstat['cumulative_tx']))
+                    netstat['cx'] = netstat['rx'] + netstat['tx']  
+                    self.stats.append(netstat)
+                ifIndex += 1
+            
+            # Save stats to compute next bitrate
+            self.network_old = network_new
 
         return self.stats
 
