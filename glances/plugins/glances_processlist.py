@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import sys libs
+import re
 from datetime import timedelta
 
 # Import Glances libs
@@ -82,8 +83,6 @@ class Plugin(GlancesPlugin):
         sort_style = 'SORT'
 
         # Header
-        msg = "{0:15}".format(" ")
-        ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(_("CPU%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
         msg = "{0:>6}".format(_("MEM%"))
@@ -115,9 +114,6 @@ class Plugin(GlancesPlugin):
         # Loop over processes (sorted by the sort key previously compute)
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
-            # Name
-            msg = "{0:15}".format(p['name'][:15])
-            ret.append(self.curse_add_line(msg))
             # CPU
             msg = "{0:>6}".format(format(p['cpu_percent'], '>5.1f'))
             ret.append(self.curse_add_line(msg,
@@ -181,11 +177,30 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, optional=True))
                 ret.append(self.curse_add_line(msg, optional=True))
             # Command line
-            try:
-                msg = " {0}".format(p['cmdline'])
-            except UnicodeEncodeError:
-                msg = ""
-            ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+            # If no command line for the process is available, fallback to
+            # the bare process name instead
+            if p['cmdline'] == "":
+                msg = " {0}".format(p['name'])
+                ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+            else:
+                try:
+                    cmdline = p['cmdline'].split(' ')
+                    pattern = p['name'] + '$'
+                    for cmd in cmdline:
+                        match = re.search(pattern, cmd)
+                        if match:
+                            start = match.start()
+                            end = match.end()
+                            first = cmd[:start]
+                            msg = " {0}".format(first)
+                            ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                            hlight = cmd[start:end]
+                            ret.append(self.curse_add_line(hlight, decoration='OK', optional=True, splittable=True))
+                        else:
+                            msg = " {0}".format(cmd)
+                            ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                except UnicodeEncodeError:
+                    ret.append(self.curse_add_line("", optional=True, splittable=True))
 
         # Return the message with decoration
         return ret
