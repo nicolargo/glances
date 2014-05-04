@@ -138,8 +138,12 @@ class Plugin(GlancesPlugin):
             msg = " {0:>3}".format(p['nice'])
             ret.append(self.curse_add_line(msg, optional=True))
             # STATUS
-            msg = " {0:>1}".format(p['status'])
-            ret.append(self.curse_add_line(msg, optional=True))
+            status = p['status']
+            msg = " {0:>1}".format(status)
+            if status == 'R':
+                ret.append(self.curse_add_line(msg, decoration='OK', optional=True))
+            else:
+                ret.append(self.curse_add_line(msg, optional=True))
             # TIME+
             if tag_proc_time:
                 try:
