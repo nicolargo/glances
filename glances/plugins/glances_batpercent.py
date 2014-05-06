@@ -45,13 +45,36 @@ class Plugin(GlancesPlugin):
         # Init the sensor class
         self.glancesgrabbat = glancesGrabBat()
 
-    def update(self):
+        # Init stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update batterie capacity stats
+        Reset/init the stats
+        """
+        self.stats = []
+
+    def update(self, input='local'):
+
+        """
+        Update batterie capacity stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        self.stats = self.glancesgrabbat.getcapacitypercent()
+        # Reset stats
+        self.reset()
 
+        if input == 'local':
+            # Update stats using the standard system lib
+
+            self.stats = self.glancesgrabbat.getcapacitypercent()
+
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # Not avalaible
+            pass
+
+        return self.stats
 
 class glancesGrabBat:
     """

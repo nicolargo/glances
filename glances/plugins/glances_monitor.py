@@ -50,19 +50,24 @@ class Plugin(GlancesPlugin):
         # print "DEBUG: Monitor plugin load config file %s" % config
         self.glances_monitors = glancesMonitorList(config)
 
-    def update(self):
+    def update(self, input='local'):
         """
         Update the monitored list
         """
-        # Check if the glances_monitor instance is init
-        if self.glances_monitors is None:
-            return self.stats
 
-        # Update the monitored list (result of command)
-        self.glances_monitors.update()
+        if input == 'local':
+            # Monitor list only available in a full Glances environment
+            # Check if the glances_monitor instance is init
+            if self.glances_monitors is None:
+                return self.stats
 
-        # Put it on the stats var
-        self.stats = self.glances_monitors.get()
+            # Update the monitored list (result of command)
+            self.glances_monitors.update()
+
+            # Put it on the stats var
+            self.stats = self.glances_monitors.get()
+        else:
+            pass
 
         return self.stats
 

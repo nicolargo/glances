@@ -40,11 +40,35 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-    def update(self):
+        # Init stats
+        self.reset()        
+
+    def reset(self):
         """
-        Update HDD stats
+        Reset/init the stats
         """
-        self.stats = self.glancesgrabhddtemp.get()
+        self.stats = []
+
+    def update(self, input='local'):
+        """
+        Update HDD stats using the input method
+        Input method could be: local (mandatory) or snmp (optionnal)
+        """
+
+        # Reset stats
+        self.reset()
+
+        if input == 'local':
+            # Update stats using the standard system lib
+            self.stats = self.glancesgrabhddtemp.get()
+
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # Not available for the moment
+            pass
+
+
+        return self.stats
 
 
 class glancesGrabHDDTemp:
