@@ -46,9 +46,6 @@ class Plugin(GlancesPlugin):
     def __init__(self):
         GlancesPlugin.__init__(self)
 
-        # Instance for the CorePlugin in order to display the core number
-        self.core_plugin = CorePlugin()
-
         # We want to display the stat in the curse interface
         self.display_curse = True
         # Set the message position
@@ -75,6 +72,13 @@ class Plugin(GlancesPlugin):
 
         # Reset stats
         self.reset()
+
+        # Call CorePlugin in order to display the core number
+        if not hasattr(self, 'nb_log_core'):
+            try:
+                self.nb_log_core = CorePlugin().update(input)["log"]
+            except:
+                self.nb_log_core = 0
 
         if input == 'local':
             # Update stats using the standard system lib
@@ -115,8 +119,9 @@ class Plugin(GlancesPlugin):
         msg = "{0:8}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        msg = "{0:>6}".format(str(self.core_plugin.update()["log"])+_("core"))
-        ret.append(self.curse_add_line(msg))
+        if (self.nb_log_core > 0):
+            msg = "{0:>6}".format(str(self.nb_log_core)+_("core"))
+            ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 1min load
@@ -131,7 +136,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(format(self.stats['min5'], '.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert(self.stats['min5'], max=100 * self.core_plugin.update()["log"])))
+            msg, self.get_alert(self.stats['min5'], max=100 * self.nb_log_core)))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
@@ -139,6 +144,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(format(self.stats['min15'], '.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min15'], max=100 * self.core_plugin.update()["log"])))
+            msg, self.get_alert_log(self.stats['min15'], max=100 * self.nb_log_core)))
 
         return ret

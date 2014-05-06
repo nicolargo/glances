@@ -243,6 +243,6 @@ class GlancesStatsClientSNMP(GlancesStats):
             try:
                 self._plugins[p].update(input='snmp')
             except Exception as e:
-                # print "ERROR: %s" % e
+                # print "ERROR with plugin %s: %s" % (p, e)
                 pass
 

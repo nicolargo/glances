@@ -37,26 +37,42 @@ class Plugin(GlancesPlugin):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
-        # Return a dict (with both physical and log cpu number) instead of a integer
-        self.stats = None
+        # Init the stat
+        self.reset()
 
-    def update(self):
+    def reset(self):
+        """
+        Reset/init the stat using the input method
+        """
+        self.stats = {}
+
+    def update(self, input='local'):
         """
         Update core stats
+        Input method could be: local (mandatory) or snmp (optionnal)
+        Stats is a dict (with both physical and log cpu number) instead of a integer
         """
 
-        # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
-        # Return a dict with:
-        # - phys: physical cores only (hyper thread CPUs are excluded)
-        # - log: logical CPUs in the system
-        # Return None if undefine
-        core_stats = {}
-        try:
-            core_stats["phys"] = psutil.cpu_count(logical=False)
-            core_stats["log"] = psutil.cpu_count()
-        except NameError:
-            core_stats = None
+        # Reset the stats
+        self.reset()
 
-        self.stats = core_stats
+        if input == 'local':
+            # Update stats using the standard system lib
+
+            # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
+            # Return a dict with:
+            # - phys: physical cores only (hyper thread CPUs are excluded)
+            # - log: logical CPUs in the system
+            # Return None if undefine
+            try:
+                self.stats["phys"] = psutil.cpu_count(logical=False)
+                self.stats["log"] = psutil.cpu_count()
+            except NameError:
+                self.reset()
+
+        elif input == 'snmp':
+            # Update stats using SNMP
+            # http://stackoverflow.com/questions/5662467/how-to-find-out-the-number-of-cpus-using-snmp
+            pass
 
         return self.stats

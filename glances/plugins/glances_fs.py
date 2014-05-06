@@ -128,8 +128,6 @@ class Plugin(GlancesPlugin):
                 self.stats.append(fs_current)
                 diskIndex += 1
 
-            # print self.stats
-
         return self.stats
 
     def msg_curse(self, args=None):

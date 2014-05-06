@@ -135,7 +135,7 @@ class Plugin(GlancesPlugin):
             self.stats.extend(self.hddtemp_plugin.stats)
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
+            # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
             pass
 
         return self.stats
