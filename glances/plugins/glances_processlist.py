@@ -141,7 +141,7 @@ class Plugin(GlancesPlugin):
             status = p['status']
             msg = " {0:>1}".format(status)
             if status == 'R':
-                ret.append(self.curse_add_line(msg, decoration='OK', optional=True))
+                ret.append(self.curse_add_line(msg, decoration='STATUS', optional=True))
             else:
                 ret.append(self.curse_add_line(msg, optional=True))
             # TIME+
@@ -195,14 +195,12 @@ class Plugin(GlancesPlugin):
                     if os.path.isdir(path):
                         msg = " {0}".format(path) + os.sep
                         ret.append(self.curse_add_line(msg, optional=True, splittable=True))
-                        ret.append(self.curse_add_line(basename, decoration='OK', optional=True, splittable=True))
-                        msg = " {0}".format(args)
-                        ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                        ret.append(self.curse_add_line(basename, decoration='PROCESS', optional=True, splittable=True))
                     else:
                         msg = " {0}".format(basename)
-                        ret.append(self.curse_add_line(msg, decoration='OK', optional=True, splittable=True))
-                        msg = " {0}".format(args)
-                        ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                        ret.append(self.curse_add_line(msg, decoration='PROCESS', optional=True, splittable=True))
+                    msg = " {0}".format(args)
+                    ret.append(self.curse_add_line(msg, optional=True, splittable=True))
                 except UnicodeEncodeError:
                     ret.append(self.curse_add_line("", optional=True, splittable=True))
 

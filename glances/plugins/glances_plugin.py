@@ -219,6 +219,8 @@ class GlancesPlugin(object):
                 UNDERLINE: underline
                 BOLD: bold
                 TITLE: for stat title
+                PROCESS: for process name
+                STATUS: for process status
                 OK: Value is OK and non logged
                 OK_LOG: Value is OK and logged
                 CAREFUL: Value is CAREFUL and non logged

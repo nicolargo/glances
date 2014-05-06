@@ -131,6 +131,8 @@ class glancesCurses:
             'SORT': A_BOLD,
             'OK': self.default_color2,
             'TITLE': self.title_color,
+            'PROCESS': self.default_color2,
+            'STATUS': self.default_color2,
             'CAREFUL': self.ifCAREFUL_color2,
             'WARNING': self.ifWARNING_color2,
             'CRITICAL': self.ifCRITICAL_color2,
