@@ -221,6 +221,7 @@ class GlancesPlugin(object):
                 TITLE: for stat title
                 PROCESS: for process name
                 STATUS: for process status
+                NICE: for process niceness
                 OK: Value is OK and non logged
                 OK_LOG: Value is OK and logged
                 CAREFUL: Value is CAREFUL and non logged

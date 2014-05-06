@@ -135,8 +135,12 @@ class Plugin(GlancesPlugin):
             msg = " {0:9}".format(p['username'][:9])
             ret.append(self.curse_add_line(msg, optional=True))
             # NICE
-            msg = " {0:>3}".format(p['nice'])
-            ret.append(self.curse_add_line(msg, optional=True))
+            nice = p['nice']
+            msg = " {0:>3}".format(nice)
+            if nice != 0:
+                ret.append(self.curse_add_line(msg, decoration='NICE', optional=True))
+            else:
+                ret.append(self.curse_add_line(msg, optional=True))
             # STATUS
             status = p['status']
             msg = " {0:>1}".format(status)
