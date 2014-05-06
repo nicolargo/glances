@@ -48,7 +48,6 @@ class Plugin(GlancesPlugin):
 
         # Init the stats
         self.reset()        
-        self.diskio_old = self.stats
 
     def reset(self):
         """
@@ -74,10 +73,13 @@ class Plugin(GlancesPlugin):
             # write_bytes: number of bytes written
             # read_time: time spent reading from disk (in milliseconds)
             # write_time: time spent writing to disk (in milliseconds)
-            diskiocounters = psutil.disk_io_counters(perdisk=True)
+            try:
+                diskiocounters = psutil.disk_io_counters(perdisk=True)
+            except:
+                return self.stats
 
             # Previous disk IO stats are stored in the diskio_old variable
-            if self.diskio_old == []:
+            if not hasattr(self, 'diskio_old'):
                 # First call, we init the network_old var
                 try:
                     self.diskio_old = diskiocounters
@@ -106,10 +108,12 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         self.stats.append(diskstat)
+                
+                # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
+            # !!! TODO: no standard way for the moment
             pass
 
         return self.stats

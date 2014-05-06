@@ -21,69 +21,26 @@ import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
 
-
-class glancesGrabFs:
-    """
-    Get FS stats
-    Did not exist in PSUtil, so had to create it from scratch
-    """
-
-    def __init__(self):
-        """
-        Init FS stats
-        """
-
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """
-        Reset/init the stats
-        """
-        self.fs_list = []
-
-    def __update__(self):
-        """
-        Update the stats
-        """
-        # Reset the list
-        self.reset()
-
-        # Grab the stats using the PsUtil disk_partitions
-        # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
-        # and ignore all others (e.g. memory partitions such as /dev/shm)
-        try:
-            fs_stat = psutil.disk_partitions(all=False)
-        except UnicodeDecodeError:
-            self.stats = []
-            return self.stats
-
-        # Loop over fs
-        for fs in range(len(fs_stat)):
-            fs_current = {}
-            fs_current['device_name'] = fs_stat[fs].device
-            fs_current['fs_type'] = fs_stat[fs].fstype
-            fs_current['mnt_point'] = fs_stat[fs].mountpoint
-            # Grab the disk usage
-            try:
-                fs_usage = psutil.disk_usage(fs_current['mnt_point'])
-            except OSError:
-                # Correct issue #346
-                # Disk is ejected during the command
-                continue
-            fs_current['size'] = fs_usage.total
-            fs_current['used'] = fs_usage.used
-            fs_current['avail'] = fs_usage.free
-            fs_current['percent'] = fs_usage.percent
-            self.fs_list.append(fs_current)
-
-        return self.fs_list
-
-    def get(self):
-        """
-        Update and return the stats
-        """
-        return self.__update__()
+# SNMP OID
+# The snmpd.conf needs to be edited. 
+# Add the following to enable it on all disk
+# ...
+# includeAllDisks 10%
+# ...
+# The OIDs are as follows (for the first disk)
+# Path where the disk is mounted: .1.3.6.1.4.1.2021.9.1.2.1
+# Path of the device for the partition: .1.3.6.1.4.1.2021.9.1.3.1
+# Total size of the disk/partion (kBytes): .1.3.6.1.4.1.2021.9.1.6.1
+# Available space on the disk: .1.3.6.1.4.1.2021.9.1.7.1
+# Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
+# Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
+# Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
+fs_oid = { 'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+           'device_name': '1.3.6.1.4.1.2021.9.1.3',
+            'size': '1.3.6.1.4.1.2021.9.1.6',
+            'used': '1.3.6.1.4.1.2021.9.1.8',
+            # 'avail': '1.3.6.1.4.1.2021.9.1.7',
+            'percent': '1.3.6.1.4.1.2021.9.1.9'}
 
 
 class Plugin(GlancesPlugin):
@@ -95,9 +52,6 @@ class Plugin(GlancesPlugin):
 
     def __init__(self):
         GlancesPlugin.__init__(self)
-
-        # Init the FS class
-        self.glancesgrabfs = glancesGrabFs()
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -123,16 +77,58 @@ class Plugin(GlancesPlugin):
         Input method could be: local (mandatory) or snmp (optionnal)
         """
 
-        # Reset the stats
-        self.reset()        
+        # Reset the list
+        self.reset()
 
         if input == 'local':
             # Update stats using the standard system lib
-            self.stats = self.glancesgrabfs.get()
+
+            # Grab the stats using the PsUtil disk_partitions
+            # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
+            # and ignore all others (e.g. memory partitions such as /dev/shm)
+            try:
+                fs_stat = psutil.disk_partitions(all=False)
+            except UnicodeDecodeError:
+                return self.stats
+
+            # Loop over fs
+            for fs in range(len(fs_stat)):
+                fs_current = {}
+                fs_current['device_name'] = fs_stat[fs].device
+                fs_current['fs_type'] = fs_stat[fs].fstype
+                fs_current['mnt_point'] = fs_stat[fs].mountpoint
+                # Grab the disk usage
+                try:
+                    fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+                except OSError:
+                    # Correct issue #346
+                    # Disk is ejected during the command
+                    continue
+                fs_current['size'] = fs_usage.total
+                fs_current['used'] = fs_usage.used
+                # fs_current['avail'] = fs_usage.free
+                fs_current['percent'] = fs_usage.percent
+                self.stats.append(fs_current)
+
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! TODO
-            pass
+
+            # Loop over disks
+            diskIndex = 1
+            while (diskIndex < 1024):
+                # Add disk index to the fs OID
+                snmp_oid = dict((k, v + '.' + str(diskIndex)) for (k, v) in fs_oid.items())
+                fs_current = self.set_stats_snmp(snmp_oid=snmp_oid)
+                if str(fs_current['mnt_point']) == '':
+                    break
+                # Size returned by SNMP is in kilobyte, convert it in byte
+                fs_current['size'] = int(fs_current['size']) * 1024
+                fs_current['used'] = int(fs_current['used']) * 1024
+                # fs_current['avail'] = int(fs_current['avail'])                
+                self.stats.append(fs_current)
+                diskIndex += 1
+
+            # print self.stats
 
         return self.stats
 

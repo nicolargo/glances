@@ -119,6 +119,7 @@ class Plugin(GlancesPlugin):
                 
                 # Save stats to compute next bitrate
                 self.network_old = network_new
+
         elif input == 'snmp':
             # Update stats using SNMP
             # !!! High CPU consumption on the client side
@@ -135,26 +136,26 @@ class Plugin(GlancesPlugin):
             network_new = {}
             ifIndex = 1
             ifCpt = 1
-            while (ifCpt < ifNumber) or (ifIndex > 1024):
+            while (ifCpt < ifNumber) and (ifIndex < 1024):
                 # Add interface index to netif OID
                 net_oid = dict((k, v + '.' + str(ifIndex)) for (k, v) in netif_oid.items())
-                netstat = self.set_stats_snmp(snmp_oid=net_oid)
-                if str(netstat['interface_name']) == '':
+                net_stat = self.set_stats_snmp(snmp_oid=net_oid)
+                if str(net_stat['interface_name']) == '':
                     ifIndex += 1
                     continue 
                 else:
                     ifCpt += 1
-                network_new[ifIndex] = netstat
+                network_new[ifIndex] = net_stat
                 if hasattr(self, 'network_old'):
-                    netstat['time_since_update'] = time_since_update
-                    netstat['rx'] = (float(network_new[ifIndex]['cumulative_rx']) -
+                    net_stat['time_since_update'] = time_since_update
+                    net_stat['rx'] = (float(network_new[ifIndex]['cumulative_rx']) -
                                      float(self.network_old[ifIndex]['cumulative_rx']))
-                    netstat['tx'] = (float(network_new[ifIndex]['cumulative_tx']) -
+                    net_stat['tx'] = (float(network_new[ifIndex]['cumulative_tx']) -
                                      float(self.network_old[ifIndex]['cumulative_tx']))
-                    netstat['cumulative_cx'] = (float(netstat['cumulative_rx']) +
-                                                float(netstat['cumulative_tx']))
-                    netstat['cx'] = netstat['rx'] + netstat['tx']  
-                    self.stats.append(netstat)
+                    net_stat['cumulative_cx'] = (float(net_stat['cumulative_rx']) +
+                                                float(net_stat['cumulative_tx']))
+                    net_stat['cx'] = net_stat['rx'] + net_stat['tx']  
+                    self.stats.append(net_stat)
                 ifIndex += 1
             
             # Save stats to compute next bitrate
