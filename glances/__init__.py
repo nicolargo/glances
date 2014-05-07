@@ -21,11 +21,14 @@ Init the Glances software
 """
 
 # Import system lib
+import gettext
+import locale
 import signal
 import sys
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
+from glances.core.glances_globals import gettext_domain, locale_dir
 from glances.core.glances_main import GlancesMain
 
 
@@ -58,9 +61,13 @@ def end():
 def main():
     """
     Main entry point for Glances
+
     Select the mode (standalone, client or server)
     Run it...
     """
+    # Setup translations
+    locale.setlocale(locale.LC_ALL, '')
+    gettext.install(gettext_domain, locale_dir)
 
     # Share global var
     global core, standalone, client, server

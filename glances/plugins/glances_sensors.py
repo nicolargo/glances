@@ -25,7 +25,7 @@ except ImportError:
     pass
 
 # Import Glances lib
-from glances.core.glances_globals import is_python3
+from glances.core.glances_globals import is_py3
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -124,7 +124,7 @@ class Plugin(GlancesPlugin):
         # Header
         msg = "{0:18}".format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if is_python3:
+        if is_py3:
             msg = "{0:>5}".format(_("°C"))
         else:
             msg = "{0:>6}".format(_("°C"))

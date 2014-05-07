@@ -20,7 +20,7 @@
 import psutil
 
 # Import Glances lib
-from glances.core.glances_globals import is_BSD, is_Mac, is_Windows
+from glances.core.glances_globals import is_bsd, is_mac, is_windows
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
 
@@ -130,7 +130,7 @@ class glancesProcesses:
         # If io_tag = 0 > Access denied (display "?")
         # If io_tag = 1 > No access denied (display the IO rate)
         # Note Disk IO stat not available on Mac OS
-        if not is_Mac:
+        if not is_mac:
             try:
                 # Get the process IO counters
                 proc_io = proc.io_counters()
@@ -182,9 +182,9 @@ class glancesProcesses:
                 # ignore the 'idle' process on Windows and *BSD
                 # ignore the 'kernel_task' process on OS X
                 # waiting for upstream patch from psutil
-                if (is_BSD and procstat['name'] == 'idle' or
-                        is_Windows and procstat['name'] == 'System Idle Process' or
-                        is_Mac and procstat['name'] == 'kernel_task'):
+                if (is_bsd and procstat['name'] == 'idle' or
+                        is_windows and procstat['name'] == 'System Idle Process' or
+                        is_mac and procstat['name'] == 'kernel_task'):
                     continue
                 # Update processcount (global statistics)
                 try:

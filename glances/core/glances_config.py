@@ -30,11 +30,12 @@ except ImportError:  # Python 2
 # Import Glances lib
 from glances.core.glances_globals import (
     __appname__,
-    is_BSD,
-    is_Linux,
-    is_Mac,
-    is_Windows,
-    is_python3,
+    is_bsd,
+    is_linux,
+    is_mac,
+    is_py3,
+    is_windows,
+    sys_prefix,
     work_path
 )
 
@@ -62,7 +63,7 @@ class Config(object):
         for path in self.get_paths_list():
             if os.path.isfile(path) and os.path.getsize(path) > 0:
                 try:
-                    if is_python3:
+                    if is_py3:
                         self.parser.read(path, encoding='utf-8')
                     else:
                         self.parser.read(path)
@@ -105,26 +106,23 @@ class Config(object):
         if os.path.exists(conf_path):
             paths.append(os.path.join(conf_path, self.filename))
 
-        if is_Linux or is_BSD:
+        if is_linux or is_bsd:
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
                 __appname__, self.filename))
-        elif is_Mac:
+            if is_linux:
+                paths.append(os.path.join('/etc', __appname__, self.filename))
+            else:
+                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.filename))
+        elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
                 __appname__, self.filename))
-        elif is_Windows:
-            paths.append(os.path.join(
-                os.environ.get('APPDATA'), __appname__, self.filename))
-
-        if is_Linux:
-            paths.append(os.path.join('/etc', __appname__, self.filename))
-        elif is_BSD:
-            paths.append(os.path.join(
-                sys.prefix, 'etc', __appname__, self.filename))
-        elif is_Mac:
             paths.append(os.path.join(
                 sys_prefix, 'etc', __appname__, self.filename))
+        elif is_windows:
+            paths.append(os.path.join(
+                os.environ.get('APPDATA'), __appname__, self.filename))
 
         return paths
 

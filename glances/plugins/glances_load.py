@@ -90,7 +90,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:8}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        msg = "{0:>6}".format(str(self.core_plugin.update()["log"])+_("core"))
+        msg = "{0:>6}".format(str(self.core_plugin.update()["log"]) + _("-core"))
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())

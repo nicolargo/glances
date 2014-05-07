@@ -24,8 +24,6 @@ __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
 # Import system libs
-import gettext
-import locale
 import os
 import sys
 
@@ -36,11 +34,9 @@ except ImportError:
     print('psutil module not found. Glances cannot start.')
     sys.exit(1)
 
-# psutil version
-psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
-
 # Check psutil version
 psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
 if psutil_version < psutil_min_version:
     print('psutil version %s detected.' % __psutil_version__)
     print('psutil 2.0 or higher is needed. Glances cannot start.')
@@ -51,20 +47,18 @@ work_path = os.path.realpath(os.path.dirname(__file__))
 appname_path = os.path.split(sys.argv[0])[0]
 sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
-# Is this Python 3?
-is_python3 = sys.version_info >= (3, 2)
+# PY3?
+is_py3 = sys.version_info >= (3, 2)
 
 # Operating system flag
 # Note: Somes libs depends of OS
-is_BSD = sys.platform.find('bsd') != -1
-is_Linux = sys.platform.startswith('linux')
-is_Mac = sys.platform.startswith('darwin')
-is_Windows = sys.platform.startswith('win')
+is_bsd = sys.platform.find('bsd') != -1
+is_linux = sys.platform.startswith('linux')
+is_mac = sys.platform.startswith('darwin')
+is_windows = sys.platform.startswith('win')
 
 # i18n
-locale.setlocale(locale.LC_ALL, '')
-gettext_domain = 'glances'
-# get locale directory
+gettext_domain = __appname__
 i18n_path = os.path.realpath(os.path.join(work_path, '..', '..', 'i18n'))
 sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 if os.path.exists(i18n_path):
@@ -73,7 +67,6 @@ elif os.path.exists(sys_i18n_path):
     locale_dir = sys_i18n_path
 else:
     locale_dir = None
-gettext.install(gettext_domain, locale_dir)
 
 # Instances shared between all Glances' scripts
 # ===============================================
