@@ -30,10 +30,10 @@ except ImportError, e:
 class GlancesSNMPClient(object):
     """ SNMP client class (based on PySNMP) """
     
-    def __init__(self, host = "localhost",
-                       port = 161,
-                       community = "public",
-                       version = "SNMPv2-MIB"):
+    def __init__(self, host="localhost",
+                       port=161,
+                       community="public",
+                       version="SNMPv2-MIB"):
         super(GlancesSNMPClient, self).__init__()
         self.cmdGen = cmdgen.CommandGenerator()
         self.host = host

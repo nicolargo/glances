@@ -29,8 +29,8 @@ class Plugin(GlancesPlugin):
     stats is a tuple
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         self.reset()        
 

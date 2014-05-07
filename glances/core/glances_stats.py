@@ -64,7 +64,7 @@ class GlancesStats(object):
             # Default behavior
             raise AttributeError(item)
 
-    def load_plugins(self):
+    def load_plugins(self, args=None):
         """
         Load all plugins in the "plugins" folder
         """
@@ -85,7 +85,7 @@ class GlancesStats(object):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 plugname = os.path.basename(plug)[len(header):-3].lower()
-                self._plugins[plugname] = m.Plugin()
+                self._plugins[plugname] = m.Plugin(args=args)
 
     def getAllPlugins(self):
         """
@@ -221,15 +221,31 @@ class GlancesStatsClientSNMP(GlancesStats):
     This class store, update and give stats for the SNMP client
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, args=None):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 
         # Init the configuration
         self.config = config
 
+        # Init the arguments
+        self.args = args
+
         # Load plugins
-        self.load_plugins()
+        self.load_plugins(args=self.args)
+
+    def check_snmp(self):
+        """
+        Chek if SNMP is available on the server
+        """
+        
+        # Import the SNMP client class
+        from glances.core.glances_snmp import GlancesSNMPClient
+
+        # Create an instance of the SNMP client
+        clientsnmp = GlancesSNMPClient(host=self.args.client)
+
+        return clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
 
     def update(self):
         """

@@ -90,7 +90,7 @@ class GlancesClient():
             client_version = self.client.init()
             self.set_mode('glances')
         except socket.error as err:
-            print(_("Error: Connection to {0} server failed").format(self.get_mode()))
+            # print(_("Error: Connection to {0} server failed").format(self.get_mode()))
             # Fallback to SNMP
             self.set_mode('snmp')
         except ProtocolError as err:
@@ -106,23 +106,16 @@ class GlancesClient():
             self.stats = GlancesStatsClient()
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
         elif self.get_mode() == 'snmp':
+            print (_("Info: Connection to Glances server failed. Trying fallback to SNMP..."))
             # Then fallback to SNMP if needed
-            from glances.core.glances_snmp import GlancesSNMPClient
-
-            # Test if SNMP is available on the server side
-            clientsnmp = GlancesSNMPClient()
-
-            # !!! Simple request with system name
-            # !!! Had to have a standard method to check SNMP server
-            print(_("Trying {0}...").format(self.get_mode()))
-            if (clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") == {}):
-                print(_("Error: Connection to {0} server failed").format(self.get_mode()))
-                sys.exit(2)
-            
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
             # Init stats
-            self.stats = GlancesStatsClientSNMP()
+            self.stats = GlancesStatsClientSNMP(args=self.args)
+
+            if not self.stats.check_snmp():
+                print(_("Error: Connection to SNMP server failed"))
+                sys.exit(2)                
         else:
             ret = False
 

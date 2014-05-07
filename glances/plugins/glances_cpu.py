@@ -39,8 +39,8 @@ class Plugin(GlancesPlugin):
     stats is a dict
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

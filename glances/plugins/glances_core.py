@@ -30,8 +30,8 @@ class Plugin(GlancesPlugin):
     stats is integer (number of core)
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin

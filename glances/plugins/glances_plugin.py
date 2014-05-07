@@ -33,9 +33,12 @@ class GlancesPlugin(object):
     Main class for Glances' plugin
     """
 
-    def __init__(self):
+    def __init__(self, args=None):
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
+
+        # Init the args
+        self.args = args
 
         # Init the stats list
         self.stats = None
@@ -61,7 +64,7 @@ class GlancesPlugin(object):
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
-        clientsnmp = GlancesSNMPClient()
+        clientsnmp = GlancesSNMPClient(host=self.args.client)
 
         # Process the SNMP request
         snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())

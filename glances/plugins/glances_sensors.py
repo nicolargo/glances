@@ -30,59 +30,6 @@ from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
-class glancesGrabSensors:
-    """
-    Get sensors stats using the PySensors library
-    """
-
-    def __init__(self):
-        """
-        Init sensors stats
-        """
-        try:
-            sensors.init()
-        except Exception:
-            self.initok = False
-        else:
-            self.initok = True
-
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """
-        Reset/init the stats
-        """
-        self.sensors_list = []
-
-    def __update__(self):
-        """
-        Update the stats
-        """
-        # Reset the list
-        self.reset()
-
-        # grab only temperature stats
-        if self.initok:
-            for chip in sensors.iter_detected_chips():
-                for feature in chip:
-                    sensors_current = {}
-                    if feature.name.startswith(b'temp'):
-                        sensors_current['label'] = feature.label
-                        sensors_current['value'] = int(feature.get_value())
-                        self.sensors_list.append(sensors_current)
-
-        return self.sensors_list
-
-    def get(self):
-        self.__update__()
-        return self.sensors_list
-
-    def quit(self):
-        if self.initok:
-            sensors.cleanup()
-
-
 class Plugin(GlancesPlugin):
     """
     Glances' sensors plugin
@@ -92,8 +39,8 @@ class Plugin(GlancesPlugin):
     The hard disks are already sorted by name
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
         self.glancesgrabsensors = glancesGrabSensors()
@@ -170,3 +117,56 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
 
         return ret
+
+
+class glancesGrabSensors:
+    """
+    Get sensors stats using the PySensors library
+    """
+
+    def __init__(self):
+        """
+        Init sensors stats
+        """
+        try:
+            sensors.init()
+        except Exception:
+            self.initok = False
+        else:
+            self.initok = True
+
+        # Init the stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.sensors_list = []
+
+    def __update__(self):
+        """
+        Update the stats
+        """
+        # Reset the list
+        self.reset()
+
+        # grab only temperature stats
+        if self.initok:
+            for chip in sensors.iter_detected_chips():
+                for feature in chip:
+                    sensors_current = {}
+                    if feature.name.startswith(b'temp'):
+                        sensors_current['label'] = feature.label
+                        sensors_current['value'] = int(feature.get_value())
+                        self.sensors_list.append(sensors_current)
+
+        return self.sensors_list
+
+    def get(self):
+        self.__update__()
+        return self.sensors_list
+
+    def quit(self):
+        if self.initok:
+            sensors.cleanup()
