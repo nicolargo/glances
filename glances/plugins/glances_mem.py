@@ -103,7 +103,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:5} ".format(_("MEM"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
-        msg = "{0:>6}%".format(format(self.stats['percent'] / 100, '.1'))
+        msg = "{0:>7.1%}".format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(msg))
         # Active memory usage
         if 'active' in self.stats:
@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
         # Total memory usage
         msg = "{0:6}".format(_("total:"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>7}".format(self.auto_unit(format(self.stats['total']), '.1%'))
+        msg = "{0:>7}".format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # Inactive memory usage
         if 'inactive' in self.stats:
