@@ -111,6 +111,9 @@ class Plugin(GlancesPlugin):
             if args.cs_status.lower() == "connected":
                 msg = _("Connected to ")
                 ret.append(self.curse_add_line(msg, 'OK'))
+            elif args.cs_status.lower() == "snmp":
+                msg = _("SNMP from ")
+                ret.append(self.curse_add_line(msg, 'OK'))
             elif args.cs_status.lower() == "disconnected":
                 msg = _("Disconnected from ")
                 ret.append(self.curse_add_line(msg, 'CRITICAL'))

@@ -256,7 +256,8 @@ class glancesCurses:
         stats: Stats database to display
         cs_status:
             "None": standalone or server mode
-            "Connected": Client is connected to the server
+            "Connected": Client is connected to a Glances server
+            "SNMP": Client is connected to a SNMP server
             "Disconnected": Client is disconnected from the server
 
         Return:

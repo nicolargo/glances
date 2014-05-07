@@ -134,7 +134,6 @@ class GlancesClient():
             # Init screen
             self.screen = glancesCurses(args=self.args)
 
-
         # Return result
         return ret
 
@@ -177,18 +176,18 @@ class GlancesClient():
         """
         Get stats from SNMP server
         Return the client/server connection status:
-        - Connected: Connection OK
+        - SNMP: Connection with SNMP server OK
         - Disconnected: Connection NOK
         """
         # Update the stats
         try:
             self.stats.update()
-        except socket.error as e:
+        except:
             # Client can not get SNMP server stats
             return "Disconnected"
         else:
             # Grab success
-            return "Connected"
+            return "SNMP"
 
     def serve_forever(self):
         """
