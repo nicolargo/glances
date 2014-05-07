@@ -88,6 +88,7 @@ class GlancesClient():
         # First of all, trying to connect to a Glances server
         try:
             client_version = self.client.init()
+            self.set_mode('glances')
         except socket.error as err:
             print(_("Error: Connection to {0} server failed").format(self.get_mode()))
             # Fallback to SNMP
@@ -104,20 +105,8 @@ class GlancesClient():
             # Init stats
             self.stats = GlancesStatsClient()
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-
-            # Load limits from the configuration file
-            # Each client can choose its owns limits
-            self.stats.load_limits(self.config)
-
-            # Init screen
-            self.screen = glancesCurses(args=self.args)
-        
-            ret = True
-        else:
-            ret = False
-
-        # Then fallback to SNMP if needed
-        if self.get_mode() == 'snmp':
+        elif self.get_mode() == 'snmp':
+            # Then fallback to SNMP if needed
             from glances.core.glances_snmp import GlancesSNMPClient
 
             # Test if SNMP is available on the server side
@@ -134,7 +123,10 @@ class GlancesClient():
 
             # Init stats
             self.stats = GlancesStatsClientSNMP()
+        else:
+            ret = False
 
+        if ret:
             # Load limits from the configuration file
             # Each client can choose its owns limits
             self.stats.load_limits(self.config)
@@ -142,7 +134,6 @@ class GlancesClient():
             # Init screen
             self.screen = glancesCurses(args=self.args)
 
-            return True
 
         # Return result
         return ret

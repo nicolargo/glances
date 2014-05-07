@@ -74,14 +74,14 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Call CorePlugin in order to display the core number
-        if not hasattr(self, 'nb_log_core'):
-            try:
-                self.nb_log_core = CorePlugin().update(input)["log"]
-            except:
-                self.nb_log_core = 0
+        try:
+            nb_log_core = CorePlugin().update(input)["log"]
+        except:
+            nb_log_core = 0
 
         if input == 'local':
             # Update stats using the standard system lib
+
             # Get the load using the os standard lib
             try:
                 load = os.getloadavg()
@@ -93,12 +93,14 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats = {'min1': load[0],
                               'min5': load[1],
-                              'min15': load[2]}
+                              'min15': load[2],
+                              'cpucore': nb_log_core }
         elif input == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
             for key in self.stats.iterkeys():
                 self.stats[key] = float(self.stats[key])
+            self.stats['cpucore'] = nb_log_core
 
         return self.stats
 
@@ -119,8 +121,8 @@ class Plugin(GlancesPlugin):
         msg = "{0:8}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        if (self.nb_log_core > 0):
-            msg = "{0:>6}".format(str(self.nb_log_core)+_("core"))
+        if (self.stats['cpucore'] > 0):
+            msg = "{0:>6}".format(str(self.stats['cpucore'])+_("core"))
             ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
@@ -136,7 +138,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(format(self.stats['min5'], '.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert(self.stats['min5'], max=100 * self.nb_log_core)))
+            msg, self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
@@ -144,6 +146,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6}".format(format(self.stats['min15'], '.2f'))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min15'], max=100 * self.nb_log_core)))
+            msg, self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])))
 
         return ret

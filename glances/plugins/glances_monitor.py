@@ -110,7 +110,15 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = "{0:13} ".format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
             ret.append(self.curse_add_line(msg))
-            msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
+            # Decode to UTF8 (only for Python 3)
+            try:
+                msg = "{0}".format(m['result'].decode('utf-8') if m['count'] >= 1 else "")
+            except (UnicodeError, AttributeError):
+                try:
+                    msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
+                except UnicodeError:
+                    msg = "{0}".format(m['result'].encode('utf-8') if m['count'] >= 1 else "")
+
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 
