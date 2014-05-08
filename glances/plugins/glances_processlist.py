@@ -95,9 +95,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, optional=True))
         msg = " {0:10}".format(_("USER"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = "{0:>3}".format(_("NI"))
+        msg = "{0:>4}".format(_("NI"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = " {0:1}".format(_("S"))
+        msg = "{0:>2}".format(_("S"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg = "{0:>9}".format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
@@ -115,11 +115,11 @@ class Plugin(GlancesPlugin):
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
-            msg = "{0:>6}".format(format(p['cpu_percent'], '>5.1f'))
+            msg = "{0:>6.1f}".format(p['cpu_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['cpu_percent'], header="cpu")))
             # MEM
-            msg = "{0:>6}".format(format(p['memory_percent'], '>5.1f'))
+            msg = "{0:>6.1f}".format(p['memory_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['memory_percent'], header="mem")))
             # VMS
@@ -136,14 +136,14 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True))
             # NICE
             nice = p['nice']
-            msg = " {0:>3}".format(nice)
+            msg = "{0:>5}".format(nice)
             if nice != 0:
                 ret.append(self.curse_add_line(msg, decoration='NICE', optional=True))
             else:
                 ret.append(self.curse_add_line(msg, optional=True))
             # STATUS
             status = p['status']
-            msg = " {0:>1}".format(status)
+            msg = "{0:>2}".format(status)
             if status == 'R':
                 ret.append(self.curse_add_line(msg, decoration='STATUS', optional=True))
             else:

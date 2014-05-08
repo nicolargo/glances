@@ -336,7 +336,7 @@ class glancesCurses:
             self.display_plugin(stats_processcount)
             self.display_plugin(stats_monitor)
             self.display_plugin(stats_processlist,
-                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 3))
+                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.display_plugin(stats_alert)
 
         return True
