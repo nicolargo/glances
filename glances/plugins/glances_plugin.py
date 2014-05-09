@@ -61,6 +61,8 @@ class GlancesPlugin(object):
 
     def set_stats_snmp(self, snmp_oid={}):
         # Update stats using SNMP
+        # TODO: optimisation with bulk command: 
+        # http://pysnmp.sourceforge.net/examples/4.x/v3arch/oneliner/manager/bulkgen.html
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
