@@ -114,6 +114,10 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
+            print self.stats
+            import time
+            time.sleep(5)
+
             if self.stats['total'] == '': 
                 self.reset()
                 return self.stats
