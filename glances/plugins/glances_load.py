@@ -98,10 +98,16 @@ class Plugin(GlancesPlugin):
         elif input == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
-            for key in self.stats.iterkeys():
-                self.stats[key] = float(self.stats[key])
+            
             self.stats['cpucore'] = nb_log_core
 
+            if self.stats['min1'] == '':
+                self.reset()
+                return self.stats
+
+            for key in self.stats.iterkeys():
+                self.stats[key] = float(self.stats[key])
+            
         return self.stats
 
     def msg_curse(self, args=None):

@@ -255,5 +255,9 @@ class GlancesStatsClientSNMP(GlancesStats):
         # For each plugins, call the update method
         for p in self._plugins:
             # print "DEBUG: Update %s stats using SNMP request" % p
-            self._plugins[p].update(input='snmp')
+            try:
+                self._plugins[p].update(input='snmp')
+            except Exception as e:
+                # print "ERROR: Update %s failed (%s)" % (p, e)
+                pass
 
