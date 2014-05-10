@@ -245,7 +245,10 @@ class GlancesStatsClientSNMP(GlancesStats):
         # Create an instance of the SNMP client
         clientsnmp = GlancesSNMPClient(host=self.args.client,
                                        port=self.args.snmp_port,
-                                       community=self.args.snmp_community)
+                                       version=self.args.snmp_version,
+                                       community=self.args.snmp_community,
+                                       user=self.args.snmp_user,
+                                       auth=self.args.snmp_auth)
 
         return clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
 

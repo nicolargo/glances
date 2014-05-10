@@ -32,16 +32,27 @@ class GlancesSNMPClient(object):
     
     def __init__(self, host="localhost",
                        port=161,
+                       version="2c",
                        community="public",
-                       version="SNMPv2-MIB"):
+                       user="private",
+                       auth=""):
         super(GlancesSNMPClient, self).__init__()
         self.cmdGen = cmdgen.CommandGenerator()
-        self.host = host
-        self.port = port
-        self.community = community
+
         self.version = version
 
+        self.host = host
+        self.port = port
+
+        self.community = community
+        self.user = user
+        self.auth = auth
+
     def __result__(self, errorIndication, errorStatus, errorIndex, varBinds):
+        """
+        Put results in table
+        """
+
         ret = {}
         if not (errorIndication or errorStatus):
             for name, val in varBinds:
@@ -52,9 +63,20 @@ class GlancesSNMPClient(object):
         return ret
 
     def get_by_oid(self, *oid):
-        errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(
-            cmdgen.CommunityData(self.community),
-            cmdgen.UdpTransportTarget((self.host, self.port)),
-            *oid
-        )
+        """
+        Process to an SNMP request (list of OID)
+        """
+
+        if (self.version == '3'):
+            errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(
+                cmdgen.UsmUserData(self.user, self.auth),
+                cmdgen.UdpTransportTarget((self.host, self.port)),
+                *oid
+            )
+        else:
+            errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(
+                cmdgen.CommunityData(self.community),
+                cmdgen.UdpTransportTarget((self.host, self.port)),
+                *oid
+            )
         return self.__result__(errorIndication, errorStatus, errorIndex, varBinds)

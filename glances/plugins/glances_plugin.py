@@ -68,6 +68,7 @@ class GlancesPlugin(object):
         # Init the SNMP request
         clientsnmp = GlancesSNMPClient(host=self.args.client,
                                        port=self.args.snmp_port,
+                                       version=self.args.snmp_version,
                                        community=self.args.snmp_community)
 
         # Process the SNMP request
