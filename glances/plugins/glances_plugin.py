@@ -66,7 +66,9 @@ class GlancesPlugin(object):
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
-        clientsnmp = GlancesSNMPClient(host=self.args.client)
+        clientsnmp = GlancesSNMPClient(host=self.args.client,
+                                       port=self.args.snmp_port,
+                                       community=self.args.snmp_community)
 
         # Process the SNMP request
         snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
