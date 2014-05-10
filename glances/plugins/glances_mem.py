@@ -114,16 +114,14 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-            print self.stats
-            import time
-            time.sleep(5)
 
             if self.stats['total'] == '': 
                 self.reset()
                 return self.stats
 
             for key in self.stats.iterkeys():
-                self.stats[key] = float(self.stats[key]) * 1024
+                if self.stats[key] != '':
+                    self.stats[key] = float(self.stats[key]) * 1024
 
             # Use the 'free'/htop calculation
             self.stats['free'] = self.stats['free'] - self.stats['total'] + (self.stats['buffers'] + self.stats['cached'])

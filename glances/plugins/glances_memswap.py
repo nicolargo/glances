@@ -93,7 +93,8 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             for key in self.stats.iterkeys():
-                self.stats[key] = float(self.stats[key]) * 1024
+                if self.stats[key] != '':
+                    self.stats[key] = float(self.stats[key]) * 1024
 
             # used=total-free
             self.stats['used'] = self.stats['total'] - self.stats['free']
