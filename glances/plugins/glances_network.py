@@ -29,10 +29,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
-snmp_oid = { 'ifNumber': '1.3.6.1.2.1.2.1.0' }
-netif_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2',
-              'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-              'cumulative_tx': '1.3.6.1.2.1.2.2.1.16' }
+ifNumber_oid = { 'ifNumber': '1.3.6.1.2.1.2.1.0' }
+ifIndex_oid = { 'ifIndex': '1.3.6.1.2.1.2.2.1.1.' }
+snmp_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2.',
+             'cumulative_rx': '1.3.6.1.2.1.2.2.1.10.',
+             'cumulative_tx': '1.3.6.1.2.1.2.2.1.16.' }
 
 
 class Plugin(GlancesPlugin):
@@ -123,14 +124,20 @@ class Plugin(GlancesPlugin):
         elif input == 'snmp':
             # Update stats using SNMP
             # !!! High CPU consumption on the client side
+            # !!! To be optimized with getbulk
 
             time_since_update = getTimeSinceLastUpdate('net')
 
             # Get number of network interfaces
             try:
-                ifNumber = int(self.set_stats_snmp(snmp_oid=snmp_oid)['ifNumber']) + 1
+                # IfNumber is available directly
+                ifNumber = int(self.set_stats_snmp(snmp_oid=ifNumber_oid)['ifNumber']) + 1
             except:
-                return self.stats
+                # Or not...
+                # Walk through ifIndex
+                ifNumber = 1
+                while self.set_stats_snmp(snmp_oid={'ifIndex': ifIndex_oid['ifIndex'] + str(ifNumber)})['ifIndex'] != '':
+                    ifNumber += 1
 
             # Loop over network interfaces
             network_new = {}
@@ -138,7 +145,7 @@ class Plugin(GlancesPlugin):
             ifCpt = 1
             while (ifCpt < ifNumber) and (ifIndex < 1024):
                 # Add interface index to netif OID
-                net_oid = dict((k, v + '.' + str(ifIndex)) for (k, v) in netif_oid.items())
+                net_oid = dict((k, v + str(ifIndex)) for (k, v) in snmp_oid.items())
                 net_stat = self.set_stats_snmp(snmp_oid=net_oid)
                 if str(net_stat['interface_name']) == '':
                     ifIndex += 1
@@ -169,7 +176,6 @@ class Plugin(GlancesPlugin):
         """
 
         #!!! TODO: Add alert on network interface bitrate
-        #!!! TODO: Manage the hide tag to hide a list of net interface
 
         # Init the return message
         ret = []
