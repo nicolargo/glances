@@ -35,12 +35,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
 # Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
-fs_oid = { 'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
-           'device_name': '1.3.6.1.4.1.2021.9.1.3',
-            'size': '1.3.6.1.4.1.2021.9.1.6',
-            'used': '1.3.6.1.4.1.2021.9.1.8',
-            # 'avail': '1.3.6.1.4.1.2021.9.1.7',
-            'percent': '1.3.6.1.4.1.2021.9.1.9'}
+snmp_oid = { 'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+             'device_name': '1.3.6.1.4.1.2021.9.1.3',
+             'size': '1.3.6.1.4.1.2021.9.1.6',
+             'used': '1.3.6.1.4.1.2021.9.1.8',
+             'percent': '1.3.6.1.4.1.2021.9.1.9' }
 
 
 class Plugin(GlancesPlugin):
@@ -113,20 +112,18 @@ class Plugin(GlancesPlugin):
         elif input == 'snmp':
             # Update stats using SNMP
 
-            # Loop over disks
-            diskIndex = 1
-            while (diskIndex < 1024):
-                # Add disk index to the fs OID
-                snmp_oid = dict((k, v + '.' + str(diskIndex)) for (k, v) in fs_oid.items())
-                fs_current = self.set_stats_snmp(snmp_oid=snmp_oid)
-                if str(fs_current['mnt_point']) == '':
-                    break
-                # Size returned by SNMP is in kilobyte, convert it in byte
-                fs_current['size'] = int(fs_current['size']) * 1024
-                fs_current['used'] = int(fs_current['used']) * 1024
-                # fs_current['avail'] = int(fs_current['avail'])                
+            # SNMP bulk command to get all file system in one shot
+            fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+
+            # Loop over fs
+            for fs in fs_stat:
+                fs_current = {}
+                fs_current['device_name'] = fs_stat[fs]['device_name']
+                fs_current['mnt_point'] = fs
+                fs_current['size'] = int(fs_stat[fs]['size']) * 1024
+                fs_current['used'] = int(fs_stat[fs]['used']) * 1024
+                fs_current['percent'] = float(fs_stat[fs]['percent'])
                 self.stats.append(fs_current)
-                diskIndex += 1
 
         return self.stats
 
