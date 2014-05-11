@@ -29,11 +29,10 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
-ifNumber_oid = { 'ifNumber': '1.3.6.1.2.1.2.1.0' }
-ifIndex_oid = { 'ifIndex': '1.3.6.1.2.1.2.2.1.1.' }
-snmp_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2.',
-             'cumulative_rx': '1.3.6.1.2.1.2.2.1.10.',
-             'cumulative_tx': '1.3.6.1.2.1.2.2.1.16.' }
+# Dict key = interface_name
+snmp_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2',
+             'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+             'cumulative_tx': '1.3.6.1.2.1.2.2.1.16' }
 
 
 class Plugin(GlancesPlugin):
@@ -123,56 +122,53 @@ class Plugin(GlancesPlugin):
 
         elif input == 'snmp':
             # Update stats using SNMP
-            # !!! High CPU consumption on the client side
-            # !!! To be optimized with getbulk
 
-            time_since_update = getTimeSinceLastUpdate('net')
 
-            # Get number of network interfaces
-            try:
-                # IfNumber is available directly
-                ifNumber = int(self.set_stats_snmp(snmp_oid=ifNumber_oid)['ifNumber']) + 1
-            except:
-                # Or not...
-                # Walk through ifIndex
-                ifNumber = 1
-                while self.set_stats_snmp(snmp_oid={'ifIndex': ifIndex_oid['ifIndex'] + str(ifNumber)})['ifIndex'] != '':
-                    ifNumber += 1
+            # SNMP bulk command to get all network interface in one shot
+            netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
 
-            # Loop over network interfaces
-            network_new = {}
-            ifIndex = 1
-            ifCpt = 1
-            while (ifCpt < ifNumber) and (ifIndex < 1024):
-                # Add interface index to netif OID
-                net_oid = dict((k, v + str(ifIndex)) for (k, v) in snmp_oid.items())
-                net_stat = self.set_stats_snmp(snmp_oid=net_oid)
-                if str(net_stat['interface_name']) == '':
-                    ifIndex += 1
-                    continue 
-                else:
-                    ifCpt += 1
-                network_new[ifIndex] = net_stat
-                if hasattr(self, 'network_old'):
-                    net_stat['time_since_update'] = time_since_update
-                    net_stat['rx'] = (float(network_new[ifIndex]['cumulative_rx']) -
-                                     float(self.network_old[ifIndex]['cumulative_rx']))
-                    net_stat['tx'] = (float(network_new[ifIndex]['cumulative_tx']) -
-                                     float(self.network_old[ifIndex]['cumulative_tx']))
-                    net_stat['cumulative_cx'] = (float(net_stat['cumulative_rx']) +
-                                                float(net_stat['cumulative_tx']))
-                    net_stat['cx'] = net_stat['rx'] + net_stat['tx']  
-                    self.stats.append(net_stat)
-                ifIndex += 1
-            
-            # Save stats to compute next bitrate
-            self.network_old = network_new
+            # Previous network interface stats are stored in the network_old variable
+            if not hasattr(self, 'network_old'):
+                # First call, we init the network_old var
+                try:
+                    self.network_old = netiocounters
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                # See description in the 'local' block
+                time_since_update = getTimeSinceLastUpdate('net')
+
+                # Loop over interfaces
+                network_new = netiocounters
+
+                for net in network_new:
+                    try:
+                        # Try necessary to manage dynamic network interface
+                        netstat = {}
+                        netstat['interface_name'] = net
+                        netstat['time_since_update'] = time_since_update
+                        netstat['cumulative_rx'] = float(network_new[net]['cumulative_rx'])
+                        netstat['rx'] = (float(network_new[net]['cumulative_rx']) -
+                                         float(self.network_old[net]['cumulative_rx']))
+                        netstat['cumulative_tx'] = float(network_new[net]['cumulative_tx'])
+                        netstat['tx'] = (float(network_new[net]['cumulative_tx']) -
+                                         float(self.network_old[net]['cumulative_tx']))
+                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                                    netstat['cumulative_tx'])
+                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                    except KeyError:
+                        continue
+                    else:
+                        self.stats.append(netstat)
+                
+                # Save stats to compute next bitrate
+                self.network_old = network_new
 
         return self.stats
 
     def msg_curse(self, args=None):
         """
-        Return the dict to display in the curse interface
+        Return the dict to displayoid in the curse interface
         """
 
         #!!! TODO: Add alert on network interface bitrate

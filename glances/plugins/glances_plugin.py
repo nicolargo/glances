@@ -59,10 +59,9 @@ class GlancesPlugin(object):
         self.stats = input_stats
         return self.stats
 
-    def set_stats_snmp(self, snmp_oid={}):
+    def set_stats_snmp(self, bulk=False, snmp_oid={}):
         # Update stats using SNMP
-        # TODO: optimisation with bulk command: 
-        # http://pysnmp.sourceforge.net/examples/4.x/v3arch/oneliner/manager/bulkgen.html
+        # If bulk=True, use a bulk request instead of a get request
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
@@ -72,12 +71,34 @@ class GlancesPlugin(object):
                                        community=self.args.snmp_community)
 
         # Process the SNMP request
-        snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
-
-        # Build the internal dict with the SNMP result
         ret = {}
-        for key in snmp_oid.iterkeys():
-            ret[key] = snmpresult[snmp_oid[key]]
+        if bulk:
+            # Bulk request
+            snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
+
+            # Build the internal dict with the SNMP result
+            # key is the first item in the snmp_oid
+            index = 1
+            for item in snmpresult:
+                item_stats = {}
+                item_key = None
+                for key in snmp_oid.iterkeys():
+                    oid = snmp_oid[key] + '.' + str(index)
+                    if oid in item:
+                        if item_key is None:
+                            item_key = item[oid]
+                        else:
+                            item_stats[key] = item[oid]
+                if item_stats != {}:
+                    ret[item_key] = item_stats
+                index += 1
+        else:
+            # Simple get request
+            snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
+
+            # Build the internal dict with the SNMP result
+            for key in snmp_oid.iterkeys():
+                ret[key] = snmpresult[snmp_oid[key]]
 
         return ret
 
