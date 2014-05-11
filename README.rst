@@ -27,7 +27,7 @@ It uses the `psutil`_ library to get information from your system.
 Requirements
 ============
 
-- ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
+- ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3, 3.4)
 - ``psutil >= 0.5.1`` (recommended version >= 2.0)
 - ``setuptools``
 

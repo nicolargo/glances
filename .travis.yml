@@ -4,6 +4,7 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+  - "3.4"
 install:
   - pip install -r requirements.txt --use-mirrors
 script: python setup.py install
