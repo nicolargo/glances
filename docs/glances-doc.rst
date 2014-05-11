@@ -6,7 +6,7 @@ This manual describes *Glances* version 1.7.6.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-March 2014
+May 2014
 
 .. contents:: Table of Contents
 
@@ -84,7 +84,7 @@ Command-line options
 -C FILE        Path to the configuration file
 -d             Disable disk I/O module
 -e             Enable sensors module (requires pysensors, Linux-only)
--f FILE        Set the HTML output folder or CSV file
+-f FOLDER      Set the HTML or CSV output folder
 -h             Display the help and exit
 -m             Disable mount module
 -n             Disable network module
@@ -374,7 +374,7 @@ Three views are available for processes:
 The processes summary line display:
 
 * Tasks number (total number of processes)
-* Threads number 
+* Threads number
 * Running tasks number
 * Sleeping tasks number
 * Other tasks number (not running or sleeping)
@@ -528,27 +528,31 @@ Glances uses a `XML-RPC server`_ and can be used by another client software.
 
 API documentation is available at https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To
 
-Others outputs
-==============
+Other outputs
+=============
 
-Thanks to the -o option, it is possible to export statistics to CSV or HTML files.
+Thanks to the -o (output) option, it is possible to export statistics to `CSV` or `HTML` files.
 
 .. code-block:: console
 
-    $ glances -o CSV -f /tmp/glances.csv
+    $ glances -o CSV -f /tmp
+
+The CSV output file is named ``glances.csv``.
 
 CSV files have on line per stats:
 
 - load,load1,load5,load15
 - mem,total,used,free
 - swap,total,used,free
-- cpu,user,system,nice,idel,iowait,irq
+- cpu,user,system,nice,idle,iowait,irq
 
 .. code-block:: console
 
     $ glances -o HTML -f /tmp
 
-Note: The css and img folders (glances/data) should be in the /tmp folder
+The HTML output file is named ``glances.html``.
+
+*Note*: The css and img folders (glances/data) should be in the /tmp folder.
 
 Support
 =======

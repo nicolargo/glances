@@ -48,6 +48,9 @@ import collections
 from base64 import b64decode
 from hashlib import md5
 
+# PY3?
+is_PY3 = sys.version_info >= (3, 2)
+
 # Somes libs depends of OS
 is_BSD = sys.platform.find('bsd') != -1
 is_Linux = sys.platform.startswith('linux')
@@ -167,7 +170,7 @@ try:
     # CSV output (optional)
     import csv
 except ImportError:
-    cvs_lib_tag = False
+    csv_lib_tag = False
 else:
     csv_lib_tag = True
 
@@ -397,7 +400,7 @@ class Config:
         for path in self.get_paths_list():
             if os.path.isfile(path) and os.path.getsize(path) > 0:
                 try:
-                    if sys.version_info >= (3, 2):
+                    if is_PY3:
                         self.parser.read(path, encoding='utf-8')
                     else:
                         self.parser.read(path)
@@ -4043,10 +4046,10 @@ class glancesHtml:
         self.__refresh_time = refresh_time
 
         # Set the HTML output file
-        self.html_file = os.path.join(html_path, html_filename)
+        self.html_file = os.path.realpath(os.path.join(html_path, html_filename))
 
         # Get data path
-        data_path = os.path.join(work_path, 'data')
+        data_path = os.path.realpath(os.path.join(work_path, 'data'))
 
         # Set the template path
         template_path = os.path.join(data_path, 'html')
@@ -4168,45 +4171,50 @@ class glancesCsv:
     This class manages the CSV output
     """
 
-    def __init__(self, cvsfile="./glances.csv", refresh_time=1):
-        # Init refresh time
+    def __init__(self, csv_path, refresh_time=1):
+        csv_filename = 'glances.csv'
         self.__refresh_time = refresh_time
 
-        # Set the ouput (CSV) path
+        # Set the CSV output file
+        csv_file = os.path.realpath(os.path.join(csv_path, csv_filename))
+
         try:
-            self.__cvsfile_fd = open("%s" % cvsfile, "wb")
-            self.__csvfile = csv.writer(self.__cvsfile_fd)
+            if is_PY3:
+                self.__csvfile_fd = open(csv_file, 'w', newline='')
+            else:
+                self.__csvfile_fd = open(csv_file, 'wb')
+            self.__csvfile = csv.writer(self.__csvfile_fd)
         except IOError as error:
-            print("Cannot create the output CSV file: ", error[1])
-            sys.exit(0)
+            print(_("Cannot create the CSV output file: %s") % error)
+            sys.exit(2)
 
     def exit(self):
-        self.__cvsfile_fd.close()
+        self.__csvfile_fd.close()
 
     def update(self, stats):
         if stats.getCpu():
             # Update CSV with the CPU stats
             cpu = stats.getCpu()
             # Standard CPU stats
-            l = ["cpu", cpu['user'], cpu['system'], cpu['nice']]
+            cpu_line = ["cpu", cpu['user'], cpu['system'], cpu['nice']]
             # Extra CPU stats
-            for s in ('idle', 'iowait', 'irq'):
-                l.append(cpu[s] if cpu.has_key(s) else None)
-            self.__csvfile.writerow(l)
+            for key in ('idle', 'iowait', 'irq'):
+                cpu_line.append(cpu[key] if key in cpu.keys() else None)
+            self.__csvfile.writerow(cpu_line)
         if stats.getLoad():
             # Update CSV with the LOAD stats
             load = stats.getLoad()
-            self.__csvfile.writerow(["load", load['min1'], load['min5'],
-                                     load['min15']])
+            self.__csvfile.writerow(
+                ["load", load['min1'], load['min5'], load['min15']])
         if stats.getMem() and stats.getMemSwap():
             # Update CSV with the MEM stats
             mem = stats.getMem()
-            self.__csvfile.writerow(["mem", mem['total'], mem['used'],
-                                     mem['free']])
+            self.__csvfile.writerow(
+                ["mem", mem['total'], mem['used'], mem['free']])
             memswap = stats.getMemSwap()
-            self.__csvfile.writerow(["swap", memswap['total'], memswap['used'],
-                                     memswap['free']])
-        self.__cvsfile_fd.flush()
+            self.__csvfile.writerow(
+                ["swap", memswap['total'], memswap['used'], memswap['free']])
+        self.__csvfile_fd.flush()
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
@@ -4529,7 +4537,7 @@ def printSyntax():
     print(_("\t-C FILE\t\tPath to the configuration file"))
     print(_("\t-d\t\tDisable disk I/O module"))
     print(_("\t-e\t\tEnable sensors module"))
-    print(_("\t-f FILE\t\tSet the HTML output folder or CSV file"))
+    print(_("\t-f FOLDER\tSet the HTML or CSV output folder"))
     print(_("\t-h\t\tDisplay the help and exit"))
     print(_("\t-m\t\tDisable mount module"))
     print(_("\t-n\t\tDisable network module"))
@@ -4693,8 +4701,7 @@ def main():
             sensors_tag = True
         elif opt in ("-y", "--hddtemp"):
             hddtemp_tag = True
-        elif opt in ("-f", "--file"):
-            output_file = arg
+        elif opt in ("-f", "--folder"):
             output_folder = arg
         elif opt in ("-t", "--time"):
             if not (arg.isdigit() and int(arg) > 0):
@@ -4755,8 +4762,7 @@ def main():
         try:
             output_folder
         except UnboundLocalError:
-            print(_("Error: HTML export (-o html) need "
-                    "output folder definition (-f <folder>)"))
+            print(_("Error: HTML export (-o html) need output folder definition (-f <folder>)"))
             sys.exit(2)
 
     if csv_tag:
@@ -4764,10 +4770,9 @@ def main():
             print(_("Error: Need CSV library to export into CSV"))
             sys.exit(2)
         try:
-            output_file
+            output_folder
         except UnboundLocalError:
-            print(_("Error: CSV export (-o csv) need "
-                    "output file definition (-f <file>)"))
+            print(_("Error: CSV export (-o csv) need output folder definition (-f <folder>)"))
             sys.exit(2)
 
     # Catch CTRL-C
@@ -4863,7 +4868,7 @@ def main():
 
         # Init CSV output
         if csv_tag:
-            csvoutput = glancesCsv(cvsfile=output_file,
+            csvoutput = glancesCsv(csv_path=output_folder,
                                    refresh_time=refresh_time)
 
         # Init screen
