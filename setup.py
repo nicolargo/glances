@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
+import glob
 import os
 import sys
-import glob
 
 from setuptools import setup
 
@@ -26,10 +26,9 @@ data_files.append((conf_path, ['conf/glances.conf']))
 for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
+requires = ['psutil>=0.5.1']
 if sys.platform.startswith('win'):
-    requires = ['psutil>=0.5.1', 'colorconsole==0.6']
-else:
-    requires = ['psutil>=0.5.1']
+    requires += ['colorconsole']
 
 setup(
     name='Glances',
@@ -66,6 +65,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3'
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4'
     ]
 )
