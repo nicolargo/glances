@@ -28,11 +28,12 @@ Requirements
 ============
 
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3)
-- ``psutil >= 0.5.1`` (recommended version >= 1.2.1)
+- ``psutil >= 2.0.0``
 - ``setuptools``
 
 Optional dependencies:
 
+- ``bottle`` (for web server mode)
 - ``jinja2`` (for HTML output)
 - ``py3sensors`` (for HW monitoring support) [Linux-only]
 - ``hddtemp`` (for HDD temperature monitoring support)
@@ -44,17 +45,14 @@ Installation
 PyPI: The simple way
 --------------------
 
-Prerequisites:
-
-.. code-block:: console
-
-    apt-get install python-dev
-
 Glances is on `PyPI`_. To install, simply use `pip`_:
 
 .. code-block:: console
 
     pip install Glances
+
+*Note*: Python headers are required to install psutil. For example,
+on Debian/Ubuntu you need to install first the *python-dev* package.
 
 To upgrade Glances to the latest version:
 
@@ -71,6 +69,7 @@ At the moment, packages exist for the following distributions:
 - Debian (Testing/Sid)
 - Fedora/CentOS/RHEL
 - Gentoo
+- Slackware
 - Ubuntu (13.04+)
 - Void Linux
 
@@ -147,11 +146,8 @@ To install Glances from source:
     $ cd glances-*
     # python setup.py install
 
-*Note*: Python headers are required to install psutil. For example, you need to install first:
-
-* On Debian/Ubuntu, the *python-dev* package
-* On CentOS/Fedora, the *python-devel* package (from the EPEL repository)
-* On openSUSE/SLES/SLED, the *python-devel* package (from Oss repository)
+*Note*: Python headers are required to install psutil. For example,
+on Debian/Ubuntu you need to install first the *python-dev* package.
 
 Puppet
 ------
