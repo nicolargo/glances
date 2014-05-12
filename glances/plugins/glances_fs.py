@@ -70,16 +70,15 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update the FS stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset the list
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             # Grab the stats using the PsUtil disk_partitions
@@ -109,7 +108,7 @@ class Plugin(GlancesPlugin):
                 fs_current['percent'] = fs_usage.percent
                 self.stats.append(fs_current)
 
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
             # SNMP bulk command to get all file system in one shot

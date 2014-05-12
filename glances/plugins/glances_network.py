@@ -63,17 +63,16 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update network stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         Stats is a list of dict (one dict per interface)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             # Grab network interface stat using the PsUtil net_io_counter method
@@ -120,7 +119,7 @@ class Plugin(GlancesPlugin):
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
 

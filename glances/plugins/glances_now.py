@@ -44,7 +44,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = -1
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update current date/time
         """

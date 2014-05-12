@@ -64,10 +64,9 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update load stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
@@ -79,7 +78,7 @@ class Plugin(GlancesPlugin):
         except:
             nb_log_core = 0
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
@@ -95,7 +94,7 @@ class Plugin(GlancesPlugin):
                               'min5': load[1],
                               'min15': load[2],
                               'cpucore': nb_log_core }
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
             

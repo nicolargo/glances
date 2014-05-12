@@ -54,22 +54,21 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
 
         """
         Update batterie capacity stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             self.stats = self.glancesgrabbat.getcapacitypercent()
 
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # Not avalaible
             pass

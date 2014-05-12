@@ -67,16 +67,15 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update MEM (RAM) stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             # Grab MEM using the PSUtil virtual_memory method
             vm_stats = psutil.virtual_memory()
@@ -110,7 +109,7 @@ class Plugin(GlancesPlugin):
                 self.stats['free'] += self.stats['cached']
             # used=total-free
             self.stats['used'] = self.stats['total'] - self.stats['free']
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 

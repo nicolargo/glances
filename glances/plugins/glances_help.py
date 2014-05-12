@@ -47,7 +47,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 0
 
-    def update(self, input='local'):
+    def update(self):
         """
         No stats, it is just a plugin to display the help...
         """

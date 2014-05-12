@@ -53,7 +53,7 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Nothing to do here
         Just return the global glances_log

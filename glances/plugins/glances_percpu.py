@@ -57,16 +57,15 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update Per CPU stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             # Grab CPU using the PSUtil cpu_times method
@@ -132,7 +131,7 @@ class Plugin(GlancesPlugin):
                 except Exception:
                     self.reset()
 
-        elif input == 'snmp':
+        else:
             # Update stats using SNMP
             pass
 

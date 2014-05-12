@@ -50,20 +50,19 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update HDD stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             self.stats = self.glancesgrabhddtemp.get()
 
-        elif input == 'snmp':
+        else:
             # Update stats using SNMP
             # Not available for the moment
             pass

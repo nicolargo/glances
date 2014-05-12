@@ -59,16 +59,15 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update MEM (SWAP) stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             # Grab SWAP using the PSUtil swap_memory method
             sm_stats = psutil.swap_memory()
@@ -84,7 +83,7 @@ class Plugin(GlancesPlugin):
                          'sin', 'sout']:
                 if hasattr(sm_stats, swap):
                     self.stats[swap] = getattr(sm_stats, swap)
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 

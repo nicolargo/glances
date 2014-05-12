@@ -59,17 +59,16 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update the host/system info using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         Return the stats (dict)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             self.stats['os_name'] = platform.system()
             self.stats['hostname'] = platform.node()
@@ -91,7 +90,7 @@ class Plugin(GlancesPlugin):
                 self.stats['os_version'] = ' '.join(os_version[::2])
             else:
                 self.stats['os_version'] = ""
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 

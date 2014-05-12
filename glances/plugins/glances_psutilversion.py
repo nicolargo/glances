@@ -40,7 +40,7 @@ class Plugin(GlancesPlugin):
         """
         self.stats = None    
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update core stats
         """
@@ -49,7 +49,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Return PsUtil version as a tuple
-        if input == 'local':
+        if self.get_input() == 'local':
             # PsUtil version only available in local
             try:
                 self.stats = tuple([int(num) for num in __psutil_version__.split('.')])

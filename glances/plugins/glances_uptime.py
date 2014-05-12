@@ -57,22 +57,21 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update uptime stat using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
 
             # Convert uptime to string (because datetime is not JSONifi)
             self.stats = str(uptime).split('.')[0]
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             uptime = self.set_stats_snmp(snmp_oid=snmp_oid)['_uptime']
             try: 

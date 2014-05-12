@@ -46,17 +46,16 @@ class Plugin(GlancesPlugin):
         """
         self.stats = {}
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update core stats
-        Input method could be: local (mandatory) or snmp (optionnal)
         Stats is a dict (with both physical and log cpu number) instead of a integer
         """
 
         # Reset the stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
 
             # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
@@ -70,7 +69,7 @@ class Plugin(GlancesPlugin):
             except NameError:
                 self.reset()
 
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # http://stackoverflow.com/questions/5662467/how-to-find-out-the-number-of-cpus-using-snmp
             pass

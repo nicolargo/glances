@@ -55,16 +55,15 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update disk IO stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset stats
         self.reset()
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             # Grab the stat using the PsUtil disk_io_counters method
             # read_count: number of reads
@@ -111,7 +110,7 @@ class Plugin(GlancesPlugin):
                 
                 # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # !!! TODO: no standard way for the moment
             pass

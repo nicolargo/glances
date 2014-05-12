@@ -40,6 +40,9 @@ class GlancesPlugin(object):
         # Init the args
         self.args = args
 
+        # Init the input method
+        self.input = 'local'
+
         # Init the stats list
         self.stats = None
 
@@ -53,6 +56,21 @@ class GlancesPlugin(object):
     def __str__(self):
         # Return the human-readable stats
         return str(self.stats)
+
+    def set_input(self, input):
+        """
+        Set the input method:
+        * local: system local grab (PSUtil or direct access)
+        * snmp: Client server mode via SNMP
+        * glances: Client server mode via Glances API
+        """
+        self.input = input
+
+    def get_input(self):
+        """
+        Get the input method
+        """
+        return self.input
 
     def set_stats(self, input_stats):
         # Set the stats to input_stats

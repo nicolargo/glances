@@ -66,21 +66,20 @@ class Plugin(GlancesPlugin):
         """
         self.stats = []
 
-    def update(self, input='local'):
+    def update(self):
         """
         Update sensors stats using the input method
-        Input method could be: local (mandatory) or snmp (optionnal)
         """
 
         # Reset the stats
         self.reset()        
 
-        if input == 'local':
+        if self.get_input() == 'local':
             # Update stats using the standard system lib
             self.hddtemp_plugin.update()
             self.stats = self.glancesgrabsensors.get()
             self.stats.extend(self.hddtemp_plugin.stats)
-        elif input == 'snmp':
+        elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
             pass
