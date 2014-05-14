@@ -1,144 +1,134 @@
-<!doctype html>
-<html>
-  <head>
+
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Glances by nicolargo</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
+    <link rel="stylesheet" href="Glances%20by%20nicolargo_files/styles.css">
+    <link rel="stylesheet" href="Glances%20by%20nicolargo_files/pygment_trac.css">
+    <script src="Glances%20by%20nicolargo_files/scale.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/nicolargo/glances">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/nicolargo/glances/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/nicolargo/glances/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
-
     <div class="wrapper">
+      <header>
+        <h1 class="header">Glances</h1>
+        <p class="header">An eye on your system</p>
 
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/nicolargo/glances/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/nicolargo/glances/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/nicolargo/glances">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/nicolargo">nicolargo</a></p>
+
+
+      </header>
       <section>
-        <div id="title">
-          <h1>Glances</h1>
-          <p>Glances an Eye on your system</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/nicolargo">nicolargo</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
+        <p><a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub"><img src="Glances%20by%20nicolargo_files/flattr-badge-large.png" <="" img=""></a>
+           <a href="https://travis-ci.org/nicolargo/glances"><img src="Glances%20by%20nicolargo_files/glances.png" <="" img=""></a>
+           <a href="http://badge.fury.io/py/Glances"><img src="Glances%20by%20nicolargo_files/Glances.png"></a></p>
 
-        <p>.. image:: <a href="http://api.flattr.com/button/flattr-badge-large.png">http://api.flattr.com/button/flattr-badge-large.png</a>
-        :target: <a href="https://flattr.com/thing/484466/nicolargoglances-on-GitHub">https://flattr.com/thing/484466/nicolargoglances-on-GitHub</a></p>
+        <p>Follow Glances on Twitter:
+          <a href="https://twitter.com/nicolargo">@nicolargo</a> or
+          <a href="https://twitter.com/glances_system">@glances_system</a></p>
 
-<p>.. image:: docs/images/glances-white-256.png
-        :width: 128</p>
+<h1>Glances - An eye on your system</h1>
+
+<p><img src="Glances%20by%20nicolargo_files/glances-white-256.png" <="" img="" width="128"></p>
 
 <p><strong>Glances</strong> is a cross-platform curses-based monitoring tool written in Python.</p>
 
-<p>It uses the <code>psutil</code>_ library to get information from your system.</p>
+<p>It uses the <a href="https://code.google.com/p/psutil/">psutil</a> library to get information from your system.</p>
 
-<p>.. image:: docs/images/screenshot-wide.png</p>
+<p><img src="Glances%20by%20nicolargo_files/screenshot-wide.png" <="" img=""></p>
 
-<h1>
-<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h1>
+<h1>Requirements</h1>
 
 <ul>
-<li>
-<code>python &gt;= 2.6</code> (tested with version 2.6, 2.7, 3.2, 3.3)</li>
-<li>
-<code>psutil &gt;= 0.4.1</code> (recommended version &gt;= 0.6)</li>
-<li>
-<code>jinja</code> (optional for HTML output)</li>
-<li>
-<code>pysensors</code> (optional for HW monitoring support)</li>
-<li>
-<code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
-<li><code>setuptools</code></li>
-</ul><h1>
-<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+  <li><code>python &gt;= 2.6</code> (tested with version 2.6, 2.7, 3.2, 3.3)</li>
+  <li><code>psutil &gt;= 0.5.1</code> (recommended version &gt;= 1.1.0)</li>
+  <li><code>jinja</code> (optional for HTML output)</li>
+  <li><code>pysensors</code> (optional for HW monitoring support) [Linux-only]</li>
+  <li><code>hddtemp</code> (optional for HDD temperature monitoring support)</li>
+  <li><code>batinfo</code> (optional for battery monitoring support) [Linux-only]</li>
+  <li><code>setuptools</code></li>
+</ul>
 
-<p>Actually, Glances is available for Arch Linux, Fedora / CentOS / RHEL,
-Debian (Sid), Ubuntu (13.04+) and FreeBSD, so you should be able to
+<h1>Installation</h1>
+
+<h2>PyPI: The simple way</h2>
+
+<p>Glances is on <a href="https://pypi.python.org/pypi">PyPI</a>. To install, simply use <a href="http://www.pip-installer.org/">pip</a>:</p>
+
+<pre><code>pip install Glances</code></pre>
+
+<p><i>Note:</i>Python headers are required to install psutil. For example, on Debian/Ubuntu you need to install first the python-dev package.</p>
+
+<p>To upgrade Glances to the latest version:</p>
+
+<pre><code>pip install --upgrade Glances</code></pre>
+
+<h2>Linux</h2>
+
+<p>At the moment, packages exist for Arch Linux, Gentoo, Fedora/CentOS/RHEL,
+Debian (Sid/Testing) and Ubuntu (13.04+), so you should be able to
 install it using your favorite package manager.</p>
 
-<p>Glances is on <code>PyPI</code><em>. To install, simply use <code>pip</code></em>:</p>
+<h2>FreeBSD</h2>
 
-<p>.. code-block:: console</p>
+<p>To install the precompiled binary package:</p>
 
-<pre><code>pip install Glances
+<pre><code># pkg_add -r py27-glances</code></pre>
+
+<p>To install Glances from ports:</p><p>
+
+</p><pre><code># cd /usr/ports/sysutils/py-glances/
+# make install clean
 </code></pre>
 
-<h2>
-<a name="os-x" class="anchor" href="#os-x"><span class="octicon octicon-link"></span></a>OS X</h2>
+<h2>OS X</h2>
 
-<p>OS X users can also install Glances using <code>Homebrew</code>_ or <code>MacPorts</code>_.</p>
+<p>OS X users can also install Glances using <a href="http://brew.sh/">Homebrew</a> or <a href="https://www.macports.org/">MacPorts</a>.</p>
 
-<p>Homebrew</p>
+<h3>Homebrew</h3>
 
-<pre><code>
-.. code-block:: console
-
-    $ brew install brew-pip
-    $ export PYTHONPATH=$(brew --prefix)/lib/python2.7/site-packages
-    $ brew pip Glances
-
-.. note:: If you get the following error:
-
-    ::
-
-        Error: Failed executing: pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X (.rb:)
-
-    Try to run:
-
-    .. code-block:: console
-
-        $ pip install glances==X.X --install-option=--prefix=/usr/local/XXX/glances/X.X
-        $ brew link Glances
-
-MacPorts
+<pre><code>$ brew install python
+$ pip install Glances
 </code></pre>
 
-<p>.. code-block:: console</p>
+<h3>MacPorts</h3>
 
-<pre><code>$ sudo port install glances
-</code></pre>
+<pre><code>$ sudo port install glances</code></pre>
 
-<h2>
-<a name="windows" class="anchor" href="#windows"><span class="octicon octicon-link"></span></a>Windows</h2>
+<h2>Windows</h2>
 
-<p>Windows only support Glances in server mode. Glances will automatically run in server mode on it.</p>
+<p>Glances 1.7.2 proposes a Windows client based on the colorconsole Python library.</p>
 
-<p>Thanks to <code>Nicolas Bourges</code>, Glances can be easily installed using a Windows installer:</p>
+<p>Glances &lt; 1.7.2 only works in server mode. It will run in server mode automatically.</p>
+
+<p>Thanks to Nicolas Bourges, Glances can be easily installed using a Windows installer:</p>
+
+<p><a href="http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi">Glances-1.7.2-win32.msi</a> (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)</p>
+
+<p>Otherwise, you have to follow these steps:</p>
 
 <ul>
-<li>glances-1.6.0-x86.exe_ (32-bit, md5sum: 1d25902a2b1030f953a108792f4732cf)</li>
-<li>glances-1.6.0-x64.exe_ (64-bit, md5sum: de2c35c4bdd6a3ab2b938ea5f4c1567d)</li>
-</ul><p>Otherwise, you have to follow these steps:</p>
+  <li>Install Python for Windows: <a href="http://www.python.org/getit/">http://www.python.org/getit/</a></li>
+  <li>Install the psutil library: <a href="https://pypi.python.org/pypi?:action=display&amp;name=psutil#downloads">https://pypi.python.org/pypi?:action=display&amp;name=psutil#downloads</a></li>
+  <li>Install the colorconsole library: <a href="http://code.google.com/p/colorconsole/downloads/list">http://code.google.com/p/colorconsole/downloads/list</a></li>
+  <li>Download Glances from here: <a href="http://nicolargo.github.io/glances/">http://nicolargo.github.io/glances/</a></li>
+</ul>
 
-<ul>
-<li>Install <code>Python for Windows</code>: <a href="http://www.python.org/getit/">http://www.python.org/getit/</a>
-</li>
-<li>Install the <code>psutil</code> library: <a href="https://code.google.com/p/psutil/downloads/list">https://code.google.com/p/psutil/downloads/list</a>
-</li>
-<li>Download <code>Glances</code> from here: <a href="http://nicolargo.github.io/glances/">http://nicolargo.github.io/glances/</a>
-</li>
-</ul><h2>
-<a name="source" class="anchor" href="#source"><span class="octicon octicon-link"></span></a>Source</h2>
+<h2>Source</h2>
 
 <p>To install Glances from source:</p>
-
-<p>.. code-block:: console</p>
 
 <pre><code>$ curl -L https://github.com/nicolargo/glances/archive/vX.X.tar.gz -o glances-X.X.tar.gz
 $ tar -zxvf glances-*.tar.gz
@@ -146,60 +136,57 @@ $ cd glances-*
 # python setup.py install
 </code></pre>
 
-<p>.. note:: On Debian/Ubuntu, you have to install first <code>build-essential</code> and <code>python-dev</code>.</p>
+<p><em>Note</em>: Python headers are required to install psutil. For example, you need to install first:</p>
 
-<h2>
-<a name="puppet" class="anchor" href="#puppet"><span class="octicon octicon-link"></span></a>Puppet</h2>
+<ul>
+  <li>On Debian/Ubuntu, the <em>python-dev</em> package</li>
+  <li>On CentOS/Fedora, the <em>python-devel</em> package (from the EPEL repository)</li>
+  <li>On openSUSE/SLES/SLED, the <em>python-devel</em> package (from Oss repository)</li>
+</ul>
 
-<p>You can install Glances using <code>Puppet</code>_: <a href="https://github.com/rverchere/puppet-glances">https://github.com/rverchere/puppet-glances</a></p>
+<h2>Puppet</h2>
 
-<h1>
-<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h1>
+<p>You can install Glances using <a href="https://puppetlabs.com/puppet/what-is-puppet/">Puppet</a>: <a href="https://github.com/rverchere/puppet-glances">https://github.com/rverchere/puppet-glances</a></p>
+
+<h1>Usage</h1>
 
 <p>Just run:</p>
 
-<p>.. code-block:: console</p>
+<pre><code>$ glances</code></pre>
 
-<pre><code>$ glances [OPTIONS]
-</code></pre>
+<p>and RTFM, always.</p>
 
-<h1>
-<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
+<h1>Documentation</h1>
 
-<p>For complete documentation see <code>glances-doc.html</code>: <a href="https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst">https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst</a></p>
+<p>For complete documentation see <a href="https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst">glances-doc</a>.</p>
 
-<h1>
-<a name="author" class="anchor" href="#author"><span class="octicon octicon-link"></span></a>Author</h1>
+<h1>Author</h1>
 
-<p>Nicolas Hennion (<a href="https://github.com/nicolargo" class="user-mention">@nicolargo</a>) <a href="mailto:nicolas@nicolargo.com">nicolas@nicolargo.com</a></p>
+<p>Nicolas Hennion (@nicolargo) <a href="mailto:nicolas@nicolargo.com">&lt;nicolas@nicolargo.com&gt;</a></p>
 
-<h1>
-<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h1>
+<h1>License</h1>
 
 <p>LGPL. See <code>COPYING</code> for more details.</p>
 
-<p>.. _psutil: <a href="https://code.google.com/p/psutil/">https://code.google.com/p/psutil/</a>
-.. _PyPI: <a href="https://pypi.python.org/pypi">https://pypi.python.org/pypi</a>
-.. _pip: <a href="http://www.pip-installer.org/">http://www.pip-installer.org/</a>
-.. _Homebrew: <a href="http://mxcl.github.com/homebrew/">http://mxcl.github.com/homebrew/</a>
-.. _MacPorts: <a href="https://www.macports.org/">https://www.macports.org/</a>
-.. _glances-1.6.0-x86.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x86.exe</a>
-.. _glances-1.6.0-x64.exe: <a href="https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe">https://s3.amazonaws.com/glances/glances-1.6.0-x64.exe</a>
-.. _Puppet: <a href="https://puppetlabs.com/puppet/what-is-puppet/">https://puppetlabs.com/puppet/what-is-puppet/</a></p>
       </section>
-
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com/">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-              <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA–115490–11");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
+<script type="text/javascript">
 
-  </body>
-</html>
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-115490-11']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+  
+
+</body></html>
