@@ -1,413 +1,851 @@
-@import url(https://fonts.googleapis.com/css?family=Arvo:400,700,400italic);
-
-/* MeyerWeb Reset */
-
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font: inherit;
-  vertical-align: baseline;
+@font-face {
+  font-family: 'OpenSansLight';
+  src: url("../fonts/OpenSans-Light-webfont.eot");
+  src: url("../fonts/OpenSans-Light-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Light-webfont.woff") format("woff"), url("../fonts/OpenSans-Light-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Light-webfont.svg#OpenSansLight") format("svg");
+  font-weight: normal;
+  font-style: normal;
 }
 
+@font-face {
+  font-family: 'OpenSansLightItalic';
+  src: url("../fonts/OpenSans-LightItalic-webfont.eot");
+  src: url("../fonts/OpenSans-LightItalic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-LightItalic-webfont.woff") format("woff"), url("../fonts/OpenSans-LightItalic-webfont.ttf") format("truetype"), url("../fonts/OpenSans-LightItalic-webfont.svg#OpenSansLightItalic") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
 
-/* Base text styles */
+@font-face {
+  font-family: 'OpenSansRegular';
+  src: url("../fonts/OpenSans-Regular-webfont.eot");
+  src: url("../fonts/OpenSans-Regular-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Regular-webfont.woff") format("woff"), url("../fonts/OpenSans-Regular-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Regular-webfont.svg#OpenSansRegular") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
 
+@font-face {
+  font-family: 'OpenSansItalic';
+  src: url("../fonts/OpenSans-Italic-webfont.eot");
+  src: url("../fonts/OpenSans-Italic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Italic-webfont.woff") format("woff"), url("../fonts/OpenSans-Italic-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Italic-webfont.svg#OpenSansItalic") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: 'OpenSansSemibold';
+  src: url("../fonts/OpenSans-Semibold-webfont.eot");
+  src: url("../fonts/OpenSans-Semibold-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Semibold-webfont.woff") format("woff"), url("../fonts/OpenSans-Semibold-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Semibold-webfont.svg#OpenSansSemibold") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: 'OpenSansSemiboldItalic';
+  src: url("../fonts/OpenSans-SemiboldItalic-webfont.eot");
+  src: url("../fonts/OpenSans-SemiboldItalic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-SemiboldItalic-webfont.woff") format("woff"), url("../fonts/OpenSans-SemiboldItalic-webfont.ttf") format("truetype"), url("../fonts/OpenSans-SemiboldItalic-webfont.svg#OpenSansSemiboldItalic") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: 'OpenSansBold';
+  src: url("../fonts/OpenSans-Bold-webfont.eot");
+  src: url("../fonts/OpenSans-Bold-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Bold-webfont.woff") format("woff"), url("../fonts/OpenSans-Bold-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Bold-webfont.svg#OpenSansBold") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+@font-face {
+  font-family: 'OpenSansBoldItalic';
+  src: url("../fonts/OpenSans-BoldItalic-webfont.eot");
+  src: url("../fonts/OpenSans-BoldItalic-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-BoldItalic-webfont.woff") format("woff"), url("../fonts/OpenSans-BoldItalic-webfont.ttf") format("truetype"), url("../fonts/OpenSans-BoldItalic-webfont.svg#OpenSansBoldItalic") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* normalize.css 2012-02-07T12:37 UTC - http://github.com/necolas/normalize.css */
+/* =============================================================================
+   HTML5 display definitions
+   ========================================================================== */
+/*
+ * Corrects block display not defined in IE6/7/8/9 & FF3
+ */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+nav,
+section,
+summary {
+  display: block;
+}
+
+/*
+ * Corrects inline-block display not defined in IE6/7/8/9 & FF3
+ */
+audio,
+canvas,
+video {
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+}
+
+/*
+ * Prevents modern browsers from displaying 'audio' without controls
+ */
+audio:not([controls]) {
+  display: none;
+}
+
+/*
+ * Addresses styling for 'hidden' attribute not present in IE7/8/9, FF3, S4
+ * Known issue: no IE6 support
+ */
+[hidden] {
+  display: none;
+}
+
+/* =============================================================================
+   Base
+   ========================================================================== */
+/*
+ * 1. Corrects text resizing oddly in IE6/7 when body font-size is set using em units
+ *    http://clagnut.com/blog/348/#c790
+ * 2. Prevents iOS text size adjust after orientation change, without disabling user zoom
+ *    www.456bereastreet.com/archive/201012/controlling_text_size_in_safari_for_ios_without_disabling_user_zoom/
+ */
+html {
+  font-size: 100%;
+  /* 1 */
+  -webkit-text-size-adjust: 100%;
+  /* 2 */
+  -ms-text-size-adjust: 100%;
+  /* 2 */
+}
+
+/*
+ * Addresses font-family inconsistency between 'textarea' and other form elements.
+ */
+html,
+button,
+input,
+select,
+textarea {
+  font-family: sans-serif;
+}
+
+/*
+ * Addresses margins handled incorrectly in IE6/7
+ */
 body {
-  padding:10px 50px 0 0;
-  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 14px;
-	color: #232323;
-	background-color: #FBFAF7;
-	margin: 0;
-	line-height: 1.8em;
-	-webkit-font-smoothing: antialiased;
-
+  margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color:#232323;
-  margin:36px 0 10px;
+/* =============================================================================
+   Links
+   ========================================================================== */
+/*
+ * Addresses outline displayed oddly in Chrome
+ */
+a:focus {
+  outline: thin dotted;
 }
 
-p, ul, ol, table, dl {
-  margin:0 0 22px;
+/*
+ * Improves readability when focused and also mouse hovered in all browsers
+ * people.opera.com/patrickl/experiments/keyboard/test
+ */
+a:hover,
+a:active {
+  outline: 0;
 }
 
-h1, h2, h3 {
-	font-family: Arvo, Monaco, serif;
-  line-height:1.3;
-	font-weight: normal;
-}
-
-h1,h2, h3 {
-	display: block;
-	border-bottom: 1px solid #ccc;
-	padding-bottom: 5px;
-}
-
+/* =============================================================================
+   Typography
+   ========================================================================== */
+/*
+ * Addresses font sizes and margins set differently in IE6/7
+ * Addresses font sizes within 'section' and 'article' in FF4+, Chrome, S5
+ */
 h1 {
-	font-size: 30px;
+  font-size: 2em;
+  margin: 0.67em 0;
 }
 
 h2 {
-	font-size: 24px;
+  font-size: 1.5em;
+  margin: 0.83em 0;
 }
 
 h3 {
-	font-size: 18px;
+  font-size: 1.17em;
+  margin: 1em 0;
 }
 
-h4, h5, h6 {
-	font-family: Arvo, Monaco, serif;
-	font-weight: 700;
+h4 {
+  font-size: 1em;
+  margin: 1.33em 0;
 }
 
-a {
-  color:#C30000;
-  font-weight:200;
-  text-decoration:none;
+h5 {
+  font-size: 0.83em;
+  margin: 1.67em 0;
 }
 
-a:hover {
-	text-decoration: underline;
+h6 {
+  font-size: 0.75em;
+  margin: 2.33em 0;
 }
 
-a small {
-	font-size: 12px;
+/*
+ * Addresses styling not present in IE7/8/9, S5, Chrome
+ */
+abbr[title] {
+  border-bottom: 1px dotted;
 }
 
-em {
-	font-style: italic;
-}
-
+/*
+ * Addresses style set to 'bolder' in FF3+, S4/5, Chrome
+*/
+b,
 strong {
-  font-weight:700;
-}
-
-ul li {
-  list-style: inside;
-  padding-left: 25px;
-}
-
-ol li {
-  list-style: decimal inside;
-  padding-left: 20px;
+  font-weight: bold;
 }
 
 blockquote {
+  margin: 1em 40px;
+}
+
+/*
+ * Addresses styling not present in S5, Chrome
+ */
+dfn {
+  font-style: italic;
+}
+
+/*
+ * Addresses styling not present in IE6/7/8/9
+ */
+mark {
+  background: #ff0;
+  color: #000;
+}
+
+/*
+ * Addresses margins set differently in IE6/7
+ */
+p,
+pre {
+  margin: 1em 0;
+}
+
+/*
+ * Corrects font family set oddly in IE6, S4/5, Chrome
+ * en.wikipedia.org/wiki/User:Davidgothberg/Test59
+ */
+pre,
+code,
+kbd,
+samp {
+  font-family: monospace, serif;
+  _font-family: 'courier new', monospace;
+  font-size: 1em;
+}
+
+/*
+ * 1. Addresses CSS quotes not supported in IE6/7
+ * 2. Addresses quote property not supported in S4
+ */
+/* 1 */
+q {
+  quotes: none;
+}
+
+/* 2 */
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+
+small {
+  font-size: 75%;
+}
+
+/*
+ * Prevents sub and sup affecting line-height in all browsers
+ * gist.github.com/413930
+ */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+/* =============================================================================
+   Lists
+   ========================================================================== */
+/*
+ * Addresses margins set differently in IE6/7
+ */
+dl,
+menu,
+ol,
+ul {
+  margin: 1em 0;
+}
+
+dd {
+  margin: 0 0 0 40px;
+}
+
+/*
+ * Addresses paddings set differently in IE6/7
+ */
+menu,
+ol,
+ul {
+  padding: 0 0 0 40px;
+}
+
+/*
+ * Corrects list images handled incorrectly in IE7
+ */
+nav ul,
+nav ol {
+  list-style: none;
+  list-style-image: none;
+}
+
+/* =============================================================================
+   Embedded content
+   ========================================================================== */
+/*
+ * 1. Removes border when inside 'a' element in IE6/7/8/9, FF3
+ * 2. Improves image quality when scaled in IE7
+ *    code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/
+ */
+img {
+  border: 0;
+  /* 1 */
+  -ms-interpolation-mode: bicubic;
+  /* 2 */
+}
+
+/*
+ * Corrects overflow displayed oddly in IE9
+ */
+svg:not(:root) {
+  overflow: hidden;
+}
+
+/* =============================================================================
+   Figures
+   ========================================================================== */
+/*
+ * Addresses margin not present in IE6/7/8/9, S5, O11
+ */
+figure {
+  margin: 0;
+}
+
+/* =============================================================================
+   Forms
+   ========================================================================== */
+/*
+ * Corrects margin displayed oddly in IE6/7
+ */
+form {
+  margin: 0;
+}
+
+/*
+ * Define consistent border, margin, and padding
+ */
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+
+/*
+ * 1. Corrects color not being inherited in IE6/7/8/9
+ * 2. Corrects text not wrapping in FF3 
+ * 3. Corrects alignment displayed oddly in IE6/7
+ */
+legend {
+  border: 0;
+  /* 1 */
+  padding: 0;
+  white-space: normal;
+  /* 2 */
+  *margin-left: -7px;
+  /* 3 */
+}
+
+/*
+ * 1. Corrects font size not being inherited in all browsers
+ * 2. Addresses margins set differently in IE6/7, FF3+, S5, Chrome
+ * 3. Improves appearance and consistency in all browsers
+ */
+button,
+input,
+select,
+textarea {
+  font-size: 100%;
+  /* 1 */
+  margin: 0;
+  /* 2 */
+  vertical-align: baseline;
+  /* 3 */
+  *vertical-align: middle;
+  /* 3 */
+}
+
+/*
+ * Addresses FF3/4 setting line-height on 'input' using !important in the UA stylesheet
+ */
+button,
+input {
+  line-height: normal;
+  /* 1 */
+}
+
+/*
+ * 1. Improves usability and consistency of cursor style between image-type 'input' and others
+ * 2. Corrects inability to style clickable 'input' types in iOS
+ * 3. Removes inner spacing in IE7 without affecting normal text inputs
+ *    Known issue: inner spacing remains in IE6
+ */
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  cursor: pointer;
+  /* 1 */
+  -webkit-appearance: button;
+  /* 2 */
+  *overflow: visible;
+  /* 3 */
+}
+
+/*
+ * Re-set default cursor for disabled elements
+ */
+button[disabled],
+input[disabled] {
+  cursor: default;
+}
+
+/*
+ * 1. Addresses box sizing set to content-box in IE8/9
+ * 2. Removes excess padding in IE8/9
+ * 3. Removes excess padding in IE7
+      Known issue: excess padding remains in IE6
+ */
+input[type="checkbox"],
+input[type="radio"] {
+  box-sizing: border-box;
+  /* 1 */
+  padding: 0;
+  /* 2 */
+  *height: 13px;
+  /* 3 */
+  *width: 13px;
+  /* 3 */
+}
+
+/*
+ * 1. Addresses appearance set to searchfield in S5, Chrome
+ * 2. Addresses box-sizing set to border-box in S5, Chrome (include -moz to future-proof)
+ */
+input[type="search"] {
+  -webkit-appearance: textfield;
+  /* 1 */
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  /* 2 */
+  box-sizing: content-box;
+}
+
+/*
+ * Removes inner padding and search cancel button in S5, Chrome on OS X
+ */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/*
+ * Removes inner padding and border in FF3+
+ * www.sitepen.com/blog/2008/05/14/the-devils-in-the-details-fixing-dojos-toolbar-buttons/
+ */
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/*
+ * 1. Removes default vertical scrollbar in IE6/7/8/9
+ * 2. Improves readability and alignment in all browsers
+ */
+textarea {
+  overflow: auto;
+  /* 1 */
+  vertical-align: top;
+  /* 2 */
+}
+
+/* =============================================================================
+   Tables
+   ========================================================================== */
+/*
+ * Remove most spacing between table cells
+ */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+body {
+  padding: 0px 0 20px 0px;
+  margin: 0px;
+  font: 14px/1.5 "OpenSansRegular", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #f0e7d5;
+  font-weight: normal;
+  background: #252525;
+  background-attachment: fixed !important;
+  background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #2a2a29), color-stop(100%, #1c1c1c));
+  background: -webkit-linear-gradient(#2a2a29, #1c1c1c);
+  background: -moz-linear-gradient(#2a2a29, #1c1c1c);
+  background: -o-linear-gradient(#2a2a29, #1c1c1c);
+  background: -ms-linear-gradient(#2a2a29, #1c1c1c);
+  background: linear-gradient(#2a2a29, #1c1c1c);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #e8e8e8;
+  margin: 0 0 10px;
+  font-family: 'OpenSansRegular', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+}
+
+p, ul, ol, table, pre, dl {
+  margin: 0 0 20px;
+}
+
+h1, h2, h3 {
+  line-height: 1.1;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 24px;
+}
+
+h4, h5, h6 {
+  color: #e8e8e8;
+}
+
+h3 {
+  font-size: 18px;
+  line-height: 24px;
+  font-family: 'OpenSansRegular', "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: normal;
+  color: #b6b6b6;
+}
+
+a {
+  color: #ffcc00;
+  font-weight: 400;
+  text-decoration: none;
+}
+a:hover {
+  color: #ffeb9b;
+}
+
+a small {
+  font-size: 11px;
+  color: #666;
+  margin-top: -0.6em;
+  display: block;
+}
+
+ul {
+  list-style-image: url("../images/bullet.png");
+}
+
+strong {
+  font-family: 'OpenSansBold', "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: normal;
+}
+
+.wrapper {
+  max-width: 650px;
+  margin: 0 auto;
+  position: relative;
+  padding: 0 20px;
+}
+
+section img {
+  max-width: 100%;
+}
+
+blockquote {
+  border-left: 3px solid #ffcc00;
   margin: 0;
   padding: 0 0 0 20px;
   font-style: italic;
 }
 
-dl, dt, dd, dl p {
-	font-color: #444;
-}
-
-dl dt {
-  font-weight: bold;
-}
-
-dl dd {
-  padding-left: 20px;
-  font-style: italic;
-}
-
-dl p {
-  padding-left: 20px;
-  font-style: italic;
-}
-
-hr {
-  border:0;
-  background:#ccc;
-  height:1px;
-  margin:0 0 24px;
-}
-
-/* Images */
-
-img {
-  position: relative;
-  margin: 0 auto;
-  max-width: 650px;
-  padding: 5px;
-  margin: 10px 0 32px 0;
-  border: 1px solid #ccc;
-}
-
-
-/* Code blocks */
-
-code, pre {
-	font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
-  color:#000;
-  font-size:14px;
+code {
+  font-family: "Lucida Sans", Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
+  color: #efefef;
+  font-size: 13px;
+  margin: 0 4px;
+  padding: 4px 6px;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -o-border-radius: 2px;
+  -ms-border-radius: 2px;
+  -khtml-border-radius: 2px;
+  border-radius: 2px;
 }
 
 pre {
-	padding: 4px 12px;
-  background: #FDFEFB;
-  border-radius:4px;
-  border:1px solid #D7D8C8;
+  padding: 8px 15px;
+  background: #191919;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -o-border-radius: 2px;
+  -ms-border-radius: 2px;
+  -khtml-border-radius: 2px;
+  border-radius: 2px;
+  border: 1px solid #121212;
+  -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  -o-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
   overflow: auto;
   overflow-y: hidden;
-	margin-bottom: 32px;
 }
-
-
-/* Tables */
-
-table {
-  width:100%;
+pre code {
+  color: #efefef;
+  text-shadow: 0px 1px 0px #000;
+  margin: 0;
+  padding: 0;
 }
 
 table {
-  border: 1px solid #ccc;
-  margin-bottom: 32px;
-  text-align: left;
- }
+  width: 100%;
+  border-collapse: collapse;
+}
 
 th {
-  font-family: 'Arvo', Helvetica, Arial, sans-serif;
-	font-size: 18px;
-	font-weight: normal;
-  padding: 10px;
-  background: #232323;
-  color: #FDFEFB;
- }
+  text-align: left;
+  padding: 5px 10px;
+  border-bottom: 1px solid #434343;
+  color: #b6b6b6;
+  font-family: 'OpenSansSemibold', "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: normal;
+}
 
 td {
-  padding: 10px;
-	background: #ccc;
- }
-
-
-/* Wrapper */
-.wrapper {
-  width:960px;
+  text-align: left;
+  padding: 5px 10px;
+  border-bottom: 1px solid #434343;
 }
 
-
-/* Header */
-
-header {
-	background-color: #171717;
-	color: #FDFDFB;
-  width:170px;
-  float:left;
-  position:fixed;
-	border: 1px solid #000;
-	-webkit-border-top-right-radius: 4px;
-	-webkit-border-bottom-right-radius: 4px;
-	-moz-border-radius-topright: 4px;
-	-moz-border-radius-bottomright: 4px;
-	border-top-right-radius: 4px;
-	border-bottom-right-radius: 4px;
-	padding: 34px 25px 22px 50px;
-	margin: 30px 25px 0 0;
-	-webkit-font-smoothing: antialiased;
+hr {
+  border: 0;
+  outline: none;
+  height: 3px;
+  background: transparent url("../images/hr.gif") center center repeat-x;
+  margin: 0 0 20px;
 }
 
-p.header {
-	font-size: 16px;
+dt {
+  color: #F0E7D5;
+  font-family: 'OpenSansSemibold', "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: normal;
 }
 
-h1.header {
-	font-family: Arvo, sans-serif;
-	font-size: 30px;
-	font-weight: 300;
-	line-height: 1.3em;
-	border-bottom: none;
-	margin-top: 0;
+#header {
+  z-index: 100;
+  left: 0;
+  top: 0px;
+  height: 60px;
+  width: 100%;
+  position: fixed;
+  background: url(../images/nav-bg.gif) #353535;
+  border-bottom: 4px solid #434343;
+  -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+  -o-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
 }
-
-
-h1.header, a.header, a.name, header a{
-	color: #fff;
+#header nav {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 0 10px;
+  background: blue;
+  margin: 6px auto;
 }
-
-a.header {
-	text-decoration: underline;
+#header nav li {
+  font-family: 'OpenSansLight', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  list-style: none;
+  display: inline;
+  color: white;
+  line-height: 50px;
+  text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
 }
-
-a.name {
-	white-space: nowrap;
+#header nav li a {
+  color: white;
+  border: 1px solid #5d910b;
+  background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #93bd20), color-stop(100%, #659e10));
+  background: -webkit-linear-gradient(#93bd20, #659e10);
+  background: -moz-linear-gradient(#93bd20, #659e10);
+  background: -o-linear-gradient(#93bd20, #659e10);
+  background: -ms-linear-gradient(#93bd20, #659e10);
+  background: linear-gradient(#93bd20, #659e10);
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -o-border-radius: 2px;
+  -ms-border-radius: 2px;
+  -khtml-border-radius: 2px;
+  border-radius: 2px;
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), 0px 3px 7px rgba(0, 0, 0, 0.7);
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), 0px 3px 7px rgba(0, 0, 0, 0.7);
+  -o-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), 0px 3px 7px rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.3), 0px 3px 7px rgba(0, 0, 0, 0.7);
+  background-color: #93bd20;
+  padding: 10px 12px;
+  margin-top: 6px;
+  line-height: 14px;
+  font-size: 14px;
+  display: inline-block;
+  text-align: center;
 }
-
-header ul {
-  list-style:none;
-  padding:0;
+#header nav li a:hover {
+  background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #749619), color-stop(100%, #527f0e));
+  background: -webkit-linear-gradient(#749619, #527f0e);
+  background: -moz-linear-gradient(#749619, #527f0e);
+  background: -o-linear-gradient(#749619, #527f0e);
+  background: -ms-linear-gradient(#749619, #527f0e);
+  background: linear-gradient(#749619, #527f0e);
+  background-color: #659e10;
+  border: 1px solid #527f0e;
+  -moz-box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.2), 0px 1px 0px rgba(0, 0, 0, 0);
+  -webkit-box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.2), 0px 1px 0px rgba(0, 0, 0, 0);
+  -o-box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.2), 0px 1px 0px rgba(0, 0, 0, 0);
+  box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.2), 0px 1px 0px rgba(0, 0, 0, 0);
 }
-
-header li {
-	list-style-type: none;
-  width:132px;
-  height:15px;
-	margin-bottom: 12px;
-	line-height: 1em;
-	padding: 6px 6px 6px 7px;
-
-	background: #AF0011;
-	background: -moz-linear-gradient(top, #AF0011 0%, #820011 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -o-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -ms-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: linear-gradient(top, #AF0011 0%,#820011 100%);
-
-	border-radius:4px;
-  border:1px solid #0D0D0D;
-
-	-webkit-box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-	box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-
+#header nav li.fork {
+  float: left;
+  margin-left: 0px;
 }
-
-header li:hover {
-	background: #C3001D;
-	background: -moz-linear-gradient(top, #C3001D 0%, #950119 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -o-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -ms-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: linear-gradient(top, #C3001D 0%,#950119 100%);
+#header nav li.downloads {
+  float: right;
+  margin-left: 6px;
 }
-
-a.buttons {
-	-webkit-font-smoothing: antialiased;
-	background: url(../images/arrow-down.png) no-repeat;
-	font-weight: normal;
-	text-shadow: rgba(0, 0, 0, 0.4) 0 -1px 0;
-	padding: 2px 2px 2px 22px;
-	height: 30px;
+#header nav li.title {
+  float: right;
+  margin-right: 10px;
+  font-size: 11px;
 }
-
-a.github {
-	background: url(../images/octocat-small.png) no-repeat 1px;
-}
-
-a.buttons:hover {
-	color: #fff;
-	text-decoration: none;
-}
-
-
-/* Section - for main page content */
 
 section {
-  width:650px;
-  float:right;
-  padding-bottom:50px;
+  max-width: 650px;
+  padding: 30px 0px 50px 0px;
+  margin: 20px 0;
+  margin-top: 70px;
 }
-
-
-/* Footer */
-
-footer {
-  width:170px;
-  float:left;
-  position:fixed;
-  bottom:10px;
-	padding-left: 50px;
+section #title {
+  border: 0;
+  outline: none;
+  margin: 0 0 50px 0;
+  padding: 0 0 5px 0;
 }
-
-@media print, screen and (max-width: 960px) {
-
-  div.wrapper {
-    width:auto;
-    margin:0;
-  }
-
-  header, section, footer {
-    float:none;
-    position:static;
-    width:auto;
-  }
-
-	footer {
-		border-top: 1px solid #ccc;
-		margin:0 84px 0 50px;
-		padding:0;
-	}
-
-  header {
-    padding-right:320px;
-  }
-
-  section {
-    padding:20px 84px 20px 50px;
-    margin:0 0 20px;
-  }
-
-  header a small {
-    display:inline;
-  }
-
-  header ul {
-    position:absolute;
-    right:130px;
-    top:84px;
-  }
+section #title h1 {
+  font-family: 'OpenSansLight', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  font-size: 40px;
+  text-align: center;
+  line-height: 36px;
+}
+section #title p {
+  color: #d7cfbe;
+  font-family: 'OpenSansLight', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  font-size: 18px;
+  text-align: center;
+}
+section #title .credits {
+  font-size: 11px;
+  font-family: 'OpenSansRegular', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+  color: #696969;
+  margin-top: -10px;
+}
+section #title .credits.left {
+  float: left;
+}
+section #title .credits.right {
+  float: right;
 }
 
 @media print, screen and (max-width: 720px) {
-  body {
-    word-wrap:break-word;
+  #title .credits {
+    display: block;
+    width: 100%;
+    line-height: 30px;
+    text-align: center;
   }
-
-  header {
-    padding:10px 20px 0;
-		margin-right: 0;
+  #title .credits .left {
+    float: none;
+    display: block;
   }
-
-	section {
-    padding:10px 0 10px 20px;
-    margin:0 0 30px;
-  }
-
-	footer {
-		margin: 0 0 0 30px;
-	}
-
-  header ul, header p.view {
-    position:static;
+  #title .credits .right {
+    float: none;
+    display: block;
   }
 }
-
 @media print, screen and (max-width: 480px) {
-
-  header ul li.download {
-    display:none;
+  #header {
+    margin-top: -20px;
   }
 
-	footer {
-		margin: 0 0 0 20px;
-	}
+  section {
+    margin-top: 40px;
+  }
 
-	footer a{
-		display:block;
-	}
-
-}
-
-@media print {
-  body {
-    padding:0.4in;
-    font-size:12pt;
-    color:#444;
+  nav {
+    display: none;
   }
 }
