@@ -1,3 +1,11 @@
+Version 1.7.7
+=============
+
+	* Fix CVS export [issue #348]
+	* Adapt to PSUtil 2.1.1
+	* Compatibility with Python 3.4
+	* Improve German update
+
 Version 1.7.6
 =============
 
