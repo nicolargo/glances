@@ -32,13 +32,13 @@ if sys.platform.startswith('win'):
 
 setup(
     name='Glances',
-    version='1.7.6',
+    version='1.7.7',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-1.7.6.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-1.7.7.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=requires,
