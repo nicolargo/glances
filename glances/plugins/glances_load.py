@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
 
         # Call CorePlugin in order to display the core number
         try:
-            nb_log_core = CorePlugin().update(input)["log"]
+            nb_log_core = CorePlugin().update()["log"]
         except:
             nb_log_core = 0
 
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:4}".format(_("LOAD"))
+        msg = "{0:8}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if (self.stats['cpucore'] > 0):
@@ -143,7 +143,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6.2f}".format(self.stats['min5'])
         ret.append(self.curse_add_line(
-            msg, self.get_alert(self.stats['min5'], max=100 * self.core_plugin.update()["log"])))
+            msg, self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
@@ -151,6 +151,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = "{0:>6.2f}".format(self.stats['min15'])
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min15'], max=100 * self.core_plugin.update()["log"])))
+            msg, self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])))
 
         return ret
