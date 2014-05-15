@@ -29,15 +29,33 @@ class Plugin(GlancesPlugin):
     stats is a tuple
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
+
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = None    
 
     def update(self):
         """
         Update core stats
         """
+
+        # Reset stats
+        self.reset()
+
         # Return PsUtil version as a tuple
-        try:
-            self.stats = tuple([int(num) for num in __psutil_version__.split('.')])
-        except NameError:
-            self.stats = None
+        if self.get_input() == 'local':
+            # PsUtil version only available in local
+            try:
+                self.stats = tuple([int(num) for num in __psutil_version__.split('.')])
+            except NameError:
+                pass
+        else:
+            pass
+
+        return self.stats

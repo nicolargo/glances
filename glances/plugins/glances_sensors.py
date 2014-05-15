@@ -30,50 +30,6 @@ from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
-class glancesGrabSensors:
-    """
-    Get sensors stats using the PySensors library
-    """
-
-    def __init__(self):
-        """
-        Init sensors stats
-        """
-        try:
-            sensors.init()
-        except Exception:
-            self.initok = False
-        else:
-            self.initok = True
-
-        self.sensors_list = []
-
-    def __update__(self):
-        """
-        Update the stats
-        """
-        # Reset the list
-        self.sensors_list = []
-
-        # grab only temperature stats
-        if self.initok:
-            for chip in sensors.iter_detected_chips():
-                for feature in chip:
-                    sensors_current = {}
-                    if feature.name.startswith(b'temp'):
-                        sensors_current['label'] = feature.label
-                        sensors_current['value'] = int(feature.get_value())
-                        self.sensors_list.append(sensors_current)
-
-    def get(self):
-        self.__update__()
-        return self.sensors_list
-
-    def quit(self):
-        if self.initok:
-            sensors.cleanup()
-
-
 class Plugin(GlancesPlugin):
     """
     Glances' sensors plugin
@@ -83,8 +39,8 @@ class Plugin(GlancesPlugin):
     The hard disks are already sorted by name
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
         self.glancesgrabsensors = glancesGrabSensors()
@@ -101,13 +57,34 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 5
 
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
+
     def update(self):
         """
-        Update sensors stats
+        Update sensors stats using the input method
         """
-        self.hddtemp_plugin.update()
-        self.stats = self.glancesgrabsensors.get()
-        self.stats.extend(self.hddtemp_plugin.stats)
+
+        # Reset the stats
+        self.reset()        
+
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+            self.hddtemp_plugin.update()
+            self.stats = self.glancesgrabsensors.get()
+            self.stats.extend(self.hddtemp_plugin.stats)
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
+            pass
+
+        return self.stats
 
     def msg_curse(self, args=None):
         """
@@ -139,3 +116,56 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
 
         return ret
+
+
+class glancesGrabSensors:
+    """
+    Get sensors stats using the PySensors library
+    """
+
+    def __init__(self):
+        """
+        Init sensors stats
+        """
+        try:
+            sensors.init()
+        except Exception:
+            self.initok = False
+        else:
+            self.initok = True
+
+        # Init the stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.sensors_list = []
+
+    def __update__(self):
+        """
+        Update the stats
+        """
+        # Reset the list
+        self.reset()
+
+        # grab only temperature stats
+        if self.initok:
+            for chip in sensors.iter_detected_chips():
+                for feature in chip:
+                    sensors_current = {}
+                    if feature.name.startswith(b'temp'):
+                        sensors_current['label'] = feature.label
+                        sensors_current['value'] = int(feature.get_value())
+                        self.sensors_list.append(sensors_current)
+
+        return self.sensors_list
+
+    def get(self):
+        self.__update__()
+        return self.sensors_list
+
+    def quit(self):
+        if self.initok:
+            sensors.cleanup()

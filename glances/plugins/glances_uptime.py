@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Check for psutil already done in the glances_core script
 import psutil
@@ -26,6 +26,8 @@ import psutil
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+snmp_oid = { '_uptime': '1.3.6.1.2.1.1.3.0' }
 
 class Plugin(GlancesPlugin):
     """
@@ -35,8 +37,8 @@ class Plugin(GlancesPlugin):
     stats is date (string)
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -46,15 +48,40 @@ class Plugin(GlancesPlugin):
         self.column_curse = -1
         # Enter -1 to diplay bottom
         self.line_curse = 0
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = {}
 
     def update(self):
         """
-        Update uptime stat
+        Update uptime stat using the input method
         """
-        uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
 
-        # Convert uptime to string (because datetime is not JSONifi)
-        self.stats = str(uptime).split('.')[0]
+        # Reset stats
+        self.reset()
+
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+            uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
+
+            # Convert uptime to string (because datetime is not JSONifi)
+            self.stats = str(uptime).split('.')[0]
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            uptime = self.set_stats_snmp(snmp_oid=snmp_oid)['_uptime']
+            try: 
+                # In hundredths of seconds
+                self.stats = str(timedelta(seconds=int(uptime) / 100))
+            except:
+                pass
+
+        # Return the result
+        return self.stats
 
     def msg_curse(self, args=None):
         """

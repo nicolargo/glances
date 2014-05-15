@@ -122,6 +122,16 @@ class GlancesMain(object):
                             help=_('define a client/server password from the prompt'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
+        parser.add_argument('--snmp-community', default='public', dest='snmp_community',
+                            help=_('SNMP community'))
+        parser.add_argument('--snmp-port', default=161, type=int, 
+                            dest='snmp_port', help=_('SNMP port'))
+        parser.add_argument('--snmp-version', default='2c', dest='snmp_version',
+                            help=_('SNMP version (1, 2c or 3)'))
+        parser.add_argument('--snmp-user', default='private', dest='snmp_user',
+                            help=_('SNMP username (only for SNMPv3)'))
+        parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
+                            help=_('SNMP authentication key (only for SNMPv3)'))
         parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
                             dest='seconds', help=_('set refresh time in seconds [default: %s sec]') % self.refresh_time)
         parser.add_argument('-w', '--webserver', action='store_true', default=False,

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-Glances CPU plugin
+Glances DiskIO plugin
 """
 
 import psutil
@@ -34,8 +34,8 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -46,57 +46,74 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 3
 
-        # Init stats
-        self.diskio_old = []
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
 
     def update(self):
         """
-        Update disk IO stats
+        Update disk IO stats using the input method
         """
 
-        # Grab the stat using the PsUtil disk_io_counters method
-        # read_count: number of reads
-        # write_count: number of writes
-        # read_bytes: number of bytes read
-        # write_bytes: number of bytes written
-        # read_time: time spent reading from disk (in milliseconds)
-        # write_time: time spent writing to disk (in milliseconds)
-        diskiocounters = psutil.disk_io_counters(perdisk=True)
+        # Reset stats
+        self.reset()
 
-        # Previous disk IO stats are stored in the diskio_old variable
-        diskio = []
-        if self.diskio_old == []:
-            # First call, we init the network_old var
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+            # Grab the stat using the PsUtil disk_io_counters method
+            # read_count: number of reads
+            # write_count: number of writes
+            # read_bytes: number of bytes read
+            # write_bytes: number of bytes written
+            # read_time: time spent reading from disk (in milliseconds)
+            # write_time: time spent writing to disk (in milliseconds)
             try:
-                self.diskio_old = diskiocounters
-            except (IOError, UnboundLocalError):
-                pass
-        else:
-            # By storing time data we enable Rx/s and Tx/s calculations in the
-            # XML/RPC API, which would otherwise be overly difficult work
-            # for users of the API
-            time_since_update = getTimeSinceLastUpdate('disk')
+                diskiocounters = psutil.disk_io_counters(perdisk=True)
+            except:
+                return self.stats
 
-            diskio_new = diskiocounters
-            for disk in diskio_new:
+            # Previous disk IO stats are stored in the diskio_old variable
+            if not hasattr(self, 'diskio_old'):
+                # First call, we init the network_old var
                 try:
-                    # Try necessary to manage dynamic disk creation/del
-                    diskstat = {}
-                    diskstat['time_since_update'] = time_since_update
-                    diskstat['disk_name'] = disk
-                    diskstat['read_bytes'] = (
-                        diskio_new[disk].read_bytes -
-                        self.diskio_old[disk].read_bytes)
-                    diskstat['write_bytes'] = (
-                        diskio_new[disk].write_bytes -
-                        self.diskio_old[disk].write_bytes)
-                except KeyError:
-                    continue
-                else:
-                    diskio.append(diskstat)
-            self.diskio_old = diskio_new
+                    self.diskio_old = diskiocounters
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                # By storing time data we enable Rx/s and Tx/s calculations in the
+                # XML/RPC API, which would otherwise be overly difficult work
+                # for users of the API
+                time_since_update = getTimeSinceLastUpdate('disk')
 
-        self.stats = diskio
+                diskio_new = diskiocounters
+                for disk in diskio_new:
+                    try:
+                        # Try necessary to manage dynamic disk creation/del
+                        diskstat = {}
+                        diskstat['time_since_update'] = time_since_update
+                        diskstat['disk_name'] = disk
+                        diskstat['read_bytes'] = (
+                            diskio_new[disk].read_bytes -
+                            self.diskio_old[disk].read_bytes)
+                        diskstat['write_bytes'] = (
+                            diskio_new[disk].write_bytes -
+                            self.diskio_old[disk].write_bytes)
+                    except KeyError:
+                        continue
+                    else:
+                        self.stats.append(diskstat)
+                
+                # Save stats to compute next bitrate
+                self.diskio_old = diskio_new
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO: no standard way for the moment
+            pass
 
         return self.stats
 

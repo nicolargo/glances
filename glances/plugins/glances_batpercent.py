@@ -37,21 +37,43 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         #!!! TODO: display plugin...
 
         # Init the sensor class
         self.glancesgrabbat = glancesGrabBat()
 
+        # Init stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
+
     def update(self):
+
         """
-        Update batterie capacity stats
+        Update batterie capacity stats using the input method
         """
 
-        self.stats = self.glancesgrabbat.getcapacitypercent()
+        # Reset stats
+        self.reset()
 
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+
+            self.stats = self.glancesgrabbat.getcapacitypercent()
+
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            # Not avalaible
+            pass
+
+        return self.stats
 
 class glancesGrabBat:
     """

@@ -24,6 +24,12 @@ import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
+# Available Swap Space: .1.3.6.1.4.1.2021.4.4.0
+snmp_oid = { 'total': '1.3.6.1.4.1.2021.4.3.0',
+             'free': '1.3.6.1.4.1.2021.4.4.0' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -32,8 +38,8 @@ class Plugin(GlancesPlugin):
     stats is a dict
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -44,29 +50,56 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 1
 
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = {}
+
     def update(self):
         """
-        Update MEM (SWAP) stats
+        Update MEM (SWAP) stats using the input method
         """
 
-        # Grab SWAP using the PSUtil swap_memory method
-        sm_stats = psutil.swap_memory()
+        # Reset stats
+        self.reset()
 
-        # Get all the swap stats (copy/paste of the PsUtil documentation)
-        # total: total swap memory in bytes
-        # used: used swap memory in bytes
-        # free: free swap memory in bytes
-        # percent: the percentage usage
-        # sin: the number of bytes the system has swapped in from disk (cumulative)
-        # sout: the number of bytes the system has swapped out from disk (cumulative)
-        swap_stats = {}
-        for swap in ['total', 'used', 'free', 'percent',
-                     'sin', 'sout']:
-            if hasattr(sm_stats, swap):
-                swap_stats[swap] = getattr(sm_stats, swap)
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+            # Grab SWAP using the PSUtil swap_memory method
+            sm_stats = psutil.swap_memory()
 
-        # Set the global variable to the new stats
-        self.stats = swap_stats
+            # Get all the swap stats (copy/paste of the PsUtil documentation)
+            # total: total swap memory in bytes
+            # used: used swap memory in bytes
+            # free: free swap memory in bytes
+            # percent: the percentage usage
+            # sin: the number of bytes the system has swapped in from disk (cumulative)
+            # sout: the number of bytes the system has swapped out from disk (cumulative)
+            for swap in ['total', 'used', 'free', 'percent',
+                         'sin', 'sout']:
+                if hasattr(sm_stats, swap):
+                    self.stats[swap] = getattr(sm_stats, swap)
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+
+            if self.stats['total'] == '': 
+                self.reset()
+                return self.stats
+
+            for key in self.stats.iterkeys():
+                if self.stats[key] != '':
+                    self.stats[key] = float(self.stats[key]) * 1024
+
+            # used=total-free
+            self.stats['used'] = self.stats['total'] - self.stats['free']
+
+            # percent: the percentage usage calculated as (total - available) / total * 100.
+            self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
         return self.stats
 

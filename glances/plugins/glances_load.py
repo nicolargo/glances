@@ -27,6 +27,14 @@ import os
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
+# 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
+# 15 minute Load: .1.3.6.1.4.1.2021.10.1.3.3
+snmp_oid = { 'min1': '1.3.6.1.4.1.2021.10.1.3.1',
+             'min5': '1.3.6.1.4.1.2021.10.1.3.2',
+             'min15': '1.3.6.1.4.1.2021.10.1.3.3' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -35,11 +43,8 @@ class Plugin(GlancesPlugin):
     stats is a dict
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
-
-        # Instance for the CorePlugin in order to display the core number
-        self.core_plugin = CorePlugin()
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -51,6 +56,12 @@ class Plugin(GlancesPlugin):
         self.line_curse = 1
 
         # Init stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
         self.stats = {}
 
     def update(self):
@@ -58,19 +69,44 @@ class Plugin(GlancesPlugin):
         Update load stats
         """
 
-        # Get the load using the os standard lib
-        try:
-            load = os.getloadavg()
-        except OSError:
-            self.stats = {}
-        except AttributeError:
-            # For Windows OS...
-            self.stats = {}
-        else:
-            self.stats = {'min1': load[0],
-                          'min5': load[1],
-                          'min15': load[2]}
+        # Reset stats
+        self.reset()
 
+        # Call CorePlugin in order to display the core number
+        try:
+            nb_log_core = CorePlugin().update(input)["log"]
+        except:
+            nb_log_core = 0
+
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+
+            # Get the load using the os standard lib
+            try:
+                load = os.getloadavg()
+            except OSError:
+                self.stats = {}
+            except AttributeError:
+                # For Windows OS...
+                self.stats = {}
+            else:
+                self.stats = {'min1': load[0],
+                              'min5': load[1],
+                              'min15': load[2],
+                              'cpucore': nb_log_core }
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            
+            self.stats['cpucore'] = nb_log_core
+
+            if self.stats['min1'] == '':
+                self.reset()
+                return self.stats
+
+            for key in self.stats.iterkeys():
+                self.stats[key] = float(self.stats[key])
+            
         return self.stats
 
     def msg_curse(self, args=None):
@@ -90,8 +126,9 @@ class Plugin(GlancesPlugin):
         msg = "{0:4}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        msg = _("{0:>5}-core").format(str(self.core_plugin.update()["log"]))
-        ret.append(self.curse_add_line(msg))
+        if (self.stats['cpucore'] > 0):
+            msg = "{0:>6}".format(str(self.stats['cpucore'])+_("core"))
+            ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 1min load

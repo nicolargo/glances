@@ -32,8 +32,8 @@ class Plugin(GlancesPlugin):
     Only for display
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -43,6 +43,15 @@ class Plugin(GlancesPlugin):
         self.column_curse = 1
         # Enter -1 to diplay bottom
         self.line_curse = -1
+
+        # Init the stats
+        self.reset()        
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
 
     def update(self):
         """

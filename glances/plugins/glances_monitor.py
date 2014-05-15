@@ -27,8 +27,8 @@ class Plugin(GlancesPlugin):
     Glances's monitor Plugin
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -54,15 +54,20 @@ class Plugin(GlancesPlugin):
         """
         Update the monitored list
         """
-        # Check if the glances_monitor instance is init
-        if self.glances_monitors is None:
-            return self.stats
 
-        # Update the monitored list (result of command)
-        self.glances_monitors.update()
+        if self.get_input() == 'local':
+            # Monitor list only available in a full Glances environment
+            # Check if the glances_monitor instance is init
+            if self.glances_monitors is None:
+                return self.stats
 
-        # Put it on the stats var
-        self.stats = self.glances_monitors.get()
+            # Update the monitored list (result of command)
+            self.glances_monitors.update()
+
+            # Put it on the stats var
+            self.stats = self.glances_monitors.get()
+        else:
+            pass
 
         return self.stats
 
@@ -105,7 +110,15 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = "{0:13} ".format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
             ret.append(self.curse_add_line(msg))
-            msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
+            # Decode to UTF8 (only for Python 3)
+            try:
+                msg = "{0}".format(m['result'].decode('utf-8') if m['count'] >= 1 else "")
+            except (UnicodeError, AttributeError):
+                try:
+                    msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
+                except UnicodeError:
+                    msg = "{0}".format(m['result'].encode('utf-8') if m['count'] >= 1 else "")
+
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 

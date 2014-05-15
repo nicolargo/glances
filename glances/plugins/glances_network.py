@@ -27,6 +27,13 @@ import psutil
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# SNMP OID
+# http://www.net-snmp.org/docs/mibs/interfaces.html
+# Dict key = interface_name
+snmp_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2',
+             'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+             'cumulative_tx': '1.3.6.1.2.1.2.2.1.16' }
+
 
 class Plugin(GlancesPlugin):
     """
@@ -35,8 +42,8 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -47,70 +54,123 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 2
 
-        # Init stats
-        self.network_old = []
+        # Init the stats
+        self.reset()
+
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = []
 
     def update(self):
         """
-        Update network stats
+        Update network stats using the input method
         Stats is a list of dict (one dict per interface)
         """
 
-        # Grab network interface stat using the PsUtil net_io_counter method
-        try:
-            netiocounters = psutil.net_io_counters(pernic=True)
-        except UnicodeDecodeError:
-            self.stats = []
-            return self.stats
+        # Reset stats
+        self.reset()
 
-        # Previous network interface stats are stored in the network_old variable
-        network = []
-        if self.network_old == []:
-            # First call, we init the network_old var
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+
+            # Grab network interface stat using the PsUtil net_io_counter method
             try:
-                self.network_old = netiocounters
-            except (IOError, UnboundLocalError):
-                pass
-        else:
-            # By storing time data we enable Rx/s and Tx/s calculations in the
-            # XML/RPC API, which would otherwise be overly difficult work
-            # for users of the API
-            time_since_update = getTimeSinceLastUpdate('net')
+                netiocounters = psutil.net_io_counters(pernic=True)
+            except UnicodeDecodeError:
+                return self.stats
 
-            # Loop over interfaces
-            network_new = netiocounters
-            for net in network_new:
+            # Previous network interface stats are stored in the network_old variable
+            if not hasattr(self, 'network_old'):
+                # First call, we init the network_old var
                 try:
-                    # Try necessary to manage dynamic network interface
-                    netstat = {}
-                    netstat['time_since_update'] = time_since_update
-                    netstat['interface_name'] = net
-                    netstat['cumulative_rx'] = network_new[net].bytes_recv
-                    netstat['rx'] = (network_new[net].bytes_recv -
-                                     self.network_old[net].bytes_recv)
-                    netstat['cumulative_tx'] = network_new[net].bytes_sent
-                    netstat['tx'] = (network_new[net].bytes_sent -
-                                     self.network_old[net].bytes_sent)
-                    netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
-                                                netstat['cumulative_tx'])
-                    netstat['cx'] = netstat['rx'] + netstat['tx']
-                except KeyError:
-                    continue
-                else:
-                    network.append(netstat)
-            self.network_old = network_new
+                    self.network_old = netiocounters
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                # By storing time data we enable Rx/s and Tx/s calculations in the
+                # XML/RPC API, which would otherwise be overly difficult work
+                # for users of the API
+                time_since_update = getTimeSinceLastUpdate('net')
 
-        self.stats = network
+                # Loop over interfaces
+                network_new = netiocounters
+                for net in network_new:
+                    try:
+                        # Try necessary to manage dynamic network interface
+                        netstat = {}
+                        netstat['interface_name'] = net
+                        netstat['time_since_update'] = time_since_update
+                        netstat['cumulative_rx'] = network_new[net].bytes_recv
+                        netstat['rx'] = (network_new[net].bytes_recv -
+                                         self.network_old[net].bytes_recv)
+                        netstat['cumulative_tx'] = network_new[net].bytes_sent
+                        netstat['tx'] = (network_new[net].bytes_sent -
+                                         self.network_old[net].bytes_sent)
+                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                                    netstat['cumulative_tx'])
+                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                    except KeyError:
+                        continue
+                    else:
+                        self.stats.append(netstat)
+                
+                # Save stats to compute next bitrate
+                self.network_old = network_new
+
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+
+
+            # SNMP bulk command to get all network interface in one shot
+            netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+
+            # Previous network interface stats are stored in the network_old variable
+            if not hasattr(self, 'network_old'):
+                # First call, we init the network_old var
+                try:
+                    self.network_old = netiocounters
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                # See description in the 'local' block
+                time_since_update = getTimeSinceLastUpdate('net')
+
+                # Loop over interfaces
+                network_new = netiocounters
+
+                for net in network_new:
+                    try:
+                        # Try necessary to manage dynamic network interface
+                        netstat = {}
+                        netstat['interface_name'] = net
+                        netstat['time_since_update'] = time_since_update
+                        netstat['cumulative_rx'] = float(network_new[net]['cumulative_rx'])
+                        netstat['rx'] = (float(network_new[net]['cumulative_rx']) -
+                                         float(self.network_old[net]['cumulative_rx']))
+                        netstat['cumulative_tx'] = float(network_new[net]['cumulative_tx'])
+                        netstat['tx'] = (float(network_new[net]['cumulative_tx']) -
+                                         float(self.network_old[net]['cumulative_tx']))
+                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
+                                                    netstat['cumulative_tx'])
+                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                    except KeyError:
+                        continue
+                    else:
+                        self.stats.append(netstat)
+                
+                # Save stats to compute next bitrate
+                self.network_old = network_new
 
         return self.stats
 
     def msg_curse(self, args=None):
         """
-        Return the dict to display in the curse interface
+        Return the dict to displayoid in the curse interface
         """
 
         #!!! TODO: Add alert on network interface bitrate
-        #!!! TODO: Manage the hide tag to hide a list of net interface
 
         # Init the return message
         ret = []

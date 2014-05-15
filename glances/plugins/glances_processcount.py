@@ -29,8 +29,8 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
-    def __init__(self):
-        GlancesPlugin.__init__(self)
+    def __init__(self, args=None):
+        GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -43,16 +43,31 @@ class Plugin(GlancesPlugin):
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
+    def reset(self):
+        """
+        Reset/init the stats
+        """
+        self.stats = {}
+
     def update(self):
         """
-        Update processes stats
+        Update processes stats using the input method
         """
 
-        # Here, update is call for processcount AND processlist
-        glances_processes.update()
+        # Reset stats
+        self.reset()
 
-        # Return the processes count
-        self.stats = glances_processes.getcount()
+        if self.get_input() == 'local':
+            # Update stats using the standard system lib
+            # Here, update is call for processcount AND processlist
+            glances_processes.update()
+
+            # Return the processes count
+            self.stats = glances_processes.getcount()
+        elif self.get_input() == 'snmp':
+            # Update stats using SNMP
+            # !!! TODO
+            pass
 
         return self.stats
 

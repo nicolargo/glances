@@ -33,9 +33,15 @@ class GlancesPlugin(object):
     Main class for Glances' plugin
     """
 
-    def __init__(self):
+    def __init__(self, args=None):
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
+
+        # Init the args
+        self.args = args
+
+        # Init the input method
+        self.input = 'local'
 
         # Init the stats list
         self.stats = None
@@ -51,10 +57,68 @@ class GlancesPlugin(object):
         # Return the human-readable stats
         return str(self.stats)
 
+    def set_input(self, input):
+        """
+        Set the input method:
+        * local: system local grab (PSUtil or direct access)
+        * snmp: Client server mode via SNMP
+        * glances: Client server mode via Glances API
+        """
+        self.input = input
+
+    def get_input(self):
+        """
+        Get the input method
+        """
+        return self.input
+
     def set_stats(self, input_stats):
         # Set the stats to input_stats
         self.stats = input_stats
         return self.stats
+
+    def set_stats_snmp(self, bulk=False, snmp_oid={}):
+        # Update stats using SNMP
+        # If bulk=True, use a bulk request instead of a get request
+        from glances.core.glances_snmp import GlancesSNMPClient
+
+        # Init the SNMP request
+        clientsnmp = GlancesSNMPClient(host=self.args.client,
+                                       port=self.args.snmp_port,
+                                       version=self.args.snmp_version,
+                                       community=self.args.snmp_community)
+
+        # Process the SNMP request
+        ret = {}
+        if bulk:
+            # Bulk request
+            snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
+
+            # Build the internal dict with the SNMP result
+            # key is the first item in the snmp_oid
+            index = 1
+            for item in snmpresult:
+                item_stats = {}
+                item_key = None
+                for key in snmp_oid.iterkeys():
+                    oid = snmp_oid[key] + '.' + str(index)
+                    if oid in item:
+                        if item_key is None:
+                            item_key = item[oid]
+                        else:
+                            item_stats[key] = item[oid]
+                if item_stats != {}:
+                    ret[item_key] = item_stats
+                index += 1
+        else:
+            # Simple get request
+            snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
+
+            # Build the internal dict with the SNMP result
+            for key in snmp_oid.iterkeys():
+                ret[key] = snmpresult[snmp_oid[key]]
+
+        return ret
 
     def get_raw(self):
         # Return the stats object
