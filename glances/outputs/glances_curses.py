@@ -149,7 +149,7 @@ class glancesCurses:
         self.term_window = self.screen.subwin(0, 0)
 
         # Init refresh time
-        self.__refresh_time = args.seconds
+        self.__refresh_time = args.time
 
         # Init process sort method
         self.args.process_sorted_by = 'auto'

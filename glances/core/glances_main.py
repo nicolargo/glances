@@ -74,10 +74,10 @@ class GlancesMain(object):
     password = ""
     # Output type (default is no output)
     # output_list = ['html', 'csv']
-    html_tag = False
-    csv_tag = False
-    output_file = None
-    output_folder = None
+    # html_tag = False
+    # csv_tag = False
+    # output_file = None
+    # output_folder = None
 
     def __init__(self):
         """Manage the command line arguments."""
@@ -96,6 +96,7 @@ class GlancesMain(object):
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
         parser.add_argument('-C', '--config', dest='conf_file',
                             help=_('path to the configuration file'))
+        # Enable or disable option on startup
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,
@@ -110,10 +111,10 @@ class GlancesMain(object):
                             dest='disable_process', help=_('disable process module'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
-        parser.add_argument('-f', '--file', dest='file',
-                            help=_('set the HTML output folder or CSV file'))
-        parser.add_argument('-o', '--output', choices=['HTML', 'CSV'], dest='output',
-                            help=_("Define additional HTML or CSV output"))
+        # CSV output feature
+        parser.add_argument('--output-csv', default=None,
+                            dest='output_csv', help=_('export stats to a csv file'))
+        # Server option
         parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
                             help=_('define the client/server TCP port [default: %d]') % self.server_port)
         parser.add_argument('-P', '--password', dest='password_arg',
@@ -133,9 +134,10 @@ class GlancesMain(object):
         parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
                             help=_('SNMP authentication key (only for SNMPv3)'))
         parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
-                            dest='seconds', help=_('set refresh time in seconds [default: %s sec]') % self.refresh_time)
+                            dest='time', help=_('set refresh time in seconds [default: %s sec]') % self.refresh_time)
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
+        # Other options
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help=_('start Glances in per CPU mode'))
 
@@ -182,11 +184,11 @@ class GlancesMain(object):
             self.client_tag = True
             self.server_ip = args.client
 
-        if args.output is not None:
-            setattr(self, args.output.lower() + '_tag', True)
-        if args.file is not None:
-            output_file = args.file
-            output_folder = args.file
+        # if args.output is not None:
+        #     setattr(self, args.output.lower() + '_tag', True)
+        # if args.file is not None:
+        #     output_file = args.file
+        #     output_folder = args.file
         # /!!!
 
         # Interactive cmds like CLI args?

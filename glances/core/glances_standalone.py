@@ -35,17 +35,14 @@ class GlancesStandalone():
         # Initial system informations update
         self.stats.update()
 
-        # Init HTML output
-        # !!! TODO
-        # if html_tag:
-        #     htmloutput = glancesHtml(html_path=output_folder,
-        #                              refresh_time=refresh_time)
-
         # Init CSV output
-        # !!! TODO
-        # if csv_tag:
-        #     csvoutput = glancesCsv(cvsfile=output_file,
-        #                            refresh_time=refresh_time)
+        if args.output_csv is not None:
+            from glances.outputs.glances_csv import glancesCsv
+
+            self.csvoutput = glancesCsv(args=args)
+            self.csv_tag = True
+        else:
+            self.csv_tag = False
 
         # Init screen
         self.screen = glancesCurses(args=args)
@@ -61,18 +58,16 @@ class GlancesStandalone():
             # Update the screen
             self.screen.update(self.stats)
 
-            # Update the HTML output
-            # !!! TODO
-            # if html_tag:
-            #     htmloutput.update(stats)
-
             # Update the CSV output
-            # !!! TODO
-            # if csv_tag:
-            #     csvoutput.update(stats)
+            if self.csv_tag:
+                self.csvoutput.update(self.stats)
 
     def end(self):
         """
         End of the CLI
         """
         self.screen.end()
+
+        # Close the CSV file
+        if self.csv_tag:
+            self.csvoutput.exit()
