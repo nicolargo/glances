@@ -79,9 +79,17 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
     def check_user(self, username, password):
         # Check username and password in the dictionnary
         if username in self.server.user_dict:
-            if self.server.user_dict[username] == md5(password).hexdigest():
-                return True
-        return False
+            from glances.core.glances_password import glancesPassword
+
+            pwd = glancesPassword()
+
+            # print "Server password: %s" % self.server.user_dict[username]
+            # print "Client password: %s" % password
+            # print "MD5Cli password: %s" % md5(password).hexdigest()
+            # print "check_password:  %s" % pwd.check_password(self.server.user_dict[username], password)
+            return pwd.check_password(self.server.user_dict[username], password)
+        else:
+            return False
 
     def parse_request(self):
         if SimpleXMLRPCRequestHandler.parse_request(self):
@@ -203,7 +211,7 @@ class GlancesServer():
             sys.exit(2)
 
         # The users dict
-        # username / MD5 password couple
+        # username / password couple
         # By default, no auth is needed
         self.server.user_dict = {}
         self.server.isAuth = False
@@ -216,7 +224,7 @@ class GlancesServer():
         """
         Add an user to the dictionnary
         """
-        self.server.user_dict[username] = md5(password).hexdigest()
+        self.server.user_dict[username] = password
         self.server.isAuth = True
 
     def serve_forever(self):
