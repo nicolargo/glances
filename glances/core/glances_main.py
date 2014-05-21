@@ -117,10 +117,10 @@ class GlancesMain(object):
         # Server option
         parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
                             help=_('define the client/server TCP port [default: %d]') % self.server_port)
-        parser.add_argument('-P', '--password', dest='password_arg',
-                            help=_('old method to define a client/server password'))
+        parser.add_argument('--password-badidea', dest='password_arg',
+                            help=_('Define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
-                            help=_('define a client/server password from the prompt'))
+                            help=_('define a client/server password from the prompt or file'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
@@ -160,10 +160,13 @@ class GlancesMain(object):
         # Server or client login/password
         args.username = self.username
         if args.password_arg is not None:
-            # Password is passed as an argument
-            args.password = args.password_arg
+            from hashlib import sha256
+            # Password is given as an argument
+            # Hash with SHA256
+            # Only the SHA will be transmit on the network
+            args.password = sha256(args.password_arg).hexdigest()
         elif args.password_prompt:
-            # Interactive password
+            # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
                     description=_("Define the password for the Glances server"),
@@ -171,7 +174,7 @@ class GlancesMain(object):
             elif args.client:
                 args.password = self.__get_password(
                     description=_("Enter the Glances server password"),
-                    confirm=False)
+                    clear=True)
         else:
             # Default is no password
             args.password = self.password
@@ -183,12 +186,6 @@ class GlancesMain(object):
         if args.client is not None:
             self.client_tag = True
             self.server_ip = args.client
-
-        # if args.output is not None:
-        #     setattr(self, args.output.lower() + '_tag', True)
-        # if args.file is not None:
-        #     output_file = args.file
-        #     output_folder = args.file
         # /!!!
 
         # Interactive cmds like CLI args?
@@ -201,26 +198,27 @@ class GlancesMain(object):
 
         return args
 
-    def __get_password(self, description='', confirm=False):
+    def __hash_password(self, plain_password):
         """
-        Read a password from the command line (with confirmation if confirm = True)
+        Hash a plain password and return the hashed one
         """
-        import getpass
+        from glances.core.glances_password import glancesPassword
 
-        if description != '':
-            sys.stdout.write("%s\n" % description)
+        password = glancesPassword()
 
-        password1 = getpass.getpass(_("Password: "))
-        if confirm:
-            password2 = getpass.getpass(_("Password (confirm): "))
-        else:
-            return password1
+        return password.hash_password(plain_password)
 
-        if password1 == password2:
-            return password1
-        else:
-            sys.stdout.write(_("[Warning] Passwords did not match, please try again...\n"))
-            return self.__get_password(description=description, confirm=confirm)
+    def __get_password(self, description='', confirm=False, clear=False):
+        """
+        Read a password from the command line 
+        - with confirmation if confirm = True
+        - plain (clear password) if clear = True
+        """
+        from glances.core.glances_password import glancesPassword
+
+        password = glancesPassword()
+
+        return password.get_password(description, confirm, clear)
 
     def is_standalone(self):
         """
