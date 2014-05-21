@@ -18,7 +18,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import sys libs
-import os
 import sys
 try:
     import csv

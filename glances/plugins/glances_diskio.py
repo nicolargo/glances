@@ -47,6 +47,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 3
 
         # Init the stats
+        self.diskio_old = []
         self.reset()        
 
     def reset(self):
@@ -112,7 +113,7 @@ class Plugin(GlancesPlugin):
                 self.diskio_old = diskio_new
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            # !!! TODO: no standard way for the moment
+            # No standard way for the moment...
             pass
 
         return self.stats

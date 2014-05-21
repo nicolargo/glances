@@ -41,7 +41,7 @@ class GlancesPlugin(object):
         self.args = args
 
         # Init the input method
-        self.input = 'local'
+        self.input_method = 'local'
 
         # Init the stats list
         self.stats = None
@@ -57,20 +57,21 @@ class GlancesPlugin(object):
         # Return the human-readable stats
         return str(self.stats)
 
-    def set_input(self, input):
+    def set_input(self, input_method):
         """
         Set the input method:
         * local: system local grab (PSUtil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
         """
-        self.input = input
+        self.input_method = input_method
+        return self.input_method
 
     def get_input(self):
         """
         Get the input method
         """
-        return self.input
+        return self.input_method
 
     def set_stats(self, input_stats):
         # Set the stats to input_stats
@@ -159,7 +160,6 @@ class GlancesPlugin(object):
         # If current > CAREFUL of max then alert = CAREFUL
         # If current > WARNING of max then alert = WARNING
         # If current > CRITICAL of max then alert = CRITICAL
-        # stat is USER, SYSTEM, IOWAIT or STEAL
         #
         # If defined 'header' is added between the plugin name and the status
         # Only usefull for stats with several alert status
@@ -176,11 +176,13 @@ class GlancesPlugin(object):
 
         # Manage limits
         ret = 'OK'
-        if value > self.get_limit_critical(header=header):
+        if value > self.__get_limit_critical(header=header):
             ret = 'CRITICAL'
-        elif value > self.get_limit_warning(header=header):
+        elif value > self.__get_limit_warning(header=header):
             ret = 'WARNING'
-        elif value > self.get_limit_careful(header=header):
+        elif value > self.__get_limit_careful(header=header):
+            ret = 'CAREFUL'
+        elif current < min:
             ret = 'CAREFUL'
 
         # Manage log (if needed)
@@ -194,7 +196,7 @@ class GlancesPlugin(object):
                 stat_name = self.plugin_name
             else:
                 stat_name = self.plugin_name + '_' + header
-            # !!! TODO: Manage the process list (last param => [])
+            # Add the log to the list
             glances_logs.add(ret, stat_name.upper(), value, [])
 
         # Default is ok
@@ -203,17 +205,23 @@ class GlancesPlugin(object):
     def get_alert_log(self, current=0, min=0, max=100, header=""):
         return self.get_alert(current, min, max, header, log=True)
 
-    def get_limit_critical(self, header=""):
+    def __get_limit_critical(self, header=""):
         if header == "":
             return self.limits[self.plugin_name + '_' + 'critical']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
 
-    def get_limit_warning(self, header=""):
+    def __get_limit_warning(self, header=""):
         if header == "":
             return self.limits[self.plugin_name + '_' + 'warning']
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
+
+    def __get_limit_careful(self, header=""):
+        if header == "":
+            return self.limits[self.plugin_name + '_' + 'careful']
+        else:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
     def get_hide(self, header=""):
         """
@@ -222,12 +230,12 @@ class GlancesPlugin(object):
         if header == "":
             try:
                 return self.limits[self.plugin_name + '_' + 'hide']
-            except Exception:
+            except KeyError:
                 return []
         else:
             try:
                 return self.limits[self.plugin_name + '_' + header + '_' + 'hide']
-            except Exception:
+            except KeyError:
                 return []
 
     def is_hide(self, value, header=""):
@@ -235,12 +243,6 @@ class GlancesPlugin(object):
         Return True if the value is in the hide configuration list
         """
         return value in self.get_hide(header=header)
-
-    def get_limit_careful(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'careful']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
     def msg_curse(self, args):
         """
