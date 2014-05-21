@@ -47,7 +47,6 @@ class Plugin(GlancesPlugin):
         self.line_curse = 3
 
         # Init the stats
-        self.diskio_old = []
         self.reset()        
 
     def reset(self):
