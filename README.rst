@@ -33,8 +33,7 @@ Requirements
 
 Optional dependencies:
 
-- ``bottle`` (for web server mode)
-- ``jinja2`` (for HTML output)
+- ``bottle`` (for Web Server mode)
 - ``py3sensors`` (for HW monitoring support) [Linux-only]
 - ``hddtemp`` (for HDD temperature monitoring support)
 - ``batinfo`` (for battery monitoring support) [Linux-only]
@@ -100,7 +99,7 @@ To install Glances from ports:
 OS X
 ----
 
-OS X users can also install Glances using `Homebrew`_ or `MacPorts`_.
+OS X users can install Glances using `Homebrew`_ or `MacPorts`_.
 
 Homebrew
 ````````
@@ -137,11 +136,11 @@ Otherwise, you have to follow these steps:
 Source
 ------
 
-To install Glances from source:
+To install Glances version X.Y from source:
 
 .. code-block:: console
 
-    $ curl -L https://github.com/nicolargo/glances/archive/vX.X.tar.gz -o glances-X.X.tar.gz
+    $ curl -L https://github.com/nicolargo/glances/archive/vX.Y.tar.gz -o glances-X.Y.tar.gz
     $ tar -zxvf glances-*.tar.gz
     $ cd glances-*
     # python setup.py install

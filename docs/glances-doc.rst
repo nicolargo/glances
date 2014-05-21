@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.4.
+This manual describes *Glances* version 2.0.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-January 2014
+May 2014
 
 .. contents:: Table of Contents
 
@@ -45,8 +45,7 @@ Simply run:
 Client/Server mode
 ------------------
 
-If you want to remotely monitor a machine, called ``server``, from another one, called ``client``,
-just run on the server:
+If you want to remotely monitor a machine, called ``server``, from another one, called ``client``, just run on the server:
 
 .. code-block:: console
 
@@ -68,9 +67,17 @@ Default binding address is ``0.0.0.0`` (Glances will listen on all the network i
 
 In client/server mode, limits are set by the server side.
 
-You can also set a password to access to the server ``-P password``.
+You can also set a password to access to the server ``--password``.
 
 Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to all IPv6 addresses.
+
+If Glances server is not detected by the client, this last one try to grab stats using the SNMP protocol:
+
+.. code-block:: console
+
+    client$ glances -c @snmpserver 
+
+Known limitation: Grab using SNMP is only validated for GNU/Linux operating system.
 
 Command reference
 =================
@@ -78,33 +85,46 @@ Command reference
 Command-line options
 --------------------
 
--b             Display network rate in Byte per second (default: bit per second)
--B IP          Bind server to the given IPv4/IPv6 address or hostname
--c IP          Connect to a Glances server by IPv4/IPv6 address or hostname
--C FILE        Path to the configuration file
--d             Disable disk I/O module
--e             Enable sensors module (requires pysensors, Linux-only)
--f FILE        Set the HTML output folder or CSV file
--h             Display the help and exit
--m             Disable mount module
--n             Disable network module
--o OUTPUT      Define additional output (available: HTML or CSV)
--p PORT        Define the client/server TCP port (default: 61209)
--P PASSWORD    Define a client/server password
---password     Define a client/server password from the prompt
--r             Disable process list (for low CPU consumption)
--s             Run Glances in server mode
--t SECONDS     Set refresh time in seconds (default: 3 sec)
--v             Display the version and exit
--y             Enable hddtemp module (requires hddtemp)
--z             Do not use the bold color attribute
--1             Start Glances in per-CPU mode
+-h, --help            show this help message and exit
+--version             show program's version number and exit
+-b, --byte            display network rate in byte per second
+-B BIND_ADDRESS, --bind BIND_ADDRESS
+                    bind server to the given IPv4/IPv6 address or hostname
+-c CLIENT, --client CLIENT
+                    connect to a Glances server by IPv4/IPv6 address or
+                    hostname
+-C CONF_FILE, --config CONF_FILE
+                    path to the configuration file
+--disable-bold        disable bold mode in the terminal
+--disable-diskio      disable disk I/O module
+--disable-fs          disable filesystem module
+--disable-network     disable network module
+--disable-sensors     disable sensors module
+--disable-process     disable process module
+--disable-log         disable log module
+--output-csv OUTPUT_CSV
+                    export stats to a csv file
+-p PORT, --port PORT  define the client/server TCP port [default: 61209]
+--password            define a client/server password from the prompt/file
+-s, --server          run Glances in server mode
+--snmp-community SNMP_COMMUNITY
+                    SNMP community
+--snmp-port SNMP_PORT
+                    SNMP port
+--snmp-version SNMP_VERSION
+                    SNMP version (1, 2c or 3)
+--snmp-user SNMP_USER
+                    SNMP username (only for SNMPv3)
+--snmp-auth SNMP_AUTH
+                    SNMP authentication key (only for SNMPv3)
+-t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
+-w, --webserver       run Glances in web server mode
+-1, --percpu          start Glances in per CPU mode
 
 Interactive commands
 --------------------
 
 The following commands (key pressed) are supported while in Glances:
-
 
 ``a``
     Sort process list automatically
@@ -135,7 +155,7 @@ The following commands (key pressed) are supported while in Glances:
 ``q``
     Quit
 ``s``
-    Show/hide sensors stats (only available with -e flag)
+    Show/hide sensors stats
 ``t``
     View network I/O as combination
 ``u``
@@ -145,7 +165,7 @@ The following commands (key pressed) are supported while in Glances:
 ``x``
     Delete finished warning and critical log messages
 ``y``
-    Show/hide hddtemp stats (only available with -y flag)
+    Show/hide hddtemp stats
 ``1``
     Switch between global CPU and per-CPU stats
 
@@ -202,8 +222,10 @@ Header
 
 .. image:: images/header.png
 
-The header shows the hostname, OS name, release version, platform architecture and system uptime.
-On Linux, it shows also the kernel version.
+The header shows the hostname, OS name, release version, platform architecture and system uptime (on the upper right).
+Additionnaly, on GNU/Linux operating system, it shows also the kernel version.
+
+In client mode, the server connection status is displayed (Connected or Disconnected)
 
 CPU
 ---
@@ -225,10 +247,10 @@ To switch to per-CPU stats, just hit the ``1`` key:
 The CPU stats are shown as a percentage and for the configured refresh time.
 The total CPU usage is displayed on the first line.
 
-| If user|system|nice CPU is ``<50%``, then status is set to ``"OK"``
-| If user|system|nice CPU is ``>50%``, then status is set to ``"CAREFUL"``
-| If user|system|nice CPU is ``>70%``, then status is set to ``"WARNING"``
-| If user|system|nice CPU is ``>90%``, then status is set to ``"CRITICAL"``
+| If user|system|iowait CPU is ``<50%``, then status is set to ``"OK"``
+| If user|system|iowait CPU is ``>50%``, then status is set to ``"CAREFUL"``
+| If user|system|iowait CPU is ``>70%``, then status is set to ``"WARNING"``
+| If user|system|iowait CPU is ``>90%``, then status is set to ``"CRITICAL"``
 
 *Note*: limit values can be overwritten in the configuration file under the ``[cpu]`` section.
 
@@ -241,10 +263,10 @@ On the *No Sheep* blog, *Zachary Tirrell* defines the average load [1]_:
 
     "In short it is the average sum of the number of processes
     waiting in the run-queue plus the number currently executing
-    over 1, 5, and 15 minute time periods."
+    over 1, 5, and 15 minutes time periods."
 
 Glances gets the number of CPU core to adapt the alerts.
-Alerts on average load are only set on 5 and 15 min.
+Alerts on average load are only set on 15 minutes time period.
 The first line also display the number of CPU core.
 
 | If average load is ``<0.7*core``, then status is set to ``"OK"``
@@ -257,15 +279,15 @@ The first line also display the number of CPU core.
 Memory
 ------
 
-Glances uses two columns: one for the ``RAM`` and another one for the ``Swap``.
+Glances uses two columns: one for the ``RAM`` and another one for the ``SWAP``.
 
 .. image:: images/mem.png
 
-If enough space is available, Glances displays extended informations:
+If enough space is available, Glances displays extended informations for the ``RAM``:
 
 .. image:: images/mem-wide.png
 
-With Glances, alerts are only set for on used memory and used swap.
+With Glances, alerts are only set for used memory and swap.
 
 | If memory is ``<50%``, then status is set to ``"OK"``
 | If memory is ``>50%``, then status is set to ``"CAREFUL"``
@@ -297,28 +319,15 @@ if the bit rate is higher than 70 Mbps.
 Sensors
 -------
 
-Glances can displays the sensors informations trough `lm-sensors` (only available on Linux).
+Glances can displays the sensors information trough `lm-sensors` (only available on GNU/Linux).
 
 As of lm-sensors, a filter is processed in order to display temperature only:
 
 .. image:: images/sensors.png
 
-
 Glances can also grab hard disk temperature through the `hddtemp` daemon (see here [2]_ to install hddtemp on your system):
 
 .. image:: images/hddtemp.png
-
-To enable the lm-sensors module:
-
-.. code-block:: console
-
-    $ glances -e
-
-To enable the hddtemp module:
-
-.. code-block:: console
-
-    $ glances -y
 
 There is no alert on this information.
 
@@ -366,7 +375,7 @@ Full view:
 Three views are available for processes:
 
 * Processes summary
-* Optional monitored processes list (new in 1.7)
+* Optional monitored processes list
 * Processes list
 
 The processes summary line display:
@@ -378,54 +387,57 @@ The processes summary line display:
 * Other tasks number (not running or sleeping)
 
 By default, or if you hit the ``a`` key, the processes list is automatically
-sorted by CPU of memory usage.
+sorted by:
 
-*Note*: limit values can be overwritten in the configuration file under the ``[process]`` section.
+* CPU if there is no alert (default behavor)
+* CPU if a CPU or LOAD alert is detected
+* MEM if a memory alert is detected
+* DiskIO if a CPU IOWait alert is detected
 
 The number of processes in the list is adapted to the screen size.
 
-``VIRT``
-    Total program size (VMS)
-``RES``
-    Resident set size (RSS)
 ``CPU%``
     % of CPU used by the process
 ``MEM%``
     % of MEM used by the process
+``VIRT``
+    Total program size (VMS)
+``RES``
+    Resident set size (RSS)
 ``PID``
     Process ID
 ``USER``
-    User ID per process
+    User ID
 ``NI``
     Nice level of the process
 ``S``
-    Process status
+    Process status (see details bellow)
 ``TIME+``
     Cumulative CPU time used
 ``IOR/s``
     Per process IO read rate (in Byte/s)
 ``IOW/s``
     Per process IO write rate (in Byte/s)
-``NAME``
-    Process name or command line
+``COMMAND``
+    Process command line
 
-Process status legend:
+Process Status legend:
 
 ``R``
-    running
+    Running
 ``S``
-    sleeping (may be interrupted)
+    Sleeping (may be interrupted)
 ``D``
-    disk sleep (may not be interrupted)
+    Disk sleep (may not be interrupted)
 ``T``
-    traced/stopped
+    Traced / Stopped
 ``Z``
-    zombie
+    Zombie
+
+*Note*: limit values can be overwritten in the configuration file under the ``[process]`` section.
 
 Monitored processes list
 ------------------------
-
-New in version 1.7. Optional.
 
 The monitored processes list allows user, through the configuration file,
 to group processes and quickly show if the number of running process is not good.
@@ -494,31 +506,6 @@ Each alert message displays the following information:
 3. alert name
 4. {min/avg/max} values or number of running processes for monitored processes list alerts
 
-Footer
-------
-
-.. image:: images/footer.png
-
-Glances displays the current date & time and access to the embedded help screen.
-
-If one or mode batteries were found on your machine and if the batinfo Python library [3]_
-is installed on your system then Glances displays the available percent capacity in the middle on the footer.
-
-.. image:: images/battery.png
-
-If you have ran Glances in client mode ``-c``, you can also see if the client is connected to the server.
-
-If client is connected:
-
-.. image:: images/client-connected.png
-
-else:
-
-.. image:: images/client-disconnected.png
-
-On the left, you can easily see if you are connected to a Glances server.
-
-
 API documentation
 =================
 
@@ -529,24 +516,16 @@ API documentation is available at https://github.com/nicolargo/glances/wiki/The-
 Others outputs
 ==============
 
-Thanks to the -o option, it is possible to export statistics to CSV or HTML files.
+It is possible to export statistics to CSV file.
 
 .. code-block:: console
 
-    $ glances -o CSV -f /tmp/glances.csv
+    $ glances --output-csv /tmp/glances.csv
 
-CSV files have on line per stats:
+CSV files have two lines per stat:
 
-- load,load1,load5,load15
-- mem,total,used,free
-- swap,total,used,free
-- cpu,user,system,nice,idel,iowait,irq
-
-.. code-block:: console
-
-    $ glances -o HTML -f /tmp
-
-Note: The css and img folders (glances/data) should be in the /tmp folder
+- Stats description
+- Stats (comma separated)
 
 Support
 =======
