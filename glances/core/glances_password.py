@@ -99,7 +99,7 @@ class glancesPassword:
 
         For Glances client, get the password (confirm=False, clear=True)
         1) From the CLI
-        2) The password is hashed with MD5 (only MD5 string transit thrught the network)
+        2) The password is hashed with SHA256 (only SHA string transit thrught the network)
         """
 
         if os.path.exists(self.password_filepath) and not clear:
@@ -113,11 +113,11 @@ class glancesPassword:
 
             # password_plain is the password MD5
             # password_hashed is the hashed password
-            password_md5 = hashlib.md5(getpass.getpass(_("Password: "))).hexdigest()
-            password_hashed = self.hash_password(password_md5)
+            password_sha = hashlib.sha256(getpass.getpass(_("Password: "))).hexdigest()
+            password_hashed = self.hash_password(password_sha)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = hashlib.md5(getpass.getpass(_("Password (confirm): "))).hexdigest()
+                password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): "))).hexdigest()
 
                 if not self.check_password(password_hashed, password_confirm):
                     sys.stdout.write(_("[Error] Sorry, but passwords did not match...\n"))
@@ -125,7 +125,7 @@ class glancesPassword:
 
             # Return the clear or hashed password
             if clear:
-                password = password_md5
+                password = password_sha
             else:
                 password = password_hashed
 

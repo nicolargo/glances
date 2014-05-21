@@ -160,11 +160,11 @@ class GlancesMain(object):
         # Server or client login/password
         args.username = self.username
         if args.password_arg is not None:
-            import hashlib
+            from hashlib import sha256
             # Password is given as an argument
-            # Hash with MD5
-            # Only the MD5 will be transmit on the network
-            args.password = hashlib.md5(args.password_arg).hexdigest()
+            # Hash with SHA256
+            # Only the SHA will be transmit on the network
+            args.password = sha256(args.password_arg).hexdigest()
         elif args.password_prompt:
             # Interactive or file password
             if args.server:

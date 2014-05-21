@@ -22,7 +22,6 @@ import json
 import socket
 import sys
 from base64 import b64decode
-from hashlib import md5
 try:
     from xmlrpc.server import SimpleXMLRPCRequestHandler
     from xmlrpc.server import SimpleXMLRPCServer
@@ -83,10 +82,6 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
 
             pwd = glancesPassword()
 
-            # print "Server password: %s" % self.server.user_dict[username]
-            # print "Client password: %s" % password
-            # print "MD5Cli password: %s" % md5(password).hexdigest()
-            # print "check_password:  %s" % pwd.check_password(self.server.user_dict[username], password)
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False
