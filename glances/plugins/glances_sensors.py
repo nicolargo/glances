@@ -58,7 +58,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 5
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -72,7 +72,7 @@ class Plugin(GlancesPlugin):
         """
 
         # Reset the stats
-        self.reset()        
+        self.reset()
 
         if self.get_input() == 'local':
             # Update stats using the standard system lib

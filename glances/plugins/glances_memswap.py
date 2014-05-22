@@ -27,8 +27,8 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
 # Available Swap Space: .1.3.6.1.4.1.2021.4.4.0
-snmp_oid = { 'total': '1.3.6.1.4.1.2021.4.3.0',
-             'free': '1.3.6.1.4.1.2021.4.4.0' }
+snmp_oid = {'total': '1.3.6.1.4.1.2021.4.3.0',
+            'free': '1.3.6.1.4.1.2021.4.4.0'}
 
 
 class Plugin(GlancesPlugin):
@@ -51,7 +51,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 1
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-            if self.stats['total'] == '': 
+            if self.stats['total'] == '':
                 self.reset()
                 return self.stats
 

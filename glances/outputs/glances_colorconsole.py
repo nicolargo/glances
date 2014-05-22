@@ -19,8 +19,8 @@
 
 import sys
 import threading
-import msvcrt
 
+import msvcrt
 try:
     import colorconsole
     import colorconsole.terminal

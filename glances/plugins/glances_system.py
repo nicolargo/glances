@@ -28,8 +28,8 @@ import platform
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
-snmp_oid = { 'hostname': '1.3.6.1.2.1.1.5.0',
-             'os_name': '1.3.6.1.2.1.1.1.0' }
+snmp_oid = {'hostname': '1.3.6.1.2.1.1.5.0',
+            'os_name': '1.3.6.1.2.1.1.1.0'}
 
 class Plugin(GlancesPlugin):
     """
@@ -51,7 +51,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 0
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """

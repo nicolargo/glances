@@ -42,7 +42,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = False
 
         # Init stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -66,7 +66,6 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # Not available for the moment
             pass
-
 
         return self.stats
 

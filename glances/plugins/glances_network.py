@@ -30,9 +30,9 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
-snmp_oid = { 'interface_name': '1.3.6.1.2.1.2.2.1.2',
-             'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-             'cumulative_tx': '1.3.6.1.2.1.2.2.1.16' }
+snmp_oid = {'interface_name': '1.3.6.1.2.1.2.2.1.2',
+            'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+            'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}
 
 
 class Plugin(GlancesPlugin):
@@ -115,13 +115,12 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         self.stats.append(netstat)
-                
+
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-
 
             # SNMP bulk command to get all network interface in one shot
             netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
@@ -159,7 +158,7 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         self.stats.append(netstat)
-                
+
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 

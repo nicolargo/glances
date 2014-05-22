@@ -27,7 +27,7 @@ import psutil
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
-snmp_oid = { '_uptime': '1.3.6.1.2.1.1.3.0' }
+snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
 
 class Plugin(GlancesPlugin):
     """
@@ -49,7 +49,7 @@ class Plugin(GlancesPlugin):
         # Enter -1 to diplay bottom
         self.line_curse = 0
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             uptime = self.set_stats_snmp(snmp_oid=snmp_oid)['_uptime']
-            try: 
+            try:
                 # In hundredths of seconds
                 self.stats = str(timedelta(seconds=int(uptime) / 100))
             except:

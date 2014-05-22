@@ -31,9 +31,9 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
 # 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
 # 15 minute Load: .1.3.6.1.4.1.2021.10.1.3.3
-snmp_oid = { 'min1': '1.3.6.1.4.1.2021.10.1.3.1',
-             'min5': '1.3.6.1.4.1.2021.10.1.3.2',
-             'min15': '1.3.6.1.4.1.2021.10.1.3.3' }
+snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
+            'min5': '1.3.6.1.4.1.2021.10.1.3.2',
+            'min15': '1.3.6.1.4.1.2021.10.1.3.3'}
 
 
 class Plugin(GlancesPlugin):
@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
         # Call CorePlugin in order to display the core number
         try:
             nb_log_core = CorePlugin().update()["log"]
-        except:
+        except Exception:
             nb_log_core = 0
 
         if self.get_input() == 'local':
@@ -84,20 +84,17 @@ class Plugin(GlancesPlugin):
             # Get the load using the os standard lib
             try:
                 load = os.getloadavg()
-            except OSError:
-                self.stats = {}
-            except AttributeError:
-                # For Windows OS...
+            except (OSError, AttributeError):
                 self.stats = {}
             else:
                 self.stats = {'min1': load[0],
                               'min5': load[1],
                               'min15': load[2],
-                              'cpucore': nb_log_core }
+                              'cpucore': nb_log_core}
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
-            
+
             self.stats['cpucore'] = nb_log_core
 
             if self.stats['min1'] == '':
@@ -106,7 +103,7 @@ class Plugin(GlancesPlugin):
 
             for key in self.stats.iterkeys():
                 self.stats[key] = float(self.stats[key])
-            
+
         return self.stats
 
     def msg_curse(self, args=None):
@@ -123,11 +120,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("LOAD"))
+        msg = "{0:4}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        if (self.stats['cpucore'] > 0):
-            msg = "{0:>6}".format(str(self.stats['cpucore'])+_("core"))
+        if self.stats['cpucore'] > 0:
+            msg = _("{0:>5}-core").format(self.stats['cpucore'])
             ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())

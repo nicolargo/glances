@@ -31,12 +31,12 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # Total RAM Shared: .1.3.6.1.4.1.2021.4.13.0
 # Total RAM Buffered: .1.3.6.1.4.1.2021.4.14.0
 # Total Cached Memory: .1.3.6.1.4.1.2021.4.15.0
-snmp_oid = { 'total': '1.3.6.1.4.1.2021.4.5.0',
-             # 'used': '1.3.6.1.4.1.2021.4.6.0',
-             'free': '1.3.6.1.4.1.2021.4.11.0',
-             'shared': '1.3.6.1.4.1.2021.4.13.0',
-             'buffers': '1.3.6.1.4.1.2021.4.14.0',
-             'cached': '1.3.6.1.4.1.2021.4.15.0' }
+snmp_oid = {'total': '1.3.6.1.4.1.2021.4.5.0',
+            # 'used': '1.3.6.1.4.1.2021.4.6.0',
+            'free': '1.3.6.1.4.1.2021.4.11.0',
+            'shared': '1.3.6.1.4.1.2021.4.13.0',
+            'buffers': '1.3.6.1.4.1.2021.4.14.0',
+            'cached': '1.3.6.1.4.1.2021.4.15.0'}
 
 
 class Plugin(GlancesPlugin):
@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 1
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -113,8 +113,7 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-
-            if self.stats['total'] == '': 
+            if self.stats['total'] == '':
                 self.reset()
                 return self.stats
 

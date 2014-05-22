@@ -31,7 +31,7 @@ import sys
 try:
     from psutil import __version__ as __psutil_version__
 except ImportError:
-    print('psutil module not found. Glances cannot start.')
+    print('psutil library not found. Glances cannot start.')
     sys.exit(1)
 
 # Check psutil version

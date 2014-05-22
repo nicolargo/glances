@@ -50,9 +50,10 @@ class GlancesClient():
 
         # Build the URI
         if args.password != "":
-            uri = 'http://%s:%s@%s:%d' % (args.username, args.password, args.bind_address, args.port)
+            uri = 'http://{0}:{1}@{2}:{3}'.format(args.username, args.password,
+                                                  args.bind_address, args.port)
         else:
-            uri = 'http://%s:%d' % (args.bind_address, args.port)
+            uri = 'http://{0}:{1}'.format(args.bind_address, args.port)
 
         # Try to connect to the URI
         try:
@@ -115,7 +116,7 @@ class GlancesClient():
 
             if not self.stats.check_snmp():
                 print(_("Error: Connection to SNMP server failed"))
-                sys.exit(2)                
+                sys.exit(2)
         else:
             ret = False
 
@@ -157,7 +158,7 @@ class GlancesClient():
         try:
             server_stats = json.loads(self.client.getAll())
             server_stats['monitor'] = json.loads(self.client.getAllMonitored())
-        except socket.error as e:
+        except socket.error:
             # Client can not get server stats
             return "Disconnected"
         else:
@@ -200,4 +201,4 @@ class GlancesClient():
         End of the client session
         """
         self.screen.end()
-        
+

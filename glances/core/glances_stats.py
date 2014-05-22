@@ -44,7 +44,7 @@ class GlancesStats(object):
     def __getattr__(self, item):
         """
         Overwrite the getattr in case of attribute is not found
-        The goal is to dynamicaly generate the following methods:
+        The goal is to dynamically generate the following methods:
         - getPlugname(): return Plugname stat in JSON format
         """
 
@@ -80,7 +80,7 @@ class GlancesStats(object):
                     plug != (header + "plugin.py")):
                 # Import the plugin
                 m = __import__(os.path.basename(plug)[:-3])
-                # Add the plugin to the dictionnary
+                # Add the plugin to the dictionary
                 # The key is the plugin name
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
@@ -126,9 +126,9 @@ class GlancesStats(object):
 
     def getAll(self):
         """
-        Return all the stats 
+        Return all the stats
         """
-        return [ self._plugins[p].get_raw() for p in self._plugins ]
+        return [self._plugins[p].get_raw() for p in self._plugins]
 
     def get_plugin_list(self):
         # Return the plugin list
@@ -238,7 +238,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         """
         Chek if SNMP is available on the server
         """
-        
+
         # Import the SNMP client class
         from glances.core.glances_snmp import GlancesSNMPClient
 
@@ -267,4 +267,3 @@ class GlancesStatsClientSNMP(GlancesStats):
             except Exception as e:
                 print "ERROR: Update %s failed (%s)" % (p, e)
                 # pass
-

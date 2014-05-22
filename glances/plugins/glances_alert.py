@@ -45,7 +45,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = -1
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """

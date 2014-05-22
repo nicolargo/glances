@@ -18,11 +18,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import system libs
+import getpass
+import hashlib
 import os
 import sys
 import uuid
-import hashlib
-import getpass
 
 # Import Glances lib
 from glances.core.glances_globals import (
@@ -41,18 +41,16 @@ class glancesPassword:
 
     def __init__(self):
         self.password_path = self.get_password_path()
-        self.password_filename = __appname__ + '.pwd'
+        self.password_filename = 'glances.pwd'
         self.password_filepath = os.path.join(self.password_path, self.password_filename)
 
     def get_password_path(self):
         """
         Get the path where the password file will be stored
-        On Linux and BSD the right place should be $XDG_DATA_HOME aka $HOME/.local/share/glances/foo.
-        On OS X: the right place is under user's Library folder aka $HOME/Library/glances/foo
-        On Windows: os.environ['APPDATA']+'/glances/'+foo
+        * Linux and BSD: ~/.config/glances
+        * OS X: ~/Library/glances
+        * Windows: %APPDATA%\glances
         """
-
-        # Get the system application data path for the current user
         if is_linux or is_bsd:
             app_path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
         elif is_mac:
@@ -69,22 +67,22 @@ class glancesPassword:
 
     def get_hash(self, salt, plain_password):
         """
-        Return the hashed password SHA265 + salt
+        Return the hashed password salt + SHA-256
         """
         return hashlib.sha256(salt.encode() + plain_password.encode()).hexdigest()
-     
+
     def hash_password(self, plain_password):
         """
-        Hash password with a salt based on UUID 
+        Hash password with a salt based on UUID (universally unique identifier)
         """
         salt = uuid.uuid4().hex
         encrypted_password = self.get_hash(salt, plain_password)
         return salt + '$' + encrypted_password
-         
+
     def check_password(self, hashed_password, plain_password):
         """
         Encode the plain_password with the salt of the hashed_password
-        and return the comparaison with the encrypted_password
+        and return the comparison with the encrypted_password
         """
         salt, encrypted_password = hashed_password.split('$')
         re_encrypted_password = self.get_hash(salt, plain_password)
@@ -93,26 +91,26 @@ class glancesPassword:
     def get_password(self, description='', confirm=False, clear=False):
         """
         For Glances server, get the password (confirm=True, clear=False)
-        1) from the password file (if the file  exist)
+        1) from the password file (if it exists)
         2) from the CLI
-        Optinnaly: save the password to a file (hashed with SHA256 + SALT)
+        Optionally: save the password to a file (hashed with salt + SHA-256)
 
         For Glances client, get the password (confirm=False, clear=True)
-        1) From the CLI
-        2) The password is hashed with SHA256 (only SHA string transit thrught the network)
+        1) from the CLI
+        2) the password is hashed with SHA-256 (only SHA string transit through the network)
         """
 
         if os.path.exists(self.password_filepath) and not clear:
             # If the password file exist then use it
-            sys.stdout.write(_("[Info] Read password from file %s\n") % self.password_filepath)            
+            sys.stdout.write(_("[Info] Read password from file %s\n") % self.password_filepath)
             password = self.load_password()
         else:
             # Else enter the password from the command line
             if description != '':
                 sys.stdout.write("%s\n" % description)
 
-            # password_plain is the password MD5
-            # password_hashed is the hashed password
+            # password_plain is the plain SHA-256 password
+            # password_hashed is the salt + SHA-256 password
             password_sha = hashlib.sha256(getpass.getpass(_("Password: "))).hexdigest()
             password_hashed = self.hash_password(password_sha)
             if confirm:
@@ -123,7 +121,7 @@ class glancesPassword:
                     sys.stdout.write(_("[Error] Sorry, but passwords did not match...\n"))
                     sys.exit(1)
 
-            # Return the clear or hashed password
+            # Return the plain or hashed password
             if clear:
                 password = password_sha
             else:
@@ -131,7 +129,7 @@ class glancesPassword:
 
             # Save the hashed password to the password file
             if not clear:
-                save_input = raw_input(_("Do you want to save the password (Yes|No) ? "))
+                save_input = raw_input(_("Do you want to save the password? (Yes|No) "))
                 if len(save_input) > 0 and save_input[0].upper() == _('Y'):
                     self.save_password(password_hashed)
 
@@ -139,19 +137,19 @@ class glancesPassword:
 
     def save_password(self, hashed_password):
         """
-        Save the hashed password to the Glances appdata folder
+        Save the hashed password to the Glances folder
         """
 
-        # Check if the Glances appdata folder already exist
+        # Check if the Glances folder already exist
         if not os.path.exists(self.password_path):
-            # Create the Glances appdata folder
+            # Create the Glances folder
             try:
                 os.mkdir(self.password_path)
             except Exception as e:
                 sys.stdout.write(_("[Warning] Glances application data folder can not be created (%s)\n") % e)
                 return
 
-        # Create/overwrite the password file to the Glances application data folder
+        # Create/overwrite the password file to the Glances folder
         try:
             file_pwd = open(self.password_filepath, 'w')
         except Exception as e:
@@ -164,10 +162,10 @@ class glancesPassword:
 
     def load_password(self):
         """
-        Load the hashed password from the Glances appdata folder
+        Load the hashed password from the Glances folder
         """
 
-        # Create/overwrite the password file to the Glances application data folder
+        # Create/overwrite the password file to the Glances folder
         try:
             file_pwd = open(self.password_filepath, 'r')
         except Exception as e:

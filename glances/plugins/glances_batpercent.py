@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-Batinfo (batterie) plugin
+Batinfo (battery) plugin
 """
 
 # Batinfo library (optional; Linux-only)
@@ -46,7 +46,7 @@ class Plugin(GlancesPlugin):
         self.glancesgrabbat = glancesGrabBat()
 
         # Init stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """

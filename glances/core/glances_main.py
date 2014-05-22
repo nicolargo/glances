@@ -22,7 +22,6 @@ Main Glances script
 
 # Import system libs
 import argparse
-import sys
 
 # Import Glances libs
 from glances.core.glances_config import Config
@@ -43,28 +42,8 @@ class GlancesMain(object):
     # Set the default cache lifetime to 1 second (only for server)
     # !!! Todo: configuration from the command line
     cached_time = 1
-    # Default network bitrate is display in bit per second
-    # network_bytepersec_tag = False
-    # Display (or not) module
-    # diskio_tag = True
-    # fs_tag = True
-    # hddtemp_flag = True
-    # network_tag = True
-    # sensors_tag = True
-    # process_tag = True
-    # Display property
-    # use_bold = True
-    # percpu_tag = False
-    # Default configuration file
-    # conf_file_tag = True
-    # conf_file = ""
-    # Bind IP address (default is all interfaces)
-    # bind_ip = "0.0.0.0"
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
-    # server_tag = False
-    # Server IP address (no default value)
-    # server_ip = None
     # Server TCP port number (default is 61209)
     server_port = 61209
     # Web Server TCP port number (default is 61208)
@@ -72,12 +51,6 @@ class GlancesMain(object):
     # Default username/password for client/server mode
     username = "glances"
     password = ""
-    # Output type (default is no output)
-    # output_list = ['html', 'csv']
-    # html_tag = False
-    # csv_tag = False
-    # output_file = None
-    # output_folder = None
 
     def __init__(self):
         """Manage the command line arguments."""
@@ -113,19 +86,19 @@ class GlancesMain(object):
                             dest='disable_log', help=_('disable log module'))
         # CSV output feature
         parser.add_argument('--output-csv', default=None,
-                            dest='output_csv', help=_('export stats to a csv file'))
+                            dest='output_csv', help=_('export stats to a CSV file'))
         # Server option
         parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
                             help=_('define the client/server TCP port [default: %d]') % self.server_port)
         parser.add_argument('--password-badidea', dest='password_arg',
-                            help=_('Define password from the command line'))
+                            help=_('define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help=_('define a client/server password from the prompt or file'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help=_('SNMP community'))
-        parser.add_argument('--snmp-port', default=161, type=int, 
+        parser.add_argument('--snmp-port', default=161, type=int,
                             dest='snmp_port', help=_('SNMP port'))
         parser.add_argument('--snmp-version', default='2c', dest='snmp_version',
                             help=_('SNMP version (1, 2c or 3)'))
@@ -210,7 +183,7 @@ class GlancesMain(object):
 
     def __get_password(self, description='', confirm=False, clear=False):
         """
-        Read a password from the command line 
+        Read a password from the command line
         - with confirmation if confirm = True
         - plain (clear password) if clear = True
         """

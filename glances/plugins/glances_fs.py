@@ -22,7 +22,7 @@ import psutil
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
-# The snmpd.conf needs to be edited. 
+# The snmpd.conf needs to be edited.
 # Add the following to enable it on all disk
 # ...
 # includeAllDisks 10%
@@ -35,11 +35,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
 # Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
-snmp_oid = { 'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
-             'device_name': '1.3.6.1.4.1.2021.9.1.3',
-             'size': '1.3.6.1.4.1.2021.9.1.6',
-             'used': '1.3.6.1.4.1.2021.9.1.8',
-             'percent': '1.3.6.1.4.1.2021.9.1.9' }
+snmp_oid = {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+            'device_name': '1.3.6.1.4.1.2021.9.1.3',
+            'size': '1.3.6.1.4.1.2021.9.1.6',
+            'used': '1.3.6.1.4.1.2021.9.1.8',
+            'percent': '1.3.6.1.4.1.2021.9.1.9'}
 
 
 class Plugin(GlancesPlugin):
@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
         self.line_curse = 4
 
         # Init the stats
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
@@ -150,7 +150,7 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if (len(i['mnt_point']) + len(i['device_name'].split('/')[-1])) <= 6:
+            if len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= 6:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(i['mnt_point']) > 9:

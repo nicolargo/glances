@@ -22,14 +22,14 @@ import sys
 try:
     import csv
 except ImportError:
-    print('CSV module not found. Glances cannot extract to .csv file.')
+    print('CSV module not found. Glances cannot export to CSV file.')
     sys.exit(1)
 
 # Import Glances libs
 from glances.core.glances_globals import is_py3
 
 # List of stats enable in the CSV output
-csv_stats_list = [ 'cpu', 'load', 'mem', 'memswap' ]
+csv_stats_list = ['cpu', 'load', 'mem', 'memswap']
 
 
 class glancesCsv:
@@ -56,7 +56,7 @@ class glancesCsv:
             print(_("Cannot create the CSV output file: %s") % error)
             sys.exit(2)
 
-        print("{0}: {1}".format(_("Stats dumped in the CSV file"), self.__csvfile_name)) 
+        print(_("Stats dumped in the CSV file: {0}").format(self.__csvfile_name))
 
     def exit(self):
         self.__csvfile_fd.close()
@@ -72,8 +72,8 @@ class glancesCsv:
         i = 0
         for p in stats.getAllPlugins():
             if p in csv_stats_list:
-                # First line for comment: csv_comment 
-                csv_comment = [ '# ' + str(p) + ': ' + '|'.join(all_stats[i].keys()) ]
+                # First line for comment: csv_comment
+                csv_comment = ['# ' + str(p) + ': ' + '|'.join(all_stats[i].keys())]
                 self.__csvfile.writerow(csv_comment)
                 # Second line for stats (CSV): csv_stats
                 self.__csvfile.writerow(all_stats[i].values())

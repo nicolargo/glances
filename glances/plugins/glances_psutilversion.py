@@ -32,13 +32,13 @@ class Plugin(GlancesPlugin):
     def __init__(self, args=None):
         GlancesPlugin.__init__(self, args=args)
 
-        self.reset()        
+        self.reset()
 
     def reset(self):
         """
         Reset/init the stats
         """
-        self.stats = None    
+        self.stats = None
 
     def update(self):
         """
