@@ -18,64 +18,59 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import sys libs
+import csv
 import sys
-try:
-    import csv
-except ImportError:
-    print('CSV module not found. Glances cannot export to CSV file.')
-    sys.exit(1)
 
 # Import Glances libs
 from glances.core.glances_globals import is_py3
 
-# List of stats enable in the CSV output
+# List of stats enabled in the CSV output
 csv_stats_list = ['cpu', 'load', 'mem', 'memswap']
 
 
-class glancesCsv:
+class glancesCSV:
     """
     This class manages the CSV output
     """
 
     def __init__(self, args=None):
-
-        # Init refresh time
-        self.__refresh_time = args.time
-
         # CSV file name
-        self.__csvfile_name = args.output_csv
+        self.csv_filename = args.output_csv
 
         # Set the CSV output file
         try:
             if is_py3:
-                self.__csvfile_fd = open(self.__csvfile_name, 'w', newline='')
+                self.csv_file = open(self.csv_filename, 'w', newline='')
             else:
-                self.__csvfile_fd = open(self.__csvfile_name, 'wb')
-            self.__csvfile = csv.writer(self.__csvfile_fd, quoting=csv.QUOTE_NONE)
-        except IOError as error:
-            print(_("Cannot create the CSV output file: %s") % error)
+                self.csv_file = open(self.csv_filename, 'wb')
+            self.writer = csv.writer(self.csv_file)
+        except IOError as e:
+            print(_("Cannot create the CSV file: {0}").format(e))
             sys.exit(2)
 
-        print(_("Stats dumped in the CSV file: {0}").format(self.__csvfile_name))
+        print(_("Stats dumped to CSV file: {0}").format(self.csv_filename))
 
     def exit(self):
-        self.__csvfile_fd.close()
+        self.csv_file.close()
 
     def update(self, stats):
         """
         Update stats in the CSV output file
         """
-
         all_stats = stats.getAll()
+        plugins = stats.getAllPlugins()
 
         # Loop over available plugin
         i = 0
-        for p in stats.getAllPlugins():
-            if p in csv_stats_list:
-                # First line for comment: csv_comment
-                csv_comment = ['# ' + str(p) + ': ' + '|'.join(all_stats[i].keys())]
-                self.__csvfile.writerow(csv_comment)
-                # Second line for stats (CSV): csv_stats
-                self.__csvfile.writerow(all_stats[i].values())
+        for plugin in plugins:
+            if plugin in csv_stats_list:
+                fieldnames = all_stats[i].keys()
+                fieldvalues = all_stats[i].values()
+                # First line: header
+                csv_header = ['# ' + plugin + ': ' + '|'.join(fieldnames)]
+                self.writer.writerow(csv_header)
+                # Second line: stats
+                self.writer.writerow(list(fieldvalues))
             i += 1
-        self.__csvfile_fd.flush()
+
+        self.csv_file.flush()

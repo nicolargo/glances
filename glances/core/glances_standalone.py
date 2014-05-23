@@ -37,9 +37,9 @@ class GlancesStandalone():
 
         # Init CSV output
         if args.output_csv is not None:
-            from glances.outputs.glances_csv import glancesCsv
+            from glances.outputs.glances_csv import glancesCSV
 
-            self.csvoutput = glancesCsv(args=args)
+            self.csvoutput = glancesCSV(args=args)
             self.csv_tag = True
         else:
             self.csv_tag = False
