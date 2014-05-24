@@ -65,7 +65,10 @@ class glancesBottle:
             'OK_LOG': 'ok_log',
             'CAREFUL_LOG': 'careful_log',
             'WARNING_LOG': 'warning_log',
-            'CRITICAL_LOG': 'critical_log'
+            'CRITICAL_LOG': 'critical_log',
+            'STATUS': '',
+            'NICE': '',
+            'PROCESS': ''
         }
 
     def _route(self):
@@ -178,12 +181,15 @@ class glancesBottle:
                 tpl += '</div>'
                 tpl += '<div class="row">'
                 continue
-            # Do not display splittable
-            if m['splittable']:
-                tpl += '<span></span>'
-                continue
-            tpl += '<span class="cell" id="%s">%s</span>' % \
-                (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
+            if plugin_name == 'processlist' and m['splittable']:
+                # Display first word of splittable stats (Process name)
+                tpl += '<span class="cell" id="%s">%s</span>' % \
+                    (self.__style_list[m['decoration']], 
+                     m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;'))
+            else:
+                # Display stat
+                tpl += '<span class="cell" id="%s">%s</span>' % \
+                    (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
         tpl += '</div>'
         tpl += '</div>'
 

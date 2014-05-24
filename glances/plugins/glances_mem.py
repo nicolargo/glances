@@ -152,47 +152,47 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Active memory usage
         if 'active' in self.stats:
-            msg = "  {0:8}".format(_("active:"))
+            msg = "  {0:8}".format(_("active")[0:7]+':')
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['active']))
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = "{0:6}".format(_("total:"))
+        msg = "{0:6}".format(_("total")[0:5]+':')
         ret.append(self.curse_add_line(msg))
         msg = "{0:>7}".format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # Inactive memory usage
         if 'inactive' in self.stats:
-            msg = "  {0:9}".format(_("inactive:"))
+            msg = "  {0:8}".format(_("inactive")[0:7]+':')
             ret.append(self.curse_add_line(msg, optional=True))
-            msg = "{0:>6}".format(self.auto_unit(self.stats['inactive']))
+            msg = "{0:>7}".format(self.auto_unit(self.stats['inactive']))
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = "{0:6}".format(_("used:"))
+        msg = "{0:6}".format(_("used")[0:5]+':')
         ret.append(self.curse_add_line(msg))
         msg = "{0:>7}".format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
             msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
         # Buffers memory usage
         if 'buffers' in self.stats:
-            msg = "  {0:8}".format(_("buffers:"))
+            msg = "  {0:8}".format(_("buffers")[0:7]+':')
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['buffers']))
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = "{0:6}".format(_("free:"))
+        msg = "{0:6}".format(_("free")[0:5]+':')
         ret.append(self.curse_add_line(msg))
         msg = "{0:>7}".format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))
         # Cached memory usage
         if 'cached' in self.stats:
-            msg = "  {0:8}".format(_("cached:"))
+            msg = "  {0:8}".format(_("cached")[0:7]+':')
             ret.append(self.curse_add_line(msg, optional=True))
             msg = "{0:>7}".format(self.auto_unit(self.stats['cached']))
             ret.append(self.curse_add_line(msg, optional=True))
