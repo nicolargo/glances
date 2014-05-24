@@ -33,6 +33,12 @@ from glances.core.glances_globals import (
     is_windows
 )
 
+# Trick: bind raw_input to input in Python 2
+try:
+    input = raw_input
+except NameError:
+    pass
+
 
 class glancesPassword:
     """
@@ -111,11 +117,11 @@ class glancesPassword:
 
             # password_plain is the plain SHA-256 password
             # password_hashed is the salt + SHA-256 password
-            password_sha = hashlib.sha256(getpass.getpass(_("Password: "))).hexdigest()
+            password_sha = hashlib.sha256(getpass.getpass(_("Password: ")).encode('utf-8')).hexdigest()
             password_hashed = self.hash_password(password_sha)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): "))).hexdigest()
+                password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): ")).encode('utf-8')).hexdigest()
 
                 if not self.check_password(password_hashed, password_confirm):
                     sys.stdout.write(_("[Error] Sorry, but passwords did not match...\n"))
@@ -129,7 +135,7 @@ class glancesPassword:
 
             # Save the hashed password to the password file
             if not clear:
-                save_input = raw_input(_("Do you want to save the password? (Yes|No) "))
+                save_input = input(_("Do you want to save the password? [Yes/No]: "))
                 if len(save_input) > 0 and save_input[0].upper() == _('Y'):
                     self.save_password(password_hashed)
 

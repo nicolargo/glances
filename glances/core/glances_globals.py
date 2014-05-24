@@ -48,7 +48,7 @@ appname_path = os.path.split(sys.argv[0])[0]
 sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
 # PY3?
-is_py3 = sys.version_info >= (3, 2)
+is_py3 = sys.version_info >= (3, 3)
 
 # Operating system flag
 # Note: Somes libs depends of OS
