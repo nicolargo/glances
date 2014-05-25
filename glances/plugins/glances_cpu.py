@@ -164,7 +164,7 @@ class Plugin(GlancesPlugin):
         # Idle CPU
         if 'idle' in self.stats:
             msg = "{0:8}".format(_("idle:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg))
             msg = "{0:>6.1%}".format(self.stats['idle'] / 100)
             ret.append(self.curse_add_line(msg))
         # Steal CPU usage

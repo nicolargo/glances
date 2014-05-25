@@ -313,7 +313,7 @@ class glancesCurses:
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
-            self.display_plugin(stats_cpu, display_optional=(screen_x >= 76))
+            self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
         self.display_plugin(stats_load)
         self.display_plugin(stats_mem, display_optional=(screen_x >= (3 * self.space_between_column + l)))
         self.display_plugin(stats_memswap)
