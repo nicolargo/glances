@@ -106,13 +106,13 @@ class Plugin(GlancesPlugin):
         msg = "{0:>6}".format(_("RES"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg = "{0:>6}".format(_("PID"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg))
         msg = " {0:10}".format(_("USER"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg))
         msg = "{0:>4}".format(_("NI"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg))
         msg = "{0:>2}".format(_("S"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg))
         msg = "{0:>9}".format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg = "{0:>6}".format(_("IOR/s"))
@@ -144,24 +144,24 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True))
             # PID
             msg = "{0:>6}".format(p['pid'])
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg))
             # USER
             msg = " {0:9}".format(p['username'][:9])
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg))
             # NICE
             nice = p['nice']
             msg = "{0:>5}".format(nice)
             if nice != 0:
-                ret.append(self.curse_add_line(msg, decoration='NICE', optional=True))
+                ret.append(self.curse_add_line(msg, decoration='NICE'))
             else:
-                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg))
             # STATUS
             status = p['status']
             msg = "{0:>2}".format(status)
             if status == 'R':
-                ret.append(self.curse_add_line(msg, decoration='STATUS', optional=True))
+                ret.append(self.curse_add_line(msg, decoration='STATUS'))
             else:
-                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg))
             # TIME+
             if tag_proc_time:
                 try:

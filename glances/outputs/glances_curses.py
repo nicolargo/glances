@@ -334,9 +334,11 @@ class glancesCurses:
             stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
             stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
             stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
+            # Display
             self.display_plugin(stats_processcount)
             self.display_plugin(stats_monitor)
             self.display_plugin(stats_processlist,
+                                display_optional=(screen_x > 102),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.display_plugin(stats_alert)
 
