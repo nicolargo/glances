@@ -120,7 +120,7 @@ class Plugin(GlancesPlugin):
         msg = "{0:>6}".format(_("IOW/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
         msg = " {0:8}".format(_("Command"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg))
 
         # Trying to display proc time
         tag_proc_time = True
@@ -204,7 +204,7 @@ class Plugin(GlancesPlugin):
             cmdline = p['cmdline']
             if cmdline == "":
                 msg = " {0}".format(p['name'])
-                ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 try:
                     cmd = cmdline.split()[0]
@@ -212,15 +212,15 @@ class Plugin(GlancesPlugin):
                     path, basename = os.path.split(cmd)
                     if os.path.isdir(path):
                         msg = " {0}".format(path) + os.sep
-                        ret.append(self.curse_add_line(msg, optional=True, splittable=True))
-                        ret.append(self.curse_add_line(basename, decoration='PROCESS', optional=True, splittable=True))
+                        ret.append(self.curse_add_line(msg, splittable=True))
+                        ret.append(self.curse_add_line(basename, decoration='PROCESS', splittable=True))
                     else:
                         msg = " {0}".format(basename)
-                        ret.append(self.curse_add_line(msg, decoration='PROCESS', optional=True, splittable=True))
+                        ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                     msg = " {0}".format(args)
-                    ret.append(self.curse_add_line(msg, optional=True, splittable=True))
+                    ret.append(self.curse_add_line(msg, splittable=True))
                 except UnicodeEncodeError:
-                    ret.append(self.curse_add_line("", optional=True, splittable=True))
+                    ret.append(self.curse_add_line("", splittable=True))
 
         # Return the message with decoration
         return ret
