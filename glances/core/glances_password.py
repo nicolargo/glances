@@ -145,41 +145,25 @@ class glancesPassword:
         """
         Save the hashed password to the Glances folder
         """
-
-        # Check if the Glances folder already exist
+        # Check if the Glances folder already exists
         if not os.path.exists(self.password_path):
             # Create the Glances folder
             try:
-                os.mkdir(self.password_path)
-            except Exception as e:
-                sys.stdout.write(_("[Warning] Glances application data folder can not be created (%s)\n") % e)
+                os.makedirs(self.password_path)
+            except OSError as e:
+                print(_("[Warning] Cannot create Glances directory: {0}").format(e))
                 return
 
-        # Create/overwrite the password file to the Glances folder
-        try:
-            file_pwd = open(self.password_filepath, 'w')
-        except Exception as e:
-            sys.stdout.write(_("[Warning] Glances wan not create the password file (%s)\n") % e)
-            return
-
-        # Generate the password file
-        file_pwd.write(hashed_password)
-        file_pwd.close()
+        # Create/overwrite the password file
+        with open(self.password_filepath, 'w') as file_pwd:
+            file_pwd.write(hashed_password)
 
     def load_password(self):
         """
         Load the hashed password from the Glances folder
         """
-
-        # Create/overwrite the password file to the Glances folder
-        try:
-            file_pwd = open(self.password_filepath, 'r')
-        except Exception as e:
-            sys.stdout.write(_("[Warning] Glances wan not read the password file (%s)\n") % e)
-            return None
-
-        # Read the password file
-        hashed_password = file_pwd.read()
-        file_pwd.close()
+        # Read the password file, if it exists
+        with open(self.password_filepath, 'r') as file_pwd:
+            hashed_password = file_pwd.read()
 
         return hashed_password
