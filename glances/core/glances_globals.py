@@ -42,11 +42,6 @@ if psutil_version < psutil_min_version:
     print('psutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
-# Path definitions
-work_path = os.path.realpath(os.path.dirname(__file__))
-appname_path = os.path.split(sys.argv[0])[0]
-sys_prefix = os.path.realpath(os.path.dirname(appname_path))
-
 # PY3?
 is_py3 = sys.version_info >= (3, 3)
 
@@ -56,6 +51,16 @@ is_bsd = sys.platform.find('bsd') != -1
 is_linux = sys.platform.startswith('linux')
 is_mac = sys.platform.startswith('darwin')
 is_windows = sys.platform.startswith('win')
+
+# Path definitions
+work_path = os.path.realpath(os.path.dirname(__file__))
+appname_path = os.path.split(sys.argv[0])[0]
+sys_prefix = os.path.realpath(os.path.dirname(appname_path))
+
+# Set the plugins path
+plugins_path = os.path.realpath(os.path.join(work_path, '..', 'plugins'))
+sys_path = sys.path[:]
+sys.path.insert(0, plugins_path)
 
 # i18n
 gettext_domain = __appname__

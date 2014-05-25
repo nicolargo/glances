@@ -21,6 +21,8 @@ import collections
 import os
 import sys
 
+from glances.core.glances_globals import plugins_path, sys_path
+
 
 class GlancesStats(object):
     """
@@ -68,24 +70,21 @@ class GlancesStats(object):
         """
         Load all plugins in the "plugins" folder
         """
-
-        # Set the plugins' path
-        plug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../plugins")
-        sys.path.insert(0, plug_dir)
-
         header = "glances_"
-        for plug in os.listdir(plug_dir):
-            if (plug.startswith(header) and
-                    plug.endswith(".py") and
-                    plug != (header + "plugin.py")):
+        for item in os.listdir(plugins_path):
+            if (item.startswith(header) and
+                    item.endswith(".py") and
+                    item != (header + "plugin.py")):
                 # Import the plugin
-                m = __import__(os.path.basename(plug)[:-3])
+                plugin = __import__(os.path.basename(item)[:-3])
                 # Add the plugin to the dictionary
                 # The key is the plugin name
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
-                plugname = os.path.basename(plug)[len(header):-3].lower()
-                self._plugins[plugname] = m.Plugin(args=args)
+                plugin_name = os.path.basename(item)[len(header):-3].lower()
+                self._plugins[plugin_name] = plugin.Plugin(args=args)
+        # Restoring system path
+        sys.path = sys_path
 
     def getAllPlugins(self):
         """
@@ -197,23 +196,20 @@ class GlancesStatsClient(GlancesStats):
 
     def set_plugins(self, input_plugins):
         """
-        Set the plugin list accoring to the Glances' server
+        Set the plugin list according to the Glances server
         """
-
-        # Set the plugins' path
-        plug_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../plugins")
-        sys.path.insert(0, plug_dir)
-
         header = "glances_"
-        for plug in input_plugins:
+        for item in input_plugins:
             # Import the plugin
-            m = __import__(header + plug)
-            # Add the plugin to the dictionnary
+            plugin = __import__(header + item)
+            # Add the plugin to the dictionary
             # The key is the plugin name
             # for example, the file glances_xxx.py
             # generate self._plugins_list["xxx"] = ...
-            # print "DEBUG: Init %s plugin" % plug
-            self._plugins[plug] = m.Plugin()
+            # print "DEBUG: Init %s plugin" % item
+            self._plugins[item] = plugin.Plugin()
+        # Restoring system path
+        sys.path = sys_path
 
 
 class GlancesStatsClientSNMP(GlancesStats):
