@@ -50,8 +50,7 @@ class Config(object):
 
     def __init__(self, location=None):
         self.location = location
-        self.filename = 'glances.conf'
-        self.config_path = None
+        self.config_filename = 'glances.conf'
 
         self.parser = RawConfigParser()
         self.load()
@@ -60,27 +59,20 @@ class Config(object):
         """
         Load a config file from the list of paths, if it exists
         """
-        for path in self.get_paths_list():
-            if os.path.isfile(path) and os.path.getsize(path) > 0:
+        for config_file in self.get_config_paths():
+            if os.path.isfile(config_file) and os.path.getsize(config_file) > 0:
                 try:
                     if is_py3:
-                        self.parser.read(path, encoding='utf-8')
+                        self.parser.read(config_file, encoding='utf-8')
                     else:
-                        self.parser.read(path)
-                    # print(_("DEBUG: Read configuration file %s") % path)
-                    self.config_path = path
+                        self.parser.read(config_file)
+                    # print(_("DEBUG: Read configuration file %s") % config_file)
                 except UnicodeDecodeError as e:
-                    print(_("Error decoding config file '{0}': {1}").format(path, e))
+                    print(_("Error decoding configuration file '{0}': {1}").format(config_file, e))
                     sys.exit(1)
                 break
 
-    def get_config_path(self):
-        """
-        Return the readed configuration file path
-        """
-        return self.config_path
-
-    def get_paths_list(self):
+    def get_config_paths(self):
         """
         Get a list of config file paths, taking into account of the OS,
         priority and location.
@@ -104,25 +96,25 @@ class Config(object):
             paths.append(self.location)
 
         if os.path.exists(conf_path):
-            paths.append(os.path.join(conf_path, self.filename))
+            paths.append(os.path.join(conf_path, self.config_filename))
 
         if is_linux or is_bsd:
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
-                __appname__, self.filename))
+                __appname__, self.config_filename))
             if is_linux:
-                paths.append(os.path.join('/etc', __appname__, self.filename))
+                paths.append(os.path.join('/etc', __appname__, self.config_filename))
             else:
-                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.filename))
+                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.config_filename))
         elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
-                __appname__, self.filename))
+                __appname__, self.config_filename))
             paths.append(os.path.join(
-                sys_prefix, 'etc', __appname__, self.filename))
+                sys_prefix, 'etc', __appname__, self.config_filename))
         elif is_windows:
             paths.append(os.path.join(
-                os.environ.get('APPDATA'), __appname__, self.filename))
+                os.environ.get('APPDATA'), __appname__, self.config_filename))
 
         return paths
 
