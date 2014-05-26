@@ -37,3 +37,6 @@ local.properties
 
 # ctags
 .tags*
+
+# Lang
+glances.pot
