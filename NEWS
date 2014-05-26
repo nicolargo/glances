@@ -31,10 +31,29 @@ Version 2.0
 
     The client mode can now fallback to a simple SNMP mode if Glances server is not found on the remote machine.
 
-
     Complete release notes:
-
-    * ...
+    * Cut ifName and DiskName if they are too long in the curses interface (by Nicolargo)
+    * Windows CLI is OK but early experimental (by Nicolargo)
+    * Add bitrate limits to the networks interfaces (by Nicolargo)
+    * Batteries % stats are now in the sensors list (by Nicolargo)
+    * Refactor the client/server password security: using SHA256 (by Nicolargo)
+    * Refactor the CSV output (by Nicolargo)
+    * Glances client fallback to SNMP server if Glances one not found (by Nicolargo)
+    * Process list: Highlight running/basename processes (by Alessio Sergi)
+    * New Web server mode thk to the Bottle library (by Nicolargo)
+    * Responsive design for Bottle interface (by Nicolargo)
+    * Remove HTML output (by Nicolargo)
+    * Enable/disable for optionnal plugins throught the command line (by Nicolargo)
+    * Refactor the API (by Nicolargo)
+    * Load-5 alert are no longer logged (by Nicolargo)
+    * Rename In/Out by Read/Write for DiskIO according to #339 (by Nicolargo) 
+    * Migrate from pysensors to py3sensors (by Alessio Sergi)
+    * Migration to PsUtil 2.x (by Nicolargo)
+    * New plugins system (by Nicolargo)
+    * Python 1.X and 3.x compatibility (by Alessio)
+    * Code quality improvment (by Alessio Sergi)
+    * Refactor unitaries tests (by Nicolargo)
+    * Development now follow the git flow workflow (by Nicolargo)
 
 
 ==============================================================================

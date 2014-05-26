@@ -19,7 +19,7 @@
 
 # Glances informations
 __appname__ = 'glances'
-__version__ = '2.0_Alpha02'
+__version__ = '2.0_RC1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
