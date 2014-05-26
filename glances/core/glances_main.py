@@ -60,7 +60,7 @@ class GlancesMain(object):
         """Init all the command line arguments."""
         version = "Glances v" + __version__ + " with psutil v" + __psutil_version__
         parser = argparse.ArgumentParser(prog=__appname__, conflict_handler='resolve')
-        parser.add_argument('--version', action='version', version=version)
+        parser.add_argument('-v', '--version', action='version', version=version)
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
