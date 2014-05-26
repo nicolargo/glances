@@ -33,7 +33,8 @@ if not is_windows:
         print('Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
 else:
-    from glances.outputs.glances_colorconsole import WCurseLight as curses
+    from glances.outputs.glances_colorconsole import WCurseLight
+    curses = WCurseLight()
 
 
 class glancesCurses:
