@@ -212,6 +212,9 @@ class Plugin(GlancesPlugin):
                 continue
             # Format stats
             ifname = i['interface_name'].split(':')[0]
+            if len(ifname) > 9:
+                # Cut interface name if it is too long
+                ifname = '_' + ifname[-8:]
             if args.byte:
                 # Bytes per second (for dummy)
                 if args.network_cumul:

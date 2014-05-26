@@ -144,7 +144,12 @@ class Plugin(GlancesPlugin):
                 continue
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:9}".format(i['disk_name'])
+            if len(i['disk_name']) > 9:
+                # Cut disk name if it is too long
+                disk_name = '_' + i['disk_name'][-8:]
+            else:
+                disk_name = i['disk_name']
+            msg = "{0:9}".format(disk_name)
             ret.append(self.curse_add_line(msg))
             txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
             rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
