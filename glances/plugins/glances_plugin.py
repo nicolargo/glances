@@ -176,14 +176,17 @@ class GlancesPlugin(object):
 
         # Manage limits
         ret = 'OK'
-        if value > self.__get_limit_critical(header=header):
-            ret = 'CRITICAL'
-        elif value > self.__get_limit_warning(header=header):
-            ret = 'WARNING'
-        elif value > self.__get_limit_careful(header=header):
-            ret = 'CAREFUL'
-        elif current < min:
-            ret = 'CAREFUL'
+        try:
+            if value > self.__get_limit_critical(header=header):
+                ret = 'CRITICAL'
+            elif value > self.__get_limit_warning(header=header):
+                ret = 'WARNING'
+            elif value > self.__get_limit_careful(header=header):
+                ret = 'CAREFUL'
+            elif current < min:
+                ret = 'CAREFUL'
+        except KeyError:
+            return 'DEFAULT'
 
         # Manage log (if needed)
         log_str = ""
