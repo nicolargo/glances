@@ -26,9 +26,9 @@ except ImportError:
 
 # Import Glances lib
 from glances.core.glances_globals import is_py3
-from glances.plugins.glances_plugin import GlancesPlugin
-from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
+from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -85,8 +85,8 @@ class Plugin(GlancesPlugin):
             hddtemp = self.__set_type(self.hddtemp_plugin.update(), 'temperature_hdd')
             self.stats.extend(hddtemp)
             # Append Batteries %
-            batpercent = self.__set_type(self.batpercent_plugin.update(), 'batterie')
-            self.stats.extend(batpercent)            
+            batpercent = self.__set_type(self.batpercent_plugin.update(), 'battery')
+            self.stats.extend(batpercent)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
@@ -99,10 +99,10 @@ class Plugin(GlancesPlugin):
         3 types of stats is possible in the Sensors plugins:
         - Core temperature
         - HDD temperature
-        - Batterie capacity 
+        - Battery capacity
         """
         for i in stats:
-            i.update({ 'type': sensor_type })
+            i.update({'type': sensor_type})
         return stats
 
     def msg_curse(self, args=None):
@@ -132,7 +132,7 @@ class Plugin(GlancesPlugin):
             msg = "{0:18}".format(item['label'][:18])
             ret.append(self.curse_add_line(msg))
             msg = "{0:>5}".format(item['value'])
-            if item['type'] == 'batterie':
+            if item['type'] == 'battery':
                 ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
             else:
                 ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))

@@ -228,7 +228,7 @@ class Plugin(GlancesPlugin):
                     sx = self.auto_unit(int(i['rx'] // i['time_since_update'])
                                         + int(i['tx'] // i['time_since_update']))
             else:
-                # Bits per second (for real network administrator | Default) 
+                # Bits per second (for real network administrator | Default)
                 if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
@@ -248,12 +248,12 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
             else:
                 msg = "{0:>7}".format(rx)
-                ret.append(self.curse_add_line(msg, 
-                                               self.get_alert(int(i['rx'] // i['time_since_update'] * 8), 
-                                                              header=ifname+'_rx')))
+                ret.append(self.curse_add_line(
+                    msg, self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
+                                        header=ifname + '_rx')))
                 msg = "{0:>7}".format(tx)
-                ret.append(self.curse_add_line(msg,
-                                               self.get_alert(int(i['tx'] // i['time_since_update'] * 8), 
-                                                              header=ifname+'_tx')))
+                ret.append(self.curse_add_line(
+                    msg, self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
+                                        header=ifname + '_tx')))
 
         return ret

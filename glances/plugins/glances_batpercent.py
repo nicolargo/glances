@@ -32,7 +32,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
     """
-    Glances's batterie capacity Plugin
+    Glances battery capacity plugin
 
     stats is a list
     """
@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
     def update(self):
 
         """
-        Update batterie capacity stats using the input method
+        Update battery capacity stats using the input method
         """
 
         # Reset stats
@@ -77,9 +77,10 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
+
 class glancesGrabBat:
     """
-    Get batteries stats using the Batinfo librairie
+    Get batteries stats using the Batinfo library
     """
 
     def __init__(self):
@@ -91,10 +92,9 @@ class glancesGrabBat:
             self.initok = True
             self.bat_list = []
             self.update()
-        except Exception as e:
-            # print(_("Warning: Can not grab batterie sensor. Missing BatInfo lib (%s).") % e)
+        except Exception:
+            # print(_("Warning: Cannot grab battery sensor. Missing BatInfo library."))
             self.initok = False
-
 
     def update(self):
         """
@@ -103,13 +103,13 @@ class glancesGrabBat:
         if self.initok:
             try:
                 self.bat.update()
-            except Exception as e:
+            except Exception:
                 self.bat_list = []
             else:
                 self.bat_list = []
-                new_item = { 'label': _("Batterie (%)"),
-                             'value': self.getcapacitypercent() }
-                self.bat_list.append(new_item) 
+                new_item = {'label': _("Battery (%)"),
+                            'value': self.getcapacitypercent()}
+                self.bat_list.append(new_item)
         else:
             self.bat_list = []
 
