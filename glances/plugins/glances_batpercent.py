@@ -66,8 +66,8 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         if self.get_input() == 'local':
-            # Update stats using the standard system lib
-
+            # Update stats
+            self.glancesgrabbat.update()
             self.stats = self.glancesgrabbat.get()
 
         elif self.get_input() == 'snmp':
