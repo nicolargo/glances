@@ -92,7 +92,7 @@ class glancesGrabBat:
             self.bat_list = []
             self.update()
         except Exception as e:
-            print(_("Warning: Can not grab batterie sensor. Missing BatInfo lib (%s).") % e)
+            # print(_("Warning: Can not grab batterie sensor. Missing BatInfo lib (%s).") % e)
             self.initok = False
 
 
