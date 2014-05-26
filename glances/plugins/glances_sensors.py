@@ -26,8 +26,9 @@ except ImportError:
 
 # Import Glances lib
 from glances.core.glances_globals import is_py3
-from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
+from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 
 
 class Plugin(GlancesPlugin):
@@ -45,8 +46,11 @@ class Plugin(GlancesPlugin):
         # Init the sensor class
         self.glancesgrabsensors = glancesGrabSensors()
 
-        # Instance for the CorePlugin in order to display the core number
+        # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
         self.hddtemp_plugin = HddTempPlugin()
+
+        # Instance for the BatPercent in order to display the batteries capacities
+        self.batpercent_plugin = BatPercentPlugin()
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -76,9 +80,13 @@ class Plugin(GlancesPlugin):
 
         if self.get_input() == 'local':
             # Update stats using the standard system lib
-            self.hddtemp_plugin.update()
             self.stats = self.glancesgrabsensors.get()
-            self.stats.extend(self.hddtemp_plugin.stats)
+            # Append HDD temperature
+            hddtemp = self.hddtemp_plugin.update()
+            self.stats.extend(hddtemp)
+            # Append Batteries %
+            batpercent = self.batpercent_plugin.update()
+            self.stats.extend(batpercent)            
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04

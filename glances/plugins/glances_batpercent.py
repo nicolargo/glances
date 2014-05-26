@@ -40,10 +40,12 @@ class Plugin(GlancesPlugin):
     def __init__(self, args=None):
         GlancesPlugin.__init__(self, args=args)
 
-        #!!! TODO: display plugin...
-
         # Init the sensor class
         self.glancesgrabbat = glancesGrabBat()
+
+        # We do not want to display the stat in a dedicated area
+        # The HDD temp is displayed within the sensors plugin
+        self.display_curse = False
 
         # Init stats
         self.reset()
@@ -66,7 +68,7 @@ class Plugin(GlancesPlugin):
         if self.get_input() == 'local':
             # Update stats using the standard system lib
 
-            self.stats = self.glancesgrabbat.getcapacitypercent()
+            self.stats = self.glancesgrabbat.get()
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
@@ -89,8 +91,10 @@ class glancesGrabBat:
             self.initok = True
             self.bat_list = []
             self.__update__()
-        except Exception:
+        except Exception as e:
+            print "Warning: Can not grab batterie sensor. Missing BatInfo lib (%s)" % e
             self.initok = False
+
 
     def __update__(self):
         """
@@ -99,29 +103,33 @@ class glancesGrabBat:
         if self.initok:
             try:
                 self.bat.update()
-            except Exception:
+            except Exception as e:
                 self.bat_list = []
             else:
-                self.bat_list = self.bat.stat
+                self.bat_list = []
+                new_item = { 'label': _("Batterie (%)"),
+                             'value': self.getcapacitypercent() }
+                self.bat_list.append(new_item) 
         else:
             self.bat_list = []
 
     def get(self):
         # Update the stats
-        self.__update__()
         return self.bat_list
 
     def getcapacitypercent(self):
-        if not self.initok or self.bat_list == []:
+        if not self.initok or self.bat.stat == []:
             return []
+
         # Init the bsum (sum of percent) and bcpt (number of batteries)
         # and Loop over batteries (yes a computer could have more than 1 battery)
         bsum = 0
-        for bcpt in range(len(self.get())):
+        for bcpt in range(len(self.bat.stat)):
             try:
-                bsum = bsum + int(self.bat_list[bcpt].capacity)
+                bsum = bsum + int(self.bat.stat[bcpt].capacity)
             except ValueError:
                 return []
             bcpt = bcpt + 1
+
         # Return the global percent
         return int(bsum / bcpt)
