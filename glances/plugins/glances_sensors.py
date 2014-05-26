@@ -80,12 +80,12 @@ class Plugin(GlancesPlugin):
 
         if self.get_input() == 'local':
             # Update stats using the standard system lib
-            self.stats = self.glancesgrabsensors.get()
+            self.stats = self.__set_type(self.glancesgrabsensors.get(), 'temperature_core')
             # Append HDD temperature
-            hddtemp = self.hddtemp_plugin.update()
+            hddtemp = self.__set_type(self.hddtemp_plugin.update(), 'temperature_hdd')
             self.stats.extend(hddtemp)
             # Append Batteries %
-            batpercent = self.batpercent_plugin.update()
+            batpercent = self.__set_type(self.batpercent_plugin.update(), 'batterie')
             self.stats.extend(batpercent)            
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
@@ -93,6 +93,17 @@ class Plugin(GlancesPlugin):
             pass
 
         return self.stats
+
+    def __set_type(self, stats, sensor_type):
+        """
+        3 types of stats is possible in the Sensors plugins:
+        - Core temperature
+        - HDD temperature
+        - Batterie capacity 
+        """
+        for i in stats:
+            i.update({ 'type': sensor_type })
+        return stats
 
     def msg_curse(self, args=None):
         """
@@ -121,7 +132,10 @@ class Plugin(GlancesPlugin):
             msg = "{0:18}".format(item['label'][:18])
             ret.append(self.curse_add_line(msg))
             msg = "{0:>5}".format(item['value'])
-            ret.append(self.curse_add_line(msg))
+            if item['type'] == 'batterie':
+                ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+            else:
+                ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
 
         return ret
 
