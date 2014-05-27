@@ -133,7 +133,10 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = "{0:>5}".format(item['value'])
             if item['type'] == 'battery':
-                ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+                try:
+                    ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+                except TypeError:
+                    pass
             else:
                 ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
 
