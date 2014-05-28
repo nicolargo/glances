@@ -120,11 +120,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:4}".format(_("LOAD"))
+        msg = "{0:8}".format(_("LOAD"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if self.stats['cpucore'] > 0:
-            msg = _("{0:>5}-core").format(self.stats['cpucore'])
+            msg = _("{0:>1}-core").format(self.stats['cpucore'])
             ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
