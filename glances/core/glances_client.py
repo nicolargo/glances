@@ -51,9 +51,9 @@ class GlancesClient():
         # Build the URI
         if args.password != "":
             uri = 'http://{0}:{1}@{2}:{3}'.format(args.username, args.password,
-                                                  args.bind_address, args.port)
+                                                  args.client, args.port)
         else:
-            uri = 'http://{0}:{1}'.format(args.bind_address, args.port)
+            uri = 'http://{0}:{1}'.format(args.client, args.port)
 
         # Try to connect to the URI
         try:
