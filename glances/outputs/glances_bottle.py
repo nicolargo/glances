@@ -66,8 +66,8 @@ class glancesBottle:
             'CAREFUL_LOG': 'careful_log',
             'WARNING_LOG': 'warning_log',
             'CRITICAL_LOG': 'critical_log',
-            'STATUS': '',
-            'NICE': '',
+            'NICE': 'nice',
+            'STATUS': 'status',
             'PROCESS': ''
         }
 
@@ -184,7 +184,7 @@ class glancesBottle:
             if plugin_name == 'processlist' and m['splittable']:
                 # Display first word of splittable stats (Process name)
                 tpl += '<span class="cell" id="%s">%s</span>' % \
-                    (self.__style_list[m['decoration']], 
+                    (self.__style_list[m['decoration']],
                      m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;'))
             else:
                 # Display stat
