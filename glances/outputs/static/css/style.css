@@ -17,12 +17,12 @@ section > article {
     display: inline-block;
     vertical-align: top;
     *display: inline;
-    zoom: 1;    
+    zoom: 1;
 }
 section:after {
     content: "";
     width: 100%;
-    display: inline-block;    
+    display: inline-block;
 }
 aside {
     float: left;
@@ -86,6 +86,12 @@ div#newline{
     background-color: red;
     color: white;
 }
+#nice {
+    color: magenta;
+}
+#status {
+    color: green;
+}
 /*Plugins*/
 #system {
     float: left;
@@ -109,7 +115,7 @@ div#newline{
 }
 #sensors {}
 #rightstats {}
-#alert {    
+#alert {
     display: block;
 }
 #processcount {
