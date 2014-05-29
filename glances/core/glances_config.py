@@ -68,7 +68,7 @@ class Config(object):
                         self.parser.read(config_file)
                     # print(_("DEBUG: Read configuration file %s") % config_file)
                 except UnicodeDecodeError as e:
-                    print(_("Error decoding configuration file '{0}': {1}").format(config_file, e))
+                    print(_("Error: Cannot decode configuration file '{0}': {1}").format(config_file, e))
                     sys.exit(1)
                 break
 

@@ -122,17 +122,17 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info
         if self.stats['os_name'] == "Linux":
-            msg = " ({0} {1} / {2} {3})".format(self.stats['linux_distro'],
+            msg = ' ({0} {1} / {2} {3})'.format(self.stats['linux_distro'],
                                                 self.stats['platform'],
                                                 self.stats['os_name'],
                                                 self.stats['os_version'])
         else:
             try:
-                msg = " ({0} {1} {2})".format(self.stats['os_name'],
+                msg = ' ({0} {1} {2})'.format(self.stats['os_name'],
                                               self.stats['os_version'],
                                               self.stats['platform'])
             except:
-                msg = " ({0})".format(self.stats['os_name'])
+                msg = ' ({0})'.format(self.stats['os_name'])
         ret.append(self.curse_add_line(msg, optional=True))
 
         # Return the message with decoration

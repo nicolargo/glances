@@ -97,29 +97,29 @@ class Plugin(GlancesPlugin):
         sort_style = 'SORT'
 
         # Header
-        msg = "{0:>6}".format(_("CPU%"))
+        msg = '{0:>6}'.format(_("CPU%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = "{0:>6}".format(_("MEM%"))
+        msg = '{0:>6}'.format(_("MEM%"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg = "{0:>6}".format(_("VIRT"))
+        msg = '{0:>6}'.format(_("VIRT"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = "{0:>6}".format(_("RES"))
+        msg = '{0:>6}'.format(_("RES"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = "{0:>6}".format(_("PID"))
+        msg = '{0:>6}'.format(_("PID"))
         ret.append(self.curse_add_line(msg))
-        msg = " {0:10}".format(_("USER"))
+        msg = ' {0:10}'.format(_("USER"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>4}".format(_("NI"))
+        msg = '{0:>4}'.format(_("NI"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>2}".format(_("S"))
+        msg = '{0:>2}'.format(_("S"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>9}".format(_("TIME+"))
+        msg = '{0:>9}'.format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = "{0:>6}".format(_("IOR/s"))
+        msg = '{0:>6}'.format(_("IOR/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
-        msg = "{0:>6}".format(_("IOW/s"))
+        msg = '{0:>6}'.format(_("IOW/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
-        msg = " {0:8}".format(_("Command"))
+        msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
 
         # Trying to display proc time
@@ -129,35 +129,35 @@ class Plugin(GlancesPlugin):
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
-            msg = "{0:>6.1f}".format(p['cpu_percent'])
+            msg = '{0:>6.1f}'.format(p['cpu_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['cpu_percent'], header="cpu")))
             # MEM
-            msg = "{0:>6.1f}".format(p['memory_percent'])
+            msg = '{0:>6.1f}'.format(p['memory_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['memory_percent'], header="mem")))
             # VMS
-            msg = "{0:>6}".format(self.auto_unit(p['memory_info'][1], low_precision=False))
+            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # RSS
-            msg = "{0:>6}".format(self.auto_unit(p['memory_info'][0], low_precision=False))
+            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # PID
-            msg = "{0:>6}".format(p['pid'])
+            msg = '{0:>6}'.format(p['pid'])
             ret.append(self.curse_add_line(msg))
             # USER
-            msg = " {0:9}".format(p['username'][:9])
+            msg = ' {0:9}'.format(p['username'][:9])
             ret.append(self.curse_add_line(msg))
             # NICE
             nice = p['nice']
-            msg = "{0:>5}".format(nice)
+            msg = '{0:>5}'.format(nice)
             if nice != 0:
                 ret.append(self.curse_add_line(msg, decoration='NICE'))
             else:
                 ret.append(self.curse_add_line(msg))
             # STATUS
             status = p['status']
-            msg = "{0:>2}".format(status)
+            msg = '{0:>2}'.format(status)
             if status == 'R':
                 ret.append(self.curse_add_line(msg, decoration='STATUS'))
             else:
@@ -171,31 +171,31 @@ class Plugin(GlancesPlugin):
                     # See https://github.com/nicolargo/glances/issues/87
                     tag_proc_time = False
                 else:
-                    msg = "{0}:{1}.{2}".format(str(dtime.seconds // 60 % 60),
+                    msg = '{0}:{1}.{2}'.format(str(dtime.seconds // 60 % 60),
                                                str(dtime.seconds % 60).zfill(2),
                                                str(dtime.microseconds)[:2].zfill(2))
             else:
-                msg = " "
-            msg = "{0:>9}".format(msg)
+                msg = ' '
+            msg = '{0:>9}'.format(msg)
             ret.append(self.curse_add_line(msg, optional=True))
             # IO read/write
             if 'io_counters' in p:
                 # IO read
                 io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
                 if io_rs == 0:
-                    msg = "{0:>6}".format("0")
+                    msg = '{0:>6}'.format("0")
                 else:
-                    msg = "{0:>6}".format(self.auto_unit(io_rs, low_precision=False))
+                    msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=False))
                 ret.append(self.curse_add_line(msg, optional=True))
                 # IO write
                 io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
                 if io_ws == 0:
-                    msg = "{0:>6}".format("0")
+                    msg = '{0:>6}'.format("0")
                 else:
-                    msg = "{0:>6}".format(self.auto_unit(io_ws, low_precision=False))
+                    msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=False))
                 ret.append(self.curse_add_line(msg, optional=True))
             else:
-                msg = "{0:>6}".format("?")
+                msg = '{0:>6}'.format("?")
                 ret.append(self.curse_add_line(msg, optional=True))
                 ret.append(self.curse_add_line(msg, optional=True))
             # Command line
@@ -203,7 +203,7 @@ class Plugin(GlancesPlugin):
             # the bare process name instead
             cmdline = p['cmdline']
             if cmdline == "":
-                msg = " {0}".format(p['name'])
+                msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 try:
@@ -211,11 +211,11 @@ class Plugin(GlancesPlugin):
                     args = ' '.join(cmdline.split()[1:])
                     path, basename = os.path.split(cmd)
                     if os.path.isdir(path):
-                        msg = " {0}".format(path) + os.sep
+                        msg = ' {0}'.format(path) + os.sep
                         ret.append(self.curse_add_line(msg, splittable=True))
                         ret.append(self.curse_add_line(basename, decoration='PROCESS', splittable=True))
                     else:
-                        msg = " {0}".format(basename)
+                        msg = ' {0}'.format(basename)
                         ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                     msg = " {0}".format(args)
                     ret.append(self.curse_add_line(msg, splittable=True))

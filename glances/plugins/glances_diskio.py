@@ -131,11 +131,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:9}".format(_("DISK I/O"))
+        msg = '{0:9}'.format(_("DISK I/O"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = "{0:>7}".format(_("R/s"))
+        msg = '{0:>7}'.format(_("R/s"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>7}".format(_("W/s"))
+        msg = '{0:>7}'.format(_("W/s"))
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
@@ -149,13 +149,13 @@ class Plugin(GlancesPlugin):
                 disk_name = '_' + i['disk_name'][-8:]
             else:
                 disk_name = i['disk_name']
-            msg = "{0:9}".format(disk_name)
+            msg = '{0:9}'.format(disk_name)
             ret.append(self.curse_add_line(msg))
             txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
             rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
-            msg = "{0:>7}".format(txps)
+            msg = '{0:>7}'.format(txps)
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>7}".format(rxps)
+            msg = '{0:>7}'.format(rxps)
             ret.append(self.curse_add_line(msg))
 
         return ret
