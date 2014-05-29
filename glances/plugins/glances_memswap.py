@@ -116,32 +116,32 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:7} ".format(_("SWAP"))
+        msg = '{0:7} '.format(_("SWAP"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
-        msg = "{0:>6.1%}".format(self.stats['percent'] / 100)
+        msg = '{0:>6.1%}'.format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = "{0:8}".format(_("total:"))
+        msg = '{0:8}'.format(_("total:"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>6}".format(self.auto_unit(self.stats['total']))
+        msg = '{0:>6}'.format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = "{0:8}".format(_("used:"))
+        msg = '{0:8}'.format(_("used:"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>6}".format(self.auto_unit(self.stats['used']))
+        msg = '{0:>6}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
             msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = "{0:8}".format(_("free:"))
+        msg = '{0:8}'.format(_("free:"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>6}".format(self.auto_unit(self.stats['free']))
+        msg = '{0:>6}'.format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))
 
         return ret

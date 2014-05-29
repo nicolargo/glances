@@ -139,11 +139,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:9}".format(_("FILE SYS"))
+        msg = '{0:9}'.format(_("FILE SYS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = "{0:>7}".format(_("Used"))
+        msg = '{0:>7}'.format(_("Used"))
         ret.append(self.curse_add_line(msg))
-        msg = "{0:>7}".format(_("Total"))
+        msg = '{0:>7}'.format(_("Total"))
         ret.append(self.curse_add_line(msg))
 
         # Disk list (sorted by name)
@@ -158,11 +158,11 @@ class Plugin(GlancesPlugin):
                 mnt_point = '_' + i['mnt_point'][-8:]
             else:
                 mnt_point = i['mnt_point']
-            msg = "{0:9}".format(mnt_point)
+            msg = '{0:9}'.format(mnt_point)
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>7}".format(self.auto_unit(i['used']))
+            msg = '{0:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
-            msg = "{0:>7}".format(self.auto_unit(i['size']))
+            msg = '{0:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
         return ret

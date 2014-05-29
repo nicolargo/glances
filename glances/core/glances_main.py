@@ -89,7 +89,7 @@ class GlancesMain(object):
                             dest='output_csv', help=_('export stats to a CSV file'))
         # Server option
         parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
-                            help=_('define the client/server TCP port [default: %d]') % self.server_port)
+                            help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
         parser.add_argument('--password-badidea', dest='password_arg',
                             help=_('define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
@@ -107,7 +107,7 @@ class GlancesMain(object):
         parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
                             help=_('SNMP authentication key (only for SNMPv3)'))
         parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
-                            dest='time', help=_('set refresh time in seconds [default: %s sec]') % self.refresh_time)
+                            dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
         # Other options
