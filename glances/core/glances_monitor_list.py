@@ -71,7 +71,7 @@ class monitorList:
                 countmin = self.config.get_raw_option(section, key + "countmin")
                 countmax = self.config.get_raw_option(section, key + "countmax")
             except Exception as e:
-                print(_("Error reading monitored list: %s" % e))
+                print(_("Error: Cannot read monitored list: {0}").format(e))
                 pass
             else:
                 if description is not None and regex is not None:
@@ -130,7 +130,7 @@ class monitorList:
             if self.command(i) is None:
                 # If there is no command specified in the conf file
                 # then display CPU and MEM %
-                self.__monitor_list[i]['result'] = "CPU: {0:.1f}% | MEM: {1:.1f}%".format(
+                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
                     sum([p['cpu_percent'] for p in monitoredlist]),
                     sum([p['memory_percent'] for p in monitoredlist]))
                 continue

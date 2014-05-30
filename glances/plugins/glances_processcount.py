@@ -84,7 +84,7 @@ class Plugin(GlancesPlugin):
         #     return ret
 
         if args.disable_process:
-            msg = "{0} ".format(_("PROCESSES DISABLED (press 'z' to display)"))
+            msg = _("PROCESSES DISABLED (press 'z' to display)")
             ret.append(self.curse_add_line(msg))
             return ret
 
@@ -93,28 +93,28 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0} ".format(_("TASKS"))
+        msg = _("TASKS ")
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Compute processes
         other = self.stats['total']
-        msg = "{0}".format(str(self.stats['total']))
+        msg = str(self.stats['total'])
         ret.append(self.curse_add_line(msg))
 
         if 'thread' in self.stats:
-            msg = " ({0} {1}),".format(str(self.stats['thread']), _("thr"))
+            msg = _(" ({0} thr),").format(self.stats['thread'])
             ret.append(self.curse_add_line(msg))
 
         if 'running' in self.stats:
             other -= self.stats['running']
-            msg = " {0} {1},".format(str(self.stats['running']), _("run"))
+            msg = _(" {0} run,").format(self.stats['running'])
             ret.append(self.curse_add_line(msg))
 
         if 'sleeping' in self.stats:
             other -= self.stats['sleeping']
-            msg = " {0} {1},".format(str(self.stats['sleeping']), _("slp"))
+            msg = _(" {0} slp,").format(self.stats['sleeping'])
             ret.append(self.curse_add_line(msg))
 
-        msg = " {0} {1} ".format(str(other), _("oth"))
+        msg = _(" {0} oth ").format(other)
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
@@ -123,12 +123,12 @@ class Plugin(GlancesPlugin):
         except AttributeError:
             args.process_sorted_by = glances_processes.getsortkey()
         if args.process_sorted_by == 'auto':
-            msg = "{0}".format(_("sorted automatically"))
+            msg = _("sorted automatically")
             ret.append(self.curse_add_line(msg))
-            msg = " {0} {1}".format(_("by"), glances_processes.getsortkey())
+            msg = _(" by {0}").format(glances_processes.getsortkey())
             ret.append(self.curse_add_line(msg))
         else:
-            msg = "{0} {1}".format(_("sorted by"), args.process_sorted_by)
+            msg = _("sorted by {0}").format(args.process_sorted_by)
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration

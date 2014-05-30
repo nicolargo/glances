@@ -108,12 +108,12 @@ class glancesPassword:
 
         if os.path.exists(self.password_filepath) and not clear:
             # If the password file exist then use it
-            sys.stdout.write(_("[Info] Read password from file %s\n") % self.password_filepath)
+            print(_("Info: Read password from file: {0}").format(self.password_filepath))
             password = self.load_password()
         else:
             # Else enter the password from the command line
             if description != '':
-                sys.stdout.write("%s\n" % description)
+                print(description)
 
             # password_plain is the plain SHA-256 password
             # password_hashed is the salt + SHA-256 password
@@ -124,7 +124,7 @@ class glancesPassword:
                 password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): ")).encode('utf-8')).hexdigest()
 
                 if not self.check_password(password_hashed, password_confirm):
-                    sys.stdout.write(_("[Error] Sorry, but passwords did not match...\n"))
+                    print(_("Error: Sorry, but passwords did not match..."))
                     sys.exit(1)
 
             # Return the plain or hashed password
@@ -151,7 +151,7 @@ class glancesPassword:
             try:
                 os.makedirs(self.password_path)
             except OSError as e:
-                print(_("[Warning] Cannot create Glances directory: {0}").format(e))
+                print(_("Warning: Cannot create Glances directory: {0}").format(e))
                 return
 
         # Create/overwrite the password file

@@ -118,20 +118,20 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:18}".format(_("SENSORS"))
+        msg = '{0:18}'.format(_("SENSORS"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         if is_py3:
-            msg = "{0:>5}".format(_("°C"))
+            msg = '{0:>5}'.format(_("°C"))
         else:
-            msg = "{0:>6}".format(_("°C"))
+            msg = '{0:>6}'.format(_("°C"))
         ret.append(self.curse_add_line(msg))
 
         for item in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:18}".format(item['label'][:18])
+            msg = '{0:18}'.format(item['label'][:18])
             ret.append(self.curse_add_line(msg))
-            msg = "{0:>5}".format(item['value'])
+            msg = '{0:>5}'.format(item['value'])
             if item['type'] == 'battery':
                 try:
                     ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))

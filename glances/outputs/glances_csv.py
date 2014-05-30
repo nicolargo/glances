@@ -45,7 +45,7 @@ class glancesCSV:
                 self.csv_file = open(self.csv_filename, 'wb')
             self.writer = csv.writer(self.csv_file)
         except IOError as e:
-            print(_("Cannot create the CSV file: {0}").format(e))
+            print(_("Error: Cannot create the CSV file: {0}").format(e))
             sys.exit(2)
 
         print(_("Stats dumped to CSV file: {0}").format(self.csv_filename))

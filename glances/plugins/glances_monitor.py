@@ -103,22 +103,21 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for m in self.stats:
-            msg = "{0:<16} ".format(str(m['description']))
+            msg = '{0:<16} '.format(m['description'])
             ret.append(self.curse_add_line(
                 msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
-            msg = "{0:<3} ".format(m['count'] if m['count'] > 1 else "")
+            msg = '{0:<3} '.format(m['count'] if m['count'] > 1 else '')
             ret.append(self.curse_add_line(msg))
-            msg = "{0:13} ".format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
+            msg = '{0:13} '.format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
             ret.append(self.curse_add_line(msg))
             # Decode to UTF8 (only for Python 3)
             try:
-                msg = "{0}".format(m['result'].decode('utf-8') if m['count'] >= 1 else "")
+                msg = m['result'].decode('utf-8') if m['count'] >= 1 else ''
             except (UnicodeError, AttributeError):
                 try:
-                    msg = "{0}".format(m['result'] if m['count'] >= 1 else "")
+                    msg = m['result'] if m['count'] >= 1 else ''
                 except UnicodeError:
-                    msg = "{0}".format(m['result'].encode('utf-8') if m['count'] >= 1 else "")
-
+                    msg = m['result'].encode('utf-8') if m['count'] >= 1 else ''
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 
