@@ -153,42 +153,42 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = "{0:8}".format(_("PER CPU"))
+        msg = '{0:8}'.format(_("PER CPU"))
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Total CPU usage
         for cpu in self.stats:
-            msg = " {0:>6.1%}".format((100 - cpu['idle']) / 100)
+            msg = ' {0:>6.1%}'.format((100 - cpu['idle']) / 100)
             ret.append(self.curse_add_line(msg))
 
         # User CPU
         if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:8}".format(_("user:"))
+            msg = '{0:8}'.format(_("user:"))
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = " {0:>6.1%}".format(cpu['user'] / 100)
+                msg = ' {0:>6.1%}'.format(cpu['user'] / 100)
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['user'], header="user")))
 
         # System CPU
         if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:8}".format(_("system:"))
+            msg = '{0:8}'.format(_("system:"))
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = " {0:>6.1%}".format(cpu['system'] / 100)
+                msg = ' {0:>6.1%}'.format(cpu['system'] / 100)
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'], header="system")))
 
         # IoWait CPU
         if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
-            msg = "{0:8}".format(_("iowait:"))
+            msg = '{0:8}'.format(_("iowait:"))
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = " {0:>6.1%}".format(cpu['iowait'] / 100)
+                msg = ' {0:>6.1%}'.format(cpu['iowait'] / 100)
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'], header="iowait")))
 
         # Return the message with decoration

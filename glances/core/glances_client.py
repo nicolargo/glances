@@ -58,8 +58,8 @@ class GlancesClient():
         # Try to connect to the URI
         try:
             self.client = ServerProxy(uri)
-        except Exception as err:
-            print(_("Error: Couldn't create socket {0}: {1}").format(uri, err))
+        except Exception as e:
+            print(_("Error: Couldn't create socket {0}: {1}").format(uri, e))
             sys.exit(2)
 
     def set_mode(self, mode='glances'):
@@ -144,7 +144,7 @@ class GlancesClient():
         elif self.get_mode() == 'snmp':
             return self.update_snmp()
         else:
-            print(_("Error: Unknown server mode ({0})").format(self.get_mode()))
+            print(_("Error: Unknown server mode: {0}").format(self.get_mode()))
             sys.exit(2)
 
     def update_glances(self):

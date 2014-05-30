@@ -311,9 +311,9 @@ class GlancesPlugin(object):
         """
         return self.curse_add_line('\n')
 
-    def auto_unit(self, val, low_precision=False):
+    def auto_unit(self, number, low_precision=False):
         """
-        Make a nice human readable string out of val
+        Make a nice human readable string out of number
         Number of decimal places increases as quantity approaches 1
 
         examples:
@@ -340,21 +340,21 @@ class GlancesPlugin(object):
             'K': 1024
         }
 
-        for key in reversed(symbols):
-            value = float(val) / prefix[key]
+        for symbol in reversed(symbols):
+            value = float(number) / prefix[symbol]
             if value > 1:
-                fixed_decimal_places = 0
+                decimal_precision = 0
                 if value < 10:
-                    fixed_decimal_places = 2
+                    decimal_precision = 2
                 elif value < 100:
-                    fixed_decimal_places = 1
+                    decimal_precision = 1
                 if low_precision:
-                    if key in 'MK':
-                        fixed_decimal_places = 0
+                    if symbol in 'MK':
+                        decimal_precision = 0
                     else:
-                        fixed_decimal_places = min(1, fixed_decimal_places)
-                elif key in 'K':
-                    fixed_decimal_places = 0
-                formatter = "{0:.%df}{1}" % fixed_decimal_places
-                return formatter.format(value, key)
-        return "{0!s}".format(val)
+                        decimal_precision = min(1, decimal_precision)
+                elif symbol in 'K':
+                    decimal_precision = 0
+                return '{0:.{decimal}f}{symbol}'.format(
+                    value, decimal=decimal_precision, symbol=symbol)
+        return '{0!s}'.format(number)
