@@ -182,10 +182,15 @@ class glancesBottle:
                 tpl += '<div class="row">'
                 continue
             if plugin_name == 'processlist' and m['splittable']:
-                # Display first word of splittable stats (Process name)
-                tpl += '<span class="cell" id="%s">%s</span>' % \
-                    (self.__style_list[m['decoration']],
-                     m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;'))
+                # Processlist: Display first 20 chars of the process name
+                if m['msg'].split(' ', 1)[0] != '':
+                    tpl += '<span class="cell" id="%s">&nbsp;%s</span>' % \
+                        (self.__style_list[m['decoration']],
+                        m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;')[:20])
+            elif m['optional']:
+                # Manage optional stats (responsive design)
+                tpl += '<span class="cell hide" id="%s">%s</span>' % \
+                    (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
             else:
                 # Display stat
                 tpl += '<span class="cell" id="%s">%s</span>' % \
