@@ -127,20 +127,31 @@ div#newline{
     margin: 1em;
 }
 #processlist {}
+/*
 article#processlist>div>div>span:last-child {
     visibility: hidden;
     white-space: nowrap;
 }
+*/
 #now {}
 /*Responsive design*/
-@media only screen and (max-width: 1024px) {
+@media only screen and (max-width: 1600px) {
     body { font-size:90%; }
 }
+@media only screen and (max-width: 1280px) {
+    body { font-size:80%; }
+}
+@media only screen and (max-width: 1024px) {
+    body { font-size:80%; }
+    #processlist .hide { display: none; }
+}
 @media only screen and (max-width: 768px) {
-    body { font-size:60%; }
+    body { font-size:70%; }
     aside { margin-right: 1%; }
+    .hide { display: none; }
 }
 @media only screen and (max-width: 480px) {
-    body { font-size:30%; }
+    body { font-size:60%; }
     aside { margin-right: 1%; }
+    .hide { display: none; }
 }
