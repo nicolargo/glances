@@ -100,6 +100,11 @@ and on the client, enter the following URL in your favorite Web Browser:
 
 where ``@server`` is the IP address or hostname of the server.
 
+The Glances Web interface is responsive web designed (Android device screenshot):
+
+.. image:: images/screenshot-web2.png
+
+
 Command reference
 =================
 
@@ -257,6 +262,7 @@ Connected:
 .. image:: images/connected.png
 
 Disconnected:
+
 .. image:: images/disconnected.png
 
 CPU
