@@ -128,7 +128,7 @@ class Plugin(GlancesPlugin):
         # Nice CPU
         if 'nice' in self.stats:
             msg = '  {0:8}'.format(_("nice:"))
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=True))
             msg = '{0:>6.1%}'.format(self.stats['nice'] / 100)
             ret.append(self.curse_add_line(msg, optional=True))
         # New line
