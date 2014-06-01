@@ -101,11 +101,8 @@ class glancesGrabBat:
         Update the stats
         """
         if self.initok:
-            try:
-                self.bat.update()
-            except Exception:
-                self.bat_list = []
-            else:
+            reply = self.bat.update()
+            if reply is not None:
                 self.bat_list = []
                 new_item = {'label': _("Battery (%)"),
                             'value': self.getcapacitypercent()}
