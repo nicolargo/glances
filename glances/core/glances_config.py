@@ -102,10 +102,10 @@ class Config(object):
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
                 __appname__, self.config_filename))
-            if is_linux:
-                paths.append(os.path.join('/etc', __appname__, self.config_filename))
-            else:
+            if hasattr(sys, 'real_prefix') or is_bsd:
                 paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.config_filename))
+            else:
+                paths.append(os.path.join('/etc', __appname__, self.config_filename))
         elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
