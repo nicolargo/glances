@@ -61,7 +61,7 @@ setup(
     include_package_data=True,
     data_files=get_data_files(),
     test_suite="unitest.py",
-    entry_points={"console_scripts": ["glances=glances.glances:main"]},
+    entry_points={"console_scripts": ["glances=glances:main"]},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console :: Curses',
