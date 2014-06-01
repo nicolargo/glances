@@ -181,15 +181,15 @@ class Plugin(GlancesPlugin):
                 msg = ' {0:>6.1%}'.format(cpu['system'] / 100)
                 ret.append(self.curse_add_line(msg, self.get_alert(cpu['system'], header="system")))
 
-        # IoWait CPU
+        # Idle CPU
         if 'user' in self.stats[0]:
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:8}'.format(_("iowait:"))
+            msg = '{0:8}'.format(_("idle:"))
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = ' {0:>6.1%}'.format(cpu['iowait'] / 100)
-                ret.append(self.curse_add_line(msg, self.get_alert(cpu['iowait'], header="iowait")))
+                msg = ' {0:>6.1%}'.format(cpu['idle'] / 100)
+                ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
         return ret
