@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-27 13:03+0200\n"
+"POT-Creation-Date: 2014-06-03 16:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,6 +24,11 @@ msgstr ""
 #: glances/__init__.py:124
 #, python-brace-format
 msgid "Glances server is running on {0}:{1}"
+msgstr ""
+
+#: glances/core/glances_stats.py:264
+#, python-brace-format
+msgid "Error: Update {0} failed: {1}"
 msgstr ""
 
 #: glances/core/glances_client.py:62
@@ -50,70 +55,12 @@ msgstr ""
 
 #: glances/core/glances_client.py:147
 #, python-brace-format
-msgid "Error: Unknown server mode ({0})"
+msgid "Error: Unknown server mode: {0}"
 msgstr ""
 
 #: glances/core/glances_config.py:71
 #, python-brace-format
-msgid "Error decoding configuration file '{0}': {1}"
-msgstr ""
-
-#: glances/core/glances_monitor_list.py:74
-#, python-format
-msgid "Error reading monitored list: %s"
-msgstr ""
-
-#: glances/core/glances_monitor_list.py:143
-msgid "Error: "
-msgstr ""
-
-#: glances/core/glances_monitor_list.py:145
-msgid "Cannot execute command"
-msgstr ""
-
-#: glances/core/glances_password.py:111
-#, python-format
-msgid "[Info] Read password from file %s\n"
-msgstr ""
-
-#: glances/core/glances_password.py:120
-msgid "Password: "
-msgstr ""
-
-#: glances/core/glances_password.py:124
-msgid "Password (confirm): "
-msgstr ""
-
-#: glances/core/glances_password.py:127
-msgid "[Error] Sorry, but passwords did not match...\n"
-msgstr ""
-
-#: glances/core/glances_password.py:138
-msgid "Do you want to save the password? [Yes/No]: "
-msgstr ""
-
-#: glances/core/glances_password.py:139
-msgid "Y"
-msgstr ""
-
-#: glances/core/glances_password.py:154
-#, python-brace-format
-msgid "[Warning] Cannot create Glances directory: {0}"
-msgstr ""
-
-#: glances/core/glances_server.py:115
-#, python-format
-msgid "Couldn't open socket: %s"
-msgstr ""
-
-#: glances/core/glances_server.py:205
-#, python-format
-msgid "Error: Cannot start Glances server (%s)"
-msgstr ""
-
-#: glances/core/glances_stats.py:264
-#, python-brace-format
-msgid "Error: Update {0} failed: {1}"
+msgid "Error: Cannot decode configuration file '{0}': {1}"
 msgstr ""
 
 #: glances/core/glances_main.py:65
@@ -165,8 +112,8 @@ msgid "export stats to a CSV file"
 msgstr ""
 
 #: glances/core/glances_main.py:92
-#, python-format
-msgid "define the client/server TCP port [default: %d]"
+#, python-brace-format
+msgid "define the client/server TCP port [default: {0}]"
 msgstr ""
 
 #: glances/core/glances_main.py:94
@@ -202,8 +149,8 @@ msgid "SNMP authentication key (only for SNMPv3)"
 msgstr ""
 
 #: glances/core/glances_main.py:110
-#, python-format
-msgid "set refresh time in seconds [default: %s sec]"
+#, python-brace-format
+msgid "set refresh time in seconds [default: {0} sec]"
 msgstr ""
 
 #: glances/core/glances_main.py:112
@@ -222,9 +169,66 @@ msgstr ""
 msgid "Enter the Glances server password"
 msgstr ""
 
+#: glances/core/glances_monitor_list.py:74
+#, python-brace-format
+msgid "Error: Cannot read monitored list: {0}"
+msgstr ""
+
+#: glances/core/glances_monitor_list.py:143
+msgid "Error: "
+msgstr ""
+
+#: glances/core/glances_monitor_list.py:145
+msgid "Cannot execute command"
+msgstr ""
+
+#: glances/core/glances_password.py:111
+#, python-brace-format
+msgid "Info: Read password from file: {0}"
+msgstr ""
+
+#: glances/core/glances_password.py:120
+msgid "Password: "
+msgstr ""
+
+#: glances/core/glances_password.py:124
+msgid "Password (confirm): "
+msgstr ""
+
+#: glances/core/glances_password.py:127
+msgid "Error: Sorry, but passwords did not match..."
+msgstr ""
+
+#: glances/core/glances_password.py:138
+msgid "Do you want to save the password? [Yes/No]: "
+msgstr ""
+
+#: glances/core/glances_password.py:139
+msgid "Y"
+msgstr ""
+
+#: glances/core/glances_password.py:154
+#, python-brace-format
+msgid "Warning: Cannot create Glances directory: {0}"
+msgstr ""
+
+#: glances/core/glances_server.py:115
+#, python-brace-format
+msgid "Error: Couldn't open socket: {0}"
+msgstr ""
+
+#: glances/core/glances_server.py:205
+#, python-brace-format
+msgid "Error: Cannot start Glances server: {0}"
+msgstr ""
+
+#: glances/outputs/glances_curses.py:61
+msgid "Error: Cannot init the curses library.\n"
+msgstr ""
+
 #: glances/outputs/glances_csv.py:48
 #, python-brace-format
-msgid "Cannot create the CSV file: {0}"
+msgid "Error: Cannot create the CSV file: {0}"
 msgstr ""
 
 #: glances/outputs/glances_csv.py:51
@@ -232,8 +236,9 @@ msgstr ""
 msgid "Stats dumped to CSV file: {0}"
 msgstr ""
 
-#: glances/outputs/glances_curses.py:61
-msgid "Error: Cannot init the curses library.\n"
+#: glances/plugins/glances_uptime.py:95
+#, python-brace-format
+msgid "Uptime: {0}"
 msgstr ""
 
 #: glances/plugins/glances_alert.py:78
@@ -245,12 +250,12 @@ msgid "Warning or critical alerts"
 msgstr ""
 
 #: glances/plugins/glances_alert.py:86
-#, python-format
-msgid "(lasts %s entries)"
+#, python-brace-format
+msgid " (lasts {0} entries)"
 msgstr ""
 
 #: glances/plugins/glances_alert.py:88
-msgid "(one entry)"
+msgid " (one entry)"
 msgstr ""
 
 #: glances/plugins/glances_alert.py:102
@@ -258,7 +263,17 @@ msgid " (ongoing)"
 msgstr ""
 
 #: glances/plugins/glances_alert.py:108
-msgid "on"
+#, python-brace-format
+msgid "{0} on {1}"
+msgstr ""
+
+#: glances/plugins/glances_alert.py:117
+#, python-brace-format
+msgid " (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})"
+msgstr ""
+
+#: glances/plugins/glances_batpercent.py:107
+msgid "Battery (%)"
 msgstr ""
 
 #: glances/plugins/glances_cpu.py:123
@@ -281,11 +296,11 @@ msgstr ""
 msgid "system:"
 msgstr ""
 
-#: glances/plugins/glances_cpu.py:158 glances/plugins/glances_percpu.py:188
+#: glances/plugins/glances_cpu.py:158
 msgid "iowait:"
 msgstr ""
 
-#: glances/plugins/glances_cpu.py:166
+#: glances/plugins/glances_cpu.py:166 glances/plugins/glances_percpu.py:188
 msgid "idle:"
 msgstr ""
 
@@ -318,7 +333,8 @@ msgid "Total"
 msgstr ""
 
 #: glances/plugins/glances_help.py:68
-msgid "with psutil"
+#, python-brace-format
+msgid " with psutil {0}"
 msgstr ""
 
 #: glances/plugins/glances_help.py:77
@@ -462,7 +478,7 @@ msgid "z"
 msgstr ""
 
 #: glances/plugins/glances_help.py:119
-msgid "Enable/Disable processes stats"
+msgid "Enable/disable processes stats"
 msgstr ""
 
 #: glances/plugins/glances_help.py:122
@@ -479,7 +495,7 @@ msgstr ""
 
 #: glances/plugins/glances_load.py:127
 #, python-brace-format
-msgid "{0:>5}-core"
+msgid "{0}-core"
 msgstr ""
 
 #: glances/plugins/glances_load.py:132
@@ -499,47 +515,35 @@ msgid "MEM"
 msgstr ""
 
 #: glances/plugins/glances_mem.py:155
-msgid "active"
+msgid "active:"
 msgstr ""
 
-#: glances/plugins/glances_mem.py:162
-msgid "total"
+#: glances/plugins/glances_mem.py:162 glances/plugins/glances_memswap.py:127
+msgid "total:"
 msgstr ""
 
 #: glances/plugins/glances_mem.py:168
-msgid "inactive"
+msgid "inactive:"
 msgstr ""
 
-#: glances/plugins/glances_mem.py:175
-msgid "used"
+#: glances/plugins/glances_mem.py:175 glances/plugins/glances_memswap.py:134
+msgid "used:"
 msgstr ""
 
 #: glances/plugins/glances_mem.py:182
-msgid "buffers"
+msgid "buffers:"
 msgstr ""
 
-#: glances/plugins/glances_mem.py:189
-msgid "free"
+#: glances/plugins/glances_mem.py:189 glances/plugins/glances_memswap.py:142
+msgid "free:"
 msgstr ""
 
 #: glances/plugins/glances_mem.py:195
-msgid "cached"
+msgid "cached:"
 msgstr ""
 
 #: glances/plugins/glances_memswap.py:119
 msgid "SWAP"
-msgstr ""
-
-#: glances/plugins/glances_memswap.py:127
-msgid "total:"
-msgstr ""
-
-#: glances/plugins/glances_memswap.py:134
-msgid "used:"
-msgstr ""
-
-#: glances/plugins/glances_memswap.py:142
-msgid "free:"
 msgstr ""
 
 #: glances/plugins/glances_monitor.py:111
@@ -550,13 +554,36 @@ msgstr ""
 msgid "NOT RUNNING"
 msgstr ""
 
-#: glances/plugins/glances_now.py:52
-msgid "%Y-%m-%d %H:%M:%S"
+#: glances/plugins/glances_network.py:183
+msgid "NETWORK"
 msgstr ""
 
-#: glances/plugins/glances_now.py:66
-#, python-brace-format
-msgid "{0:23}"
+#: glances/plugins/glances_network.py:189
+msgid "Rx+Tx"
+msgstr ""
+
+#: glances/plugins/glances_network.py:193
+msgid "Rx"
+msgstr ""
+
+#: glances/plugins/glances_network.py:195
+msgid "Tx"
+msgstr ""
+
+#: glances/plugins/glances_network.py:201
+msgid "Rx+Tx/s"
+msgstr ""
+
+#: glances/plugins/glances_network.py:204
+msgid "Rx/s"
+msgstr ""
+
+#: glances/plugins/glances_network.py:206
+msgid "Tx/s"
+msgstr ""
+
+#: glances/plugins/glances_now.py:52
+msgid "%Y-%m-%d %H:%M:%S"
 msgstr ""
 
 #: glances/plugins/glances_percpu.py:150
@@ -572,23 +599,27 @@ msgid "PROCESSES DISABLED (press 'z' to display)"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:96
-msgid "TASKS"
+msgid "TASKS "
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:104
-msgid "thr"
+#, python-brace-format
+msgid " ({0} thr),"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:109
-msgid "run"
+#, python-brace-format
+msgid " {0} run,"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:114
-msgid "slp"
+#, python-brace-format
+msgid " {0} slp,"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:117
-msgid "oth"
+#, python-brace-format
+msgid " {0} oth "
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:126
@@ -596,11 +627,13 @@ msgid "sorted automatically"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:128
-msgid "by"
+#, python-brace-format
+msgid " by {0}"
 msgstr ""
 
 #: glances/plugins/glances_processcount.py:131
-msgid "sorted by"
+#, python-brace-format
+msgid "sorted by {0}"
 msgstr ""
 
 #: glances/plugins/glances_processlist.py:100
@@ -651,6 +684,15 @@ msgstr ""
 msgid "Command"
 msgstr ""
 
+#: glances/plugins/glances_sensors.py:121
+msgid "SENSORS"
+msgstr ""
+
+#: glances/plugins/glances_sensors.py:124
+#: glances/plugins/glances_sensors.py:126
+msgid "°C"
+msgstr ""
+
 #: glances/plugins/glances_system.py:111
 msgid "Connected to "
 msgstr ""
@@ -661,70 +703,4 @@ msgstr ""
 
 #: glances/plugins/glances_system.py:117
 msgid "Disconnected from "
-msgstr ""
-
-#: glances/plugins/glances_system.py:121
-#, python-brace-format
-msgid "{0}"
-msgstr ""
-
-#: glances/plugins/glances_system.py:125
-#, python-brace-format
-msgid " ({0} {1} / {2} {3})"
-msgstr ""
-
-#: glances/plugins/glances_system.py:131
-#, python-brace-format
-msgid " ({0} {1} {2})"
-msgstr ""
-
-#: glances/plugins/glances_system.py:135
-#, python-brace-format
-msgid " ({0})"
-msgstr ""
-
-#: glances/plugins/glances_uptime.py:95
-#, python-brace-format
-msgid "Uptime: {0}"
-msgstr ""
-
-#: glances/plugins/glances_batpercent.py:110
-msgid "Battery (%)"
-msgstr ""
-
-#: glances/plugins/glances_network.py:183
-msgid "NETWORK"
-msgstr ""
-
-#: glances/plugins/glances_network.py:189
-msgid "Rx+Tx"
-msgstr ""
-
-#: glances/plugins/glances_network.py:193
-msgid "Rx"
-msgstr ""
-
-#: glances/plugins/glances_network.py:195
-msgid "Tx"
-msgstr ""
-
-#: glances/plugins/glances_network.py:201
-msgid "Rx+Tx/s"
-msgstr ""
-
-#: glances/plugins/glances_network.py:204
-msgid "Rx/s"
-msgstr ""
-
-#: glances/plugins/glances_network.py:206
-msgid "Tx/s"
-msgstr ""
-
-#: glances/plugins/glances_sensors.py:121
-msgid "SENSORS"
-msgstr ""
-
-#: glances/plugins/glances_sensors.py:124
-#: glances/plugins/glances_sensors.py:126
-msgid "°C"
 msgstr ""
