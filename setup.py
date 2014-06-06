@@ -55,7 +55,8 @@ setup(
     extras_require={
         'WEB': ['bottle'],
         'SENSORS': ['py3sensors'],
-        'BATINFO': ['batinfo']
+        'BATINFO': ['batinfo'],
+        'SNMP': ['pysnmp']
     },
     packages=['glances'],
     include_package_data=True,
