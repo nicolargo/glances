@@ -18,7 +18,8 @@ Glances - An eye on your system
 .. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
         :width: 128
 
-**Glances** is a cross-platform curses-based system monitoring tool written in Python.
+**Glances** is a cross-platform curses-based system monitoring tool
+written in Python.
 
 It uses the `psutil`_ library to get information from your system.
 
@@ -33,10 +34,11 @@ Requirements
 
 Optional dependencies:
 
-- ``bottle`` (for Web Server mode)
+- ``bottle`` (for Web server mode)
 - ``py3sensors`` (for hardware monitoring support) [Linux-only]
-- ``hddtemp`` (for HDD temperature monitoring support)
+- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``batinfo`` (for battery monitoring support) [Linux-only]
+- ``pysnmp`` (for SNMP support)
 
 Installation
 ============
@@ -44,7 +46,8 @@ Installation
 PyPI: The simple way
 --------------------
 
-Glances is on `PyPI`_. By using Pypi, you are sure to have the latest stable version.
+Glances is on `PyPI`_. By using PyPI, you are sure to have the latest
+stable version.
 
 To install, simply use `pip`_:
 
@@ -52,7 +55,7 @@ To install, simply use `pip`_:
 
     pip install Glances
 
-*Note*: Python headers are required to install PSutil. For example,
+*Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
 To upgrade Glances to the latest version:
@@ -121,9 +124,10 @@ MacPorts
 Windows
 -------
 
-Glances proposes a Windows client based on the `colorconsole`_ Python library.
+Glances proposes a Windows client based on the `colorconsole`_ Python
+library.
 
-To install Glances on Windows OS, you have to follow these steps:
+To install Glances on Windows, you have to follow these steps:
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
@@ -166,7 +170,7 @@ For the Web server mode, run:
 
     $ glances -w
 
-and enter the URL http://<ip>:61208 in your favorite Web Browser.
+and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 
 For the client/server mode, run:
 
@@ -206,7 +210,6 @@ LGPL. See ``COPYING`` for more details.
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://brew.sh/
 .. _MacPorts: https://www.macports.org/
-.. _Glances-1.7.2-win32.msi: http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
