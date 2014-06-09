@@ -30,7 +30,7 @@ except ImportError:  # Python 2
     from xmlrpclib import ServerProxy, ProtocolError
 
 # Import Glances libs
-from glances.core.glances_globals import __version__
+from glances.core.glances_globals import version
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import glancesCurses
 
@@ -102,7 +102,7 @@ class GlancesClient():
                 print(_("Error: Connection to server failed: {0}").format(err))
             sys.exit(2)
 
-        if self.get_mode() == 'glances' and __version__[:3] == client_version[:3]:
+        if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
             # Init stats
             self.stats = GlancesStatsClient()
             self.stats.set_plugins(json.loads(self.client.getAllPlugins()))

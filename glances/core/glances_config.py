@@ -29,7 +29,7 @@ except ImportError:  # Python 2
 
 # Import Glances lib
 from glances.core.glances_globals import (
-    __appname__,
+    appname,
     is_bsd,
     is_linux,
     is_mac,
@@ -101,20 +101,20 @@ class Config(object):
         if is_linux or is_bsd:
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
-                __appname__, self.config_filename))
+                appname, self.config_filename))
             if hasattr(sys, 'real_prefix') or is_bsd:
-                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.config_filename))
+                paths.append(os.path.join(sys.prefix, 'etc', appname, self.config_filename))
             else:
-                paths.append(os.path.join('/etc', __appname__, self.config_filename))
+                paths.append(os.path.join('/etc', appname, self.config_filename))
         elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
-                __appname__, self.config_filename))
+                appname, self.config_filename))
             paths.append(os.path.join(
-                sys_prefix, 'etc', __appname__, self.config_filename))
+                sys_prefix, 'etc', appname, self.config_filename))
         elif is_windows:
             paths.append(os.path.join(
-                os.environ.get('APPDATA'), __appname__, self.config_filename))
+                os.environ.get('APPDATA'), appname, self.config_filename))
 
         return paths
 

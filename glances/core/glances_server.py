@@ -30,7 +30,7 @@ except ImportError:  # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
-from glances.core.glances_globals import __version__
+from glances.core.glances_globals import version
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 
@@ -145,7 +145,7 @@ class GlancesInstance():
 
     def init(self):
         # Return the Glances version
-        return __version__
+        return version
 
     def getAll(self):
         # Update and return all the stats

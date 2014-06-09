@@ -17,30 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Glances informations
-__appname__ = 'glances'
-__version__ = '2.0_RC4'
-__author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
-__license__ = 'LGPL'
-
-# Import system libs
 import os
 import sys
 
-# Import psutil
-try:
-    from psutil import __version__ as __psutil_version__
-except ImportError:
-    print('psutil library not found. Glances cannot start.')
-    sys.exit(1)
-
-# Check psutil version
-psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version__.split('.')])
-if psutil_version < psutil_min_version:
-    print('psutil version {0} detected.').format(__psutil_version__)
-    print('psutil 2.0 or higher is needed. Glances cannot start.')
-    sys.exit(1)
+# Global information
+appname = 'glances'
+version = __import__('glances').__version__
+psutil_version = __import__('glances').__psutil_version
 
 # PY3?
 is_py3 = sys.version_info >= (3, 3)
@@ -63,7 +46,7 @@ sys_path = sys.path[:]
 sys.path.insert(0, plugins_path)
 
 # i18n
-gettext_domain = __appname__
+gettext_domain = appname
 i18n_path = os.path.realpath(os.path.join(work_path, '..', '..', 'i18n'))
 sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 if os.path.exists(i18n_path):
@@ -73,8 +56,8 @@ elif os.path.exists(sys_i18n_path):
 else:
     locale_dir = None
 
-# Instances shared between all Glances' scripts
-# ===============================================
+# Instances shared between all Glances scripts
+# ============================================
 
 # glances_processes for processcount and processlist plugins
 from glances.core.glances_processes import glancesProcesses

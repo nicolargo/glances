@@ -26,7 +26,7 @@ import uuid
 
 # Import Glances lib
 from glances.core.glances_globals import (
-    __appname__,
+    appname,
     is_bsd,
     is_linux,
     is_mac,
@@ -67,7 +67,7 @@ class glancesPassword:
             app_path = '.'
 
         # Append the Glances folder
-        app_path = os.path.join(app_path, __appname__)
+        app_path = os.path.join(app_path, appname)
 
         return app_path
 

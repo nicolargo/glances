@@ -23,9 +23,9 @@ Just a stupid plugin to display the help screen
 
 # Import Glances libs
 from glances.core.glances_globals import (
-    __appname__,
-    __psutil_version__,
-    __version__
+    appname,
+    psutil_version,
+    version
 )
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -63,9 +63,9 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0} {1}'.format(__appname__.title(), __version__)
+        msg = '{0} {1}'.format(appname.title(), version)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = _(" with psutil {0}").format(__psutil_version__)
+        msg = _(" with psutil {0}").format(psutil_version)
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
 
