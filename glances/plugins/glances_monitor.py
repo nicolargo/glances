@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Import Glances lib
-from glances.core.glances_monitor_list import monitorList as glancesMonitorList
+from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

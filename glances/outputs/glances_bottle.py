@@ -27,7 +27,7 @@ except ImportError:
     sys.exit(1)
 
 
-class glancesBottle:
+class GlancesBottle(object):
     """
     This class manage the Bottle Web Server
     """
@@ -186,7 +186,7 @@ class glancesBottle:
                 if m['msg'].split(' ', 1)[0] != '':
                     tpl += '<span class="cell" id="%s">&nbsp;%s</span>' % \
                         (self.__style_list[m['decoration']],
-                        m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;')[:20])
+                         m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;')[:20])
             elif m['optional']:
                 # Manage optional stats (responsive design)
                 tpl += '<span class="cell hide" id="%s">%s</span>' % \

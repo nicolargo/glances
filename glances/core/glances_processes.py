@@ -17,14 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import psutil
-
-# Import Glances lib
 from glances.core.glances_globals import is_bsd, is_mac, is_windows
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
+import psutil
 
-class glancesProcesses:
+
+class GlancesProcesses(object):
     """
     Get processed stats using the PsUtil lib
     """

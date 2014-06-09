@@ -256,7 +256,7 @@ class GlancesPlugin(object):
     def get_stats_display(self, args=None):
         # Return a dict with all the information needed to display the stat
         # key     | description
-        #----------------------------
+        # ----------------------------
         # display | Display the stat (True or False)
         # msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
         # column  | column number

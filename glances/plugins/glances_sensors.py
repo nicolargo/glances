@@ -44,7 +44,7 @@ class Plugin(GlancesPlugin):
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabsensors = glancesGrabSensors()
+        self.glancesgrabsensors = GlancesGrabSensors()
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
         self.hddtemp_plugin = HddTempPlugin()
@@ -143,7 +143,7 @@ class Plugin(GlancesPlugin):
         return ret
 
 
-class glancesGrabSensors:
+class GlancesGrabSensors(object):
     """
     Get sensors stats using the PySensors library
     """

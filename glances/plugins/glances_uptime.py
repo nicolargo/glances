@@ -20,14 +20,15 @@
 # Import system libs
 from datetime import datetime, timedelta
 
-# Check for psutil already done in the glances_core script
-import psutil
-
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# Check for psutil already done in the glances_core script
+import psutil
+
 # SNMP OID
 snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
+
 
 class Plugin(GlancesPlugin):
     """

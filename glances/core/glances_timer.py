@@ -36,7 +36,7 @@ def getTimeSinceLastUpdate(IOType):
     return time_since_update
 
 
-class Timer:
+class Timer(object):
     """
     The timer class
     A simple chrono
@@ -57,4 +57,3 @@ class Timer:
 
     def finished(self):
         return time() > self.target
-

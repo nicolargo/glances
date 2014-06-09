@@ -175,9 +175,9 @@ class GlancesMain(object):
         """
         Hash a plain password and return the hashed one
         """
-        from glances.core.glances_password import glancesPassword
+        from glances.core.glances_password import GlancesPassword
 
-        password = glancesPassword()
+        password = GlancesPassword()
 
         return password.hash_password(plain_password)
 
@@ -187,9 +187,9 @@ class GlancesMain(object):
         - with confirmation if confirm = True
         - plain (clear password) if clear = True
         """
-        from glances.core.glances_password import glancesPassword
+        from glances.core.glances_password import GlancesPassword
 
-        password = glancesPassword()
+        password = GlancesPassword()
 
         return password.get_password(description, confirm, clear)
 

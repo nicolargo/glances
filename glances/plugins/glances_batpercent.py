@@ -41,7 +41,7 @@ class Plugin(GlancesPlugin):
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabbat = glancesGrabBat()
+        self.glancesgrabbat = GlancesGrabBat()
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
@@ -78,7 +78,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
 
-class glancesGrabBat:
+class GlancesGrabBat(object):
     """
     Get batteries stats using the Batinfo library
     """

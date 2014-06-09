@@ -19,10 +19,10 @@
 
 # Import Glances libs
 from glances.core.glances_stats import GlancesStats
-from glances.outputs.glances_curses import glancesCurses
+from glances.outputs.glances_curses import GlancesCurses
 
 
-class GlancesStandalone():
+class GlancesStandalone(object):
     """
     This class creates and manages the Glances standalone session
     """
@@ -37,15 +37,15 @@ class GlancesStandalone():
 
         # Init CSV output
         if args.output_csv is not None:
-            from glances.outputs.glances_csv import glancesCSV
+            from glances.outputs.glances_csv import GlancesCSV
 
-            self.csvoutput = glancesCSV(args=args)
+            self.csvoutput = GlancesCSV(args=args)
             self.csv_tag = True
         else:
             self.csv_tag = False
 
         # Init screen
-        self.screen = glancesCurses(args=args)
+        self.screen = GlancesCurses(args=args)
 
     def serve_forever(self):
         """
