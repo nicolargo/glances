@@ -37,7 +37,7 @@ else:
     curses = WCurseLight()
 
 
-class glancesCurses:
+class GlancesCurses(object):
     """
     This class manage the curses display (and key pressed)
     """
@@ -160,7 +160,7 @@ class glancesCurses:
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
-    def __getkey(self, window):
+    def __get_key(self, window):
         """
         A getKey function to catch ESC key AND Numlock key (issue #163)
         """
@@ -174,10 +174,10 @@ class glancesCurses:
         else:
             return keycode[0]
 
-    def __catchKey(self):
+    def __catch_key(self):
         # Get key
-        #~ self.pressedkey = self.term_window.getch()
-        self.pressedkey = self.__getkey(self.term_window)
+        # ~ self.pressedkey = self.term_window.getch()
+        self.pressedkey = self.__get_key(self.term_window)
 
         # Actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
@@ -456,7 +456,7 @@ class glancesCurses:
         countdown = Timer(self.__refresh_time)
         while (not countdown.finished()):
             # Getkey
-            if self.__catchKey() > -1:
+            if self.__catch_key() > -1:
                 # flush display
                 self.flush(stats, cs_status=cs_status)
             # Wait 100ms...

@@ -35,7 +35,7 @@ class Plugin(GlancesPlugin):
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabhddtemp = glancesGrabHDDTemp()
+        self.glancesgrabhddtemp = GlancesGrabHDDTemp()
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
 
-class glancesGrabHDDTemp:
+class GlancesGrabHDDTemp(object):
     """
     Get hddtemp stats using a socket connection
     """

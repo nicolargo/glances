@@ -65,22 +65,22 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
             assert basic == 'Basic', 'Only basic authentication supported'
             #    Encoded portion of the header is a string
             #    Need to convert to bytestring
-            encodedByteString = encoded.encode()
+            encoded_byte_string = encoded.encode()
             #    Decode Base64 byte String to a decoded Byte String
-            decodedBytes = b64decode(encodedByteString)
+            decoded_bytes = b64decode(encoded_byte_string)
             #    Convert from byte string to a regular String
-            decodedString = decodedBytes.decode()
+            decoded_string = decoded_bytes.decode()
             #    Get the username and password from the string
-            (username, _, password) = decodedString.partition(':')
+            (username, _, password) = decoded_string.partition(':')
             #    Check that username and password match internal global dictionary
             return self.check_user(username, password)
 
     def check_user(self, username, password):
         # Check username and password in the dictionnary
         if username in self.server.user_dict:
-            from glances.core.glances_password import glancesPassword
+            from glances.core.glances_password import GlancesPassword
 
-            pwd = glancesPassword()
+            pwd = GlancesPassword()
 
             return pwd.check_password(self.server.user_dict[username], password)
         else:
@@ -119,7 +119,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
                                     requestHandler)
 
 
-class GlancesInstance():
+class GlancesInstance(object):
     """
     All the methods of this class are published as XML RPC methods
     """
@@ -189,7 +189,7 @@ class GlancesInstance():
             raise AttributeError(item)
 
 
-class GlancesServer():
+class GlancesServer(object):
     """
     This class creates and manages the TCP server
     """

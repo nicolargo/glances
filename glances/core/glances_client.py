@@ -32,10 +32,10 @@ except ImportError:  # Python 2
 # Import Glances libs
 from glances.core.glances_globals import version
 from glances.core.glances_stats import GlancesStatsClient
-from glances.outputs.glances_curses import glancesCurses
+from glances.outputs.glances_curses import GlancesCurses
 
 
-class GlancesClient():
+class GlancesClient(object):
     """
     This class creates and manages the TCP client
     """
@@ -126,7 +126,7 @@ class GlancesClient():
             self.stats.load_limits(self.config)
 
             # Init screen
-            self.screen = glancesCurses(args=self.args)
+            self.screen = GlancesCurses(args=self.args)
 
         # Return result
         return ret
@@ -201,4 +201,3 @@ class GlancesClient():
         End of the client session
         """
         self.screen.end()
-

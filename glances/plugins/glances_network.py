@@ -20,12 +20,10 @@
 Glances Network interface plugin
 """
 
-# Import system libs
-import psutil
-
-# Import Glances lib
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
@@ -169,7 +167,7 @@ class Plugin(GlancesPlugin):
         Return the dict to displayoid in the curse interface
         """
 
-        #!!! TODO: Add alert on network interface bitrate
+        # !!! TODO: Add alert on network interface bitrate
 
         # Init the return message
         ret = []

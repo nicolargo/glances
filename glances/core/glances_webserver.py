@@ -22,10 +22,10 @@ Glances Web Interface (Bottle based)
 
 # Import Glances libs
 from glances.core.glances_stats import GlancesStats
-from glances.outputs.glances_bottle import glancesBottle
+from glances.outputs.glances_bottle import GlancesBottle
 
 
-class GlancesWebServer():
+class GlancesWebServer(object):
     """
     This class creates and manages the Glances Web Server session
     """
@@ -39,7 +39,7 @@ class GlancesWebServer():
         self.stats.update()
 
         # Init the Bottle Web server
-        self.web = glancesBottle(args=args)
+        self.web = GlancesBottle(args=args)
 
     def serve_forever(self):
         """

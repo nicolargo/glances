@@ -31,6 +31,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 snmp_oid = {'hostname': '1.3.6.1.2.1.1.5.0',
             'os_name': '1.3.6.1.2.1.1.1.0'}
 
+
 class Plugin(GlancesPlugin):
     """
     Glances' Host/System Plugin

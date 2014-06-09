@@ -28,7 +28,7 @@ from glances.core.glances_globals import is_py3
 csv_stats_list = ['cpu', 'load', 'mem', 'memswap']
 
 
-class glancesCSV:
+class GlancesCSV(object):
     """
     This class manages the CSV output
     """

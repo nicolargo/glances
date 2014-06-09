@@ -25,7 +25,7 @@ from datetime import datetime
 from glances.core.glances_globals import glances_processes
 
 
-class glancesLogs:
+class GlancesLogs(object):
     """
     Manage logs inside the Glances software
     Logs is a list of list (stored in the self.logs_list var)

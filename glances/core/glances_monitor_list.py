@@ -25,7 +25,7 @@ import subprocess
 from glances.core.glances_globals import glances_processes
 
 
-class monitorList:
+class MonitorList(object):
     """
     This class describes the optionnal monitored processes list
     A list of 'important' processes to monitor.
@@ -52,11 +52,11 @@ class monitorList:
 
         if self.config is not None and self.config.has_section('monitor'):
             # Process monitoring list
-            self.__setMonitorList('monitor', 'list')
+            self.__set_monitor_list('monitor', 'list')
         else:
             self.__monitor_list = []
 
-    def __setMonitorList(self, section, key):
+    def __set_monitor_list(self, section, key):
         """
         Init the monitored processes list
         The list is defined in the Glances configuration file

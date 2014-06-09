@@ -60,9 +60,9 @@ else:
 # ============================================
 
 # glances_processes for processcount and processlist plugins
-from glances.core.glances_processes import glancesProcesses
-glances_processes = glancesProcesses()
+from glances.core.glances_processes import GlancesProcesses
+glances_processes = GlancesProcesses()
 
 # The global instance for the logs
-from glances.core.glances_logs import glancesLogs
-glances_logs = glancesLogs()
+from glances.core.glances_logs import GlancesLogs
+glances_logs = GlancesLogs()

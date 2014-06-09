@@ -20,9 +20,9 @@
 Glances virtual memory plugin
 """
 
-import psutil
-
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0

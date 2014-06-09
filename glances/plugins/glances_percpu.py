@@ -20,11 +20,11 @@
 CPU stats (per cpu)
 """
 
-# Check for psutil already done in the glances_core script
-import psutil
-
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
+
+# Check for psutil already done in the glances_core script
+import psutil
 
 
 class Plugin(GlancesPlugin):

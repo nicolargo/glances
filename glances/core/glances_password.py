@@ -40,7 +40,7 @@ except NameError:
     pass
 
 
-class glancesPassword:
+class GlancesPassword(object):
     """
     Manage password
     """
