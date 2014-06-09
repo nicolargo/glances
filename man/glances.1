@@ -1,83 +1,101 @@
-.TH glances 1  "January, 2014" "version 1.7.4" "USER COMMANDS"
+.TH glances 1  "June, 2014" "version 2.0" "USER COMMANDS"
 .SH NAME
-glances \- A cross-platform curses-based monitoring tool
+glances \- A cross-platform curses-based system monitoring tool
 .SH SYNOPSIS
 .B glances
-[\-bdehmnrsvyz1] [\-B bind] [\-c server] [\-C conffile] [\-p port] [\-P password] [--password] [\-t refresh] [\-f file] [\-o output]
+.RI [ OPTIONS ]
 .SH DESCRIPTION
-Glances is a free (LGPL) cross-platform curses-based monitoring tool which aims to present a maximum of information
-in a minimum of space, ideally to fit in a classical 80x24 terminal or higher to have additionnal information.
+Glances is a free (LGPL) cross-platform curses-based system monitoring tool which
+aims to present a maximum of information in a minimum of space, ideally to fit in
+a classical 80x24 terminal or higher to have additionnal information. It can adapt
+dynamically the displayed information depending on the terminal size.
 .PP
-Glances can adapt dynamically the displayed information depending on the terminal size. It can also
-work in a client/server mode for remote monitoring.
+Glances can also work in client/server mode. Remote monitoring could be done via
+terminal or web interface.
 .PP
-This tool is written in Python and uses the psutil library to fetch the statistical values from key elements,
-like CPU, load average, memory, network, disks, file systems, processes, etc.
+This tool is written in Python and uses the psutil library to fetch the statistical
+values from key elements, like CPU, load average, memory, network, disks, file
+systems, processes and so on.
 .SH COMMAND-LINE OPTIONS
 The command-line options are the following:
 .TP
-.B \-b
-Display network rate in Byte per second (default: bit per second)
+.B \-h, \-\-help
+display the help and exit
 .TP
-.B \-B @IP|HOST
-Bind server to the given IPv4/IPv6 address or hostname
+.B \-V, \-\-version
+show program's version number and exit
 .TP
-.B \-c @IP|HOST
-Connect to a Glances server by IPv4/IPv6 address or hostname
+.B \-b, \-\-byte
+display network rate in byte per second [default: bit per second]
 .TP
-.B \-C FILE
-Path to the configuration file
+.B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
+bind server to the given IPv4/IPv6 address or hostname
 .TP
-.B \-d
-Disable disk I/O module
+.B \-c CLIENT, \-\-client CLIENT
+connect to a Glances server by IPv4/IPv6 address or hostname
 .TP
-.B \-e
-Enable sensors module (requires pysensors, Linux-only)
+.B \-C CONF_FILE, \-\-config CONF_FILE
+path to the configuration file
 .TP
-.B \-f FILE
-Set the HTML output folder or CSV file
+.B \-\-disable-bold
+disable bold mode in the terminal
 .TP
-.B \-h
-Display the help and exit
+.B \-\-disable-diskio
+disable disk I/O module
 .TP
-.B \-m
-Disable mount module
+.B \-\-disable-fs
+disable file system module
 .TP
-.B \-n
-Disable network module
+.B \-\-disable-network
+disable network module
 .TP
-.B \-o OUTPUT
-Define additional output (available: HTML or CSV)
+.B \-\-disable-network
+disable network module
 .TP
-.B \-p PORT
-Define the client/server TCP port (default: 61209)
+.B \-\-disable-sensors
+disable sensors module
 .TP
-.B \-P PASSWORD
-Define a client/server password
+.B \-\-disable-process
+disable process module
+.TP
+.B \-\-disable-log
+disable log module
+.TP
+.B \-\-output-csv OUTPUT_CSV
+export stats to a CSV file
+.TP
+.B \-p PORT, \-\-port PORT
+define the client/server TCP port [default: 61209]
 .TP
 .B \-\-password
-Define a client/server password from the prompt
+define a client/server password from the prompt or file
 .TP
-.B \-r
-Disable process list (for low CPU consumption)
+.B \-s, \-\-server
+run Glances in server mode
 .TP
-.B \-s
-Run Glances in server mode
+.B \-\-snmp-community SNMP_COMMUNITY
+SNMP community
 .TP
-.B \-t SECONDS
-Set refresh time in seconds (default: 3 sec)
+.B \-\-snmp-port SNMP_PORT
+SNMP port
 .TP
-.B \-v
-Display the version and exit
+.B \-\-snmp-version SNMP_VERSION
+SNMP version (1, 2c or 3)
 .TP
-.B \-y
-Enable hddtemp module (requires hddtemp)
+.B \-\-snmp-user SNMP_USER
+SNMP username (only for SNMPv3)
 .TP
-.B \-z
-Do not use the bold color attribute
+.B \-\-snmp-auth SNMP_AUTH
+SNMP authentication key (only for SNMPv3)
 .TP
-.B \-1
-Start Glances in per-CPU mode
+.B \-t TIME, \-\-time TIME
+set refresh time in seconds [default: 3 sec]
+.TP
+.B \-w, \-\-webserver
+run Glances in Web server mode
+.TP
+.B \-1, \-\-percpu
+start Glances in per CPU mode
 .SH INTERACTIVE COMMANDS
 You can use the following keys while in Glances:
 .TP
@@ -118,7 +136,7 @@ Sort processes by name
 Quit
 .TP
 .B s
-Show/hide sensors stats (only available with \-e flag)
+Show/hide sensors stats
 .TP
 .B t
 View network I/O as combination
@@ -132,8 +150,8 @@ Delete finished warning log messages
 .B x
 Delete finished warning and critical log messages
 .TP
-.B y
-Show/hide hddtemp stats (only available with \-y flag)
+.B z
+Show/hide processes stats
 .TP
 .B 1
 Switch between global CPU and per-CPU stats
