@@ -24,14 +24,11 @@ import psutil
 
 
 class GlancesProcesses(object):
-    """
-    Get processed stats using the PsUtil lib
-    """
+
+    """Get processed stats using the psutil library."""
 
     def __init__(self, cache_timeout=60):
-        """
-        Init the class to collect stats about processes
-        """
+        """Init the class to collect stats about processes."""
         # Add internals caches because PSUtil do not cache all the stats
         # See: https://code.google.com/p/psutil/issues/detail?id=462
         self.username_cache = {}
@@ -56,22 +53,16 @@ class GlancesProcesses(object):
         self.disable_tag = False
 
     def enable(self):
-        """
-        Enable process stats
-        """
+        """Enable process stats."""
         self.disable_tag = False
         self.update()
 
     def disable(self):
-        """
-        Enable process stats
-        """
+        """Disable process stats."""
         self.disable_tag = True
 
     def __get_process_stats(self, proc):
-        """
-        Get process statistics
-        """
+        """Get process stats."""
         procstat = {}
 
         # Process ID
@@ -156,10 +147,7 @@ class GlancesProcesses(object):
         return procstat
 
     def update(self):
-        """
-        Update the processes sats
-        """
-
+        """Update the processes stats."""
         # Reset the stats
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
@@ -212,31 +200,24 @@ class GlancesProcesses(object):
             self.cache_timer.reset()
 
     def getcount(self):
+        """Get the number of processes."""
         return self.processcount
 
     def getlist(self, sortedby=None):
-        """
-        Return the processlist
-        """
+        """Get the processlist."""
         return self.processlist
 
     def getsortkey(self):
-        """
-        Return the current sort key for automatic sort
-        """
+        """Get the current sort key for automatic sort."""
         return self.processsort
 
     def setsortkey(self, sortedby):
-        """
-        Return the current sort key for automatic sort
-        """
+        """Set the current sort key for automatic sort."""
         self.processsort = sortedby
         return self.processsort
 
     def getsortlist(self, sortedby=None):
-        """
-        Return the processlist
-        """
+        """Get the sorted processlist."""
         if sortedby is None:
             # No need to sort...
             return self.processlist

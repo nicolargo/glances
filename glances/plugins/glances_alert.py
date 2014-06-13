@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Alert plugin."""
+
 # Import system lib
 from datetime import datetime
 
@@ -26,13 +28,14 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's alert Plugin
 
-    Only for display
+    """Glances' alert plugin.
+
+    Only for display.
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -48,23 +51,16 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Nothing to do here
-        Just return the global glances_log
-        """
+        """Nothing to do here. Just return the global glances_log."""
         # Set the stats to the glances_logs
         self.stats = glances_logs.get()
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 

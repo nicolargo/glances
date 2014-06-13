@@ -25,14 +25,14 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances' Core Plugin
-    Get current date/time
+
+    """Plugin to get the current date/time.
 
     stats is (string)
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -45,19 +45,14 @@ class Plugin(GlancesPlugin):
         self.line_curse = -1
 
     def update(self):
-        """
-        Update current date/time
-        """
+        """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
         self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
 
         return self.stats
 
     def msg_curse(self, args=None):
-        """
-        Return the string to display in the curse interface
-        """
-
+        """Return the string to display in the curse interface."""
         # Init the return message
         ret = []
 

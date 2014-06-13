@@ -17,9 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Init the Glances software
-"""
+"""Init the Glances software."""
 
 __appname__ = 'glances'
 __version__ = '2.0'
@@ -54,17 +52,12 @@ from glances.core.glances_main import GlancesMain
 
 
 def __signal_handler(signal, frame):
-    """
-    Call back for CTRL-C
-    """
+    """Callback for CTRL-C."""
     end()
 
 
 def end():
-    """
-    Stop Glances
-    """
-
+    """Stop Glances."""
     if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
@@ -80,8 +73,7 @@ def end():
 
 
 def main():
-    """
-    Main entry point for Glances
+    """Main entry point for Glances.
 
     Select the mode (standalone, client or server)
     Run it...
