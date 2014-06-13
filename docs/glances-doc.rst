@@ -462,9 +462,9 @@ The number of processes in the list is adapted to the screen size.
 ``MEM%``
     % of MEM used by the process
 ``VIRT``
-    Total program size (VMS)
+    Total program size aka Virtual Memory Size (VMS)
 ``RES``
-    Resident set size (RSS)
+    Resident Set Size (RSS)
 ``PID``
     Process ID
 ``USER``
