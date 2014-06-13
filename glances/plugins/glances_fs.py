@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""File system plugin."""
+
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -43,13 +45,14 @@ snmp_oid = {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's File System (fs) Plugin
+
+    """Glances' file system plugin.
 
     stats is a list
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -65,16 +68,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Update the FS stats using the input method
-        """
-
+        """Update the FS stats using the input method."""
         # Reset the list
         self.reset()
 
@@ -127,9 +125,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 
