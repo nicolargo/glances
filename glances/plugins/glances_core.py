@@ -17,20 +17,24 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""CPU core plugin."""
+
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances' Core Plugin
-    Get stats about CPU core number
+
+    """Glances' CPU core plugin.
+
+    Get stats about CPU core number.
 
     stats is integer (number of core)
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We dot not want to display the stat in the curse interface
@@ -41,17 +45,14 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stat using the input method
-        """
+        """Reset/init the stat using the input method."""
         self.stats = {}
 
     def update(self):
-        """
-        Update core stats
-        Stats is a dict (with both physical and log cpu number) instead of a integer
-        """
+        """Update core stats.
 
+        Stats is a dict (with both physical and log cpu number) instead of a integer.
+        """
         # Reset the stats
         self.reset()
 

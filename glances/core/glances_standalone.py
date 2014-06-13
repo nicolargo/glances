@@ -17,18 +17,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage the Glances standalone session."""
+
 # Import Glances libs
 from glances.core.glances_stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCurses
 
 
 class GlancesStandalone(object):
-    """
-    This class creates and manages the Glances standalone session
-    """
+
+    """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):
-
         # Init stats
         self.stats = GlancesStats(config)
 
@@ -48,9 +48,7 @@ class GlancesStandalone(object):
         self.screen = GlancesCurses(args=args)
 
     def serve_forever(self):
-        """
-        Main loop for the CLI
-        """
+        """Main loop for the CLI."""
         while True:
             # Update system informations
             self.stats.update()
@@ -63,9 +61,7 @@ class GlancesStandalone(object):
                 self.csvoutput.update(self.stats)
 
     def end(self):
-        """
-        End of the CLI
-        """
+        """End of the CLI."""
         self.screen.end()
 
         # Close the CSV file

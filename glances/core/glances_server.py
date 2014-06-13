@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage the Glances server."""
+
 # Import system libs
 import json
 import socket
@@ -36,9 +38,9 @@ from glances.core.glances_timer import Timer
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
-    """
-    Main XMLRPC handler
-    """
+
+    """Main XML-RPC handler."""
+
     rpc_paths = ('/RPC2', )
 
     def end_headers(self):
@@ -63,20 +65,20 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
             # Client authentication
             (basic, _, encoded) = headers.get('Authorization').partition(' ')
             assert basic == 'Basic', 'Only basic authentication supported'
-            #    Encoded portion of the header is a string
-            #    Need to convert to bytestring
+            # Encoded portion of the header is a string
+            # Need to convert to bytestring
             encoded_byte_string = encoded.encode()
-            #    Decode Base64 byte String to a decoded Byte String
+            # Decode base64 byte string to a decoded byte string
             decoded_bytes = b64decode(encoded_byte_string)
-            #    Convert from byte string to a regular String
+            # Convert from byte string to a regular string
             decoded_string = decoded_bytes.decode()
-            #    Get the username and password from the string
+            # Get the username and password from the string
             (username, _, password) = decoded_string.partition(':')
-            #    Check that username and password match internal global dictionary
+            # Check that username and password match internal global dictionary
             return self.check_user(username, password)
 
     def check_user(self, username, password):
-        # Check username and password in the dictionnary
+        # Check username and password in the dictionary
         if username in self.server.user_dict:
             from glances.core.glances_password import GlancesPassword
 
@@ -102,9 +104,8 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
 
 
 class GlancesXMLRPCServer(SimpleXMLRPCServer):
-    """
-    Init a SimpleXMLRPCServer instance (IPv6-ready)
-    """
+
+    """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
     def __init__(self, bind_address, bind_port=61209,
                  requestHandler=GlancesXMLRPCHandler):
@@ -120,9 +121,8 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
 
 
 class GlancesInstance(object):
-    """
-    All the methods of this class are published as XML RPC methods
-    """
+
+    """All the methods of this class are published as XML-RPC methods."""
 
     def __init__(self, cached_time=1, config=None):
         # Init stats
@@ -166,11 +166,10 @@ class GlancesInstance(object):
         return json.dumps(self.stats.getAll()['monitor'])
 
     def __getattr__(self, item):
-        """
-        Overwrite the getattr in case of attribute is not found
-        The goal is to dynamicaly generate the API get'Stats'() methods
-        """
+        """Overwrite the getattr method in case of attribute is not found.
 
+        The goal is to dynamically generate the API get'Stats'() methods.
+        """
         # print "DEBUG: Call method: %s" % item
         header = 'get'
         # Check if the attribute starts with 'get'
@@ -190,9 +189,8 @@ class GlancesInstance(object):
 
 
 class GlancesServer(object):
-    """
-    This class creates and manages the TCP server
-    """
+
+    """This class creates and manages the TCP server."""
 
     def __init__(self, requestHandler=GlancesXMLRPCHandler,
                  cached_time=1,
@@ -216,23 +214,18 @@ class GlancesServer(object):
         self.server.register_instance(GlancesInstance(cached_time, config))
 
     def add_user(self, username, password):
-        """
-        Add an user to the dictionnary
-        """
+        """Add an user to the dictionary."""
         self.server.user_dict[username] = password
         self.server.isAuth = True
 
     def serve_forever(self):
-        """
-        Call the main loop
-        """
+        """Call the main loop."""
         self.server.serve_forever()
 
     def server_close(self):
+        """Close the Glances server session."""
         self.server.server_close()
 
     def end(self):
-        """
-        End of the Glances server session
-        """
+        """End of the Glances server session."""
         self.server_close()

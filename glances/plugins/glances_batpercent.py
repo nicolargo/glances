@@ -16,9 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Batinfo (battery) plugin
-"""
+
+"""Battery plugin."""
 
 # Batinfo library (optional; Linux-only)
 try:
@@ -31,13 +30,14 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances battery capacity plugin
+
+    """Glances' battery capacity plugin.
 
     stats is a list
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
@@ -51,17 +51,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-
-        """
-        Update battery capacity stats using the input method
-        """
-
+        """Update battery capacity stats using the input method."""
         # Reset stats
         self.reset()
 
@@ -79,14 +73,11 @@ class Plugin(GlancesPlugin):
 
 
 class GlancesGrabBat(object):
-    """
-    Get batteries stats using the Batinfo library
-    """
+
+    """Get batteries stats using the batinfo library."""
 
     def __init__(self):
-        """
-        Init batteries stats
-        """
+        """Init batteries stats."""
         try:
             self.bat = batinfo.batteries()
             self.initok = True
@@ -97,9 +88,7 @@ class GlancesGrabBat(object):
             self.initok = False
 
     def update(self):
-        """
-        Update the stats
-        """
+        """Update the stats."""
         if self.initok:
             reply = self.bat.update()
             if reply is not None:
@@ -111,10 +100,11 @@ class GlancesGrabBat(object):
             self.bat_list = []
 
     def get(self):
-        # Update the stats
+        """Get the stats."""
         return self.bat_list
 
     def getcapacitypercent(self):
+        """Get batteries capacity percent."""
         if not self.initok or self.bat.stat == []:
             return []
 
