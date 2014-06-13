@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage the configuration file."""
+
 # Import system libs
 import os
 import sys
@@ -41,8 +43,8 @@ from glances.core.glances_globals import (
 
 
 class Config(object):
-    """
-    This class is used to access/read config file, if it exists
+
+    """This class is used to access/read config file, if it exists.
 
     :param location: the custom path to search for config file
     :type location: str or None
@@ -56,9 +58,7 @@ class Config(object):
         self.load()
 
     def load(self):
-        """
-        Load a config file from the list of paths, if it exists
-        """
+        """Load a config file from the list of paths, if it exists."""
         for config_file in self.get_config_paths():
             if os.path.isfile(config_file) and os.path.getsize(config_file) > 0:
                 try:
@@ -73,9 +73,9 @@ class Config(object):
                 break
 
     def get_config_paths(self):
-        """
-        Get a list of config file paths, taking into account of the OS,
-        priority and location.
+        r"""Get a list of config file paths.
+
+        The list is built taking into account of the OS, priority and location.
 
         * running from source: /path/to/glances/conf
         * Linux: ~/.config/glances, /etc/glances
@@ -119,21 +119,15 @@ class Config(object):
         return paths
 
     def items(self, section):
-        """
-        Return the items list of a section
-        """
+        """Return the items list of a section."""
         return self.parser.items(section)
 
     def has_section(self, section):
-        """
-        Return info about the existence of a section
-        """
+        """Return info about the existence of a section."""
         return self.parser.has_section(section)
 
     def get_option(self, section, option):
-        """
-        Get the float value of an option, if it exists
-        """
+        """Get the float value of an option, if it exists."""
         try:
             value = self.parser.getfloat(section, option)
         except NoOptionError:
@@ -142,9 +136,7 @@ class Config(object):
             return value
 
     def get_raw_option(self, section, option):
-        """
-        Get the raw value of an option, if it exists
-        """
+        """Get the raw value of an option, if it exists."""
         try:
             value = self.parser.get(section, option)
         except NoOptionError:

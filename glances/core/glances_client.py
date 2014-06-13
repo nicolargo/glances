@@ -16,9 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Manage the Glances' client
-"""
+
+"""Manage the Glances client."""
 
 # Import system libs
 import json
@@ -36,9 +35,8 @@ from glances.outputs.glances_curses import GlancesCurses
 
 
 class GlancesClient(object):
-    """
-    This class creates and manages the TCP client
-    """
+
+    """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None):
         # Store the arg/config
@@ -63,8 +61,8 @@ class GlancesClient(object):
             sys.exit(2)
 
     def set_mode(self, mode='glances'):
-        """
-        Set the client mode
+        """Set the client mode.
+
         - 'glances' = Glances server (default)
         - 'snmp' = SNMP (fallback)
         """
@@ -72,18 +70,15 @@ class GlancesClient(object):
         return self.mode
 
     def get_mode(self):
-        """
-        Return the client mode
+        """Get the client mode.
+
         - 'glances' = Glances server (default)
         - 'snmp' = SNMP (fallback)
         """
         return self.mode
 
     def login(self):
-        """
-        Logon to the server
-        """
-
+        """Logon to the server."""
         ret = True
 
         # First of all, trying to connect to a Glances server
@@ -132,13 +127,7 @@ class GlancesClient(object):
         return ret
 
     def update(self):
-        """
-        Get stats from server
-        Return the client/server connection status:
-        - Connected: Connection OK
-        - Disconnected: Connection NOK
-        """
-        # Update the stats
+        """Update stats from Glances/SNMP server."""
         if self.get_mode() == 'glances':
             return self.update_glances()
         elif self.get_mode() == 'snmp':
@@ -148,8 +137,8 @@ class GlancesClient(object):
             sys.exit(2)
 
     def update_glances(self):
-        """
-        Get stats from Glances server
+        """Get stats from Glances server.
+
         Return the client/server connection status:
         - Connected: Connection OK
         - Disconnected: Connection NOK
@@ -159,7 +148,7 @@ class GlancesClient(object):
             server_stats = json.loads(self.client.getAll())
             server_stats['monitor'] = json.loads(self.client.getAllMonitored())
         except socket.error:
-            # Client can not get server stats
+            # Client cannot get server stats
             return "Disconnected"
         else:
             # Put it in the internal dict
@@ -167,8 +156,8 @@ class GlancesClient(object):
             return "Connected"
 
     def update_snmp(self):
-        """
-        Get stats from SNMP server
+        """Get stats from SNMP server.
+
         Return the client/server connection status:
         - SNMP: Connection with SNMP server OK
         - Disconnected: Connection NOK
@@ -184,9 +173,7 @@ class GlancesClient(object):
             return "SNMP"
 
     def serve_forever(self):
-        """
-        Main client loop
-        """
+        """Main client loop."""
         while True:
             # Update the stats
             cs_status = self.update()
@@ -197,7 +184,5 @@ class GlancesClient(object):
             # print self.stats.getAll()
 
     def end(self):
-        """
-        End of the client session
-        """
+        """End of the client session."""
         self.screen.end()

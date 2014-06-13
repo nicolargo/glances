@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Curses interface class."""
+
 # Import system lib
 import sys
 
@@ -38,12 +40,10 @@ else:
 
 
 class GlancesCurses(object):
-    """
-    This class manage the curses display (and key pressed)
-    """
+
+    """This class manages the curses display (and key pressed)."""
 
     def __init__(self, args=None):
-
         # Init args
         self.args = args
 
@@ -161,9 +161,7 @@ class GlancesCurses(object):
         self.pressedkey = -1
 
     def __get_key(self, window):
-        """
-        A getKey function to catch ESC key AND Numlock key (issue #163)
-        """
+        # Catch ESC key AND numlock key (issue #163)
         keycode = [0, 0]
         keycode[0] = window.getch()
         keycode[1] = window.getch()
@@ -175,7 +173,7 @@ class GlancesCurses(object):
             return keycode[0]
 
     def __catch_key(self):
-        # Get key
+        # Catch the pressed key
         # ~ self.pressedkey = self.term_window.getch()
         self.pressedkey = self.__get_key(self.term_window)
 
@@ -249,15 +247,14 @@ class GlancesCurses(object):
         return self.pressedkey
 
     def end(self):
-        # Shutdown the curses window
+        """Shutdown the curses window."""
         curses.echo()
         curses.nocbreak()
         curses.curs_set(1)
         curses.endwin()
 
     def display(self, stats, cs_status="None"):
-        """
-        Display stats on the screen
+        """Display stats on the screen.
 
         stats: Stats database to display
         cs_status:
@@ -270,7 +267,6 @@ class GlancesCurses(object):
             True if the stats have been displayed
             False if the help have been displayed
         """
-
         # Init the internal line/column dict for Glances Curses
         self.line_to_y = {}
         self.column_to_x = {}
@@ -346,9 +342,9 @@ class GlancesCurses(object):
         return True
 
     def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
-        """
-        Display the plugin_stats on the screen
-        If display_optional=True display the optional stats
+        """Display the plugin_stats on the screen.
+
+        If display_optional=True display the optional stats.
         max_y do not display line > max_y
         """
         # Exit if:
@@ -425,12 +421,12 @@ class GlancesCurses(object):
             self.line_to_y[plugin_stats['line'] + 1] = y + self.space_between_line
 
     def erase(self):
-        # Erase the content of the screen
+        """Erase the content of the screen."""
         self.term_window.erase()
 
     def flush(self, stats, cs_status="None"):
-        """
-        Clear and update screen
+        """Clear and update the screen.
+
         stats: Stats database to display
         cs_status:
             "None": standalone or server mode
@@ -441,8 +437,10 @@ class GlancesCurses(object):
         self.display(stats, cs_status=cs_status)
 
     def update(self, stats, cs_status="None"):
-        """
-        Update the screen and wait __refresh_time sec / catch key every 100 ms
+        """Update the screen.
+
+        Wait for __refresh_time sec / catch key every 100 ms.
+
         stats: Stats database to display
         cs_status:
             "None": standalone or server mode
@@ -454,7 +452,7 @@ class GlancesCurses(object):
 
         # Wait
         countdown = Timer(self.__refresh_time)
-        while (not countdown.finished()):
+        while not countdown.finished():
             # Getkey
             if self.__catch_key() > -1:
                 # flush display
@@ -463,9 +461,10 @@ class GlancesCurses(object):
             curses.napms(100)
 
     def get_stats_display_width(self, curse_msg, without_option=False):
-        # Return the width of the formated curses message
-        # The height is defined by the maximum line
+        """Return the width of the formatted curses message.
 
+        The height is defined by the maximum line.
+        """
         try:
             if without_option:
                 # Size without options
@@ -481,9 +480,10 @@ class GlancesCurses(object):
             return c
 
     def get_stats_display_height(self, curse_msg):
-        # Return the height of the formated curses message
-        # The height is defined by the number of '\n'
+        r"""Return the height of the formatted curses message.
 
+        The height is defined by the number of '\n' (new line).
+        """
         try:
             c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
         except:

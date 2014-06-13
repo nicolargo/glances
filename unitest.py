@@ -17,9 +17,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Glances unitary tests suite...
-"""
+
+"""Glances unitary tests suite."""
 
 import os
 import sys
@@ -41,7 +40,7 @@ from glances.core.glances_globals import (
 )
 
 # Global variables
-#=================
+# =================
 
 # Unitary test is only available from a GNU/Linus machine
 if not is_linux:
@@ -53,7 +52,7 @@ else:
 # Import local settings
 from glances.core.glances_globals import gettext_domain, locale_dir
 locale.setlocale(locale.LC_ALL, '')
-gettext.install(gettext_domain, locale_dir)        
+gettext.install(gettext_domain, locale_dir)
 
 # Init Glances core
 from glances.core.glances_main import GlancesMain
@@ -67,25 +66,22 @@ from glances.core.glances_stats import GlancesStats
 stats = GlancesStats()
 
 # Unitest class
-#============== 
+# ==============
+
 
 class testGlances(unittest.TestCase):
-    """
-    Test glances class
-    """
+
+    """Test Glances class."""
 
     def setUp(self):
-        """
-        This function is called *every time* before test_*
-        """
+        """The function is called *every time* before test_*."""
         print('\n' + '='*78)
 
     def test_000_update(self):
-        """
-        Update stats (mandatory step for all the stats)
-        The update is made twice (for rate computation)
-        """
+        """Update stats (mandatory step for all the stats).
 
+        The update is made twice (for rate computation).
+        """
         print('INFO: [TEST_000] Test the stats update function')
         try:
             stats.update()
@@ -98,14 +94,11 @@ class testGlances(unittest.TestCase):
         except:
             print('ERROR: Stats update failed')
             self.assertTrue(False)
-        
+
         self.assertTrue(True)
 
     def test_001_plugins(self):
-        """
-        Check mandatory plugins
-        """
-
+        """Check mandatory plugins."""
         plug_to_check = [ 'system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs' ]
         print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plug_to_check))
         plug_list = stats.getAllPlugins()
@@ -113,10 +106,7 @@ class testGlances(unittest.TestCase):
             self.assertTrue(p in plug_list)
 
     def test_002_cpu(self):
-        """
-        Check SYSTEM plugin
-        """
-
+        """Check SYSTEM plugin."""
         stats_to_check = [ 'hostname', 'os_name' ]
         print('INFO: [TEST_002] Check SYSTEM stats: %s' % ', '.join(stats_to_check))
         stats_grab = stats.get_plugin('system').get_raw()
@@ -126,10 +116,7 @@ class testGlances(unittest.TestCase):
         print('INFO: SYSTEM stats: %s' % stats_grab)
 
     def test_003_cpu(self):
-        """
-        Check CPU plugin
-        """
-
+        """Check CPU plugin."""
         stats_to_check = [ 'system', 'user', 'idle' ]
         print('INFO: [TEST_003] Check mandatory CPU stats: %s' % ', '.join(stats_to_check))
         stats_grab = stats.get_plugin('cpu').get_raw()
@@ -142,10 +129,7 @@ class testGlances(unittest.TestCase):
         print('INFO: CPU stats: %s' % stats_grab)
 
     def test_004_load(self):
-        """
-        Check LOAD plugin
-        """
-
+        """Check LOAD plugin."""
         stats_to_check = [ 'cpucore', 'min1', 'min5', 'min15' ]
         print('INFO: [TEST_004] Check LOAD stats: %s' % ', '.join(stats_to_check))
         stats_grab = stats.get_plugin('load').get_raw()
@@ -157,10 +141,7 @@ class testGlances(unittest.TestCase):
         print('INFO: LOAD stats: %s' % stats_grab)
 
     def test_005_mem(self):
-        """
-        Check MEM plugin
-        """
-
+        """Check MEM plugin."""
         stats_to_check = [ 'available', 'used', 'free', 'total' ]
         print('INFO: [TEST_005] Check MEM stats: %s' % ', '.join(stats_to_check))
         stats_grab = stats.get_plugin('mem').get_raw()
@@ -172,10 +153,7 @@ class testGlances(unittest.TestCase):
         print('INFO: MEM stats: %s' % stats_grab)
 
     def test_006_swap(self):
-        """
-        Check MEMSWAP plugin
-        """
-
+        """Check MEMSWAP plugin."""
         stats_to_check = [ 'used', 'free', 'total' ]
         print('INFO: [TEST_006] Check SWAP stats: %s' % ', '.join(stats_to_check))
         stats_grab = stats.get_plugin('memswap').get_raw()
@@ -187,30 +165,21 @@ class testGlances(unittest.TestCase):
         print('INFO: SWAP stats: %s' % stats_grab)
 
     def test_007_network(self):
-        """
-        Check NETWORK plugin
-        """
-
+        """Check NETWORK plugin."""
         print('INFO: [TEST_007] Check NETWORK stats')
         stats_grab = stats.get_plugin('network').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='Network stats is not a list')
         print('INFO: NETWORK stats: %s' % stats_grab)
 
     def test_008_diskio(self):
-        """
-        Check DISKIO plugin
-        """
-
+        """Check DISKIO plugin."""
         print('INFO: [TEST_008] Check DiskIO stats')
         stats_grab = stats.get_plugin('diskio').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='DiskIO stats is not a list')
         print('INFO: diskio stats: %s' % stats_grab)
 
     def test_009_fs(self):
-        """
-        Check FileSystem plugin
-        """
-
+        """Check File System plugin."""
         stats_to_check = [ ]
         print('INFO: [TEST_009] Check FS stats')
         stats_grab = stats.get_plugin('fs').get_raw()
@@ -218,10 +187,7 @@ class testGlances(unittest.TestCase):
         print('INFO: FS stats: %s' % stats_grab)
 
     def test_010_processes(self):
-        """
-        Check Process plugin
-        """
-
+        """Check Process plugin."""
         stats_to_check = [ ]
         print('INFO: [TEST_010] Check PROCESS stats')
         stats_grab = stats.get_plugin('processcount').get_raw()

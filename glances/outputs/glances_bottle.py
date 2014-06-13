@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Web interface class."""
+
 import os
 import sys
 
@@ -28,12 +30,10 @@ except ImportError:
 
 
 class GlancesBottle(object):
-    """
-    This class manage the Bottle Web Server
-    """
+
+    """This class manages the Bottle Web server."""
 
     def __init__(self, args=None):
-
         # Init args
         self.args = args
 
@@ -72,29 +72,25 @@ class GlancesBottle(object):
         }
 
     def _route(self):
-        """
-        Define route
-        """
+        """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
 
     def start(self, stats):
+        """Start the bottle."""
         # Init stats
         self.stats = stats
 
-        # Start the Bottle
         self._app.run(host=self.args.bind_address, port=self.args.port)
 
     def end(self):
-        # End the Bottle
+        """End the bottle."""
         pass
 
     def _index(self, refresh_time=None):
-        """
-        Bottle callback for index.html (/) file
-        """
+        """Bottle callback for index.html (/) file."""
         # Manage parameter
         if refresh_time is None:
             refresh_time = self.args.time
@@ -106,26 +102,20 @@ class GlancesBottle(object):
         return self.display(self.stats, refresh_time=refresh_time)
 
     def _css(self, filename):
-        """
-        Bottle callback for *.css files
-        """
+        """Bottle callback for *.css files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
 
     def _js(self, filename):
-        """
-        Bottle callback for *.js files
-        """
+        """Bottle callback for *.js files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
     def display(self, stats, refresh_time=None):
-        """
-        Display stats on the Webpage
+        """Display stats on the web page.
 
         stats: Stats database to display
         """
-
         html = template('header', refresh_time=refresh_time)
         html += '<header>'
         html += self.display_plugin('system', self.stats.get_plugin('system').get_stats_display(args=self.args))
@@ -163,10 +153,7 @@ class GlancesBottle(object):
         return html
 
     def display_plugin(self, plugin_name, plugin_stats):
-        """
-        Generate the Bootle template for the plugin_stats
-        """
-
+        """Generate the Bottle template for the plugin_stats."""
         # Template header
         tpl = """ \
                 %#Template for Bottle
