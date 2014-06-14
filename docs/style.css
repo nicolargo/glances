@@ -61,12 +61,12 @@ p.topic-title {
   font-weight: bold;
 }
 
-pre.code {
+pre {
   margin-left: 2em;
   margin-right: 2em;
 }
 
-.console {
+.console, .literal-block {
   background-color: #eeeeee;
   border: 1px solid #cccccc;
   max-width: 60em;

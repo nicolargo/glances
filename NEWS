@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Version 1.7.7
 =============
 
@@ -5,20 +6,105 @@ Version 1.7.7
 	* Adapt to PSUtil 2.1.1
 	* Compatibility with Python 3.4
 	* Improve German update
+=======
+==============================================================================
+Glances Version 2.x
+==============================================================================
+
+Version 2.0
+===========
+
+    Glances v2.0 is not a simple upgrade of the version 1.x but a complete code refactoring.
+    Based on a plugins system, it aims at providing an easy way to add news features.
+    - Core defines the basics and commons functions.
+    - all stats are grabbed through plugins (see the glances/plugins source folder).
+    - also outputs methods (Curse, Web mode, CSV) are managed as plugins.
+
+    The Curse interface is almost the same than the version 1.7. Some improvements have been made:
+    - space optimisation for the CPU, LOAD and MEM stats (justified alignment)
+    - CPU:
+        . CPU stats are displayed as soon as Glances is started
+        . steal CPU alerts are no more logged
+    - LOAD:
+        . 5 min LOAD alerts are no more logged
+    - File System:
+        . Display the device name (if space is available)
+    - Sensors:
+        . Sensors and HDD temperature are displayed in the same block
+    - Process list:
+        . Refactor columns: CPU%, MEM%, VIRT, RES, PID, USER, NICE, STATUS, TIME, IO, Command/name
+        . The running processes status is highlighted
+        . The process name is highlighted in the command line
+
+    Glances 2.0 brings a brand new Web Interface. You can run Glances in Web server mode and
+    consult the stats directly from a standard Web Browser.
+
+    The client mode can now fallback to a simple SNMP mode if Glances server is not found on the remote machine.
+
+    Complete release notes:
+    * Cut ifName and DiskName if they are too long in the curses interface (by Nicolargo)
+    * Windows CLI is OK but early experimental (by Nicolargo)
+    * Add bitrate limits to the networks interfaces (by Nicolargo)
+    * Batteries % stats are now in the sensors list (by Nicolargo)
+    * Refactor the client/server password security: using SHA256 (by Nicolargo,
+      based on Alessio Sergi's example script)
+    * Refactor the CSV output (by Nicolargo)
+    * Glances client fallback to SNMP server if Glances one not found (by Nicolargo)
+    * Process list: Highlight running/basename processes (by Alessio Sergi)
+    * New Web server mode thk to the Bottle library (by Nicolargo)
+    * Responsive design for Bottle interface (by Nicolargo)
+    * Remove HTML output (by Nicolargo)
+    * Enable/disable for optional plugins through the command line (by Nicolargo)
+    * Refactor the API (by Nicolargo)
+    * Load-5 alert are no longer logged (by Nicolargo)
+    * Rename In/Out by Read/Write for DiskIO according to #339 (by Nicolargo)
+    * Migrate from pysensors to py3sensors (by Alessio Sergi)
+    * Migration to PsUtil 2.x (by Nicolargo)
+    * New plugins system (by Nicolargo)
+    * Python 2.x and 3.x compatibility (by Alessio Sergi)
+    * Code quality improvements (by Alessio Sergi)
+    * Refactor unitaries tests (by Nicolargo)
+    * Development now follow the git flow workflow (by Nicolargo)
+
+
+==============================================================================
+Glances Version 1.x
+==============================================================================
+
+Version 1.7.7
+=============
+
+* Fix CVS export [issue #348]
+* Adapt to PSUtil 2.1.1
+* Compatibility with Python 3.4
+* Improve German update
+>>>>>>> release/v2.0
 
 Version 1.7.6
 =============
 
+<<<<<<< HEAD
     *  Adapt to psutil 2.0.0 API
     *  Fixed psutil 0.5.x support on Windows
     *  Fix help screen in 80x24 terminal size
     *  Implement toggle of process list display ('z' key)
+=======
+    * Adapt to psutil 2.0.0 API
+    * Fixed psutil 0.5.x support on Windows
+    * Fix help screen in 80x24 terminal size
+    * Implement toggle of process list display ('z' key)
+>>>>>>> release/v2.0
 
 Version 1.7.5
 =============
 
+<<<<<<< HEAD
     *  Force the Pypi installer to use the PsUtil branch 1.x (#333)
 
+=======
+    * Force the Pypi installer to use the PsUtil branch 1.x (#333)
+    
+>>>>>>> release/v2.0
 Version 1.7.4
 =============
 
@@ -29,9 +115,9 @@ Version 1.7.4
     * You can hide network interface from the Network view using the conf file
     * Optimisation of CPU consumption (around ~10%)
     * Correct issue #314: Client/server mode always asks for password
-    * Correct issue #315: Defining password in client/server mode doesn't work as intended 
-    * Correct issue #316: Crash in client server mode 
-    * Correct issue #318: Argument parser, try-except blocks never get triggered 
+    * Correct issue #315: Defining password in client/server mode doesn't work as intended
+    * Correct issue #316: Crash in client server mode
+    * Correct issue #318: Argument parser, try-except blocks never get triggered
 
 Version 1.7.3
 =============

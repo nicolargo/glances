@@ -3,10 +3,11 @@ include COPYING
 include NEWS
 include README.rst
 include conf/glances.conf
-include glances/data/css/*.css
-include glances/data/html/*.html
-include glances/data/img/*.png
+include glances/outputs/bottle/*.tpl
+include glances/outputs/static/css/*.css
+include glances/outputs/static/js/*.js
 include man/glances.1
 recursive-include docs images/*.png glances-doc.html
+recursive-include glances *.py
 recursive-include i18n *.mo
 prune docs/_build

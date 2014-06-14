@@ -31,7 +31,7 @@ exit
 }
 
 function gen_pot() {
-	xgettext --language=Python --keyword=_ --output=${ROOT}i18n/glances.pot ${ROOT}glances/glances.py
+	xgettext --language=Python --keyword=_ --output=${ROOT}i18n/glances.pot `find ${ROOT}glances/ -name "*.py"`
 }
 
 OPERATION="$1"
