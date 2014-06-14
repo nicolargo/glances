@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""CSV interface class."""
+
 # Import sys libs
 import csv
 import sys
@@ -28,10 +30,9 @@ from glances.core.glances_globals import is_py3
 csv_stats_list = ['cpu', 'load', 'mem', 'memswap']
 
 
-class glancesCSV:
-    """
-    This class manages the CSV output
-    """
+class GlancesCSV(object):
+
+    """This class manages the CSV output."""
 
     def __init__(self, args=None):
         # CSV file name
@@ -51,12 +52,11 @@ class glancesCSV:
         print(_("Stats dumped to CSV file: {0}").format(self.csv_filename))
 
     def exit(self):
+        """Close the CSV file."""
         self.csv_file.close()
 
     def update(self, stats):
-        """
-        Update stats in the CSV output file
-        """
+        """Update stats in the CSV output file."""
         all_stats = stats.getAll()
         plugins = stats.getAllPlugins()
 

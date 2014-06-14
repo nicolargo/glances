@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Sensors plugin."""
+
 # Sensors library (optional; Linux-only)
 # Py3Sensors: https://bitbucket.org/gleb_zhulik/py3sensors
 try:
@@ -32,19 +34,20 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances' sensors plugin
 
-    The stats list includes both sensors and hard disks stats, if any
-    The sensors are already grouped by chip type and then sorted by name
-    The hard disks are already sorted by name
+    """Glances' sensors plugin.
+
+    The stats list includes both sensors and hard disks stats, if any.
+    The sensors are already grouped by chip type and then sorted by name.
+    The hard disks are already sorted by name.
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabsensors = glancesGrabSensors()
+        self.glancesgrabsensors = GlancesGrabSensors()
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
         self.hddtemp_plugin = HddTempPlugin()
@@ -65,16 +68,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Update sensors stats using the input method
-        """
-
+        """Update sensors stats using the input method."""
         # Reset the stats
         self.reset()
 
@@ -95,8 +93,9 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def __set_type(self, stats, sensor_type):
-        """
-        3 types of stats is possible in the Sensors plugins:
+        """Set the plugin type.
+
+        3 types of stats is possible in the sensors plugin:
         - Core temperature
         - HDD temperature
         - Battery capacity
@@ -106,9 +105,7 @@ class Plugin(GlancesPlugin):
         return stats
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 
@@ -143,15 +140,12 @@ class Plugin(GlancesPlugin):
         return ret
 
 
-class glancesGrabSensors:
-    """
-    Get sensors stats using the PySensors library
-    """
+class GlancesGrabSensors(object):
+
+    """Get sensors stats using the py3sensors library."""
 
     def __init__(self):
-        """
-        Init sensors stats
-        """
+        """Init sensors stats."""
         try:
             sensors.init()
         except Exception:
@@ -163,15 +157,11 @@ class glancesGrabSensors:
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.sensors_list = []
 
     def __update__(self):
-        """
-        Update the stats
-        """
+        """Update the stats."""
         # Reset the list
         self.reset()
 
@@ -188,9 +178,11 @@ class glancesGrabSensors:
         return self.sensors_list
 
     def get(self):
+        """Get sensors list."""
         self.__update__()
         return self.sensors_list
 
     def quit(self):
+        """End of connection."""
         if self.initok:
             sensors.cleanup()

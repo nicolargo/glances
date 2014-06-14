@@ -16,9 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 """
 I am your father...
-For all Glances plugins
+
+...for all Glances plugins.
 """
 
 # Import system libs
@@ -29,11 +31,11 @@ from glances.core.glances_globals import glances_logs
 
 
 class GlancesPlugin(object):
-    """
-    Main class for Glances' plugin
-    """
+
+    """Main class for Glances' plugin."""
 
     def __init__(self, args=None):
+        """Init the plugin of plugins class."""
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
 
@@ -50,17 +52,17 @@ class GlancesPlugin(object):
         self.limits = dict()
 
     def __repr__(self):
-        # Return the raw stats
+        """Return the raw stats."""
         return self.stats
 
     def __str__(self):
-        # Return the human-readable stats
+        """Return the human-readable stats."""
         return str(self.stats)
 
     def set_input(self, input_method):
-        """
-        Set the input method:
-        * local: system local grab (PSUtil or direct access)
+        """Set the input method.
+
+        * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
         """
@@ -68,19 +70,19 @@ class GlancesPlugin(object):
         return self.input_method
 
     def get_input(self):
-        """
-        Get the input method
-        """
+        """Get the input method."""
         return self.input_method
 
     def set_stats(self, input_stats):
-        # Set the stats to input_stats
+        """Set the stats to input_stats."""
         self.stats = input_stats
         return self.stats
 
     def set_stats_snmp(self, bulk=False, snmp_oid={}):
-        # Update stats using SNMP
-        # If bulk=True, use a bulk request instead of a get request
+        """Update stats using SNMP.
+
+        If bulk=True, use a bulk request instead of a get request.
+        """
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
@@ -122,17 +124,15 @@ class GlancesPlugin(object):
         return ret
 
     def get_raw(self):
-        # Return the stats object
+        """Return the stats object."""
         return self.stats
 
     def get_stats(self):
-        # Return the stats object in JSON format for the RPC API
+        """Return the stats object in JSON format for the XML-RPC API."""
         return json.dumps(self.stats)
 
     def load_limits(self, config):
-        """
-        Load the limits from the configuration file
-        """
+        """Load the limits from the configuration file."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
             # print "Load limits for %s" % self.plugin_name
@@ -145,27 +145,29 @@ class GlancesPlugin(object):
                     self.limits[self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
 
     def set_limits(self, input_limits):
-        # Set the limits to input_limits
+        """Set the limits to input_limits."""
         self.limits = input_limits
         return self.limits
 
     def get_limits(self):
-        # Return the limits object
+        """Return the limits object."""
         return self.limits
 
     def get_alert(self, current=0, min=0, max=100, header="", log=False):
-        # Return the alert status relative to a current value
-        # Use this function for minor stat
-        # If current < CAREFUL of max then alert = OK
-        # If current > CAREFUL of max then alert = CAREFUL
-        # If current > WARNING of max then alert = WARNING
-        # If current > CRITICAL of max then alert = CRITICAL
-        #
-        # If defined 'header' is added between the plugin name and the status
-        # Only usefull for stats with several alert status
-        #
-        # If log=True than return the logged status
+        """Return the alert status relative to a current value.
 
+        Use this function for minor stats.
+
+        If current < CAREFUL of max then alert = OK
+        If current > CAREFUL of max then alert = CAREFUL
+        If current > WARNING of max then alert = WARNING
+        If current > CRITICAL of max then alert = CRITICAL
+
+        If defined 'header' is added between the plugin name and the status.
+        Only useful for stats with several alert status.
+
+        If log=True than return the logged status.
+        """
         # Compute the %
         try:
             value = (current * 100) / max
@@ -206,6 +208,7 @@ class GlancesPlugin(object):
         return ret + log_str
 
     def get_alert_log(self, current=0, min=0, max=100, header=""):
+        """Get the alert log."""
         return self.get_alert(current, min, max, header, log=True)
 
     def __get_limit_critical(self, header=""):
@@ -227,9 +230,7 @@ class GlancesPlugin(object):
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
     def get_hide(self, header=""):
-        """
-        Return the hide configuration list key for the current plugin
-        """
+        """Return the hide configuration list key for the current plugin."""
         if header == "":
             try:
                 return self.limits[self.plugin_name + '_' + 'hide']
@@ -242,26 +243,23 @@ class GlancesPlugin(object):
                 return []
 
     def is_hide(self, value, header=""):
-        """
-        Return True if the value is in the hide configuration list
-        """
+        """Return True if the value is in the hide configuration list."""
         return value in self.get_hide(header=header)
 
     def msg_curse(self, args):
-        """
-        Return default string to display in the curse interface
-        """
+        """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]
 
     def get_stats_display(self, args=None):
-        # Return a dict with all the information needed to display the stat
-        # key     | description
-        #----------------------------
-        # display | Display the stat (True or False)
-        # msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
-        # column  | column number
-        # line    | Line number
+        """Return a dict with all the information needed to display the stat.
 
+        key     | description
+        ----------------------------
+        display | Display the stat (True or False)
+        msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
+        column  | column number
+        line    | Line number
+        """
         display_curse = False
         column_curse = -1
         line_curse = -1
@@ -279,9 +277,9 @@ class GlancesPlugin(object):
                 'line': line_curse}
 
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
-        """
-        Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }
-        with:
+        """Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }.
+
+        Where:
             msg: string
             decoration:
                 DEFAULT: no decoration
@@ -302,19 +300,16 @@ class GlancesPlugin(object):
             optional: True if the stat is optional (display only if space is available)
             spittable: Line can be splitted to fit on the screen (default is not)
         """
-
         return {'msg': msg, 'decoration': decoration, 'optional': optional, 'splittable': splittable}
 
     def curse_new_line(self):
-        """
-        Go to a new line
-        """
+        """Go to a new line."""
         return self.curse_add_line('\n')
 
     def auto_unit(self, number, low_precision=False):
-        """
-        Make a nice human readable string out of number
-        Number of decimal places increases as quantity approaches 1
+        """Make a nice human-readable string out of number.
+
+        Number of decimal places increases as quantity approaches 1.
 
         examples:
         CASE: 613421788        RESULT:       585M low_precision:       585M
@@ -325,8 +320,8 @@ class GlancesPlugin(object):
         CASE: 1073741824       RESULT:      1024M low_precision:      1024M
         CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
 
-        parameter 'low_precision=True' returns less decimal places.
-        potentially sacrificing precision for more readability
+        'low_precision=True' returns less decimal places potentially
+        sacrificing precision for more readability.
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
         prefix = {

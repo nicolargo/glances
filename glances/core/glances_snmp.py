@@ -28,7 +28,8 @@ except ImportError:
 
 
 class GlancesSNMPClient(object):
-    """ SNMP client class (based on PySNMP) """
+
+    """SNMP client class (based on pysnmp library)."""
 
     def __init__(self, host='localhost', port=161, version='2c',
                  community='public', user='private', auth=''):
@@ -46,10 +47,7 @@ class GlancesSNMPClient(object):
         self.auth = auth
 
     def __get_result__(self, errorIndication, errorStatus, errorIndex, varBinds):
-        """
-        Put results in table
-        """
-
+        """Put results in table."""
         ret = {}
         if not errorIndication or not errorStatus:
             for name, val in varBinds:
@@ -60,13 +58,13 @@ class GlancesSNMPClient(object):
         return ret
 
     def get_by_oid(self, *oid):
-        """
-        SNMP simple request (list of OID)
-        One request per OID list
+        """SNMP simple request (list of OID).
+
+        One request per OID list.
+
         * oid: oid list
         > Return a dict
         """
-
         if self.version == '3':
             errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(
                 cmdgen.UsmUserData(self.user, self.auth),
@@ -95,16 +93,19 @@ class GlancesSNMPClient(object):
         return ret
 
     def getbulk_by_oid(self, non_repeaters, max_repetitions, *oid):
-        """
-        SNMP getbulk request
-        In contrast to snmpwalk, this information will typically be gathered in a
-        single transaction with the agent, rather than one transaction per variable found.
-        * non_repeaters: This specifies the number of supplied variables that should not be iterated over.
-        * max_repetitions: This specifies the maximum number of iterations over the repeating variables.
+        """SNMP getbulk request.
+
+        In contrast to snmpwalk, this information will typically be gathered in
+        a single transaction with the agent, rather than one transaction per
+        variable found.
+
+        * non_repeaters: This specifies the number of supplied variables that
+          should not be iterated over.
+        * max_repetitions: This specifies the maximum number of iterations over
+          the repeating variables.
         * oid: oid list
         > Return a list of dicts
         """
-
         if self.version.startswith('3'):
             errorIndication, errorStatus, errorIndex, varBinds = self.cmdGen.getCmd(
                 cmdgen.UsmUserData(self.user, self.auth),

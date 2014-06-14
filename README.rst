@@ -18,7 +18,8 @@ Glances - An eye on your system
 .. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
         :width: 128
 
-**Glances** is a cross-platform curses-based system monitoring tool written in Python.
+**Glances** is a cross-platform curses-based system monitoring tool
+written in Python.
 
 It uses the `psutil`_ library to get information from your system.
 
@@ -27,16 +28,29 @@ It uses the `psutil`_ library to get information from your system.
 Requirements
 ============
 
+<<<<<<< HEAD
+- ``python >= 2.6`` (tested with version 2.6, 2.7, 3.2, 3.3, 3.4)
+- ``psutil >= 0.5.1`` (recommended version >= 2.0.0)
+=======
 - ``python >= 2.6`` (tested with version 2.6, 2.7, 3.3, 3.4)
 - ``psutil >= 2.0.0``
+>>>>>>> release/v2.0
 - ``setuptools``
 
 Optional dependencies:
 
-- ``bottle`` (for Web Server mode)
-- ``py3sensors`` (for hardware monitoring support) [Linux-only]
+<<<<<<< HEAD
+- ``jinja2`` (for HTML output)
+- ``pysensors`` (for HW monitoring support) [Linux-only]
 - ``hddtemp`` (for HDD temperature monitoring support)
 - ``batinfo`` (for battery monitoring support) [Linux-only]
+=======
+- ``bottle`` (for Web server mode)
+- ``py3sensors`` (for hardware monitoring support) [Linux-only]
+- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
+- ``batinfo`` (for battery monitoring support) [Linux-only]
+- ``pysnmp`` (for SNMP support)
+>>>>>>> release/v2.0
 
 Installation
 ============
@@ -44,7 +58,8 @@ Installation
 PyPI: The simple way
 --------------------
 
-Glances is on `PyPI`_. By using Pypi, you are sure to have the latest stable version.
+Glances is on `PyPI`_. By using PyPI, you are sure to have the latest
+stable version.
 
 To install, simply use `pip`_:
 
@@ -52,8 +67,13 @@ To install, simply use `pip`_:
 
     pip install Glances
 
-*Note*: Python headers are required to install PSutil. For example,
+<<<<<<< HEAD
+*Note*: Python headers are required to install psutil.
+For example, on Debian/Ubuntu you need to install first the *python-dev* package.
+=======
+*Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
+>>>>>>> release/v2.0
 
 To upgrade Glances to the latest version:
 
@@ -64,7 +84,11 @@ To upgrade Glances to the latest version:
 GNU/Linux
 ---------
 
+<<<<<<< HEAD
+At the moment, packages exist for the following distributions:
+=======
 At the moment, packages exist for the following GNU/Linux distributions:
+>>>>>>> release/v2.0
 
 - Arch Linux
 - Debian (Testing/Sid)
@@ -121,9 +145,21 @@ MacPorts
 Windows
 -------
 
+<<<<<<< HEAD
 Glances proposes a Windows client based on the `colorconsole`_ Python library.
+Glances version < 1.7.2 only works in server mode.
 
-To install Glances on Windows OS, you have to follow these steps:
+Thanks to Nicolas Bourges, a Windows installer is available:
+
+- Glances-1.7.2-win32.msi_ (32-bit, MD5: dba4f6cc9f47b6806ffaeb665c093270)
+
+Otherwise, you have to follow these steps:
+=======
+Glances proposes a Windows client based on the `colorconsole`_ Python
+library.
+
+To install Glances on Windows, you have to follow these steps:
+>>>>>>> release/v2.0
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
@@ -142,8 +178,13 @@ To install Glances version X.Y from source:
     $ cd glances-*
     # python setup.py install
 
+<<<<<<< HEAD
+*Note*: Python headers are required to install psutil.
+For example, on Debian/Ubuntu you need to install first the *python-dev* package.
+=======
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
+>>>>>>> release/v2.0
 
 Puppet
 ------
@@ -166,7 +207,7 @@ For the Web server mode, run:
 
     $ glances -w
 
-and enter the URL http://<ip>:61208 in your favorite Web Browser.
+and enter the URL ``http://<ip>:61208`` in your favorite web browser.
 
 For the client/server mode, run:
 
@@ -206,7 +247,6 @@ LGPL. See ``COPYING`` for more details.
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://brew.sh/
 .. _MacPorts: https://www.macports.org/
-.. _Glances-1.7.2-win32.msi: http://glances.s3.amazonaws.com/Glances-1.7.2-win32.msi
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst

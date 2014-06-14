@@ -16,15 +16,34 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Init the Glances software
-"""
+
+"""Init the Glances software."""
+
+__appname__ = 'glances'
+__version__ = '2.0'
+__author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
+__license__ = 'LGPL'
 
 # Import system lib
 import gettext
 import locale
 import signal
 import sys
+
+# Import psutil
+try:
+    from psutil import __version__ as __psutil_version
+except ImportError:
+    print('psutil library not found. Glances cannot start.')
+    sys.exit(1)
+
+# Check psutil version
+psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
+if psutil_version < psutil_min_version:
+    print('psutil version {0} detected.').format(__psutil_version)
+    print('psutil 2.0 or higher is needed. Glances cannot start.')
+    sys.exit(1)
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
@@ -33,17 +52,12 @@ from glances.core.glances_main import GlancesMain
 
 
 def __signal_handler(signal, frame):
-    """
-    Call back for CTRL-C
-    """
+    """Callback for CTRL-C."""
     end()
 
 
 def end():
-    """
-    Stop Glances
-    """
-
+    """Stop Glances."""
     if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
@@ -59,8 +73,7 @@ def end():
 
 
 def main():
-    """
-    Main entry point for Glances
+    """Main entry point for Glances.
 
     Select the mode (standalone, client or server)
     Run it...

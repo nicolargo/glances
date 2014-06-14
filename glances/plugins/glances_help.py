@@ -16,26 +16,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 """
-Glances help plugin
-Just a stupid plugin to display the help screen
+Help plugin.
+
+Just a stupid plugin to display the help screen.
 """
 
 # Import Glances libs
-from glances.core.glances_globals import (
-    __appname__,
-    __psutil_version__,
-    __version__
-)
+from glances.core.glances_globals import appname, psutil_version, version
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances' Help Plugin
-    """
+
+    """Glances' help plugin."""
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -48,24 +46,19 @@ class Plugin(GlancesPlugin):
         self.line_curse = 0
 
     def update(self):
-        """
-        No stats, it is just a plugin to display the help...
-        """
+        """No stats. It is just a plugin to display the help."""
         pass
 
     def msg_curse(self, args=None):
-        """
-        Return the list to display in the curse interface
-        """
-
+        """Return the list to display in the curse interface."""
         # Init the return message
         ret = []
 
         # Build the string message
         # Header
-        msg = '{0} {1}'.format(__appname__.title(), __version__)
+        msg = '{0} {1}'.format(appname.title(), version)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = _(" with psutil {0}").format(__psutil_version__)
+        msg = _(" with psutil {0}").format(psutil_version)
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
 

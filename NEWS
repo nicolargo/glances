@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+Version 1.7.7
+=============
+
+	* Fix CVS export [issue #348]
+	* Adapt to PSUtil 2.1.1
+	* Compatibility with Python 3.4
+	* Improve German update
+=======
 ==============================================================================
 Glances Version 2.x
 ==============================================================================
@@ -62,6 +71,40 @@ Version 2.0
 Glances Version 1.x
 ==============================================================================
 
+Version 1.7.7
+=============
+
+* Fix CVS export [issue #348]
+* Adapt to PSUtil 2.1.1
+* Compatibility with Python 3.4
+* Improve German update
+>>>>>>> release/v2.0
+
+Version 1.7.6
+=============
+
+<<<<<<< HEAD
+    *  Adapt to psutil 2.0.0 API
+    *  Fixed psutil 0.5.x support on Windows
+    *  Fix help screen in 80x24 terminal size
+    *  Implement toggle of process list display ('z' key)
+=======
+    * Adapt to psutil 2.0.0 API
+    * Fixed psutil 0.5.x support on Windows
+    * Fix help screen in 80x24 terminal size
+    * Implement toggle of process list display ('z' key)
+>>>>>>> release/v2.0
+
+Version 1.7.5
+=============
+
+<<<<<<< HEAD
+    *  Force the Pypi installer to use the PsUtil branch 1.x (#333)
+
+=======
+    * Force the Pypi installer to use the PsUtil branch 1.x (#333)
+    
+>>>>>>> release/v2.0
 Version 1.7.4
 =============
 
@@ -116,13 +159,14 @@ Version 1.7
     * Add a uninstall script
     * Add getNetTimeSinceLastUpdate() getDiskTimeSinceLastUpdate() and getProcessDiskTimeSinceLastUpdate() in the API
     * Add more translation: Italien, Chinese
-    * and last but not least... up to 100 hundred bugs corrected / software and docs improvments
+    * and last but not least... up to 100 hundred bugs corrected / software and
+    * docs improvements
 
 Version 1.6.1
 =============
 
     * Add per-user settings (configuration file) support
-    * Add -z/--nobold option for better appearence under Solarized terminal
+    * Add -z/--nobold option for better appearance under Solarized terminal
     * Key 'u' shows cumulative net traffic
     * Work in improving autoUnit
     * Take into account the number of core in the CPU process limit
@@ -263,7 +307,7 @@ Version 1.3.4
 Version 1.3.3
 =============
 
-    * Automaticaly swith between process short and long name
+    * Automatically swith between process short and long name
     * Center the host / system information
     * Always put the hour/date in the bottom/right
     * Correct a bug if there is a lot of Disk/IO

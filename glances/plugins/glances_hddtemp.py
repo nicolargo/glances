@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""HDD temperature plugin."""
+
 # Import system libs
 import socket
 
@@ -25,17 +27,18 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances' HDD temperature sensors plugin
+
+    """Glances' HDD temperature sensors plugin.
 
     stats is a list
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabhddtemp = glancesGrabHDDTemp()
+        self.glancesgrabhddtemp = GlancesGrabHDDTemp()
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
@@ -45,16 +48,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Update HDD stats using the input method
-        """
-
+        """Update HDD stats using the input method."""
         # Reset stats
         self.reset()
 
@@ -70,25 +68,25 @@ class Plugin(GlancesPlugin):
         return self.stats
 
 
-class glancesGrabHDDTemp:
-    """
-    Get hddtemp stats using a socket connection
-    """
-    def __init__(self, host="127.0.0.1", port=7634):
-        """
-        Init hddtemp stats
-        """
+class GlancesGrabHDDTemp(object):
+
+    """Get hddtemp stats using a socket connection."""
+
+    def __init__(self, host='127.0.0.1', port=7634):
+        """Init hddtemp stats."""
         self.host = host
         self.port = port
         self.cache = ""
+        self.reset()
+
+    def reset(self):
+        """Reset/init the stats."""
         self.hddtemp_list = []
 
     def __update__(self):
-        """
-        Update the stats
-        """
+        """Update the stats."""
         # Reset the list
-        self.hddtemp_list = []
+        self.reset()
 
         # Fetch the data
         data = self.fetch()
@@ -118,9 +116,7 @@ class glancesGrabHDDTemp:
             self.hddtemp_list.append(hddtemp_current)
 
     def fetch(self):
-        """
-        Fetch the data from hddtemp daemon
-        """
+        """Fetch the data from hddtemp daemon."""
         # Taking care of sudden deaths/stops of hddtemp daemon
         try:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -133,5 +129,6 @@ class glancesGrabHDDTemp:
         return data
 
     def get(self):
+        """Get HDDs list."""
         self.__update__()
         return self.hddtemp_list

@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage the monitor list."""
+
 # Import system lib
 import re
 import subprocess
@@ -25,41 +27,40 @@ import subprocess
 from glances.core.glances_globals import glances_processes
 
 
-class monitorList:
-    """
-    This class describes the optionnal monitored processes list
-    A list of 'important' processes to monitor.
+class MonitorList(object):
 
-    The list (Python list) is composed of items (Python dict)
-    An item is defined (Dict keys'):
+    """This class describes the optional monitored processes list.
+
+    The monitored list is a list of 'important' processes to monitor.
+
+    The list (Python list) is composed of items (Python dict).
+    An item is defined (dict keys):
     * description: Description of the processes (max 16 chars)
     * regex: regular expression of the processes to monitor
     * command: (optional) shell command for extended stat
     * countmin: (optional) minimal number of processes
     * countmax: (optional) maximum number of processes
     """
+
     # Maximum number of items in the list
     __monitor_list_max_size = 10
     # The list
     __monitor_list = []
 
     def __init__(self, config):
-        """
-        Init the monitoring list from the configuration file
-        """
-
+        """Init the monitoring list from the configuration file."""
         self.config = config
 
         if self.config is not None and self.config.has_section('monitor'):
             # Process monitoring list
-            self.__setMonitorList('monitor', 'list')
+            self.__set_monitor_list('monitor', 'list')
         else:
             self.__monitor_list = []
 
-    def __setMonitorList(self, section, key):
-        """
-        Init the monitored processes list
-        The list is defined in the Glances configuration file
+    def __set_monitor_list(self, section, key):
+        """Init the monitored processes list.
+
+        The list is defined in the Glances configuration file.
         """
         for l in range(1, self.__monitor_list_max_size + 1):
             value = {}
@@ -99,9 +100,9 @@ class monitorList:
         return len(self.__monitor_list)
 
     def __get__(self, item, key):
-        """
-        Meta function to return key value of item
-        None if not defined or item > len(list)
+        """Meta function to return key value of item.
+
+        Return None if not defined or item > len(list)
         """
         if item < len(self.__monitor_list):
             try:
@@ -112,15 +113,12 @@ class monitorList:
             return None
 
     def update(self):
-        """
-        Update the command result attributed
-        """
-
+        """Update the command result attributed."""
         # Only continue if monitor list is not empty
         if len(self.__monitor_list) == 0:
             return self.__monitor_list
 
-        # Iter uppon the monitored list
+        # Iter upon the monitored list
         for i in range(0, len(self.get())):
             # Search monitored processes by a regular expression
             processlist = glances_processes.getlist()
@@ -147,15 +145,11 @@ class monitorList:
         return self.__monitor_list
 
     def get(self):
-        """
-        Return the monitored list (list of dict)
-        """
+        """Return the monitored list (list of dict)."""
         return self.__monitor_list
 
     def set(self, newlist):
-        """
-        Set the monitored list (list of dict)
-        """
+        """Set the monitored list (list of dict)."""
         self.__monitor_list = newlist
 
     def getAll(self):
@@ -167,37 +161,25 @@ class monitorList:
         self.set(newlist)
 
     def description(self, item):
-        """
-        Return the description of the item number (item)
-        """
+        """Return the description of the item number (item)."""
         return self.__get__(item, "description")
 
     def regex(self, item):
-        """
-        Return the regular expression of the item number (item)
-        """
+        """Return the regular expression of the item number (item)."""
         return self.__get__(item, "regex")
 
     def command(self, item):
-        """
-        Return the stats command of the item number (item)
-        """
+        """Return the stat command of the item number (item)."""
         return self.__get__(item, "command")
 
     def result(self, item):
-        """
-        Return the reult command of the item number (item)
-        """
+        """Return the reult command of the item number (item)."""
         return self.__get__(item, "result")
 
     def countmin(self, item):
-        """
-        Return the minimum number of processes of the item number (item)
-        """
+        """Return the minimum number of processes of the item number (item)."""
         return self.__get__(item, "countmin")
 
     def countmax(self, item):
-        """
-        Return the maximum number of processes of the item number (item)
-        """
+        """Return the maximum number of processes of the item number (item)."""
         return self.__get__(item, "countmax")

@@ -16,25 +16,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Glances DiskIO plugin
-"""
 
-import psutil
+"""Disk I/O plugin."""
 
 # Import Glances libs
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
+import psutil
+
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's disks IO Plugin
+
+    """Glances' disks I/O plugin.
 
     stats is a list
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -50,16 +50,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Update disk IO stats using the input method
-        """
-
+        """Update disk I/O stats using the input method."""
         # Reset stats
         self.reset()
 
@@ -118,10 +113,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
-
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 

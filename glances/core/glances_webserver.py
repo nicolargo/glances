@@ -16,22 +16,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Glances Web Interface (Bottle based)
-"""
+
+"""Glances Web Interface (Bottle based)."""
 
 # Import Glances libs
 from glances.core.glances_stats import GlancesStats
-from glances.outputs.glances_bottle import glancesBottle
+from glances.outputs.glances_bottle import GlancesBottle
 
 
-class GlancesWebServer():
-    """
-    This class creates and manages the Glances Web Server session
-    """
+class GlancesWebServer(object):
+
+    """This class creates and manages the Glances Web server session."""
 
     def __init__(self, config=None, args=None):
-
         # Init stats
         self.stats = GlancesStats(config)
 
@@ -39,16 +36,12 @@ class GlancesWebServer():
         self.stats.update()
 
         # Init the Bottle Web server
-        self.web = glancesBottle(args=args)
+        self.web = GlancesBottle(args=args)
 
     def serve_forever(self):
-        """
-        Main loop for the Web Server
-        """
+        """Main loop for the Web server."""
         self.web.start(self.stats)
 
     def end(self):
-        """
-        End of the Web Server
-        """
+        """End of the Web server."""
         self.web.end()

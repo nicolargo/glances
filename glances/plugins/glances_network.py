@@ -16,16 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Glances Network interface plugin
-"""
 
-# Import system libs
-import psutil
+"""Network plugin."""
 
-# Import Glances lib
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
@@ -36,13 +33,14 @@ snmp_oid = {'interface_name': '1.3.6.1.2.1.2.2.1.2',
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's network Plugin
+
+    """Glances' network Plugin.
 
     stats is a list
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -58,17 +56,14 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = []
 
     def update(self):
-        """
-        Update network stats using the input method
+        """Update network stats using the input method.
+
         Stats is a list of dict (one dict per interface)
         """
-
         # Reset stats
         self.reset()
 
@@ -165,11 +160,8 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to displayoid in the curse interface
-        """
-
-        #!!! TODO: Add alert on network interface bitrate
+        """Return the dict to display in the curse interface."""
+        # !!! TODO: Add alert on network interface bitrate
 
         # Init the return message
         ret = []

@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""The timer manager."""
+
 from time import time
 
 # Global list to manage the elapsed time
@@ -24,6 +26,7 @@ last_update_times = {}
 
 
 def getTimeSinceLastUpdate(IOType):
+    """Return the elapsed time since last update."""
     global last_update_times
     # assert(IOType in ['net', 'disk', 'process_disk'])
     current_time = time()
@@ -36,11 +39,9 @@ def getTimeSinceLastUpdate(IOType):
     return time_since_update
 
 
-class Timer:
-    """
-    The timer class
-    A simple chrono
-    """
+class Timer(object):
+
+    """The timer class. A simple chronometer."""
 
     def __init__(self, duration):
         self.duration = duration
@@ -57,4 +58,3 @@ class Timer:
 
     def finished(self):
         return time() > self.target
-

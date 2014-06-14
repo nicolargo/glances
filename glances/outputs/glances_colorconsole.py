@@ -59,7 +59,7 @@ class ListenGetch(threading.Thread):
             return default
 
 
-class Screen():
+class Screen(object):
 
     COLOR_DEFAULT_WIN = '0F'  # 07'#'0F'
     COLOR_BK_DEFAULT = colorconsole.terminal.colors["BLACK"]
@@ -116,7 +116,7 @@ class Screen():
         return None
 
 
-class WCurseLight():
+class WCurseLight(object):
 
     COLOR_WHITE = colorconsole.terminal.colors["WHITE"]
     COLOR_RED = colorconsole.terminal.colors["RED"]
