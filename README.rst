@@ -15,8 +15,6 @@ Glances - An eye on your system
         :alt: Downloads
 .. image:: https://d2weczhvl823v0.cloudfront.net/nicolargo/glances/trend.png
         :target: https://bitdeli.com/nicolargo
-.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/glances-white-256.png
-        :width: 128
 
 **Glances** is a cross-platform curses-based system monitoring tool
 written in Python.
