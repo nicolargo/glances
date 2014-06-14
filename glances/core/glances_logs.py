@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage logs."""
+
 # Import system libs
 import time
 from datetime import datetime
@@ -25,14 +27,15 @@ from datetime import datetime
 from glances.core.glances_globals import glances_processes
 
 
-class glancesLogs:
-    """
-    Manage logs inside the Glances software
-    Logs is a list of list (stored in the self.logs_list var)
+class GlancesLogs(object):
 
+    """This class manages logs inside the Glances software.
+
+    Logs is a list of list (stored in the self.logs_list var)
     item_state = "OK|CAREFUL|WARNING|CRITICAL"
     item_type = "CPU*|LOAD|MEM|MON"
     item_value = value
+
     Item is defined by:
       ["begin",
        "end",
@@ -44,10 +47,7 @@ class glancesLogs:
     """
 
     def __init__(self):
-        """
-        Init the logs class
-        """
-
+        """Init the logs class."""
         # Maximum size of the logs list
         self.logs_max = 10
 
@@ -55,24 +55,20 @@ class glancesLogs:
         self.logs_list = []
 
     def get(self):
-        """
-        Return the logs list (RAW)
-        """
+        """Return the raw logs list."""
         return self.logs_list
 
     def len(self):
-        """
-        Return the number of item in the log list
-        """
+        """Return the number of item in the logs list."""
         return self.logs_list.__len__()
 
     def __itemexist__(self, item_type):
-        """
+        """Return the item position, if it exists.
+
         An item exist in the list if:
         * end is < 0
         * item_type is matching
-        Return the item position if exist
-        -1 if the item is not found
+        Return -1 if the item is not found.
         """
         for i in range(self.len()):
             if self.logs_list[i][1] < 0 and self.logs_list[i][3] == item_type:
@@ -80,9 +76,7 @@ class glancesLogs:
         return -1
 
     def set_process_sort(self, item_type):
-        """
-        Define the process auto sort key from the alert type
-        """
+        """Define the process auto sort key from the alert type."""
         # Process sort depending on alert type
         if item_type.startswith("MEM"):
             # Sort TOP process by memory_percent
@@ -99,9 +93,7 @@ class glancesLogs:
         return process_auto_by
 
     def reset_process_sort(self):
-        """
-        Reset the process_auto_by variable
-        """
+        """Reset the process_auto_by variable."""
         # Default sort is...
         process_auto_by = 'cpu_percent'
 
@@ -110,11 +102,11 @@ class glancesLogs:
         return process_auto_by
 
     def add(self, item_state, item_type, item_value, proc_list=[], proc_desc=""):
-        """
-        If item is a 'new one':
-          Add the new item at the beginning of the logs list
-        Else:
-          Update the existing item
+        """Add a new item to the logs list.
+
+        If 'item' is a 'new one', add the new item at the beginning of the logs
+        list.
+        If 'item' is not a 'new one', update the existing item.
         """
         # Add or update the log
         item_index = self.__itemexist__(item_type)
@@ -190,8 +182,8 @@ class glancesLogs:
         return self.len()
 
     def clean(self, critical=False):
-        """
-        Clean the log list by deleting finished item
+        """Clean the logs list by deleting finished items.
+
         By default, only delete WARNING message
         If critical = True, also delete CRITICAL message
         """

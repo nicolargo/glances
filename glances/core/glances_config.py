@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Manage the configuration file."""
+
 # Import system libs
 import os
 import sys
@@ -29,7 +31,7 @@ except ImportError:  # Python 2
 
 # Import Glances lib
 from glances.core.glances_globals import (
-    __appname__,
+    appname,
     is_bsd,
     is_linux,
     is_mac,
@@ -41,8 +43,8 @@ from glances.core.glances_globals import (
 
 
 class Config(object):
-    """
-    This class is used to access/read config file, if it exists
+
+    """This class is used to access/read config file, if it exists.
 
     :param location: the custom path to search for config file
     :type location: str or None
@@ -56,9 +58,7 @@ class Config(object):
         self.load()
 
     def load(self):
-        """
-        Load a config file from the list of paths, if it exists
-        """
+        """Load a config file from the list of paths, if it exists."""
         for config_file in self.get_config_paths():
             if os.path.isfile(config_file) and os.path.getsize(config_file) > 0:
                 try:
@@ -73,9 +73,9 @@ class Config(object):
                 break
 
     def get_config_paths(self):
-        """
-        Get a list of config file paths, taking into account of the OS,
-        priority and location.
+        r"""Get a list of config file paths.
+
+        The list is built taking into account of the OS, priority and location.
 
         * running from source: /path/to/glances/conf
         * Linux: ~/.config/glances, /etc/glances
@@ -101,39 +101,33 @@ class Config(object):
         if is_linux or is_bsd:
             paths.append(os.path.join(
                 os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
-                __appname__, self.config_filename))
+                appname, self.config_filename))
             if hasattr(sys, 'real_prefix') or is_bsd:
-                paths.append(os.path.join(sys.prefix, 'etc', __appname__, self.config_filename))
+                paths.append(os.path.join(sys.prefix, 'etc', appname, self.config_filename))
             else:
-                paths.append(os.path.join('/etc', __appname__, self.config_filename))
+                paths.append(os.path.join('/etc', appname, self.config_filename))
         elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),
-                __appname__, self.config_filename))
+                appname, self.config_filename))
             paths.append(os.path.join(
-                sys_prefix, 'etc', __appname__, self.config_filename))
+                sys_prefix, 'etc', appname, self.config_filename))
         elif is_windows:
             paths.append(os.path.join(
-                os.environ.get('APPDATA'), __appname__, self.config_filename))
+                os.environ.get('APPDATA'), appname, self.config_filename))
 
         return paths
 
     def items(self, section):
-        """
-        Return the items list of a section
-        """
+        """Return the items list of a section."""
         return self.parser.items(section)
 
     def has_section(self, section):
-        """
-        Return info about the existence of a section
-        """
+        """Return info about the existence of a section."""
         return self.parser.has_section(section)
 
     def get_option(self, section, option):
-        """
-        Get the float value of an option, if it exists
-        """
+        """Get the float value of an option, if it exists."""
         try:
             value = self.parser.getfloat(section, option)
         except NoOptionError:
@@ -142,9 +136,7 @@ class Config(object):
             return value
 
     def get_raw_option(self, section, option):
-        """
-        Get the raw value of an option, if it exists
-        """
+        """Get the raw value of an option, if it exists."""
         try:
             value = self.parser.get(section, option)
         except NoOptionError:

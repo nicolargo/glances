@@ -16,9 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Glances load plugin
-"""
+
+"""Load plugin."""
 
 # Import system libs
 import os
@@ -37,13 +36,14 @@ snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's Load Plugin
+
+    """Glances' load plugin.
 
     stats is a dict
     """
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -59,16 +59,11 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def reset(self):
-        """
-        Reset/init the stats
-        """
+        """Reset/init the stats."""
         self.stats = {}
 
     def update(self):
-        """
-        Update load stats
-        """
-
+        """Update load stats."""
         # Reset stats
         self.reset()
 
@@ -107,10 +102,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
-
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 

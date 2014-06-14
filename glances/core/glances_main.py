@@ -16,26 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-Main Glances script
-"""
+
+"""Glances main class."""
 
 # Import system libs
 import argparse
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import (
-    __appname__,
-    __psutil_version__,
-    __version__
-)
+from glances.core.glances_globals import appname, psutil_version, version
 
 
 class GlancesMain(object):
-    """
-    Main class to manage Glances instance
-    """
+
+    """Main class to manage Glances instance."""
 
     # Default stats' refresh time is 3 seconds
     refresh_time = 3
@@ -58,9 +52,9 @@ class GlancesMain(object):
 
     def init_args(self):
         """Init all the command line arguments."""
-        version = "Glances v" + __version__ + " with psutil v" + __psutil_version__
-        parser = argparse.ArgumentParser(prog=__appname__, conflict_handler='resolve')
-        parser.add_argument('-V', '--version', action='version', version=version)
+        _version = "Glances v" + version + " with psutil v" + psutil_version
+        parser = argparse.ArgumentParser(prog=appname, conflict_handler='resolve')
+        parser.add_argument('-V', '--version', action='version', version=_version)
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
@@ -161,7 +155,6 @@ class GlancesMain(object):
             self.server_ip = args.client
         # /!!!
 
-        # Interactive cmds like CLI args?
         # By default help is hidden
         args.help_tag = False
 
@@ -172,59 +165,45 @@ class GlancesMain(object):
         return args
 
     def __hash_password(self, plain_password):
-        """
-        Hash a plain password and return the hashed one
-        """
-        from glances.core.glances_password import glancesPassword
+        """Hash a plain password and return the hashed one."""
+        from glances.core.glances_password import GlancesPassword
 
-        password = glancesPassword()
+        password = GlancesPassword()
 
         return password.hash_password(plain_password)
 
     def __get_password(self, description='', confirm=False, clear=False):
-        """
-        Read a password from the command line
-        - with confirmation if confirm = True
-        - plain (clear password) if clear = True
-        """
-        from glances.core.glances_password import glancesPassword
+        """Read a password from the command line.
 
-        password = glancesPassword()
+        - if confirm = True, with confirmation
+        - if clear = True, plain (clear password)
+        """
+        from glances.core.glances_password import GlancesPassword
+
+        password = GlancesPassword()
 
         return password.get_password(description, confirm, clear)
 
     def is_standalone(self):
-        """
-        Return True if Glances is running in standalone mode
-        """
+        """Return True if Glances is running in standalone mode."""
         return not self.client_tag and not self.server_tag and not self.webserver_tag
 
     def is_client(self):
-        """
-        Return True if Glances is running in client mode
-        """
+        """Return True if Glances is running in client mode."""
         return self.client_tag and not self.server_tag
 
     def is_server(self):
-        """
-        Return True if Glances is running in server mode
-        """
+        """Return True if Glances is running in server mode."""
         return not self.client_tag and self.server_tag
 
     def is_webserver(self):
-        """
-        Return True if Glances is running in Web server mode
-        """
+        """Return True if Glances is running in Web server mode."""
         return not self.client_tag and self.webserver_tag
 
     def get_config(self):
-        """
-        Return configuration file object
-        """
+        """Return configuration file object."""
         return self.config
 
     def get_args(self):
-        """
-        Return the arguments
-        """
+        """Return the arguments."""
         return self.args

@@ -17,17 +17,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Monitor plugin."""
+
 # Import Glances lib
-from glances.core.glances_monitor_list import monitorList as glancesMonitorList
+from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-    """
-    Glances's monitor Plugin
-    """
+
+    """Glances' monitor plugin."""
 
     def __init__(self, args=None):
+        """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
 
         # We want to display the stat in the curse interface
@@ -44,17 +46,12 @@ class Plugin(GlancesPlugin):
         self.stats = []
 
     def load_limits(self, config):
-        """
-        Load the monitored list from the conf file
-        """
+        """Load the monitored list from the conf file."""
         # print "DEBUG: Monitor plugin load config file %s" % config
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
-        """
-        Update the monitored list
-        """
-
+        """Update the monitored list."""
         if self.get_input() == 'local':
             # Monitor list only available in a full Glances environment
             # Check if the glances_monitor instance is init
@@ -72,7 +69,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_alert(self, nbprocess=0, countmin=None, countmax=None, header="", log=False):
-        # Return the alert status relative to the process number
+        """Return the alert status relative to the process number."""
         if nbprocess is None:
             return 'OK'
         if countmin is None:
@@ -91,9 +88,7 @@ class Plugin(GlancesPlugin):
                 return 'CRITICAL'
 
     def msg_curse(self, args=None):
-        """
-        Return the dict to display in the curse interface
-        """
+        """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 

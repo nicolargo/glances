@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""The stats manager."""
+
 import collections
 import os
 import sys
@@ -25,15 +27,10 @@ from glances.core.glances_globals import plugins_path, sys_path
 
 
 class GlancesStats(object):
-    """
-    This class store, update and give stats
-    """
+
+    """This class stores, updates and gives stats."""
 
     def __init__(self, config=None):
-        """
-        Init the stats
-        """
-
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 
@@ -44,12 +41,11 @@ class GlancesStats(object):
         self.load_limits(config)
 
     def __getattr__(self, item):
-        """
-        Overwrite the getattr in case of attribute is not found
+        """Overwrite the getattr method in case of attribute is not found.
+
         The goal is to dynamically generate the following methods:
         - getPlugname(): return Plugname stat in JSON format
         """
-
         # Check if the attribute starts with 'get'
         if item.startswith('get'):
             # Get the plugin name
@@ -67,9 +63,7 @@ class GlancesStats(object):
             raise AttributeError(item)
 
     def load_plugins(self, args=None):
-        """
-        Load all plugins in the "plugins" folder
-        """
+        """Load all plugins in the 'plugins' folder."""
         header = "glances_"
         for item in os.listdir(plugins_path):
             if (item.startswith(header) and
@@ -87,26 +81,18 @@ class GlancesStats(object):
         sys.path = sys_path
 
     def getAllPlugins(self):
-        """
-        Return the plugins list
-        """
+        """Return the plugins list."""
         return [p for p in self._plugins]
 
     def load_limits(self, config=None):
-        """
-        Load the stats limits
-        """
-
+        """Load the stats limits."""
         # For each plugins, call the init_limits method
         for p in self._plugins:
             # print "DEBUG: Load limits for %s" % p
             self._plugins[p].load_limits(config)
 
     def __update__(self, input_stats):
-        """
-        Update the stats
-        """
-
+        """Update all the stats."""
         if input_stats == {}:
             # For standalone and server modes
             # For each plugins, call the update method
@@ -120,21 +106,19 @@ class GlancesStats(object):
                 self._plugins[p].set_stats(input_stats[p])
 
     def update(self, input_stats={}):
-        # Update the stats
+        """Wrapper method to update the stats."""
         self.__update__(input_stats)
 
     def getAll(self):
-        """
-        Return all the stats
-        """
+        """Return all the stats."""
         return [self._plugins[p].get_raw() for p in self._plugins]
 
     def get_plugin_list(self):
-        # Return the plugin list
+        """Return the plugin list."""
         self._plugins
 
     def get_plugin(self, plugin_name):
-        # Return the plugin name
+        """Return the plugin name."""
         if plugin_name in self._plugins:
             return self._plugins[plugin_name]
         else:
@@ -142,9 +126,8 @@ class GlancesStats(object):
 
 
 class GlancesStatsServer(GlancesStats):
-    """
-    This class store, update and give stats for the server
-    """
+
+    """This class stores, updates and gives stats for the server."""
 
     def __init__(self, config=None):
         # Init the stats
@@ -155,11 +138,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats = collections.defaultdict(dict)
 
     def update(self, input_stats={}):
-        """
-        Update the stats
-        """
-
-        # Update the stats
+        """Update the stats."""
         GlancesStats.update(self)
 
         # Build the all_stats with the get_raw() method of the plugins
@@ -167,37 +146,29 @@ class GlancesStatsServer(GlancesStats):
             self.all_stats[p] = self._plugins[p].get_raw()
 
     def getAll(self):
-        """
-        Return the stats as a dict
-        """
+        """Return the stats as a dict."""
         return self.all_stats
 
     def getAllPlugins(self):
-        """
-        Return the plugins list
-        """
+        """Return the plugins list."""
         return [p for p in self._plugins]
 
     def getAllLimits(self):
-        """
-        Return the plugins limits list
-        """
+        """Return the plugins limits list."""
         return [self._plugins[p].get_limits() for p in self._plugins]
 
 
 class GlancesStatsClient(GlancesStats):
-    """
-    This class store, update and give stats for the client
-    """
+
+    """This class stores, updates and gives stats for the client."""
 
     def __init__(self):
+        """Init the GlancesStatsClient class."""
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 
     def set_plugins(self, input_plugins):
-        """
-        Set the plugin list according to the Glances server
-        """
+        """Set the plugin list according to the Glances server."""
         header = "glances_"
         for item in input_plugins:
             # Import the plugin
@@ -213,9 +184,8 @@ class GlancesStatsClient(GlancesStats):
 
 
 class GlancesStatsClientSNMP(GlancesStats):
-    """
-    This class store, update and give stats for the SNMP client
-    """
+
+    """This class stores, updates and gives stats for the SNMP client."""
 
     def __init__(self, config=None, args=None):
         # Init the plugin list dict
@@ -231,10 +201,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         self.load_plugins(args=self.args)
 
     def check_snmp(self):
-        """
-        Chek if SNMP is available on the server
-        """
-
+        """Chek if SNMP is available on the server."""
         # Import the SNMP client class
         from glances.core.glances_snmp import GlancesSNMPClient
 
@@ -249,10 +216,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         return clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
 
     def update(self):
-        """
-        Update the stats using SNMP
-        """
-
+        """Update the stats using SNMP."""
         # For each plugins, call the update method
         for p in self._plugins:
             # Set the input method to SNMP
