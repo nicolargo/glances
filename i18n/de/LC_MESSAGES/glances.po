@@ -1,14 +1,21 @@
-# German translations for GLANCES package
-# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# German translations for GLANCES package.
+# Copyright (C) 2014 THE GLANCES'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the GLANCES package.
-# David Tiersch <d.tiersch@gmail.com>, 2013.
+# David Tiersch <d.tiersch@gmail.com>, 2014.
 #
 msgid ""
 msgstr ""
+<<<<<<< HEAD
 "Project-Id-Version: GLANCES 1.7.6\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-27 18:39+0100\n"
 "PO-Revision-Date: 2014-03-27 19:07+0100\n"
+=======
+"Project-Id-Version: GLANCES 2.0_RC4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-06-03 16:21+0200\n"
+"PO-Revision-Date: 2014-06-03 16:33+0100\n"
+>>>>>>> release/v2.0
 "Last-Translator: David Tiersch <d.tiersch@gmail.com>\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -16,6 +23,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+<<<<<<< HEAD
 "X-Generator: Poedit 1.6.4\n"
 
 #: glances/glances.py:405
@@ -393,9 +401,374 @@ msgid "m"
 msgstr "m"
 
 #: glances/glances.py:3967
-msgid "Sort processes by MEM%"
-msgstr "Prozesse nach MEM% sortieren"
+=======
+"X-Generator: Poedit 1.5.4\n"
+"X-Poedit-Basepath: ~/dev/glances\n"
 
+#: glances/__init__.py:105
+msgid "Error: The server version is not compatible with the client"
+msgstr "Fehler: Die Server-Version ist mit dem Client nicht kompatibel"
+
+#: glances/__init__.py:124
+#, python-brace-format
+msgid "Glances server is running on {0}:{1}"
+msgstr "Glances-Server läuft auf {0}:{1}"
+
+#: glances/core/glances_stats.py:264
+#, python-brace-format
+msgid "Error: Update {0} failed: {1}"
+msgstr "Fehler: Aktualisierung {0} ist fehlgeschlagen: {1}"
+
+#: glances/core/glances_client.py:62
+#, python-brace-format
+msgid "Error: Couldn't create socket {0}: {1}"
+msgstr "Fehler: Konnte Socket {0} nicht erzeugen: {1}"
+
+#: glances/core/glances_client.py:100
+msgid "Error: Connection to server failed: Bad password"
+msgstr "Fehler: Verbindung zum Server fehlgeschlagen: Falsches Passwort"
+
+#: glances/core/glances_client.py:102
+#, python-brace-format
+msgid "Error: Connection to server failed: {0}"
+msgstr "Fehler: Verbindung zum Server fehlgeschlagen: {0}"
+
+#: glances/core/glances_client.py:110
+msgid "Info: Connection to Glances server failed. Trying fallback to SNMP..."
+msgstr ""
+"Info: Verbindung zum Glances-Server fehlgeschlagen. Versuche Fallback zu "
+"SNMP..."
+
+#: glances/core/glances_client.py:118
+msgid "Error: Connection to SNMP server failed"
+msgstr "Fehler: Verbindung zum SNMP-Server fehlgeschlagen"
+
+#: glances/core/glances_client.py:147
+#, python-brace-format
+msgid "Error: Unknown server mode: {0}"
+msgstr "Fehler: Unbekannter Servers-Modus: {0}"
+
+#: glances/core/glances_config.py:71
+#, python-brace-format
+msgid "Error: Cannot decode configuration file '{0}': {1}"
+msgstr "Fehler: Kann Konfigurationsdatei '{0}' nicht lesen: {1}"
+
+#: glances/core/glances_main.py:65
+msgid "display network rate in byte per second"
+msgstr "Netzwerkgeschwindigkeit anzeigen in Byte/Sekunde"
+
+#: glances/core/glances_main.py:67
+msgid "bind server to the given IPv4/IPv6 address or hostname"
+msgstr "Server auf gegebene IPv4/IPv6-Adresse oder Hostnamen festlegen"
+
+#: glances/core/glances_main.py:69
+msgid "connect to a Glances server by IPv4/IPv6 address or hostname"
+msgstr "Zu einem Glances-Server mit IPv4/IPv6-Adresse oder Hostnamen verbinden"
+
+#: glances/core/glances_main.py:71
+msgid "path to the configuration file"
+msgstr "Pfad zur Konfigurationsdatei"
+
+#: glances/core/glances_main.py:74
+msgid "disable bold mode in the terminal"
+msgstr "Fett-Modus im Terminal deaktivieren"
+
+#: glances/core/glances_main.py:76
+msgid "disable disk I/O module"
+msgstr "Disk-I/O-Modul deaktivieren"
+
+#: glances/core/glances_main.py:78
+msgid "disable filesystem module"
+msgstr "Dateisystem-Modul deaktivieren"
+
+#: glances/core/glances_main.py:80
+msgid "disable network module"
+msgstr "Netzwerk-Modul deaktivieren"
+
+#: glances/core/glances_main.py:82
+msgid "disable sensors module"
+msgstr "Sensor-Modul deaktivieren"
+
+#: glances/core/glances_main.py:84
+msgid "disable process module"
+msgstr "Prozess-Modul deaktivieren"
+
+#: glances/core/glances_main.py:86
+msgid "disable log module"
+msgstr "Log-Modul deaktivieren"
+
+#: glances/core/glances_main.py:89
+msgid "export stats to a CSV file"
+msgstr "Exportiere Daten zu CSV-Datei"
+
+#: glances/core/glances_main.py:92
+#, python-brace-format
+msgid "define the client/server TCP port [default: {0}]"
+msgstr "Client-/Server-TCP-Port festlegen [default: {0}]"
+
+#: glances/core/glances_main.py:94
+msgid "define password from the command line"
+msgstr "Passwort auf Kommandozeile bestimmen"
+
+#: glances/core/glances_main.py:96
+msgid "define a client/server password from the prompt or file"
+msgstr "Client-/Server-Passwort über Prompt oder Datei festlegen"
+
+#: glances/core/glances_main.py:98
+msgid "run Glances in server mode"
+msgstr "Glances im Server-Modus ausführen"
+
+#: glances/core/glances_main.py:100
+msgid "SNMP community"
+msgstr "SNMP-Community"
+
+#: glances/core/glances_main.py:102
+msgid "SNMP port"
+msgstr "SNMP-Port"
+
+#: glances/core/glances_main.py:104
+msgid "SNMP version (1, 2c or 3)"
+msgstr "SNMP-Version (1, 2c oder 3)"
+
+#: glances/core/glances_main.py:106
+msgid "SNMP username (only for SNMPv3)"
+msgstr "SNMP-Benutzername (nur für SNMPv3)"
+
+#: glances/core/glances_main.py:108
+msgid "SNMP authentication key (only for SNMPv3)"
+msgstr "SNMP-Authentifizierungs-Schlüssel (nur für SNMPv3)"
+
+#: glances/core/glances_main.py:110
+#, python-brace-format
+msgid "set refresh time in seconds [default: {0} sec]"
+msgstr "Aktualisierungszeit in Sekunden [default: {0} Sek]"
+
+#: glances/core/glances_main.py:112
+msgid "run Glances in web server mode"
+msgstr "Glances im Webserver-Modus starten"
+
+#: glances/core/glances_main.py:115
+msgid "start Glances in per CPU mode"
+msgstr "Glances im pro-CPU-Modus starten"
+
+#: glances/core/glances_main.py:145
+msgid "Define the password for the Glances server"
+msgstr "Passwort für Glances-Server festlegen"
+
+#: glances/core/glances_main.py:149
+msgid "Enter the Glances server password"
+msgstr "Passwort für Glances-Server eingeben"
+
+#: glances/core/glances_monitor_list.py:74
+#, python-brace-format
+msgid "Error: Cannot read monitored list: {0}"
+msgstr "Fehler: Kann Überwachungs-Liste nicht lesen: {0}"
+
+#: glances/core/glances_monitor_list.py:143
+msgid "Error: "
+msgstr "Fehler: "
+
+#: glances/core/glances_monitor_list.py:145
+msgid "Cannot execute command"
+msgstr "Kann Befehl nicht ausführen"
+
+#: glances/core/glances_password.py:111
+#, python-brace-format
+msgid "Info: Read password from file: {0}"
+msgstr "Info: Passwort gelesen aus Datei {0}"
+
+#: glances/core/glances_password.py:120
+msgid "Password: "
+msgstr "Passwort:"
+
+#: glances/core/glances_password.py:124
+msgid "Password (confirm): "
+msgstr "Passwort (wiederholen):"
+
+#: glances/core/glances_password.py:127
+msgid "Error: Sorry, but passwords did not match..."
+msgstr "Fehler: Passwörter stimmen nicht überein..."
+
+#: glances/core/glances_password.py:138
+msgid "Do you want to save the password? [Yes/No]: "
+msgstr "Willst du das Passwort speichern? [Ja/Nein]"
+
+#: glances/core/glances_password.py:139
+msgid "Y"
+msgstr "J"
+
+#: glances/core/glances_password.py:154
+#, python-brace-format
+msgid "Warning: Cannot create Glances directory: {0}"
+msgstr "Warnung: Kann Glances-Ordner nicht erzeugen: {0}"
+
+#: glances/core/glances_server.py:115
+#, python-brace-format
+msgid "Error: Couldn't open socket: {0}"
+msgstr "Fehler: Kann Socket nicht öffnen: {0}"
+
+#: glances/core/glances_server.py:205
+#, python-brace-format
+msgid "Error: Cannot start Glances server: {0}"
+msgstr "Fehler: Kann Glances-Server nicht starten: {0}"
+
+#: glances/outputs/glances_curses.py:61
+msgid "Error: Cannot init the curses library.\n"
+msgstr "Fehler: Kann curses-Bibliothek nicht initialisieren.\n"
+
+#: glances/outputs/glances_csv.py:48
+#, python-brace-format
+msgid "Error: Cannot create the CSV file: {0}"
+msgstr "Fehler: Kann CSV-Datei nicht erzeugen: {0}"
+
+#: glances/outputs/glances_csv.py:51
+#, python-brace-format
+msgid "Stats dumped to CSV file: {0}"
+msgstr "Daten nach CSV-Datei gespeichert: {0}"
+
+#: glances/plugins/glances_uptime.py:95
+#, python-brace-format
+msgid "Uptime: {0}"
+msgstr "Betriebszeit: {0}"
+
+#: glances/plugins/glances_alert.py:78
+msgid "No warning or critical alert detected"
+msgstr "Keine (kritische) Warnung entdeckt"
+
+#: glances/plugins/glances_alert.py:82
+msgid "Warning or critical alerts"
+msgstr "(Kritische) Warnungen"
+
+#: glances/plugins/glances_alert.py:86
+#, python-brace-format
+msgid " (lasts {0} entries)"
+msgstr " (letzte {0} Einträge)"
+
+#: glances/plugins/glances_alert.py:88
+msgid " (one entry)"
+msgstr " (ein Eintrag)"
+
+#: glances/plugins/glances_alert.py:102
+msgid " (ongoing)"
+msgstr "(laufend)"
+
+#: glances/plugins/glances_alert.py:108
+#, python-brace-format
+msgid "{0} on {1}"
+msgstr "{0} auf {1}"
+
+#: glances/plugins/glances_alert.py:117
+#, python-brace-format
+msgid " (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})"
+msgstr " (Min:{0:.1f} Mittel:{1:.1f} Max:{2:.1f})"
+
+#: glances/plugins/glances_batpercent.py:107
+msgid "Battery (%)"
+msgstr "Batterie (%)"
+
+#: glances/plugins/glances_cpu.py:123
+msgid "CPU"
+msgstr "CPU"
+
+#: glances/plugins/glances_cpu.py:130
+msgid "nice:"
+msgstr "nice:"
+
+#: glances/plugins/glances_cpu.py:138 glances/plugins/glances_percpu.py:168
+msgid "user:"
+msgstr "Benutzer:"
+
+#: glances/plugins/glances_cpu.py:144
+msgid "irq:"
+msgstr "IRQ:"
+
+#: glances/plugins/glances_cpu.py:152 glances/plugins/glances_percpu.py:178
+msgid "system:"
+msgstr "System:"
+
+#: glances/plugins/glances_cpu.py:158
+msgid "iowait:"
+msgstr "IOWait:"
+
+#: glances/plugins/glances_cpu.py:166 glances/plugins/glances_percpu.py:188
+msgid "idle:"
+msgstr "Inaktiv:"
+
+#: glances/plugins/glances_cpu.py:172
+msgid "steal:"
+msgstr "Steal:"
+
+#: glances/plugins/glances_diskio.py:134
+msgid "DISK I/O"
+msgstr "DISK I/O"
+
+#: glances/plugins/glances_diskio.py:136
+msgid "R/s"
+msgstr "R/s"
+
+#: glances/plugins/glances_diskio.py:138
+msgid "W/s"
+msgstr "W/s"
+
+#: glances/plugins/glances_fs.py:142
+msgid "FILE SYS"
+msgstr "DATEISYSTEM"
+
+#: glances/plugins/glances_fs.py:144
+msgid "Used"
+msgstr "Belegt"
+
+#: glances/plugins/glances_fs.py:146
+msgid "Total"
+msgstr "Gesamt"
+
+#: glances/plugins/glances_help.py:68
+#, python-brace-format
+msgid " with psutil {0}"
+msgstr " mit psutil {0}"
+
+#: glances/plugins/glances_help.py:77
+msgid "a"
+msgstr "a"
+
+#: glances/plugins/glances_help.py:77
+msgid "Sort processes automatically"
+msgstr "Prozesse automatisch sortieren"
+
+#: glances/plugins/glances_help.py:79
+msgid "b"
+msgstr "b"
+
+#: glances/plugins/glances_help.py:79
+msgid "Bytes or bits for network I/O"
+msgstr "Bytes oder Bits für Netzwerk I/O"
+
+#: glances/plugins/glances_help.py:82
+msgid "c"
+msgstr "c"
+
+#: glances/plugins/glances_help.py:82
+msgid "Sort processes by CPU%"
+msgstr "Prozesse nach CPU% sortieren"
+
+#: glances/plugins/glances_help.py:84
+msgid "l"
+msgstr "l"
+
+#: glances/plugins/glances_help.py:84
+msgid "Show/hide logs (alerts)"
+msgstr "Logs (Warnungen) zeigen/verstecken"
+
+#: glances/plugins/glances_help.py:87
+msgid "m"
+msgstr "m"
+
+#: glances/plugins/glances_help.py:87
+>>>>>>> release/v2.0
+msgid "Sort processes by MEM%"
+msgstr "Prozesse nach RAM% sortieren"
+
+<<<<<<< HEAD
 #: glances/glances.py:3968
 msgid "p"
 msgstr "p"
@@ -799,45 +1172,332 @@ msgstr "Fehler: Die Server-Version ist nicht kompatibel"
 
 #~ msgid "Can not grab data..."
 #~ msgstr "Kann nicht auf Daten zugreifen"
+=======
+#: glances/plugins/glances_help.py:89
+msgid "w"
+msgstr "w"
 
-#~ msgid "Can not execute command"
-#~ msgstr "Kann Befehl nicht ausführen"
+#: glances/plugins/glances_help.py:89
+msgid "Delete warning alerts"
+msgstr "Warnungen entfernen"
 
-#~ msgid "Connected to"
-#~ msgstr "Verbunden zu"
+#: glances/plugins/glances_help.py:92
+msgid "p"
+msgstr "p"
 
-#~ msgid "Disconnected from"
-#~ msgstr "Getrennt von"
+#: glances/plugins/glances_help.py:92
+msgid "Sort processes by name"
+msgstr "Prozesse nach Name sortieren"
 
-#~ msgid "Glances version"
-#~ msgstr "Glances Version"
+#: glances/plugins/glances_help.py:94
+msgid "x"
+msgstr "x"
 
-#~ msgid ""
-#~ "\t-B @IP|host\tBind server to the given IPv4/IPv6 address or hostname"
-#~ msgstr ""
-#~ "\t-B @IP|host\tBinde Server an die gegebene IPv4/IPv6 Adresse oder "
-#~ "Hostnamen"
+#: glances/plugins/glances_help.py:94
+msgid "Delete warning and critical alerts"
+msgstr "(Kritische) Warnungen entfernen"
 
-#~ msgid ""
-#~ "\t-c @IP|host\tConnect to a Glances server by IPv4/IPv6 address or "
-#~ "hostname"
-#~ msgstr ""
-#~ "\t-c @IP|host\tVerbinde zu einem Glances-Sserver mit IPv4/IPv6 Adresse "
-#~ "oder Hostnamen"
+#: glances/plugins/glances_help.py:97
+msgid "i"
+msgstr "i"
 
-#~ msgid "\t-C file\t\tPath to the configuration file"
-#~ msgstr "\t-C file\t\tPfad zur Konfigurations-Datei"
+#: glances/plugins/glances_help.py:97
+msgid "Sort processes by I/O rate"
+msgstr "Prozesse nach I/O-Geschwindigkeit sortieren"
 
-#~ msgid "\t-f file\t\tSet the HTML output folder or CSV file"
-#~ msgstr "\t-f file\t\tSetze Ordner für HTML-Ausgabe oder CSV-Datei"
+#: glances/plugins/glances_help.py:99
+msgid "1"
+msgstr "1"
 
-#~ msgid "\t-o output\tDefine additional output (available: HTML or CSV)"
-#~ msgstr ""
-#~ "\t-o output\tDefiniere zusätzliche Ausgabe (verfügbar: HTML oder CSV)"
+#: glances/plugins/glances_help.py:99
+msgid "Global CPU or per-CPU stats"
+msgstr "Globale oder pro-CPU-Daten"
 
-#~ msgid "\t-P password\tDefine a client/server password"
-#~ msgstr "\t-P password\tDefiniere ein Client/Server-Passwort"
+#: glances/plugins/glances_help.py:102
+msgid "d"
+msgstr "d"
 
-#~ msgid "\t-t seconds\tSet refresh time in seconds (default: %d sec)"
-#~ msgstr ""
-#~ "\t-t seconds\tSetze Aktualisierungszeit in Sekunden (Standard: %d sek)"
+#: glances/plugins/glances_help.py:102
+msgid "Show/hide disk I/O stats"
+msgstr "I/O-Daten zeigen/verstecken"
+
+#: glances/plugins/glances_help.py:104
+msgid "h"
+msgstr "h"
+
+#: glances/plugins/glances_help.py:104
+msgid "Show/hide this help screen"
+msgstr "Diese Hilfe zeigen/verstecken"
+
+#: glances/plugins/glances_help.py:107
+msgid "f"
+msgstr "f"
+
+#: glances/plugins/glances_help.py:107
+msgid "Show/hide file system stats"
+msgstr "Zeige/Verstecke Dateisystem-Daten"
+
+#: glances/plugins/glances_help.py:109
+msgid "t"
+msgstr "t"
+
+#: glances/plugins/glances_help.py:109
+msgid "View network I/O as combination"
+msgstr "Netzwerk-I/O kombiniert zeigen"
+
+#: glances/plugins/glances_help.py:112
+msgid "n"
+msgstr "n"
+
+#: glances/plugins/glances_help.py:112
+msgid "Show/hide network stats"
+msgstr "Netzwerk-Daten zeigen/verstecken"
+
+#: glances/plugins/glances_help.py:114
+msgid "u"
+msgstr "u"
+
+#: glances/plugins/glances_help.py:114
+msgid "View cumulative network I/O"
+msgstr "kumulative Netzwerk-I/O zeigen"
+
+#: glances/plugins/glances_help.py:117
+msgid "s"
+msgstr "s"
+
+#: glances/plugins/glances_help.py:117
+msgid "Show/hide sensors stats"
+msgstr "Sensor-Daten zeigen/verstecken"
+
+#: glances/plugins/glances_help.py:119
+msgid "z"
+msgstr "z"
+
+#: glances/plugins/glances_help.py:119
+msgid "Enable/disable processes stats"
+msgstr "Prozess-Daten aktivieren/deaktivieren"
+
+#: glances/plugins/glances_help.py:122
+msgid "q"
+msgstr "q"
+
+#: glances/plugins/glances_help.py:122
+msgid "Quit (Esc and Ctrl-C also work)"
+msgstr "Beenden (auch Esc und Strg+C)"
+
+#: glances/plugins/glances_load.py:123
+msgid "LOAD"
+msgstr "LAST"
+
+#: glances/plugins/glances_load.py:127
+#, python-brace-format
+msgid "{0}-core"
+msgstr "{0}-Kern"
+
+#: glances/plugins/glances_load.py:132
+msgid "1 min:"
+msgstr "1 Min:"
+
+#: glances/plugins/glances_load.py:139
+msgid "5 min:"
+msgstr "5 Min:"
+
+#: glances/plugins/glances_load.py:147
+msgid "15 min:"
+msgstr "15 Min:"
+
+#: glances/plugins/glances_mem.py:148
+msgid "MEM"
+msgstr "RAM"
+
+#: glances/plugins/glances_mem.py:155
+msgid "active:"
+msgstr "aktiv:"
+
+#: glances/plugins/glances_mem.py:162 glances/plugins/glances_memswap.py:127
+msgid "total:"
+msgstr "gesamt:"
+
+#: glances/plugins/glances_mem.py:168
+msgid "inactive:"
+msgstr "inaktiv:"
+
+#: glances/plugins/glances_mem.py:175 glances/plugins/glances_memswap.py:134
+msgid "used:"
+msgstr "benutzt:"
+
+#: glances/plugins/glances_mem.py:182
+msgid "buffers:"
+msgstr "Puffer:"
+
+#: glances/plugins/glances_mem.py:189 glances/plugins/glances_memswap.py:142
+msgid "free:"
+msgstr "frei:"
+
+#: glances/plugins/glances_mem.py:195
+msgid "cached:"
+msgstr "cached:"
+
+#: glances/plugins/glances_memswap.py:119
+msgid "SWAP"
+msgstr "SWAP"
+
+#: glances/plugins/glances_monitor.py:111
+msgid "RUNNING"
+msgstr "LAUFEND"
+
+#: glances/plugins/glances_monitor.py:111
+msgid "NOT RUNNING"
+msgstr "NICHT LAUFEND"
+
+#: glances/plugins/glances_network.py:183
+msgid "NETWORK"
+msgstr "NETZWERK"
+
+#: glances/plugins/glances_network.py:189
+msgid "Rx+Tx"
+msgstr "Rx+Tx"
+
+#: glances/plugins/glances_network.py:193
+msgid "Rx"
+msgstr "Rx"
+
+#: glances/plugins/glances_network.py:195
+msgid "Tx"
+msgstr "Tx"
+
+#: glances/plugins/glances_network.py:201
+msgid "Rx+Tx/s"
+msgstr "Rx+Tx/s"
+
+#: glances/plugins/glances_network.py:204
+msgid "Rx/s"
+msgstr "Rx/s"
+
+#: glances/plugins/glances_network.py:206
+msgid "Tx/s"
+msgstr "Tx/s"
+
+#: glances/plugins/glances_now.py:52
+msgid "%Y-%m-%d %H:%M:%S"
+msgstr "%d.%m.%Y %H:%M:%S"
+
+#: glances/plugins/glances_percpu.py:150
+msgid "PER CPU not available"
+msgstr "PRO-CPU nicht möglich"
+
+#: glances/plugins/glances_percpu.py:156
+msgid "PER CPU"
+msgstr "PRO CPU"
+
+#: glances/plugins/glances_processcount.py:87
+msgid "PROCESSES DISABLED (press 'z' to display)"
+msgstr "PROZESS DEAKTIVIERT (drücke 'z' zum anzeigen)"
+
+#: glances/plugins/glances_processcount.py:96
+msgid "TASKS "
+msgstr "PROZESSE "
+
+#: glances/plugins/glances_processcount.py:104
+#, python-brace-format
+msgid " ({0} thr),"
+msgstr " ({0} thr),"
+
+#: glances/plugins/glances_processcount.py:109
+#, python-brace-format
+msgid " {0} run,"
+msgstr " {0} run,"
+
+#: glances/plugins/glances_processcount.py:114
+#, python-brace-format
+msgid " {0} slp,"
+msgstr " {0} slp,"
+
+#: glances/plugins/glances_processcount.py:117
+#, python-brace-format
+msgid " {0} oth "
+msgstr " {0} oth "
+
+#: glances/plugins/glances_processcount.py:126
+msgid "sorted automatically"
+msgstr "automatisch sortiert"
+
+#: glances/plugins/glances_processcount.py:128
+#, python-brace-format
+msgid " by {0}"
+msgstr " nach {0}"
+
+#: glances/plugins/glances_processcount.py:131
+#, python-brace-format
+msgid "sorted by {0}"
+msgstr "sortiert nach {0}"
+
+#: glances/plugins/glances_processlist.py:100
+msgid "CPU%"
+msgstr "CPU %"
+
+#: glances/plugins/glances_processlist.py:102
+msgid "MEM%"
+msgstr "RAM%"
+
+#: glances/plugins/glances_processlist.py:104
+msgid "VIRT"
+msgstr "VIRT"
+
+#: glances/plugins/glances_processlist.py:106
+msgid "RES"
+msgstr "RES"
+
+#: glances/plugins/glances_processlist.py:108
+msgid "PID"
+msgstr "PID"
+
+#: glances/plugins/glances_processlist.py:110
+msgid "USER"
+msgstr "BENUTZER"
+>>>>>>> release/v2.0
+
+#: glances/plugins/glances_processlist.py:112
+msgid "NI"
+msgstr "NI"
+
+#: glances/plugins/glances_processlist.py:114
+msgid "S"
+msgstr "S"
+
+#: glances/plugins/glances_processlist.py:116
+msgid "TIME+"
+msgstr "ZEIT+"
+
+#: glances/plugins/glances_processlist.py:118
+msgid "IOR/s"
+msgstr "IOR/s"
+
+#: glances/plugins/glances_processlist.py:120
+msgid "IOW/s"
+msgstr "IOW/s"
+
+#: glances/plugins/glances_processlist.py:122
+msgid "Command"
+msgstr "Befehl"
+
+#: glances/plugins/glances_sensors.py:121
+msgid "SENSORS"
+msgstr "SENSOREN"
+
+#: glances/plugins/glances_sensors.py:124
+#: glances/plugins/glances_sensors.py:126
+msgid "°C"
+msgstr "°C"
+
+#: glances/plugins/glances_system.py:111
+msgid "Connected to "
+msgstr "Verbunden mit "
+
+#: glances/plugins/glances_system.py:114
+msgid "SNMP from "
+msgstr "SNMP von "
+
+#: glances/plugins/glances_system.py:117
+msgid "Disconnected from "
+msgstr "Getrennt von "

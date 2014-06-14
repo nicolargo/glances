@@ -40,3 +40,6 @@ local.properties
 
 # Lang
 glances.pot
+
+# Sphinx
+_build

@@ -2,25 +2,28 @@
 Glances
 =======
 
-This manual describes *Glances* version 1.7.7.
+This manual describes *Glances* version 2.0.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-May 2014
+June 2014
 
 .. contents:: Table of Contents
 
 Introduction
 ============
 
-Glances is a cross-platform curses-based monitoring tool which aims to
-present a maximum of information in a minimum of space, ideally to fit
-in a classical 80x24 terminal or higher to have additional information.
+Glances is a cross-platform curses-based system monitoring tool which
+aims to present a maximum of information in a minimum of space, ideally
+to fit in a classical 80x24 terminal or higher to have additional
+information. It can adapt dynamically the displayed information depending
+on the terminal size.
 
-Glances can adapt dynamically the displayed information depending on the
-terminal size. It can also work in a client/server mode for remote monitoring.
+Glances can also work in client/server mode. Remote monitoring could be
+done via terminal or web interface.
 
-Glances is written in Python and uses the `psutil`_ library to get information from your system.
+Glances is written in Python and uses the `psutil`_ library to get
+information from your system.
 
 Console (80x24)
 
@@ -30,10 +33,14 @@ Full view (>80x24)
 
 .. image:: images/screenshot-wide.png
 
+Web interface (Firefox)
+
+.. image:: images/screenshot-web.png
+
 Usage
 =====
 
-Standalone mode
+Standalone Mode
 ---------------
 
 Simply run:
@@ -42,11 +49,11 @@ Simply run:
 
     $ glances
 
-Client/Server mode
+Client/Server Mode
 ------------------
 
-If you want to remotely monitor a machine, called ``server``, from another one, called ``client``,
-just run on the server:
+If you want to remotely monitor a machine, called ``server``, from
+another one, called ``client``, just run on the server:
 
 .. code-block:: console
 
@@ -60,51 +67,103 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
-In server mode, you can set the bind address ``-B ADDRESS`` and listening TCP port ``-p PORT``.
+In server mode, you can set the bind address ``-B ADDRESS`` and listening
+TCP port ``-p PORT``.
 
 In client mode, you can set the TCP port of the server ``-p PORT``.
 
-Default binding address is ``0.0.0.0`` (Glances will listen on all the network interfaces) and TCP port is ``61209``.
+You can also set a password to access to the server ``--password``.
+
+Default binding address is ``0.0.0.0`` (Glances will listen on all the
+network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
-You can also set a password to access to the server ``-P password``.
+Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to
+all IPv6 addresses.
 
-Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to all IPv6 addresses.
+As an experimental feature, if Glances server is not detected by the
+client, the latter will try to grab stats using the ``SNMP`` protocol:
 
-Command reference
+.. code-block:: console
+
+    client$ glances -c @snmpserver
+
+Known issues: grab using SNMP is only validated for GNU/Linux with SNMP
+v2/2c server.
+
+Web Server Mode
+---------------
+
+If you want to remotely monitor a machine, called ``server``, from any
+device with a web browser, called ``client``, just run on the server:
+
+.. code-block:: console
+
+    server$ glances -w
+
+and on the client enter the following URL in your favorite web browser:
+
+::
+
+    http://@server:61208
+
+where ``@server`` is the IP address or hostname of the server.
+
+The Glances web interface follows responsive web design principles.
+
+Screenshot from Chrome on Android
+
+.. image:: images/screenshot-web2.png
+
+
+Command Reference
 =================
 
-Command-line options
+Command-Line Options
 --------------------
 
--b             Display network rate in Byte per second (default: bit per second)
--B IP          Bind server to the given IPv4/IPv6 address or hostname
--c IP          Connect to a Glances server by IPv4/IPv6 address or hostname
--C FILE        Path to the configuration file
--d             Disable disk I/O module
--e             Enable sensors module (requires pysensors, Linux-only)
--f FOLDER      Set the HTML or CSV output folder
--h             Display the help and exit
--m             Disable mount module
--n             Disable network module
--o OUTPUT      Define additional output (available: HTML or CSV)
--p PORT        Define the client/server TCP port (default: 61209)
--P PASSWORD    Define a client/server password
---password     Define a client/server password from the prompt
--r             Disable process list (for low CPU consumption)
--s             Run Glances in server mode
--t SECONDS     Set refresh time in seconds (default: 3 sec)
--v             Display the version and exit
--y             Enable hddtemp module (requires hddtemp)
--z             Do not use the bold color attribute
--1             Start Glances in per-CPU mode
+-h, --help            show this help message and exit
+-V, --version         show program's version number and exit
+-b, --byte            display network rate in byte per second
+-B BIND_ADDRESS, --bind BIND_ADDRESS
+                      bind server to the given IPv4/IPv6 address or hostname
+-c CLIENT, --client CLIENT
+                      connect to a Glances server by IPv4/IPv6 address or
+                      hostname
+-C CONF_FILE, --config CONF_FILE
+                      path to the configuration file
+--disable-bold        disable bold mode in the terminal
+--disable-diskio      disable disk I/O module
+--disable-fs          disable file system module
+--disable-network     disable network module
+--disable-sensors     disable sensors module
+--disable-process     disable process module
+--disable-log         disable log module
+--output-csv OUTPUT_CSV
+                      export stats to a CSV file
+-p PORT, --port PORT  define the client/server TCP port [default: 61209]
+--password            define a client/server password from the prompt or
+                      file
+-s, --server          run Glances in server mode
+--snmp-community SNMP_COMMUNITY
+                      SNMP community
+--snmp-port SNMP_PORT
+                      SNMP port
+--snmp-version SNMP_VERSION
+                      SNMP version (1, 2c or 3)
+--snmp-user SNMP_USER
+                      SNMP username (only for SNMPv3)
+--snmp-auth SNMP_AUTH
+                      SNMP authentication key (only for SNMPv3)
+-t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
+-w, --webserver       run Glances in Web server mode
+-1, --percpu          start Glances in per CPU mode
 
-Interactive commands
+Interactive Commands
 --------------------
 
 The following commands (key pressed) are supported while in Glances:
-
 
 ``a``
     Sort process list automatically
@@ -123,7 +182,7 @@ The following commands (key pressed) are supported while in Glances:
 ``h``
     Show/hide the help screen
 ``i``
-    Sort processes by I/O rate (may need root privileges on some OSes)
+    Sort processes by I/O rate
 ``l``
     Show/hide log messages
 ``m``
@@ -135,7 +194,7 @@ The following commands (key pressed) are supported while in Glances:
 ``q``
     Quit
 ``s``
-    Show/hide sensors stats (only available with -e flag)
+    Show/hide sensors stats
 ``t``
     View network I/O as combination
 ``u``
@@ -144,19 +203,21 @@ The following commands (key pressed) are supported while in Glances:
     Delete finished warning log messages
 ``x``
     Delete finished warning and critical log messages
-``y``
-    Show/hide hddtemp stats (only available with -y flag)
 ``z``
-    Show/hide processes list (for low CPU consumption)
+    Show/hide processes stats
 ``1``
     Switch between global CPU and per-CPU stats
 
 Configuration
 =============
 
+**Caution! Glances version 1.x configuration files are not compatible
+with the version 2.x.**
+
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed for setup limits, disks or network interfaces to hide and/or monitored processes list.
+Furthermore a configuration file is needed to set up limits, disks or
+network interfaces to hide and/or monitored processes list.
 
 By default, the configuration file is under:
 
@@ -166,29 +227,31 @@ By default, the configuration file is under:
 
 On Windows XP, the ``%APPDATA%`` path is:
 
-.. code-block:: console
+::
 
     C:\Documents and Settings\<User>\Application Data
 
 Since Windows Vista and newer versions:
 
-.. code-block:: console
+::
 
     C:\Users\<User>\AppData\Roaming
 
 You can override the default configuration, located in one of the above
 directories on your system, except for Windows.
 
-Just copy the ``glances.conf`` file to your ``$XDG_CONFIG_HOME`` directory, e.g. Linux:
+Just copy the ``glances.conf`` file to your ``$XDG_CONFIG_HOME`` directory,
+e.g., on Linux:
 
 .. code-block:: console
 
     mkdir -p $XDG_CONFIG_HOME/glances
-    cp /etc/glances/glances.conf $XDG_CONFIG_HOME/glances/
+    cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/
 
-On OS X, you should copy the configuration file to ``~/Library/Application Support/glances/``.
+On OS X, you should copy the configuration file to
+``~/Library/Application Support/glances/``.
 
-Anatomy of the application
+Anatomy Of The Application
 ==========================
 
 Legend
@@ -199,13 +262,27 @@ Legend
 | ``MAGENTA`` stat counter is ``"WARNING"``
 | ``RED`` stat counter is ``"CRITICAL"``
 
+*Note*: only stats with colored background will be logged in the alert
+view.
+
 Header
 ------
 
 .. image:: images/header.png
 
-The header shows the hostname, OS name, release version, platform architecture and system uptime.
-On Linux, it shows also the kernel version.
+The header shows the hostname, OS name, release version, platform
+architecture and system uptime (on the upper right corner).
+Additionally, on GNU/Linux, it also shows the kernel version.
+
+In client mode, the server connection status is displayed.
+
+Connected:
+
+.. image:: images/connected.png
+
+Disconnected:
+
+.. image:: images/disconnected.png
 
 CPU
 ---
@@ -214,7 +291,8 @@ Short view:
 
 .. image:: images/cpu.png
 
-If enough horizontal space is available, extended CPU informations are displayed.
+If enough horizontal space is available, extended CPU information are
+displayed.
 
 Extended view:
 
@@ -224,57 +302,61 @@ To switch to per-CPU stats, just hit the ``1`` key:
 
 .. image:: images/per-cpu.png
 
-The CPU stats are shown as a percentage and for the configured refresh time.
-The total CPU usage is displayed on the first line.
+The CPU stats are shown as a percentage and for the configured refresh
+time. The total CPU usage is displayed on the first line.
 
-| If user|system|nice CPU is ``<50%``, then status is set to ``"OK"``
-| If user|system|nice CPU is ``>50%``, then status is set to ``"CAREFUL"``
-| If user|system|nice CPU is ``>70%``, then status is set to ``"WARNING"``
-| If user|system|nice CPU is ``>90%``, then status is set to ``"CRITICAL"``
+| If user|system CPU is ``<50%``, then status is set to ``"OK"``
+| If user|system CPU is ``>50%``, then status is set to ``"CAREFUL"``
+| If user|system CPU is ``>70%``, then status is set to ``"WARNING"``
+| If user|system CPU is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limit values can be overwritten in the configuration file under the ``[cpu]`` section.
+*Note*: limit values can be overwritten in the configuration file under
+the ``[cpu]`` and/or ``[percpu]`` sections.
 
 Load
 ----
 
 .. image:: images/load.png
 
-On the *No Sheep* blog, *Zachary Tirrell* defines the average load [1]_:
+On the *No Sheep* blog, *Zachary Tirrell* defines the load average [1]_:
 
     "In short it is the average sum of the number of processes
     waiting in the run-queue plus the number currently executing
-    over 1, 5, and 15 minute time periods."
+    over 1, 5, and 15 minutes time periods."
 
 Glances gets the number of CPU core to adapt the alerts.
-Alerts on average load are only set on 5 and 15 min.
-The first line also display the number of CPU core.
+Alerts on load average are only set on 15 minutes time period.
+The first line also displays the number of CPU core.
 
-| If average load is ``<0.7*core``, then status is set to ``"OK"``
-| If average load is ``>0.7*core``, then status is set to ``"CAREFUL"``
-| If average load is ``>1*core``, then status is set to ``"WARNING"``
-| If average load is ``>5*core``, then status is set to ``"CRITICAL"``
+| If load average is ``<0.7*core``, then status is set to ``"OK"``
+| If load average is ``>0.7*core``, then status is set to ``"CAREFUL"``
+| If load average is ``>1*core``, then status is set to ``"WARNING"``
+| If load average is ``>5*core``, then status is set to ``"CRITICAL"``
 
-*Note*: limit values can be overwritten in the configuration file under the ``[load]`` section.
+*Note*: limit values can be overwritten in the configuration file under
+the ``[load]`` section.
 
 Memory
 ------
 
-Glances uses two columns: one for the ``RAM`` and another one for the ``Swap``.
+Glances uses two columns: one for the ``RAM`` and one for the ``SWAP``.
 
 .. image:: images/mem.png
 
-If enough space is available, Glances displays extended informations:
+If enough space is available, Glances displays extended information for
+the ``RAM``:
 
 .. image:: images/mem-wide.png
 
-With Glances, alerts are only set for on used memory and used swap.
+Alerts are only set for used memory and used swap.
 
-| If memory is ``<50%``, then status is set to ``"OK"``
-| If memory is ``>50%``, then status is set to ``"CAREFUL"``
-| If memory is ``>70%``, then status is set to ``"WARNING"``
-| If memory is ``>90%``, then status is set to ``"CRITICAL"``
+| If used memory|swap is ``<50%``, then status is set to ``"OK"``
+| If used memory|swap is ``>50%``, then status is set to ``"CAREFUL"``
+| If used memory|swap is ``>70%``, then status is set to ``"WARNING"``
+| If used memory|swap is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limit values can be overwritten in the configuration file under the ``[memory]`` and ``[swap]`` sections.
+*Note*: limit values can be overwritten in the configuration file under
+the ``[memory]`` and/or ``[memswap]`` sections.
 
 Network
 -------
@@ -284,47 +366,12 @@ Network
 Glances displays the network interface bit rate. The unit is adapted
 dynamically (bits per second, kbits per second, Mbits per second, etc).
 
-Alerts are only set if the network interface maximum speed is available.
+Alerts are only set if the maximum speed per network interface is available
+(see sample in the configuration file).
 
-For example, on a 100 Mbps ethernet interface, the warning status is set
-if the bit rate is higher than 70 Mbps.
-
-| If bit rate is ``<50%``, then status is set to ``"OK"``
-| If bit rate is ``>50%``, then status is set to ``"CAREFUL"``
-| If bit rate is ``>70%``, then status is set to ``"WARNING"``
-| If bit rate is ``>90%``, then status is set to ``"CRITICAL"``
-
-*Note*: In the configuration file, you can define a list of network interfaces to hide.
-
-Sensors
--------
-
-Glances can displays the sensors informations trough `lm-sensors` (only available on Linux).
-
-As of lm-sensors, a filter is processed in order to display temperature only:
-
-.. image:: images/sensors.png
-
-
-Glances can also grab hard disk temperature through the `hddtemp` daemon (see here [2]_ to install hddtemp on your system):
-
-.. image:: images/hddtemp.png
-
-To enable the lm-sensors module:
-
-.. code-block:: console
-
-    $ glances -e
-
-To enable the hddtemp module:
-
-.. code-block:: console
-
-    $ glances -y
-
-There is no alert on this information.
-
-*Note*: limit values can be overwritten in the configuration file under the ``[temperature]`` and ``[hddtemperature]`` sections.
+*Note*: it is possibile to define a list of network interfaces to hide
+and per-interface limit values in the ``[network]`` section of the
+configuration file.
 
 Disk I/O
 --------
@@ -333,11 +380,12 @@ Disk I/O
 
 Glances displays the disk I/O throughput. The unit is adapted dynamically.
 
-*Note*: There is no alert on this information.
+There is no alert on this information.
 
-*Note*: In the configuration file, you can define a list of disk to hide.
+*Note*: it is possible to define a list of disks to hide under the
+``[diskio]`` section in the configuration file.
 
-File system
+File System
 -----------
 
 .. image:: images/fs.png
@@ -345,16 +393,35 @@ File system
 Glances displays the used and total file system disk space. The unit is
 adapted dynamically.
 
-Alerts are set for used disk space:
+Alerts are set for used disk space.
 
-| If disk used is ``<50%``, then status is set to ``"OK"``
-| If disk used is ``>50%``, then status is set to ``"CAREFUL"``
-| If disk used is ``>70%``, then status is set to ``"WARNING"``
-| If disk used is ``>90%``, then status is set to ``"CRITICAL"``
+| If used disk is ``<50%``, then status is set to ``"OK"``
+| If used disk is ``>50%``, then status is set to ``"CAREFUL"``
+| If used disk is ``>70%``, then status is set to ``"WARNING"``
+| If used disk is ``>90%``, then status is set to ``"CRITICAL"``
 
-*Note*: limit values can be overwritten in the configuration file under ``[filesystem]`` section.
+*Note*: limit values can be overwritten in the configuration file under
+the ``[filesystem]`` section.
 
-Processes list
+Sensors
+-------
+
+Glances can displays the sensors information using `lm-sensors`,
+`hddtemp` and `batinfo` [2]_.
+
+All of the above libraries are available only on Linux.
+
+As of lm-sensors, a filter is being applied in order to display
+temperature only.
+
+.. image:: images/sensors.png
+
+There is no alert on this information.
+
+*Note*: limit values can be overwritten in the configuration file under
+the ``[sensors]`` section.
+
+Processes List
 --------------
 
 Compact view:
@@ -368,7 +435,7 @@ Full view:
 Three views are available for processes:
 
 * Processes summary
-* Optional monitored processes list (new in 1.7)
+* Optional monitored processes list (see below)
 * Processes list
 
 The processes summary line display:
@@ -378,59 +445,65 @@ The processes summary line display:
 * Running tasks number
 * Sleeping tasks number
 * Other tasks number (not running or sleeping)
+* Sort key
 
-By default, or if you hit the ``a`` key, the processes list is automatically
-sorted by CPU of memory usage.
+By default, or if you hit the ``a`` key, the processes list is
+automatically sorted by:
 
-*Note*: limit values can be overwritten in the configuration file under the ``[process]`` section.
+* ``CPU`` if there is no alert (default behavior)
+* ``CPU`` if a CPU or LOAD alert is detected
+* ``MEM`` if a memory alert is detected
+* ``Disk I/O`` if a CPU iowait alert is detected
 
 The number of processes in the list is adapted to the screen size.
 
-``VIRT``
-    Total program size (VMS)
-``RES``
-    Resident set size (RSS)
 ``CPU%``
     % of CPU used by the process
 ``MEM%``
     % of MEM used by the process
+``VIRT``
+    Total program size aka Virtual Memory Size (VMS)
+``RES``
+    Resident Set Size (RSS)
 ``PID``
     Process ID
 ``USER``
-    User ID per process
+    User ID
 ``NI``
-    Nice level of the process
+    Nice level of the process (niceness other than 0 is highlighted)
 ``S``
-    Process status
+    Process status (running process is highlighted)
 ``TIME+``
     Cumulative CPU time used
 ``IOR/s``
-    Per process IO read rate (in Byte/s)
+    Per process I/O read rate (in Byte/s)
 ``IOW/s``
-    Per process IO write rate (in Byte/s)
-``NAME``
-    Process name or command line
+    Per process I/O write rate (in Byte/s)
+``COMMAND``
+    Process command line (process name is highlighted)
 
 Process status legend:
 
 ``R``
-    running
+    Running
 ``S``
-    sleeping (may be interrupted)
+    Sleeping (may be interrupted)
 ``D``
-    disk sleep (may not be interrupted)
+    Disk sleep (may not be interrupted)
 ``T``
-    traced/stopped
+    Traced / Stopped
 ``Z``
-    zombie
+    Zombie
 
-Monitored processes list
+*Note*: limits values can be overwritten in the configuration file under
+the ``[process]`` section.
+
+Monitored Processes List
 ------------------------
 
-New in version 1.7. Optional.
-
 The monitored processes list allows user, through the configuration file,
-to group processes and quickly show if the number of running process is not good.
+to group processes and quickly show if the number of running processes is
+not good.
 
 .. image:: images/monitored.png
 
@@ -438,15 +511,19 @@ Each item is defined by:
 
 * ``description``: description of the processes (max 16 chars).
 * ``regex``: regular expression of the processes to monitor.
-* ``command`` (optional): full path to shell command/script for extended stat. Should return a single line string. Use with caution.
-* ``countmin`` (optional): minimal number of processes. A warning will be displayed if number of processes < count.
-* ``countmax`` (optional): maximum number of processes. A warning will be displayed if number of processes > count.
+* ``command`` (optional): full path to shell command/script for extended
+  stat. Should return a single line string. Use with caution.
+* ``countmin`` (optional): minimal number of processes. A warning will
+  be displayed if number of processes < count.
+* ``countmax`` (optional): maximum number of processes. A warning will
+  be displayed if number of processes > count.
 
 Up to 10 items can be defined.
 
-For example, if you want to monitor the Nginx processes on a Web server, the following definition should do the job:
+For example, if you want to monitor the Nginx processes on a Web server,
+the following definition should do the job:
 
-.. code-block:: console
+::
 
     [monitor]
     list_1_description=Nginx server
@@ -455,9 +532,10 @@ For example, if you want to monitor the Nginx processes on a Web server, the fol
     list_1_countmin=1
     list_1_countmax=4
 
-If you also want to monitor the PHP-FPM daemon processes, you should add another item:
+If you also want to monitor the PHP-FPM daemon processes, you should add
+another item:
 
-.. code-block:: console
+::
 
     [monitor]
     list_1_description=Nginx server
@@ -471,7 +549,8 @@ If you also want to monitor the PHP-FPM daemon processes, you should add another
     list_1_countmax=20
 
 In client/server mode, the list is defined on the server side.
-A new method, called getAllMonitored, is available in the APIs and get the JSON representation of the monitored processes list.
+A new method, called `getAllMonitored`, is available in the APIs and
+get the JSON representation of the monitored processes list.
 
 Alerts are set as following:
 
@@ -484,48 +563,41 @@ Logs
 
 .. image:: images/logs.png
 
-A log messages list is displayed in the bottom of the screen if (and only if):
+A log messages list is displayed in the bottom of the screen if (and
+only if):
 
 - at least one ``WARNING`` or ``CRITICAL`` alert was occurred
 - space is available in the bottom of the console/terminal
 
 Each alert message displays the following information:
 
-1. start date
-2. end date
+1. start datetime
+2. duration if alert is terminated or `ongoing` if the alert is still in
+   progress
 3. alert name
-4. {min/avg/max} values or number of running processes for monitored processes list alerts
+4. {min,avg,max} values or number of running processes for monitored
+   processes list alerts
 
-Footer
-------
+Other Outputs
+=============
 
-.. image:: images/footer.png
+It is possible to export statistics to CSV file.
 
-Glances displays the current date & time and access to the embedded help screen.
+.. code-block:: console
 
-If one or mode batteries were found on your machine and if the batinfo Python library [3]_
-is installed on your system then Glances displays the available percent capacity in the middle on the footer.
+    $ glances --output-csv /tmp/glances.csv
 
-.. image:: images/battery.png
+CSV files have two lines per stats:
 
-If you have ran Glances in client mode ``-c``, you can also see if the client is connected to the server.
+- Stats description
+- Stats (comma separated)
 
-If client is connected:
-
-.. image:: images/client-connected.png
-
-else:
-
-.. image:: images/client-disconnected.png
-
-On the left, you can easily see if you are connected to a Glances server.
-
-
-API documentation
+API Documentation
 =================
 
 Glances uses a `XML-RPC server`_ and can be used by another client software.
 
+<<<<<<< HEAD
 API documentation is available at https://github.com/nicolargo/glances/wiki/The-Glances-API-How-To
 
 Other outputs
@@ -553,18 +625,22 @@ CSV files have on line per stats:
 The HTML output file is named ``glances.html``.
 
 *Note*: The css and img folders (glances/data) should be in the /tmp folder.
+=======
+API documentation is available at
+https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to.
+>>>>>>> release/v2.0
 
 Support
 =======
 
-To report a bug or a feature request use the bug tracking system at https://github.com/nicolargo/glances/issues
+To report a bug or a feature request use the bug tracking system at
+https://github.com/nicolargo/glances/issues.
 
 Feel free to contribute!
 
 
 .. [1] http://nosheep.net/story/defining-unix-load-average/
-.. [2] http://www.cyberciti.biz/tips/howto-monitor-hard-drive-temperature.html
-.. [3] https://github.com/nicolargo/batinfo
+.. [2] https://github.com/nicolargo/batinfo
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html

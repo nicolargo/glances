@@ -1,0 +1,157 @@
+body {
+    background: black;
+    color: #BBB;
+    font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono", monospace;
+    font-size: 100%;
+}
+header,footer,
+article,section,
+hgroup,nav,
+figure,div,aside {
+    display: block;
+}
+section {
+    text-align: justify;
+}
+section > article {
+    display: inline-block;
+    vertical-align: top;
+    *display: inline;
+    zoom: 1;
+}
+section:after {
+    content: "";
+    width: 100%;
+    display: inline-block;
+}
+aside {
+    float: left;
+    margin-right: 2%;
+}
+div#newline{
+    clear: both;
+    height: 1em;
+}
+#underline{
+    text-decoration: underline
+}
+#bold{
+    font-weight: bold;
+}
+#sort{
+    font-weight: bold;
+}
+#sort:after{
+    content: '\25BC'
+}
+/*Theme*/
+#title{
+    font-weight: bold;
+    color: white;
+}
+#table {
+    display: table;
+}
+.row {
+    display: table-row;
+}
+.cell {
+    display: table-cell;
+}
+#ok {
+    color: green;
+}
+#ok_log {
+    background-color: green;
+    color: white;
+}
+#careful {
+    color: blueviolet;
+}
+#careful_log {
+    background-color: blueviolet;
+    color: white;
+}
+#warning {
+    color: orange;
+}
+#warning_log {
+    background-color: orange;
+    color: white;
+}
+#critical {
+    color: red;
+}
+#critical_log {
+    background-color: red;
+    color: white;
+}
+#nice {
+    color: magenta;
+}
+#status {
+    color: green;
+}
+/*Plugins*/
+#system {
+    float: left;
+}
+#uptime {
+    float: right;
+}
+#cpu {}
+#load {}
+#mem {}
+#memswap {}
+#leftstats {}
+#network {
+    margin-bottom: 1em;
+}
+#diskio {
+    margin-bottom: 1em;
+}
+#fs {
+    margin-bottom: 1em;
+}
+#sensors {}
+#rightstats {}
+#alert {
+    display: block;
+}
+#processcount {
+    display: block;
+    margin: 1em;
+}
+#monitor {
+    display: block;
+    margin: 1em;
+}
+#processlist {}
+/*
+article#processlist>div>div>span:last-child {
+    visibility: hidden;
+    white-space: nowrap;
+}
+*/
+#now {}
+/*Responsive design*/
+@media only screen and (max-width: 1600px) {
+    body { font-size:90%; }
+}
+@media only screen and (max-width: 1280px) {
+    body { font-size:80%; }
+}
+@media only screen and (max-width: 1024px) {
+    body { font-size:80%; }
+    #processlist .hide { display: none; }
+}
+@media only screen and (max-width: 768px) {
+    body { font-size:70%; }
+    aside { margin-right: 1%; }
+    .hide { display: none; }
+}
+@media only screen and (max-width: 480px) {
+    body { font-size:60%; }
+    aside { margin-right: 1%; }
+    .hide { display: none; }
+}
