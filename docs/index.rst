@@ -1,11 +1,11 @@
-Welcome to Glances's documentation!
-===================================
+Welcome to Glances documentation!
+=================================
 
 **Glances** is a cross-platform curses-based monitoring tool written in Python.
 
 It uses the psutil library and some internal code to get information from your system.
 
-.. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
+.. image:: images/screenshot-wide.png
 
 Get the code
 ------------
