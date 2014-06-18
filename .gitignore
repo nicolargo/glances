@@ -38,8 +38,5 @@ local.properties
 # ctags
 .tags*
 
-# Lang
-glances.pot
-
 # Sphinx
 _build

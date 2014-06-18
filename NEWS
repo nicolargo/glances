@@ -82,7 +82,7 @@ Version 1.7.5
 =============
 
     * Force the Pypi installer to use the PsUtil branch 1.x (#333)
-    
+
 Version 1.7.4
 =============
 
