@@ -78,7 +78,12 @@ class MonitorList(object):
                 if description is not None and regex is not None:
                     # Build the new item
                     value["description"] = description
-                    value["regex"] = regex
+                    try:
+                        re.compile(regex)
+                    except:
+                        continue
+                    else:
+                        value["regex"] = regex
                     value["command"] = command
                     value["countmin"] = countmin
                     value["countmax"] = countmax
