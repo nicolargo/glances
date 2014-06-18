@@ -141,7 +141,8 @@ class Plugin(GlancesPlugin):
             msg = '{0:>6}'.format(p['pid'])
             ret.append(self.curse_add_line(msg))
             # USER
-            msg = ' {0:9}'.format(p['username'][:9])
+            # docker internal users are displayed as ints only, therefore str()
+            msg = ' {0:9}'.format(str(p['username'])[:9])
             ret.append(self.curse_add_line(msg))
             # NICE
             nice = p['nice']
