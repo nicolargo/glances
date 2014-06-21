@@ -24,9 +24,9 @@ import json
 import socket
 import sys
 try:
-    from xmlrpc.client import ServerProxy, ProtocolError
+    from xmlrpc.client import ServerProxy, ProtocolError, Fault
 except ImportError:  # Python 2
-    from xmlrpclib import ServerProxy, ProtocolError
+    from xmlrpclib import ServerProxy, ProtocolError, Fault
 
 # Import Glances libs
 from glances.core.glances_globals import version
@@ -149,6 +149,9 @@ class GlancesClient(object):
             server_stats['monitor'] = json.loads(self.client.getAllMonitored())
         except socket.error:
             # Client cannot get server stats
+            return "Disconnected"
+        except Fault:
+            # Client cannot get server stats (issue #375)
             return "Disconnected"
         else:
             # Put it in the internal dict
