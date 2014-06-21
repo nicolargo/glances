@@ -69,7 +69,10 @@ class GlancesProcesses(object):
         procstat['pid'] = proc.pid
 
         # Process name (cached by PSUtil)
-        procstat['name'] = proc.name()
+        try:
+            procstat['name'] = proc.name()
+        except psutil.AccessDenied:
+            procstat['name'] = ""
 
         # Process username (cached with internal cache)
         try:
@@ -77,10 +80,10 @@ class GlancesProcesses(object):
         except:
             try:
                 self.username_cache[procstat['pid']] = proc.username()
-            except KeyError:
+            except (KeyError, psutil.AccessDenied):
                 try:
                     self.username_cache[procstat['pid']] = proc.uids().real
-                except KeyError:
+                except (KeyError, psutil.AccessDenied):
                     self.username_cache[procstat['pid']] = "?"
         procstat['username'] = self.username_cache[procstat['pid']]
 
