@@ -83,7 +83,7 @@ class GlancesProcesses(object):
             except (KeyError, psutil.AccessDenied):
                 try:
                     self.username_cache[procstat['pid']] = proc.uids().real
-                except (KeyError, psutil.AccessDenied):
+                except (KeyError, AttributeError, psutil.AccessDenied):
                     self.username_cache[procstat['pid']] = "?"
         procstat['username'] = self.username_cache[procstat['pid']]
 
