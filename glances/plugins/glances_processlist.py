@@ -146,6 +146,8 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             # NICE
             nice = p['nice']
+            if nice is None:
+                nice = '?'
             msg = '{0:>5}'.format(nice)
             if nice != 0:
                 ret.append(self.curse_add_line(msg, decoration='NICE'))
