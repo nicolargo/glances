@@ -95,7 +95,10 @@ class GlancesProcesses(object):
         procstat['status'] = str(proc.status())[:1].upper()
 
         # Process nice
-        procstat['nice'] = proc.nice()
+        try:
+            procstat['nice'] = proc.nice()
+        except psutil.AccessDenied:
+            procstat['nice'] = None
 
         # Process memory
         procstat['memory_info'] = proc.memory_info()
