@@ -2,6 +2,21 @@
 Glances Version 2.x
 ==============================================================================
 
+Version 2.0.1
+=============
+
+Maintenance version.
+
+Bugs corrected:
+
+    * Error when displaying numeric process user names (#380)
+    * Display users without username correctly (#379)
+    * Bug when parsing configuration file (#378)
+    * The sda2 partition is not seen by glances (#376)
+    * Client crash if server is ended during XML request (#375)
+    * Error with the Sensors module on Debian/Ubuntu (#373)
+    * Windows don't view all processes (#319) 
+
 Version 2.0
 ===========
 
