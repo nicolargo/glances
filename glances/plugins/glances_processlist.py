@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_linux, is_windows
+from glances.core.glances_globals import glances_processes, is_windows
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -149,7 +149,8 @@ class Plugin(GlancesPlugin):
             if nice is None:
                 nice = '?'
             msg = '{0:>5}'.format(nice)
-            if (is_linux and nice != 0) or (is_windows and nice != 32):
+            if isinstance(nice, int) and ((is_windows and nice != 32) or
+                                          (not is_windows and nice != 0)):
                 ret.append(self.curse_add_line(msg, decoration='NICE'))
             else:
                 ret.append(self.curse_add_line(msg))
