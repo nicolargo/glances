@@ -19,6 +19,8 @@
 
 """Network plugin."""
 
+import base64
+
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -27,9 +29,9 @@ import psutil
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
-snmp_oid = {'interface_name': '1.3.6.1.2.1.2.2.1.2',
-            'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-            'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}
+snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
+                        'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+                        'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
 
 
 class Plugin(GlancesPlugin):
@@ -94,7 +96,7 @@ class Plugin(GlancesPlugin):
                 for net in network_new:
                     try:
                         # Try necessary to manage dynamic network interface
-                        netstat = {}
+                        netstat = {} 
                         netstat['interface_name'] = net
                         netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = network_new[net].bytes_recv
@@ -118,7 +120,12 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
 
             # SNMP bulk command to get all network interface in one shot
-            netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+            try:
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                    bulk=True)
+            except KeyError:
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                                                    bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
             if not hasattr(self, 'network_old'):
@@ -138,7 +145,15 @@ class Plugin(GlancesPlugin):
                     try:
                         # Try necessary to manage dynamic network interface
                         netstat = {}
-                        netstat['interface_name'] = net
+                        # Windows: a tips is needed to convert HEX to TXT
+                        # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
+                        if self.get_short_system_name() == 'windows':
+                            try:
+                                netstat['interface_name'] = str(base64.b16decode(net[2:-2].upper()))
+                            except TypeError:
+                                netstat['interface_name'] = net
+                        else:
+                            netstat['interface_name'] = net
                         netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = float(network_new[net]['cumulative_rx'])
                         netstat['rx'] = (float(network_new[net]['cumulative_rx']) -

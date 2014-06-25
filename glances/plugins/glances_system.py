@@ -22,13 +22,25 @@
 # Import system libs
 import os
 import platform
+import re
 
 # Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
-snmp_oid = {'hostname': '1.3.6.1.2.1.1.5.0',
-            'os_name': '1.3.6.1.2.1.1.1.0'}
+snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
+                        'system_name': '1.3.6.1.2.1.1.1.0'}}
+
+# SNMP to human read
+# Dict (key: OS short name) of dict (reg exp OID to human)
+# Windows: http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
+snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
+                             'Windows Version 6.2': 'Windows 8 or Server 2012',
+                             'Windows Version 6.1': 'Windows 7 or Server 2008R2',
+                             'Windows Version 6.0': 'Windows Vista or Server 2008',
+                             'Windows Version 5.2': 'Windows XP 64bits or 2003 server',
+                             'Windows Version 5.1': 'Windows XP',
+                             'Windows Version 5.0': 'Windows 2000'}}
 
 
 class Plugin(GlancesPlugin):
@@ -90,7 +102,18 @@ class Plugin(GlancesPlugin):
                 self.stats['os_version'] = ""
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            try:
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
+            except KeyError:
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+            # Default behavor: display all the information
+            self.stats['os_name'] = self.stats['system_name']
+            # Windows OS tips
+            if self.get_short_system_name() == 'windows':
+                for r,v in snmp_to_human['windows'].iteritems():
+                    if re.search(r, self.stats['system_name']):
+                        self.stats['os_name'] = v 
+                        break
 
         return self.stats
 

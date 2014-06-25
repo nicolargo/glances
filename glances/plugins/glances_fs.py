@@ -19,6 +19,8 @@
 
 """File system plugin."""
 
+import base64
+
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -37,11 +39,15 @@ import psutil
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
 # Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
-snmp_oid = {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
-            'device_name': '1.3.6.1.4.1.2021.9.1.3',
-            'size': '1.3.6.1.4.1.2021.9.1.6',
-            'used': '1.3.6.1.4.1.2021.9.1.8',
-            'percent': '1.3.6.1.4.1.2021.9.1.9'}
+snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+                        'device_name': '1.3.6.1.4.1.2021.9.1.3',
+                        'size': '1.3.6.1.4.1.2021.9.1.6',
+                        'used': '1.3.6.1.4.1.2021.9.1.8',
+                        'percent': '1.3.6.1.4.1.2021.9.1.9'},
+            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+                        'size': '1.3.6.1.2.1.25.2.3.1.5',
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
 
 
 class Plugin(GlancesPlugin):
@@ -110,17 +116,38 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
 
             # SNMP bulk command to get all file system in one shot
-            fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+            
+            try:
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                              bulk=True)
+            except KeyError:
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                                              bulk=True)
 
             # Loop over fs
-            for fs in fs_stat:
-                fs_current = {}
-                fs_current['device_name'] = fs_stat[fs]['device_name']
-                fs_current['mnt_point'] = fs
-                fs_current['size'] = int(fs_stat[fs]['size']) * 1024
-                fs_current['used'] = int(fs_stat[fs]['used']) * 1024
-                fs_current['percent'] = float(fs_stat[fs]['percent'])
-                self.stats.append(fs_current)
+            if self.get_short_system_name() == 'windows':
+                # Windows tips
+                for fs in fs_stat:
+                    # Memory stats are grabed in the same OID table (ignore it)
+                    if fs == 'Virtual Memory' or fs == 'Physical Memory':
+                        continue
+                    fs_current = {}
+                    fs_current['device_name'] = ''
+                    fs_current['mnt_point'] = fs.partition(' ')[0]
+                    fs_current['size'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['percent'] = float(fs_current['used'] * 100 / fs_current['size'])
+                    self.stats.append(fs_current)                
+            else:
+                # Default behavor
+                for fs in fs_stat:
+                    fs_current = {}
+                    fs_current['device_name'] = fs_stat[fs]['device_name']
+                    fs_current['mnt_point'] = fs
+                    fs_current['size'] = int(fs_stat[fs]['size']) * 1024
+                    fs_current['used'] = int(fs_stat[fs]['used']) * 1024
+                    fs_current['percent'] = float(fs_stat[fs]['percent'])
+                    self.stats.append(fs_current)
 
         return self.stats
 
@@ -146,7 +173,9 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= 6:
+            if i['device_name'] == '':
+                mnt_point = i['mnt_point']
+            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= 6:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(i['mnt_point']) > 9:

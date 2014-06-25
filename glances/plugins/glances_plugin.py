@@ -44,6 +44,7 @@ class GlancesPlugin(object):
 
         # Init the input method
         self.input_method = 'local'
+        self.short_system_name = None
 
         # Init the stats list
         self.stats = None
@@ -59,19 +60,26 @@ class GlancesPlugin(object):
         """Return the human-readable stats."""
         return str(self.stats)
 
-    def set_input(self, input_method):
+    def set_input(self, input_method, short_system_name=None):
         """Set the input method.
 
         * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
+
+        For SNMP, short_system_name is detected short OS name
         """
         self.input_method = input_method
+        self.short_system_name = short_system_name
         return self.input_method
 
     def get_input(self):
         """Get the input method."""
         return self.input_method
+
+    def get_short_system_name(self):
+        """Get the short detected OS name"""
+        return self.short_system_name
 
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
