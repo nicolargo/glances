@@ -82,7 +82,7 @@ class Config(object):
         return self._loaded_config_file
 
     def get_config_paths(self):
-        """Get a list of config file paths.
+        r"""Get a list of config file paths.
 
         The list is built taking into account of the OS, priority and location.
 
