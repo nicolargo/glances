@@ -52,9 +52,12 @@ class Config(object):
 
     def __init__(self, location=None):
         self.location = location
+        
         self.config_filename = 'glances.conf'
 
         self.parser = RawConfigParser()
+
+        self._loaded_config_file = None
         self.load()
 
     def load(self):
@@ -70,10 +73,16 @@ class Config(object):
                 except UnicodeDecodeError as e:
                     print(_("Error: Cannot decode configuration file '{0}': {1}").format(config_file, e))
                     sys.exit(1)
+                # Save the loaded configuration file path (issue #374)
+                self._loaded_config_file = config_file
                 break
 
+    def get_loaded_config_file(self):
+        """Return the loaded configuration file"""
+        return self._loaded_config_file
+
     def get_config_paths(self):
-        r"""Get a list of config file paths.
+        """Get a list of config file paths.
 
         The list is built taking into account of the OS, priority and location.
 

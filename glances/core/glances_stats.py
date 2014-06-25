@@ -34,6 +34,9 @@ class GlancesStats(object):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 
+        # Set the config instance
+        self.config = config
+
         # Load the plugins
         self.load_plugins()
 
@@ -76,7 +79,10 @@ class GlancesStats(object):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 plugin_name = os.path.basename(item)[len(header):-3].lower()
-                self._plugins[plugin_name] = plugin.Plugin(args=args)
+                if plugin_name == 'help':
+                    self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
+                else:
+                    self._plugins[plugin_name] = plugin.Plugin(args=args)
         # Restoring system path
         sys.path = sys_path
 

@@ -114,7 +114,7 @@ class GlancesMain(object):
         """Parse command line arguments."""
         args = self.init_args().parse_args()
 
-        # Load the configuration file, it it exists
+        # Load the configuration file, if it exists
         self.config = Config(args.conf_file)
 
         # In web server mode, default:
@@ -145,15 +145,6 @@ class GlancesMain(object):
         else:
             # Default is no password
             args.password = self.password
-
-        # !!! Change global variables regarding to user args
-        # !!! To be refactor to use directly the args list in the code
-        self.server_tag = args.server
-        self.webserver_tag = args.webserver
-        if args.client is not None:
-            self.client_tag = True
-            self.server_ip = args.client
-        # /!!!
 
         # By default help is hidden
         args.help_tag = False
@@ -186,19 +177,19 @@ class GlancesMain(object):
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.client_tag and not self.server_tag and not self.webserver_tag
+        return not self.args.client and not self.args.server and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return self.client_tag and not self.server_tag
+        return self.args.client and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
-        return not self.client_tag and self.server_tag
+        return not self.args.client and self.args.server
 
     def is_webserver(self):
         """Return True if Glances is running in Web server mode."""
-        return not self.client_tag and self.webserver_tag
+        return not self.args.client and self.args.webserver
 
     def get_config(self):
         """Return configuration file object."""
