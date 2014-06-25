@@ -32,9 +32,12 @@ class Plugin(GlancesPlugin):
 
     """Glances' help plugin."""
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         GlancesPlugin.__init__(self, args=args)
+
+        # Set the config instance
+        self.config = config
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -58,9 +61,19 @@ class Plugin(GlancesPlugin):
         # Header
         msg = '{0} {1}'.format(appname.title(), version)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = _(" with psutil {0}").format(psutil_version)
+        msg = _(" with PSutil {0}").format(psutil_version)
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
+
+        # Configuration file path
+        try:
+            msg = '{0}: {1}'.format(_("Configuration file"), self.config.get_loaded_config_file())
+        except AttributeError as e:
+            pass
+        else:
+            ret.append(self.curse_new_line())
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
 
         # Keys
         msg_col = ' {0:1}  {1:35}'
