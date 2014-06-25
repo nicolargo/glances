@@ -27,10 +27,9 @@ import psutil
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
 # percentages of idle CPU time: .1.3.6.1.4.1.2021.11.11.0
-snmp_oid = {'user': '1.3.6.1.4.1.2021.11.9.0',
-            'system': '1.3.6.1.4.1.2021.11.10.0',
-            'idle': '1.3.6.1.4.1.2021.11.11.0'}
-
+snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
+                        'system': '1.3.6.1.4.1.2021.11.10.0',
+                        'idle': '1.3.6.1.4.1.2021.11.11.0'}}
 
 class Plugin(GlancesPlugin):
 
@@ -91,7 +90,10 @@ class Plugin(GlancesPlugin):
                     self.stats[cpu] = getattr(cputimespercent, cpu)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            try:
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
+            except KeyError:
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
 
             if self.stats['user'] == '':
                 self.reset()

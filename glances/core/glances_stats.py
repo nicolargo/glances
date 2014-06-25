@@ -22,8 +22,16 @@
 import collections
 import os
 import sys
+import re
 
 from glances.core.glances_globals import plugins_path, sys_path
+
+# SNMP OID regexp pattern to short system name dict
+oid_to_short_system_name = {'.*Linux.*': 'linux',
+                            '.*BSD.*': 'bsd',
+                            '.*Darwin.*': 'mac',
+                            '.*Windows.*': 'windows',
+                            '.*Cisco.*': 'cisco'}
 
 
 class GlancesStats(object):
@@ -203,6 +211,9 @@ class GlancesStatsClientSNMP(GlancesStats):
         # Init the arguments
         self.args = args
 
+        # OS name is used because OID is differents between system
+        self.os_name = None
+
         # Load plugins
         self.load_plugins(args=self.args)
 
@@ -219,14 +230,40 @@ class GlancesStatsClientSNMP(GlancesStats):
                                        user=self.args.snmp_user,
                                        auth=self.args.snmp_auth)
 
-        return clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
+        # If we can not grab the hostname, then exit...
+        ret = clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
+        if ret:
+            # Get the OS name (need to grab the good OID...)
+            oid_os_name = clientsnmp.get_by_oid("1.3.6.1.2.1.1.1.0")
+            try:
+                self.system_name = self.get_system_name(oid_os_name['1.3.6.1.2.1.1.1.0'])
+            except KeyError:
+                self.system_name = None
+
+        return ret
+
+    def get_system_name(self, oid_system_name):
+        """Get the short os name from the OS name OID string"""
+        short_system_name = None
+
+        if oid_system_name == '':
+            return short_system_name
+        
+        # Find the short name in the oid_to_short_os_name dict
+        for r,v in oid_to_short_system_name.iteritems():
+            if re.search(r, oid_system_name):
+                short_system_name = v
+                break
+
+        return short_system_name
+
 
     def update(self):
         """Update the stats using SNMP."""
         # For each plugins, call the update method
         for p in self._plugins:
             # Set the input method to SNMP
-            self._plugins[p].set_input('snmp')
+            self._plugins[p].set_input('snmp', self.system_name)
             # print "DEBUG: Update %s stats using SNMP request" % p
             try:
                 self._plugins[p].update()
