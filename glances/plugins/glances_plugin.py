@@ -105,22 +105,36 @@ class GlancesPlugin(object):
             # Bulk request
             snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
 
-            # Build the internal dict with the SNMP result
-            # key is the first item in the snmp_oid
-            index = 1
-            for item in snmpresult:
-                item_stats = {}
-                item_key = None
-                for key in snmp_oid.iterkeys():
-                    oid = snmp_oid[key] + '.' + str(index)
-                    if oid in item:
-                        if item_key is None:
-                            item_key = item[oid]
-                        else:
-                            item_stats[key] = item[oid]
-                if item_stats != {}:
-                    ret[item_key] = item_stats
-                index += 1
+            if len(snmp_oid) == 1:
+                # Bulk command for only one OID
+                # Note: key is the item indexed but the OID result 
+                for item in snmpresult:
+                    if item.keys()[0].startswith(snmp_oid.values()[0]):
+                        ret[snmp_oid.keys()[0] + item.keys()[0].split(snmp_oid.values()[0])[1]] = item.values()[0]
+            else:
+                # Build the internal dict with the SNMP result
+                # Note: key is the first item in the snmp_oid
+                index = 1
+                for item in snmpresult:
+                    item_stats = {}
+                    item_key = None
+                    for key in snmp_oid.iterkeys():
+                        oid = snmp_oid[key] + '.' + str(index)
+                        if oid in item:
+                            if item_key is None:
+                                item_key = item[oid]
+                            else:
+                                item_stats[key] = item[oid]
+                    if item_stats != {}:
+                        ret[item_key] = item_stats
+                    index += 1
+
+            # if '1.3.6.1.2.1.25.3.3.1.2' in snmp_oid.values():
+            # # if '1.3.6.1.2.1.25.2.3.1.3' in snmp_oid.values():
+            #     print snmp_oid
+            #     print snmpresult
+            #     print ret
+
         else:
             # Simple get request
             snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())

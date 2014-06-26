@@ -29,7 +29,8 @@ import psutil
 # percentages of idle CPU time: .1.3.6.1.4.1.2021.11.11.0
 snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
                         'system': '1.3.6.1.4.1.2021.11.10.0',
-                        'idle': '1.3.6.1.4.1.2021.11.11.0'}}
+                        'idle': '1.3.6.1.4.1.2021.11.11.0'},
+            'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
 
 class Plugin(GlancesPlugin):
 
@@ -90,15 +91,33 @@ class Plugin(GlancesPlugin):
                     self.stats[cpu] = getattr(cputimespercent, cpu)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            try:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
-            except KeyError:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
 
-            if self.stats['user'] == '':
-                self.reset()
-                return self.stats
+            if self.get_short_system_name() == 'windows':
+                # Windows
+                # You can find the CPU utilization of windows system by querying the oid
+                # Give also the number of core (number of element in the table)
+                # print snmp_oid[self.get_short_system_name()]
+                try:
+                    self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                     bulk=True)
+                except KeyError:
+                    self.reset()
 
+                # TODO: iter through CPU... startswith('percent')
+                self.stats['idle'] = self.stats['percent.3']
+
+            else:
+                # Default behavor
+                try:
+                    self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
+                except KeyError:
+                    self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+               
+                if self.stats['idle'] == '':
+                    self.reset()
+                    return self.stats
+
+            # Convert SNMP stats to float
             for key in self.stats.iterkeys():
                 self.stats[key] = float(self.stats[key])
 
