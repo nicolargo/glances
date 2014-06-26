@@ -30,13 +30,16 @@ import psutil
 # Total RAM Shared: .1.3.6.1.4.1.2021.4.13.0
 # Total RAM Buffered: .1.3.6.1.4.1.2021.4.14.0
 # Total Cached Memory: .1.3.6.1.4.1.2021.4.15.0
-snmp_oid = {'total': '1.3.6.1.4.1.2021.4.5.0',
-            # 'used': '1.3.6.1.4.1.2021.4.6.0',
-            'free': '1.3.6.1.4.1.2021.4.11.0',
-            'shared': '1.3.6.1.4.1.2021.4.13.0',
-            'buffers': '1.3.6.1.4.1.2021.4.14.0',
-            'cached': '1.3.6.1.4.1.2021.4.15.0'}
-
+# Note: For Windows, stats are in the FS table
+snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.5.0',
+                        'free': '1.3.6.1.4.1.2021.4.11.0',
+                        'shared': '1.3.6.1.4.1.2021.4.13.0',
+                        'buffers': '1.3.6.1.4.1.2021.4.14.0',
+                        'cached': '1.3.6.1.4.1.2021.4.15.0'},
+            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+                        'size': '1.3.6.1.2.1.25.2.3.1.5',
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
 
 class Plugin(GlancesPlugin):
 
@@ -88,7 +91,7 @@ class Plugin(GlancesPlugin):
             # cached: (Linux, BSD): cache for various things.
             # wired: (BSD, OSX): memory that is marked to always stay in RAM. It is never moved to disk.
             # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
-            self.stats = {}
+            self.reset()
             for mem in ['total', 'available', 'percent', 'used', 'free',
                         'active', 'inactive', 'buffers', 'cached',
                         'wired', 'shared']:
@@ -106,24 +109,42 @@ class Plugin(GlancesPlugin):
             self.stats['used'] = self.stats['total'] - self.stats['free']
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            if self.get_short_system_name() == 'windows':
+                # Mem stats for Windows OS are stored in the FS table
+                try:
+                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                  bulk=True)
+                except KeyError:
+                    self.reset()
+                else:
+                    for fs in fs_stat:
+                        # Memory stats are grabed in the same OID table (ignore it)
+                        if fs == 'Virtual Memory':
+                            self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
+                            self.stats['free'] = self.stats['total'] - self.stats['used'] 
+                            break
+            else:
+                # Default behavor for others OS
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
 
-            if self.stats['total'] == '':
-                self.reset()
-                return self.stats
+                if self.stats['total'] == '':
+                    self.reset()
+                    return self.stats
 
-            for key in self.stats.iterkeys():
-                if self.stats[key] != '':
-                    self.stats[key] = float(self.stats[key]) * 1024
+                for key in self.stats.iterkeys():
+                    if self.stats[key] != '':
+                        self.stats[key] = float(self.stats[key]) * 1024
 
-            # Use the 'free'/htop calculation
-            self.stats['free'] = self.stats['free'] - self.stats['total'] + (self.stats['buffers'] + self.stats['cached'])
+                # Use the 'free'/htop calculation
+                self.stats['free'] = self.stats['free'] - self.stats['total'] + (self.stats['buffers'] + self.stats['cached'])
 
-            # used=total-free
-            self.stats['used'] = self.stats['total'] - self.stats['free']
+                # used=total-free
+                self.stats['used'] = self.stats['total'] - self.stats['free']
 
-            # percent: the percentage usage calculated as (total - available) / total * 100.
-            self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
+                # percent: the percentage usage calculated as (total - available) / total * 100.
+                self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
         return self.stats
 

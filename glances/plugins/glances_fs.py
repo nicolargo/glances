@@ -115,8 +115,7 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
-            # SNMP bulk command to get all file system in one shot
-            
+            # SNMP bulk command to get all file system in one shot            
             try:
                 fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
                                               bulk=True)

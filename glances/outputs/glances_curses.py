@@ -379,7 +379,7 @@ class GlancesCurses(object):
             if plugin_stats['line'] not in self.line_to_y:
                 self.line_to_y[plugin_stats['line']] = plugin_stats['line']
             display_y = self.line_to_y[plugin_stats['line']]
-
+        
         # Display
         x = display_x
         y = display_y
