@@ -30,7 +30,8 @@ import psutil
 snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
                         'system': '1.3.6.1.4.1.2021.11.10.0',
                         'idle': '1.3.6.1.4.1.2021.11.11.0'},
-            'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
+            'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
+            'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
 
 class Plugin(GlancesPlugin):
 
@@ -92,8 +93,8 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
-            if self.get_short_system_name() == 'windows':
-                # Windows
+            if self.get_short_system_name() in ('windows', 'esxi'):
+                # Windows or VMWare ESXi
                 # You can find the CPU utilization of windows system by querying the oid
                 # Give also the number of core (number of element in the table)
                 # print snmp_oid[self.get_short_system_name()]
