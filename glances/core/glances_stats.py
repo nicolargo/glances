@@ -28,10 +28,11 @@ from glances.core.glances_globals import plugins_path, sys_path
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {'.*Linux.*': 'linux',
-                            '.*BSD.*': 'bsd',
                             '.*Darwin.*': 'mac',
+                            '.*BSD.*': 'bsd',
                             '.*Windows.*': 'windows',
-                            '.*Cisco.*': 'cisco'}
+                            '.*Cisco.*': 'cisco',
+                            '.*VMware ESXi.*': 'esxi'}
 
 
 class GlancesStats(object):

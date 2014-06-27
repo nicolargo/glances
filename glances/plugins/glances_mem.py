@@ -39,7 +39,11 @@ snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.5.0',
             'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
                         'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
                         'size': '1.3.6.1.2.1.25.2.3.1.5',
-                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'},
+            'esxi': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+                     'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+                     'size': '1.3.6.1.2.1.25.2.3.1.5',
+                     'used': '1.3.6.1.2.1.25.2.3.1.6'}}
 
 class Plugin(GlancesPlugin):
 
@@ -109,8 +113,8 @@ class Plugin(GlancesPlugin):
             self.stats['used'] = self.stats['total'] - self.stats['free']
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            if self.get_short_system_name() == 'windows':
-                # Mem stats for Windows OS are stored in the FS table
+            if self.get_short_system_name() in ('windows', 'esxi'):
+                # Mem stats for Windows|Vmware Esxi are stored in the FS table
                 try:
                     fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
                                                   bulk=True)
@@ -118,8 +122,9 @@ class Plugin(GlancesPlugin):
                     self.reset()
                 else:
                     for fs in fs_stat:                        
-                        # The Physical Memory gives statistics on RAM usage and availability.
-                        if fs == 'Physical Memory':
+                        # The Physical Memory (Windows) or Real Memory (VmWare)
+                        # gives statistics on RAM usage and availability.
+                        if fs in ('Physical Memory', 'Real Memory'):
                             self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
