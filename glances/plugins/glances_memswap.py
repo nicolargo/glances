@@ -26,8 +26,12 @@ import psutil
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
 # Available Swap Space: .1.3.6.1.4.1.2021.4.4.0
-snmp_oid = {'total': '1.3.6.1.4.1.2021.4.3.0',
-            'free': '1.3.6.1.4.1.2021.4.4.0'}
+snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.3.0',
+                        'free': '1.3.6.1.4.1.2021.4.4.0'},
+            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+                        'size': '1.3.6.1.2.1.25.2.3.1.5',
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}            
 
 
 class Plugin(GlancesPlugin):
@@ -80,21 +84,39 @@ class Plugin(GlancesPlugin):
                     self.stats[swap] = getattr(sm_stats, swap)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            if self.get_short_system_name() == 'windows':
+                # Mem stats for Windows OS are stored in the FS table
+                try:
+                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                  bulk=True)
+                except KeyError:
+                    self.reset()
+                else:
+                    for fs in fs_stat:                        
+                        # The virtual memory concept is used by the operating system to extend (virtually) the physical 
+                        # memory and thus to run more programs by swapping unused memory zone (page) to a disk file. 
+                        if fs == 'Virtual Memory':
+                            self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
+                            self.stats['free'] = self.stats['total'] - self.stats['used'] 
+                            break
+            else:            
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-            if self.stats['total'] == '':
-                self.reset()
-                return self.stats
+                if self.stats['total'] == '':
+                    self.reset()
+                    return self.stats
 
-            for key in self.stats.iterkeys():
-                if self.stats[key] != '':
-                    self.stats[key] = float(self.stats[key]) * 1024
+                for key in self.stats.iterkeys():
+                    if self.stats[key] != '':
+                        self.stats[key] = float(self.stats[key]) * 1024
 
-            # used=total-free
-            self.stats['used'] = self.stats['total'] - self.stats['free']
+                # used=total-free
+                self.stats['used'] = self.stats['total'] - self.stats['free']
 
-            # percent: the percentage usage calculated as (total - available) / total * 100.
-            self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
+                # percent: the percentage usage calculated as (total - available) / total * 100.
+                self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
         return self.stats
 

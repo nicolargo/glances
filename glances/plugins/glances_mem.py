@@ -117,9 +117,9 @@ class Plugin(GlancesPlugin):
                 except KeyError:
                     self.reset()
                 else:
-                    for fs in fs_stat:
-                        # Memory stats are grabed in the same OID table (ignore it)
-                        if fs == 'Virtual Memory':
+                    for fs in fs_stat:                        
+                        # The Physical Memory gives statistics on RAM usage and availability.
+                        if fs == 'Physical Memory':
                             self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
