@@ -174,9 +174,8 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-        # !!! TODO: Add alert on network interface bitrate
 
         # Init the return message
         ret = []
@@ -185,9 +184,16 @@ class Plugin(GlancesPlugin):
         if self.stats == [] or args.disable_network:
             return ret
 
+        # Max size for the interface name
+        if max_width is not None and max_width >= 23:
+            # Interface size name = max_width - space for interfaces bitrate
+            ifname_max_width = max_width - 14
+        else:
+            ifname_max_width = 9
+
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("NETWORK"))
+        msg = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
@@ -219,9 +225,9 @@ class Plugin(GlancesPlugin):
                 continue
             # Format stats
             ifname = i['interface_name'].split(':')[0]
-            if len(ifname) > 9:
+            if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
-                ifname = '_' + ifname[-8:]
+                ifname = '_' + ifname[-ifname_max_width+1:]
             if args.byte:
                 # Bytes per second (for dummy)
                 if args.network_cumul:
@@ -248,7 +254,7 @@ class Plugin(GlancesPlugin):
                                         int(i['tx'] // i['time_since_update'] * 8)) + "b"
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:9}'.format(ifname)
+            msg = '{0:{width}}'.format(ifname, width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
                 msg = '{0:>14}'.format(sx)

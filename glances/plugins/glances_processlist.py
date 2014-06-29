@@ -63,10 +63,9 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            self.stats = glances_processes.getlist()
+            self.stats = glances_processes.getlist()            
         elif self.get_input() == 'snmp':
-            # Update stats using SNMP
-            # !!! TODO
+            # No SNMP grab for processes
             pass
 
         return self.stats
@@ -124,42 +123,68 @@ class Plugin(GlancesPlugin):
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
-            msg = '{0:>6.1f}'.format(p['cpu_percent'])
-            ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['cpu_percent'], header="cpu")))
+            if 'cpu_percent' in p:
+                msg = '{0:>6.1f}'.format(p['cpu_percent'])
+                ret.append(self.curse_add_line(msg,
+                                               self.get_alert(p['cpu_percent'], header="cpu")))
+            else:
+                msg = '{0:>6}'.format('?')
+                ret.append(self.curse_add_line(msg))
             # MEM
-            msg = '{0:>6.1f}'.format(p['memory_percent'])
-            ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['memory_percent'], header="mem")))
-            # VMS
-            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
-            # RSS
-            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
+            if 'memory_percent' in p:
+                msg = '{0:>6.1f}'.format(p['memory_percent'])
+                ret.append(self.curse_add_line(msg,
+                                               self.get_alert(p['memory_percent'], header="mem")))
+            else:
+                msg = '{0:>6}'.format('?')
+                ret.append(self.curse_add_line(msg))
+            # VMS/RSS
+            if 'memory_info' in p:
+                # VMS
+                msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
+                ret.append(self.curse_add_line(msg, optional=True))
+                # RSS
+                msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
+                ret.append(self.curse_add_line(msg, optional=True))
+            else:
+                msg = '{0:>6}'.format('?')
+                ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_add_line(msg))
             # PID
             msg = '{0:>6}'.format(p['pid'])
             ret.append(self.curse_add_line(msg))
             # USER
-            # docker internal users are displayed as ints only, therefore str()
-            msg = ' {0:9}'.format(str(p['username'])[:9])
-            ret.append(self.curse_add_line(msg))
-            # NICE
-            nice = p['nice']
-            if nice is None:
-                nice = '?'
-            msg = '{0:>5}'.format(nice)
-            if isinstance(nice, int) and ((is_windows and nice != 32) or
-                                          (not is_windows and nice != 0)):
-                ret.append(self.curse_add_line(msg, decoration='NICE'))
+            if 'username' in p:
+                # docker internal users are displayed as ints only, therefore str()
+                msg = ' {0:9}'.format(str(p['username'])[:9])
+                ret.append(self.curse_add_line(msg))
             else:
+                msg = ' {0:9}'.format('?')
+                ret.append(self.curse_add_line(msg))
+            # NICE
+            if 'nice' in p:
+                nice = p['nice']
+                if nice is None:
+                    nice = '?'
+                msg = '{0:>5}'.format(nice)
+                if isinstance(nice, int) and ((is_windows and nice != 32) or
+                                              (not is_windows and nice != 0)):
+                    ret.append(self.curse_add_line(msg, decoration='NICE'))
+                else:
+                    ret.append(self.curse_add_line(msg))
+            else:
+                msg = '{0:>5}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # STATUS
-            status = p['status']
-            msg = '{0:>2}'.format(status)
-            if status == 'R':
-                ret.append(self.curse_add_line(msg, decoration='STATUS'))
+            if 'status' in p:
+                status = p['status']
+                msg = '{0:>2}'.format(status)
+                if status == 'R':
+                    ret.append(self.curse_add_line(msg, decoration='STATUS'))
+                else:
+                    ret.append(self.curse_add_line(msg))
             else:
+                msg = '{0:>2}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # TIME+
             if tag_proc_time:
@@ -250,9 +275,14 @@ class Plugin(GlancesPlugin):
                                     reverse=sortedreverse)
         else:
             # Others sorts
-            listsorted = sorted(self.stats,
-                                key=lambda process: process[sortedby],
-                                reverse=sortedreverse)
+            try:
+                listsorted = sorted(self.stats,
+                                    key=lambda process: process[sortedby],
+                                    reverse=sortedreverse)
+            except KeyError:
+                listsorted = sorted(self.stats,
+                                    key=lambda process: process['name'],
+                                    reverse=False)
 
         self.stats = listsorted
 
