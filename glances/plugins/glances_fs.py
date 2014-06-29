@@ -150,7 +150,7 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -159,9 +159,16 @@ class Plugin(GlancesPlugin):
         if self.stats == [] or args.disable_fs:
             return ret
 
+        # Max size for the fsname name
+        if max_width is not None and max_width >= 23:
+            # Interface size name = max_width - space for interfaces bitrate
+            fsname_max_width = max_width - 14
+        else:
+            fsname_max_width = 9
+
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("FILE SYS"))
+        msg = '{0:{width}}'.format(_("FILE SYS"), width=fsname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{0:>7}'.format(_("Used"))
         ret.append(self.curse_add_line(msg))
@@ -172,17 +179,17 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if i['device_name'] == '':
+            if i['device_name'] == '' or i['device_name'] == 'none':
                 mnt_point = i['mnt_point']
-            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= 6:
+            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif len(i['mnt_point']) > 9:
+            elif len(i['mnt_point']) > fsname_max_width:
                 # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-8:]
+                mnt_point = '_' + i['mnt_point'][-fsname_max_width+1:]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{0:9}'.format(mnt_point)
+            msg = '{0:{width}}'.format(mnt_point, width=fsname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{0:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))

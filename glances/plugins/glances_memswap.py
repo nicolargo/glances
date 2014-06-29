@@ -102,7 +102,7 @@ class Plugin(GlancesPlugin):
                             self.stats['free'] = self.stats['total'] - self.stats['used'] 
                             break
             else:            
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
                     self.reset()

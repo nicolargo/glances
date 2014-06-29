@@ -304,23 +304,30 @@ class GlancesCurses(object):
         stats_memswap = stats.get_plugin('memswap').get_stats_display()
         l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
-        if screen_x > (3 * self.space_between_column + l):
-            self.space_between_column = int((screen_x - l) / 3)
+        space_number = int(stats_load['msgdict'] != []) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != []) 
+        if screen_x > (space_number * self.space_between_column + l):
+            self.space_between_column = int((screen_x - l) / space_number)
         # Display
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
             self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
         self.display_plugin(stats_load)
-        self.display_plugin(stats_mem, display_optional=(screen_x >= (3 * self.space_between_column + l)))
+        self.display_plugin(stats_mem, display_optional=(screen_x >= (space_number * self.space_between_column + l)))
         self.display_plugin(stats_memswap)
         # Space between column
         self.space_between_column = 3
 
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS)
-        self.display_plugin(stats.get_plugin('network').get_stats_display(args=self.args))
+        if cs_status == 'SNMP':
+            # No process list
+            # More space for others plugins
+            plugin_max_width = 43
+        else:
+            plugin_max_width = None
+        self.display_plugin(stats.get_plugin('network').get_stats_display(args=self.args, max_width=plugin_max_width))
         self.display_plugin(stats.get_plugin('diskio').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('fs').get_stats_display(args=self.args))
+        self.display_plugin(stats.get_plugin('fs').get_stats_display(args=self.args, max_width=plugin_max_width))
         self.display_plugin(stats.get_plugin('sensors').get_stats_display(args=self.args))
         # Display last line (currenttime)
         self.display_plugin(stats.get_plugin('now').get_stats_display())

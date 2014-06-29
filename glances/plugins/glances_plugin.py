@@ -268,11 +268,11 @@ class GlancesPlugin(object):
         """Return True if the value is in the hide configuration list."""
         return value in self.get_hide(header=header)
 
-    def msg_curse(self, args):
+    def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]
 
-    def get_stats_display(self, args=None):
+    def get_stats_display(self, args=None, max_width=None):
         """Return a dict with all the information needed to display the stat.
 
         key     | description
@@ -293,10 +293,18 @@ class GlancesPlugin(object):
         if hasattr(self, 'line_curse'):
             line_curse = self.line_curse
 
-        return {'display': display_curse,
-                'msgdict': self.msg_curse(args),
-                'column': column_curse,
-                'line': line_curse}
+        if max_width is not None:
+            ret = {'display': display_curse,
+                    'msgdict': self.msg_curse(args, max_width=max_width),
+                    'column': column_curse,
+                    'line': line_curse}
+        else:
+            ret = {'display': display_curse,
+                    'msgdict': self.msg_curse(args),
+                    'column': column_curse,
+                    'line': line_curse}
+
+        return ret
 
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
         """Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }.
@@ -327,6 +335,18 @@ class GlancesPlugin(object):
     def curse_new_line(self):
         """Go to a new line."""
         return self.curse_add_line('\n')
+
+    def set_curse_column(self, column):
+        """Set the Curse column
+        Enter -1 to right align
+        """
+        self.column_curse = column
+
+    def set_curse_line(self, line):
+        """Set the Curse line
+        Enter -1 to right align
+        """
+        self.line_curse = line
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.
