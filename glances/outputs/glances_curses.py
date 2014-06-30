@@ -362,9 +362,11 @@ class GlancesCurses(object):
         if plugin_stats['msgdict'] == [] or not plugin_stats['display']:
             # Display the next plugin at the current plugin position
             try:
+                # if self.column_to_x[plugin_stats['column'] + 1] < self.column_to_x[plugin_stats['column']]:
                 self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
+                # if self.line_to_y[plugin_stats['line'] + 1] < self.line_to_y[plugin_stats['line']]:
                 self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
-            except Exception:
+            except KeyError:
                 pass
             # Exit
             return 0
