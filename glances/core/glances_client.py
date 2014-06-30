@@ -81,29 +81,33 @@ class GlancesClient(object):
         """Logon to the server."""
         ret = True
 
-        # First of all, trying to connect to a Glances server
-        try:
-            client_version = self.client.init()
+        if not self.args.snmp_force:
+            # First of all, trying to connect to a Glances server
             self.set_mode('glances')
-        except socket.error as err:
-            # print(_("Error: Connection to {0} server failed").format(self.get_mode()))
-            # Fallback to SNMP
-            self.set_mode('snmp')
-        except ProtocolError as err:
-            # Others errors
-            if str(err).find(" 401 ") > 0:
-                print(_("Error: Connection to server failed: Bad password"))
-            else:
-                print(_("Error: Connection to server failed: {0}").format(err))
-            sys.exit(2)
+            try:
+                client_version = self.client.init()
+            except socket.error as err:
+                # Fallback to SNMP
+                print (_("Info: Connection to Glances server failed. Trying fallback to SNMP..."))
+                self.set_mode('snmp')
+            except ProtocolError as err:
+                # Others errors
+                if str(err).find(" 401 ") > 0:
+                    print(_("Error: Connection to server failed: Bad password"))
+                else:
+                    print(_("Error: Connection to server failed: {0}").format(err))
+                sys.exit(2)
 
-        if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
-            # Init stats
-            self.stats = GlancesStatsClient()
-            self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-        elif self.get_mode() == 'snmp':
-            print (_("Info: Connection to Glances server failed. Trying fallback to SNMP..."))
-            # Then fallback to SNMP if needed
+            if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
+                # Init stats
+                self.stats = GlancesStatsClient()
+                self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+        else:
+            print (_("Info: Trying to grab stats by SNMP..."))
+            self.set_mode('snmp')
+
+        if self.get_mode() == 'snmp':            
+            # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
             # Init stats
@@ -113,6 +117,7 @@ class GlancesClient(object):
                 print(_("Error: Connection to SNMP server failed"))
                 sys.exit(2)
         else:
+            # Unknow mode...
             ret = False
 
         if ret:
