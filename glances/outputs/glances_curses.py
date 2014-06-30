@@ -305,6 +305,8 @@ class GlancesCurses(object):
         l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
         space_number = int(stats_load['msgdict'] != []) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != []) 
+        if space_number == 0:
+            space_number = 1
         if screen_x > (space_number * self.space_between_column + l):
             self.space_between_column = int((screen_x - l) / space_number)
         # Display
