@@ -48,6 +48,7 @@ snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
                         'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
                         'size': '1.3.6.1.2.1.25.2.3.1.5',
                         'used': '1.3.6.1.2.1.25.2.3.1.6'}}
+snmp_oid['esxi'] = snmp_oid['windows']
 
 
 class Plugin(GlancesPlugin):
@@ -124,11 +125,11 @@ class Plugin(GlancesPlugin):
                                               bulk=True)
 
             # Loop over fs
-            if self.get_short_system_name() == 'windows':
-                # Windows tips
+            if self.get_short_system_name() in ('windows', 'esxi'):
+                # Windows or ESXi tips
                 for fs in fs_stat:
                     # Memory stats are grabed in the same OID table (ignore it)
-                    if fs == 'Virtual Memory' or fs == 'Physical Memory':
+                    if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
                         continue
                     fs_current = {}
                     fs_current['device_name'] = ''
@@ -180,7 +181,7 @@ class Plugin(GlancesPlugin):
             # New line
             ret.append(self.curse_new_line())
             if i['device_name'] == '' or i['device_name'] == 'none':
-                mnt_point = i['mnt_point']
+                mnt_point = i['mnt_point'][-fsname_max_width+1:]
             elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
