@@ -42,6 +42,9 @@ class GlancesPlugin(object):
         # Init the args
         self.args = args
 
+        # Init the default alignement (for curses)
+        self.set_align('left')
+
         # Init the input method
         self.input_method = 'local'
         self.short_system_name = None
@@ -279,30 +282,23 @@ class GlancesPlugin(object):
         ----------------------------
         display | Display the stat (True or False)
         msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
-        column  | column number
-        line    | Line number
+        align   | Message position
         """
         display_curse = False
-        column_curse = -1
-        line_curse = -1
 
         if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
-        if hasattr(self, 'column_curse'):
-            column_curse = self.column_curse
-        if hasattr(self, 'line_curse'):
-            line_curse = self.line_curse
+        if hasattr(self, 'align'):
+            align_curse = self.align
 
         if max_width is not None:
             ret = {'display': display_curse,
                     'msgdict': self.msg_curse(args, max_width=max_width),
-                    'column': column_curse,
-                    'line': line_curse}
+                    'align': align_curse}
         else:
             ret = {'display': display_curse,
                     'msgdict': self.msg_curse(args),
-                    'column': column_curse,
-                    'line': line_curse}
+                    'align': align_curse}
 
         return ret
 
@@ -336,17 +332,16 @@ class GlancesPlugin(object):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def set_curse_column(self, column):
-        """Set the Curse column
-        Enter -1 to right align
-        """
-        self.column_curse = column
+    def set_align(self, align='left'):
+        """Set the Curse align"""
+        if align in ('left', 'right', 'bottom'):       
+            self.align = align
+        else:
+            self.align = 'left'
 
-    def set_curse_line(self, line):
-        """Set the Curse line
-        Enter -1 to right align
-        """
-        self.line_curse = line
+    def get_align(self):
+        """Get the Curse align"""
+        return self.align
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.
