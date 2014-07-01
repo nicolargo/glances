@@ -432,12 +432,12 @@ class GlancesCurses(object):
         screen_y = self.screen.getmaxyx()[0]
 
         # Set the upper/left position of the message
-        if plugin_stats['column'] < 0:
+        if plugin_stats['align'] == 'right':
             # Right align (last column)
             display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
             display_x = self.column
-        if plugin_stats['line'] < 0:
+        if plugin_stats['align'] == 'bottom':
             # Bottom (last line)
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
