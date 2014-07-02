@@ -23,7 +23,7 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_windows
+from glances.core.glances_globals import glances_logs, glances_processes, is_windows, logger
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
@@ -181,6 +181,7 @@ class GlancesCurses(object):
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             self.end()
+            logger.info("Stop Glances")
             sys.exit(0)
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information

@@ -22,6 +22,8 @@
 import os
 import sys
 
+from glances.core.glances_logging import glancesLogger
+
 # Global information
 appname = 'glances'
 version = __import__('glances').__version__
@@ -57,6 +59,9 @@ elif os.path.exists(sys_i18n_path):
     locale_dir = sys_i18n_path
 else:
     locale_dir = None
+
+# Create and init the logging instance
+logger = glancesLogger()
 
 # Instances shared between all Glances scripts
 # ============================================
