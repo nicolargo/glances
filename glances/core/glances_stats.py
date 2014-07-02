@@ -24,7 +24,7 @@ import os
 import sys
 import re
 
-from glances.core.glances_globals import plugins_path, sys_path
+from glances.core.glances_globals import plugins_path, sys_path, logger
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {'.*Linux.*': 'linux',
@@ -94,6 +94,8 @@ class GlancesStats(object):
                     self._plugins[plugin_name] = plugin.Plugin(args=args)
         # Restoring system path
         sys.path = sys_path
+        # Log plugins list
+        logger.debug("Available plugins list: %s", self.getAllPlugins())
 
     def getAllPlugins(self):
         """Return the plugins list."""
