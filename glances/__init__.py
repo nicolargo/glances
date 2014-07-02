@@ -47,7 +47,7 @@ if psutil_version < psutil_min_version:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir
+from glances.core.glances_globals import gettext_domain, locale_dir, logger
 from glances.core.glances_main import GlancesMain
 
 
@@ -58,6 +58,7 @@ def __signal_handler(signal, frame):
 
 def end():
     """Stop Glances."""
+    logger.info("Stop Glances (with CTRL-C)")
     if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
@@ -93,6 +94,7 @@ def main():
 
     # Glances can be ran in standalone, client or server mode
     if core.is_standalone():
+        logger.info("Start Glances in standalone mode")
 
         # Import the Glances standalone module
         from glances.core.glances_standalone import GlancesStandalone
@@ -105,6 +107,7 @@ def main():
         standalone.serve_forever()
 
     elif core.is_client():
+        logger.info("Start Glances in client mode")
 
         # Import the Glances client module
         from glances.core.glances_client import GlancesClient
@@ -125,6 +128,7 @@ def main():
         client.close()
 
     elif core.is_server():
+        logger.info("Start Glances in server mode")
 
         # Import the Glances server module
         from glances.core.glances_server import GlancesServer
@@ -147,6 +151,7 @@ def main():
         server.server_close()
 
     elif core.is_webserver():
+        logger.info("Start Glances in web server mode")
 
         # Import the Glances web server module
         from glances.core.glances_webserver import GlancesWebServer

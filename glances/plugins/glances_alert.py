@@ -41,6 +41,9 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Set the message position
+        self.set_align('bottom')
+
         # Init the stats
         self.reset()
 
