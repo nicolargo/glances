@@ -249,11 +249,17 @@ class GlancesCurses(object):
 
     def end(self):
         """Shutdown the curses window."""
-        curses.echo()
-        curses.nocbreak()
-        curses.curs_set(1)
+        if hasattr(curses, 'echo'):
+            curses.echo()
+        if hasattr(curses, 'nocbreak'):
+            curses.nocbreak()
+        if hasattr(curses, 'curs_set'):
+            try:
+                curses.curs_set(1)
+            except Exception:
+                pass
         curses.endwin()
-
+        
     def init_line_column(self):
         """Init the line and column position for the curses inteface"""
         self.line = 0
