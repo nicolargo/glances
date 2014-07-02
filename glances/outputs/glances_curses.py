@@ -248,9 +248,15 @@ class GlancesCurses(object):
 
     def end(self):
         """Shutdown the curses window."""
-        curses.echo()
-        curses.nocbreak()
-        curses.curs_set(1)
+        if hasattr(curses, 'echo'):
+            curses.echo()
+        if hasattr(curses, 'nocbreak'):
+            curses.nocbreak()
+        if hasattr(curses, 'curs_set'):
+            try:
+                curses.curs_set(1)
+            except Exception:
+                pass
         curses.endwin()
 
     def display(self, stats, cs_status="None"):
