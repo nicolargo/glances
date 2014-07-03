@@ -22,11 +22,16 @@
 import os
 import sys
 
+# Import Glances libs
+from glances.core.glances_globals import logger
+
+# Import mandatory Bottle lib
 try:
     from bottle import Bottle, template, static_file, TEMPLATE_PATH
 except ImportError:
-    print('Bottle module not found. Glances cannot start in web server mode.')
-    sys.exit(1)
+    logger.critical('Bottle module not found. Glances cannot start in web server mode.')
+    print(_("Install it using pip: # pip install bottle"))
+    sys.exit(2)
 
 
 class GlancesBottle(object):
@@ -83,7 +88,10 @@ class GlancesBottle(object):
         # Init stats
         self.stats = stats
 
-        self._app.run(host=self.args.bind_address, port=self.args.port)
+        bindmsg = _("Glances web server started on http://{}:{}/").format(self.args.bind_address, self.args.port)
+        logger.info(bindmsg)
+        print(bindmsg)
+        self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
 
     def end(self):
         """End the bottle."""

@@ -248,7 +248,7 @@ class GlancesCurses(object):
         return self.pressedkey
 
     def end(self):
-        """Shutdown the curses window."""
+        """Shutdown the curses window."""        
         if hasattr(curses, 'echo'):
             curses.echo()
         if hasattr(curses, 'nocbreak'):

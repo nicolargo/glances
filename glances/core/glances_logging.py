@@ -33,6 +33,9 @@ LOGGING_CFG = {
     'formatters': {
         'standard': {
             'format': '%(asctime)s -- %(levelname)s -- %(message)s'
+        },
+        'short': {
+            'format': '%(levelname)s: %(message)s'
         }
     },
     'handlers': {
@@ -43,9 +46,9 @@ LOGGING_CFG = {
             'filename': '/tmp/glances.log'
         },
         'console':{
-            'level':'CRITICAL',
+            'level':'ERROR',
             'class':'logging.StreamHandler',
-            'formatter': 'standard'
+            'formatter': 'short'
         }
     },
     'loggers': {
