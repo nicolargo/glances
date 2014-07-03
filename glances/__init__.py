@@ -58,16 +58,22 @@ def __signal_handler(signal, frame):
 
 def end():
     """Stop Glances."""
-    logger.info("Stop Glances (with CTRL-C)")
     if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
+        logger.info("Stop Glances (with CTRL-C)")
     elif core.is_client():
         # Stop the client
         client.end()
+        logger.info("Stop Glances client (with CTRL-C)")
     elif core.is_server():
         # Stop the server
         server.end()
+        logger.info("Stop Glances server (with CTRL-C)")
+    elif core.is_webserver():
+        # Stop the Web server
+        webserver.end()
+        logger.info("Stop Glances web server(with CTRL-C)")
 
     # The end...
     sys.exit(0)
@@ -84,7 +90,7 @@ def main():
     gettext.install(gettext_domain, locale_dir)
 
     # Share global var
-    global core, standalone, client, server
+    global core, standalone, client, server, webserver
 
     # Create the Glances main instance
     core = GlancesMain()
@@ -118,7 +124,7 @@ def main():
 
         # Test if client and server are in the same major version
         if not client.login():
-            print(_("Error: The server version is not compatible with the client"))
+            logger.critical(_("The server version is not compatible with the client"))
             sys.exit(2)
 
         # Start the client loop

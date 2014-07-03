@@ -19,11 +19,15 @@
 
 import sys
 
+# Import Glances libs
+from glances.core.glances_globals import logger
+
+# Import mandatory PySNMP lib
 try:
     from pysnmp.entity.rfc3413.oneliner import cmdgen
 except ImportError:
-    print("PySNMP library not found.")
-    print("Install using pip: # pip install pysnmp")
+    logger.critical(_("PySNMP library not found."))
+    print(_("Install using pip: # pip install pysnmp"))
     sys.exit(2)
 
 
