@@ -20,6 +20,7 @@
 """Monitor plugin."""
 
 # Import Glances lib
+from glances.core.glances_globals import logger
 from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -41,7 +42,7 @@ class Plugin(GlancesPlugin):
 
     def load_limits(self, config):
         """Load the monitored list from the conf file."""
-        # print "DEBUG: Monitor plugin load config file %s" % config
+        logger.debug(_("Monitor plugin configuration detected in the configuration file"))
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):

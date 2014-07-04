@@ -32,7 +32,7 @@ if not is_windows:
         import curses
         import curses.panel
     except ImportError:
-        print('Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical('Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -58,7 +58,7 @@ class GlancesCurses(object):
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            print(_("Error: Cannot init the curses library.\n"))
+            logger.critical(_("Error: Cannot init the curses library.\n"))
             sys.exit(1)
 
         # Set curses options
@@ -398,8 +398,6 @@ class GlancesCurses(object):
         self.display_plugin(stats_sensors)
         self.new_line()
         self.display_plugin(stats_now)
-
-        # print "%s|%s" % (self.column, self.next_column)
 
         # If space available...
         if screen_x > 52:

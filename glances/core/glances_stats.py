@@ -95,7 +95,7 @@ class GlancesStats(object):
         # Restoring system path
         sys.path = sys_path
         # Log plugins list
-        logger.debug("Available plugins list: %s", self.getAllPlugins())
+        logger.debug(_("Available plugins list: %s"), self.getAllPlugins())
 
     def getAllPlugins(self):
         """Return the plugins list."""
@@ -105,7 +105,7 @@ class GlancesStats(object):
         """Load the stats limits."""
         # For each plugins, call the init_limits method
         for p in self._plugins:
-            # print "DEBUG: Load limits for %s" % p
+            # logger.debug(_("Load limits for %s") % p)
             self._plugins[p].load_limits(config)
 
     def __update__(self, input_stats):
@@ -113,8 +113,8 @@ class GlancesStats(object):
         if input_stats == {}:
             # For standalone and server modes
             # For each plugins, call the update method
-            for p in self._plugins:
-                # print "DEBUG: Update %s stats" % p
+            for p in self._plugins:                
+                # logger.debug(_("Update %s stats") % p)
                 self._plugins[p].update()
         else:
             # For Glances client mode
@@ -193,8 +193,8 @@ class GlancesStatsClient(GlancesStats):
             # Add the plugin to the dictionary
             # The key is the plugin name
             # for example, the file glances_xxx.py
-            # generate self._plugins_list["xxx"] = ...
-            # print "DEBUG: Init %s plugin" % item
+            # generate self._plugins_list["xxx"] = ...            
+            logger.debug(_("Init %s plugin") % item)
             self._plugins[item] = plugin.Plugin()
         # Restoring system path
         sys.path = sys_path
@@ -267,9 +267,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         for p in self._plugins:
             # Set the input method to SNMP
             self._plugins[p].set_input('snmp', self.system_name)
-            # print "DEBUG: Update %s stats using SNMP request" % p
             try:
                 self._plugins[p].update()
             except Exception as e:
-                print(_("Error: Update {0} failed: {1}").format(p, e))
-                # pass
+                logger.error(_("Error: Update {0} failed: {1}").format(p, e))
