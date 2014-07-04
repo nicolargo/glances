@@ -21,12 +21,14 @@ import sys
 import threading
 import time
 
+from glances.core.glances_globals import logger
+
 import msvcrt
 try:
     import colorconsole
     import colorconsole.terminal
 except ImportError:
-    print('Colorconsole module not found. Glances cannot start in standalone mode.')
+    logger.critical(_('Colorconsole module not found. Glances cannot start in standalone mode.'))
     sys.exit(1)
 
 try:

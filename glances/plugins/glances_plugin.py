@@ -131,13 +131,6 @@ class GlancesPlugin(object):
                     if item_stats != {}:
                         ret[item_key] = item_stats
                     index += 1
-
-            # if '1.3.6.1.2.1.25.3.3.1.2' in snmp_oid.values():
-            # # if '1.3.6.1.2.1.25.2.3.1.3' in snmp_oid.values():
-            #     print snmp_oid
-            #     print snmpresult
-            #     print ret
-
         else:
             # Simple get request
             snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
@@ -160,10 +153,8 @@ class GlancesPlugin(object):
         """Load the limits from the configuration file."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
-                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
                 try:
                     self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
                 except ValueError:

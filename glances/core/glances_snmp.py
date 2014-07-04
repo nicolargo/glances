@@ -27,7 +27,7 @@ try:
     from pysnmp.entity.rfc3413.oneliner import cmdgen
 except ImportError:
     logger.critical(_("PySNMP library not found."))
-    print(_("Install using pip: # pip install pysnmp"))
+    print(_("Install it using pip: # pip install pysnmp"))
     sys.exit(2)
 
 

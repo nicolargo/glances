@@ -37,18 +37,22 @@ except ImportError:
     print('psutil library not found. Glances cannot start.')
     sys.exit(1)
 
-# Check psutil version
-psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
-if psutil_version < psutil_min_version:
-    print('psutil version {0} detected.').format(__psutil_version)
-    print('psutil 2.0 or higher is needed. Glances cannot start.')
-    sys.exit(1)
-
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
 from glances.core.glances_globals import gettext_domain, locale_dir, logger
 from glances.core.glances_main import GlancesMain
+
+# Get PSutil version
+psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
+
+# First log with Glances and PSUtil version
+logger.info('Start Glances {} with PSutil {}'.format(__version__, __psutil_version))
+
+# Check PSutil version
+if psutil_version < psutil_min_version:    
+    logger.critical('PSutil 2.0 or higher is needed. Glances cannot start.')
+    sys.exit(1)
 
 
 def __signal_handler(signal, frame):

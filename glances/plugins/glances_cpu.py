@@ -91,7 +91,6 @@ class Plugin(GlancesPlugin):
                 # Windows or VMWare ESXi
                 # You can find the CPU utilization of windows system by querying the oid
                 # Give also the number of core (number of element in the table)
-                # print snmp_oid[self.get_short_system_name()]
                 try:
                     cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
                                                     bulk=True)
