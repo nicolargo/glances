@@ -24,7 +24,7 @@ import argparse
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, psutil_version, version
+from glances.core.glances_globals import appname, psutil_version, version, logger
 
 
 class GlancesMain(object):
@@ -55,6 +55,8 @@ class GlancesMain(object):
         _version = "Glances v" + version + " with psutil v" + psutil_version
         parser = argparse.ArgumentParser(prog=appname, conflict_handler='resolve')
         parser.add_argument('-V', '--version', action='version', version=_version)
+        parser.add_argument('-d', '--debug', action='store_true', default=False,
+                            dest='debug', help=_('Enable debug mode'))
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
@@ -100,6 +102,8 @@ class GlancesMain(object):
                             help=_('SNMP username (only for SNMPv3)'))
         parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
                             help=_('SNMP authentication key (only for SNMPv3)'))
+        parser.add_argument('--snmp-force', action='store_true', default=False,
+                            dest='snmp_force', help=_('force SNMP mode'))
         parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
                             dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
@@ -116,6 +120,11 @@ class GlancesMain(object):
 
         # Load the configuration file, if it exists
         self.config = Config(args.conf_file)
+
+        # Debug mode
+        if args.debug:
+            from logging import DEBUG
+            logger.setLevel(DEBUG)
 
         # In web server mode, default:
         # - refresh time: 5 sec

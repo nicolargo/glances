@@ -20,8 +20,8 @@ https://github.com/jrenner
 Packagers
 =========
 
-Geoffroy Youri Berret for the Debian package
-http://packages.debian.org/fr/sid/glances
+Rémi Verchère for the Debian package
+https://github.com/rverchere/debian-glances
 
 gasol.wu@gmail.com for the FreeBSD port
 

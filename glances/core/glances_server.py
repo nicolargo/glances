@@ -32,7 +32,7 @@ except ImportError:  # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
-from glances.core.glances_globals import version
+from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 
@@ -113,7 +113,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
-            print(_("Error: Couldn't open socket: {0}").format(e))
+            logger.error(_("Couldn't open socket: {0}").format(e))
             sys.exit(1)
 
         SimpleXMLRPCServer.__init__(self, (bind_address, bind_port),
@@ -170,7 +170,6 @@ class GlancesInstance(object):
 
         The goal is to dynamically generate the API get'Stats'() methods.
         """
-        # print "DEBUG: Call method: %s" % item
         header = 'get'
         # Check if the attribute starts with 'get'
         if item.startswith(header):
@@ -200,7 +199,7 @@ class GlancesServer(object):
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
         except Exception as e:
-            print(_("Error: Cannot start Glances server: {0}").format(e))
+            logger.error(_("Cannot start Glances server: {0}").format(e))
             sys.exit(2)
 
         # The users dict

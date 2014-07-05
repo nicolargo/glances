@@ -24,7 +24,7 @@ import re
 import subprocess
 
 # Import Glances lib
-from glances.core.glances_globals import glances_processes
+from glances.core.glances_globals import glances_processes, logger
 
 
 class MonitorList(object):
@@ -72,7 +72,7 @@ class MonitorList(object):
                 countmin = self.config.get_raw_option(section, key + "countmin")
                 countmax = self.config.get_raw_option(section, key + "countmax")
             except Exception as e:
-                print(_("Error: Cannot read monitored list: {0}").format(e))
+                logger.error(_("Cannot read monitored list: {0}").format(e))
                 pass
             else:
                 if description is not None and regex is not None:
