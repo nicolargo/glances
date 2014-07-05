@@ -21,6 +21,8 @@
 
 import logging
 import logging.config
+import tempfile
+import os
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -43,7 +45,8 @@ LOGGING_CFG = {
             'level':'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
             'formatter': 'standard',
-            'filename': '/tmp/glances.log'
+            # http://stackoverflow.com/questions/847850/cross-platform-way-of-getting-temp-directory-in-python
+            'filename': os.path.join(tempfile.gettempdir(), 'glances.log')
         },
         'console':{
             'level':'ERROR',
