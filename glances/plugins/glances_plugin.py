@@ -42,8 +42,12 @@ class GlancesPlugin(object):
         # Init the args
         self.args = args
 
+        # Init the default alignement (for curses)
+        self.set_align('left')
+
         # Init the input method
         self.input_method = 'local'
+        self.short_system_name = None
 
         # Init the stats list
         self.stats = None
@@ -59,19 +63,26 @@ class GlancesPlugin(object):
         """Return the human-readable stats."""
         return str(self.stats)
 
-    def set_input(self, input_method):
+    def set_input(self, input_method, short_system_name=None):
         """Set the input method.
 
         * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
+
+        For SNMP, short_system_name is detected short OS name
         """
         self.input_method = input_method
+        self.short_system_name = short_system_name
         return self.input_method
 
     def get_input(self):
         """Get the input method."""
         return self.input_method
+
+    def get_short_system_name(self):
+        """Get the short detected OS name"""
+        return self.short_system_name
 
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
@@ -97,22 +108,29 @@ class GlancesPlugin(object):
             # Bulk request
             snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
 
-            # Build the internal dict with the SNMP result
-            # key is the first item in the snmp_oid
-            index = 1
-            for item in snmpresult:
-                item_stats = {}
-                item_key = None
-                for key in snmp_oid.iterkeys():
-                    oid = snmp_oid[key] + '.' + str(index)
-                    if oid in item:
-                        if item_key is None:
-                            item_key = item[oid]
-                        else:
-                            item_stats[key] = item[oid]
-                if item_stats != {}:
-                    ret[item_key] = item_stats
-                index += 1
+            if len(snmp_oid) == 1:
+                # Bulk command for only one OID
+                # Note: key is the item indexed but the OID result 
+                for item in snmpresult:
+                    if item.keys()[0].startswith(snmp_oid.values()[0]):
+                        ret[snmp_oid.keys()[0] + item.keys()[0].split(snmp_oid.values()[0])[1]] = item.values()[0]
+            else:
+                # Build the internal dict with the SNMP result
+                # Note: key is the first item in the snmp_oid
+                index = 1
+                for item in snmpresult:
+                    item_stats = {}
+                    item_key = None
+                    for key in snmp_oid.iterkeys():
+                        oid = snmp_oid[key] + '.' + str(index)
+                        if oid in item:
+                            if item_key is None:
+                                item_key = item[oid]
+                            else:
+                                item_stats[key] = item[oid]
+                    if item_stats != {}:
+                        ret[item_key] = item_stats
+                    index += 1
         else:
             # Simple get request
             snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
@@ -135,10 +153,8 @@ class GlancesPlugin(object):
         """Load the limits from the configuration file."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
-                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
                 try:
                     self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
                 except ValueError:
@@ -246,35 +262,36 @@ class GlancesPlugin(object):
         """Return True if the value is in the hide configuration list."""
         return value in self.get_hide(header=header)
 
-    def msg_curse(self, args):
+    def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]
 
-    def get_stats_display(self, args=None):
+    def get_stats_display(self, args=None, max_width=None):
         """Return a dict with all the information needed to display the stat.
 
         key     | description
         ----------------------------
         display | Display the stat (True or False)
         msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
-        column  | column number
-        line    | Line number
+        align   | Message position
         """
         display_curse = False
-        column_curse = -1
-        line_curse = -1
 
         if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
-        if hasattr(self, 'column_curse'):
-            column_curse = self.column_curse
-        if hasattr(self, 'line_curse'):
-            line_curse = self.line_curse
+        if hasattr(self, 'align'):
+            align_curse = self.align
 
-        return {'display': display_curse,
-                'msgdict': self.msg_curse(args),
-                'column': column_curse,
-                'line': line_curse}
+        if max_width is not None:
+            ret = {'display': display_curse,
+                    'msgdict': self.msg_curse(args, max_width=max_width),
+                    'align': align_curse}
+        else:
+            ret = {'display': display_curse,
+                    'msgdict': self.msg_curse(args),
+                    'align': align_curse}
+
+        return ret
 
     def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
         """Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }.
@@ -305,6 +322,17 @@ class GlancesPlugin(object):
     def curse_new_line(self):
         """Go to a new line."""
         return self.curse_add_line('\n')
+
+    def set_align(self, align='left'):
+        """Set the Curse align"""
+        if align in ('left', 'right', 'bottom'):       
+            self.align = align
+        else:
+            self.align = 'left'
+
+    def get_align(self):
+        """Get the Curse align"""
+        return self.align
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.

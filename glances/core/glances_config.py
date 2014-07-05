@@ -38,7 +38,8 @@ from glances.core.glances_globals import (
     is_py3,
     is_windows,
     sys_prefix,
-    work_path
+    work_path,
+    logger
 )
 
 
@@ -69,9 +70,9 @@ class Config(object):
                         self.parser.read(config_file, encoding='utf-8')
                     else:
                         self.parser.read(config_file)
-                    # print(_("DEBUG: Read configuration file %s") % config_file)
+                    logger.info(_("Read configuration file %s") % config_file)
                 except UnicodeDecodeError as e:
-                    print(_("Error: Cannot decode configuration file '{0}': {1}").format(config_file, e))
+                    logger.error(_("Cannot decode configuration file '{0}': {1}").format(config_file, e))
                     sys.exit(1)
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file

@@ -23,7 +23,7 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_windows
+from glances.core.glances_globals import glances_logs, glances_processes, is_windows, logger
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
@@ -32,7 +32,7 @@ if not is_windows:
         import curses
         import curses.panel
     except ImportError:
-        print('Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical('Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -58,7 +58,7 @@ class GlancesCurses(object):
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            print(_("Error: Cannot init the curses library.\n"))
+            logger.critical(_("Error: Cannot init the curses library.\n"))
             sys.exit(1)
 
         # Set curses options
@@ -181,6 +181,7 @@ class GlancesCurses(object):
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             self.end()
+            logger.info("Stop Glances")
             sys.exit(0)
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
@@ -247,7 +248,7 @@ class GlancesCurses(object):
         return self.pressedkey
 
     def end(self):
-        """Shutdown the curses window."""
+        """Shutdown the curses window."""        
         if hasattr(curses, 'echo'):
             curses.echo()
         if hasattr(curses, 'nocbreak'):
@@ -258,6 +259,31 @@ class GlancesCurses(object):
             except Exception:
                 pass
         curses.endwin()
+        
+    def init_line_column(self):
+        """Init the line and column position for the curses inteface"""
+        self.line = 0
+        self.column = 0
+        self.next_line = 0
+        self.next_column = 0
+
+    def init_line(self):
+        """Init the line position for the curses inteface"""
+        self.line = 0
+        self.next_line = 0
+
+    def init_column(self):
+        """Init the column position for the curses inteface"""
+        self.column = 0
+        self.next_column = 0
+
+    def new_line(self):
+        """New line in the curses interface"""
+        self.line = self.next_line
+
+    def new_column(self):
+        """New column in the curses interface"""
+        self.column = self.next_column
 
     def display(self, stats, cs_status="None"):
         """Display stats on the screen.
@@ -273,76 +299,122 @@ class GlancesCurses(object):
             True if the stats have been displayed
             False if the help have been displayed
         """
-        # Init the internal line/column dict for Glances Curses
-        self.line_to_y = {}
-        self.column_to_x = {}
+        # Init the internal line/column for Glances Curses
+        self.init_line_column()
 
         # Get the screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
+        # No processes list in SNMP mode
+        if cs_status == 'SNMP':
+            # so... more space for others plugins
+            plugin_max_width = 43
+        else:
+            plugin_max_width = None
+
+        # Update the stats messages
+        ###########################
+
+        # Update the client server status
+        self.args.cs_status = cs_status
+        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
+        stats_uptime = stats.get_plugin('uptime').get_stats_display()
+        if self.args.percpu:
+            stats_percpu = stats.get_plugin('percpu').get_stats_display()
+        else:
+            stats_cpu = stats.get_plugin('cpu').get_stats_display()
+        stats_load = stats.get_plugin('load').get_stats_display()
+        stats_mem = stats.get_plugin('mem').get_stats_display()
+        stats_memswap = stats.get_plugin('memswap').get_stats_display()
+        stats_network = stats.get_plugin('network').get_stats_display(args=self.args, max_width=plugin_max_width)
+        stats_diskio = stats.get_plugin('diskio').get_stats_display(args=self.args)
+        stats_fs = stats.get_plugin('fs').get_stats_display(args=self.args, max_width=plugin_max_width)
+        stats_sensors = stats.get_plugin('sensors').get_stats_display(args=self.args)
+        stats_now = stats.get_plugin('now').get_stats_display()
+        stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
+        stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
+        stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
+        stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
+
+        # Display the stats on the curses interface
+        ###########################################
+
+        # Help screen (on top of the other stats)
         if self.args.help_tag:
             # Display the stats...
             self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
             return False
 
-        # Update the client server status
-        self.args.cs_status = cs_status
-
         # Display first line (system+uptime)
-        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
-        stats_uptime = stats.get_plugin('uptime').get_stats_display()
+        self.new_line()
         l = self.get_stats_display_width(stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
         self.display_plugin(stats_system, display_optional=(screen_x >= l))
+        self.new_column()
         self.display_plugin(stats_uptime)
 
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
+        self.init_column()
+        self.new_line()        
         if self.args.percpu:
-            stats_percpu = stats.get_plugin('percpu').get_stats_display()
             l = self.get_stats_display_width(stats_percpu)
         else:
-            stats_cpu = stats.get_plugin('cpu').get_stats_display()
             l = self.get_stats_display_width(stats_cpu)
-        stats_load = stats.get_plugin('load').get_stats_display()
-        stats_mem = stats.get_plugin('mem').get_stats_display()
-        stats_memswap = stats.get_plugin('memswap').get_stats_display()
         l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
-        if screen_x > (3 * self.space_between_column + l):
-            self.space_between_column = int((screen_x - l) / 3)
+        space_number = int(stats_load['msgdict'] != []) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != []) 
+        if space_number == 0:
+            space_number = 1
+        if screen_x > (space_number * self.space_between_column + l):
+            self.space_between_column = int((screen_x - l) / space_number)
         # Display
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
             self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
+        self.new_column()
         self.display_plugin(stats_load)
-        self.display_plugin(stats_mem, display_optional=(screen_x >= (3 * self.space_between_column + l)))
+        self.new_column()
+        self.display_plugin(stats_mem, display_optional=(screen_x >= (space_number * self.space_between_column + l)))
+        self.new_column()
         self.display_plugin(stats_memswap)
         # Space between column
         self.space_between_column = 3
 
-        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS)
-        self.display_plugin(stats.get_plugin('network').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('diskio').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('fs').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('sensors').get_stats_display(args=self.args))
-        # Display last line (currenttime)
-        self.display_plugin(stats.get_plugin('now').get_stats_display())
+        # Backup line position
+        self.saved_line = self.next_line
 
-        # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
+        self.init_column()
+        self.new_line()
+        self.display_plugin(stats_network)
+        self.new_line()
+        self.display_plugin(stats_diskio)
+        self.new_line()
+        self.display_plugin(stats_fs)
+        self.new_line()
+        self.display_plugin(stats_sensors)
+        self.new_line()
+        self.display_plugin(stats_now)
+
+        # If space available...
         if screen_x > 52:
-            stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
-            stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
-            stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
-            stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
-            # Display
+            # Restore line position
+            self.next_line = self.saved_line
+
+            # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+            self.new_column()
+            self.new_line()
             self.display_plugin(stats_processcount)
+            self.new_line()
             self.display_plugin(stats_monitor)
+            self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
+            self.new_line()
             self.display_plugin(stats_alert)
 
         return True
@@ -357,12 +429,6 @@ class GlancesCurses(object):
         # - the plugin_stats message is empty
         # - the display tag = False
         if plugin_stats['msgdict'] == [] or not plugin_stats['display']:
-            # Display the next plugin at the current plugin position
-            try:
-                self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
-                self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
-            except Exception:
-                pass
             # Exit
             return 0
 
@@ -371,21 +437,17 @@ class GlancesCurses(object):
         screen_y = self.screen.getmaxyx()[0]
 
         # Set the upper/left position of the message
-        if plugin_stats['column'] < 0:
+        if plugin_stats['align'] == 'right':
             # Right align (last column)
             display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
-            if plugin_stats['column'] not in self.column_to_x:
-                self.column_to_x[plugin_stats['column']] = plugin_stats['column']
-            display_x = self.column_to_x[plugin_stats['column']]
-        if plugin_stats['line'] < 0:
+            display_x = self.column
+        if plugin_stats['align'] == 'bottom':
             # Bottom (last line)
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
-            if plugin_stats['line'] not in self.line_to_y:
-                self.line_to_y[plugin_stats['line']] = plugin_stats['line']
-            display_y = self.line_to_y[plugin_stats['line']]
-
+            display_y = self.line
+        
         # Display
         x = display_x
         y = display_y
@@ -413,7 +475,7 @@ class GlancesCurses(object):
                 self.term_window.addnstr(y, x,
                                          m['msg'],
                                          screen_x - x,  # Do not disply outside the screen
-                                         self.__colors_list[m['decoration']])
+                                         self.__colors_list[m['decoration']])                
             except:
                 pass
             else:
@@ -421,10 +483,8 @@ class GlancesCurses(object):
                 x = x + len(m['msg'])
 
         # Compute the next Glances column/line position
-        if plugin_stats['column'] > -1:
-            self.column_to_x[plugin_stats['column'] + 1] = x + self.space_between_column
-        if plugin_stats['line'] > -1:
-            self.line_to_y[plugin_stats['line'] + 1] = y + self.space_between_line
+        self.next_column = max(self.next_column, x + self.space_between_column)
+        self.next_line = max(self.next_line, y + self.space_between_line)
 
     def erase(self):
         """Erase the content of the screen."""

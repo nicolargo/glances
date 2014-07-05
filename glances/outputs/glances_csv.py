@@ -20,10 +20,11 @@
 """CSV interface class."""
 
 # Import sys libs
-import csv
 import sys
+import csv
 
-# Import Glances libs
+# Import Glances lib
+from glances.core.glances_globals import logger
 from glances.core.glances_globals import is_py3
 
 # List of stats enabled in the CSV output
@@ -46,10 +47,10 @@ class GlancesCSV(object):
                 self.csv_file = open(self.csv_filename, 'wb')
             self.writer = csv.writer(self.csv_file)
         except IOError as e:
-            print(_("Error: Cannot create the CSV file: {0}").format(e))
+            logger.critical(_("Error: Cannot create the CSV file: {0}").format(e))
             sys.exit(2)
 
-        print(_("Stats dumped to CSV file: {0}").format(self.csv_filename))
+        logger.info(_("Stats dumped to CSV file: {0}").format(self.csv_filename))
 
     def exit(self):
         """Close the CSV file."""

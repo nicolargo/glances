@@ -19,6 +19,8 @@
 
 """Network plugin."""
 
+import base64
+
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -27,9 +29,9 @@ import psutil
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
-snmp_oid = {'interface_name': '1.3.6.1.2.1.2.2.1.2',
-            'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
-            'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}
+snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
+                        'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
+                        'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
 
 
 class Plugin(GlancesPlugin):
@@ -45,12 +47,6 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 0
-        # Enter -1 to diplay bottom
-        self.line_curse = 2
 
         # Init the stats
         self.reset()
@@ -94,7 +90,7 @@ class Plugin(GlancesPlugin):
                 for net in network_new:
                     try:
                         # Try necessary to manage dynamic network interface
-                        netstat = {}
+                        netstat = {} 
                         netstat['interface_name'] = net
                         netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = network_new[net].bytes_recv
@@ -118,7 +114,12 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
 
             # SNMP bulk command to get all network interface in one shot
-            netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+            try:
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                    bulk=True)
+            except KeyError:
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                                                    bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
             if not hasattr(self, 'network_old'):
@@ -138,7 +139,15 @@ class Plugin(GlancesPlugin):
                     try:
                         # Try necessary to manage dynamic network interface
                         netstat = {}
-                        netstat['interface_name'] = net
+                        # Windows: a tips is needed to convert HEX to TXT
+                        # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
+                        if self.get_short_system_name() == 'windows':
+                            try:
+                                netstat['interface_name'] = str(base64.b16decode(net[2:-2].upper()))
+                            except TypeError:
+                                netstat['interface_name'] = net
+                        else:
+                            netstat['interface_name'] = net
                         netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = float(network_new[net]['cumulative_rx'])
                         netstat['rx'] = (float(network_new[net]['cumulative_rx']) -
@@ -159,9 +168,8 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-        # !!! TODO: Add alert on network interface bitrate
 
         # Init the return message
         ret = []
@@ -170,9 +178,16 @@ class Plugin(GlancesPlugin):
         if self.stats == [] or args.disable_network:
             return ret
 
+        # Max size for the interface name
+        if max_width is not None and max_width >= 23:
+            # Interface size name = max_width - space for interfaces bitrate
+            ifname_max_width = max_width - 14
+        else:
+            ifname_max_width = 9
+
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("NETWORK"))
+        msg = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
@@ -204,9 +219,9 @@ class Plugin(GlancesPlugin):
                 continue
             # Format stats
             ifname = i['interface_name'].split(':')[0]
-            if len(ifname) > 9:
+            if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
-                ifname = '_' + ifname[-8:]
+                ifname = '_' + ifname[-ifname_max_width+1:]
             if args.byte:
                 # Bytes per second (for dummy)
                 if args.network_cumul:
@@ -233,7 +248,7 @@ class Plugin(GlancesPlugin):
                                         int(i['tx'] // i['time_since_update'] * 8)) + "b"
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:9}'.format(ifname)
+            msg = '{0:{width}}'.format(ifname, width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
                 msg = '{0:>14}'.format(sx)
