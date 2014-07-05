@@ -57,12 +57,6 @@ class GlancesMain(object):
         parser.add_argument('-V', '--version', action='version', version=_version)
         parser.add_argument('-d', '--debug', action='store_true', default=False,
                             dest='debug', help=_('Enable debug mode'))
-        parser.add_argument('-b', '--byte', action='store_true', default=False,
-                            dest='byte', help=_('display network rate in byte per second'))
-        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
-                            help=_('bind server to the given IPv4/IPv6 address or hostname'))
-        parser.add_argument('-c', '--client', dest='client',
-                            help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
         parser.add_argument('-C', '--config', dest='conf_file',
                             help=_('path to the configuration file'))
         # Enable or disable option on startup
@@ -83,15 +77,19 @@ class GlancesMain(object):
         # CSV output feature
         parser.add_argument('--output-csv', default=None,
                             dest='output_csv', help=_('export stats to a CSV file'))
-        # Server option
+        # Client/Server option
+        parser.add_argument('-c', '--client', dest='client',
+                            help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
+        parser.add_argument('-s', '--server', action='store_true', default=False,
+                            dest='server', help=_('run Glances in server mode'))
         parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
+        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
+                            help=_('bind server to the given IPv4/IPv6 address or hostname'))
         parser.add_argument('--password-badidea', dest='password_arg',
                             help=_('define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help=_('define a client/server password from the prompt or file'))
-        parser.add_argument('-s', '--server', action='store_true', default=False,
-                            dest='server', help=_('run Glances in server mode'))
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help=_('SNMP community'))
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -108,9 +106,13 @@ class GlancesMain(object):
                             dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
-        # Other options
+        # Display (Curses) options
+        parser.add_argument('-b', '--byte', action='store_true', default=False,
+                            dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help=_('start Glances in per CPU mode'))
+        parser.add_argument('--theme-white', action='store_true', default=False,
+                            dest='theme_white', help=_('optimize display for white background'))
 
         return parser
 
