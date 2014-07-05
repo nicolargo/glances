@@ -120,7 +120,7 @@ class Plugin(GlancesPlugin):
                     return self.stats
 
                 # Convert SNMP stats to float
-                for key in self.stats.iterkeys():
+                for key in list(self.stats.keys()):
                     self.stats[key] = float(self.stats[key])
 
         return self.stats

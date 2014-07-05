@@ -121,7 +121,7 @@ class GlancesPlugin(object):
                 for item in snmpresult:
                     item_stats = {}
                     item_key = None
-                    for key in snmp_oid.iterkeys():
+                    for key in list(snmp_oid.keys()):
                         oid = snmp_oid[key] + '.' + str(index)
                         if oid in item:
                             if item_key is None:
@@ -136,7 +136,7 @@ class GlancesPlugin(object):
             snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
 
             # Build the internal dict with the SNMP result
-            for key in snmp_oid.iterkeys():
+            for key in list(snmp_oid.keys()):
                 ret[key] = snmpresult[snmp_oid[key]]
 
         return ret

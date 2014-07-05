@@ -240,8 +240,10 @@ class GlancesStatsClientSNMP(GlancesStats):
             oid_os_name = clientsnmp.get_by_oid("1.3.6.1.2.1.1.1.0")
             try:
                 self.system_name = self.get_system_name(oid_os_name['1.3.6.1.2.1.1.1.0'])
+                logger.info(_('SNMP system name detected: {}').format(self.system_name))
             except KeyError:
                 self.system_name = None
+                logger.warning(_('Can not detect SNMP system name'))
 
         return ret
 
@@ -253,7 +255,12 @@ class GlancesStatsClientSNMP(GlancesStats):
             return short_system_name
         
         # Find the short name in the oid_to_short_os_name dict
-        for r,v in oid_to_short_system_name.iteritems():
+        try:
+            iteritems = oid_to_short_system_name.iteritems()
+        except AttributeError:
+            # Correct issue #386
+            iteritems = oid_to_short_system_name.items()
+        for r,v in iteritems:
             if re.search(r, oid_system_name):
                 short_system_name = v
                 break
