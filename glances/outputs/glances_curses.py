@@ -81,7 +81,10 @@ class GlancesCurses(object):
         if curses.has_colors() and curses.COLOR_PAIRS > 8:
             self.hascolors = True
             # FG color, BG color
-            curses.init_pair(1, curses.COLOR_WHITE, -1)
+            if args.theme_white:
+                curses.init_pair(1, curses.COLOR_BLACK, -1)
+            else:
+                curses.init_pair(1, curses.COLOR_WHITE, -1)
             curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
             curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
             curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
