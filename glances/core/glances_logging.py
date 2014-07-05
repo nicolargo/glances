@@ -49,7 +49,7 @@ LOGGING_CFG = {
             'filename': os.path.join(tempfile.gettempdir(), 'glances.log')
         },
         'console':{
-            'level':'ERROR',
+            'level':'CRITICAL',
             'class':'logging.StreamHandler',
             'formatter': 'short'
         }

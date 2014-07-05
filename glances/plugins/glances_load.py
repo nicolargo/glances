@@ -23,6 +23,7 @@
 import os
 
 # Import Glances libs
+from glances.core.glances_globals import logger
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -84,14 +85,20 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-            self.stats['cpucore'] = nb_log_core
-
             if self.stats['min1'] == '':
                 self.reset()
                 return self.stats
 
-            for key in self.stats.iterkeys():
-                self.stats[key] = float(self.stats[key])
+            # Python 3 return a dict like:
+            # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
+            try:
+                iteritems = self.stats.iteritems()
+            except AttributeError:
+                iteritems = self.stats.items()
+            for k,v in iteritems:
+                self.stats[k] = float(v)
+
+            self.stats['cpucore'] = nb_log_core
 
         return self.stats
 

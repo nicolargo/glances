@@ -19,10 +19,14 @@
 
 """File system plugin."""
 
+# System libs
 import base64
 
+# Glances libs
+from glances.core.glances_globals import version, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# PSutil lib for local grab
 import psutil
 
 # SNMP OID

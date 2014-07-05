@@ -59,6 +59,9 @@ class GlancesSNMPClient(object):
                     ret[name.prettyPrint()] = ''
                 else:
                     ret[name.prettyPrint()] = val.prettyPrint()
+                    # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
+                    if ret[name.prettyPrint()].startswith('b\''):
+                        ret[name.prettyPrint()] = ret[name.prettyPrint()][2:-1]
         return ret
 
     def get_by_oid(self, *oid):
@@ -93,6 +96,9 @@ class GlancesSNMPClient(object):
                         item[name.prettyPrint()] = ''
                     else:
                         item[name.prettyPrint()] = val.prettyPrint()
+                        # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
+                        if item[name.prettyPrint()].startswith('b\''):
+                            item[name.prettyPrint()] = item[name.prettyPrint()][2:-1]
                 ret.append(item)
         return ret
 

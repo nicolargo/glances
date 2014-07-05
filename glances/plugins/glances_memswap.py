@@ -102,7 +102,7 @@ class Plugin(GlancesPlugin):
                     self.reset()
                     return self.stats
 
-                for key in self.stats.iterkeys():
+                for key in list(self.stats.keys()):
                     if self.stats[key] != '':
                         self.stats[key] = float(self.stats[key]) * 1024
 
