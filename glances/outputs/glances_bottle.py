@@ -27,11 +27,12 @@ from glances.core.glances_globals import logger
 
 # Import mandatory Bottle lib
 try:
-    from bottle import Bottle, template, static_file, TEMPLATE_PATH
+    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     print(_("Install it using pip: # pip install bottle"))
     sys.exit(2)
+import json
 
 
 class GlancesBottle(object):
@@ -82,12 +83,21 @@ class GlancesBottle(object):
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
+        # REST API
+        self._app.route('/api/pluginslist', method="GET", callback=self._api_plugins)
+        self._app.route('/api/:plugin', method="GET", callback=self._api)
+        self._app.route('/api/:plugin/:item', method="GET", callback=self._api_item)
+        self._app.route('/api/:plugin/:item/:value', method="GET", callback=self._api_value)
 
     def start(self, stats):
         """Start the bottle."""
         # Init stats
         self.stats = stats
 
+        # Init plugin list
+        self.plugins_list = self.stats.getAllPlugins()
+
+        # Bind the Bottle TCP address/port
         bindmsg = _("Glances web server started on http://{}:{}/").format(self.args.bind_address, self.args.port)
         logger.info(bindmsg)
         print(bindmsg)
@@ -118,6 +128,61 @@ class GlancesBottle(object):
         """Bottle callback for *.js files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+
+    def _api_plugins(self):
+        """
+        Glances API RESTFULL implementation
+        Return the plugin list
+        or 404 error
+        """
+        try:
+            plist = json.dumps(self.plugins_list) 
+        except Exception as e:
+            abort(404, "Can not get plugin list (%s)" % str(e))            
+        return plist
+
+    def _api(self, plugin):
+        """
+        Glances API RESTFULL implementation
+        Return the JSON representation of a given plugin
+        or 404 error
+        """
+        if plugin not in self.plugins_list:
+            abort(404, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+        try:
+            # Get the JSON value of the stat ID
+            statval = self.stats.get_plugin(plugin).get_stats()
+        except Exception as e:
+            abort(404, "Can not get plugin %s (%s)" % (plugin, str(e)))
+        return statval
+
+    def _api_item(self, plugin, item):
+        """
+        Glances API RESTFULL implementation
+        Return the JSON represenation of the couple plugin/item
+        or 404 error
+        """
+        if plugin not in self.plugins_list:
+            abort(404, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+        plist = self.stats.get_plugin(plugin).get_stats_item(item)
+        if plist is None:
+            abort(404, "Can not get item %s in plugin %s" % (item, plugin))
+        else:
+            return plist
+
+    def _api_value(self, plugin, item, value):
+        """
+        Glances API RESTFULL implementation
+        Return the process stats (dict) for the given item=value
+        or 404 error
+        """
+        if plugin not in self.plugins_list:
+            abort(404, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+        pdict = self.stats.get_plugin(plugin).get_stats_value(item, value)
+        if pdict is None:
+            abort(404, "Can not get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
+        else:
+            return pdict
 
     def display(self, stats, refresh_time=None):
         """Display stats on the web page.
