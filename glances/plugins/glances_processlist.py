@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_windows
+from glances.core.glances_globals import glances_processes, is_windows, is_linux
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -216,6 +216,7 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>6}'.format("?")
                 ret.append(self.curse_add_line(msg, optional=True))
                 ret.append(self.curse_add_line(msg, optional=True))
+
             # Command line
             # If no command line for the process is available, fallback to
             # the bare process name instead

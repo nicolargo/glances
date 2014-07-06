@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from glances.core.glances_globals import is_bsd, is_mac, is_windows
+from glances.core.glances_globals import is_linux, is_bsd, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
 import psutil
@@ -112,7 +112,7 @@ class GlancesProcesses(object):
         procstat['cpu_percent'] = proc.cpu_percent(interval=0)
 
         # Process network connections (TCP and UDP) (Experimental)
-        # !!! High CPU consumption
+        # REJECTED: Too high CPU consumption
         # try:
         #     procstat['tcp'] = len(proc.connections(kind="tcp"))
         #     procstat['udp'] = len(proc.connections(kind="udp"))
@@ -149,6 +149,14 @@ class GlancesProcesses(object):
 
             # Append the IO tag (for display)
             procstat['io_counters'] += [io_tag]
+
+        # SWAP memory
+        # Only on Linux based OS
+        # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        # REJECTED: Too high CPU consumption
+        # if is_linux:
+        #     logger.debug(proc.memory_maps())
+        #     procstat['memory_swap'] = sum([ v.swap for v in proc.memory_maps() ])
 
         return procstat
 
