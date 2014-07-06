@@ -284,17 +284,19 @@ class GlancesPlugin(object):
 
         if max_width is not None:
             ret = {'display': display_curse,
-                    'msgdict': self.msg_curse(args, max_width=max_width),
-                    'align': align_curse}
+                   'msgdict': self.msg_curse(args, max_width=max_width),
+                   'align': align_curse}
         else:
             ret = {'display': display_curse,
-                    'msgdict': self.msg_curse(args),
-                    'align': align_curse}
+                   'msgdict': self.msg_curse(args),
+                   'align': align_curse}
 
         return ret
 
-    def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
-        """Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }.
+    def curse_add_line(self, msg, decoration="DEFAULT", 
+                       optional=False, additional=False, 
+                       splittable=False):
+        """Return a dict with
 
         Where:
             msg: string
@@ -315,9 +317,10 @@ class GlancesPlugin(object):
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)
+            additional: True if the stat is additional (display only if space is available after optional)
             spittable: Line can be splitted to fit on the screen (default is not)
         """
-        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'splittable': splittable}
+        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'additional': additional, 'splittable': splittable}
 
     def curse_new_line(self):
         """Go to a new line."""

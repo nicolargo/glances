@@ -422,10 +422,14 @@ class GlancesCurses(object):
 
         return True
 
-    def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
+    def display_plugin(self, plugin_stats, 
+                       display_optional=True,
+                       display_additional=True, 
+                       max_y=65535):
         """Display the plugin_stats on the screen.
 
-        If display_optional=True display the optional stats.
+        If display_optional=True display the optional stats
+        If display_additional=True display additionnal stats
         max_y do not display line > max_y
         """
         # Exit if:
@@ -471,6 +475,9 @@ class GlancesCurses(object):
                 break
             # If display_optional = False do not display optional stats
             if not display_optional and m['optional']:
+                continue
+            # If display_additional = False do not display additional stats
+            if not display_additional and m['additional']:
                 continue
             # Is it possible to display the stat with the current screen size
             # !!! Crach if not try/except... Why ???
