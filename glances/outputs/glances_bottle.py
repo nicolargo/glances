@@ -87,6 +87,7 @@ class GlancesBottle(object):
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
+        self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
@@ -139,7 +140,7 @@ class GlancesBottle(object):
         Return the plugin list
         or 404 error
         """
-        response.content_type = 'application/vnd.api+json'
+        response.content_type = 'application/json'
 
         # Update the stat
         self.stats.update()
@@ -158,7 +159,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/vnd.api+json'
+        response.content_type = 'application/json'
 
         # Update the stat
         self.stats.update()
@@ -178,7 +179,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/vnd.api+json'
+        response.content_type = 'application/json'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -193,6 +194,29 @@ class GlancesBottle(object):
             abort(404, "Can not get plugin %s (%s)" % (plugin, str(e)))
         return statval
 
+    def _api_limits(self, plugin):
+        """
+        Glances API RESTFul implementation
+        Return the JSON limits of a given plugin
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        # self.stats.update()
+
+        try:
+            # Get the JSON value of the stat ID
+            limits = self.stats.get_plugin(plugin).get_limits()
+        except Exception as e:
+            abort(404, "Can not get limits for plugin %s (%s)" % (plugin, str(e)))
+        return limits
+
     def _api_item(self, plugin, item):
         """
         Glances API RESTFul implementation
@@ -202,7 +226,7 @@ class GlancesBottle(object):
         HTTP/404 if others error
 
         """
-        response.content_type = 'application/vnd.api+json'
+        response.content_type = 'application/json'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -225,7 +249,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/vnd.api+json'
+        response.content_type = 'application/json'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
