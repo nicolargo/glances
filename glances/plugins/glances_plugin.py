@@ -25,9 +25,10 @@ I am your father...
 
 # Import system libs
 import json
+from operator import itemgetter
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs
+from glances.core.glances_globals import glances_logs, logger
 
 
 class GlancesPlugin(object):
@@ -146,8 +147,45 @@ class GlancesPlugin(object):
         return self.stats
 
     def get_stats(self):
-        """Return the stats object in JSON format for the XML-RPC API."""
+        """Return the stats object in JSON format"""
         return json.dumps(self.stats)
+
+    def get_stats_item(self, item):
+        """
+        Return the stats object for a specific item (in JSON format)
+        Stats should be a list of dict (processlist, network...)
+        """        
+        if type(self.stats) is not list:
+            if type(self.stats) is dict:
+                try:
+                    return json.dumps({ item: self.stats[item] })
+                except KeyError as e:
+                    logger.error(_("Can not get item %s (%s)") % (item, e))
+            else:
+                return None
+        else:
+            try:
+                # Source: http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+                return json.dumps({ item: map(itemgetter(item), self.stats) })
+            except (KeyError, ValueError) as e:
+                logger.error(_("Can not get item %s (%s)") % (item, e))
+                return None
+
+    def get_stats_value(self, item, value):
+        """
+        Return the stats object for a specific item=value (in JSON format)
+        Stats should be a list of dict (processlist, network...)
+        """
+        if type(self.stats) is not list:
+            return None
+        else:
+            if value.isdigit():
+                value = int(value)
+            try:
+                return json.dumps({ value: [i for i in self.stats if i[item] == value] }) 
+            except (KeyError, ValueError) as e:
+                logger.error(_("Can not get item(%s)=value(%s) (%s)") % (item, value,e))
+                return None
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
