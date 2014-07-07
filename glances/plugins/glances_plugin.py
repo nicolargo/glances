@@ -158,7 +158,7 @@ class GlancesPlugin(object):
         if type(self.stats) is not list:
             if type(self.stats) is dict:
                 try:
-                    return json.dumps(self.stats[item])
+                    return json.dumps({ item: self.stats[item] })
                 except KeyError as e:
                     logger.error(_("Can not get item %s (%s)") % (item, e))
             else:
@@ -166,7 +166,7 @@ class GlancesPlugin(object):
         else:
             try:
                 # Source: http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-                return json.dumps(map(itemgetter(item), self.stats))
+                return json.dumps({ item: map(itemgetter(item), self.stats) })
             except (KeyError, ValueError) as e:
                 logger.error(_("Can not get item %s (%s)") % (item, e))
                 return None
@@ -182,7 +182,7 @@ class GlancesPlugin(object):
             if value.isdigit():
                 value = int(value)
             try:
-                return json.dumps([i for i in self.stats if i[item] == value]) 
+                return json.dumps({ value: [i for i in self.stats if i[item] == value] }) 
             except (KeyError, ValueError) as e:
                 logger.error(_("Can not get item(%s)=value(%s) (%s)") % (item, value,e))
                 return None

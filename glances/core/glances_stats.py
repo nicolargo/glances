@@ -127,8 +127,12 @@ class GlancesStats(object):
         self.__update__(input_stats)
 
     def getAll(self):
-        """Return all the stats."""
+        """Return all the stats (list)"""
         return [self._plugins[p].get_raw() for p in self._plugins]
+
+    def getAllAsDict(self):
+        """Return all the stats (dict)"""
+        return {p: self._plugins[p].get_raw() for p in self._plugins}
 
     def get_plugin_list(self):
         """Return the plugin list."""
@@ -163,8 +167,12 @@ class GlancesStatsServer(GlancesStats):
             self.all_stats[p] = self._plugins[p].get_raw()
 
     def getAll(self):
-        """Return the stats as a dict."""
+        """Return the stats as a list"""
         return self.all_stats
+
+    def getAllAsDict(self):
+        """Return the stats as a dict"""
+        return {p: self.all_stats[p] for p in self._plugins}
 
     def getAllPlugins(self):
         """Return the plugins list."""
