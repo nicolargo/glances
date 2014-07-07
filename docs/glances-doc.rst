@@ -592,13 +592,15 @@ CSV files have two lines per stats:
 - Stats description
 - Stats (comma separated)
 
-API Documentation
-=================
+APIs Documentations
+===================
 
-Glances uses a `XML-RPC server`_ and can be used by another client software.
+Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be used by another client software.
 
-API documentation is available at
-https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to.
+APIs documentations are available at:
+
+- XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
+- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
 
 Support
 =======
@@ -614,3 +616,4 @@ Feel free to contribute!
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
+.. _RESTFULL-JSON: http://jsonapi.org/
