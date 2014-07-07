@@ -135,7 +135,7 @@ class GlancesBottle(object):
 
     def _api_plugins(self):
         """
-        Glances API RESTFULL implementation
+        Glances API RESTFul implementation
         Return the plugin list
         or 404 error
         """
@@ -152,7 +152,7 @@ class GlancesBottle(object):
 
     def _api_all(self):
         """
-        Glances API RESTFULL implementation
+        Glances API RESTFul implementation
         Return the JSON representation of all the plugins
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -172,7 +172,7 @@ class GlancesBottle(object):
 
     def _api(self, plugin):
         """
-        Glances API RESTFULL implementation
+        Glances API RESTFul implementation
         Return the JSON representation of a given plugin
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -195,7 +195,7 @@ class GlancesBottle(object):
 
     def _api_item(self, plugin, item):
         """
-        Glances API RESTFULL implementation
+        Glances API RESTFul implementation
         Return the JSON represenation of the couple plugin/item
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -219,7 +219,7 @@ class GlancesBottle(object):
 
     def _api_value(self, plugin, item, value):
         """
-        Glances API RESTFULL implementation
+        Glances API RESTFul implementation
         Return the process stats (dict) for the given item=value
         HTTP/200 if OK
         HTTP/400 if plugin is not found
