@@ -177,7 +177,12 @@ class GlancesStatsServer(GlancesStats):
 
     def getAllAsDict(self):
         """Return the stats as a dict"""
-        return {p: self.all_stats[p] for p in self._plugins}
+        # Python > 2.6
+        # return {p: self.all_stats[p] for p in self._plugins}
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self.all_stats[p]
+        return ret                
 
     def getAllPlugins(self):
         """Return the plugins list."""
