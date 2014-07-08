@@ -132,7 +132,12 @@ class GlancesStats(object):
 
     def getAllAsDict(self):
         """Return all the stats (dict)"""
-        return {p: self._plugins[p].get_raw() for p in self._plugins}
+        # Python > 2.6
+        # {p: self._plugins[p].get_raw() for p in self._plugins}
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self._plugins[p].get_raw()
+        return ret
 
     def get_plugin_list(self):
         """Return the plugin list."""
