@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_windows, is_linux
+from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -104,9 +104,9 @@ class Plugin(GlancesPlugin):
         msg = '{0:>9}'.format(_("TIME+"))
         ret.append(self.curse_add_line(msg, optional=True))
         msg = '{0:>6}'.format(_("IOR/s"))
-        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = '{0:>6}'.format(_("IOW/s"))
-        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
 
@@ -204,18 +204,18 @@ class Plugin(GlancesPlugin):
                     msg = '{0:>6}'.format("0")
                 else:
                     msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=False))
-                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg, optional=True, additional=True))
                 # IO write
                 io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
                 if io_ws == 0:
                     msg = '{0:>6}'.format("0")
                 else:
                     msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=False))
-                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg, optional=True, additional=True))
             else:
                 msg = '{0:>6}'.format("?")
-                ret.append(self.curse_add_line(msg, optional=True))
-                ret.append(self.curse_add_line(msg, optional=True))
+                ret.append(self.curse_add_line(msg, optional=True, additional=True))
+                ret.append(self.curse_add_line(msg, optional=True, additional=True))
 
             # Command line
             # If no command line for the process is available, fallback to

@@ -23,7 +23,7 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_windows, logger
+from glances.core.glances_globals import glances_logs, glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
@@ -416,6 +416,7 @@ class GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
+                                display_additional=(is_mac==False),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.new_line()
             self.display_plugin(stats_alert)
