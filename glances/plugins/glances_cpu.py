@@ -33,8 +33,8 @@ snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
             'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
             'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
 
-class Plugin(GlancesPlugin):
 
+class Plugin(GlancesPlugin):
     """
     Glances' CPU plugin.
 
