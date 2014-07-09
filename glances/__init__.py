@@ -47,7 +47,7 @@ psutil_min_version = (2, 0, 0)
 psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
 
 # First log with Glances and PSUtil version
-logger.info('Start Glances {} with PSutil {}'.format(__version__, __psutil_version))
+logger.info('Start Glances {0} with PSutil {1}'.format(__version__, __psutil_version))
 
 # Check PSutil version
 if psutil_version < psutil_min_version:    
