@@ -258,7 +258,7 @@ class GlancesStatsClientSNMP(GlancesStats):
             oid_os_name = clientsnmp.get_by_oid("1.3.6.1.2.1.1.1.0")
             try:
                 self.system_name = self.get_system_name(oid_os_name['1.3.6.1.2.1.1.1.0'])
-                logger.info(_('SNMP system name detected: {}').format(self.system_name))
+                logger.info(_('SNMP system name detected: {0}').format(self.system_name))
             except KeyError:
                 self.system_name = None
                 logger.warning(_('Can not detect SNMP system name'))
