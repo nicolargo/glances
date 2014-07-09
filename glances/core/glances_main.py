@@ -82,7 +82,7 @@ class GlancesMain(object):
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
-        parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
+        parser.add_argument('-p', '--port', default=None, type=int, dest='port',
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
                             help=_('bind server to the given IPv4/IPv6 address or hostname'))
@@ -128,12 +128,16 @@ class GlancesMain(object):
             from logging import DEBUG
             logger.setLevel(DEBUG)
 
-        # In web server mode, default:
-        # - refresh time: 5 sec
-        # - host port: 61208
+        # Client/server Port        
+        if args.port is None:
+            if args.webserver:
+                args.port = self.web_server_port
+            else:
+                args.port = self.server_port            
+
+        # In web server mode, defaul refresh time: 5 sec        
         if args.webserver:
-            args.time = 5
-            args.port = self.web_server_port
+            args.time = 5            
 
         # Server or client login/password
         args.username = self.username
