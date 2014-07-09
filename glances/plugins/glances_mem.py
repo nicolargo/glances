@@ -45,6 +45,7 @@ snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.5.0',
                      'size': '1.3.6.1.2.1.25.2.3.1.5',
                      'used': '1.3.6.1.2.1.25.2.3.1.6'}}
 
+
 class Plugin(GlancesPlugin):
 
     """Glances' memory plugin.
@@ -115,7 +116,7 @@ class Plugin(GlancesPlugin):
                 except KeyError:
                     self.reset()
                 else:
-                    for fs in fs_stat:                        
+                    for fs in fs_stat:
                         # The Physical Memory (Windows) or Real Memory (VmWare)
                         # gives statistics on RAM usage and availability.
                         if fs in ('Physical Memory', 'Real Memory'):

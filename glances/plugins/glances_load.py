@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
                 iteritems = self.stats.iteritems()
             except AttributeError:
                 iteritems = self.stats.items()
-            for k,v in iteritems:
+            for k, v in iteritems:
                 self.stats[k] = float(v)
 
             self.stats['cpucore'] = nb_log_core

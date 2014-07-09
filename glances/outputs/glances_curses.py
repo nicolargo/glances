@@ -416,7 +416,7 @@ class GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
-                                display_additional=(is_mac==False),
+                                display_additional=(is_mac == False),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.new_line()
             self.display_plugin(stats_alert)
