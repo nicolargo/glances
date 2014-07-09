@@ -6,4 +6,7 @@ python:
   - "3.4"
 install:
   - pip install -r requirements.txt
-script: python setup.py install
+  - pip install coveralls
+script: 
+  - python setup.py install
+  - python unitest.py
