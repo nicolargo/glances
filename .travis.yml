@@ -4,9 +4,13 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
+  - "pypy"
 install:
   - pip install -r requirements.txt
   - pip install coveralls
 script: 
   - python setup.py install
   - python unitest.py
+  - coverage run --source=glances unitest.py
+after_success:
+  - coveralls
