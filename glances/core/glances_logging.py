@@ -72,5 +72,12 @@ LOGGING_CFG = {
 
 def glancesLogger():
     _logger = logging.getLogger()
-    logging.config.dictConfig(LOGGING_CFG)
+    try:
+        logging.config.dictConfig(LOGGING_CFG)
+    except AttributeError:
+        # dictConfig is only available for Python 2.7 or higher
+        # Minimal configuration for Python 2.6
+        logging.basicConfig(filename=os.path.join(tempfile.gettempdir(), 'glances.log'),
+                            level=logging.DEBUG,
+                            format='%(asctime)s -- %(levelname)s -- %(message)s')
     return _logger
