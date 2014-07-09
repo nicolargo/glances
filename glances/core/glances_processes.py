@@ -77,7 +77,7 @@ class GlancesProcesses(object):
         # Process username (cached with internal cache)
         try:
             self.username_cache[procstat['pid']]
-        except:
+        except KeyError:
             try:
                 self.username_cache[procstat['pid']] = proc.username()
             except (KeyError, psutil.AccessDenied):
@@ -90,8 +90,12 @@ class GlancesProcesses(object):
         # Process command line (cached with internal cache)
         try:
             self.cmdline_cache[procstat['pid']]
-        except:
-            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+        except KeyError:
+            # Patch for issue #391
+            try:
+                self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+            except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                self.cmdline_cache[procstat['pid']] = ""
         procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
         # Process status
