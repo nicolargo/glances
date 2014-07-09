@@ -10,6 +10,5 @@ install:
 script: 
   - python setup.py install
   - coverage run --source=glances --omit="glances_bottle,glances_color_console,glances_csv,glances_curses" unitest.py
-  - coverage run --append --source=glances --omit="glances_bottle,glances_color_console,glances_csv,glances_curses" unitest-restful.py
 after_success:
   - coveralls
