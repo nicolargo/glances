@@ -1,5 +1,7 @@
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
+Give Glances some Bitcoin: `18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW`_
+
 ===============================
 Glances - An eye on your system
 ===============================
@@ -199,6 +201,7 @@ LGPL. See ``COPYING`` for more details.
 .. _psutil: https://code.google.com/p/psutil/
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
+.. _18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW: bitcoin:18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW?amount=1X8&label=Glances
 .. _PyPI: https://pypi.python.org/pypi
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://brew.sh/
