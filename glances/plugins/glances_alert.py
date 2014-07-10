@@ -20,6 +20,7 @@
 """Alert plugin."""
 
 # Import system lib
+import types
 from datetime import datetime
 
 # Import Glances libs
@@ -104,7 +105,7 @@ class Plugin(GlancesPlugin):
                     msg = str(alert[3])
                     ret.append(self.curse_add_line(msg, decoration=alert[2]))
                 # Min / Mean / Max
-                if alert[6] == alert[4]:
+                if self.approx_equal(alert[6], alert[4], tolerance=0.1):
                     msg = ' ({0:.1f})'.format(alert[5])
                 else:
                     msg = _(" (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})").format(alert[6], alert[5], alert[4])
@@ -119,3 +120,13 @@ class Plugin(GlancesPlugin):
                 # ret.append(self.curse_add_line(msg))
 
         return ret
+
+    def approx_equal(self, a, b, tolerance=0.0):
+        """
+        Compare a with b using the tolerance (if numerical)
+        """
+        numericalType = [types.IntType, types.FloatType, types.LongType]
+        if type(a) in numericalType and type(b) in numericalType:
+            return abs(a-b) <= max(abs(a), abs(b)) * tolerance
+        else:
+            return a == b
