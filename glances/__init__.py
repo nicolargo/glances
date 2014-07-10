@@ -29,6 +29,7 @@ import gettext
 import locale
 import signal
 import sys
+import platform
 
 # Import psutil
 try:
@@ -47,7 +48,10 @@ psutil_min_version = (2, 0, 0)
 psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
 
 # First log with Glances and PSUtil version
-logger.info('Start Glances {0} with PSutil {1}'.format(__version__, __psutil_version))
+logger.info('Start Glances {0}'.format(__version__))
+logger.info('with {0} {1} and PSutil {2}'.format(platform.python_implementation(),
+                                                 platform.python_version(), 
+                                                 __psutil_version))
 
 # Check PSutil version
 if psutil_version < psutil_min_version:    
@@ -104,7 +108,7 @@ def main():
 
     # Glances can be ran in standalone, client or server mode
     if core.is_standalone():
-        logger.info("Start Glances in standalone mode")
+        logger.info("Start standalone mode")
 
         # Import the Glances standalone module
         from glances.core.glances_standalone import GlancesStandalone
@@ -117,7 +121,7 @@ def main():
         standalone.serve_forever()
 
     elif core.is_client():
-        logger.info("Start Glances in client mode")
+        logger.info("Start client mode")
 
         # Import the Glances client module
         from glances.core.glances_client import GlancesClient
@@ -138,7 +142,7 @@ def main():
         client.close()
 
     elif core.is_server():
-        logger.info("Start Glances in server mode")
+        logger.info("Start server mode")
 
         # Import the Glances server module
         from glances.core.glances_server import GlancesServer
@@ -161,7 +165,7 @@ def main():
         server.server_close()
 
     elif core.is_webserver():
-        logger.info("Start Glances in web server mode")
+        logger.info("Start web server mode")
 
         # Import the Glances web server module
         from glances.core.glances_webserver import GlancesWebServer
