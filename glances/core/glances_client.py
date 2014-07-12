@@ -24,9 +24,10 @@ import json
 import socket
 import sys
 try:
-    from xmlrpc.client import ServerProxy, ProtocolError, Fault
+    from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
 except ImportError:  # Python 2
-    from xmlrpclib import ServerProxy, ProtocolError, Fault
+    from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
+import httplib
 
 # Import Glances libs
 from glances.core.glances_globals import version, logger
@@ -34,8 +35,17 @@ from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCurses
 
 
-class GlancesClient(object):
+class GlancesClientTransport(Transport):
+    """This class overwrite the default XML-RPC transport and manage timeout"""
+    
+    def set_timeout(self, timeout):
+        self.timeout = timeout
 
+    def make_connection(self, host):
+        return httplib.HTTPConnection(host, timeout=self.timeout)
+
+
+class GlancesClient(object):
     """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None):
@@ -54,8 +64,10 @@ class GlancesClient(object):
             uri = 'http://{0}:{1}'.format(args.client, args.port)
 
         # Try to connect to the URI
+        transport = GlancesClientTransport()
+        transport.set_timeout(5)
         try:
-            self.client = ServerProxy(uri)
+            self.client = ServerProxy(uri, transport = transport)
         except Exception as e:
             logger.error(_("Couldn't create socket {0}: {1}").format(uri, e))
             sys.exit(2)
@@ -84,6 +96,7 @@ class GlancesClient(object):
         if not self.args.snmp_force:
             # First of all, trying to connect to a Glances server
             self.set_mode('glances')
+            client_version = None
             try:
                 client_version = self.client.init()
             except socket.error as err:
@@ -92,7 +105,6 @@ class GlancesClient(object):
                 self.set_mode('snmp')
                 fallbackmsg = _("Trying fallback to SNMP...")
                 print(fallbackmsg)
-                logger.info(fallbackmsg)
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
@@ -105,11 +117,14 @@ class GlancesClient(object):
                 # Init stats
                 self.stats = GlancesStatsClient()
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+            else:
+                logger.error("Client version: %s / Server version: %s" % (version, client_version))
+
         else:
             self.set_mode('snmp')
-            logger.info(_("Trying to grab stats by SNMP..."))
 
         if self.get_mode() == 'snmp':            
+            logger.info(_("Trying to grab stats by SNMP..."))
             # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
@@ -119,9 +134,6 @@ class GlancesClient(object):
             if not self.stats.check_snmp():
                 logger.error(_("Connection to SNMP server failed"))
                 sys.exit(2)
-        else:
-            # Unknow mode...
-            ret = False
 
         if ret:
             # Load limits from the configuration file
