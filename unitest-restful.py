@@ -113,8 +113,8 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json, types.ListType)
-        self.assertIn('cpu', req.json)
+        self.assertIsInstance(req.json(), types.ListType)
+        self.assertIn('cpu', req.json())
 
     def test_003_plugins(self):
         """Plugins"""
@@ -123,18 +123,20 @@ class TestGlances(unittest.TestCase):
 
         plist = requests.get("%s/%s" % (URL, method))
 
-        for p in plist.json:
+        print plist.json()
+
+        for p in plist.json():
             print("HTTP RESTFul request: %s/%s" % (URL, p))
             req = requests.get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
-                self.assertIsInstance(req.json, types.UnicodeType)
+                self.assertIsInstance(req.json(), types.UnicodeType)
             elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist', 'diskio', 'hddtemp', 'batpercent', 'network'):
-                self.assertIsInstance(req.json, types.ListType)
+                self.assertIsInstance(req.json(), types.ListType)
             elif p in ('psutilversion', 'help'):
                 pass
             else:
-                self.assertIsInstance(req.json, types.DictType)
+                self.assertIsInstance(req.json(), types.DictType)
 
     def test_004_items(self):
         """Items"""
@@ -143,12 +145,12 @@ class TestGlances(unittest.TestCase):
 
         ilist = requests.get("%s/%s" % (URL, method))
 
-        for i in ilist.json:
+        for i in ilist.json():
             print("HTTP RESTFul request: %s/%s/%s" % (URL, method,i))
             req = requests.get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
-            self.assertIsInstance(req.json, types.DictType)
-            self.assertIsInstance(req.json[i], types.FloatType)
+            self.assertIsInstance(req.json(), types.DictType)
+            self.assertIsInstance(req.json()[i], types.FloatType)
 
     def test_005_values(self):
         """Valuess"""
@@ -159,7 +161,7 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s/pid/0" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json, types.DictType)
+        self.assertIsInstance(req.json(), types.DictType)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server"""
