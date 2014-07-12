@@ -65,7 +65,8 @@ class GlancesClient(object):
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
-        transport.set_timeout(5)
+        # Configure the server timeout to 7 seconds
+        transport.set_timeout(7)
         try:
             self.client = ServerProxy(uri, transport = transport)
         except Exception as e:
