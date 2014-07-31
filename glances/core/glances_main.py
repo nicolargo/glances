@@ -60,6 +60,8 @@ class GlancesMain(object):
         parser.add_argument('-C', '--config', dest='conf_file',
                             help=_('path to the configuration file'))
         # Enable or disable option on startup
+        parser.add_argument('--enable-history', action='store_true', default=False,
+                            dest='enable_history', help=_('enable the history mode'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,

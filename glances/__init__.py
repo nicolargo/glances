@@ -49,7 +49,7 @@ psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
 
 # First log with Glances and PSUtil version
 logger.info('Start Glances {0}'.format(__version__))
-logger.info('with {0} {1} and PSutil {2}'.format(platform.python_implementation(),
+logger.info('{0} {1} and PSutil {2} detected'.format(platform.python_implementation(),
                                                  platform.python_version(), 
                                                  __psutil_version))
 

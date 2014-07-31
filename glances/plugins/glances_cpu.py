@@ -33,6 +33,12 @@ snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
             'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
             'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
 
+# Define the history items list
+# 'color' define the graph color in #RGB format
+# All items in this list will be historised if the --enable-history tag is set
+items_history_list = [{'name': 'user', 'color': '#00FF00'}, 
+                      {'name': 'system', 'color': '#FF0000'}]
+
 
 class Plugin(GlancesPlugin):
     """
@@ -43,7 +49,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the CPU plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -122,6 +128,9 @@ class Plugin(GlancesPlugin):
                 # Convert SNMP stats to float
                 for key in list(self.stats.keys()):
                     self.stats[key] = float(self.stats[key])
+
+        # Update the history list
+        self.update_stats_history()
 
         return self.stats
 

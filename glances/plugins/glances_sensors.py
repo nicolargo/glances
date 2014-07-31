@@ -50,10 +50,10 @@ class Plugin(GlancesPlugin):
         self.glancesgrabsensors = GlancesGrabSensors()
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
-        self.hddtemp_plugin = HddTempPlugin()
+        self.hddtemp_plugin = HddTempPlugin(args=args)
 
         # Instance for the BatPercent in order to display the batteries capacities
-        self.batpercent_plugin = BatPercentPlugin()
+        self.batpercent_plugin = BatPercentPlugin(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -136,7 +136,12 @@ class Plugin(GlancesPlugin):
         for item in self.stats:
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:18}'.format(item['label'][:18])
+            # Alias for the lable name ?
+            label = self.has_alias(item['label'].lower())
+            if label is None:
+                label = item['label']
+            label = label[:18]
+            msg = '{0:18}'.format(label)
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}'.format(item['value'])
             if item['type'] == 'battery':

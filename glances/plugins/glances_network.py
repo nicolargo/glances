@@ -218,7 +218,10 @@ class Plugin(GlancesPlugin):
             if self.is_hide(i['interface_name']):
                 continue
             # Format stats
-            ifname = i['interface_name'].split(':')[0]
+            # Is there an alias for the interface name ?
+            ifname = self.has_alias(i['interface_name'])
+            if ifname is None:
+                ifname = i['interface_name'].split(':')[0]
             if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
                 ifname = '_' + ifname[-ifname_max_width+1:]
