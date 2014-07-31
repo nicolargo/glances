@@ -128,13 +128,15 @@ class Plugin(GlancesPlugin):
             # Do not display hidden interfaces
             if self.is_hide(i['disk_name']):
                 continue
+            # Is there an alias for the disk name ?
+            disk_name = self.has_alias(i['disk_name'])
+            if disk_name is None:
+                disk_name = i['disk_name']
             # New line
             ret.append(self.curse_new_line())
-            if len(i['disk_name']) > 9:
+            if len(disk_name) > 9:
                 # Cut disk name if it is too long
-                disk_name = '_' + i['disk_name'][-8:]
-            else:
-                disk_name = i['disk_name']
+                disk_name = '_' + disk_name[-8:]
             msg = '{0:9}'.format(disk_name)
             ret.append(self.curse_add_line(msg))
             txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))

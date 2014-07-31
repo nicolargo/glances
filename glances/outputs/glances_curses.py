@@ -163,6 +163,17 @@ class GlancesCurses(object):
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
+        # History tag
+        self.reset_history_tag = False
+        self.history_tag = False
+        if args.enable_history:
+            logger.info('Stats history enabled')
+            from glances.outputs.glances_history import GlancesHistory
+            self.glances_history = GlancesHistory()
+            if not self.glances_history.graph_enabled():
+                args.enable_history = False
+                logger.error('Stats history disabled because graph lib is not available')
+
     def __get_key(self, window):
         # Catch ESC key AND numlock key (issue #163)
         keycode = [0, 0]
@@ -205,6 +216,9 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs stats
             self.args.disable_fs = not self.args.disable_fs
+        elif self.pressedkey == ord('g'):
+            # 'g' > History
+            self.history_tag = not self.history_tag
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.args.help_tag = not self.args.help_tag
@@ -223,6 +237,9 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.args.process_sorted_by = 'name'
+        elif self.pressedkey == ord('r'):
+            # 'r' > Reset history
+            self.reset_history_tag = not self.reset_history_tag            
         elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
@@ -421,6 +438,58 @@ class GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_alert)
 
+        # History option
+        # Generate history graph
+        if self.history_tag and self.args.enable_history:
+            self.display_popup(_("Graphs history generated in %s") % self.glances_history.get_output_folder())
+            self.glances_history.generate_graph(stats)
+        elif self.reset_history_tag and self.args.enable_history:
+            self.display_popup(_("Reset history"))
+            self.glances_history.reset(stats)            
+        elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
+            self.display_popup(_("History disabled\nEnable it using --enable-history"))
+        self.history_tag = False
+        self.reset_history_tag = False
+
+        return True
+
+    def display_popup(self, message, size_x=None, size_y=None, duration=3):
+        """
+        Display a centered popup with the given message during duration seconds
+        If size_x and size_y: set the popup size
+        else set it automatically
+        Return True if the popup could be displayed
+        """
+
+        # Center the popup
+        if size_x is None:
+            size_x = len(message) + 4
+        if size_y is None:
+            size_y = message.count('\n') + 1 + 4
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+        if size_x > screen_x or size_y > screen_y:
+            # No size to display the popup => abord
+            return False 
+        pos_x = (screen_x - size_x) / 2
+        pos_y = (screen_y - size_y) / 2
+
+        # Create the popup
+        popup = curses.newwin(size_y, size_x, pos_y, pos_x)
+
+        # Fill the popup
+        popup.border()
+
+        # Add the message
+        y = 0
+        for m in message.split('\n'):
+            popup.addnstr(2 + y, 2, m, len(m))
+            y += 1
+
+        # Display the popup
+        popup.refresh()
+        curses.napms(duration * 1000)
+
         return True
 
     def display_plugin(self, plugin_stats, 
@@ -532,8 +601,8 @@ class GlancesCurses(object):
         while not countdown.finished():
             # Getkey
             if self.__catch_key() > -1:
-                # flush display
-                self.flush(stats, cs_status=cs_status)
+                # Redraw display
+                self.flush(stats, cs_status=cs_status)                
             # Wait 100ms...
             curses.napms(100)
 

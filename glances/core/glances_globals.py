@@ -73,3 +73,4 @@ glances_processes = GlancesProcesses()
 # The global instance for the logs
 from glances.core.glances_logs import GlancesLogs
 glances_logs = GlancesLogs()
+

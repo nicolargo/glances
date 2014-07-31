@@ -35,6 +35,13 @@ snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
             'min5': '1.3.6.1.4.1.2021.10.1.3.2',
             'min15': '1.3.6.1.4.1.2021.10.1.3.3'}
 
+# Define the history items list
+# All items in this list will be historised if the --enable-history tag is set
+# 'color' define the graph color in #RGB format
+items_history_list = [{'name': 'min1', 'color': '#0000FF'}, 
+                      {'name': 'min5', 'color': '#0000AA'},
+                      {'name': 'min15', 'color': '#000044'}]
+
 
 class Plugin(GlancesPlugin):
 
@@ -45,13 +52,19 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Init stats
         self.reset()
+
+        # Call CorePlugin in order to display the core number
+        try:
+            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
+        except Exception:
+            self.nb_log_core = 0
 
     def reset(self):
         """Reset/init the stats."""
@@ -61,12 +74,6 @@ class Plugin(GlancesPlugin):
         """Update load stats."""
         # Reset stats
         self.reset()
-
-        # Call CorePlugin in order to display the core number
-        try:
-            nb_log_core = CorePlugin().update()["log"]
-        except Exception:
-            nb_log_core = 0
 
         if self.get_input() == 'local':
             # Update stats using the standard system lib
@@ -80,7 +87,7 @@ class Plugin(GlancesPlugin):
                 self.stats = {'min1': load[0],
                               'min5': load[1],
                               'min15': load[2],
-                              'cpucore': nb_log_core}
+                              'cpucore': self.nb_log_core}
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
@@ -98,7 +105,10 @@ class Plugin(GlancesPlugin):
             for k, v in iteritems:
                 self.stats[k] = float(v)
 
-            self.stats['cpucore'] = nb_log_core
+            self.stats['cpucore'] = self.nb_log_core
+
+        # Update the history list
+        self.update_stats_history()
 
         return self.stats
 

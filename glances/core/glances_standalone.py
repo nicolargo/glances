@@ -30,7 +30,7 @@ class GlancesStandalone(object):
 
     def __init__(self, config=None, args=None):
         # Init stats
-        self.stats = GlancesStats(config)
+        self.stats = GlancesStats(config=config, args=args)
 
         # Initial system informations update
         self.stats.update()

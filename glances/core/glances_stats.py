@@ -39,15 +39,18 @@ class GlancesStats(object):
 
     """This class stores, updates and gives stats."""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, args=None):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
+
+        # Set the argument instance
+        self.args = args
 
         # Set the config instance
         self.config = config
 
         # Load the plugins
-        self.load_plugins()
+        self.load_plugins(args=args)
 
         # Load the limits
         self.load_limits(config)

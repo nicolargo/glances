@@ -24,6 +24,7 @@ I am your father...
 """
 
 # Import system libs
+from datetime import datetime
 import json
 from operator import itemgetter
 
@@ -35,10 +36,11 @@ class GlancesPlugin(object):
 
     """Main class for Glances' plugin."""
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, items_history_list=None):
         """Init the plugin of plugins class."""
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
+        logger.debug(_("Init plugin %s") % self.plugin_name)
 
         # Init the args
         self.args = args
@@ -53,6 +55,10 @@ class GlancesPlugin(object):
         # Init the stats list
         self.stats = None
 
+        # Init the history list
+        self.items_history_list = items_history_list
+        self.stats_history = self.init_stats_history()
+
         # Init the limits dictionnary
         self.limits = dict()
 
@@ -63,6 +69,49 @@ class GlancesPlugin(object):
     def __str__(self):
         """Return the human-readable stats."""
         return str(self.stats)
+
+    def init_stats_history(self):
+        """Init the stats history (dict of list)"""
+        ret = None
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            iList = [i['name'] for i in self.get_items_history_list()]
+            logger.debug(_("Stats history activated for plugin %s (items: %s)") % (self.plugin_name, iList))
+            ret = {}
+            # First column for the date
+            ret['date'] = []
+            for i in self.get_items_history_list():
+                # One column per item
+                ret[i['name']] = []
+        return ret
+
+    def reset_stats_history(self):
+        """Reset the stats history (dict of list)"""
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            iList = [i['name'] for i in self.get_items_history_list()]
+            logger.debug(_("Reset history for plugin %s (items: %s)") % (self.plugin_name, iList))
+            self.stats_history = {}
+            # First column for the date
+            self.stats_history['date'] = []
+            for i in self.get_items_history_list():
+                # One column per item
+                self.stats_history[i['name']] = []
+        return self.stats_history
+
+    def update_stats_history(self):
+        """Update stats history"""
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            self.stats_history['date'].append(datetime.now())
+            for i in self.get_items_history_list():
+                self.stats_history[i['name']].append(self.stats[i['name']])
+        return self.stats_history
+
+    def get_stats_history(self):
+        """Return the stats history"""
+        return self.stats_history
+
+    def get_items_history_list(self):
+        """Return the items history list"""
+        return self.items_history_list
 
     def set_input(self, input_method, short_system_name=None):
         """Set the input method.
@@ -283,7 +332,7 @@ class GlancesPlugin(object):
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
-    def get_hide(self, header=""):
+    def __get_hide(self, header=""):
         """Return the hide configuration list key for the current plugin."""
         if header == "":
             try:
@@ -298,7 +347,14 @@ class GlancesPlugin(object):
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""
-        return value in self.get_hide(header=header)
+        return value in self.__get_hide(header=header)
+
+    def has_alias(self, header):
+        """Return the alias name for the relative header or None if nonexist"""
+        try:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
+        except (KeyError, IndexError):
+            return None
 
     def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
