@@ -2,6 +2,26 @@
 Glances Version 2.x
 ==============================================================================
 
+Version 2.1
+===========
+
+    * History feature (--enable-history option on the command line)
+      This feature allows users to generate graphs within the curse interface.
+      Graphs are available for CPU, LOAD and MEM.
+      To generate graph, click on the 'g' key.
+      To reset the history, press the 'r' key.
+    * Alias for network interfaces, disks and sensors
+      Users can configure alias from the Glances configuration file.
+    * Add Glances log message (in the /tmp/glances.log file)
+      The default log level is INFO, you can switch to the debug mode using the -d option on the command line.
+    * Add RESTFul API to the web server mode
+    * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
+    * Travis coverage
+
+Bugs corrected:
+
+    * ...
+
 Version 2.0.1
 =============
 

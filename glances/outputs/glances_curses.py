@@ -471,8 +471,8 @@ class GlancesCurses(object):
         if size_x > screen_x or size_y > screen_y:
             # No size to display the popup => abord
             return False 
-        pos_x = (screen_x - size_x) / 2
-        pos_y = (screen_y - size_y) / 2
+        pos_x = int((screen_x - size_x) / 2)
+        pos_y = int((screen_y - size_y) / 2)
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
