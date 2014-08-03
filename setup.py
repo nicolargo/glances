@@ -56,7 +56,8 @@ setup(
         'WEB': ['bottle'],
         'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo'],
-        'SNMP': ['pysnmp']
+        'SNMP': ['pysnmp'],
+        'CHART': ['matplotlib']
     },
     packages=['glances'],
     include_package_data=True,
