@@ -125,8 +125,7 @@ class Plugin(GlancesPlugin):
         """
         Compare a with b using the tolerance (if numerical)
         """
-        numericalType = [types.IntType, types.FloatType, types.LongType]
-        if type(a) in numericalType and type(b) in numericalType:
+        if str(int(a)).isdigit() and str(int(b)).isdigit():
             return abs(a-b) <= max(abs(a), abs(b)) * tolerance
         else:
             return a == b
