@@ -44,7 +44,7 @@ class GlancesProcesses(object):
         self.io_old = {}
 
         # Init stats
-        self.processsort = 'cpu_percent'
+        self.resetsort()
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
@@ -219,7 +219,7 @@ class GlancesProcesses(object):
         if self.get_max_processes() is not None:
             # Sort the internal dict and cut the top N (Return a list of tuple)
             # tuple=key (proc), dict (returned by __get_process_stats)
-            processiter = sorted(processdict.items(), key=lambda x: x[1]['cpu_percent'], reverse=True)
+            processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
             for i in processiter[0:self.get_max_processes()]:
                 # Already existing mandatory stats
                 procstat = i[1]
@@ -257,13 +257,34 @@ class GlancesProcesses(object):
         return self.processlist
 
     def getsortkey(self):
-        """Get the current sort key for automatic sort."""
-        return self.processsort
+        """Get the current sort key"""
+        if self.getmanualsortkey() is not None:
+            return self.getmanualsortkey()
+        else:
+            return self.getautosortkey()
 
-    def setsortkey(self, sortedby):
+    def getmanualsortkey(self):
+        """Get the current sort key for manual sort."""
+        return self.processmanualsort
+
+    def getautosortkey(self):
+        """Get the current sort key for automatic sort."""
+        return self.processautosort
+
+    def setmanualsortkey(self, sortedby):
+        """Set the current sort key for manual sort."""
+        self.processmanualsort = sortedby
+        return self.processmanualsort
+
+    def setautosortkey(self, sortedby):
         """Set the current sort key for automatic sort."""
-        self.processsort = sortedby
-        return self.processsort
+        self.processautosort = sortedby
+        return self.processautosort
+
+    def resetsort(self):
+        """Set the default sort: Auto"""
+        self.setmanualsortkey(None)
+        self.setautosortkey('cpu_percent')
 
     def getsortlist(self, sortedby=None):
         """Get the sorted processlist."""
