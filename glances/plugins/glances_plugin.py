@@ -332,22 +332,24 @@ class GlancesPlugin(object):
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
-    def __get_hide(self, header=""):
-        """Return the hide configuration list key for the current plugin."""
+    def get_conf_value(self, value, header="", plugin_name=None):
+        """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""
+        if plugin_name is None:
+            plugin_name = self.plugin_name
         if header == "":
             try:
-                return self.limits[self.plugin_name + '_' + 'hide']
+                return self.limits[plugin_name + '_' + value]
             except KeyError:
                 return []
         else:
             try:
-                return self.limits[self.plugin_name + '_' + header + '_' + 'hide']
+                return self.limits[plugin_name + '_' + header + '_' + value]
             except KeyError:
                 return []
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""
-        return value in self.__get_hide(header=header)
+        return value in self.get_conf_value('hide', header=header)
 
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist"""
