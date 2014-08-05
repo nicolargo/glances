@@ -107,17 +107,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
-        try:
-            args.process_sorted_by
-        except AttributeError:
-            args.process_sorted_by = glances_processes.getsortkey()
-        if args.process_sorted_by == 'auto':
+        if glances_processes.getmanualsortkey() is None:
             msg = _("sorted automatically")
             ret.append(self.curse_add_line(msg))
-            msg = _(" by {0}").format(glances_processes.getsortkey())
+            msg = _(" by {0}").format(glances_processes.getautosortkey())
             ret.append(self.curse_add_line(msg))
         else:
-            msg = _("sorted by {0}").format(args.process_sorted_by)
+            msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration

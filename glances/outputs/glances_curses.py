@@ -203,6 +203,7 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('a'):
             # 'a' > Sort processes automatically
             self.args.process_sorted_by = 'auto'
+            glances_processes.resetsort()
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             # self.net_byteps_tag = not self.net_byteps_tag
@@ -210,6 +211,7 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             self.args.process_sorted_by = 'cpu_percent'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
@@ -225,18 +227,21 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('i'):
             # 'i' > Sort processes by IO rate (not available on OS X)
             self.args.process_sorted_by = 'io_counters'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
             self.args.disable_log = not self.args.disable_log
         elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
             self.args.process_sorted_by = 'memory_percent'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
             self.args.disable_network = not self.args.disable_network
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.args.process_sorted_by = 'name'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag            
