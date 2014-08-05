@@ -20,6 +20,7 @@
 """Manage the Glances standalone session."""
 
 # Import Glances libs
+from glances.core.glances_globals import logger
 from glances.core.glances_stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCurses
 from glances.core.glances_globals import glances_processes
@@ -36,8 +37,10 @@ class GlancesStandalone(object):
         # If configured, set the maximum processes number to display
         try:
             max_processes = int(self.stats.get_plugin('processlist').get_conf_value('max_processes'))
+            logger.debug(_("Limit maximum displayed processes to %s") % max_processes)
         except:
             max_processes = None
+            logger.warning(_("Maximum displayed processes is not configured (high CPU consumption)"))
         glances_processes.set_max_processes(max_processes)
 
         # Initial system informations update
