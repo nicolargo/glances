@@ -52,6 +52,10 @@ class GlancesProcesses(object):
         # Default is to enable the processes stats
         self.disable_tag = False
 
+        # Maximum number of processes showed in the UI interface
+        # None if no limit
+        self.max_processes = None
+
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -61,111 +65,117 @@ class GlancesProcesses(object):
         """Disable process stats."""
         self.disable_tag = True
 
-    def __get_process_stats(self, proc):
-        """Get process stats."""
-        procstat = {}
+    def set_max_processes(self, value):
+        """Set the maximum number of processes showed in the UI interfaces"""
+        self.max_processes = value
+        return self.max_processes
 
-        # Process ID
-        procstat['pid'] = proc.pid
+    def get_max_processes(self):
+        """Get the maximum number of processes showed in the UI interfaces"""
+        return self.max_processes
 
-        # Process name (cached by PSUtil)
-        try:
-            procstat['name'] = proc.name()
-        except psutil.AccessDenied:
-            procstat['name'] = ""
+    def __get_process_stats(self, proc,
+                            mandatory_stats=True,
+                            standard_stats=True, 
+                            extended_stats=False):
+        """
+        Get process stats of the proc processes (proc is returned psutil.process_iter())
+        mandatory_stats: need for the sorting step  
+        => cpu_percent, memory_percent, io_counters, name
+        standard_stats: for all the displayed processes
+        => username, cmdline, status, memory_info, cpu_times
+        extended_stats: only for top processes (!!! to be implemented)
+        => connections (UDP/TCP), memory_swap
+        """
 
-        # Process username (cached with internal cache)
-        try:
-            self.username_cache[procstat['pid']]
-        except KeyError:
-            try:
-                self.username_cache[procstat['pid']] = proc.username()
-            except (KeyError, psutil.AccessDenied):
+        # Process ID (always)
+        procstat = proc.as_dict(attrs=['pid'])
+
+        if mandatory_stats:
+            # Process CPU, MEM percent and name
+            procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+
+            # Process IO
+            # procstat['io_counters'] is a list:
+            # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+            # If io_tag = 0 > Access denied (display "?")
+            # If io_tag = 1 > No access denied (display the IO rate)
+            # Note Disk IO stat not available on Mac OS
+            if not is_mac:
                 try:
-                    self.username_cache[procstat['pid']] = proc.uids().real
-                except (KeyError, AttributeError, psutil.AccessDenied):
-                    self.username_cache[procstat['pid']] = "?"
-        procstat['username'] = self.username_cache[procstat['pid']]
+                    # Get the process IO counters
+                    proc_io = proc.io_counters()
+                    io_new = [proc_io.read_bytes, proc_io.write_bytes]
+                except psutil.AccessDenied:
+                    # Access denied to process IO (no root account)
+                    # Put 0 in all values (for sort) and io_tag = 0 (for display)
+                    procstat['io_counters'] = [0, 0] + [0, 0]
+                    io_tag = 0
+                else:
+                    # For IO rate computation
+                    # Append saved IO r/w bytes
+                    try:
+                        procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
+                    except KeyError:
+                        procstat['io_counters'] = io_new + [0, 0]
+                    # then save the IO r/w bytes
+                    self.io_old[procstat['pid']] = io_new
+                    io_tag = 1
 
-        # Process command line (cached with internal cache)
-        try:
-            self.cmdline_cache[procstat['pid']]
-        except KeyError:
-            # Patch for issue #391
+                # Append the IO tag (for display)
+                procstat['io_counters'] += [io_tag]
+
+        if standard_stats:
+            # Process username (cached with internal cache)
             try:
-                self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-            except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
-                self.cmdline_cache[procstat['pid']] = ""
-        procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
-
-        # Process status
-        procstat['status'] = str(proc.status())[:1].upper()
-
-        # Process nice
-        try:
-            procstat['nice'] = proc.nice()
-        except psutil.AccessDenied:
-            procstat['nice'] = None
-
-        # Process memory
-        procstat['memory_info'] = proc.memory_info()
-        procstat['memory_percent'] = proc.memory_percent()
-
-        # Process CPU
-        procstat['cpu_times'] = proc.cpu_times()
-        procstat['cpu_percent'] = proc.cpu_percent(interval=0)
-
-        # Process network connections (TCP and UDP) (Experimental)
-        # REJECTED: Too high CPU consumption
-        # try:
-        #     procstat['tcp'] = len(proc.connections(kind="tcp"))
-        #     procstat['udp'] = len(proc.connections(kind="udp"))
-        # except:
-        #     procstat['tcp'] = 0
-        #     procstat['udp'] = 0
-
-        # Process IO
-        # procstat['io_counters'] is a list:
-        # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
-        # If io_tag = 0 > Access denied (display "?")
-        # If io_tag = 1 > No access denied (display the IO rate)
-        # Note Disk IO stat not available on Mac OS
-        if not is_mac:
-            try:
-                # Get the process IO counters
-                proc_io = proc.io_counters()
-                io_new = [proc_io.read_bytes, proc_io.write_bytes]
-            except psutil.AccessDenied:
-                # Access denied to process IO (no root account)
-                # Put 0 in all values (for sort) and io_tag = 0 (for display)
-                procstat['io_counters'] = [0, 0] + [0, 0]
-                io_tag = 0
-            else:
-                # For IO rate computation
-                # Append saved IO r/w bytes
+                self.username_cache[procstat['pid']]
+            except KeyError:
                 try:
-                    procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
-                except KeyError:
-                    procstat['io_counters'] = io_new + [0, 0]
-                # then save the IO r/w bytes
-                self.io_old[procstat['pid']] = io_new
-                io_tag = 1
+                    self.username_cache[procstat['pid']] = proc.username()
+                except (KeyError, psutil.AccessDenied):
+                    try:
+                        self.username_cache[procstat['pid']] = proc.uids().real
+                    except (KeyError, AttributeError, psutil.AccessDenied):
+                        self.username_cache[procstat['pid']] = "?"
+            procstat['username'] = self.username_cache[procstat['pid']]
 
-            # Append the IO tag (for display)
-            procstat['io_counters'] += [io_tag]
+            # Process command line (cached with internal cache)
+            try:
+                self.cmdline_cache[procstat['pid']]
+            except KeyError:
+                # Patch for issue #391
+                try:
+                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                    self.cmdline_cache[procstat['pid']] = ""
+            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
-        # SWAP memory
-        # Only on Linux based OS
-        # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-        # REJECTED: Too high CPU consumption
-        # if is_linux:
-        #     logger.debug(proc.memory_maps())
-        #     procstat['memory_swap'] = sum([ v.swap for v in proc.memory_maps() ])
+            # Process status, nice, memory_info and cpu_times
+            procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+            procstat['status'] = str(procstat['status'])[:1].upper()
+
+        if extended_stats:
+            # Process network connections (TCP and UDP) (Experimental)
+            try:
+                procstat['tcp'] = len(proc.connections(kind="tcp"))
+                procstat['udp'] = len(proc.connections(kind="udp"))
+            except:
+                procstat['tcp'] = 0
+                procstat['udp'] = 0
+
+            # SWAP memory
+            # Only on Linux based OS
+            # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+            if is_linux:
+                logger.debug(proc.memory_maps())
+                procstat['memory_swap'] = sum([ v.swap for v in proc.memory_maps() ])
 
         return procstat
 
     def update(self):
-        """Update the processes stats."""
+        """
+        Update the processes stats
+        """
         # Reset the stats
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
@@ -177,37 +187,58 @@ class GlancesProcesses(object):
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
 
-        # For each existing process...
+        # Build an internal dict with only mandatories stats (sort keys)
+        processdict = {}
         for proc in psutil.process_iter():
+            # If self.get_max_processes() is None: Only retreive mandatory stats
+            # Else: retreive mandatoryadn standard stast
+            processdict[proc] = self.__get_process_stats(proc, 
+                                                         mandatory_stats=True, 
+                                                         standard_stats=self.get_max_processes() is None)
+            # ignore the 'idle' process on Windows and *BSD
+            # ignore the 'kernel_task' process on OS X
+            # waiting for upstream patch from psutil
+            if (is_bsd and processdict[proc]['name'] == 'idle' or
+                is_windows and processdict[proc]['name'] == 'System Idle Process' or
+                is_mac and processdict[proc]['name'] == 'kernel_task'):
+                continue
+            # Update processcount (global statistics)
             try:
-                # Get stats using the PSUtil
-                procstat = self.__get_process_stats(proc)
+                self.processcount[str(proc.status())] += 1
+            except KeyError:
+                # Key did not exist, create it
+                self.processcount[str(proc.status())] = 1
+            else:
+                self.processcount['total'] += 1
+            # Update thread number (global statistics)
+            try:
+                self.processcount['thread'] += proc.num_threads()
+            except:
+                pass
+
+        if self.get_max_processes() is not None:
+            # Sort the internal dict and cut the top N (Return a list of tuple)
+            # tuple=key (proc), dict (returned by __get_process_stats)
+            processiter = sorted(processdict.items(), key=lambda x: x[1]['cpu_percent'], reverse=True)
+            for i in processiter[0:self.get_max_processes()]:
+                # Already existing mandatory stats
+                procstat = i[1]
+                # Update with standard stats
+                procstat.update(self.__get_process_stats(i[0], 
+                                                         mandatory_stats=False, 
+                                                         standard_stats=True))
                 # Add a specific time_since_update stats for bitrate
                 procstat['time_since_update'] = time_since_update
-                # ignore the 'idle' process on Windows and *BSD
-                # ignore the 'kernel_task' process on OS X
-                # waiting for upstream patch from psutil
-                if (is_bsd and procstat['name'] == 'idle' or
-                        is_windows and procstat['name'] == 'System Idle Process' or
-                        is_mac and procstat['name'] == 'kernel_task'):
-                    continue
-                # Update processcount (global statistics)
-                try:
-                    self.processcount[str(proc.status())] += 1
-                except KeyError:
-                    # Key did not exist, create it
-                    self.processcount[str(proc.status())] = 1
-                else:
-                    self.processcount['total'] += 1
-                # Update thread number (global statistics)
-                try:
-                    self.processcount['thread'] += proc.num_threads()
-                except:
-                    pass
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-            else:
-                # Update processlist
+                # Update process list
+                self.processlist.append(procstat)
+        else:
+            # Get all the processes
+            for i in processdict.items():
+                # Already existing mandatory and standard stats
+                procstat = i[1]
+                # Add a specific time_since_update stats for bitrate
+                procstat['time_since_update'] = time_since_update
+                # Update process list
                 self.processlist.append(procstat)
 
         # Clean internals caches if timeout is reached
