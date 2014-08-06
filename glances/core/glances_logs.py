@@ -87,8 +87,7 @@ class GlancesLogs(object):
         else:
             # Default sort is...
             process_auto_by = 'cpu_percent'
-
-        glances_processes.setsortkey(process_auto_by)
+        glances_processes.setautosortkey(process_auto_by)
 
         return process_auto_by
 
@@ -96,8 +95,8 @@ class GlancesLogs(object):
         """Reset the process_auto_by variable."""
         # Default sort is...
         process_auto_by = 'cpu_percent'
-
-        glances_processes.setsortkey(process_auto_by)
+        glances_processes.setautosortkey(process_auto_by)
+        glances_processes.setmanualsortkey(None)
 
         return process_auto_by
 
