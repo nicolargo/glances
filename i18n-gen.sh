@@ -34,12 +34,12 @@ function gen_pot() {
 	xgettext --language=Python --keyword=_ --output=${ROOT}i18n/glances.pot `find ${ROOT}glances/ -name "*.py"`
 }
 
-OPERATION="$1"
-shift
-
-if [ -z "$1" ]; then
+if [ $# != 2 ]; then
 	usage
 fi
+
+OPERATION="$1"
+shift
 
 case "$OPERATION" in
 	init)
