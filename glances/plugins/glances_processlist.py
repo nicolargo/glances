@@ -110,6 +110,7 @@ class Plugin(GlancesPlugin):
         tag_proc_time = True
 
         # Loop over processes (sorted by the sort key previously compute)
+        first = True
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
@@ -236,6 +237,27 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(msg, splittable=True))
                 except UnicodeEncodeError:
                     ret.append(self.curse_add_line("", splittable=True))
+
+            # Add extended stats but only for the top processes
+            # !!! CPU consumption !!!!
+            if first:
+                # Left padding
+                xpad = ' ' * 13
+                # First line is CPU affinity
+                ret.append(self.curse_new_line())
+                msg = xpad + _('CPU affinity: ') + ','.join(str(i) for i in p['cpu_affinity'])
+                ret.append(self.curse_add_line(msg))
+                # Second line is memory info
+                ret.append(self.curse_new_line())
+                msg = xpad + _('Memory info: ')
+                msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
+                for k, v in p['memory_info_ex']._asdict().items():
+                    # Ignore rss and vms (already displayed)
+                    if k not in ['rss', 'vms']:
+                        msg += ', ' + k + ' ' + self.auto_unit(v, low_precision=False)
+                ret.append(self.curse_add_line(msg))
+                # End of extended stats
+                first = False
 
         # Return the message with decoration
         return ret

@@ -92,6 +92,8 @@ class GlancesProcesses(object):
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
+            procstat['mandatory_stats'] = True 
+
             # Process CPU, MEM percent and name
             procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
 
@@ -126,6 +128,8 @@ class GlancesProcesses(object):
                 procstat['io_counters'] += [io_tag]
 
         if standard_stats:
+            procstat['standard_stats'] = True 
+
             # Process username (cached with internal cache)
             try:
                 self.username_cache[procstat['pid']]
@@ -155,6 +159,8 @@ class GlancesProcesses(object):
             procstat['status'] = str(procstat['status'])[:1].upper()
 
         if extended_stats:
+            procstat['extended_stats'] = True 
+
             # CPU affinity
             # Memory extended
             # Number of context switch
@@ -185,6 +191,11 @@ class GlancesProcesses(object):
             except:
                 procstat['tcp'] = None
                 procstat['udp'] = None
+
+            # IO Nice
+            # http://pythonhosted.org/psutil/#psutil.Process.ionice
+            if is_linux or is_windows:
+                procstat.update(proc.as_dict(attrs=['ionice']))
 
             # !!! Only for dev
             logger.debug("EXTENDED STATS: %s" % procstat)
