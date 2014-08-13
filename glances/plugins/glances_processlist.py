@@ -240,7 +240,7 @@ class Plugin(GlancesPlugin):
 
             # Add extended stats but only for the top processes
             # !!! CPU consumption !!!!
-            if first and p['extended_stats']:
+            if first and 'extended_stats' in p:
                 # Left padding
                 xpad = ' ' * 13
                 # First line is CPU affinity
