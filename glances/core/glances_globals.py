@@ -66,11 +66,10 @@ logger = glancesLogger()
 # Instances shared between all Glances scripts
 # ============================================
 
-# glances_processes for processcount and processlist plugins
+# Glances_processes for processcount and processlist plugins
 from glances.core.glances_processes import GlancesProcesses
 glances_processes = GlancesProcesses()
 
 # The global instance for the logs
 from glances.core.glances_logs import GlancesLogs
 glances_logs = GlancesLogs()
-
