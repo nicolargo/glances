@@ -175,6 +175,8 @@ class GlancesProcesses(object):
             # Number of handles (Windows only)
             if is_windows:
                 procstat.update(proc.as_dict(attrs=['num_handles']))
+            else:
+                procstat['num_handles'] = None
 
             # SWAP memory (Only on Linux based OS)
             # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
@@ -196,9 +198,8 @@ class GlancesProcesses(object):
             # http://pythonhosted.org/psutil/#psutil.Process.ionice
             if is_linux or is_windows:
                 procstat.update(proc.as_dict(attrs=['ionice']))
-
-            # !!! Only for dev
-            logger.debug("EXTENDED STATS: %s" % procstat)
+            else:
+                procstat['ionice'] = None
 
         return procstat
 
