@@ -124,7 +124,9 @@ class Plugin(GlancesPlugin):
         msg = msg_col2.format("r", _("Reset history"))
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
-        msg = msg_col.format("q", _("Quit (Esc and Ctrl-C also work)"))
+        msg = msg_col.format("e", _("Enable/disable top extended stats"))
+        ret.append(self.curse_add_line(msg))
+        msg = msg_col2.format("q", _("Quit (Esc and Ctrl-C also work)"))
         ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration

@@ -40,7 +40,7 @@ class GlancesPlugin(object):
         """Init the plugin of plugins class."""
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
-        logger.debug(_("Init plugin %s") % self.plugin_name)
+        # logger.debug(_("Init plugin %s") % self.plugin_name)
 
         # Init the args
         self.args = args
