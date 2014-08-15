@@ -129,5 +129,11 @@ class Plugin(GlancesPlugin):
         msg = msg_col2.format("q", _("Quit (Esc and Ctrl-C also work)"))
         ret.append(self.curse_add_line(msg))
 
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_new_line())
+        msg = '{0}: {1}'.format("ENTER", _("Edit the process filter patern"))
+        ret.append(self.curse_add_line(msg))
+
+
         # Return the message with decoration
         return ret
