@@ -51,6 +51,10 @@ class GlancesStandalone(object):
             logger.debug(_("Extended stats for top process is enabled (default behavor)"))
             glances_processes.enable_extended()
 
+        # Manage optionnal process filter
+        if args.process_filter is not None:
+            glances_processes.set_process_filter(args.process_filter)
+
         # Initial system informations update
         self.stats.update()
 

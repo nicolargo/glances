@@ -31,6 +31,7 @@ if not is_windows:
     try:
         import curses
         import curses.panel
+        from curses.textpad import Textbox, rectangle
     except ImportError:
         logger.critical('Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
@@ -70,11 +71,7 @@ class GlancesCurses(object):
             curses.noecho()
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
-        if hasattr(curses, 'curs_set'):
-            try:
-                curses.curs_set(0)
-            except Exception:
-                pass
+        self.set_cursor(0)
 
         # Init colors
         self.hascolors = False
@@ -136,6 +133,7 @@ class GlancesCurses(object):
             'BOLD': A_BOLD,
             'SORT': A_BOLD,
             'OK': self.default_color2,
+            'FILTER': self.ifCAREFUL_color2,
             'TITLE': self.title_color,
             'PROCESS': self.default_color2,
             'STATUS': self.default_color2,
@@ -158,6 +156,9 @@ class GlancesCurses(object):
         # Init process sort method
         self.args.process_sorted_by = 'auto'
 
+        # Init edit filter tag
+        self.edit_filter = False
+
         # Catch key pressed with non blocking mode
         self.term_window.keypad(1)
         self.term_window.nodelay(1)
@@ -173,6 +174,18 @@ class GlancesCurses(object):
             if not self.glances_history.graph_enabled():
                 args.enable_history = False
                 logger.error('Stats history disabled because graph lib is not available')
+
+    def set_cursor(self, value):
+        """Configure the cursor 
+           0: invisible
+           1: visible
+           2: very visible
+           """
+        if hasattr(curses, 'curs_set'):
+            try:
+                curses.curs_set(value)
+            except Exception:
+                pass
 
     def __get_key(self, window):
         # Catch ESC key AND numlock key (issue #163)
@@ -197,6 +210,9 @@ class GlancesCurses(object):
             self.end()
             logger.info("Stop Glances")
             sys.exit(0)
+        elif self.pressedkey == 10:
+            # 'ENTER' > Edit the process filter
+            self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.args.percpu = not self.args.percpu
@@ -463,19 +479,41 @@ class GlancesCurses(object):
         self.history_tag = False
         self.reset_history_tag = False
 
+        # Display edit filter popup
+        if self.edit_filter:
+            new_filter = self.display_popup(_("Filter: "), 
+                                            is_input=True,
+                                            input_value=glances_processes.get_process_filter())
+            glances_processes.set_process_filter(new_filter)
+        self.edit_filter = False
+
         return True
 
-    def display_popup(self, message, size_x=None, size_y=None, duration=3):
+    def display_popup(self, message, 
+                      size_x=None, size_y=None, 
+                      duration=3,
+                      is_input=False,
+                      input_size=20,
+                      input_value=None):
         """
-        Display a centered popup with the given message during duration seconds
-        If size_x and size_y: set the popup size
-        else set it automatically
-        Return True if the popup could be displayed
+        If is_input is False:
+         Display a centered popup with the given message during duration seconds
+         If size_x and size_y: set the popup size
+         else set it automatically
+         Return True if the popup could be displayed
+        If is_input is True:
+         Display a centered popup with the given message and a input field
+         If size_x and size_y: set the popup size
+         else set it automatically
+         Return the input string or None if the field is empty        
         """
 
         # Center the popup
         if size_x is None:
             size_x = len(message) + 4
+            # Add space for the input field
+            if is_input:
+                size_x += input_size
         if size_y is None:
             size_y = message.count('\n') + 1 + 4
         screen_x = self.screen.getmaxyx()[1]
@@ -488,7 +526,7 @@ class GlancesCurses(object):
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
-
+        
         # Fill the popup
         popup.border()
 
@@ -498,11 +536,32 @@ class GlancesCurses(object):
             popup.addnstr(2 + y, 2, m, len(m))
             y += 1
 
-        # Display the popup
-        popup.refresh()
-        curses.napms(duration * 1000)
-
-        return True
+        if is_input:
+            # Create a subwindow for the text field
+            subpop = popup.derwin(1, input_size, 2, 2 + len(m))
+            subpop.attron(self.__colors_list['FILTER'])
+            # Init the field with the current value
+            if input_value is not None:
+                subpop.addnstr(0, 0, input_value, len(input_value))
+            # Display the popup
+            popup.refresh()
+            subpop.refresh()
+            # Create the textbox inside the subwindows
+            self.set_cursor(2)
+            textbox = glances_textbox(subpop, insert_mode=False)
+            textbox.edit()
+            self.set_cursor(0)
+            if textbox.gather() != '':
+                logger.debug(_("User enters the following process filter patern: %s") % textbox.gather())
+                return textbox.gather()[:-1]
+            else:
+                logger.debug(_("User clears the process filter patern"))
+                return None
+        else:
+            # Display the popup
+            popup.refresh()
+            curses.napms(duration * 1000)
+            return True
 
     def display_plugin(self, plugin_stats, 
                        display_optional=True,
@@ -648,3 +707,16 @@ class GlancesCurses(object):
             return 0
         else:
             return c + 1
+
+class glances_textbox(Textbox):
+    """
+    """
+    def __init__(*args, **kwargs):
+        Textbox.__init__(*args, **kwargs)
+  
+    def do_command(self, ch):
+        if ch == 10: # Enter
+            return 0
+        if ch == 127: # Enter
+            return 8
+        return Textbox.do_command(self, ch)
