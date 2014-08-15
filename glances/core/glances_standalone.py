@@ -43,6 +43,14 @@ class GlancesStandalone(object):
             logger.warning(_("Maximum displayed processes is not configured (high CPU consumption)"))
         glances_processes.set_max_processes(max_processes)
 
+        # If process extended stats is disabled by user
+        if args.disable_process_extended:
+            logger.info(_("Extended stats for top process is disabled"))
+            glances_processes.disable_extended()
+        else:
+            logger.debug(_("Extended stats for top process is enabled (default behavor)"))
+            glances_processes.enable_extended()
+
         # Initial system informations update
         self.stats.update()
 

@@ -52,6 +52,9 @@ class GlancesProcesses(object):
         # Default is to enable the processes stats
         self.disable_tag = False
 
+        # Extended stats for top process is enable by default
+        self.disable_extended_tag = False
+
         # Maximum number of processes showed in the UI interface
         # None if no limit
         self.max_processes = None
@@ -64,6 +67,15 @@ class GlancesProcesses(object):
     def disable(self):
         """Disable process stats."""
         self.disable_tag = True
+
+    def enable_extended(self):
+        """Enable extended process stats."""
+        self.disable_extended_tag = False
+        self.update()
+
+    def disable_extended(self):
+        """Disable extended process stats."""
+        self.disable_extended_tag = True
 
     def set_max_processes(self, value):
         """Set the maximum number of processes showed in the UI interfaces"""
@@ -158,7 +170,7 @@ class GlancesProcesses(object):
             procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
             procstat['status'] = str(procstat['status'])[:1].upper()
 
-        if extended_stats:
+        if extended_stats and not self.disable_extended_tag:
             procstat['extended_stats'] = True 
 
             # CPU affinity
@@ -200,6 +212,8 @@ class GlancesProcesses(object):
                 procstat.update(proc.as_dict(attrs=['ionice']))
             else:
                 procstat['ionice'] = None
+
+            #logger.debug(procstat)
 
         return procstat
 
