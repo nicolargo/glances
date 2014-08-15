@@ -74,6 +74,8 @@ class GlancesMain(object):
                             dest='disable_sensors', help=_('disable sensors module'))
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help=_('disable process module'))
+        parser.add_argument('--disable-process-extended', action='store_true', default=False,
+                            dest='disable_process_extended', help=_('disable extended stats on top process'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
         # CSV output feature
