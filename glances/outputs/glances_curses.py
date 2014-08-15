@@ -215,6 +215,13 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('e'):
+            # 'e' > Enable/Disable extended stats for top process
+            self.args.disable_process_extended = not self.args.disable_process_extended
+            if self.args.disable_process_extended:
+                glances_processes.disable_extended()
+            else:
+                glances_processes.enable_extended()
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs stats
             self.args.disable_fs = not self.args.disable_fs

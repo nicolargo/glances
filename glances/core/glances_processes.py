@@ -52,6 +52,9 @@ class GlancesProcesses(object):
         # Default is to enable the processes stats
         self.disable_tag = False
 
+        # Extended stats for top process is enable by default
+        self.disable_extended_tag = False
+
         # Maximum number of processes showed in the UI interface
         # None if no limit
         self.max_processes = None
@@ -64,6 +67,15 @@ class GlancesProcesses(object):
     def disable(self):
         """Disable process stats."""
         self.disable_tag = True
+
+    def enable_extended(self):
+        """Enable extended process stats."""
+        self.disable_extended_tag = False
+        self.update()
+
+    def disable_extended(self):
+        """Disable extended process stats."""
+        self.disable_extended_tag = True
 
     def set_max_processes(self, value):
         """Set the maximum number of processes showed in the UI interfaces"""
@@ -84,14 +96,16 @@ class GlancesProcesses(object):
         => cpu_percent, memory_percent, io_counters, name
         standard_stats: for all the displayed processes
         => username, cmdline, status, memory_info, cpu_times
-        extended_stats: only for top processes (!!! to be implemented)
-        => connections (UDP/TCP), memory_swap
+        extended_stats: only for top processes (see issue #403)
+        => connections (UDP/TCP), memory_swap...
         """
 
         # Process ID (always)
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
+            procstat['mandatory_stats'] = True 
+
             # Process CPU, MEM percent and name
             procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
 
@@ -126,6 +140,8 @@ class GlancesProcesses(object):
                 procstat['io_counters'] += [io_tag]
 
         if standard_stats:
+            procstat['standard_stats'] = True 
+
             # Process username (cached with internal cache)
             try:
                 self.username_cache[procstat['pid']]
@@ -154,21 +170,50 @@ class GlancesProcesses(object):
             procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
             procstat['status'] = str(procstat['status'])[:1].upper()
 
-        if extended_stats:
-            # Process network connections (TCP and UDP) (Experimental)
+        if extended_stats and not self.disable_extended_tag:
+            procstat['extended_stats'] = True 
+
+            # CPU affinity
+            # Memory extended
+            # Number of context switch
+            # Number of file descriptors (Unix only)
+            # Threads number
+            procstat.update(proc.as_dict(attrs=['cpu_affinity', 
+                                                'memory_info_ex',
+                                                'num_ctx_switches',
+                                                'num_fds',
+                                                'num_threads']))
+
+            # Number of handles (Windows only)
+            if is_windows:
+                procstat.update(proc.as_dict(attrs=['num_handles']))
+            else:
+                procstat['num_handles'] = None
+
+            # SWAP memory (Only on Linux based OS)
+            # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+            if is_linux:
+                try:
+                    procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
+                except psutil.AccessDenied:
+                    procstat['memory_swap'] = None
+
+            # Process network connections (TCP and UDP)
             try:
                 procstat['tcp'] = len(proc.connections(kind="tcp"))
                 procstat['udp'] = len(proc.connections(kind="udp"))
             except:
-                procstat['tcp'] = 0
-                procstat['udp'] = 0
+                procstat['tcp'] = None
+                procstat['udp'] = None
 
-            # SWAP memory
-            # Only on Linux based OS
-            # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-            if is_linux:
-                logger.debug(proc.memory_maps())
-                procstat['memory_swap'] = sum([ v.swap for v in proc.memory_maps() ])
+            # IO Nice
+            # http://pythonhosted.org/psutil/#psutil.Process.ionice
+            if is_linux or is_windows:
+                procstat.update(proc.as_dict(attrs=['ionice']))
+            else:
+                procstat['ionice'] = None
+
+            #logger.debug(procstat)
 
         return procstat
 
@@ -220,17 +265,22 @@ class GlancesProcesses(object):
             # Sort the internal dict and cut the top N (Return a list of tuple)
             # tuple=key (proc), dict (returned by __get_process_stats)
             processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+            first = True
             for i in processiter[0:self.get_max_processes()]:
                 # Already existing mandatory stats
                 procstat = i[1]
                 # Update with standard stats
+                # and extended stats but only for TOP (first) process
                 procstat.update(self.__get_process_stats(i[0], 
                                                          mandatory_stats=False, 
-                                                         standard_stats=True))
+                                                         standard_stats=True,
+                                                         extended_stats=first))
                 # Add a specific time_since_update stats for bitrate
                 procstat['time_since_update'] = time_since_update
                 # Update process list
                 self.processlist.append(procstat)
+                # Next...
+                first = False
         else:
             # Get all the processes
             for i in processdict.items():

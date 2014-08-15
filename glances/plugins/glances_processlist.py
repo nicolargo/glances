@@ -110,6 +110,7 @@ class Plugin(GlancesPlugin):
         tag_proc_time = True
 
         # Loop over processes (sorted by the sort key previously compute)
+        first = True
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
@@ -236,6 +237,78 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(msg, splittable=True))
                 except UnicodeEncodeError:
                     ret.append(self.curse_add_line("", splittable=True))
+
+            # Add extended stats but only for the top processes
+            # !!! CPU consumption ???
+            # TODO: extended stats into the web interface
+            if first and 'extended_stats' in p:
+                # Left padding
+                xpad = ' ' * 13
+                # First line is CPU affinity
+                if p['cpu_affinity'] is not None:
+                    ret.append(self.curse_new_line())
+                    msg = xpad + _('CPU affinity: ') + str(len(p['cpu_affinity'])) + _(' cores')
+                    ret.append(self.curse_add_line(msg))
+                # Second line is memory info
+                if p['memory_info_ex'] is not None:
+                    ret.append(self.curse_new_line())
+                    msg = xpad + _('Memory info: ')
+                    for k, v in p['memory_info_ex']._asdict().items():
+                        # Ignore rss and vms (already displayed)
+                        if k not in ['rss', 'vms'] and v is not None:
+                            msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
+                    if p['memory_swap'] is not None:
+                        msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
+                        ret.append(self.curse_add_line(msg))
+                # Third line is for openned files/network sessions
+                ret.append(self.curse_new_line())
+                msg = xpad + _('Openned: ')
+                if p['num_threads'] is not None:
+                    msg += _('threads ') + str(p['num_threads']) + ' '
+                if p['num_fds'] is not None:
+                    msg += _('files ') + str(p['num_fds']) + ' '
+                if p['num_handles'] is not None:
+                    msg += _('handles ') + str(p['num_handles']) + ' '
+                if p['tcp'] is not None:
+                    msg += _('TCP ') + str(p['tcp']) + ' '
+                if p['udp'] is not None:
+                    msg += _('UDP ') + str(p['udp']) + ' '
+                ret.append(self.curse_add_line(msg))
+                # Fouth line is IO nice level (only Linux and Windows OS)
+                if p['ionice'] is not None:
+                    ret.append(self.curse_new_line())
+                    msg = xpad + _('IO nice: ')
+                    k = _('Class is ')
+                    v = p['ionice'].ioclass
+                    # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle. 
+                    # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low). 
+                    if is_windows:
+                        if v == 0:
+                            msg += k + 'Very Low'
+                        elif v == 1:
+                            msg += k + 'Low'
+                        elif v == 2:
+                            msg += _('No specific I/O priority')
+                        else:
+                            msg += k + str(v)                        
+                    else:
+                        if v == 0:
+                            msg += _('No specific I/O priority')
+                        elif v == 1:
+                            msg += k + 'Real Time'
+                        elif v == 2:
+                            msg += k + 'Best Effort'
+                        elif v == 3:
+                            msg += k + 'IDLE'
+                        else:
+                            msg += k + str(v)
+                    #  value is a number which goes from 0 to 7. 
+                    # The higher the value, the lower the I/O priority of the process.
+                    if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
+                        msg += _(' (value %s/7)') % str(p['ionice'].value)
+                    ret.append(self.curse_add_line(msg))                
+                # End of extended stats
+                first = False
 
         # Return the message with decoration
         return ret
