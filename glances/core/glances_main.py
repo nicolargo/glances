@@ -21,6 +21,7 @@
 
 # Import system libs
 import argparse
+import sys
 
 # Import Glances libs
 from glances.core.glances_config import Config
@@ -111,6 +112,8 @@ class GlancesMain(object):
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
         # Display (Curses) options
+        parser.add_argument('-f', '--process-filter', default=None, type=str,
+                            dest='process_filter', help=_('set the process filter patern (regular expression)'))
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
@@ -141,7 +144,7 @@ class GlancesMain(object):
 
         # In web server mode, defaul refresh time: 5 sec        
         if args.webserver:
-            args.time = 5            
+            args.time = 5
 
         # Server or client login/password
         args.username = self.username
@@ -171,6 +174,14 @@ class GlancesMain(object):
         # Display Rx and Tx, not the sum for the network
         args.network_sum = False
         args.network_cumul = False
+
+        # Control parameter and exit if it is not OK
+        self.args = args
+
+        # Filter is only available in standalone mode
+        if args.process_filter is not None and not self.is_standalone():
+            logger.critical(_("Process filter is only available in standalone mode"))
+            sys.exit(2)
 
         return args
 

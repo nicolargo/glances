@@ -17,10 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Import Glances lib
 from glances.core.glances_globals import is_linux, is_bsd, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
+# Import Python lib
 import psutil
+import re
 
 
 class GlancesProcesses(object):
@@ -59,6 +62,13 @@ class GlancesProcesses(object):
         # None if no limit
         self.max_processes = None
 
+        # Process filter is a regular expression
+        self.process_filter = None
+        self.process_filter_re = None
+
+        # !!! ONLY FOR TEST
+        # self.set_process_filter('.*python.*')
+
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -86,16 +96,48 @@ class GlancesProcesses(object):
         """Get the maximum number of processes showed in the UI interfaces"""
         return self.max_processes
 
+    def set_process_filter(self, value):
+        """Set the process filter"""
+        logger.info(_("Set process filter to %s") % value)
+        self.process_filter = value
+        if value is not None:
+            try:
+                self.process_filter_re = re.compile(value)
+                logger.debug(_("Process filter regular expression compilation OK: %s") % self.get_process_filter())
+            except:
+                logger.error(_("Can not compile process filter regular expression: %s") % value)
+                self.process_filter_re = None
+        else:
+            self.process_filter_re = None
+        return self.process_filter
+
+    def get_process_filter(self):
+        """Get the process filter"""
+        return self.process_filter
+
+    def get_process_filter_re(self):
+        """Get the process regular expression compiled"""
+        return self.process_filter_re
+
+    def is_filtered(self, value):
+        """Return True if the value should be filtered"""
+        if self.get_process_filter() is None:
+            # No filter => Not filtered
+            return False
+        else:
+            # logger.debug(self.get_process_filter() + " <> " + value + " => " + str(self.get_process_filter_re().match(value) is None))
+            return self.get_process_filter_re().match(value) is None
+
     def __get_process_stats(self, proc,
                             mandatory_stats=True,
                             standard_stats=True, 
                             extended_stats=False):
         """
         Get process stats of the proc processes (proc is returned psutil.process_iter())
-        mandatory_stats: need for the sorting step  
-        => cpu_percent, memory_percent, io_counters, name
+        mandatory_stats: need for the sorting/filter step
+        => cpu_percent, memory_percent, io_counters, name, cmdline
         standard_stats: for all the displayed processes
-        => username, cmdline, status, memory_info, cpu_times
+        => username, status, memory_info, cpu_times
         extended_stats: only for top processes (see issue #403)
         => connections (UDP/TCP), memory_swap...
         """
@@ -108,6 +150,17 @@ class GlancesProcesses(object):
 
             # Process CPU, MEM percent and name
             procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+
+            # Process command line (cached with internal cache)
+            try:
+                self.cmdline_cache[procstat['pid']]
+            except KeyError:
+                # Patch for issue #391
+                try:
+                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                    self.cmdline_cache[procstat['pid']] = ""
+            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
             # Process IO
             # procstat['io_counters'] is a list:
@@ -154,17 +207,6 @@ class GlancesProcesses(object):
                     except (KeyError, AttributeError, psutil.AccessDenied):
                         self.username_cache[procstat['pid']] = "?"
             procstat['username'] = self.username_cache[procstat['pid']]
-
-            # Process command line (cached with internal cache)
-            try:
-                self.cmdline_cache[procstat['pid']]
-            except KeyError:
-                # Patch for issue #391
-                try:
-                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
-                    self.cmdline_cache[procstat['pid']] = ""
-            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
             # Process status, nice, memory_info and cpu_times
             procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
@@ -237,9 +279,14 @@ class GlancesProcesses(object):
         for proc in psutil.process_iter():
             # If self.get_max_processes() is None: Only retreive mandatory stats
             # Else: retreive mandatoryadn standard stast
-            processdict[proc] = self.__get_process_stats(proc, 
-                                                         mandatory_stats=True, 
-                                                         standard_stats=self.get_max_processes() is None)
+            s = self.__get_process_stats(proc, 
+                                         mandatory_stats=True, 
+                                         standard_stats=self.get_max_processes() is None)
+            # Continue to the next process if it has to be filtered
+            if self.is_filtered(s['cmdline']) and self.is_filtered(s['name']):
+                continue
+            # Ok add the process to the list
+            processdict[proc] = s
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
