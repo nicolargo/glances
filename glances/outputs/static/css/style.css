@@ -61,6 +61,9 @@ div#newline{
 #ok {
     color: green;
 }
+#filter {
+    color: cyan;
+}
 #ok_log {
     background-color: green;
     color: white;
