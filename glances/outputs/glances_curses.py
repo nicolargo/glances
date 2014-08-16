@@ -90,6 +90,7 @@ class GlancesCurses(object):
             curses.init_pair(7, curses.COLOR_GREEN, -1)
             curses.init_pair(8, curses.COLOR_BLUE, -1)
             curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+            curses.init_pair(10, curses.COLOR_CYAN, -1)
         else:
             self.hascolors = False
 
@@ -113,6 +114,7 @@ class GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
             self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.filter_color = curses.color_pair(10) | A_BOLD
         else:
             # B&W text styles
             self.no_color = curses.A_NORMAL
@@ -125,6 +127,7 @@ class GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
+            self.filter_color = A_BOLD
 
         # Define the colors list (hash table) for stats
         self.__colors_list = {
@@ -133,7 +136,7 @@ class GlancesCurses(object):
             'BOLD': A_BOLD,
             'SORT': A_BOLD,
             'OK': self.default_color2,
-            'FILTER': self.ifCAREFUL_color2,
+            'FILTER': self.filter_color,
             'TITLE': self.title_color,
             'PROCESS': self.default_color2,
             'STATUS': self.default_color2,
