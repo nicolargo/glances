@@ -64,6 +64,7 @@ class GlancesBottle(object):
             'BOLD': 'bold',
             'SORT': 'sort',
             'OK': 'ok',
+            'FILTER': 'filter',
             'TITLE': 'title',
             'CAREFUL': 'careful',
             'WARNING': 'warning',

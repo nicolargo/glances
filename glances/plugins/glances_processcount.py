@@ -69,9 +69,6 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        # if self.stats == {} or args.disable_process:
-        #     return ret
-
         if args.disable_process:
             msg = _("PROCESSES DISABLED (press 'z' to display)")
             ret.append(self.curse_add_line(msg))
@@ -79,6 +76,16 @@ class Plugin(GlancesPlugin):
 
         if self.stats == {}:
             return ret
+
+        # Display the filter (if it exists)
+        if glances_processes.get_process_filter() is not None:
+            msg = _("Processes filter:")
+            ret.append(self.curse_add_line(msg, "TITLE"))
+            msg = _(" {0} ").format(glances_processes.get_process_filter())
+            ret.append(self.curse_add_line(msg, "FILTER"))
+            msg = _("(press ENTER to edit)")
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
 
         # Build the string message
         # Header

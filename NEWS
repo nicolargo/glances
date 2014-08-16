@@ -5,6 +5,11 @@ Glances Version 2.x
 Version 2.1
 ===========
 
+    * Add user process filter feature
+      User can define a process filter pattern (as a regular expression).
+      The pattern could be defined from the command line (-f <pattern>)
+      or by pressing the ENTER key in the curse interface.
+      Process filter feature is only available in standalone mode. 
     * Create a max_processes key in the configuration file
       The goal is to reduce the number of displayed processes in the curses UI and 
       so limit the CPU footprint of the Glances standalone mode.
