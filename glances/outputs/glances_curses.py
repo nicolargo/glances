@@ -481,7 +481,7 @@ class GlancesCurses(object):
 
         # Display edit filter popup
         if self.edit_filter:
-            new_filter = self.display_popup(_("Filter: "), 
+            new_filter = self.display_popup(_("Process filter pattern: "), 
                                             is_input=True,
                                             input_value=glances_processes.get_process_filter())
             glances_processes.set_process_filter(new_filter)
@@ -493,7 +493,7 @@ class GlancesCurses(object):
                       size_x=None, size_y=None, 
                       duration=3,
                       is_input=False,
-                      input_size=20,
+                      input_size=30,
                       input_value=None):
         """
         If is_input is False:
