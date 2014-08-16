@@ -21,6 +21,7 @@
 
 # Import system libs
 import argparse
+import sys
 
 # Import Glances libs
 from glances.core.glances_config import Config
@@ -173,6 +174,14 @@ class GlancesMain(object):
         # Display Rx and Tx, not the sum for the network
         args.network_sum = False
         args.network_cumul = False
+
+        # Control parameter and exit if it is not OK
+        self.args = args
+
+        # Filter is only available in standalone mode
+        if args.process_filter is not None and not self.is_standalone():
+            logger.critical(_("Process filter is only available in standalone mode"))
+            sys.exit(2)
 
         return args
 

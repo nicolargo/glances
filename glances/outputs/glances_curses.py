@@ -483,11 +483,14 @@ class GlancesCurses(object):
         self.reset_history_tag = False
 
         # Display edit filter popup
-        if self.edit_filter:
+        # Only in standalone mode (cs_status == 'None')
+        if self.edit_filter and cs_status == 'None':
             new_filter = self.display_popup(_("Process filter pattern: "), 
                                             is_input=True,
                                             input_value=glances_processes.get_process_filter())
             glances_processes.set_process_filter(new_filter)
+        elif self.edit_filter and cs_status != 'None':
+            self.display_popup(_("Process filter only available in standalone mode"))
         self.edit_filter = False
 
         return True
