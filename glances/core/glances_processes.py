@@ -125,6 +125,7 @@ class GlancesProcesses(object):
             # No filter => Not filtered
             return False
         else:
+            # logger.debug(self.get_process_filter() + " <> " + value + " => " + str(self.get_process_filter_re().match(value) is None))
             return self.get_process_filter_re().match(value) is None
 
     def __get_process_stats(self, proc,
@@ -133,10 +134,10 @@ class GlancesProcesses(object):
                             extended_stats=False):
         """
         Get process stats of the proc processes (proc is returned psutil.process_iter())
-        mandatory_stats: need for the sorting step  
-        => cpu_percent, memory_percent, io_counters, name
+        mandatory_stats: need for the sorting/filter step
+        => cpu_percent, memory_percent, io_counters, name, cmdline
         standard_stats: for all the displayed processes
-        => username, cmdline, status, memory_info, cpu_times
+        => username, status, memory_info, cpu_times
         extended_stats: only for top processes (see issue #403)
         => connections (UDP/TCP), memory_swap...
         """
@@ -149,6 +150,17 @@ class GlancesProcesses(object):
 
             # Process CPU, MEM percent and name
             procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+
+            # Process command line (cached with internal cache)
+            try:
+                self.cmdline_cache[procstat['pid']]
+            except KeyError:
+                # Patch for issue #391
+                try:
+                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                    self.cmdline_cache[procstat['pid']] = ""
+            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
             # Process IO
             # procstat['io_counters'] is a list:
@@ -195,17 +207,6 @@ class GlancesProcesses(object):
                     except (KeyError, AttributeError, psutil.AccessDenied):
                         self.username_cache[procstat['pid']] = "?"
             procstat['username'] = self.username_cache[procstat['pid']]
-
-            # Process command line (cached with internal cache)
-            try:
-                self.cmdline_cache[procstat['pid']]
-            except KeyError:
-                # Patch for issue #391
-                try:
-                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
-                    self.cmdline_cache[procstat['pid']] = ""
-            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
             # Process status, nice, memory_info and cpu_times
             procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
@@ -281,8 +282,10 @@ class GlancesProcesses(object):
             s = self.__get_process_stats(proc, 
                                          mandatory_stats=True, 
                                          standard_stats=self.get_max_processes() is None)
-            if self.is_filtered(s['name']):
+            # Continue to the next process if it has to be filtered
+            if self.is_filtered(s['cmdline']) and self.is_filtered(s['name']):
                 continue
+            # Ok add the process to the list
             processdict[proc] = s
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
