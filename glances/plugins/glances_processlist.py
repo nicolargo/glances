@@ -259,7 +259,7 @@ class Plugin(GlancesPlugin):
                             msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
                     if p['memory_swap'] is not None:
                         msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
-                        ret.append(self.curse_add_line(msg))
+                    ret.append(self.curse_add_line(msg))
                 # Third line is for openned files/network sessions
                 ret.append(self.curse_new_line())
                 msg = xpad + _('Openned: ')
