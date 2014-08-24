@@ -48,54 +48,80 @@ table {
 
 /* LAYOUT STYLES */
 body {
-  font-size: 1em;
+  font-size: 15px;
   line-height: 1.5; 
-  background: #e7e7e7 url(../images/body-bg.png) 0 0 repeat;
+  background: #fafafa url(../images/body-bg.jpg) 0 0 repeat;
   font-family: 'Helvetica Neue', Helvetica, Arial, serif;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
-  color: #6d6d6d;
+  font-weight: 400;
+  color: #666;
 }
 
 a {
-  color: #d5000d;
+  color: #2879d0;
 }
 a:hover {
-  color: #c5000c;
+  color: #2268b2;
 }
 
 header {
-  padding-top: 35px;
-  padding-bottom: 25px;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
+  background: #2e7bcf url(../images/header-bg.jpg) 0 0 repeat-x;
+  border-bottom: solid 1px #275da1;
 }
 
 header h1 {
-  font-family: 'Chivo', 'Helvetica Neue', Helvetica, Arial, serif; font-weight: 900;
   letter-spacing: -1px;
-  font-size: 48px;
-  color: #303030;
-  line-height: 1.2;
+  font-size: 72px;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 0.2em;
+  width: 540px;
 }
 
 header h2 {
-  letter-spacing: -1px;
-  font-size: 24px;
-  color: #aaa;
+  font-size: 26px;
+  color: #9ddcff;
   font-weight: normal;
   line-height: 1.3;
-}
-
-#container {
-  background: transparent url(../images/highlight-bg.jpg) 50% 0 no-repeat;
-  min-height: 595px;
+  width: 540px;
+  letter-spacing: 0;
 }
 
 .inner {
-  width: 620px;
+  position: relative;
+  width: 940px;
   margin: 0 auto;
 }
 
-#container .inner img {
+#content-wrapper {
+  border-top: solid 1px #fff;
+  padding-top: 30px;
+}
+
+#main-content {
+  width: 690px;
+  float: left;
+}
+
+#main-content img {
   max-width: 100%;
+}
+
+aside#sidebar {
+  width: 200px;
+  padding-left: 20px;
+  min-height: 504px;
+  float: right;
+  background: transparent url(../images/sidebar-bg.jpg) 0 0 no-repeat;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+aside#sidebar p.repo-owner,
+aside#sidebar p.repo-owner a {
+  font-weight: bold;
 }
 
 #downloads {
@@ -103,91 +129,57 @@ header h2 {
 }
 
 a.button {
-  -moz-border-radius: 30px;
-  -webkit-border-radius: 30px;                     
-  border-radius: 30px;
-  border-top: solid 1px #cbcbcb;
-  border-left: solid 1px #b7b7b7;
-  border-right: solid 1px #b7b7b7;
-  border-bottom: solid 1px #b3b3b3;
-  color: #303030;
-  line-height: 25px;
-  font-weight: bold;
-  font-size: 15px;
-  padding: 12px 8px 12px 8px;
+  width: 134px;
+  height: 58px;
+  line-height: 1.2;
+  font-size: 23px;
+  color: #fff;
+  padding-left: 68px;
+  padding-top: 22px;
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
+}
+a.button small {
   display: block;
-  float: left;
-  width: 179px;
-  margin-right: 14px;  
-  background: #fdfdfd; /* Old browsers */
-  background: -moz-linear-gradient(top,  #fdfdfd 0%, #f2f2f2 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fdfdfd), color-stop(100%,#f2f2f2)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top,  #fdfdfd 0%,#f2f2f2 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top,  #fdfdfd 0%,#f2f2f2 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top,  #fdfdfd 0%,#f2f2f2 100%); /* IE10+ */
-  background: linear-gradient(top,  #fdfdfd 0%,#f2f2f2 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fdfdfd', endColorstr='#f2f2f2',GradientType=0 ); /* IE6-9 */
-  -webkit-box-shadow: 10px 10px 5px #888;
-  -moz-box-shadow: 10px 10px 5px #888;
-  box-shadow: 0px 1px 5px #e8e8e8;
+  font-size: 11px;
 }
-a.button:hover {
-  border-top: solid 1px #b7b7b7;
-  border-left: solid 1px #b3b3b3;
-  border-right: solid 1px #b3b3b3;
-  border-bottom: solid 1px #b3b3b3;
-  background: #fafafa; /* Old browsers */
-  background: -moz-linear-gradient(top,  #fdfdfd 0%, #f6f6f6 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fdfdfd), color-stop(100%,#f6f6f6)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top,  #fdfdfd 0%,#f6f6f6 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top,  #fdfdfd 0%,#f6f6f6 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top,  #fdfdfd 0%,#f6f6f6 100%); /* IE10+ */
-  background: linear-gradient(top,  #fdfdfd 0%,#f6f6f6, 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fdfdfd', endColorstr='#f6f6f6',GradientType=0 ); /* IE6-9 */
+header a.button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: transparent url(../images/github-button.png) 0 0 no-repeat;
 }
-
-a.button span {
-  padding-left: 50px;
+aside a.button {
+  width: 138px;
+  padding-left: 64px;
   display: block;
-  height: 23px;
-}
-
-#download-zip span {
-  background: transparent url(../images/zip-icon.png) 12px 50% no-repeat;
-}
-#download-tar-gz span {
-  background: transparent url(../images/tar-gz-icon.png) 12px 50% no-repeat;
-}
-#view-on-github span {
-  background: transparent url(../images/octocat-icon.png) 12px 50% no-repeat;
-}
-#view-on-github {
-  margin-right: 0;
+  background: transparent url(../images/download-button.png) 0 0 no-repeat;
+  margin-bottom: 20px;
+  font-size: 21px;
 }
 
 code, pre {
-  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal;
+  font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   color: #222;
   margin-bottom: 30px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 code {
-  background-color: #f2f2f2;
-  border: solid 1px #ddd;
+  background-color: #f2f8fc;
+  border: solid 1px #dbe7f3;
   padding: 0 3px;
 }
 
 pre {
   padding: 20px;
-  background: #303030;
-  color: #f2f2f2;
+  background: #fff;
   text-shadow: none;
   overflow: auto;
+  border: solid 1px #f2f2f2;
 }
 pre code {
-  color: #f2f2f2;
-  background-color: #303030;
+  color: #2879d0;
+  background-color: #fff;
   border: none;
   padding: 0;
 }
@@ -205,15 +197,7 @@ hr {
   margin-top: 1em;
   padding-bottom: 1em;
   border: none;
-  background: transparent url('../images/hr.png') 50% 0 no-repeat;
-}
-
-strong {
-  font-weight: bold;
-}
-
-em {
-  font-style: italic;
+  background: transparent url('../images/hr.png') 0 0 no-repeat;
 }
 
 table {
@@ -240,42 +224,89 @@ form {
 
 /* GENERAL ELEMENT TYPE STYLES */
 
-h1 {
-  font-size: 32px;
+#main-content h1 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
+  font-size: 2.8em;
+  letter-spacing: -1px;
+  color: #474747;
 } 
 
-h2 {
+#main-content h1:before {
+  content: "/";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -0.9em;
+}
+
+#main-content h2 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
   font-size: 22px;
   font-weight: bold;
-  color: #303030;
   margin-bottom: 8px;
+  color: #474747;
 } 
+#main-content h2:before {
+  content: "//";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -1.5em;
+}
 
-h3 {
-  color: #d5000d;
+#main-content h3 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
   font-size: 18px;
   font-weight: bold;
+  margin-top: 24px;
   margin-bottom: 8px;
+  color: #474747;
 } 
  
-h4 {
-  font-size: 16px;
-  color: #303030;
+#main-content h3:before {
+  content: "///";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -2em;
+}
+
+#main-content h4 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
+  font-size: 15px;
   font-weight: bold;
+  color: #474747;
 } 
 
-h5 {
-  font-size: 1em;
-  color: #303030;
-} 
+h4:before {
+  content: "////";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -2.8em;
+}
 
-h6 {
+#main-content h5 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
+  font-size: 14px;
+  color: #474747;
+} 
+h5:before {
+  content: "/////";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -3.2em;
+}
+
+#main-content h6 {
+  font-family: 'Architects Daughter', 'Helvetica Neue', Helvetica, Arial, serif; 
   font-size: .8em;
-  color: #303030;
+  color: #474747;
 } 
+h6:before {
+  content: "//////";
+  color: #9ddcff;
+  padding-right: 0.3em;
+  margin-left: -3.7em;
+}
 
 p {
-  font-weight: 300;
   margin-bottom: 20px;
 }
  
@@ -294,18 +325,19 @@ blockquote {
   padding: 0 0 0 30px;
 }
 
-ul li {
+ul {
   list-style: disc inside;
   padding-left: 20px;
 }
 
-ol li {
+ol {
   list-style: decimal inside;
   padding-left: 3px;
 }
 
-dl dt {
-  color: #303030;
+dl dd {
+  font-style: italic;
+  font-weight: 100;
 }
 
 footer {
@@ -344,23 +376,99 @@ footer a:hover {
 @media only screen and (max-width: 959px) {}
 
 /* Tablet Portrait size to standard 960 (devices and browsers) */
-@media only screen and (min-width: 768px) and (max-width: 959px) {}
+@media only screen and (min-width: 768px) and (max-width: 959px) {
+  .inner {
+    width: 740px;
+  }
+  header h1, header h2 {
+    width: 340px;
+  }
+  header h1 {
+    font-size: 60px;
+  }
+  header h2 {
+    font-size: 30px;
+  }
+  #main-content {
+    width: 490px;
+  }
+  #main-content h1:before,
+  #main-content h2:before,
+  #main-content h3:before,
+  #main-content h4:before,
+  #main-content h5:before,
+  #main-content h6:before {
+    content: none;
+    padding-right: 0;
+    margin-left: 0;
+  }
+}
 
 /* All Mobile Sizes (devices and browser) */
 @media only screen and (max-width: 767px) {
+  .inner {
+    width: 93%;
+  }
   header {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 20px 0;
   }
-  #downloads {
-    margin-bottom: 25px;
+  header .inner {
+    position: relative;
   }
-  #download-zip, #download-tar-gz {
+  header h1, header h2 {
+    width: 100%;
+  }
+  header h1 {
+    font-size: 48px;
+  }
+  header h2 {
+    font-size: 24px;
+  }
+  header a.button {
+    background-image: none;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    margin-top: 15px;
+    padding: 5px 10px;
+    position: relative;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1;
+    background-color: #9ddcff;
+    color: #2879d0;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;                     
+    border-radius: 5px;    
+  }
+  header a.button small {
+    font-size: 13px;
+    display: inline;
+  }
+  #main-content,
+  aside#sidebar {
+    float: none;
+    width: 100% ! important;
+  }
+  aside#sidebar {
+    background-image: none;
+    margin-top: 20px;
+    border-top: solid 1px #ddd;
+    padding: 20px 0;
+    min-height: 0;
+  }
+  aside#sidebar a.button {
     display: none;
   }
-  .inner {
-    width: 94%;
-    margin: 0 auto;
+  #main-content h1:before,
+  #main-content h2:before,
+  #main-content h3:before,
+  #main-content h4:before,
+  #main-content h5:before,
+  #main-content h6:before {
+    content: none;
+    padding-right: 0;
+    margin-left: 0;
   }
 }
 
