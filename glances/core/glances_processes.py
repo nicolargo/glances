@@ -201,6 +201,8 @@ class GlancesProcesses(object):
             except KeyError:
                 try:
                     self.username_cache[procstat['pid']] = proc.username()
+                except psutil.NoSuchProcess:
+                    pass
                 except (KeyError, psutil.AccessDenied):
                     try:
                         self.username_cache[procstat['pid']] = proc.uids().real
@@ -209,8 +211,12 @@ class GlancesProcesses(object):
             procstat['username'] = self.username_cache[procstat['pid']]
 
             # Process status, nice, memory_info and cpu_times
-            procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
-            procstat['status'] = str(procstat['status'])[:1].upper()
+            try:
+                procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+            except psutil.NoSuchProcess:
+                pass
+            else:
+                procstat['status'] = str(procstat['status'])[:1].upper()
 
         if extended_stats and not self.disable_extended_tag:
             procstat['extended_stats'] = True 
@@ -218,32 +224,45 @@ class GlancesProcesses(object):
             # CPU affinity (Windows and Linux only)
             try:
                 procstat.update(proc.as_dict(attrs=['cpu_affinity']))
+            except psutil.NoSuchProcess:
+                pass
             except AttributeError:
                 procstat['cpu_affinity'] = None
             # Memory extended
             try:
                 procstat.update(proc.as_dict(attrs=['memory_info_ex']))
+            except psutil.NoSuchProcess:
+                pass
             except AttributeError:
                 procstat['memory_info_ex'] = None
             # Number of context switch
             try:
                 procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
+            except psutil.NoSuchProcess:
+                pass
             except AttributeError:
                 procstat['num_ctx_switches'] = None
             # Number of file descriptors (Unix only)
             try:
                 procstat.update(proc.as_dict(attrs=['num_fds']))
+            except psutil.NoSuchProcess:
+                pass
             except AttributeError:
                 procstat['num_fds'] = None
             # Threads number
             try:
                 procstat.update(proc.as_dict(attrs=['num_threads']))
+            except psutil.NoSuchProcess:
+                pass
             except AttributeError:
                 procstat['num_threads'] = None
 
             # Number of handles (Windows only)
             if is_windows:
-                procstat.update(proc.as_dict(attrs=['num_handles']))
+                try:
+                    procstat.update(proc.as_dict(attrs=['num_handles']))
+                except psutil.NoSuchProcess:
+                    pass
             else:
                 procstat['num_handles'] = None
 
@@ -252,6 +271,8 @@ class GlancesProcesses(object):
             if is_linux:
                 try:
                     procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
+                except psutil.NoSuchProcess:
+                    pass
                 except psutil.AccessDenied:
                     procstat['memory_swap'] = None
 
@@ -266,7 +287,10 @@ class GlancesProcesses(object):
             # IO Nice
             # http://pythonhosted.org/psutil/#psutil.Process.ionice
             if is_linux or is_windows:
-                procstat.update(proc.as_dict(attrs=['ionice']))
+                try:
+                    procstat.update(proc.as_dict(attrs=['ionice']))
+                except psutil.NoSuchProcess:
+                    pass
             else:
                 procstat['ionice'] = None
 
@@ -298,7 +322,7 @@ class GlancesProcesses(object):
                                          mandatory_stats=True, 
                                          standard_stats=self.get_max_processes() is None)
             # Continue to the next process if it has to be filtered
-            if self.is_filtered(s['cmdline']) and self.is_filtered(s['name']):
+            if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
                 continue
             # Ok add the process to the list
             processdict[proc] = s
@@ -333,10 +357,13 @@ class GlancesProcesses(object):
                 procstat = i[1]
                 # Update with standard stats
                 # and extended stats but only for TOP (first) process
-                procstat.update(self.__get_process_stats(i[0], 
-                                                         mandatory_stats=False, 
-                                                         standard_stats=True,
-                                                         extended_stats=first))
+                s = self.__get_process_stats(i[0], 
+                                             mandatory_stats=False, 
+                                             standard_stats=True,
+                                             extended_stats=first)
+                if s is None:
+                    continue
+                procstat.update(s)
                 # Add a specific time_since_update stats for bitrate
                 procstat['time_since_update'] = time_since_update
                 # Update process list
