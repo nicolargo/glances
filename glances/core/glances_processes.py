@@ -215,16 +215,31 @@ class GlancesProcesses(object):
         if extended_stats and not self.disable_extended_tag:
             procstat['extended_stats'] = True 
 
-            # CPU affinity
+            # CPU affinity (Windows and Linux only)
+            try:
+                procstat.update(proc.as_dict(attrs=['cpu_affinity']))
+            except AttributeError:
+                procstat['cpu_affinity'] = None
             # Memory extended
+            try:
+                procstat.update(proc.as_dict(attrs=['memory_info_ex']))
+            except AttributeError:
+                procstat['memory_info_ex'] = None
             # Number of context switch
+            try:
+                procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
+            except AttributeError:
+                procstat['num_ctx_switches'] = None
             # Number of file descriptors (Unix only)
+            try:
+                procstat.update(proc.as_dict(attrs=['num_fds']))
+            except AttributeError:
+                procstat['num_fds'] = None
             # Threads number
-            procstat.update(proc.as_dict(attrs=['cpu_affinity', 
-                                                'memory_info_ex',
-                                                'num_ctx_switches',
-                                                'num_fds',
-                                                'num_threads']))
+            try:
+                procstat.update(proc.as_dict(attrs=['num_threads']))
+            except AttributeError:
+                procstat['num_threads'] = None
 
             # Number of handles (Windows only)
             if is_windows:
