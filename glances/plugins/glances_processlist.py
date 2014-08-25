@@ -114,7 +114,7 @@ class Plugin(GlancesPlugin):
         for p in self.sortlist(process_sort_key):
             ret.append(self.curse_new_line())
             # CPU
-            if 'cpu_percent' in p:
+            if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
                 msg = '{0:>6.1f}'.format(p['cpu_percent'])
                 ret.append(self.curse_add_line(msg,
                                                self.get_alert(p['cpu_percent'], header="cpu")))
@@ -122,7 +122,7 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>6}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # MEM
-            if 'memory_percent' in p:
+            if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
                 msg = '{0:>6.1f}'.format(p['memory_percent'])
                 ret.append(self.curse_add_line(msg,
                                                self.get_alert(p['memory_percent'], header="mem")))
@@ -130,7 +130,7 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>6}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # VMS/RSS
-            if 'memory_info' in p:
+            if 'memory_info' in p and p['memory_info'] is not None and p['memory_info'] != '':
                 # VMS
                 msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
                 ret.append(self.curse_add_line(msg, optional=True))
@@ -257,7 +257,7 @@ class Plugin(GlancesPlugin):
                         # Ignore rss and vms (already displayed)
                         if k not in ['rss', 'vms'] and v is not None:
                             msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
-                    if p['memory_swap'] is not None:
+                    if 'memory_swap' in p and p['memory_swap'] is not None:
                         msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
                     ret.append(self.curse_add_line(msg))
                 # Third line is for openned files/network sessions
