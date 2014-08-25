@@ -9,31 +9,38 @@ Version 2.1
       User can define a process filter pattern (as a regular expression).
       The pattern could be defined from the command line (-f <pattern>)
       or by pressing the ENTER key in the curse interface.
-      Process filter feature is only available in standalone mode. 
+      Process filter feature is only available in standalone mode.
+    * Add extended processes informations for top process
+      Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), openned threads/files and TCP/UDP network sessions, IO nice level 
     * Create a max_processes key in the configuration file
       The goal is to reduce the number of displayed processes in the curses UI and 
       so limit the CPU footprint of the Glances standalone mode.
       The API always return all the processes, the key is only active in the curses UI.
       If the key is not define, all the processes will be displayed.
       The default value is 20 (processes displayed).
-    * History feature (--enable-history option on the command line)
+    * Alias for network interfaces, disks and sensors
+      Users can configure alias from the Glances configuration file.
+    * Add Glances log message (in the /tmp/glances.log file)
+      The default log level is INFO, you can switch to the DEBUG mode using the -d option on the command line.
+    * Add RESTFul API to the Web server mode
+      RestFul API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+    * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
+    * Add --theme-white feature to optimize display for white background
+    * Experimental history feature (--enable-history option on the command line)
       This feature allows users to generate graphs within the curse interface.
       Graphs are available for CPU, LOAD and MEM.
       To generate graph, click on the 'g' key.
       To reset the history, press the 'r' key.
       Note: This feature uses the matplotlib library.
-    * Alias for network interfaces, disks and sensors
-      Users can configure alias from the Glances configuration file.
-    * Add Glances log message (in the /tmp/glances.log file)
-      The default log level is INFO, you can switch to the DEBUG mode using the -d option on the command line.
-    * Add RESTFul API to the web server mode
-      RestFul API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
-    * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
-    * CI: Travis coverage
+    * CI: Improve Travis coverage
 
 Bugs corrected:
 
-    * ...
+    * Quitting glances leaves a column layout to the current terminal (issue #392)
+    * Glances crashes with malformed UTF-8 sequences in process command lines (issue #391)
+    * SNMP fallback mode is not Python 3 compliant (issue #386)
+    * Trouble using batinfo, hddtemp, pysensors w/ Python (issue #324) 
+
 
 Version 2.0.1
 =============
