@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3
+from glances.core.glances_globals import is_py3, logger
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -134,23 +134,25 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         for item in self.stats:
-            # New line
-            ret.append(self.curse_new_line())
-            # Alias for the lable name ?
-            label = self.has_alias(item['label'].lower())
-            if label is None:
-                label = item['label']
-            label = label[:18]
-            msg = '{0:18}'.format(label)
-            ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}'.format(item['value'])
-            if item['type'] == 'battery':
-                try:
-                    ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
-                except TypeError:
-                    pass
-            else:
-                ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
+            if item['value'] is not None and item['value'] != []:
+                logger.debug(item['value'])
+                # New line
+                ret.append(self.curse_new_line())
+                # Alias for the lable name ?
+                label = self.has_alias(item['label'].lower())
+                if label is None:
+                    label = item['label']
+                label = label[:18]
+                msg = '{0:18}'.format(label)
+                ret.append(self.curse_add_line(msg))
+                msg = '{0:>5}'.format(item['value'])
+                if item['type'] == 'battery':
+                    try:
+                        ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+                    except TypeError:
+                        pass
+                else:
+                    ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
 
         return ret
 
