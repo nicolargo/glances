@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows
+from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -218,13 +218,13 @@ class Plugin(GlancesPlugin):
             # If no command line for the process is available, fallback to
             # the bare process name instead
             cmdline = p['cmdline']
-            if cmdline == "":
+            if cmdline == "" or args.process_short_name:
                 msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 try:
                     cmd = cmdline.split()[0]
-                    args = ' '.join(cmdline.split()[1:])
+                    argument = ' '.join(cmdline.split()[1:])
                     path, basename = os.path.split(cmd)
                     if os.path.isdir(path):
                         msg = ' {0}'.format(path) + os.sep
@@ -233,7 +233,7 @@ class Plugin(GlancesPlugin):
                     else:
                         msg = ' {0}'.format(basename)
                         ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                    msg = " {0}".format(args)
+                    msg = " {0}".format(argument)
                     ret.append(self.curse_add_line(msg, splittable=True))
                 except UnicodeEncodeError:
                     ret.append(self.curse_add_line("", splittable=True))

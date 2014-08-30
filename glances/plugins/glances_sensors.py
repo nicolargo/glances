@@ -135,7 +135,6 @@ class Plugin(GlancesPlugin):
 
         for item in self.stats:
             if item['value'] is not None and item['value'] != []:
-                logger.debug(item['value'])
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
