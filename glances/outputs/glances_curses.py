@@ -219,6 +219,9 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.args.percpu = not self.args.percpu
+        elif self.pressedkey == ord('/'):
+            # '/' > Switch between short/long name for processes
+            self.args.process_short_name = not self.args.process_short_name
         elif self.pressedkey == ord('a'):
             # 'a' > Sort processes automatically
             self.args.process_sorted_by = 'auto'
