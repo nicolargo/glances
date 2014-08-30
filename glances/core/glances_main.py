@@ -111,9 +111,11 @@ class GlancesMain(object):
                             dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
-        # Display (Curses) options
+        # Display options
         parser.add_argument('-f', '--process-filter', default=None, type=str,
                             dest='process_filter', help=_('set the process filter patern (regular expression)'))
+        parser.add_argument('--process-short-name', action='store_true', default=False,
+                            dest='process_short_name', help=_('force short name for processes name'))
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
