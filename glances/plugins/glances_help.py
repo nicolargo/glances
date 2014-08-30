@@ -128,6 +128,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = msg_col2.format("q", _("Quit (Esc and Ctrl-C also work)"))
         ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        msg = msg_col.format("/", _("Enable/disable short processes name"))
+        ret.append(self.curse_add_line(msg))
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
