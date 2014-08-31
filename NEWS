@@ -9,9 +9,10 @@ Version 2.1
       User can define a process filter pattern (as a regular expression).
       The pattern could be defined from the command line (-f <pattern>)
       or by pressing the ENTER key in the curse interface.
-      Process filter feature is only available in standalone mode.
+      For the moment, process filter feature is only available in standalone mode.
     * Add extended processes informations for top process
       Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), openned threads/files and TCP/UDP network sessions, IO nice level 
+      For the moment, extended processes stats are only available in standalone mode.
     * Add --process-short-name tag and '/' key to switch between short/command line
     * Create a max_processes key in the configuration file
       The goal is to reduce the number of displayed processes in the curses UI and 
@@ -19,6 +20,7 @@ Version 2.1
       The API always return all the processes, the key is only active in the curses UI.
       If the key is not define, all the processes will be displayed.
       The default value is 20 (processes displayed).
+      For the moment, this feature is only available in standalone mode.
     * Alias for network interfaces, disks and sensors
       Users can configure alias from the Glances configuration file.
     * Add Glances log message (in the /tmp/glances.log file)
