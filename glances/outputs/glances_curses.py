@@ -545,7 +545,7 @@ class GlancesCurses(object):
             popup.addnstr(2 + y, 2, m, len(m))
             y += 1
 
-        if is_input:
+        if is_input and not is_windows:
             # Create a subwindow for the text field
             subpop = popup.derwin(1, input_size, 2, 2 + len(m))
             subpop.attron(self.__colors_list['FILTER'])
@@ -717,15 +717,16 @@ class GlancesCurses(object):
         else:
             return c + 1
 
-class glances_textbox(Textbox):
-    """
-    """
-    def __init__(*args, **kwargs):
-        Textbox.__init__(*args, **kwargs)
-  
-    def do_command(self, ch):
-        if ch == 10: # Enter
-            return 0
-        if ch == 127: # Enter
-            return 8
-        return Textbox.do_command(self, ch)
+if not is_windows:
+    class glances_textbox(Textbox):
+        """
+        """
+        def __init__(*args, **kwargs):
+            Textbox.__init__(*args, **kwargs)
+      
+        def do_command(self, ch):
+            if ch == 10: # Enter
+                return 0
+            if ch == 127: # Enter
+                return 8
+            return Textbox.do_command(self, ch)
