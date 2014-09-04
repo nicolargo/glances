@@ -126,6 +126,8 @@ class WCurseLight(object):
     COLOR_BLUE = colorconsole.terminal.colors["LBLUE"]
     COLOR_MAGENTA = colorconsole.terminal.colors["LPURPLE"]
     COLOR_BLACK = colorconsole.terminal.colors["BLACK"]
+    COLOR_MAGENTA = colorconsole.terminal.colors["MAGENTA"]
+    COLOR_CYAN = colorconsole.terminal.colors["CYAN"]
     A_UNDERLINE = 0
     A_BOLD = 0
     COLOR_PAIRS = 9
