@@ -27,13 +27,20 @@ import psutil
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
 # percentages of idle CPU time: .1.3.6.1.4.1.2021.11.11.0
-snmp_oid = {'user': '1.3.6.1.4.1.2021.11.9.0',
-            'system': '1.3.6.1.4.1.2021.11.10.0',
-            'idle': '1.3.6.1.4.1.2021.11.11.0'}
+snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
+                        'system': '1.3.6.1.4.1.2021.11.10.0',
+                        'idle': '1.3.6.1.4.1.2021.11.11.0'},
+            'windows': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
+            'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'}}
+
+# Define the history items list
+# 'color' define the graph color in #RGB format
+# All items in this list will be historised if the --enable-history tag is set
+items_history_list = [{'name': 'user', 'color': '#00FF00'}, 
+                      {'name': 'system', 'color': '#FF0000'}]
 
 
 class Plugin(GlancesPlugin):
-
     """
     Glances' CPU plugin.
 
@@ -42,16 +49,10 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the CPU plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 0
-        # Enter -1 to diplay bottom
-        self.line_curse = 1
 
         # Init stats
         self.first_call = True
@@ -91,14 +92,45 @@ class Plugin(GlancesPlugin):
                     self.stats[cpu] = getattr(cputimespercent, cpu)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
 
-            if self.stats['user'] == '':
-                self.reset()
-                return self.stats
+            if self.get_short_system_name() in ('windows', 'esxi'):
+                # Windows or VMWare ESXi
+                # You can find the CPU utilization of windows system by querying the oid
+                # Give also the number of core (number of element in the table)
+                try:
+                    cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                                    bulk=True)
+                except KeyError:
+                    self.reset()
 
-            for key in self.stats.iterkeys():
-                self.stats[key] = float(self.stats[key])
+                # Iter through CPU and compute the idle CPU stats
+                self.stats['nb_log_core'] = 0
+                self.stats['idle'] = 0
+                for c in cpu_stats:
+                    if c.startswith('percent'):
+                        self.stats['idle'] += float(cpu_stats['percent.3'])
+                        self.stats['nb_log_core'] += 1
+                if self.stats['nb_log_core'] > 0:
+                    self.stats['idle'] = self.stats['idle'] / self.stats['nb_log_core']
+                self.stats['idle'] = 100 - self.stats['idle']
+
+            else:
+                # Default behavor
+                try:
+                    self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
+                except KeyError:
+                    self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+               
+                if self.stats['idle'] == '':
+                    self.reset()
+                    return self.stats
+
+                # Convert SNMP stats to float
+                for key in list(self.stats.keys()):
+                    self.stats[key] = float(self.stats[key])
+
+        # Update the history list
+        self.update_stats_history()
 
         return self.stats
 
@@ -112,12 +144,17 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Build the string message
+        # If user stat is not here, display only idle / total CPU usage (for exemple on Windows OS)
+        idle_tag = 'user' not in self.stats
         # Header
         msg = '{0:8}'.format(_("CPU"))
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Total CPU usage
         msg = '{0:>6.1%}'.format((100 - self.stats['idle']) / 100)
-        ret.append(self.curse_add_line(msg))
+        if idle_tag:
+            ret.append(self.curse_add_line(msg, self.get_alert_log((100 - self.stats['idle']) / 100, header="system")))
+        else:
+            ret.append(self.curse_add_line(msg))
         # Nice CPU
         if 'nice' in self.stats:
             msg = '  {0:8}'.format(_("nice:"))
@@ -131,7 +168,12 @@ class Plugin(GlancesPlugin):
             msg = '{0:8}'.format(_("user:"))
             ret.append(self.curse_add_line(msg))
             msg = '{0:>6.1%}'.format(self.stats['user'] / 100)
-            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))            
+        elif 'idle' in self.stats:
+            msg = '{0:8}'.format(_("idle:"))
+            ret.append(self.curse_add_line(msg))
+            msg = '{0:>6.1%}'.format(self.stats['idle'] / 100)
+            ret.append(self.curse_add_line(msg))
         # IRQ CPU
         if 'irq' in self.stats:
             msg = '  {0:8}'.format(_("irq:"))
@@ -141,11 +183,16 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # System CPU
-        if 'system' in self.stats:
+        if 'system' in self.stats and not idle_tag:
             msg = '{0:8}'.format(_("system:"))
             ret.append(self.curse_add_line(msg))
             msg = '{0:>6.1%}'.format(self.stats['system'] / 100)
             ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['system'], header="system")))
+        else:
+            msg = '{0:8}'.format(_("core:"))
+            ret.append(self.curse_add_line(msg))
+            msg = '{0:>6}'.format(self.stats['nb_log_core'])
+            ret.append(self.curse_add_line(msg))
         # IOWait CPU
         if 'iowait' in self.stats:
             msg = '  {0:8}'.format(_("iowait:"))
@@ -155,7 +202,7 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # Idle CPU
-        if 'idle' in self.stats:
+        if 'idle' in self.stats and not idle_tag:
             msg = '{0:8}'.format(_("idle:"))
             ret.append(self.curse_add_line(msg))
             msg = '{0:>6.1%}'.format(self.stats['idle'] / 100)

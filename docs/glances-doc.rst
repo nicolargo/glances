@@ -123,42 +123,53 @@ Command Reference
 Command-Line Options
 --------------------
 
--h, --help            show this help message and exit
--V, --version         show program's version number and exit
--b, --byte            display network rate in byte per second
--B BIND_ADDRESS, --bind BIND_ADDRESS
-                      bind server to the given IPv4/IPv6 address or hostname
--c CLIENT, --client CLIENT
-                      connect to a Glances server by IPv4/IPv6 address or
-                      hostname
--C CONF_FILE, --config CONF_FILE
-                      path to the configuration file
---disable-bold        disable bold mode in the terminal
---disable-diskio      disable disk I/O module
---disable-fs          disable file system module
---disable-network     disable network module
---disable-sensors     disable sensors module
---disable-process     disable process module
---disable-log         disable log module
---output-csv OUTPUT_CSV
-                      export stats to a CSV file
--p PORT, --port PORT  define the client/server TCP port [default: 61209]
---password            define a client/server password from the prompt or
-                      file
--s, --server          run Glances in server mode
---snmp-community SNMP_COMMUNITY
-                      SNMP community
---snmp-port SNMP_PORT
-                      SNMP port
---snmp-version SNMP_VERSION
-                      SNMP version (1, 2c or 3)
---snmp-user SNMP_USER
-                      SNMP username (only for SNMPv3)
---snmp-auth SNMP_AUTH
-                      SNMP authentication key (only for SNMPv3)
--t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
--w, --webserver       run Glances in Web server mode
--1, --percpu          start Glances in per CPU mode
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  -d, --debug           Enable debug mode
+  -C CONF_FILE, --config CONF_FILE
+                        path to the configuration file
+  --enable-history      enable the history mode
+  --disable-bold        disable bold mode in the terminal
+  --disable-diskio      disable disk I/O module
+  --disable-fs          disable filesystem module
+  --disable-network     disable network module
+  --disable-sensors     disable sensors module
+  --disable-process     disable process module
+  --disable-process-extended
+                        disable extended stats on top process
+  --disable-log         disable log module
+  --output-csv OUTPUT_CSV
+                        export stats to a CSV file
+  -c CLIENT, --client CLIENT
+                        connect to a Glances server by IPv4/IPv6 address or
+                        hostname
+  -s, --server          run Glances in server mode
+  -p PORT, --port PORT  define the client/server TCP port [default: 61209]
+  -B BIND_ADDRESS, --bind BIND_ADDRESS
+                        bind server to the given IPv4/IPv6 address or hostname
+  --password-badidea PASSWORD_ARG
+                        define password from the command line
+  --password            define a client/server password from the prompt or
+                        file
+  --snmp-community SNMP_COMMUNITY
+                        SNMP community
+  --snmp-port SNMP_PORT
+                        SNMP port
+  --snmp-version SNMP_VERSION
+                        SNMP version (1, 2c or 3)
+  --snmp-user SNMP_USER
+                        SNMP username (only for SNMPv3)
+  --snmp-auth SNMP_AUTH
+                        SNMP authentication key (only for SNMPv3)
+  --snmp-force          force SNMP mode
+  -t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
+  -w, --webserver       run Glances in web server mode
+  -f PROCESS_FILTER, --process-filter PROCESS_FILTER
+                        set the process filter patern (regular expression)
+  --process-short-name  force short name for processes name
+  -b, --byte            display network rate in byte per second
+  -1, --percpu          start Glances in per CPU mode
+  --theme-white         optimize display for white background
 
 Interactive Commands
 --------------------
@@ -177,8 +188,12 @@ The following commands (key pressed) are supported while in Glances:
     Sort processes by CPU usage
 ``d``
     Show/hide disk I/O stats
+``e``
+    Enable/disable top extended stats
 ``f``
     Show/hide file system stats
+``f``
+    Generate hraphs for current history
 ``h``
     Show/hide the help screen
 ``i``
@@ -193,6 +208,8 @@ The following commands (key pressed) are supported while in Glances:
     Sort processes by name
 ``q``
     Quit
+``r``
+    Reset history
 ``s``
     Show/hide sensors stats
 ``t``
@@ -207,6 +224,8 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide processes stats
 ``1``
     Switch between global CPU and per-CPU stats
+``/``
+    Switch between short name / command line (processes name)
 
 Configuration
 =============
@@ -592,13 +611,15 @@ CSV files have two lines per stats:
 - Stats description
 - Stats (comma separated)
 
-API Documentation
-=================
+APIs Documentations
+===================
 
-Glances uses a `XML-RPC server`_ and can be used by another client software.
+Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be used by another client software.
 
-API documentation is available at
-https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to.
+APIs documentations are available at:
+
+- XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
+- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
 
 Support
 =======
@@ -614,3 +635,4 @@ Feel free to contribute!
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
+.. _RESTFULL-JSON: http://jsonapi.org/

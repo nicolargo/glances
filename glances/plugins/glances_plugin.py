@@ -24,29 +24,40 @@ I am your father...
 """
 
 # Import system libs
+from datetime import datetime
 import json
+from operator import itemgetter
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs
+from glances.core.glances_globals import glances_logs, logger
 
 
 class GlancesPlugin(object):
 
     """Main class for Glances' plugin."""
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, items_history_list=None):
         """Init the plugin of plugins class."""
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
+        # logger.debug(_("Init plugin %s") % self.plugin_name)
 
         # Init the args
         self.args = args
 
+        # Init the default alignement (for curses)
+        self.set_align('left')
+
         # Init the input method
         self.input_method = 'local'
+        self.short_system_name = None
 
         # Init the stats list
         self.stats = None
+
+        # Init the history list
+        self.items_history_list = items_history_list
+        self.stats_history = self.init_stats_history()
 
         # Init the limits dictionnary
         self.limits = dict()
@@ -59,19 +70,69 @@ class GlancesPlugin(object):
         """Return the human-readable stats."""
         return str(self.stats)
 
-    def set_input(self, input_method):
+    def init_stats_history(self):
+        """Init the stats history (dict of list)"""
+        ret = None
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            iList = [i['name'] for i in self.get_items_history_list()]
+            logger.debug(_("Stats history activated for plugin %s (items: %s)") % (self.plugin_name, iList))
+            ret = {}
+            # First column for the date
+            ret['date'] = []
+            for i in self.get_items_history_list():
+                # One column per item
+                ret[i['name']] = []
+        return ret
+
+    def reset_stats_history(self):
+        """Reset the stats history (dict of list)"""
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            iList = [i['name'] for i in self.get_items_history_list()]
+            logger.debug(_("Reset history for plugin %s (items: %s)") % (self.plugin_name, iList))
+            self.stats_history = {}
+            # First column for the date
+            self.stats_history['date'] = []
+            for i in self.get_items_history_list():
+                # One column per item
+                self.stats_history[i['name']] = []
+        return self.stats_history
+
+    def update_stats_history(self):
+        """Update stats history"""
+        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+            self.stats_history['date'].append(datetime.now())
+            for i in self.get_items_history_list():
+                self.stats_history[i['name']].append(self.stats[i['name']])
+        return self.stats_history
+
+    def get_stats_history(self):
+        """Return the stats history"""
+        return self.stats_history
+
+    def get_items_history_list(self):
+        """Return the items history list"""
+        return self.items_history_list
+
+    def set_input(self, input_method, short_system_name=None):
         """Set the input method.
 
         * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
+
+        For SNMP, short_system_name is detected short OS name
         """
         self.input_method = input_method
+        self.short_system_name = short_system_name
         return self.input_method
 
     def get_input(self):
         """Get the input method."""
         return self.input_method
+
+    def get_short_system_name(self):
+        """Get the short detected OS name"""
+        return self.short_system_name
 
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
@@ -97,28 +158,35 @@ class GlancesPlugin(object):
             # Bulk request
             snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
 
-            # Build the internal dict with the SNMP result
-            # key is the first item in the snmp_oid
-            index = 1
-            for item in snmpresult:
-                item_stats = {}
-                item_key = None
-                for key in snmp_oid.iterkeys():
-                    oid = snmp_oid[key] + '.' + str(index)
-                    if oid in item:
-                        if item_key is None:
-                            item_key = item[oid]
-                        else:
-                            item_stats[key] = item[oid]
-                if item_stats != {}:
-                    ret[item_key] = item_stats
-                index += 1
+            if len(snmp_oid) == 1:
+                # Bulk command for only one OID
+                # Note: key is the item indexed but the OID result 
+                for item in snmpresult:
+                    if item.keys()[0].startswith(snmp_oid.values()[0]):
+                        ret[snmp_oid.keys()[0] + item.keys()[0].split(snmp_oid.values()[0])[1]] = item.values()[0]
+            else:
+                # Build the internal dict with the SNMP result
+                # Note: key is the first item in the snmp_oid
+                index = 1
+                for item in snmpresult:
+                    item_stats = {}
+                    item_key = None
+                    for key in list(snmp_oid.keys()):
+                        oid = snmp_oid[key] + '.' + str(index)
+                        if oid in item:
+                            if item_key is None:
+                                item_key = item[oid]
+                            else:
+                                item_stats[key] = item[oid]
+                    if item_stats != {}:
+                        ret[item_key] = item_stats
+                    index += 1
         else:
             # Simple get request
             snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
 
             # Build the internal dict with the SNMP result
-            for key in snmp_oid.iterkeys():
+            for key in list(snmp_oid.keys()):
                 ret[key] = snmpresult[snmp_oid[key]]
 
         return ret
@@ -128,17 +196,52 @@ class GlancesPlugin(object):
         return self.stats
 
     def get_stats(self):
-        """Return the stats object in JSON format for the XML-RPC API."""
+        """Return the stats object in JSON format"""
         return json.dumps(self.stats)
+
+    def get_stats_item(self, item):
+        """
+        Return the stats object for a specific item (in JSON format)
+        Stats should be a list of dict (processlist, network...)
+        """        
+        if type(self.stats) is not list:
+            if type(self.stats) is dict:
+                try:
+                    return json.dumps({ item: self.stats[item] })
+                except KeyError as e:
+                    logger.error(_("Can not get item %s (%s)") % (item, e))
+            else:
+                return None
+        else:
+            try:
+                # Source: http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+                return json.dumps({ item: map(itemgetter(item), self.stats) })
+            except (KeyError, ValueError) as e:
+                logger.error(_("Can not get item %s (%s)") % (item, e))
+                return None
+
+    def get_stats_value(self, item, value):
+        """
+        Return the stats object for a specific item=value (in JSON format)
+        Stats should be a list of dict (processlist, network...)
+        """
+        if type(self.stats) is not list:
+            return None
+        else:
+            if value.isdigit():
+                value = int(value)
+            try:
+                return json.dumps({ value: [i for i in self.stats if i[item] == value] }) 
+            except (KeyError, ValueError) as e:
+                logger.error(_("Can not get item(%s)=value(%s) (%s)") % (item, value,e))
+                return None
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            # print "Load limits for %s" % self.plugin_name
             for s, v in config.items(self.plugin_name):
                 # Read limits
-                # print "\t%s = %s" % (self.plugin_name + '_' + s, v)
                 try:
                     self.limits[self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
                 except ValueError:
@@ -229,55 +332,67 @@ class GlancesPlugin(object):
         else:
             return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
-    def get_hide(self, header=""):
-        """Return the hide configuration list key for the current plugin."""
+    def get_conf_value(self, value, header="", plugin_name=None):
+        """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""
+        if plugin_name is None:
+            plugin_name = self.plugin_name
         if header == "":
             try:
-                return self.limits[self.plugin_name + '_' + 'hide']
+                return self.limits[plugin_name + '_' + value]
             except KeyError:
                 return []
         else:
             try:
-                return self.limits[self.plugin_name + '_' + header + '_' + 'hide']
+                return self.limits[plugin_name + '_' + header + '_' + value]
             except KeyError:
                 return []
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""
-        return value in self.get_hide(header=header)
+        return value in self.get_conf_value('hide', header=header)
 
-    def msg_curse(self, args):
+    def has_alias(self, header):
+        """Return the alias name for the relative header or None if nonexist"""
+        try:
+            return self.limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
+        except (KeyError, IndexError):
+            return None
+
+    def msg_curse(self, args=None, max_width=None):
         """Return default string to display in the curse interface."""
         return [self.curse_add_line(str(self.stats))]
 
-    def get_stats_display(self, args=None):
+    def get_stats_display(self, args=None, max_width=None):
         """Return a dict with all the information needed to display the stat.
 
         key     | description
         ----------------------------
         display | Display the stat (True or False)
         msgdict | Message to display (list of dict [{ 'msg': msg, 'decoration': decoration } ... ])
-        column  | column number
-        line    | Line number
+        align   | Message position
         """
         display_curse = False
-        column_curse = -1
-        line_curse = -1
 
         if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
-        if hasattr(self, 'column_curse'):
-            column_curse = self.column_curse
-        if hasattr(self, 'line_curse'):
-            line_curse = self.line_curse
+        if hasattr(self, 'align'):
+            align_curse = self.align
 
-        return {'display': display_curse,
-                'msgdict': self.msg_curse(args),
-                'column': column_curse,
-                'line': line_curse}
+        if max_width is not None:
+            ret = {'display': display_curse,
+                   'msgdict': self.msg_curse(args, max_width=max_width),
+                   'align': align_curse}
+        else:
+            ret = {'display': display_curse,
+                   'msgdict': self.msg_curse(args),
+                   'align': align_curse}
 
-    def curse_add_line(self, msg, decoration="DEFAULT", optional=False, splittable=False):
-        """Return a dict with: { 'msg': msg, 'decoration': decoration, 'optional': False }.
+        return ret
+
+    def curse_add_line(self, msg, decoration="DEFAULT", 
+                       optional=False, additional=False, 
+                       splittable=False):
+        """Return a dict with
 
         Where:
             msg: string
@@ -298,13 +413,25 @@ class GlancesPlugin(object):
                 CRITICAL: Value is CRITICAL and non logged
                 CRITICAL_LOG: Value is CRITICAL and logged
             optional: True if the stat is optional (display only if space is available)
+            additional: True if the stat is additional (display only if space is available after optional)
             spittable: Line can be splitted to fit on the screen (default is not)
         """
-        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'splittable': splittable}
+        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'additional': additional, 'splittable': splittable}
 
     def curse_new_line(self):
         """Go to a new line."""
         return self.curse_add_line('\n')
+
+    def set_align(self, align='left'):
+        """Set the Curse align"""
+        if align in ('left', 'right', 'bottom'):       
+            self.align = align
+        else:
+            self.align = 'left'
+
+    def get_align(self):
+        """Get the Curse align"""
+        return self.align
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.

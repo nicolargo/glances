@@ -19,11 +19,15 @@
 
 import sys
 
+# Import Glances libs
+from glances.core.glances_globals import logger
+
+# Import mandatory PySNMP lib
 try:
     from pysnmp.entity.rfc3413.oneliner import cmdgen
 except ImportError:
-    print("PySNMP library not found.")
-    print("Install using pip: # pip install pysnmp")
+    logger.critical(_("PySNMP library not found."))
+    print(_("Install it using pip: # pip install pysnmp"))
     sys.exit(2)
 
 
@@ -55,6 +59,9 @@ class GlancesSNMPClient(object):
                     ret[name.prettyPrint()] = ''
                 else:
                     ret[name.prettyPrint()] = val.prettyPrint()
+                    # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
+                    if ret[name.prettyPrint()].startswith('b\''):
+                        ret[name.prettyPrint()] = ret[name.prettyPrint()][2:-1]
         return ret
 
     def get_by_oid(self, *oid):
@@ -89,6 +96,9 @@ class GlancesSNMPClient(object):
                         item[name.prettyPrint()] = ''
                     else:
                         item[name.prettyPrint()] = val.prettyPrint()
+                        # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
+                        if item[name.prettyPrint()].startswith('b\''):
+                            item[name.prettyPrint()] = item[name.prettyPrint()][2:-1]
                 ret.append(item)
         return ret
 

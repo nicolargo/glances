@@ -24,18 +24,28 @@ import json
 import socket
 import sys
 try:
-    from xmlrpc.client import ServerProxy, ProtocolError, Fault
+    from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
 except ImportError:  # Python 2
-    from xmlrpclib import ServerProxy, ProtocolError, Fault
+    from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
+import httplib
 
 # Import Glances libs
-from glances.core.glances_globals import version
+from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCurses
 
 
-class GlancesClient(object):
+class GlancesClientTransport(Transport):
+    """This class overwrite the default XML-RPC transport and manage timeout"""
+    
+    def set_timeout(self, timeout):
+        self.timeout = timeout
 
+    def make_connection(self, host):
+        return httplib.HTTPConnection(host, timeout=self.timeout)
+
+
+class GlancesClient(object):
     """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None):
@@ -54,10 +64,13 @@ class GlancesClient(object):
             uri = 'http://{0}:{1}'.format(args.client, args.port)
 
         # Try to connect to the URI
+        transport = GlancesClientTransport()
+        # Configure the server timeout to 7 seconds
+        transport.set_timeout(7)
         try:
-            self.client = ServerProxy(uri)
+            self.client = ServerProxy(uri, transport = transport)
         except Exception as e:
-            print(_("Error: Couldn't create socket {0}: {1}").format(uri, e))
+            logger.error(_("Couldn't create socket {0}: {1}").format(uri, e))
             sys.exit(2)
 
     def set_mode(self, mode='glances'):
@@ -81,39 +94,47 @@ class GlancesClient(object):
         """Logon to the server."""
         ret = True
 
-        # First of all, trying to connect to a Glances server
-        try:
-            client_version = self.client.init()
+        if not self.args.snmp_force:
+            # First of all, trying to connect to a Glances server
             self.set_mode('glances')
-        except socket.error as err:
-            # print(_("Error: Connection to {0} server failed").format(self.get_mode()))
-            # Fallback to SNMP
-            self.set_mode('snmp')
-        except ProtocolError as err:
-            # Others errors
-            if str(err).find(" 401 ") > 0:
-                print(_("Error: Connection to server failed: Bad password"))
-            else:
-                print(_("Error: Connection to server failed: {0}").format(err))
-            sys.exit(2)
+            client_version = None
+            try:
+                client_version = self.client.init()
+            except socket.error as err:
+                # Fallback to SNMP
+                logger.error(_("Connection to Glances server failed"))
+                self.set_mode('snmp')
+                fallbackmsg = _("Trying fallback to SNMP...")
+                print(fallbackmsg)
+            except ProtocolError as err:
+                # Others errors
+                if str(err).find(" 401 ") > 0:
+                    logger.error(_("Connection to server failed (Bad password)"))
+                else:
+                    logger.error(_("Connection to server failed ({0})").format(err))
+                sys.exit(2)
 
-        if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
-            # Init stats
-            self.stats = GlancesStatsClient()
-            self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-        elif self.get_mode() == 'snmp':
-            print (_("Info: Connection to Glances server failed. Trying fallback to SNMP..."))
-            # Then fallback to SNMP if needed
+            if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
+                # Init stats
+                self.stats = GlancesStatsClient()
+                self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+            else:
+                logger.error("Client version: %s / Server version: %s" % (version, client_version))
+
+        else:
+            self.set_mode('snmp')
+
+        if self.get_mode() == 'snmp':            
+            logger.info(_("Trying to grab stats by SNMP..."))
+            # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
             # Init stats
             self.stats = GlancesStatsClientSNMP(args=self.args)
 
             if not self.stats.check_snmp():
-                print(_("Error: Connection to SNMP server failed"))
+                logger.error(_("Connection to SNMP server failed"))
                 sys.exit(2)
-        else:
-            ret = False
 
         if ret:
             # Load limits from the configuration file
@@ -133,7 +154,8 @@ class GlancesClient(object):
         elif self.get_mode() == 'snmp':
             return self.update_snmp()
         else:
-            print(_("Error: Unknown server mode: {0}").format(self.get_mode()))
+            self.end()
+            logger.critical(_("Unknown server mode: {0}").format(self.get_mode()))
             sys.exit(2)
 
     def update_glances(self):
@@ -183,8 +205,6 @@ class GlancesClient(object):
 
             # Update the screen
             self.screen.update(self.stats, cs_status=cs_status)
-            # print self.stats
-            # print self.stats.getAll()
 
     def end(self):
         """End of the client session."""

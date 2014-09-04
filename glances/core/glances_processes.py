@@ -17,10 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from glances.core.glances_globals import is_bsd, is_mac, is_windows
+# Import Glances lib
+from glances.core.glances_globals import is_linux, is_bsd, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
+# Import Python lib
 import psutil
+import re
 
 
 class GlancesProcesses(object):
@@ -44,13 +47,27 @@ class GlancesProcesses(object):
         self.io_old = {}
 
         # Init stats
-        self.processsort = 'cpu_percent'
+        self.resetsort()
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU comsumption)
         # Default is to enable the processes stats
         self.disable_tag = False
+
+        # Extended stats for top process is enable by default
+        self.disable_extended_tag = False
+
+        # Maximum number of processes showed in the UI interface
+        # None if no limit
+        self.max_processes = None
+
+        # Process filter is a regular expression
+        self.process_filter = None
+        self.process_filter_re = None
+
+        # !!! ONLY FOR TEST
+        # self.set_process_filter('.*python.*')
 
     def enable(self):
         """Enable process stats."""
@@ -61,99 +78,230 @@ class GlancesProcesses(object):
         """Disable process stats."""
         self.disable_tag = True
 
-    def __get_process_stats(self, proc):
-        """Get process stats."""
-        procstat = {}
+    def enable_extended(self):
+        """Enable extended process stats."""
+        self.disable_extended_tag = False
+        self.update()
 
-        # Process ID
-        procstat['pid'] = proc.pid
+    def disable_extended(self):
+        """Disable extended process stats."""
+        self.disable_extended_tag = True
 
-        # Process name (cached by PSUtil)
-        try:
-            procstat['name'] = proc.name()
-        except psutil.AccessDenied:
-            procstat['name'] = ""
+    def set_max_processes(self, value):
+        """Set the maximum number of processes showed in the UI interfaces"""
+        self.max_processes = value
+        return self.max_processes
 
-        # Process username (cached with internal cache)
-        try:
-            self.username_cache[procstat['pid']]
-        except:
+    def get_max_processes(self):
+        """Get the maximum number of processes showed in the UI interfaces"""
+        return self.max_processes
+
+    def set_process_filter(self, value):
+        """Set the process filter"""
+        logger.info(_("Set process filter to %s") % value)
+        self.process_filter = value
+        if value is not None:
             try:
-                self.username_cache[procstat['pid']] = proc.username()
-            except (KeyError, psutil.AccessDenied):
+                self.process_filter_re = re.compile(value)
+                logger.debug(_("Process filter regular expression compilation OK: %s") % self.get_process_filter())
+            except:
+                logger.error(_("Can not compile process filter regular expression: %s") % value)
+                self.process_filter_re = None
+        else:
+            self.process_filter_re = None
+        return self.process_filter
+
+    def get_process_filter(self):
+        """Get the process filter"""
+        return self.process_filter
+
+    def get_process_filter_re(self):
+        """Get the process regular expression compiled"""
+        return self.process_filter_re
+
+    def is_filtered(self, value):
+        """Return True if the value should be filtered"""
+        if self.get_process_filter() is None:
+            # No filter => Not filtered
+            return False
+        else:
+            # logger.debug(self.get_process_filter() + " <> " + value + " => " + str(self.get_process_filter_re().match(value) is None))
+            return self.get_process_filter_re().match(value) is None
+
+    def __get_process_stats(self, proc,
+                            mandatory_stats=True,
+                            standard_stats=True, 
+                            extended_stats=False):
+        """
+        Get process stats of the proc processes (proc is returned psutil.process_iter())
+        mandatory_stats: need for the sorting/filter step
+        => cpu_percent, memory_percent, io_counters, name, cmdline
+        standard_stats: for all the displayed processes
+        => username, status, memory_info, cpu_times
+        extended_stats: only for top processes (see issue #403)
+        => connections (UDP/TCP), memory_swap...
+        """
+
+        # Process ID (always)
+        procstat = proc.as_dict(attrs=['pid'])
+
+        if mandatory_stats:
+            procstat['mandatory_stats'] = True 
+
+            # Process CPU, MEM percent and name
+            procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+
+            # Process command line (cached with internal cache)
+            try:
+                self.cmdline_cache[procstat['pid']]
+            except KeyError:
+                # Patch for issue #391
                 try:
-                    self.username_cache[procstat['pid']] = proc.uids().real
-                except (KeyError, AttributeError, psutil.AccessDenied):
-                    self.username_cache[procstat['pid']] = "?"
-        procstat['username'] = self.username_cache[procstat['pid']]
+                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                    self.cmdline_cache[procstat['pid']] = ""
+            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
-        # Process command line (cached with internal cache)
-        try:
-            self.cmdline_cache[procstat['pid']]
-        except:
-            self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-        procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
+            # Process IO
+            # procstat['io_counters'] is a list:
+            # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+            # If io_tag = 0 > Access denied (display "?")
+            # If io_tag = 1 > No access denied (display the IO rate)
+            # Note Disk IO stat not available on Mac OS
+            if not is_mac:
+                try:
+                    # Get the process IO counters
+                    proc_io = proc.io_counters()
+                    io_new = [proc_io.read_bytes, proc_io.write_bytes]
+                except psutil.AccessDenied:
+                    # Access denied to process IO (no root account)
+                    # Put 0 in all values (for sort) and io_tag = 0 (for display)
+                    procstat['io_counters'] = [0, 0] + [0, 0]
+                    io_tag = 0
+                else:
+                    # For IO rate computation
+                    # Append saved IO r/w bytes
+                    try:
+                        procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
+                    except KeyError:
+                        procstat['io_counters'] = io_new + [0, 0]
+                    # then save the IO r/w bytes
+                    self.io_old[procstat['pid']] = io_new
+                    io_tag = 1
 
-        # Process status
-        procstat['status'] = str(proc.status())[:1].upper()
+                # Append the IO tag (for display)
+                procstat['io_counters'] += [io_tag]
 
-        # Process nice
-        try:
-            procstat['nice'] = proc.nice()
-        except psutil.AccessDenied:
-            procstat['nice'] = None
+        if standard_stats:
+            procstat['standard_stats'] = True 
 
-        # Process memory
-        procstat['memory_info'] = proc.memory_info()
-        procstat['memory_percent'] = proc.memory_percent()
-
-        # Process CPU
-        procstat['cpu_times'] = proc.cpu_times()
-        procstat['cpu_percent'] = proc.cpu_percent(interval=0)
-
-        # Process network connections (TCP and UDP) (Experimental)
-        # !!! High CPU consumption
-        # try:
-        #     procstat['tcp'] = len(proc.connections(kind="tcp"))
-        #     procstat['udp'] = len(proc.connections(kind="udp"))
-        # except:
-        #     procstat['tcp'] = 0
-        #     procstat['udp'] = 0
-
-        # Process IO
-        # procstat['io_counters'] is a list:
-        # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
-        # If io_tag = 0 > Access denied (display "?")
-        # If io_tag = 1 > No access denied (display the IO rate)
-        # Note Disk IO stat not available on Mac OS
-        if not is_mac:
+            # Process username (cached with internal cache)
             try:
-                # Get the process IO counters
-                proc_io = proc.io_counters()
-                io_new = [proc_io.read_bytes, proc_io.write_bytes]
-            except psutil.AccessDenied:
-                # Access denied to process IO (no root account)
-                # Put 0 in all values (for sort) and io_tag = 0 (for display)
-                procstat['io_counters'] = [0, 0] + [0, 0]
-                io_tag = 0
+                self.username_cache[procstat['pid']]
+            except KeyError:
+                try:
+                    self.username_cache[procstat['pid']] = proc.username()
+                except psutil.NoSuchProcess:
+                    pass
+                except (KeyError, psutil.AccessDenied):
+                    try:
+                        self.username_cache[procstat['pid']] = proc.uids().real
+                    except (KeyError, AttributeError, psutil.AccessDenied):
+                        self.username_cache[procstat['pid']] = "?"
+            procstat['username'] = self.username_cache[procstat['pid']]
+
+            # Process status, nice, memory_info and cpu_times
+            try:
+                procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+            except psutil.NoSuchProcess:
+                pass
             else:
-                # For IO rate computation
-                # Append saved IO r/w bytes
-                try:
-                    procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
-                except KeyError:
-                    procstat['io_counters'] = io_new + [0, 0]
-                # then save the IO r/w bytes
-                self.io_old[procstat['pid']] = io_new
-                io_tag = 1
+                procstat['status'] = str(procstat['status'])[:1].upper()
 
-            # Append the IO tag (for display)
-            procstat['io_counters'] += [io_tag]
+        if extended_stats and not self.disable_extended_tag:
+            procstat['extended_stats'] = True 
+
+            # CPU affinity (Windows and Linux only)
+            try:
+                procstat.update(proc.as_dict(attrs=['cpu_affinity']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['cpu_affinity'] = None
+            # Memory extended
+            try:
+                procstat.update(proc.as_dict(attrs=['memory_info_ex']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['memory_info_ex'] = None
+            # Number of context switch
+            try:
+                procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['num_ctx_switches'] = None
+            # Number of file descriptors (Unix only)
+            try:
+                procstat.update(proc.as_dict(attrs=['num_fds']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['num_fds'] = None
+            # Threads number
+            try:
+                procstat.update(proc.as_dict(attrs=['num_threads']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['num_threads'] = None
+
+            # Number of handles (Windows only)
+            if is_windows:
+                try:
+                    procstat.update(proc.as_dict(attrs=['num_handles']))
+                except psutil.NoSuchProcess:
+                    pass
+            else:
+                procstat['num_handles'] = None
+
+            # SWAP memory (Only on Linux based OS)
+            # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+            if is_linux:
+                try:
+                    procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
+                except psutil.NoSuchProcess:
+                    pass
+                except psutil.AccessDenied:
+                    procstat['memory_swap'] = None
+
+            # Process network connections (TCP and UDP)
+            try:
+                procstat['tcp'] = len(proc.connections(kind="tcp"))
+                procstat['udp'] = len(proc.connections(kind="udp"))
+            except:
+                procstat['tcp'] = None
+                procstat['udp'] = None
+
+            # IO Nice
+            # http://pythonhosted.org/psutil/#psutil.Process.ionice
+            if is_linux or is_windows:
+                try:
+                    procstat.update(proc.as_dict(attrs=['ionice']))
+                except psutil.NoSuchProcess:
+                    pass
+            else:
+                procstat['ionice'] = None
+
+            #logger.debug(procstat)
 
         return procstat
 
     def update(self):
-        """Update the processes stats."""
+        """
+        Update the processes stats
+        """
         # Reset the stats
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
@@ -165,37 +313,71 @@ class GlancesProcesses(object):
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
 
-        # For each existing process...
+        # Build an internal dict with only mandatories stats (sort keys)
+        processdict = {}
         for proc in psutil.process_iter():
+            # If self.get_max_processes() is None: Only retreive mandatory stats
+            # Else: retreive mandatoryadn standard stast
+            s = self.__get_process_stats(proc, 
+                                         mandatory_stats=True, 
+                                         standard_stats=self.get_max_processes() is None)
+            # Continue to the next process if it has to be filtered
+            if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
+                continue
+            # Ok add the process to the list
+            processdict[proc] = s
+            # ignore the 'idle' process on Windows and *BSD
+            # ignore the 'kernel_task' process on OS X
+            # waiting for upstream patch from psutil
+            if (is_bsd and processdict[proc]['name'] == 'idle' or
+                is_windows and processdict[proc]['name'] == 'System Idle Process' or
+                is_mac and processdict[proc]['name'] == 'kernel_task'):
+                continue
+            # Update processcount (global statistics)
             try:
-                # Get stats using the PSUtil
-                procstat = self.__get_process_stats(proc)
+                self.processcount[str(proc.status())] += 1
+            except KeyError:
+                # Key did not exist, create it
+                self.processcount[str(proc.status())] = 1
+            else:
+                self.processcount['total'] += 1
+            # Update thread number (global statistics)
+            try:
+                self.processcount['thread'] += proc.num_threads()
+            except:
+                pass
+
+        if self.get_max_processes() is not None:
+            # Sort the internal dict and cut the top N (Return a list of tuple)
+            # tuple=key (proc), dict (returned by __get_process_stats)
+            processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+            first = True
+            for i in processiter[0:self.get_max_processes()]:
+                # Already existing mandatory stats
+                procstat = i[1]
+                # Update with standard stats
+                # and extended stats but only for TOP (first) process
+                s = self.__get_process_stats(i[0], 
+                                             mandatory_stats=False, 
+                                             standard_stats=True,
+                                             extended_stats=first)
+                if s is None:
+                    continue
+                procstat.update(s)
                 # Add a specific time_since_update stats for bitrate
                 procstat['time_since_update'] = time_since_update
-                # ignore the 'idle' process on Windows and *BSD
-                # ignore the 'kernel_task' process on OS X
-                # waiting for upstream patch from psutil
-                if (is_bsd and procstat['name'] == 'idle' or
-                        is_windows and procstat['name'] == 'System Idle Process' or
-                        is_mac and procstat['name'] == 'kernel_task'):
-                    continue
-                # Update processcount (global statistics)
-                try:
-                    self.processcount[str(proc.status())] += 1
-                except KeyError:
-                    # Key did not exist, create it
-                    self.processcount[str(proc.status())] = 1
-                else:
-                    self.processcount['total'] += 1
-                # Update thread number (global statistics)
-                try:
-                    self.processcount['thread'] += proc.num_threads()
-                except:
-                    pass
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-            else:
-                # Update processlist
+                # Update process list
+                self.processlist.append(procstat)
+                # Next...
+                first = False
+        else:
+            # Get all the processes
+            for i in processdict.items():
+                # Already existing mandatory and standard stats
+                procstat = i[1]
+                # Add a specific time_since_update stats for bitrate
+                procstat['time_since_update'] = time_since_update
+                # Update process list
                 self.processlist.append(procstat)
 
         # Clean internals caches if timeout is reached
@@ -214,13 +396,34 @@ class GlancesProcesses(object):
         return self.processlist
 
     def getsortkey(self):
-        """Get the current sort key for automatic sort."""
-        return self.processsort
+        """Get the current sort key"""
+        if self.getmanualsortkey() is not None:
+            return self.getmanualsortkey()
+        else:
+            return self.getautosortkey()
 
-    def setsortkey(self, sortedby):
+    def getmanualsortkey(self):
+        """Get the current sort key for manual sort."""
+        return self.processmanualsort
+
+    def getautosortkey(self):
+        """Get the current sort key for automatic sort."""
+        return self.processautosort
+
+    def setmanualsortkey(self, sortedby):
+        """Set the current sort key for manual sort."""
+        self.processmanualsort = sortedby
+        return self.processmanualsort
+
+    def setautosortkey(self, sortedby):
         """Set the current sort key for automatic sort."""
-        self.processsort = sortedby
-        return self.processsort
+        self.processautosort = sortedby
+        return self.processautosort
+
+    def resetsort(self):
+        """Set the default sort: Auto"""
+        self.setmanualsortkey(None)
+        self.setautosortkey('cpu_percent')
 
     def getsortlist(self, sortedby=None):
         """Get the sorted processlist."""

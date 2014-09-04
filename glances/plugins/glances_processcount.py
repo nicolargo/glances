@@ -37,12 +37,6 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 1
-        # Enter -1 to diplay bottom
-        self.line_curse = 2
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
@@ -75,9 +69,6 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        # if self.stats == {} or args.disable_process:
-        #     return ret
-
         if args.disable_process:
             msg = _("PROCESSES DISABLED (press 'z' to display)")
             ret.append(self.curse_add_line(msg))
@@ -85,6 +76,16 @@ class Plugin(GlancesPlugin):
 
         if self.stats == {}:
             return ret
+
+        # Display the filter (if it exists)
+        if glances_processes.get_process_filter() is not None:
+            msg = _("Processes filter:")
+            ret.append(self.curse_add_line(msg, "TITLE"))
+            msg = _(" {0} ").format(glances_processes.get_process_filter())
+            ret.append(self.curse_add_line(msg, "FILTER"))
+            msg = _("(press ENTER to edit)")
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_new_line())
 
         # Build the string message
         # Header
@@ -113,17 +114,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
-        try:
-            args.process_sorted_by
-        except AttributeError:
-            args.process_sorted_by = glances_processes.getsortkey()
-        if args.process_sorted_by == 'auto':
+        if glances_processes.getmanualsortkey() is None:
             msg = _("sorted automatically")
             ret.append(self.curse_add_line(msg))
-            msg = _(" by {0}").format(glances_processes.getsortkey())
+            msg = _(" by {0}").format(glances_processes.getautosortkey())
             ret.append(self.curse_add_line(msg))
         else:
-            msg = _("sorted by {0}").format(args.process_sorted_by)
+            msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
