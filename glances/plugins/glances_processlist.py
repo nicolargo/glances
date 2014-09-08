@@ -248,7 +248,7 @@ class Plugin(GlancesPlugin):
                 if p['cpu_affinity'] is not None:
                     ret.append(self.curse_new_line())
                     msg = xpad + _('CPU affinity: ') + str(len(p['cpu_affinity'])) + _(' cores')
-                    ret.append(self.curse_add_line(msg))
+                    ret.append(self.curse_add_line(msg, splittable=True))
                 # Second line is memory info
                 if p['memory_info_ex'] is not None:
                     ret.append(self.curse_new_line())
@@ -259,7 +259,7 @@ class Plugin(GlancesPlugin):
                             msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
                     if 'memory_swap' in p and p['memory_swap'] is not None:
                         msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
-                    ret.append(self.curse_add_line(msg))
+                    ret.append(self.curse_add_line(msg, splittable=True))
                 # Third line is for openned files/network sessions
                 ret.append(self.curse_new_line())
                 msg = xpad + _('Openned: ')
@@ -273,7 +273,7 @@ class Plugin(GlancesPlugin):
                     msg += _('TCP ') + str(p['tcp']) + ' '
                 if p['udp'] is not None:
                     msg += _('UDP ') + str(p['udp']) + ' '
-                ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_add_line(msg, splittable=True))
                 # Fouth line is IO nice level (only Linux and Windows OS)
                 if p['ionice'] is not None:
                     ret.append(self.curse_new_line())
@@ -306,7 +306,7 @@ class Plugin(GlancesPlugin):
                     # The higher the value, the lower the I/O priority of the process.
                     if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
                         msg += _(' (value %s/7)') % str(p['ionice'].value)
-                    ret.append(self.curse_add_line(msg))                
+                    ret.append(self.curse_add_line(msg, splittable=True))                
                 # End of extended stats
                 first = False
 
