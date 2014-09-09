@@ -202,7 +202,7 @@ class GlancesProcesses(object):
                 try:
                     self.username_cache[procstat['pid']] = proc.username()
                 except psutil.NoSuchProcess:
-                    pass
+                        self.username_cache[procstat['pid']] = "?"
                 except (KeyError, psutil.AccessDenied):
                     try:
                         self.username_cache[procstat['pid']] = proc.uids().real
