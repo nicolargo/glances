@@ -41,6 +41,18 @@ Optional dependencies:
 Installation
 ============
 
+Glances Auto Install script
+---------------------------
+
+Just enter the following command line:
+
+.. code-block:: console
+
+    curl -L http://bit.ly/glances | /bin/bash
+
+*Note*: Only supported on some GNU/Linux distributions.
+If you want to support others distribs, please contribute to `glancesautoinstall`_.
+
 PyPI: The simple way
 --------------------
 
@@ -197,6 +209,7 @@ License
 LGPL. See ``COPYING`` for more details.
 
 .. _psutil: https://code.google.com/p/psutil/
+.. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _PyPI: https://pypi.python.org/pypi
