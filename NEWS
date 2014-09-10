@@ -325,13 +325,13 @@ Version 1.3
 ===========
 
     * Add file system stats (total and used space)
-    * Adapt unit dynamicaly (K, M, G)
+    * Adapt unit dynamically (K, M, G)
     * Add man page (Thanks to Edouard Bourguignon)
 
 Version 1.2
 ===========
 
-    * Resize the terminal and the windows are adapted dynamicaly
+    * Resize the terminal and the windows are adapted dynamically
     * Refresh screen instantanetly when a key is pressed
 
 Version 1.1.3
