@@ -245,12 +245,12 @@ class Plugin(GlancesPlugin):
                 # Left padding
                 xpad = ' ' * 13
                 # First line is CPU affinity
-                if p['cpu_affinity'] is not None:
+                if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
                     ret.append(self.curse_new_line())
                     msg = xpad + _('CPU affinity: ') + str(len(p['cpu_affinity'])) + _(' cores')
                     ret.append(self.curse_add_line(msg, splittable=True))
                 # Second line is memory info
-                if p['memory_info_ex'] is not None:
+                if 'memory_info_ex' in p and p['memory_info_ex'] is not None:
                     ret.append(self.curse_new_line())
                     msg = xpad + _('Memory info: ')
                     for k, v in p['memory_info_ex']._asdict().items():
@@ -263,19 +263,19 @@ class Plugin(GlancesPlugin):
                 # Third line is for openned files/network sessions
                 ret.append(self.curse_new_line())
                 msg = xpad + _('Openned: ')
-                if p['num_threads'] is not None:
+                if 'num_threads' in p and p['num_threads'] is not None:
                     msg += _('threads ') + str(p['num_threads']) + ' '
-                if p['num_fds'] is not None:
+                if 'num_fds' in p and p['num_fds'] is not None:
                     msg += _('files ') + str(p['num_fds']) + ' '
-                if p['num_handles'] is not None:
+                if 'num_handles' in p and p['num_handles'] is not None:
                     msg += _('handles ') + str(p['num_handles']) + ' '
-                if p['tcp'] is not None:
+                if 'tcp' in p and p['tcp'] is not None:
                     msg += _('TCP ') + str(p['tcp']) + ' '
-                if p['udp'] is not None:
+                if 'udp' in p and p['udp'] is not None:
                     msg += _('UDP ') + str(p['udp']) + ' '
                 ret.append(self.curse_add_line(msg, splittable=True))
                 # Fouth line is IO nice level (only Linux and Windows OS)
-                if p['ionice'] is not None:
+                if 'ionice' in p and p['ionice'] is not None:
                     ret.append(self.curse_new_line())
                     msg = xpad + _('IO nice: ')
                     k = _('Class is ')
