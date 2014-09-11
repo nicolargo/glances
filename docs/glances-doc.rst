@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.0.1.
+This manual describes *Glances* version 2.1.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-June 2014
+September 2014
 
 .. contents:: Table of Contents
 
@@ -75,7 +75,7 @@ In client mode, you can set the TCP port of the server ``-p PORT``.
 You can also set a password to access to the server ``--password``.
 
 Default binding address is ``0.0.0.0`` (Glances will listen on all the
-network interfaces) and TCP port is ``61209``.
+available network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
@@ -89,14 +89,13 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
 
     client$ glances -c @snmpserver
 
-Known issues: grab using SNMP is only validated for GNU/Linux with SNMP
-v2/2c server.
+Note: Stats grabbed by SNMP request are limited.
 
 Web Server Mode
 ---------------
 
 If you want to remotely monitor a machine, called ``server``, from any
-device with a web browser, called ``client``, just run on the server:
+device with a web browser, just run on the server:
 
 .. code-block:: console
 
@@ -192,7 +191,7 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable top extended stats
 ``f``
     Show/hide file system stats
-``f``
+``g``
     Generate hraphs for current history
 ``h``
     Show/hide the help screen
@@ -230,13 +229,11 @@ The following commands (key pressed) are supported while in Glances:
 Configuration
 =============
 
-**Caution! Glances version 1.x configuration files are not compatible
-with the version 2.x.**
-
 No configuration file is mandatory to use Glances.
 
 Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list.
+network interfaces to hide and/or monitored processes list or to define
+alias.
 
 By default, the configuration file is under:
 
@@ -255,6 +252,8 @@ Since Windows Vista and newer versions:
 ::
 
     C:\Users\<User>\AppData\Roaming
+    or
+    %userprofile%\AppData\Roaming
 
 You can override the default configuration, located in one of the above
 directories on your system, except for Windows.
@@ -269,6 +268,18 @@ e.g., on Linux:
 
 On OS X, you should copy the configuration file to
 ``~/Library/Application Support/glances/``.
+
+Logs and debug mode
+===================
+
+Glances logs all its internal messages to a log file. By default, only 
+INFO & WARNING & ERROR &CRITICAL levels are logged, but DEBUG messages 
+can ben logged using the -d option on the command line. 
+
+By default, the configuration file is under:
+
+:Linux, \*BSD and OS X: ``/tmp/glances.conf``
+:Windows: ``%APPDATA%\Local\temp\glances.conf``
 
 Anatomy Of The Application
 ==========================
@@ -390,7 +401,7 @@ Alerts are only set if the maximum speed per network interface is available
 
 *Note*: it is possibile to define a list of network interfaces to hide
 and per-interface limit values in the ``[network]`` section of the
-configuration file.
+configuration file and aliases for interface name. 
 
 Disk I/O
 --------
@@ -402,7 +413,7 @@ Glances displays the disk I/O throughput. The unit is adapted dynamically.
 There is no alert on this information.
 
 *Note*: it is possible to define a list of disks to hide under the
-``[diskio]`` section in the configuration file.
+``[diskio]`` section in the configuration file and aliases for disk name.
 
 File System
 -----------
@@ -437,8 +448,8 @@ temperature only.
 
 There is no alert on this information.
 
-*Note*: limit values can be overwritten in the configuration file under
-the ``[sensors]`` section.
+*Note*: limit values and sensors alias names can be defined in the configuration 
+file under the ``[sensors]`` section.
 
 Processes List
 --------------
@@ -499,7 +510,8 @@ The number of processes in the list is adapted to the screen size.
 ``IOW/s``
     Per process I/O write rate (in Byte/s)
 ``COMMAND``
-    Process command line (process name is highlighted)
+    Process command line
+    User cans switch to the process name by pressing on the ``/`` key 
 
 Process status legend:
 
@@ -513,6 +525,13 @@ Process status legend:
     Traced / Stopped
 ``Z``
     Zombie
+
+In standalone mode, additionals informations are provided for the top process:
+
+* CPU affinity (number of cores used by the process)
+* Extended memory information (swap, shared, text, lib, data and dirty on Linux)
+* Openned threads, files and network sessions (TCP and UDP)
+* IO nice level  
 
 *Note*: limit values can be overwritten in the configuration file under
 the ``[process]`` section.

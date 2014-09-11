@@ -89,8 +89,21 @@ class GlancesCurses(object):
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
             curses.init_pair(8, curses.COLOR_BLUE, -1)
-            curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-            curses.init_pair(10, curses.COLOR_CYAN, -1)
+            try:
+                curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+            except:
+                if args.theme_white:
+                    curses.init_pair(9, curses.COLOR_BLACK, -1)
+                else:
+                    curses.init_pair(9, curses.COLOR_WHITE, -1)
+            try:
+                curses.init_pair(10, curses.COLOR_CYAN, -1)
+            except:
+                if args.theme_white:
+                    curses.init_pair(10, curses.COLOR_BLACK, -1)
+                else:
+                    curses.init_pair(10, curses.COLOR_WHITE, -1)
+
         else:
             self.hascolors = False
 
