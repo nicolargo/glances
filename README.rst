@@ -198,6 +198,8 @@ Documentation
 
 For complete documentation see `glances-doc`_.
 
+If you have any question (after RTFM !), please post it on the official Q&A `forum`_.
+
 Author
 ======
 
@@ -219,3 +221,4 @@ LGPL. See ``COPYING`` for more details.
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
