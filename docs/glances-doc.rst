@@ -643,10 +643,12 @@ APIs documentations are available at:
 Support
 =======
 
+To post a question about Glances use case, please post it to the offical Q&A `forum`_.
+
 To report a bug or a feature request use the bug tracking system at
 https://github.com/nicolargo/glances/issues.
 
-Feel free to contribute!
+Feel free to contribute !
 
 
 .. [1] http://nosheep.net/story/defining-unix-load-average/
@@ -655,3 +657,4 @@ Feel free to contribute!
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
 .. _RESTFULL-JSON: http://jsonapi.org/
+.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
