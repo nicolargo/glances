@@ -175,6 +175,12 @@ Interactive Commands
 
 The following commands (key pressed) are supported while in Glances:
 
+``ENTER``
+    Set the process filter
+    Filter is a regular expression pattern:
+
+    - gnome: all processes starting with the gnome string
+    - .*gnome.*: all processes containing the gnome string
 ``a``
     Sort process list automatically
 
@@ -528,10 +534,14 @@ Process status legend:
 
 In standalone mode, additionals informations are provided for the top process:
 
+.. image:: images/processlist-top.png
+
 * CPU affinity (number of cores used by the process)
 * Extended memory information (swap, shared, text, lib, data and dirty on Linux)
 * Openned threads, files and network sessions (TCP and UDP)
 * IO nice level  
+
+The extended stats feature could be disabled using the --disable-process-extended option (command line) or the ``e`` key (curses interface).
 
 *Note*: limit values can be overwritten in the configuration file under
 the ``[process]`` section.

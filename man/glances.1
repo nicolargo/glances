@@ -1,4 +1,4 @@
-.TH glances 1  "June, 2014" "version 2.0.1" "USER COMMANDS"
+.TH glances 1  "September, 2014" "version 2.1" "USER COMMANDS"
 .SH NAME
 glances \- A cross-platform curses-based system monitoring tool
 .SH SYNOPSIS
@@ -25,17 +25,17 @@ display the help and exit
 .B \-V, \-\-version
 show program's version number and exit
 .TP
+.B \-d, \-\-debug
+Enable debug mode (log file is /tmp/glances.log)
+.TP
 .B \-b, \-\-byte
 display network rate in byte per second [default: bit per second]
 .TP
-.B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
-bind server to the given IPv4/IPv6 address or hostname
-.TP
-.B \-c CLIENT, \-\-client CLIENT
-connect to a Glances server by IPv4/IPv6 address or hostname
-.TP
 .B \-C CONF_FILE, \-\-config CONF_FILE
 path to the configuration file
+.TP
+.B \-\-enable-history
+enable the history mode
 .TP
 .B \-\-disable-bold
 disable bold mode in the terminal
@@ -58,11 +58,20 @@ disable sensors module
 .B \-\-disable-process
 disable process module
 .TP
+.B \-\-disable-process-extended
+disable extended stats on top process
+.TP
 .B \-\-disable-log
 disable log module
 .TP
 .B \-\-output-csv OUTPUT_CSV
 export stats to a CSV file
+.TP
+.B \-s, \-\-server
+run Glances in server mode
+.TP
+.B \-c CLIENT, \-\-client CLIENT
+connect to a Glances server by IPv4/IPv6 address or hostname
 .TP
 .B \-p PORT, \-\-port PORT
 define the client/server TCP port [default: 61209]
@@ -70,8 +79,8 @@ define the client/server TCP port [default: 61209]
 .B \-\-password
 define a client/server password from the prompt or file
 .TP
-.B \-s, \-\-server
-run Glances in server mode
+.B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
+bind server to the given IPv4/IPv6 address or hostname
 .TP
 .B \-\-snmp-community SNMP_COMMUNITY
 SNMP community
@@ -88,6 +97,9 @@ SNMP username (only for SNMPv3)
 .B \-\-snmp-auth SNMP_AUTH
 SNMP authentication key (only for SNMPv3)
 .TP
+.B \-\-snmp-force
+Force the SNMP mode (do not try Glances server)
+.TP
 .B \-t TIME, \-\-time TIME
 set refresh time in seconds [default: 3 sec]
 .TP
@@ -96,8 +108,17 @@ run Glances in Web server mode
 .TP
 .B \-1, \-\-percpu
 start Glances in per CPU mode
+.TP
+.B \-1, \-\-process-short-name
+Force short name for processes name
+.TP
+.B \-1, \-\-theme-white
+Optimize display for white background
 .SH INTERACTIVE COMMANDS
 You can use the following keys while in Glances:
+.TP
+.B ENTER
+Set the process filter patern (as a regular expression)
 .TP
 .B a
 Sort process list automatically
@@ -111,8 +132,13 @@ Sort processes by CPU usage
 .B d
 Show/hide disk I/O stats
 .TP
+.B e  
+Enable/disable top extended stats
+.TP
 .B f
 Show/hide file system stats
+.B g
+Generate graphs for current history
 .TP
 .B h
 Show/hide the help screen
@@ -134,6 +160,9 @@ Sort processes by name
 .TP
 .B q
 Quit
+.TP
+.B r
+Reset history
 .TP
 .B s
 Show/hide sensors stats
