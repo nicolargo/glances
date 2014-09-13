@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.0.1.
+This manual describes *Glances* version 2.1.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-June 2014
+September 2014
 
 .. contents:: Table of Contents
 
@@ -75,7 +75,7 @@ In client mode, you can set the TCP port of the server ``-p PORT``.
 You can also set a password to access to the server ``--password``.
 
 Default binding address is ``0.0.0.0`` (Glances will listen on all the
-network interfaces) and TCP port is ``61209``.
+available network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
@@ -89,14 +89,13 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
 
     client$ glances -c @snmpserver
 
-Known issues: grab using SNMP is only validated for GNU/Linux with SNMP
-v2/2c server.
+Note: Stats grabbed by SNMP request are limited.
 
 Web Server Mode
 ---------------
 
 If you want to remotely monitor a machine, called ``server``, from any
-device with a web browser, called ``client``, just run on the server:
+device with a web browser, just run on the server:
 
 .. code-block:: console
 
@@ -123,48 +122,65 @@ Command Reference
 Command-Line Options
 --------------------
 
--h, --help            show this help message and exit
--V, --version         show program's version number and exit
--b, --byte            display network rate in byte per second
--B BIND_ADDRESS, --bind BIND_ADDRESS
-                      bind server to the given IPv4/IPv6 address or hostname
--c CLIENT, --client CLIENT
-                      connect to a Glances server by IPv4/IPv6 address or
-                      hostname
--C CONF_FILE, --config CONF_FILE
-                      path to the configuration file
---disable-bold        disable bold mode in the terminal
---disable-diskio      disable disk I/O module
---disable-fs          disable file system module
---disable-network     disable network module
---disable-sensors     disable sensors module
---disable-process     disable process module
---disable-log         disable log module
---output-csv OUTPUT_CSV
-                      export stats to a CSV file
--p PORT, --port PORT  define the client/server TCP port [default: 61209]
---password            define a client/server password from the prompt or
-                      file
--s, --server          run Glances in server mode
---snmp-community SNMP_COMMUNITY
-                      SNMP community
---snmp-port SNMP_PORT
-                      SNMP port
---snmp-version SNMP_VERSION
-                      SNMP version (1, 2c or 3)
---snmp-user SNMP_USER
-                      SNMP username (only for SNMPv3)
---snmp-auth SNMP_AUTH
-                      SNMP authentication key (only for SNMPv3)
--t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
--w, --webserver       run Glances in Web server mode
--1, --percpu          start Glances in per CPU mode
+  -h, --help            show this help message and exit
+  -V, --version         show program's version number and exit
+  -d, --debug           Enable debug mode
+  -C CONF_FILE, --config CONF_FILE
+                        path to the configuration file
+  --enable-history      enable the history mode
+  --disable-bold        disable bold mode in the terminal
+  --disable-diskio      disable disk I/O module
+  --disable-fs          disable filesystem module
+  --disable-network     disable network module
+  --disable-sensors     disable sensors module
+  --disable-process     disable process module
+  --disable-process-extended
+                        disable extended stats on top process
+  --disable-log         disable log module
+  --output-csv OUTPUT_CSV
+                        export stats to a CSV file
+  -c CLIENT, --client CLIENT
+                        connect to a Glances server by IPv4/IPv6 address or
+                        hostname
+  -s, --server          run Glances in server mode
+  -p PORT, --port PORT  define the client/server TCP port [default: 61209]
+  -B BIND_ADDRESS, --bind BIND_ADDRESS
+                        bind server to the given IPv4/IPv6 address or hostname
+  --password-badidea PASSWORD_ARG
+                        define password from the command line
+  --password            define a client/server password from the prompt or
+                        file
+  --snmp-community SNMP_COMMUNITY
+                        SNMP community
+  --snmp-port SNMP_PORT
+                        SNMP port
+  --snmp-version SNMP_VERSION
+                        SNMP version (1, 2c or 3)
+  --snmp-user SNMP_USER
+                        SNMP username (only for SNMPv3)
+  --snmp-auth SNMP_AUTH
+                        SNMP authentication key (only for SNMPv3)
+  --snmp-force          force SNMP mode
+  -t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
+  -w, --webserver       run Glances in web server mode
+  -f PROCESS_FILTER, --process-filter PROCESS_FILTER
+                        set the process filter patern (regular expression)
+  --process-short-name  force short name for processes name
+  -b, --byte            display network rate in byte per second
+  -1, --percpu          start Glances in per CPU mode
+  --theme-white         optimize display for white background
 
 Interactive Commands
 --------------------
 
 The following commands (key pressed) are supported while in Glances:
 
+``ENTER``
+    Set the process filter
+    Filter is a regular expression pattern:
+
+    - gnome: all processes starting with the gnome string
+    - .*gnome.*: all processes containing the gnome string
 ``a``
     Sort process list automatically
 
@@ -177,8 +193,12 @@ The following commands (key pressed) are supported while in Glances:
     Sort processes by CPU usage
 ``d``
     Show/hide disk I/O stats
+``e``
+    Enable/disable top extended stats
 ``f``
     Show/hide file system stats
+``g``
+    Generate hraphs for current history
 ``h``
     Show/hide the help screen
 ``i``
@@ -193,6 +213,8 @@ The following commands (key pressed) are supported while in Glances:
     Sort processes by name
 ``q``
     Quit
+``r``
+    Reset history
 ``s``
     Show/hide sensors stats
 ``t``
@@ -207,17 +229,17 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide processes stats
 ``1``
     Switch between global CPU and per-CPU stats
+``/``
+    Switch between short name / command line (processes name)
 
 Configuration
 =============
 
-**Caution! Glances version 1.x configuration files are not compatible
-with the version 2.x.**
-
 No configuration file is mandatory to use Glances.
 
 Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list.
+network interfaces to hide and/or monitored processes list or to define
+alias.
 
 By default, the configuration file is under:
 
@@ -236,6 +258,8 @@ Since Windows Vista and newer versions:
 ::
 
     C:\Users\<User>\AppData\Roaming
+    or
+    %userprofile%\AppData\Roaming
 
 You can override the default configuration, located in one of the above
 directories on your system, except for Windows.
@@ -250,6 +274,18 @@ e.g., on Linux:
 
 On OS X, you should copy the configuration file to
 ``~/Library/Application Support/glances/``.
+
+Logs and debug mode
+===================
+
+Glances logs all its internal messages to a log file. By default, only 
+INFO & WARNING & ERROR &CRITICAL levels are logged, but DEBUG messages 
+can ben logged using the -d option on the command line. 
+
+By default, the configuration file is under:
+
+:Linux, \*BSD and OS X: ``/tmp/glances.conf``
+:Windows: ``%APPDATA%\Local\temp\glances.conf``
 
 Anatomy Of The Application
 ==========================
@@ -371,7 +407,7 @@ Alerts are only set if the maximum speed per network interface is available
 
 *Note*: it is possibile to define a list of network interfaces to hide
 and per-interface limit values in the ``[network]`` section of the
-configuration file.
+configuration file and aliases for interface name. 
 
 Disk I/O
 --------
@@ -383,7 +419,7 @@ Glances displays the disk I/O throughput. The unit is adapted dynamically.
 There is no alert on this information.
 
 *Note*: it is possible to define a list of disks to hide under the
-``[diskio]`` section in the configuration file.
+``[diskio]`` section in the configuration file and aliases for disk name.
 
 File System
 -----------
@@ -418,8 +454,8 @@ temperature only.
 
 There is no alert on this information.
 
-*Note*: limit values can be overwritten in the configuration file under
-the ``[sensors]`` section.
+*Note*: limit values and sensors alias names can be defined in the configuration 
+file under the ``[sensors]`` section.
 
 Processes List
 --------------
@@ -480,7 +516,8 @@ The number of processes in the list is adapted to the screen size.
 ``IOW/s``
     Per process I/O write rate (in Byte/s)
 ``COMMAND``
-    Process command line (process name is highlighted)
+    Process command line
+    User cans switch to the process name by pressing on the ``/`` key 
 
 Process status legend:
 
@@ -494,6 +531,17 @@ Process status legend:
     Traced / Stopped
 ``Z``
     Zombie
+
+In standalone mode, additionals informations are provided for the top process:
+
+.. image:: images/processlist-top.png
+
+* CPU affinity (number of cores used by the process)
+* Extended memory information (swap, shared, text, lib, data and dirty on Linux)
+* Openned threads, files and network sessions (TCP and UDP)
+* IO nice level  
+
+The extended stats feature could be disabled using the --disable-process-extended option (command line) or the ``e`` key (curses interface).
 
 *Note*: limit values can be overwritten in the configuration file under
 the ``[process]`` section.
@@ -592,21 +640,25 @@ CSV files have two lines per stats:
 - Stats description
 - Stats (comma separated)
 
-API Documentation
-=================
+APIs Documentations
+===================
 
-Glances uses a `XML-RPC server`_ and can be used by another client software.
+Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be used by another client software.
 
-API documentation is available at
-https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to.
+APIs documentations are available at:
+
+- XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
+- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
 
 Support
 =======
 
+To post a question about Glances use case, please post it to the offical Q&A `forum`_.
+
 To report a bug or a feature request use the bug tracking system at
 https://github.com/nicolargo/glances/issues.
 
-Feel free to contribute!
+Feel free to contribute !
 
 
 .. [1] http://nosheep.net/story/defining-unix-load-average/
@@ -614,3 +666,5 @@ Feel free to contribute!
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
+.. _RESTFULL-JSON: http://jsonapi.org/
+.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users

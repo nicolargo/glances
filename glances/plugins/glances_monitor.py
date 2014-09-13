@@ -20,6 +20,7 @@
 """Monitor plugin."""
 
 # Import Glances lib
+from glances.core.glances_globals import logger
 from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -34,12 +35,6 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 1
-        # Enter -1 to diplay bottom
-        self.line_curse = 3
 
         # Init stats
         self.glances_monitors = None
@@ -47,7 +42,7 @@ class Plugin(GlancesPlugin):
 
     def load_limits(self, config):
         """Load the monitored list from the conf file."""
-        # print "DEBUG: Monitor plugin load config file %s" % config
+        logger.debug(_("Monitor plugin configuration detected in the configuration file"))
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
@@ -93,7 +88,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_process:
+        if self.stats == [] or args.disable_process:  
             return ret
 
         # Build the string message

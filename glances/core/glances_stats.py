@@ -22,20 +22,35 @@
 import collections
 import os
 import sys
+import re
 
-from glances.core.glances_globals import plugins_path, sys_path
+from glances.core.glances_globals import plugins_path, sys_path, logger
+
+# SNMP OID regexp pattern to short system name dict
+oid_to_short_system_name = {'.*Linux.*': 'linux',
+                            '.*Darwin.*': 'mac',
+                            '.*BSD.*': 'bsd',
+                            '.*Windows.*': 'windows',
+                            '.*Cisco.*': 'cisco',
+                            '.*VMware ESXi.*': 'esxi'}
 
 
 class GlancesStats(object):
 
     """This class stores, updates and gives stats."""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, args=None):
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
 
+        # Set the argument instance
+        self.args = args
+
+        # Set the config instance
+        self.config = config
+
         # Load the plugins
-        self.load_plugins()
+        self.load_plugins(args=args)
 
         # Load the limits
         self.load_limits(config)
@@ -76,9 +91,14 @@ class GlancesStats(object):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 plugin_name = os.path.basename(item)[len(header):-3].lower()
-                self._plugins[plugin_name] = plugin.Plugin(args=args)
+                if plugin_name == 'help':
+                    self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
+                else:
+                    self._plugins[plugin_name] = plugin.Plugin(args=args)
         # Restoring system path
         sys.path = sys_path
+        # Log plugins list
+        logger.debug(_("Available plugins list: %s"), self.getAllPlugins())
 
     def getAllPlugins(self):
         """Return the plugins list."""
@@ -88,7 +108,7 @@ class GlancesStats(object):
         """Load the stats limits."""
         # For each plugins, call the init_limits method
         for p in self._plugins:
-            # print "DEBUG: Load limits for %s" % p
+            # logger.debug(_("Load limits for %s") % p)
             self._plugins[p].load_limits(config)
 
     def __update__(self, input_stats):
@@ -96,8 +116,8 @@ class GlancesStats(object):
         if input_stats == {}:
             # For standalone and server modes
             # For each plugins, call the update method
-            for p in self._plugins:
-                # print "DEBUG: Update %s stats" % p
+            for p in self._plugins:                
+                # logger.debug(_("Update %s stats") % p)
                 self._plugins[p].update()
         else:
             # For Glances client mode
@@ -110,8 +130,17 @@ class GlancesStats(object):
         self.__update__(input_stats)
 
     def getAll(self):
-        """Return all the stats."""
+        """Return all the stats (list)"""
         return [self._plugins[p].get_raw() for p in self._plugins]
+
+    def getAllAsDict(self):
+        """Return all the stats (dict)"""
+        # Python > 2.6
+        # {p: self._plugins[p].get_raw() for p in self._plugins}
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self._plugins[p].get_raw()
+        return ret
 
     def get_plugin_list(self):
         """Return the plugin list."""
@@ -146,8 +175,17 @@ class GlancesStatsServer(GlancesStats):
             self.all_stats[p] = self._plugins[p].get_raw()
 
     def getAll(self):
-        """Return the stats as a dict."""
+        """Return the stats as a list"""
         return self.all_stats
+
+    def getAllAsDict(self):
+        """Return the stats as a dict"""
+        # Python > 2.6
+        # return {p: self.all_stats[p] for p in self._plugins}
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self.all_stats[p]
+        return ret                
 
     def getAllPlugins(self):
         """Return the plugins list."""
@@ -176,8 +214,8 @@ class GlancesStatsClient(GlancesStats):
             # Add the plugin to the dictionary
             # The key is the plugin name
             # for example, the file glances_xxx.py
-            # generate self._plugins_list["xxx"] = ...
-            # print "DEBUG: Init %s plugin" % item
+            # generate self._plugins_list["xxx"] = ...            
+            logger.debug(_("Init %s plugin") % item)
             self._plugins[item] = plugin.Plugin()
         # Restoring system path
         sys.path = sys_path
@@ -197,6 +235,9 @@ class GlancesStatsClientSNMP(GlancesStats):
         # Init the arguments
         self.args = args
 
+        # OS name is used because OID is differents between system
+        self.os_name = None
+
         # Load plugins
         self.load_plugins(args=self.args)
 
@@ -213,17 +254,48 @@ class GlancesStatsClientSNMP(GlancesStats):
                                        user=self.args.snmp_user,
                                        auth=self.args.snmp_auth)
 
-        return clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
+        # If we can not grab the hostname, then exit...
+        ret = clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
+        if ret:
+            # Get the OS name (need to grab the good OID...)
+            oid_os_name = clientsnmp.get_by_oid("1.3.6.1.2.1.1.1.0")
+            try:
+                self.system_name = self.get_system_name(oid_os_name['1.3.6.1.2.1.1.1.0'])
+                logger.info(_('SNMP system name detected: {0}').format(self.system_name))
+            except KeyError:
+                self.system_name = None
+                logger.warning(_('Can not detect SNMP system name'))
+
+        return ret
+
+    def get_system_name(self, oid_system_name):
+        """Get the short os name from the OS name OID string"""
+        short_system_name = None
+
+        if oid_system_name == '':
+            return short_system_name
+        
+        # Find the short name in the oid_to_short_os_name dict
+        try:
+            iteritems = oid_to_short_system_name.iteritems()
+        except AttributeError:
+            # Correct issue #386
+            iteritems = oid_to_short_system_name.items()
+        for r,v in iteritems:
+            if re.search(r, oid_system_name):
+                short_system_name = v
+                break
+
+        return short_system_name
+
 
     def update(self):
         """Update the stats using SNMP."""
         # For each plugins, call the update method
         for p in self._plugins:
             # Set the input method to SNMP
-            self._plugins[p].set_input('snmp')
-            # print "DEBUG: Update %s stats using SNMP request" % p
+            self._plugins[p].set_input('snmp', self.system_name)
             try:
                 self._plugins[p].update()
             except Exception as e:
-                print(_("Error: Update {0} failed: {1}").format(p, e))
-                # pass
+                logger.error(_("Error: Update {0} failed: {1}").format(p, e))
