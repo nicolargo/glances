@@ -475,8 +475,10 @@ class GlancesCurses(object):
             self.new_column()
             self.new_line()
             self.display_plugin(stats_processcount)
-            self.new_line()
-            self.display_plugin(stats_monitor)
+            if glances_processes.get_process_filter() == None and cs_status == 'None':
+                # Do not display stats monitor list if a filter exist
+                self.new_line()
+                self.display_plugin(stats_monitor)
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
