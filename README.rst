@@ -43,6 +43,18 @@ Optional dependencies:
 Installation
 ============
 
+Glances Auto Install script
+---------------------------
+
+Just enter the following command line:
+
+.. code-block:: console
+
+    curl -L http://bit.ly/glances | /bin/bash
+
+*Note*: Only supported on some GNU/Linux distributions.
+If you want to support others distribs, please contribute to `glancesautoinstall`_.
+
 PyPI: The simple way
 --------------------
 
@@ -188,6 +200,8 @@ Documentation
 
 For complete documentation see `glances-doc`_.
 
+If you have any question (after RTFM !), please post it on the official Q&A `forum`_.
+
 Author
 ======
 
@@ -199,6 +213,7 @@ License
 LGPL. See ``COPYING`` for more details.
 
 .. _psutil: https://code.google.com/p/psutil/
+.. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW: bitcoin:18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW?amount=1X8&label=Glances
@@ -209,3 +224,4 @@ LGPL. See ``COPYING`` for more details.
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+.. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users

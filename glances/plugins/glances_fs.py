@@ -19,8 +19,14 @@
 
 """File system plugin."""
 
+# System libs
+import base64
+
+# Glances libs
+from glances.core.glances_globals import version, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# PSutil lib for local grab
 import psutil
 
 # SNMP OID
@@ -37,11 +43,16 @@ import psutil
 # Used space on the disk: .1.3.6.1.4.1.2021.9.1.8.1
 # Percentage of space used on disk: .1.3.6.1.4.1.2021.9.1.9.1
 # Percentage of inodes used on disk: .1.3.6.1.4.1.2021.9.1.10.1
-snmp_oid = {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
-            'device_name': '1.3.6.1.4.1.2021.9.1.3',
-            'size': '1.3.6.1.4.1.2021.9.1.6',
-            'used': '1.3.6.1.4.1.2021.9.1.8',
-            'percent': '1.3.6.1.4.1.2021.9.1.9'}
+snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
+                        'device_name': '1.3.6.1.4.1.2021.9.1.3',
+                        'size': '1.3.6.1.4.1.2021.9.1.6',
+                        'used': '1.3.6.1.4.1.2021.9.1.8',
+                        'percent': '1.3.6.1.4.1.2021.9.1.9'},
+            'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
+                        'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
+                        'size': '1.3.6.1.2.1.25.2.3.1.5',
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
+snmp_oid['esxi'] = snmp_oid['windows']
 
 
 class Plugin(GlancesPlugin):
@@ -57,12 +68,6 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 0
-        # Enter -1 to diplay bottom
-        self.line_curse = 4
 
         # Init the stats
         self.reset()
@@ -109,22 +114,42 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
-            # SNMP bulk command to get all file system in one shot
-            fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid, bulk=True)
+            # SNMP bulk command to get all file system in one shot            
+            try:
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                                              bulk=True)
+            except KeyError:
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                                              bulk=True)
 
             # Loop over fs
-            for fs in fs_stat:
-                fs_current = {}
-                fs_current['device_name'] = fs_stat[fs]['device_name']
-                fs_current['mnt_point'] = fs
-                fs_current['size'] = int(fs_stat[fs]['size']) * 1024
-                fs_current['used'] = int(fs_stat[fs]['used']) * 1024
-                fs_current['percent'] = float(fs_stat[fs]['percent'])
-                self.stats.append(fs_current)
+            if self.get_short_system_name() in ('windows', 'esxi'):
+                # Windows or ESXi tips
+                for fs in fs_stat:
+                    # Memory stats are grabed in the same OID table (ignore it)
+                    if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
+                        continue
+                    fs_current = {}
+                    fs_current['device_name'] = ''
+                    fs_current['mnt_point'] = fs.partition(' ')[0]
+                    fs_current['size'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['percent'] = float(fs_current['used'] * 100 / fs_current['size'])
+                    self.stats.append(fs_current)                
+            else:
+                # Default behavor
+                for fs in fs_stat:
+                    fs_current = {}
+                    fs_current['device_name'] = fs_stat[fs]['device_name']
+                    fs_current['mnt_point'] = fs
+                    fs_current['size'] = int(fs_stat[fs]['size']) * 1024
+                    fs_current['used'] = int(fs_stat[fs]['used']) * 1024
+                    fs_current['percent'] = float(fs_stat[fs]['percent'])
+                    self.stats.append(fs_current)
 
         return self.stats
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -133,9 +158,16 @@ class Plugin(GlancesPlugin):
         if self.stats == [] or args.disable_fs:
             return ret
 
+        # Max size for the fsname name
+        if max_width is not None and max_width >= 23:
+            # Interface size name = max_width - space for interfaces bitrate
+            fsname_max_width = max_width - 14
+        else:
+            fsname_max_width = 9
+
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("FILE SYS"))
+        msg = '{0:{width}}'.format(_("FILE SYS"), width=fsname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{0:>7}'.format(_("Used"))
         ret.append(self.curse_add_line(msg))
@@ -146,15 +178,17 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
             # New line
             ret.append(self.curse_new_line())
-            if len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= 6:
+            if i['device_name'] == '' or i['device_name'] == 'none':
+                mnt_point = i['mnt_point'][-fsname_max_width+1:]
+            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif len(i['mnt_point']) > 9:
+            elif len(i['mnt_point']) > fsname_max_width:
                 # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-8:]
+                mnt_point = '_' + i['mnt_point'][-fsname_max_width+1:]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{0:9}'.format(mnt_point)
+            msg = '{0:{width}}'.format(mnt_point, width=fsname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{0:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))

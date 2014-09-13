@@ -19,14 +19,15 @@
 
 """Battery plugin."""
 
+# Import Glances libs
+from glances.core.glances_globals import logger
+from glances.plugins.glances_plugin import GlancesPlugin
+
 # Batinfo library (optional; Linux-only)
 try:
     import batinfo
 except ImportError:
-    pass
-
-# Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
+    logger.debug(_("Cannot grab battery sensor. Missing BatInfo library."))
 
 
 class Plugin(GlancesPlugin):
@@ -84,18 +85,12 @@ class GlancesGrabBat(object):
             self.bat_list = []
             self.update()
         except Exception:
-            # print(_("Warning: Cannot grab battery sensor. Missing BatInfo library."))
             self.initok = False
 
     def update(self):
         """Update the stats."""
         if self.initok:
-            reply = self.bat.update()
-            if reply is not None:
-                self.bat_list = []
-                new_item = {'label': _("Battery (%)"),
-                            'value': self.getcapacitypercent()}
-                self.bat_list.append(new_item)
+            self.bat_list = [{'label': _("Battery (%)"), 'value': self.getcapacitypercent()}]
         else:
             self.bat_list = []
 
@@ -108,15 +103,14 @@ class GlancesGrabBat(object):
         if not self.initok or self.bat.stat == []:
             return []
 
-        # Init the bsum (sum of percent) and bcpt (number of batteries)
+        # Init the bsum (sum of percent)
         # and Loop over batteries (yes a computer could have more than 1 battery)
         bsum = 0
-        for bcpt in range(len(self.bat.stat)):
+        for b in self.bat.stat:
             try:
-                bsum = bsum + int(self.bat.stat[bcpt].capacity)
+                bsum = bsum + int(b.capacity)
             except ValueError:
                 return []
-            bcpt = bcpt + 1
 
         # Return the global percent
-        return int(bsum / bcpt)
+        return int(bsum / len(self.bat.stat))

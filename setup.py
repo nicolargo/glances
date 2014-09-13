@@ -6,7 +6,6 @@ import sys
 
 from setuptools import setup
 
-
 def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
@@ -30,7 +29,6 @@ def get_data_files():
 
     return data_files
 
-
 def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
@@ -42,13 +40,13 @@ def get_requires():
 
 setup(
     name='Glances',
-    version='2.0.1',
+    version='2.1',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-2.0.1.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-2.1.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=get_requires(),
@@ -56,7 +54,8 @@ setup(
         'WEB': ['bottle'],
         'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo'],
-        'SNMP': ['pysnmp']
+        'SNMP': ['pysnmp'],
+        'CHART': ['matplotlib']
     },
     packages=['glances'],
     include_package_data=True,

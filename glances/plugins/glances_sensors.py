@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3
+from glances.core.glances_globals import is_py3, logger
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -50,19 +50,13 @@ class Plugin(GlancesPlugin):
         self.glancesgrabsensors = GlancesGrabSensors()
 
         # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
-        self.hddtemp_plugin = HddTempPlugin()
+        self.hddtemp_plugin = HddTempPlugin(args=args)
 
         # Instance for the BatPercent in order to display the batteries capacities
-        self.batpercent_plugin = BatPercentPlugin()
+        self.batpercent_plugin = BatPercentPlugin(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 0
-        # Enter -1 to diplay bottom
-        self.line_curse = 5
 
         # Init the stats
         self.reset()
@@ -140,18 +134,24 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         for item in self.stats:
-            # New line
-            ret.append(self.curse_new_line())
-            msg = '{0:18}'.format(item['label'][:18])
-            ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}'.format(item['value'])
-            if item['type'] == 'battery':
-                try:
-                    ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
-                except TypeError:
-                    pass
-            else:
-                ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
+            if item['value'] is not None and item['value'] != []:
+                # New line
+                ret.append(self.curse_new_line())
+                # Alias for the lable name ?
+                label = self.has_alias(item['label'].lower())
+                if label is None:
+                    label = item['label']
+                label = label[:18]
+                msg = '{0:18}'.format(label)
+                ret.append(self.curse_add_line(msg))
+                msg = '{0:>5}'.format(item['value'])
+                if item['type'] == 'battery':
+                    try:
+                        ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+                    except TypeError:
+                        pass
+                else:
+                    ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
 
         return ret
 

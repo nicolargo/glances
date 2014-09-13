@@ -21,10 +21,11 @@
 
 # Import system libs
 import argparse
+import sys
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, psutil_version, version
+from glances.core.glances_globals import appname, psutil_version, version, logger
 
 
 class GlancesMain(object):
@@ -55,15 +56,13 @@ class GlancesMain(object):
         _version = "Glances v" + version + " with psutil v" + psutil_version
         parser = argparse.ArgumentParser(prog=appname, conflict_handler='resolve')
         parser.add_argument('-V', '--version', action='version', version=_version)
-        parser.add_argument('-b', '--byte', action='store_true', default=False,
-                            dest='byte', help=_('display network rate in byte per second'))
-        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
-                            help=_('bind server to the given IPv4/IPv6 address or hostname'))
-        parser.add_argument('-c', '--client', dest='client',
-                            help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
+        parser.add_argument('-d', '--debug', action='store_true', default=False,
+                            dest='debug', help=_('Enable debug mode'))
         parser.add_argument('-C', '--config', dest='conf_file',
                             help=_('path to the configuration file'))
         # Enable or disable option on startup
+        parser.add_argument('--enable-history', action='store_true', default=False,
+                            dest='enable_history', help=_('enable the history mode'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,
@@ -76,20 +75,26 @@ class GlancesMain(object):
                             dest='disable_sensors', help=_('disable sensors module'))
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help=_('disable process module'))
+        parser.add_argument('--disable-process-extended', action='store_true', default=False,
+                            dest='disable_process_extended', help=_('disable extended stats on top process'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
         # CSV output feature
         parser.add_argument('--output-csv', default=None,
                             dest='output_csv', help=_('export stats to a CSV file'))
-        # Server option
-        parser.add_argument('-p', '--port', default=self.server_port, type=int, dest='port',
+        # Client/Server option
+        parser.add_argument('-c', '--client', dest='client',
+                            help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
+        parser.add_argument('-s', '--server', action='store_true', default=False,
+                            dest='server', help=_('run Glances in server mode'))
+        parser.add_argument('-p', '--port', default=None, type=int, dest='port',
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
+        parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
+                            help=_('bind server to the given IPv4/IPv6 address or hostname'))
         parser.add_argument('--password-badidea', dest='password_arg',
                             help=_('define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help=_('define a client/server password from the prompt or file'))
-        parser.add_argument('-s', '--server', action='store_true', default=False,
-                            dest='server', help=_('run Glances in server mode'))
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help=_('SNMP community'))
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -100,13 +105,23 @@ class GlancesMain(object):
                             help=_('SNMP username (only for SNMPv3)'))
         parser.add_argument('--snmp-auth', default='password', dest='snmp_auth',
                             help=_('SNMP authentication key (only for SNMPv3)'))
-        parser.add_argument('-t', '--time', default=self.refresh_time, type=int,
+        parser.add_argument('--snmp-force', action='store_true', default=False,
+                            dest='snmp_force', help=_('force SNMP mode'))
+        parser.add_argument('-t', '--time', default=self.refresh_time, type=float,
                             dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode'))
-        # Other options
+        # Display options
+        parser.add_argument('-f', '--process-filter', default=None, type=str,
+                            dest='process_filter', help=_('set the process filter patern (regular expression)'))
+        parser.add_argument('--process-short-name', action='store_true', default=False,
+                            dest='process_short_name', help=_('force short name for processes name'))
+        parser.add_argument('-b', '--byte', action='store_true', default=False,
+                            dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help=_('start Glances in per CPU mode'))
+        parser.add_argument('--theme-white', action='store_true', default=False,
+                            dest='theme_white', help=_('optimize display for white background'))
 
         return parser
 
@@ -114,15 +129,24 @@ class GlancesMain(object):
         """Parse command line arguments."""
         args = self.init_args().parse_args()
 
-        # Load the configuration file, it it exists
+        # Load the configuration file, if it exists
         self.config = Config(args.conf_file)
 
-        # In web server mode, default:
-        # - refresh time: 5 sec
-        # - host port: 61208
+        # Debug mode
+        if args.debug:
+            from logging import DEBUG
+            logger.setLevel(DEBUG)
+
+        # Client/server Port        
+        if args.port is None:
+            if args.webserver:
+                args.port = self.web_server_port
+            else:
+                args.port = self.server_port            
+
+        # In web server mode, defaul refresh time: 5 sec        
         if args.webserver:
             args.time = 5
-            args.port = self.web_server_port
 
         # Server or client login/password
         args.username = self.username
@@ -146,21 +170,20 @@ class GlancesMain(object):
             # Default is no password
             args.password = self.password
 
-        # !!! Change global variables regarding to user args
-        # !!! To be refactor to use directly the args list in the code
-        self.server_tag = args.server
-        self.webserver_tag = args.webserver
-        if args.client is not None:
-            self.client_tag = True
-            self.server_ip = args.client
-        # /!!!
-
         # By default help is hidden
         args.help_tag = False
 
         # Display Rx and Tx, not the sum for the network
         args.network_sum = False
         args.network_cumul = False
+
+        # Control parameter and exit if it is not OK
+        self.args = args
+
+        # Filter is only available in standalone mode
+        if args.process_filter is not None and not self.is_standalone():
+            logger.critical(_("Process filter is only available in standalone mode"))
+            sys.exit(2)
 
         return args
 
@@ -186,19 +209,19 @@ class GlancesMain(object):
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.client_tag and not self.server_tag and not self.webserver_tag
+        return not self.args.client and not self.args.server and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return self.client_tag and not self.server_tag
+        return self.args.client and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
-        return not self.client_tag and self.server_tag
+        return not self.args.client and self.args.server
 
     def is_webserver(self):
         """Return True if Glances is running in Web server mode."""
-        return not self.client_tag and self.webserver_tag
+        return not self.args.client and self.args.webserver
 
     def get_config(self):
         """Return configuration file object."""

@@ -20,7 +20,7 @@
 """Init the Glances software."""
 
 __appname__ = 'glances'
-__version__ = '2.0.1'
+__version__ = '2.1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
@@ -29,6 +29,7 @@ import gettext
 import locale
 import signal
 import sys
+import platform
 
 # Import psutil
 try:
@@ -37,18 +38,25 @@ except ImportError:
     print('psutil library not found. Glances cannot start.')
     sys.exit(1)
 
-# Check psutil version
-psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
-if psutil_version < psutil_min_version:
-    print('psutil version {0} detected.').format(__psutil_version)
-    print('psutil 2.0 or higher is needed. Glances cannot start.')
-    sys.exit(1)
-
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir
+from glances.core.glances_globals import gettext_domain, locale_dir, logger
 from glances.core.glances_main import GlancesMain
+
+# Get PSutil version
+psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
+
+# First log with Glances and PSUtil version
+logger.info('Start Glances {0}'.format(__version__))
+logger.info('{0} {1} and PSutil {2} detected'.format(platform.python_implementation(),
+                                                 platform.python_version(), 
+                                                 __psutil_version))
+
+# Check PSutil version
+if psutil_version < psutil_min_version:    
+    logger.critical('PSutil 2.0 or higher is needed. Glances cannot start.')
+    sys.exit(1)
 
 
 def __signal_handler(signal, frame):
@@ -61,12 +69,19 @@ def end():
     if core.is_standalone():
         # Stop the standalone (CLI)
         standalone.end()
+        logger.info("Stop Glances (with CTRL-C)")
     elif core.is_client():
         # Stop the client
         client.end()
+        logger.info("Stop Glances client (with CTRL-C)")
     elif core.is_server():
         # Stop the server
         server.end()
+        logger.info("Stop Glances server (with CTRL-C)")
+    elif core.is_webserver():
+        # Stop the Web server
+        webserver.end()
+        logger.info("Stop Glances web server(with CTRL-C)")
 
     # The end...
     sys.exit(0)
@@ -83,7 +98,7 @@ def main():
     gettext.install(gettext_domain, locale_dir)
 
     # Share global var
-    global core, standalone, client, server
+    global core, standalone, client, server, webserver
 
     # Create the Glances main instance
     core = GlancesMain()
@@ -93,6 +108,7 @@ def main():
 
     # Glances can be ran in standalone, client or server mode
     if core.is_standalone():
+        logger.info("Start standalone mode")
 
         # Import the Glances standalone module
         from glances.core.glances_standalone import GlancesStandalone
@@ -105,6 +121,7 @@ def main():
         standalone.serve_forever()
 
     elif core.is_client():
+        logger.info("Start client mode")
 
         # Import the Glances client module
         from glances.core.glances_client import GlancesClient
@@ -115,7 +132,7 @@ def main():
 
         # Test if client and server are in the same major version
         if not client.login():
-            print(_("Error: The server version is not compatible with the client"))
+            logger.critical(_("The server version is not compatible with the client"))
             sys.exit(2)
 
         # Start the client loop
@@ -125,6 +142,7 @@ def main():
         client.close()
 
     elif core.is_server():
+        logger.info("Start server mode")
 
         # Import the Glances server module
         from glances.core.glances_server import GlancesServer
@@ -147,6 +165,7 @@ def main():
         server.server_close()
 
     elif core.is_webserver():
+        logger.info("Start web server mode")
 
         # Import the Glances web server module
         from glances.core.glances_webserver import GlancesWebServer

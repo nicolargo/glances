@@ -23,7 +23,7 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_windows
+from glances.core.glances_globals import glances_logs, glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
@@ -31,8 +31,9 @@ if not is_windows:
     try:
         import curses
         import curses.panel
+        from curses.textpad import Textbox, rectangle
     except ImportError:
-        print('Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical('Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -58,7 +59,7 @@ class GlancesCurses(object):
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            print(_("Error: Cannot init the curses library.\n"))
+            logger.critical(_("Error: Cannot init the curses library.\n"))
             sys.exit(1)
 
         # Set curses options
@@ -70,18 +71,17 @@ class GlancesCurses(object):
             curses.noecho()
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
-        if hasattr(curses, 'curs_set'):
-            try:
-                curses.curs_set(0)
-            except Exception:
-                pass
+        self.set_cursor(0)
 
         # Init colors
         self.hascolors = False
         if curses.has_colors() and curses.COLOR_PAIRS > 8:
             self.hascolors = True
             # FG color, BG color
-            curses.init_pair(1, curses.COLOR_WHITE, -1)
+            if args.theme_white:
+                curses.init_pair(1, curses.COLOR_BLACK, -1)
+            else:
+                curses.init_pair(1, curses.COLOR_WHITE, -1)
             curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
             curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
             curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
@@ -89,7 +89,21 @@ class GlancesCurses(object):
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
             curses.init_pair(8, curses.COLOR_BLUE, -1)
-            curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+            try:
+                curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+            except:
+                if args.theme_white:
+                    curses.init_pair(9, curses.COLOR_BLACK, -1)
+                else:
+                    curses.init_pair(9, curses.COLOR_WHITE, -1)
+            try:
+                curses.init_pair(10, curses.COLOR_CYAN, -1)
+            except:
+                if args.theme_white:
+                    curses.init_pair(10, curses.COLOR_BLACK, -1)
+                else:
+                    curses.init_pair(10, curses.COLOR_WHITE, -1)
+
         else:
             self.hascolors = False
 
@@ -113,6 +127,7 @@ class GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
             self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
             self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.filter_color = curses.color_pair(10) | A_BOLD
         else:
             # B&W text styles
             self.no_color = curses.A_NORMAL
@@ -125,6 +140,7 @@ class GlancesCurses(object):
             self.ifCAREFUL_color2 = curses.A_UNDERLINE
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
+            self.filter_color = A_BOLD
 
         # Define the colors list (hash table) for stats
         self.__colors_list = {
@@ -133,6 +149,7 @@ class GlancesCurses(object):
             'BOLD': A_BOLD,
             'SORT': A_BOLD,
             'OK': self.default_color2,
+            'FILTER': self.filter_color,
             'TITLE': self.title_color,
             'PROCESS': self.default_color2,
             'STATUS': self.default_color2,
@@ -155,10 +172,36 @@ class GlancesCurses(object):
         # Init process sort method
         self.args.process_sorted_by = 'auto'
 
+        # Init edit filter tag
+        self.edit_filter = False
+
         # Catch key pressed with non blocking mode
         self.term_window.keypad(1)
         self.term_window.nodelay(1)
         self.pressedkey = -1
+
+        # History tag
+        self.reset_history_tag = False
+        self.history_tag = False
+        if args.enable_history:
+            logger.info('Stats history enabled')
+            from glances.outputs.glances_history import GlancesHistory
+            self.glances_history = GlancesHistory()
+            if not self.glances_history.graph_enabled():
+                args.enable_history = False
+                logger.error('Stats history disabled because graph lib is not available')
+
+    def set_cursor(self, value):
+        """Configure the cursor 
+           0: invisible
+           1: visible
+           2: very visible
+           """
+        if hasattr(curses, 'curs_set'):
+            try:
+                curses.curs_set(value)
+            except Exception:
+                pass
 
     def __get_key(self, window):
         # Catch ESC key AND numlock key (issue #163)
@@ -181,13 +224,21 @@ class GlancesCurses(object):
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             self.end()
+            logger.info("Stop Glances")
             sys.exit(0)
+        elif self.pressedkey == 10:
+            # 'ENTER' > Edit the process filter
+            self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.args.percpu = not self.args.percpu
+        elif self.pressedkey == ord('/'):
+            # '/' > Switch between short/long name for processes
+            self.args.process_short_name = not self.args.process_short_name
         elif self.pressedkey == ord('a'):
             # 'a' > Sort processes automatically
             self.args.process_sorted_by = 'auto'
+            glances_processes.resetsort()
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             # self.net_byteps_tag = not self.net_byteps_tag
@@ -195,30 +246,47 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             self.args.process_sorted_by = 'cpu_percent'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('e'):
+            # 'e' > Enable/Disable extended stats for top process
+            self.args.disable_process_extended = not self.args.disable_process_extended
+            if self.args.disable_process_extended:
+                glances_processes.disable_extended()
+            else:
+                glances_processes.enable_extended()
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs stats
             self.args.disable_fs = not self.args.disable_fs
+        elif self.pressedkey == ord('g'):
+            # 'g' > History
+            self.history_tag = not self.history_tag
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.args.help_tag = not self.args.help_tag
         elif self.pressedkey == ord('i'):
             # 'i' > Sort processes by IO rate (not available on OS X)
             self.args.process_sorted_by = 'io_counters'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
             self.args.disable_log = not self.args.disable_log
         elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
             self.args.process_sorted_by = 'memory_percent'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
             self.args.disable_network = not self.args.disable_network
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
             self.args.process_sorted_by = 'name'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+        elif self.pressedkey == ord('r'):
+            # 'r' > Reset history
+            self.reset_history_tag = not self.reset_history_tag            
         elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
@@ -247,7 +315,7 @@ class GlancesCurses(object):
         return self.pressedkey
 
     def end(self):
-        """Shutdown the curses window."""
+        """Shutdown the curses window."""        
         if hasattr(curses, 'echo'):
             curses.echo()
         if hasattr(curses, 'nocbreak'):
@@ -258,6 +326,31 @@ class GlancesCurses(object):
             except Exception:
                 pass
         curses.endwin()
+        
+    def init_line_column(self):
+        """Init the line and column position for the curses inteface"""
+        self.line = 0
+        self.column = 0
+        self.next_line = 0
+        self.next_column = 0
+
+    def init_line(self):
+        """Init the line position for the curses inteface"""
+        self.line = 0
+        self.next_line = 0
+
+    def init_column(self):
+        """Init the column position for the curses inteface"""
+        self.column = 0
+        self.next_column = 0
+
+    def new_line(self):
+        """New line in the curses interface"""
+        self.line = self.next_line
+
+    def new_column(self):
+        """New column in the curses interface"""
+        self.column = self.next_column
 
     def display(self, stats, cs_status="None"):
         """Display stats on the screen.
@@ -273,96 +366,241 @@ class GlancesCurses(object):
             True if the stats have been displayed
             False if the help have been displayed
         """
-        # Init the internal line/column dict for Glances Curses
-        self.line_to_y = {}
-        self.column_to_x = {}
+        # Init the internal line/column for Glances Curses
+        self.init_line_column()
 
         # Get the screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
+        # No processes list in SNMP mode
+        if cs_status == 'SNMP':
+            # so... more space for others plugins
+            plugin_max_width = 43
+        else:
+            plugin_max_width = None
+
+        # Update the stats messages
+        ###########################
+
+        # Update the client server status
+        self.args.cs_status = cs_status
+        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
+        stats_uptime = stats.get_plugin('uptime').get_stats_display()
+        if self.args.percpu:
+            stats_percpu = stats.get_plugin('percpu').get_stats_display()
+        else:
+            stats_cpu = stats.get_plugin('cpu').get_stats_display()
+        stats_load = stats.get_plugin('load').get_stats_display()
+        stats_mem = stats.get_plugin('mem').get_stats_display()
+        stats_memswap = stats.get_plugin('memswap').get_stats_display()
+        stats_network = stats.get_plugin('network').get_stats_display(args=self.args, max_width=plugin_max_width)
+        stats_diskio = stats.get_plugin('diskio').get_stats_display(args=self.args)
+        stats_fs = stats.get_plugin('fs').get_stats_display(args=self.args, max_width=plugin_max_width)
+        stats_sensors = stats.get_plugin('sensors').get_stats_display(args=self.args)
+        stats_now = stats.get_plugin('now').get_stats_display()
+        stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
+        stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
+        stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
+        stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
+
+        # Display the stats on the curses interface
+        ###########################################
+
+        # Help screen (on top of the other stats)
         if self.args.help_tag:
             # Display the stats...
             self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
             return False
 
-        # Update the client server status
-        self.args.cs_status = cs_status
-
         # Display first line (system+uptime)
-        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
-        stats_uptime = stats.get_plugin('uptime').get_stats_display()
+        self.new_line()
         l = self.get_stats_display_width(stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
         self.display_plugin(stats_system, display_optional=(screen_x >= l))
+        self.new_column()
         self.display_plugin(stats_uptime)
 
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
+        self.init_column()
+        self.new_line()        
         if self.args.percpu:
-            stats_percpu = stats.get_plugin('percpu').get_stats_display()
             l = self.get_stats_display_width(stats_percpu)
         else:
-            stats_cpu = stats.get_plugin('cpu').get_stats_display()
             l = self.get_stats_display_width(stats_cpu)
-        stats_load = stats.get_plugin('load').get_stats_display()
-        stats_mem = stats.get_plugin('mem').get_stats_display()
-        stats_memswap = stats.get_plugin('memswap').get_stats_display()
         l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
-        if screen_x > (3 * self.space_between_column + l):
-            self.space_between_column = int((screen_x - l) / 3)
+        space_number = int(stats_load['msgdict'] != []) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != []) 
+        if space_number == 0:
+            space_number = 1
+        if screen_x > (space_number * self.space_between_column + l):
+            self.space_between_column = int((screen_x - l) / space_number)
         # Display
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
             self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
+        self.new_column()
         self.display_plugin(stats_load)
-        self.display_plugin(stats_mem, display_optional=(screen_x >= (3 * self.space_between_column + l)))
+        self.new_column()
+        self.display_plugin(stats_mem, display_optional=(screen_x >= (space_number * self.space_between_column + l)))
+        self.new_column()
         self.display_plugin(stats_memswap)
         # Space between column
         self.space_between_column = 3
 
-        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS)
-        self.display_plugin(stats.get_plugin('network').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('diskio').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('fs').get_stats_display(args=self.args))
-        self.display_plugin(stats.get_plugin('sensors').get_stats_display(args=self.args))
-        # Display last line (currenttime)
-        self.display_plugin(stats.get_plugin('now').get_stats_display())
+        # Backup line position
+        self.saved_line = self.next_line
 
-        # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
+        self.init_column()
+        self.new_line()
+        self.display_plugin(stats_network)
+        self.new_line()
+        self.display_plugin(stats_diskio)
+        self.new_line()
+        self.display_plugin(stats_fs)
+        self.new_line()
+        self.display_plugin(stats_sensors)
+        self.new_line()
+        self.display_plugin(stats_now)
+
+        # If space available...
         if screen_x > 52:
-            stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
-            stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
-            stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
-            stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
-            # Display
+            # Restore line position
+            self.next_line = self.saved_line
+
+            # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+            self.new_column()
+            self.new_line()
             self.display_plugin(stats_processcount)
-            self.display_plugin(stats_monitor)
+            if glances_processes.get_process_filter() == None and cs_status == 'None':
+                # Do not display stats monitor list if a filter exist
+                self.new_line()
+                self.display_plugin(stats_monitor)
+            self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
+                                display_additional=(is_mac == False),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
+            self.new_line()
             self.display_plugin(stats_alert)
+
+        # History option
+        # Generate history graph
+        if self.history_tag and self.args.enable_history:
+            self.display_popup(_("Graphs history generated in %s") % self.glances_history.get_output_folder())
+            self.glances_history.generate_graph(stats)
+        elif self.reset_history_tag and self.args.enable_history:
+            self.display_popup(_("Reset history"))
+            self.glances_history.reset(stats)            
+        elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
+            self.display_popup(_("History disabled\nEnable it using --enable-history"))
+        self.history_tag = False
+        self.reset_history_tag = False
+
+        # Display edit filter popup
+        # Only in standalone mode (cs_status == 'None')
+        if self.edit_filter and cs_status == 'None':
+            new_filter = self.display_popup(_("Process filter pattern: "), 
+                                            is_input=True,
+                                            input_value=glances_processes.get_process_filter())
+            glances_processes.set_process_filter(new_filter)
+        elif self.edit_filter and cs_status != 'None':
+            self.display_popup(_("Process filter only available in standalone mode"))
+        self.edit_filter = False
 
         return True
 
-    def display_plugin(self, plugin_stats, display_optional=True, max_y=65535):
+    def display_popup(self, message, 
+                      size_x=None, size_y=None, 
+                      duration=3,
+                      is_input=False,
+                      input_size=30,
+                      input_value=None):
+        """
+        If is_input is False:
+         Display a centered popup with the given message during duration seconds
+         If size_x and size_y: set the popup size
+         else set it automatically
+         Return True if the popup could be displayed
+        If is_input is True:
+         Display a centered popup with the given message and a input field
+         If size_x and size_y: set the popup size
+         else set it automatically
+         Return the input string or None if the field is empty        
+        """
+
+        # Center the popup
+        if size_x is None:
+            size_x = len(message) + 4
+            # Add space for the input field
+            if is_input:
+                size_x += input_size
+        if size_y is None:
+            size_y = message.count('\n') + 1 + 4
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+        if size_x > screen_x or size_y > screen_y:
+            # No size to display the popup => abord
+            return False 
+        pos_x = int((screen_x - size_x) / 2)
+        pos_y = int((screen_y - size_y) / 2)
+
+        # Create the popup
+        popup = curses.newwin(size_y, size_x, pos_y, pos_x)
+        
+        # Fill the popup
+        popup.border()
+
+        # Add the message
+        y = 0
+        for m in message.split('\n'):
+            popup.addnstr(2 + y, 2, m, len(m))
+            y += 1
+
+        if is_input and not is_windows:
+            # Create a subwindow for the text field
+            subpop = popup.derwin(1, input_size, 2, 2 + len(m))
+            subpop.attron(self.__colors_list['FILTER'])
+            # Init the field with the current value
+            if input_value is not None:
+                subpop.addnstr(0, 0, input_value, len(input_value))
+            # Display the popup
+            popup.refresh()
+            subpop.refresh()
+            # Create the textbox inside the subwindows
+            self.set_cursor(2)
+            textbox = glances_textbox(subpop, insert_mode=False)
+            textbox.edit()
+            self.set_cursor(0)
+            if textbox.gather() != '':
+                logger.debug(_("User enters the following process filter patern: %s") % textbox.gather())
+                return textbox.gather()[:-1]
+            else:
+                logger.debug(_("User clears the process filter patern"))
+                return None
+        else:
+            # Display the popup
+            popup.refresh()
+            curses.napms(duration * 1000)
+            return True
+
+    def display_plugin(self, plugin_stats, 
+                       display_optional=True,
+                       display_additional=True, 
+                       max_y=65535):
         """Display the plugin_stats on the screen.
 
-        If display_optional=True display the optional stats.
+        If display_optional=True display the optional stats
+        If display_additional=True display additionnal stats
         max_y do not display line > max_y
         """
         # Exit if:
         # - the plugin_stats message is empty
         # - the display tag = False
         if plugin_stats['msgdict'] == [] or not plugin_stats['display']:
-            # Display the next plugin at the current plugin position
-            try:
-                self.column_to_x[plugin_stats['column'] + 1] = self.column_to_x[plugin_stats['column']]
-                self.line_to_y[plugin_stats['line'] + 1] = self.line_to_y[plugin_stats['line']]
-            except Exception:
-                pass
             # Exit
             return 0
 
@@ -371,21 +609,17 @@ class GlancesCurses(object):
         screen_y = self.screen.getmaxyx()[0]
 
         # Set the upper/left position of the message
-        if plugin_stats['column'] < 0:
+        if plugin_stats['align'] == 'right':
             # Right align (last column)
             display_x = screen_x - self.get_stats_display_width(plugin_stats)
         else:
-            if plugin_stats['column'] not in self.column_to_x:
-                self.column_to_x[plugin_stats['column']] = plugin_stats['column']
-            display_x = self.column_to_x[plugin_stats['column']]
-        if plugin_stats['line'] < 0:
+            display_x = self.column
+        if plugin_stats['align'] == 'bottom':
             # Bottom (last line)
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
-            if plugin_stats['line'] not in self.line_to_y:
-                self.line_to_y[plugin_stats['line']] = plugin_stats['line']
-            display_y = self.line_to_y[plugin_stats['line']]
-
+            display_y = self.line
+        
         # Display
         x = display_x
         y = display_y
@@ -407,13 +641,16 @@ class GlancesCurses(object):
             # If display_optional = False do not display optional stats
             if not display_optional and m['optional']:
                 continue
+            # If display_additional = False do not display additional stats
+            if not display_additional and m['additional']:
+                continue
             # Is it possible to display the stat with the current screen size
             # !!! Crach if not try/except... Why ???
             try:
                 self.term_window.addnstr(y, x,
                                          m['msg'],
                                          screen_x - x,  # Do not disply outside the screen
-                                         self.__colors_list[m['decoration']])
+                                         self.__colors_list[m['decoration']])                
             except:
                 pass
             else:
@@ -421,10 +658,8 @@ class GlancesCurses(object):
                 x = x + len(m['msg'])
 
         # Compute the next Glances column/line position
-        if plugin_stats['column'] > -1:
-            self.column_to_x[plugin_stats['column'] + 1] = x + self.space_between_column
-        if plugin_stats['line'] > -1:
-            self.line_to_y[plugin_stats['line'] + 1] = y + self.space_between_line
+        self.next_column = max(self.next_column, x + self.space_between_column)
+        self.next_line = max(self.next_line, y + self.space_between_line)
 
     def erase(self):
         """Erase the content of the screen."""
@@ -461,8 +696,8 @@ class GlancesCurses(object):
         while not countdown.finished():
             # Getkey
             if self.__catch_key() > -1:
-                # flush display
-                self.flush(stats, cs_status=cs_status)
+                # Redraw display
+                self.flush(stats, cs_status=cs_status)                
             # Wait 100ms...
             curses.napms(100)
 
@@ -496,3 +731,17 @@ class GlancesCurses(object):
             return 0
         else:
             return c + 1
+
+if not is_windows:
+    class glances_textbox(Textbox):
+        """
+        """
+        def __init__(*args, **kwargs):
+            Textbox.__init__(*args, **kwargs)
+      
+        def do_command(self, ch):
+            if ch == 10: # Enter
+                return 0
+            if ch == 127: # Enter
+                return 8
+            return Textbox.do_command(self, ch)

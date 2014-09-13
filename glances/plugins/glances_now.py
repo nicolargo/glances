@@ -37,12 +37,9 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+        
         # Set the message position
-        # It is NOT the curse position but the Glances column/line
-        # Enter -1 to right align
-        self.column_curse = 0
-        # Enter -1 to diplay bottom
-        self.line_curse = -1
+        self.set_align('bottom')
 
     def update(self):
         """Update current date/time."""

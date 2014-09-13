@@ -123,9 +123,9 @@ td.option-group {
 <div class="document" id="glances">
 <h1 class="title">Glances</h1>
 
-<p>This manual describes <em>Glances</em> version 2.0.1.</p>
+<p>This manual describes <em>Glances</em> version 2.1.</p>
 <p>Copyright © 2012-2014 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>June 2014</p>
+<p>September 2014</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -142,24 +142,25 @@ td.option-group {
 </ul>
 </li>
 <li><a class="reference internal" href="#configuration" id="id13">Configuration</a></li>
-<li><a class="reference internal" href="#anatomy-of-the-application" id="id14">Anatomy Of The Application</a><ul>
-<li><a class="reference internal" href="#legend" id="id15">Legend</a></li>
-<li><a class="reference internal" href="#header" id="id16">Header</a></li>
-<li><a class="reference internal" href="#cpu" id="id17">CPU</a></li>
-<li><a class="reference internal" href="#load" id="id18">Load</a></li>
-<li><a class="reference internal" href="#memory" id="id19">Memory</a></li>
-<li><a class="reference internal" href="#network" id="id20">Network</a></li>
-<li><a class="reference internal" href="#disk-i-o" id="id21">Disk I/O</a></li>
-<li><a class="reference internal" href="#file-system" id="id22">File System</a></li>
-<li><a class="reference internal" href="#sensors" id="id23">Sensors</a></li>
-<li><a class="reference internal" href="#processes-list" id="id24">Processes List</a></li>
-<li><a class="reference internal" href="#monitored-processes-list" id="id25">Monitored Processes List</a></li>
-<li><a class="reference internal" href="#logs" id="id26">Logs</a></li>
+<li><a class="reference internal" href="#logs-and-debug-mode" id="id14">Logs and debug mode</a></li>
+<li><a class="reference internal" href="#anatomy-of-the-application" id="id15">Anatomy Of The Application</a><ul>
+<li><a class="reference internal" href="#legend" id="id16">Legend</a></li>
+<li><a class="reference internal" href="#header" id="id17">Header</a></li>
+<li><a class="reference internal" href="#cpu" id="id18">CPU</a></li>
+<li><a class="reference internal" href="#load" id="id19">Load</a></li>
+<li><a class="reference internal" href="#memory" id="id20">Memory</a></li>
+<li><a class="reference internal" href="#network" id="id21">Network</a></li>
+<li><a class="reference internal" href="#disk-i-o" id="id22">Disk I/O</a></li>
+<li><a class="reference internal" href="#file-system" id="id23">File System</a></li>
+<li><a class="reference internal" href="#sensors" id="id24">Sensors</a></li>
+<li><a class="reference internal" href="#processes-list" id="id25">Processes List</a></li>
+<li><a class="reference internal" href="#monitored-processes-list" id="id26">Monitored Processes List</a></li>
+<li><a class="reference internal" href="#logs" id="id27">Logs</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#other-outputs" id="id27">Other Outputs</a></li>
-<li><a class="reference internal" href="#api-documentation" id="id28">API Documentation</a></li>
-<li><a class="reference internal" href="#support" id="id29">Support</a></li>
+<li><a class="reference internal" href="#other-outputs" id="id28">Other Outputs</a></li>
+<li><a class="reference internal" href="#apis-documentations" id="id29">APIs Documentations</a></li>
+<li><a class="reference internal" href="#support" id="id30">Support</a></li>
 </ul>
 </div>
 <div class="section" id="introduction">
@@ -206,7 +207,7 @@ TCP port <tt class="docutils literal"><span class="pre">-p</span> PORT</tt>.</p>
 <p>In client mode, you can set the TCP port of the server <tt class="docutils literal"><span class="pre">-p</span> PORT</tt>.</p>
 <p>You can also set a password to access to the server <tt class="docutils literal"><span class="pre">--password</span></tt>.</p>
 <p>Default binding address is <tt class="docutils literal">0.0.0.0</tt> (Glances will listen on all the
-network interfaces) and TCP port is <tt class="docutils literal">61209</tt>.</p>
+available network interfaces) and TCP port is <tt class="docutils literal">61209</tt>.</p>
 <p>In client/server mode, limits are set by the server side.</p>
 <p>Glances is <tt class="docutils literal">IPv6</tt> compatible. Just use the <tt class="docutils literal"><span class="pre">-B</span> ::</tt> option to bind to
 all IPv6 addresses.</p>
@@ -215,13 +216,12 @@ client, the latter will try to grab stats using the <tt class="docutils literal"
 <pre class="code console literal-block">
 <span class="generic output">client$ glances -c &#64;snmpserver</span>
 </pre>
-<p>Known issues: grab using SNMP is only validated for GNU/Linux with SNMP
-v2/2c server.</p>
+<p>Note: Stats grabbed by SNMP request are limited.</p>
 </div>
 <div class="section" id="web-server-mode">
 <h2><a class="toc-backref" href="#id9">Web Server Mode</a></h2>
 <p>If you want to remotely monitor a machine, called <tt class="docutils literal">server</tt>, from any
-device with a web browser, called <tt class="docutils literal">client</tt>, just run on the server:</p>
+device with a web browser, just run on the server:</p>
 <pre class="code console literal-block">
 <span class="generic output">server$ glances -w</span>
 </pre>
@@ -239,6 +239,7 @@ http://&#64;server:61208
 <h1><a class="toc-backref" href="#id10">Command Reference</a></h1>
 <div class="section" id="command-line-options">
 <h2><a class="toc-backref" href="#id11">Command-Line Options</a></h2>
+<blockquote>
 <table class="docutils option-list" frame="void" rules="none">
 <col class="option" />
 <col class="description" />
@@ -250,21 +251,16 @@ http://&#64;server:61208
 <kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
 <td>show program's version number and exit</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">-b</span>, <span class="option">--byte</span></kbd></td>
-<td>display network rate in byte per second</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-B <var>BIND_ADDRESS</var></span>, <span class="option">--bind <var>BIND_ADDRESS</var></span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>bind server to the given IPv4/IPv6 address or hostname</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-c <var>CLIENT</var></span>, <span class="option">--client <var>CLIENT</var></span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>connect to a Glances server by IPv4/IPv6 address or
-hostname</td></tr>
+<kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></td>
+<td>Enable debug mode</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-C <var>CONF_FILE</var></span>, <span class="option">--config <var>CONF_FILE</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>path to the configuration file</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--enable-history</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>enable the history mode</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--disable-bold</span></kbd></td>
 <td>disable bold mode in the terminal</td></tr>
@@ -274,7 +270,7 @@ hostname</td></tr>
 <tr><td>&nbsp;</td><td>disable disk I/O module</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--disable-fs</span></kbd></td>
-<td>disable file system module</td></tr>
+<td>disable filesystem module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-network</span></kbd></td>
 </tr>
@@ -287,6 +283,10 @@ hostname</td></tr>
 <kbd><span class="option">--disable-process</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>disable process module</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-process-extended</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable extended stats on top process</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--disable-log</span></kbd></td>
 <td>disable log module</td></tr>
@@ -295,16 +295,29 @@ hostname</td></tr>
 </tr>
 <tr><td>&nbsp;</td><td>export stats to a CSV file</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c <var>CLIENT</var></span>, <span class="option">--client <var>CLIENT</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>connect to a Glances server by IPv4/IPv6 address or
+hostname</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--server</span></kbd></td>
+<td>run Glances in server mode</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">-p <var>PORT</var></span>, <span class="option">--port <var>PORT</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>define the client/server TCP port [default: 61209]</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-B <var>BIND_ADDRESS</var></span>, <span class="option">--bind <var>BIND_ADDRESS</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>bind server to the given IPv4/IPv6 address or hostname</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--password-badidea <var>PASSWORD_ARG</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>define password from the command line</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--password</span></kbd></td>
 <td>define a client/server password from the prompt or
 file</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-s</span>, <span class="option">--server</span></kbd></td>
-<td>run Glances in server mode</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--snmp-community <var>SNMP_COMMUNITY</var></span></kbd></td>
 </tr>
@@ -325,6 +338,9 @@ file</td></tr>
 <kbd><span class="option">--snmp-auth <var>SNMP_AUTH</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>SNMP authentication key (only for SNMPv3)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--snmp-force</span></kbd></td>
+<td>force SNMP mode</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-t <var>TIME</var></span>, <span class="option">--time <var>TIME</var></span></kbd></td>
 </tr>
@@ -332,17 +348,40 @@ file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-w</span>, <span class="option">--webserver</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>run Glances in Web server mode</td></tr>
+<tr><td>&nbsp;</td><td>run Glances in web server mode</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f <var>PROCESS_FILTER</var></span>, <span class="option">--process-filter <var>PROCESS_FILTER</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>set the process filter patern (regular expression)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--process-short-name</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>force short name for processes name</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-b</span>, <span class="option">--byte</span></kbd></td>
+<td>display network rate in byte per second</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-1</span>, <span class="option">--percpu</span></kbd></td>
 <td>start Glances in per CPU mode</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--theme-white</span></kbd></td>
+<td>optimize display for white background</td></tr>
 </tbody>
 </table>
+</blockquote>
 </div>
 <div class="section" id="interactive-commands">
 <h2><a class="toc-backref" href="#id12">Interactive Commands</a></h2>
 <p>The following commands (key pressed) are supported while in Glances:</p>
 <dl class="docutils">
+<dt><tt class="docutils literal">ENTER</tt></dt>
+<dd><p class="first">Set the process filter
+Filter is a regular expression pattern:</p>
+<ul class="last simple">
+<li>gnome: all processes starting with the gnome string</li>
+<li>.*gnome.*: all processes containing the gnome string</li>
+</ul>
+</dd>
 <dt><tt class="docutils literal">a</tt></dt>
 <dd><p class="first">Sort process list automatically</p>
 <ul class="last simple">
@@ -357,8 +396,12 @@ file</td></tr>
 <dd>Sort processes by CPU usage</dd>
 <dt><tt class="docutils literal">d</tt></dt>
 <dd>Show/hide disk I/O stats</dd>
+<dt><tt class="docutils literal">e</tt></dt>
+<dd>Enable/disable top extended stats</dd>
 <dt><tt class="docutils literal">f</tt></dt>
 <dd>Show/hide file system stats</dd>
+<dt><tt class="docutils literal">g</tt></dt>
+<dd>Generate hraphs for current history</dd>
 <dt><tt class="docutils literal">h</tt></dt>
 <dd>Show/hide the help screen</dd>
 <dt><tt class="docutils literal">i</tt></dt>
@@ -373,6 +416,8 @@ file</td></tr>
 <dd>Sort processes by name</dd>
 <dt><tt class="docutils literal">q</tt></dt>
 <dd>Quit</dd>
+<dt><tt class="docutils literal">r</tt></dt>
+<dd>Reset history</dd>
 <dt><tt class="docutils literal">s</tt></dt>
 <dd>Show/hide sensors stats</dd>
 <dt><tt class="docutils literal">t</tt></dt>
@@ -387,16 +432,17 @@ file</td></tr>
 <dd>Show/hide processes stats</dd>
 <dt><tt class="docutils literal">1</tt></dt>
 <dd>Switch between global CPU and per-CPU stats</dd>
+<dt><tt class="docutils literal">/</tt></dt>
+<dd>Switch between short name / command line (processes name)</dd>
 </dl>
 </div>
 </div>
 <div class="section" id="configuration">
 <h1><a class="toc-backref" href="#id13">Configuration</a></h1>
-<p><strong>Caution! Glances version 1.x configuration files are not compatible
-with the version 2.x.</strong></p>
 <p>No configuration file is mandatory to use Glances.</p>
 <p>Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list.</p>
+network interfaces to hide and/or monitored processes list or to define
+alias.</p>
 <p>By default, the configuration file is under:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -417,6 +463,8 @@ C:\Documents and Settings\&lt;User&gt;\Application Data
 <p>Since Windows Vista and newer versions:</p>
 <pre class="literal-block">
 C:\Users\&lt;User&gt;\AppData\Roaming
+or
+%userprofile%\AppData\Roaming
 </pre>
 <p>You can override the default configuration, located in one of the above
 directories on your system, except for Windows.</p>
@@ -429,10 +477,28 @@ cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 <p>On OS X, you should copy the configuration file to
 <tt class="docutils literal">~/Library/Application Support/glances/</tt>.</p>
 </div>
+<div class="section" id="logs-and-debug-mode">
+<h1><a class="toc-backref" href="#id14">Logs and debug mode</a></h1>
+<p>Glances logs all its internal messages to a log file. By default, only
+INFO &amp; WARNING &amp; ERROR &amp;CRITICAL levels are logged, but DEBUG messages
+can ben logged using the -d option on the command line.</p>
+<p>By default, the configuration file is under:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name" colspan="2">Linux, *BSD and OS X:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"><tt class="docutils literal">/tmp/glances.conf</tt></td>
+</tr>
+<tr class="field"><th class="field-name">Windows:</th><td class="field-body"><tt class="docutils literal"><span class="pre">%APPDATA%\Local\temp\glances.conf</span></tt></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="anatomy-of-the-application">
-<h1><a class="toc-backref" href="#id14">Anatomy Of The Application</a></h1>
+<h1><a class="toc-backref" href="#id15">Anatomy Of The Application</a></h1>
 <div class="section" id="legend">
-<h2><a class="toc-backref" href="#id15">Legend</a></h2>
+<h2><a class="toc-backref" href="#id16">Legend</a></h2>
 <div class="line-block">
 <div class="line"><tt class="docutils literal">GREEN</tt> stat counter is <tt class="docutils literal">&quot;OK&quot;</tt></div>
 <div class="line"><tt class="docutils literal">BLUE</tt> stat counter is <tt class="docutils literal">&quot;CAREFUL&quot;</tt></div>
@@ -443,7 +509,7 @@ cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 view.</p>
 </div>
 <div class="section" id="header">
-<h2><a class="toc-backref" href="#id16">Header</a></h2>
+<h2><a class="toc-backref" href="#id17">Header</a></h2>
 <img alt="images/header.png" src="images/header.png" />
 <p>The header shows the hostname, OS name, release version, platform
 architecture and system uptime (on the upper right corner).
@@ -455,7 +521,7 @@ Additionally, on GNU/Linux, it also shows the kernel version.</p>
 <img alt="images/disconnected.png" src="images/disconnected.png" />
 </div>
 <div class="section" id="cpu">
-<h2><a class="toc-backref" href="#id17">CPU</a></h2>
+<h2><a class="toc-backref" href="#id18">CPU</a></h2>
 <p>Short view:</p>
 <img alt="images/cpu.png" src="images/cpu.png" />
 <p>If enough horizontal space is available, extended CPU information are
@@ -476,7 +542,7 @@ time. The total CPU usage is displayed on the first line.</p>
 the <tt class="docutils literal">[cpu]</tt> and/or <tt class="docutils literal">[percpu]</tt> sections.</p>
 </div>
 <div class="section" id="load">
-<h2><a class="toc-backref" href="#id18">Load</a></h2>
+<h2><a class="toc-backref" href="#id19">Load</a></h2>
 <img alt="images/load.png" src="images/load.png" />
 <p>On the <em>No Sheep</em> blog, <em>Zachary Tirrell</em> defines the load average <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
 <blockquote>
@@ -496,7 +562,7 @@ The first line also displays the number of CPU core.</p>
 the <tt class="docutils literal">[load]</tt> section.</p>
 </div>
 <div class="section" id="memory">
-<h2><a class="toc-backref" href="#id19">Memory</a></h2>
+<h2><a class="toc-backref" href="#id20">Memory</a></h2>
 <p>Glances uses two columns: one for the <tt class="docutils literal">RAM</tt> and one for the <tt class="docutils literal">SWAP</tt>.</p>
 <img alt="images/mem.png" src="images/mem.png" />
 <p>If enough space is available, Glances displays extended information for
@@ -513,7 +579,7 @@ the <tt class="docutils literal">RAM</tt>:</p>
 the <tt class="docutils literal">[memory]</tt> and/or <tt class="docutils literal">[memswap]</tt> sections.</p>
 </div>
 <div class="section" id="network">
-<h2><a class="toc-backref" href="#id20">Network</a></h2>
+<h2><a class="toc-backref" href="#id21">Network</a></h2>
 <img alt="images/network.png" src="images/network.png" />
 <p>Glances displays the network interface bit rate. The unit is adapted
 dynamically (bits per second, kbits per second, Mbits per second, etc).</p>
@@ -521,18 +587,18 @@ dynamically (bits per second, kbits per second, Mbits per second, etc).</p>
 (see sample in the configuration file).</p>
 <p><em>Note</em>: it is possibile to define a list of network interfaces to hide
 and per-interface limit values in the <tt class="docutils literal">[network]</tt> section of the
-configuration file.</p>
+configuration file and aliases for interface name.</p>
 </div>
 <div class="section" id="disk-i-o">
-<h2><a class="toc-backref" href="#id21">Disk I/O</a></h2>
+<h2><a class="toc-backref" href="#id22">Disk I/O</a></h2>
 <img alt="images/diskio.png" src="images/diskio.png" />
 <p>Glances displays the disk I/O throughput. The unit is adapted dynamically.</p>
 <p>There is no alert on this information.</p>
 <p><em>Note</em>: it is possible to define a list of disks to hide under the
-<tt class="docutils literal">[diskio]</tt> section in the configuration file.</p>
+<tt class="docutils literal">[diskio]</tt> section in the configuration file and aliases for disk name.</p>
 </div>
 <div class="section" id="file-system">
-<h2><a class="toc-backref" href="#id22">File System</a></h2>
+<h2><a class="toc-backref" href="#id23">File System</a></h2>
 <img alt="images/fs.png" src="images/fs.png" />
 <p>Glances displays the used and total file system disk space. The unit is
 adapted dynamically.</p>
@@ -547,7 +613,7 @@ adapted dynamically.</p>
 the <tt class="docutils literal">[filesystem]</tt> section.</p>
 </div>
 <div class="section" id="sensors">
-<h2><a class="toc-backref" href="#id23">Sensors</a></h2>
+<h2><a class="toc-backref" href="#id24">Sensors</a></h2>
 <p>Glances can displays the sensors information using <cite>lm-sensors</cite>,
 <cite>hddtemp</cite> and <cite>batinfo</cite> <a class="footnote-reference" href="#id4" id="id2">[2]</a>.</p>
 <p>All of the above libraries are available only on Linux.</p>
@@ -555,11 +621,11 @@ the <tt class="docutils literal">[filesystem]</tt> section.</p>
 temperature only.</p>
 <img alt="images/sensors.png" src="images/sensors.png" />
 <p>There is no alert on this information.</p>
-<p><em>Note</em>: limit values can be overwritten in the configuration file under
-the <tt class="docutils literal">[sensors]</tt> section.</p>
+<p><em>Note</em>: limit values and sensors alias names can be defined in the configuration
+file under the <tt class="docutils literal">[sensors]</tt> section.</p>
 </div>
 <div class="section" id="processes-list">
-<h2><a class="toc-backref" href="#id24">Processes List</a></h2>
+<h2><a class="toc-backref" href="#id25">Processes List</a></h2>
 <p>Compact view:</p>
 <img alt="images/processlist.png" src="images/processlist.png" />
 <p>Full view:</p>
@@ -612,7 +678,8 @@ automatically sorted by:</p>
 <dt><tt class="docutils literal">IOW/s</tt></dt>
 <dd>Per process I/O write rate (in Byte/s)</dd>
 <dt><tt class="docutils literal">COMMAND</tt></dt>
-<dd>Process command line (process name is highlighted)</dd>
+<dd>Process command line
+User cans switch to the process name by pressing on the <tt class="docutils literal">/</tt> key</dd>
 </dl>
 <p>Process status legend:</p>
 <dl class="docutils">
@@ -627,11 +694,20 @@ automatically sorted by:</p>
 <dt><tt class="docutils literal">Z</tt></dt>
 <dd>Zombie</dd>
 </dl>
+<p>In standalone mode, additionals informations are provided for the top process:</p>
+<img alt="images/processlist-top.png" src="images/processlist-top.png" />
+<ul class="simple">
+<li>CPU affinity (number of cores used by the process)</li>
+<li>Extended memory information (swap, shared, text, lib, data and dirty on Linux)</li>
+<li>Openned threads, files and network sessions (TCP and UDP)</li>
+<li>IO nice level</li>
+</ul>
+<p>The extended stats feature could be disabled using the --disable-process-extended option (command line) or the <tt class="docutils literal">e</tt> key (curses interface).</p>
 <p><em>Note</em>: limit values can be overwritten in the configuration file under
 the <tt class="docutils literal">[process]</tt> section.</p>
 </div>
 <div class="section" id="monitored-processes-list">
-<h2><a class="toc-backref" href="#id25">Monitored Processes List</a></h2>
+<h2><a class="toc-backref" href="#id26">Monitored Processes List</a></h2>
 <p>The monitored processes list allows user, through the configuration file,
 to group processes and quickly show if the number of running processes is
 not good.</p>
@@ -683,7 +759,7 @@ get the JSON representation of the monitored processes list.</p>
 </div>
 </div>
 <div class="section" id="logs">
-<h2><a class="toc-backref" href="#id26">Logs</a></h2>
+<h2><a class="toc-backref" href="#id27">Logs</a></h2>
 <img alt="images/logs.png" src="images/logs.png" />
 <p>A log messages list is displayed in the bottom of the screen if (and
 only if):</p>
@@ -703,7 +779,7 @@ processes list alerts</li>
 </div>
 </div>
 <div class="section" id="other-outputs">
-<h1><a class="toc-backref" href="#id27">Other Outputs</a></h1>
+<h1><a class="toc-backref" href="#id28">Other Outputs</a></h1>
 <p>It is possible to export statistics to CSV file.</p>
 <pre class="code console literal-block">
 <span class="generic prompt">$</span> glances --output-csv /tmp/glances.csv
@@ -714,17 +790,21 @@ processes list alerts</li>
 <li>Stats (comma separated)</li>
 </ul>
 </div>
-<div class="section" id="api-documentation">
-<h1><a class="toc-backref" href="#id28">API Documentation</a></h1>
-<p>Glances uses a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and can be used by another client software.</p>
-<p>API documentation is available at
-<a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a>.</p>
+<div class="section" id="apis-documentations">
+<h1><a class="toc-backref" href="#id29">APIs Documentations</a></h1>
+<p>Glances includes a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and a <a class="reference external" href="http://jsonapi.org/">RESTFULL-JSON</a> API which and can be used by another client software.</p>
+<p>APIs documentations are available at:</p>
+<ul class="simple">
+<li>XML-RPC: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a></li>
+<li>RESTFULL-JSON: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API</a></li>
+</ul>
 </div>
 <div class="section" id="support">
-<h1><a class="toc-backref" href="#id29">Support</a></h1>
+<h1><a class="toc-backref" href="#id30">Support</a></h1>
+<p>To post a question about Glances use case, please post it to the offical Q&amp;A <a class="reference external" href="https://groups.google.com/forum/?hl=en#!forum/glances-users">forum</a>.</p>
 <p>To report a bug or a feature request use the bug tracking system at
 <a class="reference external" href="https://github.com/nicolargo/glances/issues">https://github.com/nicolargo/glances/issues</a>.</p>
-<p>Feel free to contribute!</p>
+<p>Feel free to contribute !</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

@@ -32,7 +32,8 @@ from glances.core.glances_globals import (
     is_bsd,
     is_linux,
     is_mac,
-    is_windows
+    is_windows,
+    logger
 )
 
 # Trick: bind raw_input to input in Python 2
@@ -106,7 +107,7 @@ class GlancesPassword(object):
         """
         if os.path.exists(self.password_filepath) and not clear:
             # If the password file exist then use it
-            print(_("Info: Read password from file: {0}").format(self.password_filepath))
+            logger.info(_("Read password from file: {0}").format(self.password_filepath))
             password = self.load_password()
         else:
             # Else enter the password from the command line
@@ -122,7 +123,7 @@ class GlancesPassword(object):
                 password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): ")).encode('utf-8')).hexdigest()
 
                 if not self.check_password(password_hashed, password_confirm):
-                    print(_("Error: Sorry, but passwords did not match..."))
+                    logger.critical(_("Sorry, but passwords did not match..."))
                     sys.exit(1)
 
             # Return the plain or hashed password
@@ -147,7 +148,7 @@ class GlancesPassword(object):
             try:
                 os.makedirs(self.password_path)
             except OSError as e:
-                print(_("Warning: Cannot create Glances directory: {0}").format(e))
+                logger.error(_("Cannot create Glances directory: {0}").format(e))
                 return
 
         # Create/overwrite the password file
