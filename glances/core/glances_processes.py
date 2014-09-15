@@ -276,6 +276,9 @@ class GlancesProcesses(object):
                     pass
                 except psutil.AccessDenied:
                     procstat['memory_swap'] = None
+                except:
+                    # Add a dirty except to handle the PsUtil issue #413
+                    procstat['memory_swap'] = None
 
             # Process network connections (TCP and UDP)
             try:
