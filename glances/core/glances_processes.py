@@ -66,9 +66,6 @@ class GlancesProcesses(object):
         self.process_filter = None
         self.process_filter_re = None
 
-        # !!! ONLY FOR TEST
-        # self.set_process_filter('.*python.*')
-
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
