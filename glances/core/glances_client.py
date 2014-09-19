@@ -25,9 +25,14 @@ import socket
 import sys
 try:
     from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
-except ImportError:  # Python 2
+except ImportError:  
+    # Python 2
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
-import httplib
+try:
+    import http.client as httplib
+except:  
+    # Python 2
+    import httplib
 
 # Import Glances libs
 from glances.core.glances_globals import version, logger
