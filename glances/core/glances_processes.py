@@ -155,7 +155,7 @@ class GlancesProcesses(object):
                 # Patch for issue #391
                 try:
                     self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess):
                     self.cmdline_cache[procstat['pid']] = ""
             procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
