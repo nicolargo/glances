@@ -343,7 +343,7 @@ class Plugin(GlancesPlugin):
                 listsorted = sorted(self.stats,
                                     key=lambda process: process[sortedby],
                                     reverse=sortedreverse)
-            except KeyError:
+            except KeyError, TypeError:
                 listsorted = sorted(self.stats,
                                     key=lambda process: process['name'],
                                     reverse=False)
