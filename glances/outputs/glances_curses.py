@@ -383,6 +383,7 @@ class GlancesCurses(object):
         # Update the stats messages
         ###########################
 
+
         # Update the client server status
         self.args.cs_status = cs_status
         stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
@@ -400,9 +401,21 @@ class GlancesCurses(object):
         stats_sensors = stats.get_plugin('sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
         stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
-        stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
         stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
         stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
+
+        # Adapt number of processes to the available space
+        max_processes_displayed = screen_y - 11 - self.get_stats_display_height(stats_alert)
+        if not self.args.disable_process_extended:
+            max_processes_displayed -= 4
+        if max_processes_displayed < 0:
+            max_processes_displayed = 0            
+        if glances_processes.get_max_processes() is None or \
+           glances_processes.get_max_processes() != max_processes_displayed:
+            logger.debug(_("Set number of displayed processes to %s") % max_processes_displayed)
+            glances_processes.set_max_processes(max_processes_displayed)
+
+        stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
 
         # Display the stats on the curses interface
         ###########################################
