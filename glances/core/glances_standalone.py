@@ -34,14 +34,8 @@ class GlancesStandalone(object):
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
 
-        # If configured, set the maximum processes number to display
-        try:
-            max_processes = int(self.stats.get_plugin('processlist').get_conf_value('max_processes'))
-            logger.debug(_("Limit maximum displayed processes to %s") % max_processes)
-        except:
-            max_processes = None
-            logger.warning(_("Maximum displayed processes is not configured (high CPU consumption)"))
-        glances_processes.set_max_processes(max_processes)
+        # Default number of processes to displayed is set to 20
+        glances_processes.set_max_processes(20)
 
         # If process extended stats is disabled by user
         if args.disable_process_extended:
