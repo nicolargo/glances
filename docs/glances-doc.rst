@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.1.
+This manual describes *Glances* version 2.1.1.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-September 2014
+October 2014
 
 .. contents:: Table of Contents
 

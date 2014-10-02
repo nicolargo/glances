@@ -2,6 +2,21 @@
 Glances Version 2.x
 ==============================================================================
 
+Version 2.1.1
+=============
+
+Enhancement:
+    * Automaticaly compute top processes number for the current screen (issue #408)
+    * CPU and Memory footprint optimization (issue #401)
+
+Bugs corrected:
+
+    * Mac OS X 10.9: Exception at start (issue #423)
+    * Process no longer exists (issue #421)
+    * Error with Glances Client with Python 3.4.1 (issue #419)
+    * TypeError: memory_maps() takes exactly 2 arguments (issue #413)
+    * No filesystem informations since Glances 2.0 bug enhancement (issue #381)
+
 Version 2.1
 ===========
 
