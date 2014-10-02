@@ -123,7 +123,7 @@ class TestGlances(unittest.TestCase):
 
         plist = requests.get("%s/%s" % (URL, method))
 
-        print plist.json()
+        print(plist.json())
 
         for p in plist.json():
             print("HTTP RESTFul request: %s/%s" % (URL, p))
