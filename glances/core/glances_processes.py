@@ -66,9 +66,6 @@ class GlancesProcesses(object):
         self.process_filter = None
         self.process_filter_re = None
 
-        # !!! ONLY FOR TEST
-        # self.set_process_filter('.*python.*')
-
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -158,7 +155,7 @@ class GlancesProcesses(object):
                 # Patch for issue #391
                 try:
                     self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
-                except (AttributeError, psutil.AccessDenied, UnicodeDecodeError):
+                except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess):
                     self.cmdline_cache[procstat['pid']] = ""
             procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
@@ -276,6 +273,9 @@ class GlancesProcesses(object):
                     pass
                 except psutil.AccessDenied:
                     procstat['memory_swap'] = None
+                except:
+                    # Add a dirty except to handle the PsUtil issue #413
+                    procstat['memory_swap'] = None
 
             # Process network connections (TCP and UDP)
             try:
@@ -318,7 +318,7 @@ class GlancesProcesses(object):
         processdict = {}
         for proc in psutil.process_iter():
             # If self.get_max_processes() is None: Only retreive mandatory stats
-            # Else: retreive mandatoryadn standard stast
+            # Else: retreive mandatory and standard stats
             try:
                 s = self.__get_process_stats(proc, 
                                              mandatory_stats=True, 
@@ -352,14 +352,28 @@ class GlancesProcesses(object):
             except:
                 pass
 
+        # Process optimization
+        # Only retreive stats for visible processes (get_max_processes)
         if self.get_max_processes() is not None:
             # Sort the internal dict and cut the top N (Return a list of tuple)
             # tuple=key (proc), dict (returned by __get_process_stats)
-            processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
-            first = True
-            for i in processiter[0:self.get_max_processes()]:
-                # Already existing mandatory stats
-                procstat = i[1]
+            try:
+                processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+            except TypeError:
+                # Fallback to all process (issue #423)
+                processloop = processdict.items()
+                first = False
+            else:
+                processloop = processiter[0:self.get_max_processes()]
+                first = True
+        else:
+            # Get all processes stats
+            processloop = processdict.items()
+            first = False        
+        for i in processloop:
+            # Already existing mandatory stats
+            procstat = i[1]
+            if self.get_max_processes() is not None:
                 # Update with standard stats
                 # and extended stats but only for TOP (first) process
                 s = self.__get_process_stats(i[0], 
@@ -369,21 +383,12 @@ class GlancesProcesses(object):
                 if s is None:
                     continue
                 procstat.update(s)
-                # Add a specific time_since_update stats for bitrate
-                procstat['time_since_update'] = time_since_update
-                # Update process list
-                self.processlist.append(procstat)
-                # Next...
-                first = False
-        else:
-            # Get all the processes
-            for i in processdict.items():
-                # Already existing mandatory and standard stats
-                procstat = i[1]
-                # Add a specific time_since_update stats for bitrate
-                procstat['time_since_update'] = time_since_update
-                # Update process list
-                self.processlist.append(procstat)
+            # Add a specific time_since_update stats for bitrate
+            procstat['time_since_update'] = time_since_update
+            # Update process list
+            self.processlist.append(procstat)
+            # Next...
+            first = False
 
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():
