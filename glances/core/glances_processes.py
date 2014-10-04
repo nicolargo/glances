@@ -319,9 +319,13 @@ class GlancesProcesses(object):
         for proc in psutil.process_iter():
             # If self.get_max_processes() is None: Only retreive mandatory stats
             # Else: retreive mandatory and standard stats
-            s = self.__get_process_stats(proc, 
-                                         mandatory_stats=True, 
-                                         standard_stats=self.get_max_processes() is None)
+            try:
+                s = self.__get_process_stats(proc, 
+                                             mandatory_stats=True, 
+                                             standard_stats=self.get_max_processes() is None)
+            except psutil.NoSuchProcess:
+                # Can happen if process no longer exists
+                continue
             # Continue to the next process if it has to be filtered
             if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
                 continue
