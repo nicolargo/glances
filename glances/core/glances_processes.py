@@ -147,6 +147,9 @@ class GlancesProcesses(object):
 
             # Process CPU, MEM percent and name
             procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+            if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
+                # Do not display process if we can not get the basic cpu_percent or memory_percent stats
+                return None
 
             # Process command line (cached with internal cache)
             try:
