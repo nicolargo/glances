@@ -27,9 +27,13 @@ import time
 import unittest
 import shlex
 import subprocess
-import xmlrpclib
 import json
 import types
+try:
+    from xmlrpc.client import ServerProxy
+except ImportError:  
+    # Python 2
+    from xmlrpclib import ServerProxy
 
 from glances.core.glances_globals import (
     appname,
@@ -68,7 +72,7 @@ from glances.core.glances_stats import GlancesStats
 stats = GlancesStats()
 
 # Init the XML/RCP client
-client = xmlrpclib.ServerProxy(URL)
+client = ServerProxy(URL)
 
 # Unitest class
 # ==============
