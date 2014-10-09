@@ -261,8 +261,7 @@ class Plugin(GlancesPlugin):
                         msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
                     ret.append(self.curse_add_line(msg, splittable=True))
                 # Third line is for openned files/network sessions
-                ret.append(self.curse_new_line())
-                msg = xpad + _('Openned: ')
+                msg = ''
                 if 'num_threads' in p and p['num_threads'] is not None:
                     msg += _('threads ') + str(p['num_threads']) + ' '
                 if 'num_fds' in p and p['num_fds'] is not None:
@@ -273,7 +272,10 @@ class Plugin(GlancesPlugin):
                     msg += _('TCP ') + str(p['tcp']) + ' '
                 if 'udp' in p and p['udp'] is not None:
                     msg += _('UDP ') + str(p['udp']) + ' '
-                ret.append(self.curse_add_line(msg, splittable=True))
+                if msg != '':
+                    ret.append(self.curse_new_line())
+                    msg = xpad + _('Openned: ') + msg
+                    ret.append(self.curse_add_line(msg, splittable=True))
                 # Fouth line is IO nice level (only Linux and Windows OS)
                 if 'ionice' in p and p['ionice'] is not None:
                     ret.append(self.curse_new_line())
