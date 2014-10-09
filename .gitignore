@@ -40,3 +40,6 @@ local.properties
 
 # Sphinx
 _build
+
+# Tox
+.tox/

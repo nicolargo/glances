@@ -34,8 +34,8 @@ class GlancesStandalone(object):
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
 
-        # Default number of processes to displayed is set to 20
-        glances_processes.set_max_processes(20)
+        # Default number of processes to displayed is set to 50
+        glances_processes.set_max_processes(50)
 
         # If process extended stats is disabled by user
         if args.disable_process_extended:
