@@ -2,6 +2,15 @@
 Glances Version 2.x
 ==============================================================================
 
+Version 2.1.2
+=============
+
+    Maintenance version (only needed for Mac OS X).
+
+Bugs corrected:
+
+    * Mac OS X: Error if Glances is not ran with sudo (issue #426)
+
 Version 2.1.1
 =============
 
