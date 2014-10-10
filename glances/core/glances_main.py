@@ -65,15 +65,17 @@ class GlancesMain(object):
                             dest='enable_history', help=_('enable the history mode'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
+        parser.add_argument('--disable-network', action='store_true', default=False,
+                            dest='disable_network', help=_('disable network module'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,
                             dest='disable_diskio', help=_('disable disk I/O module'))
         parser.add_argument('--disable-fs', action='store_true', default=False,
                             dest='disable_fs', help=_('disable filesystem module'))
-        parser.add_argument('--disable-network', action='store_true', default=False,
-                            dest='disable_network', help=_('disable network module'))
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help=_('disable sensors module'))
-        parser.add_argument('--disable-process', action='store_true', default=False,
+        parser.add_argument('--disable-left-sidebar', action='store_true', default=False,
+                            dest='disable_left_sidebar', help=_('disable network, disk io, FS and sensors modules'))
+        parser.add_argument('--disable_left_sidebar', action='store_true', default=False,
                             dest='disable_process', help=_('disable process module'))
         parser.add_argument('--disable-process-extended', action='store_true', default=False,
                             dest='disable_process_extended', help=_('disable extended stats on top process'))

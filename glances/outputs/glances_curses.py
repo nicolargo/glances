@@ -232,6 +232,9 @@ class GlancesCurses(object):
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.args.percpu = not self.args.percpu
+        elif self.pressedkey == ord('2'):
+            # '2' > Enable/disable left sidebar
+            self.args.disable_left_sidebar = not self.args.disable_left_sidebar    
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
@@ -468,16 +471,19 @@ class GlancesCurses(object):
 
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         self.init_column()
-        self.new_line()
-        self.display_plugin(stats_network)
-        self.new_line()
-        self.display_plugin(stats_diskio)
-        self.new_line()
-        self.display_plugin(stats_fs)
-        self.new_line()
-        self.display_plugin(stats_sensors)
-        self.new_line()
-        self.display_plugin(stats_now)
+        if (not (self.args.disable_network and self.args.disable_diskio \
+            and self.args.disable_fs and self.args.disable_sensors)) \
+            and not self.args.disable_left_sidebar:
+            self.new_line()
+            self.display_plugin(stats_network)
+            self.new_line()
+            self.display_plugin(stats_diskio)
+            self.new_line()
+            self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_sensors)
+            self.new_line()
+            self.display_plugin(stats_now)
 
         # If space available...
         if screen_x > 52:
