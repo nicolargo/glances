@@ -40,7 +40,7 @@ def get_requires():
 
 setup(
     name='Glances',
-    version='2.1.2',
+    version='2.2_BETA',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
