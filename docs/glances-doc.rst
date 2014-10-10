@@ -133,6 +133,8 @@ Command-Line Options
   --disable-fs          disable filesystem module
   --disable-network     disable network module
   --disable-sensors     disable sensors module
+  --disable-left-sidebar
+                        disable left sidebar
   --disable-process     disable process module
   --disable-process-extended
                         disable extended stats on top process
@@ -229,6 +231,8 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide processes stats
 ``1``
     Switch between global CPU and per-CPU stats
+``2``
+    Enable/disable left sidebar
 ``/``
     Switch between short name / command line (processes name)
 
