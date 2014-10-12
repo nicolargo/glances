@@ -21,7 +21,6 @@
 
 # Import system lib
 import os
-import tempfile
 
 # Import Glances lib
 from glances.core.glances_globals import logger
@@ -43,12 +42,7 @@ class GlancesHistory(object):
 
     """This class define the object to manage stats history"""
 
-    def __init__(self, output_folder=tempfile.gettempdir()):
-        # !!! MINUS: matplotlib footprint (mem/cpu) => Fork process ?
-        # !!! MINUS: Mem used to store history
-        # !!! TODO: sampling before graph => Usefull ?
-        # !!! TODO: do not display first two point (glances is running)
-        # !!! TODO: replace /tmp by a cross platform way to get /tmp folder
+    def __init__(self, output_folder):
         self.output_folder = output_folder
 
     def get_output_folder(self):
@@ -87,21 +81,21 @@ class GlancesHistory(object):
 
                 # Label
                 plt.title("%s stats" % p)
-                
+
                 handles = []
                 for i in stats.get_plugin(p).get_items_history_list():
                     handles.append(plt.Rectangle((0, 0), 1, 1, fc=i['color'], ec=i['color'], linewidth=1))
                 labels = [i['name'] for i in stats.get_plugin(p).get_items_history_list()]
-                plt.legend(handles, labels, loc=1, prop={'size':9})
+                plt.legend(handles, labels, loc=1, prop={'size': 9})
                 formatter = dates.DateFormatter('%H:%M:%S')
                 ax.xaxis.set_major_formatter(formatter)
                 # ax.set_ylabel('%')
 
                 # Draw the stats
                 for i in stats.get_plugin(p).get_items_history_list():
-                    ax.plot_date(h['date'], h[i['name']], 
-                                 i['color'], 
-                                 label='%s' % i['name'], 
+                    ax.plot_date(h['date'], h[i['name']],
+                                 i['color'],
+                                 label='%s' % i['name'],
                                  xdate=True, ydate=False)
 
                 # Save and display
