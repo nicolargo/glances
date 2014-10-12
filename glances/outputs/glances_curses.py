@@ -515,7 +515,12 @@ class GlancesCurses(object):
             self.display_popup(_("Reset history"))
             self.glances_history.reset(stats)            
         elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
-            self.display_popup(_("History disabled\nEnable it using --enable-history"))
+            try:
+                self.glances_history.graph_enabled()
+            except:
+                self.display_popup(_("History disabled\nEnable it using --enable-history"))
+            else:
+                self.display_popup(_("History disabled\nPlease install MatPlotLib"))            
         self.history_tag = False
         self.reset_history_tag = False
 
