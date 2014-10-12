@@ -184,12 +184,12 @@ class GlancesCurses(object):
         self.reset_history_tag = False
         self.history_tag = False
         if args.enable_history:
-            logger.info('Stats history enabled')
+            logger.info('Stats history enabled with output path %s' % args.path_history)
             from glances.outputs.glances_history import GlancesHistory
-            self.glances_history = GlancesHistory()
+            self.glances_history = GlancesHistory(args.path_history)
             if not self.glances_history.graph_enabled():
                 args.enable_history = False
-                logger.error('Stats history disabled because graph lib is not available')
+                logger.error('Stats history disabled because MatPlotLib is not installed')
 
     def set_cursor(self, value):
         """Configure the cursor 

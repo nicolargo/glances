@@ -22,6 +22,8 @@
 # Import system libs
 import argparse
 import sys
+import os
+import tempfile
 
 # Import Glances libs
 from glances.core.glances_config import Config
@@ -34,6 +36,7 @@ class GlancesMain(object):
 
     # Default stats' refresh time is 3 seconds
     refresh_time = 3
+
     # Set the default cache lifetime to 1 second (only for server)
     # !!! Todo: configuration from the command line
     cached_time = 1
@@ -61,10 +64,6 @@ class GlancesMain(object):
         parser.add_argument('-C', '--config', dest='conf_file',
                             help=_('path to the configuration file'))
         # Enable or disable option on startup
-        parser.add_argument('--enable-history', action='store_true', default=False,
-                            dest='enable_history', help=_('enable the history mode'))
-        parser.add_argument('--disable-bold', action='store_false', default=True,
-                            dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help=_('disable network module'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,
@@ -81,6 +80,12 @@ class GlancesMain(object):
                             dest='disable_process_extended', help=_('disable extended stats on top process'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
+        parser.add_argument('--disable-bold', action='store_false', default=True,
+                            dest='disable_bold', help=_('disable bold mode in the terminal'))
+        parser.add_argument('--enable-history', action='store_true', default=False,
+                            dest='enable_history', help=_('enable the history mode'))
+        parser.add_argument('--path-history', default=tempfile.gettempdir(),
+                            dest='path_history', help=_('Set the export path for graph history'))
         # CSV output feature
         parser.add_argument('--output-csv', default=None,
                             dest='output_csv', help=_('export stats to a CSV file'))
@@ -186,6 +191,13 @@ class GlancesMain(object):
         if args.process_filter is not None and not self.is_standalone():
             logger.critical(_("Process filter is only available in standalone mode"))
             sys.exit(2)
+
+        # Check graph output path
+        if args.enable_history and args.path_history is not None:
+            if not os.access(args.path_history, os.W_OK):
+                logger.critical(_("History output path (%s) do not exist or is not writable") % args.path_history)
+                sys.exit(2)
+            logger.info(_("History output path is %s") % args.path_history)
 
         return args
 
