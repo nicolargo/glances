@@ -19,11 +19,7 @@
 
 """File system plugin."""
 
-# System libs
-import base64
-
 # Glances libs
-from glances.core.glances_globals import version, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # PSutil lib for local grab
@@ -54,6 +50,11 @@ snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
                         'used': '1.3.6.1.2.1.25.2.3.1.6'}}
 snmp_oid['esxi'] = snmp_oid['windows']
 
+# Define the history items list
+# All items in this list will be historised if the --enable-history tag is set
+# 'color' define the graph color in #RGB format
+items_history_list = [{'name': 'percent', 'color': '#00FF00'}]
+
 
 class Plugin(GlancesPlugin):
 
@@ -64,7 +65,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -114,12 +115,12 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
 
-            # SNMP bulk command to get all file system in one shot            
+            # SNMP bulk command to get all file system in one shot
             try:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                               bulk=True)
             except KeyError:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
                                               bulk=True)
 
             # Loop over fs
@@ -135,7 +136,7 @@ class Plugin(GlancesPlugin):
                     fs_current['size'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
                     fs_current['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
                     fs_current['percent'] = float(fs_current['used'] * 100 / fs_current['size'])
-                    self.stats.append(fs_current)                
+                    self.stats.append(fs_current)
             else:
                 # Default behavor
                 for fs in fs_stat:
@@ -146,6 +147,9 @@ class Plugin(GlancesPlugin):
                     fs_current['used'] = int(fs_stat[fs]['used']) * 1024
                     fs_current['percent'] = float(fs_stat[fs]['percent'])
                     self.stats.append(fs_current)
+
+        # Update the history list
+        self.update_stats_history('mnt_point')
 
         return self.stats
 

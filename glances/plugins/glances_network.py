@@ -33,6 +33,12 @@ snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
                         'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
                         'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
 
+# Define the history items list
+# All items in this list will be historised if the --enable-history tag is set
+# 'color' define the graph color in #RGB format
+items_history_list = [{'name': 'rx', 'color': '#00FF00', 'label_y': '(bit/s)'},
+                      {'name': 'tx', 'color': '#FF0000', 'label_y': '(bit/s)'}]
+
 
 class Plugin(GlancesPlugin):
 
@@ -43,7 +49,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -90,7 +96,7 @@ class Plugin(GlancesPlugin):
                 for net in network_new:
                     try:
                         # Try necessary to manage dynamic network interface
-                        netstat = {} 
+                        netstat = {}
                         netstat['interface_name'] = net
                         netstat['time_since_update'] = time_since_update
                         netstat['cumulative_rx'] = network_new[net].bytes_recv
@@ -115,10 +121,10 @@ class Plugin(GlancesPlugin):
 
             # SNMP bulk command to get all network interface in one shot
             try:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                     bulk=True)
             except KeyError:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'], 
+                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
                                                     bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
@@ -165,6 +171,9 @@ class Plugin(GlancesPlugin):
 
                 # Save stats to compute next bitrate
                 self.network_old = network_new
+
+        # Update the history list
+        self.update_stats_history('interface_name')
 
         return self.stats
 

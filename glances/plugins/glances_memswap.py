@@ -31,7 +31,12 @@ snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.3.0',
             'windows': {'mnt_point': '1.3.6.1.2.1.25.2.3.1.3',
                         'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
                         'size': '1.3.6.1.2.1.25.2.3.1.5',
-                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}            
+                        'used': '1.3.6.1.2.1.25.2.3.1.6'}}
+
+# Define the history items list
+# All items in this list will be historised if the --enable-history tag is set
+# 'color' define the graph color in #RGB format
+items_history_list = [{'name': 'percent', 'color': '#00FF00'}]
 
 
 class Plugin(GlancesPlugin):
@@ -43,7 +48,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        GlancesPlugin.__init__(
+            self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -71,7 +77,8 @@ class Plugin(GlancesPlugin):
             # free: free swap memory in bytes
             # percent: the percentage usage
             # sin: the number of bytes the system has swapped in from disk (cumulative)
-            # sout: the number of bytes the system has swapped out from disk (cumulative)
+            # sout: the number of bytes the system has swapped out from disk
+            # (cumulative)
             for swap in ['total', 'used', 'free', 'percent',
                          'sin', 'sout']:
                 if hasattr(sm_stats, swap):
@@ -81,21 +88,26 @@ class Plugin(GlancesPlugin):
             if self.get_short_system_name() == 'windows':
                 # Mem stats for Windows OS are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
                 else:
-                    for fs in fs_stat:                        
-                        # The virtual memory concept is used by the operating system to extend (virtually) the physical 
-                        # memory and thus to run more programs by swapping unused memory zone (page) to a disk file. 
+                    for fs in fs_stat:
+                        # The virtual memory concept is used by the operating system to extend (virtually) the physical
+                        # memory and thus to run more programs by swapping
+                        # unused memory zone (page) to a disk file.
                         if fs == 'Virtual Memory':
-                            self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                            self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                            self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
-                            self.stats['free'] = self.stats['total'] - self.stats['used'] 
+                            self.stats['total'] = int(
+                                fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['used'] = int(
+                                fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                            self.stats['percent'] = float(
+                                self.stats['used'] * 100 / self.stats['total'])
+                            self.stats['free'] = self.stats[
+                                'total'] - self.stats['used']
                             break
-            else:            
+            else:
                 self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
@@ -109,8 +121,13 @@ class Plugin(GlancesPlugin):
                 # used=total-free
                 self.stats['used'] = self.stats['total'] - self.stats['free']
 
-                # percent: the percentage usage calculated as (total - available) / total * 100.
-                self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
+                # percent: the percentage usage calculated as (total -
+                # available) / total * 100.
+                self.stats['percent'] = float(
+                    (self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
+
+        # Update the history list
+        self.update_stats_history()
 
         return self.stats
 
