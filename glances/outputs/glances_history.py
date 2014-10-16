@@ -29,10 +29,10 @@ from glances.core.glances_globals import logger
 try:
     from matplotlib import __version__ as matplotlib_version
     import matplotlib.pyplot as plt
-    import matplotlib.dates as dates
 except:
     matplotlib_check = False
-    logger.warning('Can not load Matplotlib library. Please install it using "pip install matplotlib"')
+    logger.warning(
+        'Can not load Matplotlib library. Please install it using "pip install matplotlib"')
 else:
     matplotlib_check = True
     logger.info('Load Matplotlib version %s' % matplotlib_version)
@@ -65,6 +65,28 @@ class GlancesHistory(object):
                 stats.get_plugin(p).reset_stats_history()
         return True
 
+    def get_graph_color(self, item):
+        """
+        Get the item's color
+        """
+        try:
+            ret = item['color']
+        except KeyError:
+            return '#FFFFFF'
+        else:
+            return ret
+
+    def get_graph_ylegend(self, item):
+        """
+        Get the item's Y legend
+        """
+        try:
+            ret = item['label_y']
+        except KeyError:
+            return ''
+        else:
+            return ' ' + ret
+
     def generate_graph(self, stats):
         """
         Generate graphs from plugins history
@@ -74,32 +96,92 @@ class GlancesHistory(object):
 
         for p in stats.getAllPlugins():
             h = stats.get_plugin(p).get_stats_history()
+            # Init graph
+            plt.clf()
+            fig = plt.gcf()
+            fig.set_size_inches(20, 10)
+            # Data
+            if h is None:
+                # History (h) not available for plugin (p)
+                continue
+            index_graph = 0
+            for i in stats.get_plugin(p).get_items_history_list():
+                if i['name'] in h.keys():
+                    # The key exist
+                    # Add the curve in the current chart
+                    logger.debug("Generate graph: %s %s" % (p, i['name']))
+                    index_graph += 1
+                    plt.title(p.capitalize())
+                    plt.subplot(len(stats.get_plugin(p).get_items_history_list()), 1, index_graph)
+                    plt.ylabel(i['name'] + self.get_graph_ylegend(i))
+                    plt.grid(True)
+                    plt.plot_date(h['date'], h[i['name']],
+                                  fmt='', drawstyle='default', linestyle='-',
+                                  color=self.get_graph_color(i),
+                                  xdate=True, ydate=False)
+                else:
+                    # The key did not exist
+                    # Find if anothers key ends with the key
+                    # Ex: key='tx' => 'ethernet_tx'
+                    stats_history_filtered = sorted([key for key in h.keys() if key.endswith(i['name'])])
+                    logger.debug("Generate graphs: %s %s" % (p, stats_history_filtered))
+                    if len(stats_history_filtered) > 0:
+                        # Create 'n' graph
+                        # Each graph iter through the stats
+                        plt.clf()
+                        index_item = 0
+                        for k in stats_history_filtered:
+                            index_item += 1
+                            plt.title(p.capitalize())
+                            plt.subplot(len(stats_history_filtered), 1, index_item)
+                            plt.ylabel(k + self.get_graph_ylegend(i))
+                            plt.grid(True)
+                            plt.plot_date(h['date'], h[k],
+                                          fmt='', drawstyle='default', linestyle='-',
+                                          color=self.get_graph_color(i),
+                                          xdate=True, ydate=False)
+                        # Save the graph to output file
+                        plt.xlabel('Date')
+                        plt.savefig(os.path.join(self.output_folder, 'glances_%s_%s.png' % (p, i['name'])), dpi=72)
+
+            if index_graph > 0:
+                # Save the graph to output file
+                plt.xlabel('Date')
+                plt.savefig(os.path.join(self.output_folder, 'glances_%s.png' % (p)), dpi=72)
+
+            plt.close()
+
+        return True
+
+
+def generate_graph_OLD(self, stats):
+        """
+        Generate graphs from plugins history
+        """
+        if not self.graph_enabled():
+            return False
+
+        for p in stats.getAllPlugins():
+            h = stats.get_plugin(p).get_stats_history()
+            # Generate graph (init)
+            plt.clf()
+            # Title and axis
+            plt.title(p.capitalize())
+            plt.grid(True)
             if h is not None:
-                # Build the graph
-                # fig = plt.figure(dpi=72)
-                ax = plt.subplot(1, 1, 1)
-
-                # Label
-                plt.title("%s stats" % p)
-
-                handles = []
-                for i in stats.get_plugin(p).get_items_history_list():
-                    handles.append(plt.Rectangle((0, 0), 1, 1, fc=i['color'], ec=i['color'], linewidth=1))
-                labels = [i['name'] for i in stats.get_plugin(p).get_items_history_list()]
-                plt.legend(handles, labels, loc=1, prop={'size': 9})
-                formatter = dates.DateFormatter('%H:%M:%S')
-                ax.xaxis.set_major_formatter(formatter)
-                # ax.set_ylabel('%')
-
-                # Draw the stats
-                for i in stats.get_plugin(p).get_items_history_list():
-                    ax.plot_date(h['date'], h[i['name']],
-                                 i['color'],
-                                 label='%s' % i['name'],
-                                 xdate=True, ydate=False)
-
-                # Save and display
-                plt.savefig(os.path.join(self.output_folder, 'glances_%s.png' % p), dpi=72)
-                # plt.show()
-
+                # History (h) available for plugin (p)
+                index = 1
+                for k, v in h.iteritems():
+                    if k != 'date':
+                        plt.subplot(len(h), 1, index)
+                        index += 1
+                        plt.xlabel('Date')
+                        plt.ylabel(self.get_graph_ylegend(stats, p, k))
+                        # Data
+                        plt.plot_date(h['date'], h[k],
+                                      fmt='', drawstyle='default', linestyle='-',
+                                      color=self.get_graph_color(stats, p, k),
+                                      xdate=True, ydate=False)
+                        # Save the graph to output file
+                        plt.savefig(os.path.join(self.output_folder, 'glances_%s_%s.png' % (p, k)), dpi=72)
         return True

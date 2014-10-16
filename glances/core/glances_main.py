@@ -197,7 +197,7 @@ class GlancesMain(object):
             if not os.access(args.path_history, os.W_OK):
                 logger.critical(_("History output path (%s) do not exist or is not writable") % args.path_history)
                 sys.exit(2)
-            logger.info(_("History output path is %s") % args.path_history)
+            logger.debug(_("History output path is set to %s") % args.path_history)
 
         return args
 

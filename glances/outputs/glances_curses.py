@@ -23,7 +23,7 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
+from glances.core.glances_globals import glances_logs, glances_processes, is_mac, is_windows, logger
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
@@ -31,9 +31,10 @@ if not is_windows:
     try:
         import curses
         import curses.panel
-        from curses.textpad import Textbox, rectangle
+        from curses.textpad import Textbox
     except ImportError:
-        logger.critical('Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical(
+            'Curses module not found. Glances cannot start in standalone mode.')
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -184,15 +185,17 @@ class GlancesCurses(object):
         self.reset_history_tag = False
         self.history_tag = False
         if args.enable_history:
-            logger.info('Stats history enabled with output path %s' % args.path_history)
+            logger.info('Stats history enabled with output path %s' %
+                        args.path_history)
             from glances.outputs.glances_history import GlancesHistory
             self.glances_history = GlancesHistory(args.path_history)
             if not self.glances_history.graph_enabled():
                 args.enable_history = False
-                logger.error('Stats history disabled because MatPlotLib is not installed')
+                logger.error(
+                    'Stats history disabled because MatPlotLib is not installed')
 
     def set_cursor(self, value):
-        """Configure the cursor 
+        """Configure the cursor
            0: invisible
            1: visible
            2: very visible
@@ -234,7 +237,7 @@ class GlancesCurses(object):
             self.args.percpu = not self.args.percpu
         elif self.pressedkey == ord('2'):
             # '2' > Enable/disable left sidebar
-            self.args.disable_left_sidebar = not self.args.disable_left_sidebar    
+            self.args.disable_left_sidebar = not self.args.disable_left_sidebar
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
@@ -289,7 +292,7 @@ class GlancesCurses(object):
             glances_processes.setmanualsortkey(self.args.process_sorted_by)
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
-            self.reset_history_tag = not self.reset_history_tag            
+            self.reset_history_tag = not self.reset_history_tag
         elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
@@ -318,7 +321,7 @@ class GlancesCurses(object):
         return self.pressedkey
 
     def end(self):
-        """Shutdown the curses window."""        
+        """Shutdown the curses window."""
         if hasattr(curses, 'echo'):
             curses.echo()
         if hasattr(curses, 'nocbreak'):
@@ -329,7 +332,7 @@ class GlancesCurses(object):
             except Exception:
                 pass
         curses.endwin()
-        
+
     def init_line_column(self):
         """Init the line and column position for the curses inteface"""
         self.line = 0
@@ -386,10 +389,10 @@ class GlancesCurses(object):
         # Update the stats messages
         ###########################
 
-
         # Update the client server status
         self.args.cs_status = cs_status
-        stats_system = stats.get_plugin('system').get_stats_display(args=self.args)
+        stats_system = stats.get_plugin(
+            'system').get_stats_display(args=self.args)
         stats_uptime = stats.get_plugin('uptime').get_stats_display()
         if self.args.percpu:
             stats_percpu = stats.get_plugin('percpu').get_stats_display()
@@ -398,27 +401,37 @@ class GlancesCurses(object):
         stats_load = stats.get_plugin('load').get_stats_display()
         stats_mem = stats.get_plugin('mem').get_stats_display()
         stats_memswap = stats.get_plugin('memswap').get_stats_display()
-        stats_network = stats.get_plugin('network').get_stats_display(args=self.args, max_width=plugin_max_width)
-        stats_diskio = stats.get_plugin('diskio').get_stats_display(args=self.args)
-        stats_fs = stats.get_plugin('fs').get_stats_display(args=self.args, max_width=plugin_max_width)
-        stats_sensors = stats.get_plugin('sensors').get_stats_display(args=self.args)
+        stats_network = stats.get_plugin('network').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        stats_diskio = stats.get_plugin(
+            'diskio').get_stats_display(args=self.args)
+        stats_fs = stats.get_plugin('fs').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        stats_sensors = stats.get_plugin(
+            'sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
-        stats_processcount = stats.get_plugin('processcount').get_stats_display(args=self.args)
-        stats_monitor = stats.get_plugin('monitor').get_stats_display(args=self.args)
-        stats_alert = stats.get_plugin('alert').get_stats_display(args=self.args)
+        stats_processcount = stats.get_plugin(
+            'processcount').get_stats_display(args=self.args)
+        stats_monitor = stats.get_plugin(
+            'monitor').get_stats_display(args=self.args)
+        stats_alert = stats.get_plugin(
+            'alert').get_stats_display(args=self.args)
 
         # Adapt number of processes to the available space
-        max_processes_displayed = screen_y - 11 - self.get_stats_display_height(stats_alert)
+        max_processes_displayed = screen_y - 11 - \
+            self.get_stats_display_height(stats_alert)
         if not self.args.disable_process_extended:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
-            max_processes_displayed = 0            
+            max_processes_displayed = 0
         if glances_processes.get_max_processes() is None or \
            glances_processes.get_max_processes() != max_processes_displayed:
-            logger.debug(_("Set number of displayed processes to %s") % max_processes_displayed)
+            logger.debug(
+                _("Set number of displayed processes to %s") % max_processes_displayed)
             glances_processes.set_max_processes(max_processes_displayed)
 
-        stats_processlist = stats.get_plugin('processlist').get_stats_display(args=self.args)
+        stats_processlist = stats.get_plugin(
+            'processlist').get_stats_display(args=self.args)
 
         # Display the stats on the curses interface
         ###########################################
@@ -426,13 +439,15 @@ class GlancesCurses(object):
         # Help screen (on top of the other stats)
         if self.args.help_tag:
             # Display the stats...
-            self.display_plugin(stats.get_plugin('help').get_stats_display(args=self.args))
+            self.display_plugin(
+                stats.get_plugin('help').get_stats_display(args=self.args))
             # ... and exit
             return False
 
         # Display first line (system+uptime)
         self.new_line()
-        l = self.get_stats_display_width(stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
+        l = self.get_stats_display_width(
+            stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
         self.display_plugin(stats_system, display_optional=(screen_x >= l))
         self.new_column()
         self.display_plugin(stats_uptime)
@@ -440,14 +455,16 @@ class GlancesCurses(object):
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
         # CPU|PERCPU
         self.init_column()
-        self.new_line()        
+        self.new_line()
         if self.args.percpu:
             l = self.get_stats_display_width(stats_percpu)
         else:
             l = self.get_stats_display_width(stats_cpu)
-        l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(stats_mem) + self.get_stats_display_width(stats_memswap)
+        l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(
+            stats_mem) + self.get_stats_display_width(stats_memswap)
         # Space between column
-        space_number = int(stats_load['msgdict'] != []) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != []) 
+        space_number = int(stats_load['msgdict'] != [
+        ]) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != [])
         if space_number == 0:
             space_number = 1
         if screen_x > (space_number * self.space_between_column + l):
@@ -460,7 +477,8 @@ class GlancesCurses(object):
         self.new_column()
         self.display_plugin(stats_load)
         self.new_column()
-        self.display_plugin(stats_mem, display_optional=(screen_x >= (space_number * self.space_between_column + l)))
+        self.display_plugin(stats_mem, display_optional=(
+            screen_x >= (space_number * self.space_between_column + l)))
         self.new_column()
         self.display_plugin(stats_memswap)
         # Space between column
@@ -471,9 +489,9 @@ class GlancesCurses(object):
 
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         self.init_column()
-        if (not (self.args.disable_network and self.args.disable_diskio \
-            and self.args.disable_fs and self.args.disable_sensors)) \
-            and not self.args.disable_left_sidebar:
+        if (not (self.args.disable_network and self.args.disable_diskio
+                 and self.args.disable_fs and self.args.disable_sensors)) \
+                and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
             self.new_line()
@@ -490,18 +508,19 @@ class GlancesCurses(object):
             # Restore line position
             self.next_line = self.saved_line
 
-            # Display right sidebar (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+            # Display right sidebar
+            # (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
             self.new_column()
             self.new_line()
             self.display_plugin(stats_processcount)
-            if glances_processes.get_process_filter() == None and cs_status == 'None':
+            if glances_processes.get_process_filter() is None and cs_status == 'None':
                 # Do not display stats monitor list if a filter exist
                 self.new_line()
                 self.display_plugin(stats_monitor)
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
-                                display_additional=(is_mac == False),
+                                display_additional=(not is_mac),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.new_line()
             self.display_plugin(stats_alert)
@@ -509,36 +528,40 @@ class GlancesCurses(object):
         # History option
         # Generate history graph
         if self.history_tag and self.args.enable_history:
-            self.display_popup(_("Graphs history generated in %s") % self.glances_history.get_output_folder())
+            self.display_popup(
+                _("Generate graphs history in %s\nPlease wait...") % self.glances_history.get_output_folder())
             self.glances_history.generate_graph(stats)
         elif self.reset_history_tag and self.args.enable_history:
             self.display_popup(_("Reset history"))
-            self.glances_history.reset(stats)            
+            self.glances_history.reset(stats)
         elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
             try:
                 self.glances_history.graph_enabled()
             except:
-                self.display_popup(_("History disabled\nEnable it using --enable-history"))
+                self.display_popup(
+                    _("History disabled\nEnable it using --enable-history"))
             else:
-                self.display_popup(_("History disabled\nPlease install MatPlotLib"))            
+                self.display_popup(
+                    _("History disabled\nPlease install MatPlotLib"))
         self.history_tag = False
         self.reset_history_tag = False
 
         # Display edit filter popup
         # Only in standalone mode (cs_status == 'None')
         if self.edit_filter and cs_status == 'None':
-            new_filter = self.display_popup(_("Process filter pattern: "), 
+            new_filter = self.display_popup(_("Process filter pattern: "),
                                             is_input=True,
                                             input_value=glances_processes.get_process_filter())
             glances_processes.set_process_filter(new_filter)
         elif self.edit_filter and cs_status != 'None':
-            self.display_popup(_("Process filter only available in standalone mode"))
+            self.display_popup(
+                _("Process filter only available in standalone mode"))
         self.edit_filter = False
 
         return True
 
-    def display_popup(self, message, 
-                      size_x=None, size_y=None, 
+    def display_popup(self, message,
+                      size_x=None, size_y=None,
                       duration=3,
                       is_input=False,
                       input_size=30,
@@ -553,7 +576,7 @@ class GlancesCurses(object):
          Display a centered popup with the given message and a input field
          If size_x and size_y: set the popup size
          else set it automatically
-         Return the input string or None if the field is empty        
+         Return the input string or None if the field is empty
         """
 
         # Center the popup
@@ -568,13 +591,13 @@ class GlancesCurses(object):
         screen_y = self.screen.getmaxyx()[0]
         if size_x > screen_x or size_y > screen_y:
             # No size to display the popup => abord
-            return False 
+            return False
         pos_x = int((screen_x - size_x) / 2)
         pos_y = int((screen_y - size_y) / 2)
 
         # Create the popup
         popup = curses.newwin(size_y, size_x, pos_y, pos_x)
-        
+
         # Fill the popup
         popup.border()
 
@@ -600,7 +623,8 @@ class GlancesCurses(object):
             textbox.edit()
             self.set_cursor(0)
             if textbox.gather() != '':
-                logger.debug(_("User enters the following process filter patern: %s") % textbox.gather())
+                logger.debug(
+                    _("User enters the following process filter patern: %s") % textbox.gather())
                 return textbox.gather()[:-1]
             else:
                 logger.debug(_("User clears the process filter patern"))
@@ -611,9 +635,9 @@ class GlancesCurses(object):
             curses.napms(duration * 1000)
             return True
 
-    def display_plugin(self, plugin_stats, 
+    def display_plugin(self, plugin_stats,
                        display_optional=True,
-                       display_additional=True, 
+                       display_additional=True,
                        max_y=65535):
         """Display the plugin_stats on the screen.
 
@@ -643,7 +667,7 @@ class GlancesCurses(object):
             display_y = screen_y - self.get_stats_display_height(plugin_stats)
         else:
             display_y = self.line
-        
+
         # Display
         x = display_x
         y = display_y
@@ -673,8 +697,9 @@ class GlancesCurses(object):
             try:
                 self.term_window.addnstr(y, x,
                                          m['msg'],
-                                         screen_x - x,  # Do not disply outside the screen
-                                         self.__colors_list[m['decoration']])                
+                                         # Do not disply outside the screen
+                                         screen_x - x,
+                                         self.__colors_list[m['decoration']])
             except:
                 pass
             else:
@@ -721,7 +746,7 @@ class GlancesCurses(object):
             # Getkey
             if self.__catch_key() > -1:
                 # Redraw display
-                self.flush(stats, cs_status=cs_status)                
+                self.flush(stats, cs_status=cs_status)
             # Wait 100ms...
             curses.napms(100)
 
@@ -734,11 +759,11 @@ class GlancesCurses(object):
             if without_option:
                 # Size without options
                 c = len(max(''.join([(i['msg'] if not i['optional'] else "")
-                        for i in curse_msg['msgdict']]).split('\n'), key=len))
+                                     for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
                 c = len(max(''.join([i['msg']
-                        for i in curse_msg['msgdict']]).split('\n'), key=len))
+                                     for i in curse_msg['msgdict']]).split('\n'), key=len))
         except:
             return 0
         else:
@@ -758,14 +783,15 @@ class GlancesCurses(object):
 
 if not is_windows:
     class glances_textbox(Textbox):
+
         """
         """
         def __init__(*args, **kwargs):
             Textbox.__init__(*args, **kwargs)
-      
+
         def do_command(self, ch):
-            if ch == 10: # Enter
+            if ch == 10:  # Enter
                 return 0
-            if ch == 127: # Enter
+            if ch == 127:  # Enter
                 return 8
             return Textbox.do_command(self, ch)
