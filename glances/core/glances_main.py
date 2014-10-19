@@ -57,8 +57,10 @@ class GlancesMain(object):
     def init_args(self):
         """Init all the command line arguments."""
         _version = "Glances v" + version + " with psutil v" + psutil_version
-        parser = argparse.ArgumentParser(prog=appname, conflict_handler='resolve')
-        parser.add_argument('-V', '--version', action='version', version=_version)
+        parser = argparse.ArgumentParser(
+            prog=appname, conflict_handler='resolve')
+        parser.add_argument(
+            '-V', '--version', action='version', version=_version)
         parser.add_argument('-d', '--debug', action='store_true', default=False,
                             dest='debug', help=_('Enable debug mode'))
         parser.add_argument('-C', '--config', dest='conf_file',
@@ -76,12 +78,12 @@ class GlancesMain(object):
                             dest='disable_left_sidebar', help=_('disable network, disk io, FS and sensors modules'))
         parser.add_argument('--disable_left_sidebar', action='store_true', default=False,
                             dest='disable_process', help=_('disable process module'))
-        parser.add_argument('--disable-process-extended', action='store_true', default=False,
-                            dest='disable_process_extended', help=_('disable extended stats on top process'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
+        parser.add_argument('--enable-process-extended', action='store_false', default=False,
+                            dest='enable_process_extended', help=_('enable extended stats on top process'))
         parser.add_argument('--enable-history', action='store_true', default=False,
                             dest='enable_history', help=_('enable the history mode'))
         parser.add_argument('--path-history', default=tempfile.gettempdir(),
@@ -144,14 +146,14 @@ class GlancesMain(object):
             from logging import DEBUG
             logger.setLevel(DEBUG)
 
-        # Client/server Port        
+        # Client/server Port
         if args.port is None:
             if args.webserver:
                 args.port = self.web_server_port
             else:
-                args.port = self.server_port            
+                args.port = self.server_port
 
-        # In web server mode, defaul refresh time: 5 sec        
+        # In web server mode, defaul refresh time: 5 sec
         if args.webserver:
             args.time = 5
 
@@ -167,7 +169,8 @@ class GlancesMain(object):
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description=_("Define the password for the Glances server"),
+                    description=_(
+                        "Define the password for the Glances server"),
                     confirm=True)
             elif args.client:
                 args.password = self.__get_password(
@@ -189,15 +192,18 @@ class GlancesMain(object):
 
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
-            logger.critical(_("Process filter is only available in standalone mode"))
+            logger.critical(
+                _("Process filter is only available in standalone mode"))
             sys.exit(2)
 
         # Check graph output path
         if args.enable_history and args.path_history is not None:
             if not os.access(args.path_history, os.W_OK):
-                logger.critical(_("History output path (%s) do not exist or is not writable") % args.path_history)
+                logger.critical(
+                    _("History output path (%s) do not exist or is not writable") % args.path_history)
                 sys.exit(2)
-            logger.debug(_("History output path is set to %s") % args.path_history)
+            logger.debug(_("History output path is set to %s") %
+                         args.path_history)
 
         return args
 
