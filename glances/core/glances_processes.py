@@ -49,7 +49,8 @@ class GlancesProcesses(object):
         # Init stats
         self.resetsort()
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.processcount = {
+            'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU comsumption)
         # Default is to enable the processes stats
@@ -100,9 +101,11 @@ class GlancesProcesses(object):
         if value is not None:
             try:
                 self.process_filter_re = re.compile(value)
-                logger.debug(_("Process filter regular expression compilation OK: %s") % self.get_process_filter())
+                logger.debug(
+                    _("Process filter regular expression compilation OK: %s") % self.get_process_filter())
             except:
-                logger.error(_("Can not compile process filter regular expression: %s") % value)
+                logger.error(
+                    _("Can not compile process filter regular expression: %s") % value)
                 self.process_filter_re = None
         else:
             self.process_filter_re = None
@@ -127,7 +130,7 @@ class GlancesProcesses(object):
 
     def __get_process_stats(self, proc,
                             mandatory_stats=True,
-                            standard_stats=True, 
+                            standard_stats=True,
                             extended_stats=False):
         """
         Get process stats of the proc processes (proc is returned psutil.process_iter())
@@ -143,12 +146,14 @@ class GlancesProcesses(object):
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
-            procstat['mandatory_stats'] = True 
+            procstat['mandatory_stats'] = True
 
             # Process CPU, MEM percent and name
-            procstat.update(proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+            procstat.update(
+                proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
             if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
-                # Do not display process if we can not get the basic cpu_percent or memory_percent stats
+                # Do not display process if we can not get the basic
+                # cpu_percent or memory_percent stats
                 return None
 
             # Process command line (cached with internal cache)
@@ -157,7 +162,8 @@ class GlancesProcesses(object):
             except KeyError:
                 # Patch for issue #391
                 try:
-                    self.cmdline_cache[procstat['pid']] = ' '.join(proc.cmdline())
+                    self.cmdline_cache[
+                        procstat['pid']] = ' '.join(proc.cmdline())
                 except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess):
                     self.cmdline_cache[procstat['pid']] = ""
             procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
@@ -176,14 +182,16 @@ class GlancesProcesses(object):
                 except (psutil.AccessDenied, psutil.NoSuchProcess):
                     # Access denied to process IO (no root account)
                     # NoSuchProcess (process die between first and second grab)
-                    # Put 0 in all values (for sort) and io_tag = 0 (for display)
+                    # Put 0 in all values (for sort) and io_tag = 0 (for
+                    # display)
                     procstat['io_counters'] = [0, 0] + [0, 0]
                     io_tag = 0
                 else:
                     # For IO rate computation
                     # Append saved IO r/w bytes
                     try:
-                        procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
+                        procstat['io_counters'] = io_new + \
+                            self.io_old[procstat['pid']]
                     except KeyError:
                         procstat['io_counters'] = io_new + [0, 0]
                     # then save the IO r/w bytes
@@ -194,7 +202,7 @@ class GlancesProcesses(object):
                 procstat['io_counters'] += [io_tag]
 
         if standard_stats:
-            procstat['standard_stats'] = True 
+            procstat['standard_stats'] = True
 
             # Process username (cached with internal cache)
             try:
@@ -203,7 +211,7 @@ class GlancesProcesses(object):
                 try:
                     self.username_cache[procstat['pid']] = proc.username()
                 except psutil.NoSuchProcess:
-                        self.username_cache[procstat['pid']] = "?"
+                    self.username_cache[procstat['pid']] = "?"
                 except (KeyError, psutil.AccessDenied):
                     try:
                         self.username_cache[procstat['pid']] = proc.uids().real
@@ -213,14 +221,15 @@ class GlancesProcesses(object):
 
             # Process status, nice, memory_info and cpu_times
             try:
-                procstat.update(proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+                procstat.update(
+                    proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
             except psutil.NoSuchProcess:
                 pass
             else:
                 procstat['status'] = str(procstat['status'])[:1].upper()
 
         if extended_stats and not self.disable_extended_tag:
-            procstat['extended_stats'] = True 
+            procstat['extended_stats'] = True
 
             # CPU affinity (Windows and Linux only)
             try:
@@ -271,7 +280,8 @@ class GlancesProcesses(object):
             # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
             if is_linux:
                 try:
-                    procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
+                    procstat['memory_swap'] = sum(
+                        [v.swap for v in proc.memory_maps()])
                 except psutil.NoSuchProcess:
                     pass
                 except psutil.AccessDenied:
@@ -298,7 +308,7 @@ class GlancesProcesses(object):
             else:
                 procstat['ionice'] = None
 
-            #logger.debug(procstat)
+            # logger.debug(procstat)
 
         return procstat
 
@@ -308,7 +318,8 @@ class GlancesProcesses(object):
         """
         # Reset the stats
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.processcount = {
+            'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -322,8 +333,8 @@ class GlancesProcesses(object):
         for proc in psutil.process_iter():
             # If self.get_max_processes() is None: Only retreive mandatory stats
             # Else: retreive mandatory and standard stats
-            s = self.__get_process_stats(proc, 
-                                         mandatory_stats=True, 
+            s = self.__get_process_stats(proc,
+                                         mandatory_stats=True,
                                          standard_stats=self.get_max_processes() is None)
             # Continue to the next process if it has to be filtered
             if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
@@ -334,15 +345,18 @@ class GlancesProcesses(object):
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
             if (is_bsd and processdict[proc]['name'] == 'idle' or
-                is_windows and processdict[proc]['name'] == 'System Idle Process' or
-                is_mac and processdict[proc]['name'] == 'kernel_task'):
+                    is_windows and processdict[proc]['name'] == 'System Idle Process' or
+                    is_mac and processdict[proc]['name'] == 'kernel_task'):
                 continue
             # Update processcount (global statistics)
             try:
                 self.processcount[str(proc.status())] += 1
             except KeyError:
                 # Key did not exist, create it
-                self.processcount[str(proc.status())] = 1
+                try:
+                    self.processcount[str(proc.status())] = 1
+                except psutil.NoSuchProcess:
+                    pass
             except psutil.NoSuchProcess:
                 pass
             else:
@@ -359,7 +373,8 @@ class GlancesProcesses(object):
             # Sort the internal dict and cut the top N (Return a list of tuple)
             # tuple=key (proc), dict (returned by __get_process_stats)
             try:
-                processiter = sorted(processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+                processiter = sorted(
+                    processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
             except TypeError:
                 # Fallback to all process (issue #423)
                 processloop = processdict.items()
@@ -370,15 +385,15 @@ class GlancesProcesses(object):
         else:
             # Get all processes stats
             processloop = processdict.items()
-            first = False        
+            first = False
         for i in processloop:
             # Already existing mandatory stats
             procstat = i[1]
             if self.get_max_processes() is not None:
                 # Update with standard stats
                 # and extended stats but only for TOP (first) process
-                s = self.__get_process_stats(i[0], 
-                                             mandatory_stats=False, 
+                s = self.__get_process_stats(i[0],
+                                             mandatory_stats=False,
                                              standard_stats=True,
                                              extended_stats=first)
                 if s is None:
