@@ -136,9 +136,9 @@ Command-Line Options
   --disable-left-sidebar
                         disable left sidebar
   --disable-process     disable process module
-  --disable-process-extended
-                        disable extended stats on top process
   --disable-log         disable log module
+  --enable-process-extended
+                        enable extended stats on top process
   --output-csv OUTPUT_CSV
                         export stats to a CSV file
   -c CLIENT, --client CLIENT
@@ -545,7 +545,7 @@ In standalone mode, additionals informations are provided for the top process:
 * Openned threads, files and network sessions (TCP and UDP)
 * IO nice level  
 
-The extended stats feature could be disabled using the --disable-process-extended option (command line) or the ``e`` key (curses interface).
+The extended stats feature could be enabled using the --enable-process-extended option (command line) or the ``e`` key (curses interface).
 
 *Note*: limit values can be overwritten in the configuration file under
 the ``[process]`` section.

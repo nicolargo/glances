@@ -5,7 +5,8 @@ Glances Version 2.x
 Version 2.2
 ===========
 
-...
+    * Improve graph history feature (issue #428)
+    * Extended stats is disable by default (use --enable-process-extended to enable it - issue #430)
 
 Version 2.1.2
 =============

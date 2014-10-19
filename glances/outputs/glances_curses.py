@@ -258,8 +258,8 @@ class GlancesCurses(object):
             self.args.disable_diskio = not self.args.disable_diskio
         elif self.pressedkey == ord('e'):
             # 'e' > Enable/Disable extended stats for top process
-            self.args.disable_process_extended = not self.args.disable_process_extended
-            if self.args.disable_process_extended:
+            self.args.enable_process_extended = not self.args.enable_process_extended
+            if not self.args.enable_process_extended:
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
@@ -420,7 +420,7 @@ class GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
             self.get_stats_display_height(stats_alert)
-        if not self.args.disable_process_extended:
+        if self.args.enable_process_extended:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
             max_processes_displayed = 0
