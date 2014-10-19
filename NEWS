@@ -7,6 +7,7 @@ Version 2.2
 
     * Improve graph history feature (issue #428)
     * Extended stats is disable by default (use --enable-process-extended to enable it - issue #430)
+    * Add a key ('F') and a command line option (--fs-free-space) to display FS free space instead of used space (issue #411)
 
 Version 2.1.2
 =============

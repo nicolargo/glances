@@ -173,7 +173,10 @@ class Plugin(GlancesPlugin):
         # Header
         msg = '{0:{width}}'.format(_("FILE SYS"), width=fsname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>7}'.format(_("Used"))
+        if args.fs_free_space:
+            msg = '{0:>7}'.format(_("Free"))
+        else:
+            msg = '{0:>7}'.format(_("Used"))
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(_("Total"))
         ret.append(self.curse_add_line(msg))
@@ -194,7 +197,10 @@ class Plugin(GlancesPlugin):
                 mnt_point = i['mnt_point']
             msg = '{0:{width}}'.format(mnt_point, width=fsname_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>7}'.format(self.auto_unit(i['used']))
+            if args.fs_free_space:
+                msg = '{0:>7}'.format(self.auto_unit(i['size'] - i['used']))
+            else:
+                msg = '{0:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
             msg = '{0:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))

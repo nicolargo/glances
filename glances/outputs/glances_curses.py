@@ -263,6 +263,9 @@ class GlancesCurses(object):
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+        elif self.pressedkey == ord('F'):
+            # 'F' > Switch between FS available and free space
+            self.args.fs_free_space = not self.args.fs_free_space
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs stats
             self.args.disable_fs = not self.args.disable_fs

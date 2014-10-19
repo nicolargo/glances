@@ -129,6 +129,8 @@ class GlancesMain(object):
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help=_('start Glances in per CPU mode'))
+        parser.add_argument('--fs-free-space', action='store_false', default=False,
+                            dest='fs_free_space', help=_('display FS free space instead of used'))
         parser.add_argument('--theme-white', action='store_true', default=False,
                             dest='theme_white', help=_('optimize display for white background'))
 
