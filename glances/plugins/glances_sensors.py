@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3, logger
+from glances.core.glances_globals import is_py3
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -49,10 +49,12 @@ class Plugin(GlancesPlugin):
         # Init the sensor class
         self.glancesgrabsensors = GlancesGrabSensors()
 
-        # Instance for the HDDTemp Plugin in order to display the hard disks temperatures
+        # Instance for the HDDTemp Plugin in order to display the hard disks
+        # temperatures
         self.hddtemp_plugin = HddTempPlugin(args=args)
 
-        # Instance for the BatPercent in order to display the batteries capacities
+        # Instance for the BatPercent in order to display the batteries
+        # capacities
         self.batpercent_plugin = BatPercentPlugin(args=args)
 
         # We want to display the stat in the curse interface
@@ -73,13 +75,13 @@ class Plugin(GlancesPlugin):
         if self.get_input() == 'local':
             # Update stats using the dedicated lib
             try:
-                self.stats = self.__set_type(self.glancesgrabsensors.get(), 
+                self.stats = self.__set_type(self.glancesgrabsensors.get(),
                                              'temperature_core')
             except:
                 pass
             # Update HDDtemp stats
             try:
-                hddtemp = self.__set_type(self.hddtemp_plugin.update(), 
+                hddtemp = self.__set_type(self.hddtemp_plugin.update(),
                                           'temperature_hdd')
             except:
                 pass
@@ -88,7 +90,7 @@ class Plugin(GlancesPlugin):
                 self.stats.extend(hddtemp)
             # Update batteries stats
             try:
-                batpercent = self.__set_type(self.batpercent_plugin.update(), 
+                batpercent = self.__set_type(self.batpercent_plugin.update(),
                                              'battery')
             except:
                 pass
@@ -97,7 +99,8 @@ class Plugin(GlancesPlugin):
                 self.stats.extend(batpercent)
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            # No standard: http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
+            # No standard:
+            # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
             pass
 
         return self.stats
@@ -147,11 +150,13 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>5}'.format(item['value'])
                 if item['type'] == 'battery':
                     try:
-                        ret.append(self.curse_add_line(msg, self.get_alert(100 - item['value'], header=item['type'])))
+                        ret.append(self.curse_add_line(
+                            msg, self.get_alert(100 - item['value'], header=item['type'])))
                     except TypeError:
                         pass
                 else:
-                    ret.append(self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
+                    ret.append(
+                        self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
 
         return ret
 
