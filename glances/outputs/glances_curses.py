@@ -530,7 +530,8 @@ class GlancesCurses(object):
         if self.history_tag and self.args.enable_history:
             self.display_popup(
                 _("Generate graphs history in %s\nPlease wait...") % self.glances_history.get_output_folder())
-            self.glances_history.generate_graph(stats)
+            self.display_popup(
+                _("Generate graphs history in %s\nDone: %s graphs generated") % (self.glances_history.get_output_folder(), self.glances_history.generate_graph(stats)))
         elif self.reset_history_tag and self.args.enable_history:
             self.display_popup(_("Reset history"))
             self.glances_history.reset(stats)
@@ -580,13 +581,14 @@ class GlancesCurses(object):
         """
 
         # Center the popup
+        sentence_list = message.split('\n')
         if size_x is None:
-            size_x = len(message) + 4
+            size_x = len(max(sentence_list, key=len)) + 4
             # Add space for the input field
             if is_input:
                 size_x += input_size
         if size_y is None:
-            size_y = message.count('\n') + 1 + 4
+            size_y = len(sentence_list) + 4
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
         if size_x > screen_x or size_y > screen_y:

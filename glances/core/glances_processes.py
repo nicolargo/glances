@@ -343,6 +343,8 @@ class GlancesProcesses(object):
             except KeyError:
                 # Key did not exist, create it
                 self.processcount[str(proc.status())] = 1
+            except psutil.NoSuchProcess:
+                pass
             else:
                 self.processcount['total'] += 1
             # Update thread number (global statistics)

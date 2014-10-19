@@ -23,6 +23,9 @@
 from glances.core.glances_globals import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# Note: history items list is not compliant with process count
+#       if a filter is applyed, the graph will show the filtered processes count
+
 
 class Plugin(GlancesPlugin):
 
