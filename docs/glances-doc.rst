@@ -170,6 +170,7 @@ Command-Line Options
   --process-short-name  force short name for processes name
   -b, --byte            display network rate in byte per second
   -1, --percpu          start Glances in per CPU mode
+  --fs-free-space       display FS free space instead of used
   --theme-white         optimize display for white background
 
 Interactive Commands
@@ -199,6 +200,8 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable top extended stats
 ``f``
     Show/hide file system stats
+``F``
+    Switch between FS used and free space
 ``g``
     Generate hraphs for current history
 ``h``
