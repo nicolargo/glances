@@ -84,12 +84,14 @@ class GlancesGrabBat(object):
             self.initok = True
             self.bat_list = []
             self.update()
-        except Exception:
+        except Exception as e:
             self.initok = False
+            logger.debug("Can not init GlancesGrabBat class (%s)" % e)
 
     def update(self):
         """Update the stats."""
         if self.initok:
+            self.bat.update()
             self.bat_list = [{'label': _("Battery (%)"), 'value': self.getcapacitypercent()}]
         else:
             self.bat_list = []

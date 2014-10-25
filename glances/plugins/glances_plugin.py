@@ -494,3 +494,15 @@ class GlancesPlugin(object):
                 return '{0:.{decimal}f}{symbol}'.format(
                     value, decimal=decimal_precision, symbol=symbol)
         return '{0!s}'.format(number)
+
+    def _log_result_decorator(fct):
+        """Log (DEBUG) the result of the function fct"""
+        def wrapper(*args, **kw):
+            ret = fct(*args, **kw)
+            logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
+                         0].__class__.__module__[len('glances_'):], fct.func_name, ret))
+            return ret
+        return wrapper
+
+    # Mandatory to call the decorator in childs' classes
+    _log_result_decorator = staticmethod(_log_result_decorator)
