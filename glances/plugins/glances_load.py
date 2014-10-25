@@ -38,7 +38,7 @@ snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
 # 'color' define the graph color in #RGB format
-items_history_list = [{'name': 'min1', 'color': '#0000FF'}, 
+items_history_list = [{'name': 'min1', 'color': '#0000FF'},
                       {'name': 'min5', 'color': '#0000AA'},
                       {'name': 'min15', 'color': '#000044'}]
 
@@ -52,7 +52,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
+        GlancesPlugin.__init__(
+            self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -70,6 +71,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update load stats."""
         # Reset stats

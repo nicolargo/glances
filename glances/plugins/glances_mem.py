@@ -72,6 +72,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update RAM memory stats using the input method."""
         # Reset stats
