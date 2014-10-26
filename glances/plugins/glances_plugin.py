@@ -29,7 +29,7 @@ import json
 from operator import itemgetter
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, logger
+from glances.core.glances_globals import is_py3, glances_logs, logger
 
 
 class GlancesPlugin(object):
@@ -499,8 +499,12 @@ class GlancesPlugin(object):
         """Log (DEBUG) the result of the function fct"""
         def wrapper(*args, **kw):
             ret = fct(*args, **kw)
-            logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
-                         0].__class__.__module__[len('glances_'):], fct.func_name, ret))
+            if is_py3:
+                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
+                             0].__class__.__module__[len('glances_'):], fct.__name__, ret))
+            else:
+                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
+                             0].__class__.__module__[len('glances_'):], fct.func_name, ret))
             return ret
         return wrapper
 
