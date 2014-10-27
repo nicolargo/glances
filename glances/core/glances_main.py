@@ -96,6 +96,10 @@ class GlancesMain(object):
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
+        parser.add_argument('--autodiscover', action='store_true', default=False,
+                            dest='autodiscover', help=_('autodetect all Glances servers on your local area network'))
+        parser.add_argument('--disable-autodiscover', action='store_true', default=False,
+                            dest='disable_autodiscover', help=_('disable server announcement on the local area network'))
         parser.add_argument('-p', '--port', default=None, type=int, dest='port',
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
@@ -231,11 +235,15 @@ class GlancesMain(object):
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.args.client and not self.args.server and not self.args.webserver
+        return not self.args.client and not self.args.autodiscover and not self.args.server and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return self.args.client and not self.args.server
+        return (self.args.client or self.args.autodiscover) and not self.args.server
+
+    def is_client_autodiscover(self):
+        """Return True if Glances is running in client mode with autodiscover."""
+        return self.args.autodiscover and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
