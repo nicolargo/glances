@@ -50,11 +50,11 @@ psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
 # First log with Glances and PSUtil version
 logger.info('Start Glances {0}'.format(__version__))
 logger.info('{0} {1} and PSutil {2} detected'.format(platform.python_implementation(),
-                                                 platform.python_version(), 
-                                                 __psutil_version))
+                                                     platform.python_version(),
+                                                     __psutil_version))
 
 # Check PSutil version
-if psutil_version < psutil_min_version:    
+if psutil_version < psutil_min_version:
     logger.critical('PSutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
@@ -122,7 +122,6 @@ def main():
 
     elif core.is_client():
         logger.info("Start client mode")
-
         # Import the Glances client module
         from glances.core.glances_client import GlancesClient
 
@@ -130,13 +129,22 @@ def main():
         client = GlancesClient(config=core.get_config(),
                                args=core.get_args())
 
-        # Test if client and server are in the same major version
-        if not client.login():
-            logger.critical(_("The server version is not compatible with the client"))
-            sys.exit(2)
+        if core.is_client_autodiscover():
+            # !!! Create a new script with the client_browser feature
+            import time
+            while True:
+                print client.get_servers_list()
+                time.sleep(3)
 
-        # Start the client loop
-        client.serve_forever()
+        else:
+            # Test if client and server are in the same major version
+            if not client.login():
+                logger.critical(
+                    _("The server version is not compatible with the client"))
+                sys.exit(2)
+
+            # Start the client loop
+            client.serve_forever()
 
         # Shutdown the client
         client.close()
@@ -152,7 +160,8 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
+        print(_("Glances server is running on {0}:{1}").format(
+            args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if args.password != "":

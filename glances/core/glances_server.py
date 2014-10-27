@@ -35,6 +35,7 @@ except ImportError:  # Python 2
 from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
+from glances.core.glances_autodiscover import GlancesAutoDiscoverClient
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
@@ -195,6 +196,9 @@ class GlancesServer(object):
                  cached_time=1,
                  config=None,
                  args=None):
+        # Args
+        self.args = args
+
         # Init the XML RPC server
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
@@ -212,6 +216,13 @@ class GlancesServer(object):
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(cached_time, config))
 
+        # Announce the server to the network
+        if not self.args.disable_autodiscover:
+            # Note: The Zeroconf service name will be based on the hostname
+            self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname(), args)
+        else:
+            logger.info("Glances autodiscover announce is disabled")
+
     def add_user(self, username, password):
         """Add an user to the dictionary."""
         self.server.user_dict[username] = password
@@ -227,4 +238,6 @@ class GlancesServer(object):
 
     def end(self):
         """End of the Glances server session."""
+        if not self.args.disable_autodiscover:
+            self.autodiscover_client.close()
         self.server_close()

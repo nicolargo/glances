@@ -25,12 +25,12 @@ import socket
 import sys
 try:
     from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
-except ImportError:  
+except ImportError:
     # Python 2
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
 try:
     import http.client as httplib
-except:  
+except:
     # Python 2
     import httplib
 
@@ -38,11 +38,13 @@ except:
 from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCurses
+from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 
 
 class GlancesClientTransport(Transport):
+
     """This class overwrite the default XML-RPC transport and manage timeout"""
-    
+
     def set_timeout(self, timeout):
         self.timeout = timeout
 
@@ -51,6 +53,7 @@ class GlancesClientTransport(Transport):
 
 
 class GlancesClient(object):
+
     """This class creates and manages the TCP client."""
 
     def __init__(self, config=None, args=None):
@@ -73,10 +76,21 @@ class GlancesClient(object):
         # Configure the server timeout to 7 seconds
         transport.set_timeout(7)
         try:
-            self.client = ServerProxy(uri, transport = transport)
+            self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
             logger.error(_("Couldn't create socket {0}: {1}").format(uri, e))
             sys.exit(2)
+
+        # Start the autodiscover mode (Zeroconf listener)
+        if self.args.autodiscover:
+            self.autodiscover_server = GlancesAutoDiscoverServer()
+
+    def get_servers_list(self):
+        """Return the current server list (dict of dict)"""
+        if self.args.autodiscover:
+            return self.autodiscover_server.get_servers_list()
+        else:
+            return {}
 
     def set_mode(self, mode='glances'):
         """Set the client mode.
@@ -114,9 +128,11 @@ class GlancesClient(object):
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    logger.error(_("Connection to server failed (Bad password)"))
+                    logger.error(
+                        _("Connection to server failed (Bad password)"))
                 else:
-                    logger.error(_("Connection to server failed ({0})").format(err))
+                    logger.error(
+                        _("Connection to server failed ({0})").format(err))
                 sys.exit(2)
 
             if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
@@ -124,12 +140,13 @@ class GlancesClient(object):
                 self.stats = GlancesStatsClient()
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
             else:
-                logger.error("Client version: %s / Server version: %s" % (version, client_version))
+                logger.error(
+                    "Client version: %s / Server version: %s" % (version, client_version))
 
         else:
             self.set_mode('snmp')
 
-        if self.get_mode() == 'snmp':            
+        if self.get_mode() == 'snmp':
             logger.info(_("Trying to grab stats by SNMP..."))
             # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
@@ -160,7 +177,8 @@ class GlancesClient(object):
             return self.update_snmp()
         else:
             self.end()
-            logger.critical(_("Unknown server mode: {0}").format(self.get_mode()))
+            logger.critical(
+                _("Unknown server mode: {0}").format(self.get_mode()))
             sys.exit(2)
 
     def update_glances(self):
