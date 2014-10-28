@@ -176,8 +176,7 @@ class GlancesInstance(object):
         if item.startswith(header):
             try:
                 # Update the stat
-                # !!! All the stat are updated before one grab (not optimized)
-                self.stats.update()
+                self.__update__()
                 # Return the attribute
                 return getattr(self.stats, item)
             except Exception:

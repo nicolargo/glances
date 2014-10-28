@@ -121,30 +121,34 @@ def main():
         standalone.serve_forever()
 
     elif core.is_client():
-        logger.info("Start client mode")
-        # Import the Glances client module
-        from glances.core.glances_client import GlancesClient
-
-        # Init the client
-        client = GlancesClient(config=core.get_config(),
-                               args=core.get_args())
-
         if core.is_client_autodiscover():
-            # !!! Create a new script with the client_browser feature
-            import time
-            while True:
-                print client.get_servers_list()
-                time.sleep(3)
+            logger.info("Start client mode (browser)")
+
+            # Import the Glances client browser module
+            from glances.core.glances_client_browser import GlancesClientBrowser
+
+            # Init the client
+            client = GlancesClientBrowser(config=core.get_config(),
+                                          args=core.get_args())
 
         else:
+            logger.info("Start client mode")
+
+            # Import the Glances client module
+            from glances.core.glances_client import GlancesClient
+
+            # Init the client
+            client = GlancesClient(config=core.get_config(),
+                                   args=core.get_args())
+
             # Test if client and server are in the same major version
             if not client.login():
                 logger.critical(
                     _("The server version is not compatible with the client"))
                 sys.exit(2)
 
-            # Start the client loop
-            client.serve_forever()
+        # Start the client loop
+        client.serve_forever()
 
         # Shutdown the client
         client.close()

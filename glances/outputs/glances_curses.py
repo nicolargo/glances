@@ -361,6 +361,65 @@ class GlancesCurses(object):
         """New column in the curses interface"""
         self.column = self.next_column
 
+    def display_browser(self, servers_list):
+        """Display the servers list
+        Return:
+            True if the stats have been displayed
+            False if the help have been displayed
+        """
+        # Init the internal line/column for Glances Curses
+        self.init_line_column()
+
+        # Get the current screen size
+        screen_x = self.screen.getmaxyx()[1]
+        screen_y = self.screen.getmaxyx()[0]
+
+        # Display header
+        x = 0
+        y = 0
+        if len(servers_list) == 0:
+            msg = _("No Glances server detected on your network")
+        elif len(servers_list) == 1:
+            msg = _("One Glances server detected on your network")
+        else:
+            msg = _("%d Glances servers detected on your network" % len(servers_list))
+        self.term_window.addnstr(y, x,
+                                 msg,
+                                 screen_x - x,
+                                 self.__colors_list['TITLE'])
+
+        # Display the Glances server list
+        y = 2
+        try:
+            iteritems = servers_list.iteritems()
+        except AttributeError:
+            iteritems = servers_list.items()
+        for k, v in iteritems:
+            # Display server address:port
+            msg = "%s:%s" % (servers_list[k]['ip'], servers_list[k]['port'])
+            self.term_window.addnstr(y, x,
+                                     "%21s" % msg,
+                                     screen_x - x,
+                                     self.__colors_list['BOLD'])
+            # Display server LOAD
+            self.term_window.addnstr(y, x + 24,
+                                     "%6s" % servers_list[k]['load_min5'],
+                                     screen_x - x,
+                                     self.__colors_list['DEFAULT'])
+            # Display server CPU%
+            self.term_window.addnstr(y, x + 32,
+                                     "%6s" % servers_list[k]['cpu_percent'],
+                                     screen_x - x,
+                                     self.__colors_list['DEFAULT'])
+            # Display server MEM%
+            self.term_window.addnstr(y, x + 40,
+                                     "%6s" % servers_list[k]['mem_percent'],
+                                     screen_x - x,
+                                     self.__colors_list['DEFAULT'])
+            y += 1
+
+        return True
+
     def display(self, stats, cs_status="None"):
         """Display stats on the screen.
 
@@ -731,6 +790,14 @@ class GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
+    def flush_browser(self, servers_list):
+        """Update the servers' list screen.
+
+        servers_list: Dict of dict with servers stats
+        """
+        self.erase()
+        self.display_browser(servers_list)
+
     def update(self, stats, cs_status="None"):
         """Update the screen.
 
@@ -752,6 +819,26 @@ class GlancesCurses(object):
             if self.__catch_key() > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
+            # Wait 100ms...
+            curses.napms(100)
+
+    def update_browser(self, servers_list):
+        """Update the servers' list screen.
+
+        Wait for __refresh_time sec / catch key every 100 ms.
+
+        servers_list: Dict of dict with servers stats
+        """
+        # Flush display
+        self.flush_browser(servers_list)
+
+        # Wait
+        countdown = Timer(self.__refresh_time)
+        while not countdown.finished():
+            # Getkey
+            if self.__catch_key() > -1:
+                # Redraw display
+                self.flush_browser(servers_list)
             # Wait 100ms...
             curses.napms(100)
 
