@@ -57,7 +57,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            self.stats = glances_processes.getlist()            
+            self.stats = glances_processes.getlist()
         elif self.get_input() == 'snmp':
             # No SNMP grab for processes
             pass
@@ -260,7 +260,7 @@ class Plugin(GlancesPlugin):
                     if 'memory_swap' in p and p['memory_swap'] is not None:
                         msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
                     ret.append(self.curse_add_line(msg, splittable=True))
-                # Third line is for openned files/network sessions
+                # Third line is for open files/network sessions
                 msg = ''
                 if 'num_threads' in p and p['num_threads'] is not None:
                     msg += _('threads ') + str(p['num_threads']) + ' '
@@ -274,7 +274,7 @@ class Plugin(GlancesPlugin):
                     msg += _('UDP ') + str(p['udp']) + ' '
                 if msg != '':
                     ret.append(self.curse_new_line())
-                    msg = xpad + _('Openned: ') + msg
+                    msg = xpad + _('Open: ') + msg
                     ret.append(self.curse_add_line(msg, splittable=True))
                 # Fouth line is IO nice level (only Linux and Windows OS)
                 if 'ionice' in p and p['ionice'] is not None:
@@ -282,8 +282,8 @@ class Plugin(GlancesPlugin):
                     msg = xpad + _('IO nice: ')
                     k = _('Class is ')
                     v = p['ionice'].ioclass
-                    # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle. 
-                    # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low). 
+                    # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
+                    # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
                     if is_windows:
                         if v == 0:
                             msg += k + 'Very Low'
@@ -292,7 +292,7 @@ class Plugin(GlancesPlugin):
                         elif v == 2:
                             msg += _('No specific I/O priority')
                         else:
-                            msg += k + str(v)                        
+                            msg += k + str(v)
                     else:
                         if v == 0:
                             msg += _('No specific I/O priority')
@@ -304,11 +304,11 @@ class Plugin(GlancesPlugin):
                             msg += k + 'IDLE'
                         else:
                             msg += k + str(v)
-                    #  value is a number which goes from 0 to 7. 
+                    #  value is a number which goes from 0 to 7.
                     # The higher the value, the lower the I/O priority of the process.
                     if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
                         msg += _(' (value %s/7)') % str(p['ionice'].value)
-                    ret.append(self.curse_add_line(msg, splittable=True))                
+                    ret.append(self.curse_add_line(msg, splittable=True))
                 # End of extended stats
                 first = False
 
