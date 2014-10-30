@@ -285,14 +285,14 @@ On OS X, you should copy the configuration file to
 Logs and debug mode
 ===================
 
-Glances logs all its internal messages to a log file. By default, only 
-INFO & WARNING & ERROR &CRITICAL levels are logged, but DEBUG messages 
-can ben logged using the -d option on the command line. 
+Glances logs all its internal messages to a log file. By default, only
+INFO & WARNING & ERROR &CRITICAL levels are logged, but DEBUG messages
+can ben logged using the -d option on the command line.
 
-By default, the configuration file is under:
+By default, the log file is under:
 
-:Linux, \*BSD and OS X: ``/tmp/glances.conf``
-:Windows: ``%APPDATA%\Local\temp\glances.conf``
+:Linux, \*BSD and OS X: ``/tmp/glances.log``
+:Windows: ``%APPDATA%\Local\temp\glances.log``
 
 Anatomy Of The Application
 ==========================
@@ -414,7 +414,7 @@ Alerts are only set if the maximum speed per network interface is available
 
 *Note*: it is possibile to define a list of network interfaces to hide
 and per-interface limit values in the ``[network]`` section of the
-configuration file and aliases for interface name. 
+configuration file and aliases for interface name.
 
 Disk I/O
 --------
@@ -461,7 +461,7 @@ temperature only.
 
 There is no alert on this information.
 
-*Note*: limit values and sensors alias names can be defined in the configuration 
+*Note*: limit values and sensors alias names can be defined in the configuration
 file under the ``[sensors]`` section.
 
 Processes List
@@ -524,7 +524,7 @@ The number of processes in the list is adapted to the screen size.
     Per process I/O write rate (in Byte/s)
 ``COMMAND``
     Process command line
-    User cans switch to the process name by pressing on the ``/`` key 
+    User cans switch to the process name by pressing on the ``/`` key
 
 Process status legend:
 
@@ -546,7 +546,7 @@ In standalone mode, additionals informations are provided for the top process:
 * CPU affinity (number of cores used by the process)
 * Extended memory information (swap, shared, text, lib, data and dirty on Linux)
 * Openned threads, files and network sessions (TCP and UDP)
-* IO nice level  
+* IO nice level
 
 The extended stats feature could be enabled using the --enable-process-extended option (command line) or the ``e`` key (curses interface).
 
