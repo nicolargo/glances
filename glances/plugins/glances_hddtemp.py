@@ -20,6 +20,7 @@
 """HDD temperature plugin."""
 
 # Import system libs
+import os.path
 import socket
 
 # Import Glances libs
@@ -109,9 +110,10 @@ class GlancesGrabHDDTemp(object):
         for item in range(devices):
             offset = item * 5
             hddtemp_current = {}
-            device = fields[offset + 1].split(b'/dev/')[-1]
+            device = fields[offset + 1].decode('utf-8')
+            device = os.path.basename(device)
             temperature = fields[offset + 3]
-            hddtemp_current['label'] = device.decode('utf-8')
+            hddtemp_current['label'] = device
             hddtemp_current['value'] = temperature.decode('utf-8')
             self.hddtemp_list.append(hddtemp_current)
 
