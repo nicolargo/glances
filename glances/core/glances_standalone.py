@@ -39,10 +39,10 @@ class GlancesStandalone(object):
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
-            logger.info(_("Extended stats for top process is disabled (default behavor)"))
+            logger.info(_("Extended stats for top process are disabled (default behavior)"))
             glances_processes.disable_extended()
         else:
-            logger.debug(_("Extended stats for top process is enabled"))
+            logger.debug(_("Extended stats for top process are enabled"))
             glances_processes.enable_extended()
 
         # Manage optionnal process filter
