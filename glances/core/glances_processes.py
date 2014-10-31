@@ -52,7 +52,7 @@ class GlancesProcesses(object):
         self.processcount = {
             'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
-        # Tag to enable/disable the processes stats (to reduce the Glances CPU comsumption)
+        # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
         self.disable_tag = False
 
