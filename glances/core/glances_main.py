@@ -27,7 +27,7 @@ import tempfile
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, psutil_version, version, logger
+from glances.core.glances_globals import appname, psutil_version, version, logger, is_windows
 
 
 class GlancesMain(object):
@@ -125,6 +125,9 @@ class GlancesMain(object):
                             dest='process_filter', help=_('set the process filter patern (regular expression)'))
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help=_('force short name for processes name'))
+        if not is_windows:
+            parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
+                                dest='no_kernel_threads', help=_('hide kernel threads in process list'))
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
