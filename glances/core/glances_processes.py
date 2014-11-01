@@ -52,7 +52,7 @@ class GlancesProcesses(object):
         self.processcount = {
             'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
-        # Tag to enable/disable the processes stats (to reduce the Glances CPU comsumption)
+        # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
         self.disable_tag = False
 
@@ -66,6 +66,9 @@ class GlancesProcesses(object):
         # Process filter is a regular expression
         self.process_filter = None
         self.process_filter_re = None
+
+        # Whether or not to hide kernel threads
+        self.no_kernel_threads = False
 
     def enable(self):
         """Enable process stats."""
@@ -127,6 +130,10 @@ class GlancesProcesses(object):
         else:
             # logger.debug(self.get_process_filter() + " <> " + value + " => " + str(self.get_process_filter_re().match(value) is None))
             return self.get_process_filter_re().match(value) is None
+
+    def disable_kernel_threads(self):
+        """ Ignore kernel threads in process list. """
+        self.no_kernel_threads = True
 
     def __get_process_stats(self, proc,
                             mandatory_stats=True,
@@ -335,6 +342,11 @@ class GlancesProcesses(object):
         # Build an internal dict with only mandatories stats (sort keys)
         processdict = {}
         for proc in psutil.process_iter():
+            # Ignore kernel threads if needed
+            if (self.no_kernel_threads and (not is_windows)  # gids() is only available on unix
+                    and (proc.gids().real == 0)):
+                continue
+
             # If self.get_max_processes() is None: Only retreive mandatory stats
             # Else: retreive mandatory and standard stats
             s = self.__get_process_stats(proc,

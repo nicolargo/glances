@@ -39,15 +39,19 @@ class GlancesStandalone(object):
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
-            logger.info(_("Extended stats for top process is disabled (default behavor)"))
+            logger.info(_("Extended stats for top process are disabled (default behavior)"))
             glances_processes.disable_extended()
         else:
-            logger.debug(_("Extended stats for top process is enabled"))
+            logger.debug(_("Extended stats for top process are enabled"))
             glances_processes.enable_extended()
 
         # Manage optionnal process filter
         if args.process_filter is not None:
             glances_processes.set_process_filter(args.process_filter)
+
+        # Ignore kernel threads in process list
+        if args.no_kernel_threads:
+            glances_processes.disable_kernel_threads()
 
         # Initial system informations update
         self.stats.update()
