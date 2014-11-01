@@ -22,19 +22,25 @@
 # Import system libs
 import socket
 try:
+    import netifaces
+    netifaces_tag = True
+except ImportError:
+    netifaces_tag = True
+try:
     from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
     zeroconf_tag = True
 except ImportError:
     zeroconf_tag = False
 
 # Import Glances libs
-from glances.core.glances_globals import appname, version, logger
+from glances.core.glances_globals import appname, logger
 
 # Global var
 zeroconf_type = "_%s._tcp." % appname
 
 
 class AutoDiscovered(object):
+
     """Class to manage the auto discovered servers dict"""
 
     def __init__(self):
@@ -59,6 +65,7 @@ class AutoDiscovered(object):
 
 
 class GlancesAutoDiscoverListener(object):
+
     """Zeroconf listener for Glances server"""
 
     def __init__(self):
@@ -89,18 +96,22 @@ class GlancesAutoDiscoverListener(object):
 
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
-            logger.info("New Glances server detected (%s from %s:%s)" % (srv_name, new_server_ip, new_server_port))
+            logger.info("New Glances server detected (%s from %s:%s)" %
+                        (srv_name, new_server_ip, new_server_port))
         else:
-            logger.warning("New Glances server detected, but Zeroconf info failed to be grabbed")
+            logger.warning(
+                "New Glances server detected, but Zeroconf info failed to be grabbed")
         return True
 
     def removeService(self, zeroconf, srv_type, srv_name):
         # Remove the server from the list
         self.servers.remove_server(srv_name)
-        logger.info("Glances server %s removed from the autodetect list" % srv_name)
+        logger.info(
+            "Glances server %s removed from the autodetect list" % srv_name)
 
 
 class GlancesAutoDiscoverServer(object):
+
     """Implementation of the Zeroconf protocol (server side for the Glances client)"""
 
     def __init__(self, args=None):
@@ -108,9 +119,11 @@ class GlancesAutoDiscoverServer(object):
             logger.info("Init autodiscover mode (Zeroconf protocol)")
             self.zeroconf = Zeroconf()
             self.listener = GlancesAutoDiscoverListener()
-            self.browser = ServiceBrowser(self.zeroconf, zeroconf_type, self.listener)
+            self.browser = ServiceBrowser(
+                self.zeroconf, zeroconf_type, self.listener)
         else:
-            logger.error("Can not start autodiscover mode (Zeroconf lib is not installed)")
+            logger.error(
+                "Can not start autodiscover mode (Zeroconf lib is not installed)")
 
     def get_servers_list(self):
         """Return the current server list (dict of dict)"""
@@ -125,23 +138,40 @@ class GlancesAutoDiscoverServer(object):
 
 
 class GlancesAutoDiscoverClient(object):
+
     """Implementation of the Zeroconf protocol (client side for the Glances server)"""
 
     def __init__(self, hostname, args=None):
-        if zeroconf_tag:
-            logger.info("Announce the Glances server on the local area network")
-            self.zeroconf = Zeroconf()
-            self.info = ServiceInfo(zeroconf_type,
-                                    hostname + '.' + zeroconf_type,
-                                    address=socket.inet_aton(args.bind_address),
-                                    port=args.port,
-                                    weight=0,
-                                    priority=0,
-                                    properties={},
-                                    server=hostname)
-            self.zeroconf.registerService(self.info)
+        if netifaces_tag:
+            # !!! TO BE REFACTOR
+            # OK with server: LANGUAGE=en_US.utf8 python -m glances -s -d -B 192.168.176.128
+            # KO with server: LANGUAGE=en_US.utf8 python -m glances -s -d
+            try:
+                zeroconf_bind_address = socket.inet_aton(netifaces.ifaddresses(
+                    netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr'])
+            except:
+                zeroconf_bind_address = socket.inet_aton(args.bind_address)
+            # /!!!
+
+            if zeroconf_tag:
+                logger.info(
+                    "Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
+                self.zeroconf = Zeroconf()
+                self.info = ServiceInfo(zeroconf_type,
+                                        hostname + '.' + zeroconf_type,
+                                        address=zeroconf_bind_address,
+                                        port=args.port,
+                                        weight=0,
+                                        priority=0,
+                                        properties={},
+                                        server=hostname)
+                self.zeroconf.registerService(self.info)
+            else:
+                logger.error(
+                    "Can not announce Glances server on the network (Zeroconf lib is not installed)")
         else:
-            logger.error("Can not announce Glances server on the network (Zeroconf lib is not installed)")
+            logger.error(
+                "Can not announce Glances server on the network (Netifaces lib is not installed)")
 
     def close(self):
         if zeroconf_tag:
