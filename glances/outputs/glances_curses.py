@@ -365,7 +365,7 @@ class GlancesCurses(object):
         """Display the servers list
         Return:
             True if the stats have been displayed
-            False if the help have been displayed
+            False if the stats have not been displayed (no server available)
         """
         # Init the internal line/column for Glances Curses
         self.init_line_column()
@@ -374,7 +374,7 @@ class GlancesCurses(object):
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
-        # Display header
+        # Display top header
         x = 0
         y = 0
         if len(servers_list) == 0:
@@ -382,40 +382,69 @@ class GlancesCurses(object):
         elif len(servers_list) == 1:
             msg = _("One Glances server detected on your network")
         else:
-            msg = _("%d Glances servers detected on your network" % len(servers_list))
+            msg = _("%d Glances servers detected on your network" %
+                    len(servers_list))
         self.term_window.addnstr(y, x,
                                  msg,
                                  screen_x - x,
                                  self.__colors_list['TITLE'])
 
+        if len(servers_list) == 0:
+            return False
+
         # Display the Glances server list
+        #================================
+
+        # Table of table
+        # Item description: [statsid, column name, column size]
+        column_def = [
+            ['name', _('Name'), 16],
+            ['ip', _('IP'), 15],
+            ['load_min5', _('LOAD'), 6],
+            ['cpu_percent', _('CPU%'), 5],
+            ['mem_percent', _('MEM%'), 5],            
+        ]
         y = 2
+
+        # Display table header
+        cpt = 0
+        xc = x
+        for c in column_def:
+            # Display server name
+            self.term_window.addnstr(y, xc,
+                                     "%s" % c[1].split('_')[0].capitalize(),
+                                     screen_x - x,
+                                     self.__colors_list['BOLD'])
+            xc += c[2] + 2
+            cpt += 1
+        y += 1
+
+        # Display table
         try:
             iteritems = servers_list.iteritems()
         except AttributeError:
             iteritems = servers_list.items()
         for k, v in iteritems:
-            # Display server address:port
-            msg = "%s:%s" % (servers_list[k]['ip'], servers_list[k]['port'])
-            self.term_window.addnstr(y, x,
-                                     "%21s" % msg,
-                                     screen_x - x,
-                                     self.__colors_list['BOLD'])
-            # Display server LOAD
-            self.term_window.addnstr(y, x + 24,
-                                     "%6s" % servers_list[k]['load_min5'],
-                                     screen_x - x,
-                                     self.__colors_list['DEFAULT'])
-            # Display server CPU%
-            self.term_window.addnstr(y, x + 32,
-                                     "%6s" % servers_list[k]['cpu_percent'],
-                                     screen_x - x,
-                                     self.__colors_list['DEFAULT'])
-            # Display server MEM%
-            self.term_window.addnstr(y, x + 40,
-                                     "%6s" % servers_list[k]['mem_percent'],
-                                     screen_x - x,
-                                     self.__colors_list['DEFAULT'])
+            # Get server stats
+            try:
+                server_stat = {}
+                for c in column_def:
+                    server_stat[c[0]] = servers_list[k][c[0]]
+            except KeyError as e:
+                logger.debug(_("Can not grab stats %s from server (KeyError: %s)") % (c[0], e))
+                continue
+            # Display line for server stats
+            cpt = 0
+            xc = x
+            for c in column_def:
+                # Display server name
+                self.term_window.addnstr(y, xc,
+                                         "%s" % server_stat[c[0]],
+                                         screen_x - x,
+                                         self.__colors_list['DEFAULT'])
+                xc += c[2] + 2
+                cpt += 1
+            # Next line, next server...
             y += 1
 
         return True
