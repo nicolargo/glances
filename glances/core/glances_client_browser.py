@@ -20,8 +20,8 @@
 """Manage the Glances client browser (list of Glances server)."""
 
 # Import system libs
-import time
 import json
+import socket
 try:
     from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
 except ImportError:
@@ -32,6 +32,7 @@ except ImportError:
 from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCurses
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
+from glances.core.glances_client import GlancesClientTransport
 
 
 class GlancesClientBrowser(object):
@@ -68,13 +69,34 @@ class GlancesClientBrowser(object):
                 iteritems = self.get_servers_list().iteritems()
             except AttributeError:
                 iteritems = self.get_servers_list().items()
-            for k, v in iteritems:
-                s = ServerProxy('http://%s:%s' % (self.get_servers_list()[k]['ip'], self.get_servers_list()[k]['port']))
-                # !!! 3 requests => high CPU consumption on the server :(
-                # !!! Try a getAll ??? Optimize server ???
-                self.get_servers_list()[k]['load_min5'] = json.loads(s.getLoad())['min5']
-                self.get_servers_list()[k]['cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
-                self.get_servers_list()[k]['mem_percent'] = json.loads(s.getMem())['percent']
+            # Dictionnary can change size during iteration...
+            try:
+                for k, v in iteritems:
+                    # !!! Perhaps, it will be better to store the ServerProxy instance in the get_servers_list
+                    uri = 'http://%s:%s' % (self.get_servers_list()
+                                            [k]['ip'], self.get_servers_list()[k]['port'])
+                    # Configure the server timeout to 3 seconds
+                    t = GlancesClientTransport()
+                    t.set_timeout(3)
+                    # !!! How to manage password protecttion ??? Disable autodiscover if password is set ?
+                    try:
+                        s = ServerProxy(uri, t)
+                    except Exception as e:
+                        logger.warning(
+                            _("Couldn't create socket {0}: {1}").format(uri, e))
+                    else:
+                        try:
+                            self.get_servers_list()[k]['load_min5'] = json.loads(
+                                s.getLoad())['min5']
+                            self.get_servers_list()[k][
+                                'cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
+                            self.get_servers_list()[k]['mem_percent'] = json.loads(
+                                s.getMem())['percent']
+                        except (socket.error, Fault, KeyError) as e:
+                            logger.warning(
+                                _("Can not grab stats form {0}: {1}").format(uri, e))
+            except RuntimeError:
+                logger.debug(_("Server list dictionnary chenge inside the loop (wait next update)"))
 
             # Update the screen
             self.screen.update_browser(self.get_servers_list())

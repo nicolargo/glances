@@ -55,7 +55,7 @@ class AutoDiscovered(object):
 
     def add_server(self, name, ip, port):
         """Add a new server to the dict"""
-        self._server_dict[name] = {'ip': ip, 'port': port}
+        self._server_dict[name] = {'name': name.split(':')[0], 'ip': ip, 'port': port}
         logger.debug("Servers list: %s" % self._server_dict)
 
     def remove_server(self, name):
@@ -147,10 +147,9 @@ class GlancesAutoDiscoverClient(object):
             # OK with server: LANGUAGE=en_US.utf8 python -m glances -s -d -B 192.168.176.128
             # KO with server: LANGUAGE=en_US.utf8 python -m glances -s -d
             try:
-                zeroconf_bind_address = socket.inet_aton(netifaces.ifaddresses(
-                    netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr'])
+                zeroconf_bind_address = netifaces.ifaddresses(netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
             except:
-                zeroconf_bind_address = socket.inet_aton(args.bind_address)
+                zeroconf_bind_address = args.bind_address
             # /!!!
 
             if zeroconf_tag:
@@ -158,8 +157,8 @@ class GlancesAutoDiscoverClient(object):
                     "Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
                 self.zeroconf = Zeroconf()
                 self.info = ServiceInfo(zeroconf_type,
-                                        hostname + '.' + zeroconf_type,
-                                        address=zeroconf_bind_address,
+                                        hostname+':'+str(args.port)+'.'+zeroconf_type,
+                                        address=socket.inet_aton(zeroconf_bind_address),
                                         port=args.port,
                                         weight=0,
                                         priority=0,
