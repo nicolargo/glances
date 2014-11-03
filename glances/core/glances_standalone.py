@@ -23,7 +23,7 @@
 from glances.core.glances_globals import logger
 from glances.core.glances_stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCurses
-from glances.core.glances_globals import glances_processes
+from glances.core.glances_globals import glances_processes, is_windows
 
 
 class GlancesStandalone(object):
@@ -50,7 +50,7 @@ class GlancesStandalone(object):
             glances_processes.set_process_filter(args.process_filter)
 
         # Ignore kernel threads in process list
-        if args.no_kernel_threads:
+        if (not is_windows) and args.no_kernel_threads:
             glances_processes.disable_kernel_threads()
 
         # Initial system informations update
