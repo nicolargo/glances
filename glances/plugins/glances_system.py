@@ -94,6 +94,13 @@ class Plugin(GlancesPlugin):
                 self.stats['os_version'] = ' '.join(os_version[::2])
             else:
                 self.stats['os_version'] = ""
+            # Add human readable name
+            self.stats['hr_name'] = self.stats['os_name']
+            self.stats['hr_name'] += ' ' + self.stats['os_version']
+            if self.stats['os_name'] == "Linux":
+                self.stats['hr_name'] = self.stats['linux_distro']
+            self.stats['hr_name'] += ' (' + self.stats['platform'] + ')'
+
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             try:
@@ -108,7 +115,9 @@ class Plugin(GlancesPlugin):
                     if re.search(r, self.stats['system_name']):
                         self.stats['os_name'] = v 
                         break
-
+            # Add human readable name
+            self.stats['hr_name'] = self.stats['os_name']
+            
         return self.stats
 
     def msg_curse(self, args=None):

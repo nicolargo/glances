@@ -86,12 +86,18 @@ class GlancesClientBrowser(object):
                             _("Couldn't create socket {0}: {1}").format(uri, e))
                     else:
                         try:
+                            # LOAD
                             self.get_servers_list()[k]['load_min5'] = json.loads(
                                 s.getLoad())['min5']
+                            # CPU%
                             self.get_servers_list()[k][
                                 'cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
+                            # MEM%
                             self.get_servers_list()[k]['mem_percent'] = json.loads(
                                 s.getMem())['percent']
+                            # OS (human readable name)
+                            self.get_servers_list()[k]['hr_name'] = json.loads(
+                                s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
                             logger.warning(
                                 _("Can not grab stats form {0}: {1}").format(uri, e))
