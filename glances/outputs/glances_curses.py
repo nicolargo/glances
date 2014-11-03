@@ -396,13 +396,14 @@ class GlancesCurses(object):
         #================================
 
         # Table of table
-        # Item description: [statsid, column name, column size]
+        # Item description: [stats_id, column name, column size]
         column_def = [
             ['name', _('Name'), 16],
-            ['ip', _('IP'), 15],
             ['load_min5', _('LOAD'), 6],
             ['cpu_percent', _('CPU%'), 5],
-            ['mem_percent', _('MEM%'), 5],            
+            ['mem_percent', _('MEM%'), 5],
+            ['ip', _('IP'), 15],
+            ['hr_name', _('OS'), 16],
         ]
         y = 2
 
@@ -412,7 +413,7 @@ class GlancesCurses(object):
         for c in column_def:
             # Display server name
             self.term_window.addnstr(y, xc,
-                                     "%s" % c[1].split('_')[0].capitalize(),
+                                     c[1],
                                      screen_x - x,
                                      self.__colors_list['BOLD'])
             xc += c[2] + 2

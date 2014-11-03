@@ -95,12 +95,6 @@ class GlancesAutoDiscoverListener(object):
             new_server_ip = socket.inet_ntoa(info.getAddress())
             new_server_port = info.getPort()
 
-            # !!! Only for dev
-            # new_server_name = info.getServer()
-            prop = info.getProperties()
-            if prop:
-                logger.debug("Zeroconf properties are %s" % prop)
-
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
             logger.info("New Glances server detected (%s from %s:%s)" %
