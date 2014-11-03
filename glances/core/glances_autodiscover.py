@@ -55,13 +55,19 @@ class AutoDiscovered(object):
 
     def add_server(self, name, ip, port):
         """Add a new server to the dict"""
-        self._server_dict[name] = {'name': name.split(':')[0], 'ip': ip, 'port': port}
-        logger.debug("Servers list: %s" % self._server_dict)
+        try:
+            self._server_dict[name] = {'name': name.split(':')[0], 'ip': ip, 'port': port}
+            logger.debug("Servers list: %s" % self._server_dict)
+        except KeyError:
+            pass
 
     def remove_server(self, name):
         """Remove a server from the dict"""
-        del(self._server_dict[name])
-        logger.debug("Servers list: %s" % self._server_dict)
+        try:
+            del(self._server_dict[name])
+            logger.debug("Servers list: %s" % self._server_dict)
+        except KeyError:
+            pass
 
 
 class GlancesAutoDiscoverListener(object):
@@ -150,7 +156,8 @@ class GlancesAutoDiscoverClient(object):
                 zeroconf_bind_address = netifaces.ifaddresses(netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
             except:
                 zeroconf_bind_address = args.bind_address
-            # /!!!
+            print("Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
+            # /!!!            
 
             if zeroconf_tag:
                 logger.info(
