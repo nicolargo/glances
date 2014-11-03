@@ -90,6 +90,7 @@ class GlancesAutoDiscoverListener(object):
         if srv_type != zeroconf_type:
             return False
         info = zeroconf.getServiceInfo(srv_type, srv_name)
+        logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
         if info:
             new_server_ip = socket.inet_ntoa(info.getAddress())
             new_server_port = info.getPort()
