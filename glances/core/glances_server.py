@@ -23,6 +23,7 @@
 import json
 import socket
 import sys
+import time
 from base64 import b64decode
 try:
     from xmlrpc.server import SimpleXMLRPCRequestHandler
@@ -215,7 +216,8 @@ class GlancesServer(object):
         self.server.register_introspection_functions()
         self.server.register_instance(GlancesInstance(cached_time, config))
 
-        # Announce the server to the network
+        # Announce the server to the network (wait 1 seond before do this)
+        time.sleep(1)
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
             self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname(), args)
