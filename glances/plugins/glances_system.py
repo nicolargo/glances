@@ -111,13 +111,13 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
             if self.get_short_system_name() == 'windows':
-                for r,v in snmp_to_human['windows'].iteritems():
+                for r, v in snmp_to_human['windows'].iteritems():
                     if re.search(r, self.stats['system_name']):
-                        self.stats['os_name'] = v 
+                        self.stats['os_name'] = v
                         break
             # Add human readable name
             self.stats['hr_name'] = self.stats['os_name']
-            
+
         return self.stats
 
     def msg_curse(self, args=None):
