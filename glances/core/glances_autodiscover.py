@@ -21,6 +21,7 @@
 
 # Import system libs
 import socket
+import time
 try:
     import netifaces
     netifaces_tag = True
@@ -99,6 +100,7 @@ class GlancesAutoDiscoverListener(object):
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
             logger.info("New Glances server detected (%s from %s:%s)" %
                         (srv_name, new_server_ip, new_server_port))
+            time.sleep(3)
         else:
             logger.warning(
                 "New Glances server detected, but Zeroconf info failed to be grabbed")
@@ -145,8 +147,6 @@ class GlancesAutoDiscoverClient(object):
     def __init__(self, hostname, args=None):
         if netifaces_tag:
             # !!! TO BE REFACTOR
-            # OK with server: LANGUAGE=en_US.utf8 python -m glances -s -d -B 192.168.176.128
-            # KO with server: LANGUAGE=en_US.utf8 python -m glances -s -d
             try:
                 zeroconf_bind_address = netifaces.ifaddresses(netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
             except:
