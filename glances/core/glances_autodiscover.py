@@ -46,6 +46,7 @@ class AutoDiscovered(object):
 
     def __init__(self):
         # server_dict is a dict of dict
+        # !!! server_dict SHOULD BE REFACTOR to list of dict to be JSON compliant
         # key: ip:port
         # value: {'cpu': 3, 'mem': 34 ...}
         self._server_dict = {}
@@ -90,8 +91,8 @@ class GlancesAutoDiscoverListener(object):
         """
         if srv_type != zeroconf_type:
             return False
-        info = zeroconf.getServiceInfo(srv_type, srv_name)
         logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
+        info = zeroconf.getServiceInfo(srv_type, srv_name)
         if info:
             new_server_ip = socket.inet_ntoa(info.getAddress())
             new_server_port = info.getPort()
@@ -100,7 +101,6 @@ class GlancesAutoDiscoverListener(object):
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
             logger.info("New Glances server detected (%s from %s:%s)" %
                         (srv_name, new_server_ip, new_server_port))
-            time.sleep(3)
         else:
             logger.warning(
                 "New Glances server detected, but Zeroconf info failed to be grabbed")
