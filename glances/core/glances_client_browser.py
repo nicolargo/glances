@@ -78,7 +78,7 @@ class GlancesClientBrowser(object):
                     # Configure the server timeout to 3 seconds
                     t = GlancesClientTransport()
                     t.set_timeout(3)
-                    # !!! How to manage password protecttion ??? Disable autodiscover if password is set ?
+                    # !!! How to manage password protection ??? Disable autodiscover if password is set ?
                     try:
                         s = ServerProxy(uri, t)
                     except Exception as e:
