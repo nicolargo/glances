@@ -25,6 +25,81 @@ from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 import psutil
 import re
 
+PROCESS_TREE = True  # TODO remove that and take command line parameter
+
+
+class ProcessTreeNode(object):
+
+    def __init__(self, process=None):
+        self.process = process  # is None for tree root node
+        self.children = []
+
+    def __str__(self):
+      """ Return the tree as text for debugging. """
+      lines = []
+      is_root = self.process is None
+      if is_root:
+        lines.append("#")
+      else:
+        lines.append("[%s]" % (self.process.name()))
+      indent_str = " " * len(lines[-1])
+      child_lines = []
+      for child in self.children:
+        for i, line in enumerate(str(child).splitlines()):
+          if i == 0:
+            if child is self.children[0]:
+              if len(self.children) == 1:
+                tree_char = "─"
+              else:
+                tree_char = "┌"
+            elif child is self.children[-1]:
+              tree_char = "└"
+            else:
+              tree_char = "├"
+            child_lines.append(tree_char + "─ " + line)
+          else:
+            if is_root:
+              child_lines.append("│ " + indent_str + line)
+            else:
+              child_lines.append(indent_str + line)
+      if child_lines:
+        lines[-1] += child_lines[0]
+        for child_line in child_lines[1:]:
+          lines.append(indent_str + child_line)
+      return "\n".join(lines)
+
+    def findProcess(self, process):
+        """ Search in tree for the ProcessTreeNode owning process, and return it or None if not found. """
+        assert(process is not None)
+        if self.process is process:
+            return self
+        for child in self.children:
+            node = child.findProcess(process)
+            if node is not None:
+                return node
+
+    @staticmethod
+    def buildTree(processes):
+        """ Build a process tree using using parent/child relationships, and return the root node. """
+        tree_root = ProcessTreeNode()
+        for process in processes:
+            assert(process is not None)
+            new_node = ProcessTreeNode(process)
+            parent_process = process.parent()
+            if parent_process is None:
+                # no parent, add this node at the top level
+                tree_root.children.append(new_node)
+            else:
+                parent_node = tree_root.findProcess(parent_process)
+                if parent_node is not None:
+                    # parent is already in the tree, add a new child
+                    parent_node.children.append(new_node)   # marche pas
+                else:
+                    # parent is not in tree, add this node at the top level
+                    tree_root.children.append(new_node)
+        return tree_root
+
+
 
 class GlancesProcesses(object):
 
@@ -382,6 +457,11 @@ class GlancesProcesses(object):
                 self.processcount['thread'] += proc.num_threads()
             except:
                 pass
+
+        if PROCESS_TREE:
+            tree = ProcessTreeNode.buildTree(processdict.keys())
+            print(tree)
+            exit(0)
 
         # Process optimization
         # Only retreive stats for visible processes (get_max_processes)
