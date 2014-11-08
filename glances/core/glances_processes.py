@@ -71,7 +71,7 @@ class ProcessTreeNode(object):
     def findProcess(self, process):
         """ Search in tree for the ProcessTreeNode owning process, and return it or None if not found. """
         assert(process is not None)
-        if self.process is process:
+        if (self.process is not None) and (self.process.pid == process.pid):
             return self
         for child in self.children:
             node = child.findProcess(process)
