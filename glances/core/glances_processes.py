@@ -22,8 +22,10 @@ from glances.core.glances_globals import is_linux, is_bsd, is_mac, is_windows, l
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 
 # Import Python lib
+import collections
 import psutil
 import re
+import sys
 
 PROCESS_TREE = True  # TODO remove that and take command line parameter
 
@@ -34,6 +36,7 @@ class ProcessTreeNode(object):
         self.process = process
         self.stats = stats
         self.children = []
+        self.children_sorted = False
         self.sort_key = sort_key
         self.is_root = root
 
@@ -60,15 +63,41 @@ class ProcessTreeNode(object):
                         tree_char = "├"
                     child_lines.append(tree_char + "─ " + line)
                 else:
-                  if self.is_root:
-                      child_lines.append("│ " + indent_str + line)
-                  else:
-                      child_lines.append(indent_str + line)
+                    if self.is_root:
+                        child_lines.append("│ " + indent_str + line)
+                    else:
+                        child_lines.append(indent_str + line)
         if child_lines:
             lines[-1] += child_lines[0]
             for child_line in child_lines[1:]:
                 lines.append(indent_str + child_line)
         return "\n".join(lines)
+
+    def getRessourceUsage(self):
+        """ Return ressource usage for a process and all its children. """
+        # special case for root
+        if self.is_root:
+            return sys.maxsize
+
+        # sum ressource usage for self and other
+        total = 0
+        nodes_to_sum = collections.deque([self])
+        while nodes_to_sum:
+            current_node = nodes_to_sum.pop()
+            total += current_node.stats[self.sort_key]
+            nodes_to_sum.extend(current_node.children)
+
+        return total
+
+    def __iter__(self):
+        """ Iterator returning ProcessTreeNode in sorted order. """
+        if not self.is_root:
+            yield self
+        if not self.children_sorted:
+            self.children.sort(key=__class__.getRessourceUsage, reverse=True)
+            self.children_sorted = True
+        for child in self.children:
+            yield from iter(child)
 
     def findProcess(self, process):
         """ Search in tree for the ProcessTreeNode owning process, return it or None if not found. """
@@ -98,7 +127,6 @@ class ProcessTreeNode(object):
                     # parent is not in tree, add this node at the top level
                     tree_root.children.append(new_node)
         return tree_root
-
 
 
 class GlancesProcesses(object):
@@ -459,25 +487,28 @@ class GlancesProcesses(object):
                 pass
 
         if PROCESS_TREE:
-            tree = ProcessTreeNode.buildTree(processdict, self.getsortkey())
-            print(tree)
-            exit(0)
+            self.process_tree = ProcessTreeNode.buildTree(processdict, self.getsortkey())
 
         # Process optimization
         # Only retreive stats for visible processes (get_max_processes)
         if self.get_max_processes() is not None:
             # Sort the internal dict and cut the top N (Return a list of tuple)
             # tuple=key (proc), dict (returned by __get_process_stats)
-            try:
-                processiter = sorted(
-                    processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
-            except TypeError:
-                # Fallback to all process (issue #423)
-                processloop = processdict.items()
-                first = False
-            else:
+            if PROCESS_TREE:
+                processiter = [[n.process, n.stats] for n in iter(self.process_tree)]
                 processloop = processiter[0:self.get_max_processes()]
                 first = True
+            else:
+                try:
+                    processiter = sorted(
+                        processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+                except TypeError:
+                    # Fallback to all process (issue #423)
+                    processloop = processdict.items()
+                    first = False
+                else:
+                    processloop = processiter[0:self.get_max_processes()]
+                    first = True
         else:
             # Get all processes stats
             processloop = processdict.items()
