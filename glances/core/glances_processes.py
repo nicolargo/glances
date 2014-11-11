@@ -209,6 +209,8 @@ class GlancesProcesses(object):
         # Whether or not to hide kernel threads
         self.no_kernel_threads = False
 
+        self.process_tree = None
+
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -525,16 +527,28 @@ class GlancesProcesses(object):
         if PROCESS_TREE:
             self.process_tree = ProcessTreeNode.buildTree(processdict, self.getsortkey())
 
-        # Process optimization
-        # Only retreive stats for visible processes (get_max_processes)
-        if self.get_max_processes() is not None:
-            # Sort the internal dict and cut the top N (Return a list of tuple)
-            # tuple=key (proc), dict (returned by __get_process_stats)
-            if PROCESS_TREE:
-                processiter = [[n.process, n.stats] for n in iter(self.process_tree)]
-                processloop = processiter[0:self.get_max_processes()]
-                first = True
-            else:
+            for i, node in enumerate(self.process_tree):
+                # Only retreive stats for visible processes (get_max_processes)
+                # if (self.get_max_processes() is not None) and (i >= self.get_max_processes()):
+                #     break
+
+                # add standard stats
+                new_stats = self.__get_process_stats(node.process,
+                                                     mandatory_stats=False,
+                                                     standard_stats=True,
+                                                     extended_stats=False)
+                if new_stats is not None:
+                    node.stats.update(new_stats)
+
+                # Add a specific time_since_update stats for bitrate
+                node.stats['time_since_update'] = time_since_update
+
+        else:
+            # Process optimization
+            # Only retreive stats for visible processes (get_max_processes)
+            if self.get_max_processes() is not None:
+                # Sort the internal dict and cut the top N (Return a list of tuple)
+                # tuple=key (proc), dict (returned by __get_process_stats)
                 try:
                     processiter = sorted(
                         processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
@@ -545,29 +559,29 @@ class GlancesProcesses(object):
                 else:
                     processloop = processiter[0:self.get_max_processes()]
                     first = True
-        else:
-            # Get all processes stats
-            processloop = processdict.items()
-            first = False
-        for i in processloop:
-            # Already existing mandatory stats
-            procstat = i[1]
-            if self.get_max_processes() is not None:
-                # Update with standard stats
-                # and extended stats but only for TOP (first) process
-                s = self.__get_process_stats(i[0],
-                                             mandatory_stats=False,
-                                             standard_stats=True,
-                                             extended_stats=first)
-                if s is None:
-                    continue
-                procstat.update(s)
-            # Add a specific time_since_update stats for bitrate
-            procstat['time_since_update'] = time_since_update
-            # Update process list
-            self.processlist.append(procstat)
-            # Next...
-            first = False
+            else:
+                # Get all processes stats
+                processloop = processdict.items()
+                first = False
+            for i in processloop:
+                # Already existing mandatory stats
+                procstat = i[1]
+                if self.get_max_processes() is not None:
+                    # Update with standard stats
+                    # and extended stats but only for TOP (first) process
+                    s = self.__get_process_stats(i[0],
+                                                 mandatory_stats=False,
+                                                 standard_stats=True,
+                                                 extended_stats=first)
+                    if s is None:
+                        continue
+                    procstat.update(s)
+                # Add a specific time_since_update stats for bitrate
+                procstat['time_since_update'] = time_since_update
+                # Update process list
+                self.processlist.append(procstat)
+                # Next...
+                first = False
 
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():
@@ -583,6 +597,10 @@ class GlancesProcesses(object):
     def getlist(self, sortedby=None):
         """Get the processlist."""
         return self.processlist
+
+    def gettree(self):
+        """Get the process tree."""
+        return self.process_tree
 
     def getsortkey(self):
         """Get the current sort key"""
