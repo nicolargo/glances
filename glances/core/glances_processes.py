@@ -41,7 +41,11 @@ class ProcessTreeNode(object):
         self.is_root = root
 
     def __str__(self):
-        """ Return the tree as a string for debugging. """
+        """
+        Return the tree as a string for debugging.
+
+        Indentation is currently buggy (often off by a few chars).
+        """
         lines = []
         if self.is_root:
             lines.append("#")
@@ -112,9 +116,16 @@ class ProcessTreeNode(object):
     def buildTree(process_dict, sort_key):
         """ Build a process tree using using parent/child relationships, and return the tree root node. """
         tree_root = ProcessTreeNode(root=True)
+        nodes_to_add_last = collections.deque()
+
+        # first pass: build tree structure
         for process, stats in process_dict.items():
             new_node = ProcessTreeNode(process, stats, sort_key)
-            parent_process = process.parent()
+            try:
+                parent_process = process.parent()
+            except psutil.NoSuchProcess:
+                # parent is dead, consider no parent
+                parent_process = None
             if parent_process is None:
                 # no parent, add this node at the top level
                 tree_root.children.append(new_node)
@@ -124,8 +135,26 @@ class ProcessTreeNode(object):
                     # parent is already in the tree, add a new child
                     parent_node.children.append(new_node)
                 else:
-                    # parent is not in tree, add this node at the top level
-                    tree_root.children.append(new_node)
+                    # parent is not in tree, add this node later
+                    nodes_to_add_last.append(new_node)
+
+        # next pass(es): add nodes to their parents if it could not be done in previous pass
+        while nodes_to_add_last:
+            node_to_add = nodes_to_add_last.popleft()
+            try:
+                parent_process = node_to_add.process.parent()
+            except psutil.NoSuchProcess:
+                # parent is dead, consider no parent, add this node at the top level
+                tree_root.children.append(node_to_add)
+            else:
+                parent_node = tree_root.findProcess(parent_process)
+                if parent_node is not None:
+                    # parent is already in the tree, add a new child
+                    parent_node.children.append(node_to_add)
+                else:
+                    # parent is not in tree, add this node later
+                    nodes_to_add_last.append(node_to_add)
+
         return tree_root
 
 
