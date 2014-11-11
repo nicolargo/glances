@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
             if not node.is_root:
                 # TODO remove msg index hardcoding
                 child_data[12]["msg"] = "%s%s" % (prefix, child_data[12]["msg"])
-                # TODO this code an ugly hack and should be reworked
+                # TODO this code is an ugly hack and should be reworked
                 i = 0
                 for m in child_data:
                     if m["msg"] == "\n":
@@ -108,7 +108,7 @@ class Plugin(GlancesPlugin):
                             if add:
                                 old_str = m["msg"]
                                 if first_level:
-                                    m["msg"] = " │" + old_str[1:]
+                                    m["msg"] = " │" + old_str[2:]
                                 else:
                                     m["msg"] = old_str[:3] + "│" + old_str[4:]
                             else:
