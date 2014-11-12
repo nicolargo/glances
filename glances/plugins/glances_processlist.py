@@ -77,14 +77,13 @@ class Plugin(GlancesPlugin):
             node_data = self.get_process_curses_data(node.stats, False, args)
             node_count += 1
             ret.extend(node_data)
-        for i, child in enumerate(node.children):
+        for child in node.children:
             # stop if we have enough nodes to display
             if (max_node_count is not None) and (node_count >= max_node_count):
                 break
 
             has_other_children = False
-            if ((len(node.children) == 1) or   # only one child process
-                (i == len(node.children) - 1)):  # last child process
+            if child is node.children[-1]:
                 prefix = "└─"
             else:
                 prefix = "├─"
