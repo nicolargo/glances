@@ -100,6 +100,17 @@ class ProcessTreeNode(object):
 
         return total
 
+    def __len__(self):
+        """Return the number of nodes in the tree starting from this node."""
+        total = 0
+        nodes_to_sum = collections.deque([self])
+        while nodes_to_sum:
+            current_node = nodes_to_sum.pop()
+            if not current_node.is_root:
+                total += 1
+            nodes_to_sum.extend(current_node.children)
+        return total
+
     def __iter__(self):
         """ Iterator returning ProcessTreeNode in sorted order. """
         if not self.is_root:
@@ -529,8 +540,8 @@ class GlancesProcesses(object):
 
             for i, node in enumerate(self.process_tree):
                 # Only retreive stats for visible processes (get_max_processes)
-                # if (self.get_max_processes() is not None) and (i >= self.get_max_processes()):
-                #     break
+                if (self.get_max_processes() is not None) and (i >= self.get_max_processes()):
+                    break
 
                 # add standard stats
                 new_stats = self.__get_process_stats(node.process,

@@ -19,6 +19,8 @@
 
 """Curses interface class."""
 
+PROCESS_TREE = True
+
 # Import system lib
 import sys
 
@@ -423,7 +425,7 @@ class GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
             self.get_stats_display_height(stats_alert)
-        if self.args.enable_process_extended:
+        if self.args.enable_process_extended and not PROCESS_TREE:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
             max_processes_displayed = 0

@@ -70,12 +70,18 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_process_tree_curses_data(self, node, args, first_level=True):
+    def get_process_tree_curses_data(self, node, args, first_level=True, max_node_count=None):
         ret = []
-        if not node.is_root:
+        node_count = 0
+        if (not node.is_root) and ((max_node_count is None) or (max_node_count > 0)):
             node_data = self.get_process_curses_data(node.stats, False, args)
+            node_count += 1
             ret.extend(node_data)
         for i, child in enumerate(node.children):
+            # stop if we have enough nodes to display
+            if (max_node_count is not None) and (node_count >= max_node_count):
+                break
+
             has_other_children = False
             if ((len(node.children) == 1) or   # only one child process
                 (i == len(node.children) - 1)):  # last child process
@@ -83,7 +89,20 @@ class Plugin(GlancesPlugin):
             else:
                 prefix = "├─"
                 has_other_children = True
-            child_data = self.get_process_tree_curses_data(child, args, node.is_root)
+
+            if max_node_count is None:
+                children_max_node_count = None
+            else:
+                children_max_node_count = max_node_count - node_count
+            child_data = self.get_process_tree_curses_data(child,
+                                                           args,
+                                                           first_level=node.is_root,
+                                                           max_node_count=children_max_node_count)
+            if max_node_count is None:
+                node_count += len(child)
+            else:
+                node_count += min(children_max_node_count, len(child))
+
             if not node.is_root:
                 # TODO remove msg index hardcoding
                 child_data[12]["msg"] = "%s%s" % (prefix, child_data[12]["msg"])
@@ -365,7 +384,10 @@ class Plugin(GlancesPlugin):
         self.tag_proc_time = True
 
         if PROCESS_TREE:
-            ret.extend(self.get_process_tree_curses_data(self.sortlist(process_sort_key), args))
+            ret.extend(self.get_process_tree_curses_data(self.sortlist(process_sort_key),
+                                                         args,
+                                                         first_level=True,
+                                                         max_node_count=glances_processes.get_max_processes()))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
