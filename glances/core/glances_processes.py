@@ -32,6 +32,12 @@ PROCESS_TREE = True  # TODO remove that and take command line parameter
 
 class ProcessTreeNode(object):
 
+    """
+    Represent a process tree.
+
+    We avoid recursive algorithm to manipulate the tree because function calls are expensive with CPython.
+    """
+
     def __init__(self, process=None, stats=None, sort_key=None, root=False):
         self.process = process
         self.stats = stats
@@ -123,12 +129,12 @@ class ProcessTreeNode(object):
 
     def findProcess(self, process):
         """ Search in tree for the ProcessTreeNode owning process, return it or None if not found. """
-        if (not self.is_root) and (self.process.pid == process.pid):
-            return self
-        for child in self.children:
-            node = child.findProcess(process)
-            if node is not None:
-                return node
+        nodes_to_search = collections.deque([self])
+        while nodes_to_search:
+            current_node = nodes_to_search.pop()
+            if (not current_node.is_root) and (current_node.process.pid == process.pid):
+                return current_node
+            nodes_to_search.extend(current_node.children)
 
     @staticmethod
     def buildTree(process_dict, sort_key):
