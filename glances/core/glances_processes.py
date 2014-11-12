@@ -48,40 +48,27 @@ class ProcessTreeNode(object):
         self.is_root = root
 
     def __str__(self):
-        """
-        Return the tree as a string for debugging.
-
-        Indentation is currently buggy (often off by a few chars).
-        """
+        """ Return the tree as a string for debugging. """
         lines = []
-        if self.is_root:
-            lines.append("#")
-        else:
-            lines.append("[%s]" % (self.process.name()))
-        indent_str = " " * len(lines[-1])
-        child_lines = []
-        for child in self.children:
-            for i, line in enumerate(str(child).splitlines()):
-                if i == 0:
-                    if child is self.children[0]:
-                        if len(self.children) == 1:
-                            tree_char = "─"
-                        else:
-                            tree_char = "┌"
-                    elif child is self.children[-1]:
-                        tree_char = "└"
-                    else:
-                        tree_char = "├"
-                    child_lines.append(tree_char + "─ " + line)
+        nodes_to_print = collections.deque([collections.deque([("#", self)])])
+        while nodes_to_print:
+            indent_str, current_node = nodes_to_print[-1].pop()
+            if not nodes_to_print[-1]:
+                nodes_to_print.pop()
+            if current_node.is_root:
+                lines.append(indent_str)
+            else:
+                lines.append("%s[%s]" % (indent_str, current_node.process.name()))
+            indent_str = " " * (len(lines[-1]) -1)
+            children_nodes_to_print = collections.deque()
+            for child in current_node.children:
+                if child is current_node.children[-1]:
+                    tree_char = "└─"
                 else:
-                    if self.is_root:
-                        child_lines.append("│ " + indent_str + line)
-                    else:
-                        child_lines.append(indent_str + line)
-        if child_lines:
-            lines[-1] += child_lines[0]
-            for child_line in child_lines[1:]:
-                lines.append(indent_str + child_line)
+                    tree_char = "├─"
+                children_nodes_to_print.appendleft((indent_str + tree_char, child))
+            if children_nodes_to_print:
+                nodes_to_print.append(children_nodes_to_print)
         return "\n".join(lines)
 
     def setSorting(self, key, reverse):
@@ -107,7 +94,7 @@ class ProcessTreeNode(object):
         return total
 
     def __len__(self):
-        """Return the number of nodes in the tree starting from this node."""
+        """Return the number of nodes in the tree."""
         total = 0
         nodes_to_sum = collections.deque([self])
         while nodes_to_sum:
