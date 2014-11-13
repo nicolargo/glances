@@ -77,7 +77,7 @@ class Plugin(GlancesPlugin):
             node_data = self.get_process_curses_data(node.stats, False, args)
             node_count += 1
             ret.extend(node_data)
-        for child in node.children:
+        for child in node.iterChildren():
             # stop if we have enough nodes to display
             if (max_node_count is not None) and (node_count >= max_node_count):
                 break

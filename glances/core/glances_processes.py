@@ -71,11 +71,15 @@ class ProcessTreeNode(object):
         return "\n".join(lines)
 
     def setSorting(self, key, reverse):
-        """ Set sorting key or func for user with __iter__. """
+        """ Set sorting key or func for user with __iter__ (affects the whole tree from this node). """
         if (self.sort_key != key) or (self.reverse_sorting != reverse):
-            self.children_sorted = False
-        self.sort_key = key
-        self.reverse_sorting = reverse
+            nodes_to_flag_unsorted = collections.deque([self])
+            while nodes_to_flag_unsorted:
+                current_node = nodes_to_flag_unsorted.pop()
+                current_node.children_sorted = False
+                current_node.sort_key = key
+                current_node.reverse_sorting = reverse
+                nodes_to_flag_unsorted.extend(current_node.children)
 
     def getWeight(self):
         """ Return "weight" of a process and all its children for sorting. """
@@ -110,7 +114,7 @@ class ProcessTreeNode(object):
         return total
 
     def __iter__(self):
-        """ Iterator returning ProcessTreeNode in sorted order. """
+        """ Iterator returning ProcessTreeNode in sorted order, recursively. """
         if not self.is_root:
             yield self
         if not self.children_sorted:
@@ -120,6 +124,23 @@ class ProcessTreeNode(object):
             self.children_sorted = True
         for child in self.children:
             yield from iter(child)
+
+    def iterChildren(self, exclude_incomplete_stats=True):
+        """
+        Iterator returning ProcessTreeNode in sorted order (only children of this node, non recursive).
+
+        If exclude_incomplete_stats is True, exclude processes not having full statistics.
+        It can happen after a resort (change of sort key) because process stats are not grabbed immediately,
+        but only at next full update.
+        """
+        if not self.children_sorted:
+            # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
+            # and once before displaying)
+            self.children.sort(key=__class__.getWeight, reverse=self.reverse_sorting)
+            self.children_sorted = True
+        for child in self.children:
+            if (not exclude_incomplete_stats) or ("time_since_update" in child.stats):
+                yield child
 
     def findProcess(self, process):
         """ Search in tree for the ProcessTreeNode owning process, return it or None if not found. """
@@ -158,7 +179,7 @@ class ProcessTreeNode(object):
 
         # next pass(es): add nodes to their parents if it could not be done in previous pass
         while nodes_to_add_last:
-            node_to_add = nodes_to_add_last.popleft()
+            node_to_add = nodes_to_add_last.popleft()  # pop from left and append to right to avoid infinite loop
             try:
                 parent_process = node_to_add.process.parent()
             except psutil.NoSuchProcess:
@@ -197,6 +218,7 @@ class GlancesProcesses(object):
         self.io_old = {}
 
         # Init stats
+        self.process_tree = None
         self.resetsort()
         self.processlist = []
         self.processcount = {
@@ -219,8 +241,6 @@ class GlancesProcesses(object):
 
         # Whether or not to hide kernel threads
         self.no_kernel_threads = False
-
-        self.process_tree = None
 
     def enable(self):
         """Enable process stats."""
@@ -631,6 +651,8 @@ class GlancesProcesses(object):
     def setmanualsortkey(self, sortedby):
         """Set the current sort key for manual sort."""
         self.processmanualsort = sortedby
+        if PROCESS_TREE and (self.process_tree is not None):
+            self.process_tree.setSorting(sortedby, sortedby != "name")
         return self.processmanualsort
 
     def setautosortkey(self, sortedby):
