@@ -383,14 +383,14 @@ class Plugin(GlancesPlugin):
         self.tag_proc_time = True
 
         if PROCESS_TREE:
-            ret.extend(self.get_process_tree_curses_data(self.sortlist(process_sort_key),
+            ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
                                                          args,
                                                          first_level=True,
                                                          max_node_count=glances_processes.get_max_processes()))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
-            for p in self.sortlist(process_sort_key):
+            for p in self.sortstats(process_sort_key):
                 ret.extend(self.get_process_curses_data(p, first, args))
                 # End of extended stats
                 first = False
@@ -398,20 +398,17 @@ class Plugin(GlancesPlugin):
         # Return the message with decoration
         return ret
 
-    def sortlist(self, sortedby=None):
+    def sortstats(self, sortedby=None):
         """Return the stats sorted by sortedby variable."""
         if sortedby is None:
             # No need to sort...
             return self.stats
 
-        if PROCESS_TREE:
-            return self.stats  # TODO fix that and implement dynamic sorting
-
         sortedreverse = True
         if sortedby == 'name':
             sortedreverse = False
 
-        if sortedby == 'io_counters':
+        if sortedby == 'io_counters' and not PROCESS_TREE:
             # Specific case for io_counters
             # Sum of io_r + io_w
             try:
@@ -427,15 +424,19 @@ class Plugin(GlancesPlugin):
                                     reverse=sortedreverse)
         else:
             # Others sorts
-            try:
-                listsorted = sorted(self.stats,
-                                    key=lambda process: process[sortedby],
-                                    reverse=sortedreverse)
-            except (KeyError, TypeError):
-                listsorted = sorted(self.stats,
-                                    key=lambda process: process['name'],
-                                    reverse=False)
+            if PROCESS_TREE:
+                self.stats.setSorting(sortedby, sortedreverse)
+            else:
+                try:
+                    listsorted = sorted(self.stats,
+                                        key=lambda process: process[sortedby],
+                                        reverse=sortedreverse)
+                except (KeyError, TypeError):
+                    listsorted = sorted(self.stats,
+                                        key=lambda process: process['name'],
+                                        reverse=False)
 
-        self.stats = listsorted
+        if not PROCESS_TREE:
+            self.stats = listsorted
 
         return self.stats
