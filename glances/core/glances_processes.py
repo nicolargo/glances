@@ -25,7 +25,6 @@ from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
 import collections
 import psutil
 import re
-import sys
 
 PROCESS_TREE = True  # TODO remove that and take command line parameter
 
@@ -44,7 +43,7 @@ class ProcessTreeNode(object):
         self.children = []
         self.children_sorted = False
         self.sort_key = sort_key
-        self.reverse_sorting = True
+        self.reverse_sorting = (self.sort_key != "name")
         self.is_root = root
 
     def __str__(self):
@@ -72,23 +71,29 @@ class ProcessTreeNode(object):
         return "\n".join(lines)
 
     def setSorting(self, key, reverse):
+        """ Set sorting key or func for user with __iter__. """
         if (self.sort_key != key) or (self.reverse_sorting != reverse):
             self.children_sorted = False
         self.sort_key = key
         self.reverse_sorting = reverse
 
     def getRessourceUsage(self):
-        """ Return ressource usage for a process and all its children. """
-        # special case for root
-        if self.is_root:
-            return sys.maxsize
+        """ Return "weight" of a process and all its children for sorting. """
+        if self.sort_key == "name":
+            return self.stats[self.sort_key]
 
         # sum ressource usage for self and other
         total = 0
         nodes_to_sum = collections.deque([self])
         while nodes_to_sum:
             current_node = nodes_to_sum.pop()
-            total += current_node.stats[self.sort_key]
+            if callable(self.sort_key):
+                total += self.sort_key(current_node.stats)
+            elif self.sort_key == "io_counters":
+                stats = current_node.stats[self.sort_key]
+                total += stats[0] - stats[2] + stats[1] - stats[3]
+            else:
+                total += current_node.stats[self.sort_key]
             nodes_to_sum.extend(current_node.children)
 
         return total
@@ -109,6 +114,8 @@ class ProcessTreeNode(object):
         if not self.is_root:
             yield self
         if not self.children_sorted:
+            # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
+            # and once before displaying)
             self.children.sort(key=__class__.getRessourceUsage, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
