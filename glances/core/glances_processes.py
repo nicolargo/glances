@@ -82,7 +82,7 @@ class ProcessTreeNode(object):
         if self.sort_key == "name":
             return self.stats[self.sort_key]
 
-        # sum ressource usage for self and other
+        # sum ressource usage for self and children
         total = 0
         nodes_to_sum = collections.deque([self])
         while nodes_to_sum:
