@@ -19,6 +19,8 @@
 
 """Curses interface class."""
 
+# !!! TODO: split GlancesCurses for client and client_browser
+
 # Import system lib
 import sys
 
@@ -194,6 +196,9 @@ class GlancesCurses(object):
                 logger.error(
                     'Stats history disabled because MatPlotLib is not installed')
 
+        # Init the cursor position for the client browser
+        self.cursor_init()
+
     def set_cursor(self, value):
         """Configure the cursor
            0: invisible
@@ -212,6 +217,9 @@ class GlancesCurses(object):
         keycode[0] = window.getch()
         keycode[1] = window.getch()
 
+        if keycode != [-1, -1]:
+            logger.debug("Keypressed ! Code: %s" % keycode)
+
         if keycode[0] == 27 and keycode[1] != -1:
             # Do not escape on specials keys
             return -1
@@ -220,7 +228,6 @@ class GlancesCurses(object):
 
     def __catch_key(self):
         # Catch the pressed key
-        # ~ self.pressedkey = self.term_window.getch()
         self.pressedkey = self.__get_key(self.term_window)
 
         # Actions...
@@ -323,6 +330,48 @@ class GlancesCurses(object):
         # Return the key code
         return self.pressedkey
 
+    def cursor_init(self):
+        """Init the cursor position to the top of the list"""
+        self.cursor_position = 0
+
+    def cursor_get(self):
+        """Return the cursor position"""
+        return self.cursor_position
+
+    def cursor_up(self):
+        """Set the cursor to position N-1 in the list"""
+        if self.cursor_position > 0:
+            self.cursor_position -= 1
+
+    def cursor_down(self, servers_list):
+        """Set the cursor to position N-1 in the list"""
+        if self.cursor_position < len(servers_list) - 1:
+            self.cursor_position += 1
+
+    def __catch_key_browser(self, servers_list):
+        # Catch the browser pressed key
+        self.pressedkey = self.__get_key(self.term_window)
+
+        # Actions...
+        if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
+            # 'ESC'|'q' > Quit
+            self.end()
+            logger.info("Stop Glances client browser")
+            sys.exit(0)
+        elif self.pressedkey == 10:
+            # 'ENTER' > Run Glances on the selected server
+            logger.debug("Line %s selected in the server list" % self.cursor_get())
+        elif self.pressedkey == 259:
+            # 'UP' > Up in the server list
+            logger
+            self.cursor_up()
+        elif self.pressedkey == 258:
+            # 'DOWN' > Down in the server list
+            self.cursor_down(servers_list)
+
+        # Return the key code
+        return self.pressedkey
+
     def end(self):
         """Shutdown the curses window."""
         if hasattr(curses, 'echo'):
@@ -374,9 +423,11 @@ class GlancesCurses(object):
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
 
-        # Display top header
+        # Init position
         x = 0
         y = 0
+
+        # Display top header
         if len(servers_list) == 0:
             msg = _("No Glances server detected on your network")
         elif len(servers_list) == 1:
@@ -409,9 +460,8 @@ class GlancesCurses(object):
 
         # Display table header
         cpt = 0
-        xc = x
+        xc = x + 2
         for c in column_def:
-            # Display server name
             self.term_window.addnstr(y, xc,
                                      c[1],
                                      screen_x - x,
@@ -421,6 +471,7 @@ class GlancesCurses(object):
         y += 1
 
         # Display table
+        line = 0
         try:
             iteritems = servers_list.iteritems()
         except AttributeError:
@@ -433,12 +484,23 @@ class GlancesCurses(object):
                     server_stat[c[0]] = servers_list[k][c[0]]
             except KeyError as e:
                 logger.debug(_("Can not grab stats %s from server (KeyError: %s)") % (c[0], e))
-                continue
+                continue                
+
             # Display line for server stats
             cpt = 0
             xc = x
+
+            # Is the line selected ?
+            if line == self.cursor_get():
+                # Display cursor
+                self.term_window.addnstr(y, xc,
+                                         ">",
+                                         screen_x - x,
+                                         self.__colors_list['BOLD'])
+
+            xc += 2
             for c in column_def:
-                # Display server name
+                # Display server stats
                 self.term_window.addnstr(y, xc,
                                          "%s" % server_stat[c[0]],
                                          screen_x - x,
@@ -447,6 +509,7 @@ class GlancesCurses(object):
                 cpt += 1
             # Next line, next server...
             y += 1
+            line += 1
 
         return True
 
@@ -866,7 +929,7 @@ class GlancesCurses(object):
         countdown = Timer(self.__refresh_time)
         while not countdown.finished():
             # Getkey
-            if self.__catch_key() > -1:
+            if self.__catch_key_browser(servers_list) > -1:
                 # Redraw display
                 self.flush_browser(servers_list)
             # Wait 100ms...

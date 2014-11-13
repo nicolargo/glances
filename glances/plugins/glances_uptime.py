@@ -48,7 +48,7 @@ class Plugin(GlancesPlugin):
 
         # Set the message position
         self.set_align('right')
-        
+
         # Init the stats
         self.reset()
 
@@ -63,7 +63,8 @@ class Plugin(GlancesPlugin):
 
         if self.get_input() == 'local':
             # Update stats using the standard system lib
-            uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
+            uptime = datetime.now() - \
+                datetime.fromtimestamp(psutil.boot_time())
 
             # Convert uptime to string (because datetime is not JSONifi)
             self.stats = str(uptime).split('.')[0]
