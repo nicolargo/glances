@@ -77,7 +77,7 @@ class ProcessTreeNode(object):
         self.sort_key = key
         self.reverse_sorting = reverse
 
-    def getRessourceUsage(self):
+    def getWeight(self):
         """ Return "weight" of a process and all its children for sorting. """
         if self.sort_key == "name":
             return self.stats[self.sort_key]
@@ -116,7 +116,7 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=__class__.getRessourceUsage, reverse=self.reverse_sorting)
+            self.children.sort(key=__class__.getWeight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
             yield from iter(child)
