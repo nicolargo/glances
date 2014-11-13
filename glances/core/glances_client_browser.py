@@ -102,7 +102,8 @@ class GlancesClientBrowser(object):
                             logger.warning(
                                 _("Can not grab stats form {0}: {1}").format(uri, e))
             except RuntimeError:
-                logger.debug(_("Server list dictionnary change inside the loop (wait next update)"))
+                logger.debug(
+                    _("Server list dictionnary change inside the loop (wait next update)"))
 
             # Update the screen
             self.screen.update_browser(self.get_servers_list())
