@@ -45,31 +45,30 @@ class AutoDiscovered(object):
     """Class to manage the auto discovered servers dict"""
 
     def __init__(self):
-        # server_dict is a dict of dict
-        # !!! server_dict SHOULD BE REFACTOR to list of dict to be JSON compliant
-        # key: ip:port
-        # value: {'cpu': 3, 'mem': 34 ...}
-        self._server_dict = {}
+        # server_dict is a list of dict (JSON compliant)
+        # [ {'key': 'zeroconf name', ip': '172.1.2.3', 'port': 61209, 'cpu': 3, 'mem': 34 ...} ... ]
+        self._server_list = []
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
-        return self._server_dict
+        """Return the current server list (list of dict)"""
+        return self._server_list
 
     def add_server(self, name, ip, port):
-        """Add a new server to the dict"""
-        try:
-            self._server_dict[name] = {'name': name.split(':')[0], 'ip': ip, 'port': port}
-            logger.debug("Servers list: %s" % self._server_dict)
-        except KeyError:
-            pass
+        """Add a new server to the list"""
+        new_server = {'key': name, 'name': name.split(':')[0], 'ip': ip, 'port': port}
+        self._server_list.append(new_server)
+        logger.debug("Servers list: %s" % self._server_list)
 
     def remove_server(self, name):
         """Remove a server from the dict"""
-        try:
-            del(self._server_dict[name])
-            logger.debug("Servers list: %s" % self._server_dict)
-        except KeyError:
-            pass
+        for i in self._server_list:
+            if i['key'] == name:
+                try:
+                    self._server_list.remove(i)
+                    logger.debug("Remove server %s from the list" % name)
+                    logger.debug("Updated servers list: %s" % self._server_list)
+                except ValueError:
+                    logger.error("Can not remove server %s from the list" % name)
 
 
 class GlancesAutoDiscoverListener(object):
@@ -81,7 +80,7 @@ class GlancesAutoDiscoverListener(object):
         self.servers = AutoDiscovered()
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
+        """Return the current server list (list of dict)"""
         return self.servers.get_servers_list()
 
     def addService(self, zeroconf, srv_type, srv_name):

@@ -37,7 +37,7 @@ except:
 # Import Glances libs
 from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsClient
-from glances.outputs.glances_curses import GlancesCurses
+from glances.outputs.glances_curses import GlancesCursesClient
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 
 
@@ -164,7 +164,7 @@ class GlancesClient(object):
             self.stats.load_limits(self.config)
 
             # Init screen
-            self.screen = GlancesCurses(args=self.args)
+            self.screen = GlancesCursesClient(args=self.args)
 
         # Return result
         return ret
