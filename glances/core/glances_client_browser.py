@@ -23,14 +23,14 @@
 import json
 import socket
 try:
-    from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
+    from xmlrpc.client import ServerProxy, Fault
 except ImportError:
     # Python 2
-    from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
+    from xmlrpclib import ServerProxy, Fault
 
 # Import Glances libs
 from glances.core.glances_globals import logger
-from glances.outputs.glances_curses import GlancesCurses
+from glances.outputs.glances_curses import GlancesCursesBrowser
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClientTransport
 
@@ -49,7 +49,7 @@ class GlancesClientBrowser(object):
             self.autodiscover_server = GlancesAutoDiscoverServer()
 
         # Init screen
-        self.screen = GlancesCurses(args=self.args)
+        self.screen = GlancesCursesBrowser(args=self.args)
 
     def get_servers_list(self):
         """Return the current server list (dict of dict)"""
@@ -66,15 +66,9 @@ class GlancesClientBrowser(object):
             # For each server in the list, grab elementary stats (CPU, LOAD, MEM)
             # logger.debug(self.get_servers_list())
             try:
-                iteritems = self.get_servers_list().iteritems()
-            except AttributeError:
-                iteritems = self.get_servers_list().items()
-            # Dictionnary can change size during iteration...
-            try:
-                for k, v in iteritems:
+                for v in self.get_servers_list():
                     # !!! Perhaps, it will be better to store the ServerProxy instance in the get_servers_list
-                    uri = 'http://%s:%s' % (self.get_servers_list()
-                                            [k]['ip'], self.get_servers_list()[k]['port'])
+                    uri = 'http://%s:%s' % (v['ip'], v['port'])
                     # Configure the server timeout to 3 seconds
                     t = GlancesClientTransport()
                     t.set_timeout(3)
@@ -82,31 +76,25 @@ class GlancesClientBrowser(object):
                     try:
                         s = ServerProxy(uri, t)
                     except Exception as e:
-                        logger.warning(
-                            _("Couldn't create socket {0}: {1}").format(uri, e))
+                        logger.warning("Couldn't create socket {0}: {1}".format(uri, e))
                     else:
                         try:
                             # LOAD
-                            self.get_servers_list()[k]['load_min5'] = json.loads(
-                                s.getLoad())['min5']
+                            v['load_min5'] = json.loads(s.getLoad())['min5']
                             # CPU%
-                            self.get_servers_list()[k][
-                                'cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
+                            v['cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
                             # MEM%
-                            self.get_servers_list()[k]['mem_percent'] = json.loads(
-                                s.getMem())['percent']
+                            v['mem_percent'] = json.loads(s.getMem())['percent']
                             # OS (human readable name)
-                            self.get_servers_list()[k]['hr_name'] = json.loads(
-                                s.getSystem())['hr_name']
+                            v['hr_name'] = json.loads(s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
-                            logger.warning(
-                                _("Can not grab stats form {0}: {1}").format(uri, e))
+                            logger.warning("Can not grab stats form {0}: {1}".format(uri, e))
+            # List can change size during iteration...
             except RuntimeError:
-                logger.debug(
-                    _("Server list dictionnary change inside the loop (wait next update)"))
+                logger.debug("Server list dictionnary change inside the loop (wait next update)")
 
             # Update the screen
-            self.screen.update_browser(self.get_servers_list())
+            self.screen.update(self.get_servers_list())
 
     def end(self):
         """End of the client session."""
