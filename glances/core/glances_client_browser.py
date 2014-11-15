@@ -72,7 +72,9 @@ class GlancesClientBrowser(object):
                     # Configure the server timeout to 3 seconds
                     t = GlancesClientTransport()
                     t.set_timeout(3)
-                    # !!! How to manage password protection ??? Disable autodiscover if password is set ?
+                    # !!! How to manage password protection ???
+                    # => Disable autodiscover if password is set ?
+                    # => Display a popup and ask for password ? <=====
                     try:
                         s = ServerProxy(uri, t)
                     except Exception as e:
@@ -85,7 +87,7 @@ class GlancesClientBrowser(object):
                             v['cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
                             # MEM%
                             v['mem_percent'] = json.loads(s.getMem())['percent']
-                            # OS (human readable name)
+                            # OS (Human Readable name)
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
                             logger.warning("Can not grab stats form {0}: {1}".format(uri, e))
