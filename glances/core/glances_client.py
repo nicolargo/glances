@@ -78,7 +78,7 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            logger.error(_("Couldn't create socket {0}: {1}").format(uri, e))
+            logger.error("Couldn't create socket {0}: {1}".format(uri, e))
             sys.exit(2)
 
         # Start the autodiscover mode (Zeroconf listener)
@@ -121,18 +121,16 @@ class GlancesClient(object):
                 client_version = self.client.init()
             except socket.error as err:
                 # Fallback to SNMP
-                logger.error(_("Connection to Glances server failed"))
+                logger.error("Connection to Glances server failed")
                 self.set_mode('snmp')
                 fallbackmsg = _("Trying fallback to SNMP...")
                 print(fallbackmsg)
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    logger.error(
-                        _("Connection to server failed (Bad password)"))
+                    logger.error("Connection to server failed (Bad password)")
                 else:
-                    logger.error(
-                        _("Connection to server failed ({0})").format(err))
+                    logger.error("Connection to server failed ({0})").format(err)
                 sys.exit(2)
 
             if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
@@ -147,7 +145,7 @@ class GlancesClient(object):
             self.set_mode('snmp')
 
         if self.get_mode() == 'snmp':
-            logger.info(_("Trying to grab stats by SNMP..."))
+            logger.info("Trying to grab stats by SNMP...")
             # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
@@ -155,7 +153,7 @@ class GlancesClient(object):
             self.stats = GlancesStatsClientSNMP(args=self.args)
 
             if not self.stats.check_snmp():
-                logger.error(_("Connection to SNMP server failed"))
+                logger.error("Connection to SNMP server failed")
                 sys.exit(2)
 
         if ret:
@@ -177,8 +175,7 @@ class GlancesClient(object):
             return self.update_snmp()
         else:
             self.end()
-            logger.critical(
-                _("Unknown server mode: {0}").format(self.get_mode()))
+            logger.critical("Unknown server mode: {0}").format(self.get_mode())
             sys.exit(2)
 
     def update_glances(self):

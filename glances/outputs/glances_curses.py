@@ -436,8 +436,7 @@ class _GlancesCurses(object):
             max_processes_displayed = 0
         if glances_processes.get_max_processes() is None or \
            glances_processes.get_max_processes() != max_processes_displayed:
-            logger.debug(
-                _("Set number of displayed processes to %s") % max_processes_displayed)
+            logger.debug("Set number of displayed processes to %s" % max_processes_displayed)
             glances_processes.set_max_processes(max_processes_displayed)
 
         stats_processlist = stats.get_plugin(
@@ -635,11 +634,10 @@ class _GlancesCurses(object):
             textbox.edit()
             self.set_cursor(0)
             if textbox.gather() != '':
-                logger.debug(
-                    _("User enters the following process filter patern: %s") % textbox.gather())
+                logger.debug("User enters the following process filter patern: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
-                logger.debug(_("User clears the process filter patern"))
+                logger.debug("User clears the process filter patern")
                 return None
         else:
             # Display the popup
