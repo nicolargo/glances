@@ -27,8 +27,6 @@ from datetime import timedelta
 from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-PROCESS_TREE = True  # TODO remove that and take command line parameter
-
 
 class Plugin(GlancesPlugin):
 
@@ -59,7 +57,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            if PROCESS_TREE:
+            if glances_processes.is_tree_enabled():
                 self.stats = glances_processes.gettree()
             else:
                 self.stats = glances_processes.getlist()
@@ -396,7 +394,7 @@ class Plugin(GlancesPlugin):
         # Trying to display proc time
         self.tag_proc_time = True
 
-        if PROCESS_TREE:
+        if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
                                                          args,
                                                          first_level=True,
@@ -422,7 +420,9 @@ class Plugin(GlancesPlugin):
         if sortedby == 'name':
             sortedreverse = False
 
-        if sortedby == 'io_counters' and not PROCESS_TREE:
+        tree = glances_processes.is_tree_enabled()
+
+        if sortedby == 'io_counters' and not tree:
             # Specific case for io_counters
             # Sum of io_r + io_w
             try:
@@ -438,7 +438,7 @@ class Plugin(GlancesPlugin):
                                     reverse=sortedreverse)
         else:
             # Others sorts
-            if PROCESS_TREE:
+            if tree:
                 self.stats.setSorting(sortedby, sortedreverse)
             else:
                 try:
@@ -450,7 +450,7 @@ class Plugin(GlancesPlugin):
                                         key=lambda process: process['name'],
                                         reverse=False)
 
-        if not PROCESS_TREE:
+        if not tree:
             self.stats = listsorted
 
         return self.stats
