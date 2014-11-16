@@ -152,7 +152,7 @@ class ProcessTreeNode(object):
             nodes_to_search.extend(current_node.children)
 
     @staticmethod
-    def buildTree(process_dict, sort_key):
+    def buildTree(process_dict, sort_key, hide_kernel_threads):
         """ Build a process tree using using parent/child relationships, and return the tree root node. """
         tree_root = ProcessTreeNode(root=True)
         nodes_to_add_last = collections.deque()
@@ -167,6 +167,9 @@ class ProcessTreeNode(object):
                 parent_process = None
             if parent_process is None:
                 # no parent, add this node at the top level
+                tree_root.children.append(new_node)
+            elif hide_kernel_threads and (not is_windows) and (parent_process.gids().real == 0):
+                # parent is a kernel thread, add this node at the top level
                 tree_root.children.append(new_node)
             else:
                 parent_node = tree_root.findProcess(parent_process)
@@ -556,7 +559,9 @@ class GlancesProcesses(object):
                 pass
 
         if PROCESS_TREE:
-            self.process_tree = ProcessTreeNode.buildTree(processdict, self.getsortkey())
+            self.process_tree = ProcessTreeNode.buildTree(processdict,
+                                                          self.getsortkey(),
+                                                          self.no_kernel_threads)
 
             for i, node in enumerate(self.process_tree):
                 # Only retreive stats for visible processes (get_max_processes)
