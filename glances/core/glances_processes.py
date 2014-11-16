@@ -156,7 +156,7 @@ class ProcessTreeNode(object):
         tree_root = ProcessTreeNode(root=True)
         nodes_to_add_last = collections.deque()
 
-        # first pass: build tree structure
+        # first pass: add nodes whose parent are in the tree
         for process, stats in process_dict.items():
             new_node = ProcessTreeNode(process, stats, sort_key)
             try:
@@ -188,13 +188,18 @@ class ProcessTreeNode(object):
                 # parent is dead, consider no parent, add this node at the top level
                 tree_root.children.append(node_to_add)
             else:
-                parent_node = tree_root.findProcess(parent_process)
-                if parent_node is not None:
-                    # parent is already in the tree, add a new child
-                    parent_node.children.append(node_to_add)
+                if parent_process is None:
+                    # parent is None now, but was not at previous pass (can occur on Windows only)
+                    # consider no parent, add this node at the top level
+                    tree_root.children.append(node_to_add)
                 else:
-                    # parent is not in tree, add this node later
-                    nodes_to_add_last.append(node_to_add)
+                    parent_node = tree_root.findProcess(parent_process)
+                    if parent_node is not None:
+                        # parent is already in the tree, add a new child
+                        parent_node.children.append(node_to_add)
+                    else:
+                        # parent is not in tree, add this node later
+                        nodes_to_add_last.append(node_to_add)
 
         return tree_root
 
