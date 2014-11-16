@@ -21,7 +21,6 @@
 
 # Import system libs
 import socket
-import time
 try:
     import netifaces
     netifaces_tag = True
@@ -55,9 +54,14 @@ class AutoDiscovered(object):
 
     def add_server(self, name, ip, port):
         """Add a new server to the list"""
-        new_server = {'key': name, 'name': name.split(':')[0], 'ip': ip, 'port': port}
+        new_server = {'key': name,  # Zeroconf name with both hostname and port
+                      'name': name.split(':')[0],  # Short name
+                      'ip': ip,  # IP address seen by the client
+                      'port': port,  # TCP port
+                      }
         self._server_list.append(new_server)
-        logger.debug("Servers list: %s" % self._server_list)
+        logger.debug("Updated servers list (%s servers): %s" %
+                     (len(self._server_list), self._server_list))
 
     def remove_server(self, name):
         """Remove a server from the dict"""
@@ -66,9 +70,11 @@ class AutoDiscovered(object):
                 try:
                     self._server_list.remove(i)
                     logger.debug("Remove server %s from the list" % name)
-                    logger.debug("Updated servers list: %s" % self._server_list)
+                    logger.debug("Updated servers list (%s servers): %s" % (
+                        len(self._server_list), self._server_list))
                 except ValueError:
-                    logger.error("Can not remove server %s from the list" % name)
+                    logger.error(
+                        "Can not remove server %s from the list" % name)
 
 
 class GlancesAutoDiscoverListener(object):
@@ -90,7 +96,8 @@ class GlancesAutoDiscoverListener(object):
         """
         if srv_type != zeroconf_type:
             return False
-        logger.debug("Check new Zeroconf server: %s / %s" % (srv_type, srv_name))
+        logger.debug("Check new Zeroconf server: %s / %s" %
+                     (srv_type, srv_name))
         info = zeroconf.getServiceInfo(srv_type, srv_name)
         if info:
             new_server_ip = socket.inet_ntoa(info.getAddress())
@@ -145,21 +152,23 @@ class GlancesAutoDiscoverClient(object):
 
     def __init__(self, hostname, args=None):
         if netifaces_tag:
-            # !!! TO BE REFACTOR
             try:
-                zeroconf_bind_address = netifaces.ifaddresses(netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
+                zeroconf_bind_address = netifaces.ifaddresses(
+                    netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
             except:
                 zeroconf_bind_address = args.bind_address
-            print("Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
-            # /!!!            
+            print("Announce the Glances server on the local area network (using %s IP address)" %
+                  zeroconf_bind_address)
 
             if zeroconf_tag:
                 logger.info(
                     "Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
                 self.zeroconf = Zeroconf()
                 self.info = ServiceInfo(zeroconf_type,
-                                        hostname+':'+str(args.port)+'.'+zeroconf_type,
-                                        address=socket.inet_aton(zeroconf_bind_address),
+                                        hostname + ':' +
+                                        str(args.port) + '.' + zeroconf_type,
+                                        address=socket.inet_aton(
+                                            zeroconf_bind_address),
                                         port=args.port,
                                         weight=0,
                                         priority=0,

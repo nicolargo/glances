@@ -19,8 +19,6 @@
 
 """Curses interface class."""
 
-# !!! TODO: split GlancesCurses for client and client_browser
-
 # Import system lib
 import sys
 
@@ -218,7 +216,7 @@ class _GlancesCurses(object):
         keycode[1] = window.getch()
 
         if keycode != [-1, -1]:
-            logger.debug("Keypressed ! Code: %s" % keycode)
+            logger.debug("Keypressed (code: %s)" % keycode)
 
         if keycode[0] == 27 and keycode[1] != -1:
             # Do not escape on specials keys
@@ -226,16 +224,19 @@ class _GlancesCurses(object):
         else:
             return keycode[0]
 
-    def __catch_key(self):
+    def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
         self.pressedkey = self.get_key(self.term_window)
 
         # Actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
-            self.end()
-            logger.info("Stop Glances")
-            sys.exit(0)
+            if return_to_browser:
+                logger.info("Stop Glances client and return to the browser")
+            else:
+                self.end()
+                logger.info("Stop Glances")
+                sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
@@ -736,29 +737,43 @@ class _GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
-    def update(self, stats, cs_status="None"):
+    def update(self, stats, cs_status="None", return_to_browser=False):
         """Update the screen.
 
         Wait for __refresh_time sec / catch key every 100 ms.
 
+        INPUT
         stats: Stats database to display
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
             "Disconnected": Client is disconnected from the server
+        return_to_browser:
+            True: Do not exist, return to the browser list
+            False: Exit and return to the shell
+
+        OUPUT
+        True: Exit key has been pressed
+        False: Others cases...
         """
         # Flush display
         self.flush(stats, cs_status=cs_status)
 
         # Wait
+        exitkey = False
         countdown = Timer(self.__refresh_time)
-        while not countdown.finished():
+        while not countdown.finished() and not exitkey:
             # Getkey
-            if self.__catch_key() > -1:
+            pressedkey = self.__catch_key(return_to_browser=return_to_browser)
+            # Is it an exit key ?
+            exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+            if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
             # Wait 100ms...
             curses.napms(100)
+
+        return exitkey
 
     def get_stats_display_width(self, curse_msg, without_option=False):
         """Return the width of the formatted curses message.
@@ -813,12 +828,24 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Init the cursor position for the client browser
         self.cursor_init()
 
+        # Active Glances server number
+        self.set_active()
+
+    def set_active(self, index=None):
+        """Set the active server or None if no server selected"""
+        self.active_server = index
+        return self.active_server
+
+    def get_active(self):
+        """Return the active server (the one display in front) or None if it is the browser list"""
+        return self.active_server
+
     def cursor_init(self):
         """Init the cursor position to the top of the list"""
         return self.cursor_set(0)
 
     def cursor_set(self, pos):
-        """Set the cursor position andd return it"""
+        """Set the cursor position and return it"""
         self.cursor_position = pos
         return self.cursor_position
 
@@ -851,7 +878,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
             logger.debug("Server number %s selected" % (self.cursor_get() + 1))
-            self.run_client(servers_list[self.cursor_get()])
+            self.set_active(self.cursor_get())
         elif self.pressedkey == 259:
             # 'UP' > Up in the server list
             logger
@@ -862,11 +889,6 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # Return the key code
         return self.pressedkey
-
-    def run_client(self, server):
-        """Run the Glances client to the given server"""
-
-        logger.debug("Run Glances client on %s" % server)
 
     def update(self, servers_list):
         """Update the servers' list screen.
@@ -879,14 +901,20 @@ class GlancesCursesBrowser(_GlancesCurses):
         self.flush(servers_list)
 
         # Wait
+        exitkey = False
         countdown = Timer(self.__refresh_time)
-        while not countdown.finished():
+        while not countdown.finished() and not exitkey:
             # Getkey
-            if self.__catch_key(servers_list) > -1:
+            pressedkey = self.__catch_key(servers_list)
+            # Is it an exit or select server key ?
+            exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10)
+            if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(servers_list)
             # Wait 100ms...
             curses.napms(100)
+
+        return self.get_active()
 
     def flush(self, servers_list):
         """Update the servers' list screen.
