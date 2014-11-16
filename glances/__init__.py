@@ -151,7 +151,7 @@ def main():
         client.serve_forever()
 
         # Shutdown the client
-        client.close()
+        client.end()
 
     elif core.is_server():
         logger.info("Start server mode")

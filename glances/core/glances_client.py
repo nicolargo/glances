@@ -78,19 +78,8 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            logger.error("Couldn't create socket {0}: {1}".format(uri, e))
+            logger.error("Client couldn't create socket {0}: {1}".format(uri, e))
             sys.exit(2)
-
-        # Start the autodiscover mode (Zeroconf listener)
-        if self.args.autodiscover:
-            self.autodiscover_server = GlancesAutoDiscoverServer()
-
-    def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
-        if self.args.autodiscover:
-            return self.autodiscover_server.get_servers_list()
-        else:
-            return {}
 
     def set_mode(self, mode='glances'):
         """Set the client mode.
@@ -175,7 +164,7 @@ class GlancesClient(object):
             return self.update_snmp()
         else:
             self.end()
-            logger.critical("Unknown server mode: {0}").format(self.get_mode())
+            logger.critical(_("Unknown server mode: {0}").format(self.get_mode()))
             sys.exit(2)
 
     def update_glances(self):
@@ -217,14 +206,19 @@ class GlancesClient(object):
             # Grab success
             return "SNMP"
 
-    def serve_forever(self):
+    def serve_forever(self, return_to_browser=False):
         """Main client loop."""
-        while True:
+
+        exitkey = False
+
+        while True and not exitkey:
             # Update the stats
             cs_status = self.update()
 
             # Update the screen
-            self.screen.update(self.stats, cs_status=cs_status)
+            exitkey = self.screen.update(self.stats,
+                                         cs_status=cs_status,
+                                         return_to_browser=return_to_browser)
 
     def end(self):
         """End of the client session."""

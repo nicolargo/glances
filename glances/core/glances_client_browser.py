@@ -32,7 +32,7 @@ except ImportError:
 from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCursesBrowser
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
-from glances.core.glances_client import GlancesClientTransport
+from glances.core.glances_client import GlancesClientTransport, GlancesClient
 
 
 class GlancesClientBrowser(object):
@@ -52,7 +52,7 @@ class GlancesClientBrowser(object):
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
+        """Return the current server list (list of dict)"""
         if self.args.autodiscover:
             return self.autodiscover_server.get_servers_list()
         else:
@@ -78,26 +78,60 @@ class GlancesClientBrowser(object):
                     try:
                         s = ServerProxy(uri, t)
                     except Exception as e:
-                        logger.warning("Couldn't create socket {0}: {1}".format(uri, e))
+                        logger.warning(
+                            "Client browser couldn't create socket {0}: {1}".format(uri, e))
                     else:
                         try:
                             # LOAD
                             v['load_min5'] = json.loads(s.getLoad())['min5']
                             # CPU%
-                            v['cpu_percent'] = 100 - json.loads(s.getCpu())['idle']
+                            v['cpu_percent'] = 100 - \
+                                json.loads(s.getCpu())['idle']
                             # MEM%
-                            v['mem_percent'] = json.loads(s.getMem())['percent']
+                            v['mem_percent'] = json.loads(
+                                s.getMem())['percent']
                             # OS (Human Readable name)
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
-                            logger.warning("Can not grab stats form {0}: {1}".format(uri, e))
+                            logger.warning(
+                                "Can not grab stats form {0}: {1}".format(uri, e))
             # List can change size during iteration...
             except RuntimeError:
-                logger.debug("Server list dictionnary change inside the loop (wait next update)")
+                logger.debug(
+                    "Server list dictionnary change inside the loop (wait next update)")
 
-            # Update the screen
-            self.screen.update(self.get_servers_list())
+            # Update the screen (list or Glances client)
+            if self.screen.get_active() is None:
+                #  Display the Glances browser
+                self.screen.update(self.get_servers_list())
+            else:
+                # Display the Glance client on the selected server
+                logger.info("Connect Glances client to the %s server" %
+                            self.get_servers_list()[self.screen.get_active()]['key'])
+
+                # Init the client
+                args_server = self.args
+
+                # Overwrite connection setting
+                args_server.client = self.get_servers_list(
+                )[self.screen.get_active()]['ip']
+                args_server.port = self.get_servers_list()[self.screen.get_active()][
+                    'port']
+                client = GlancesClient(config=self.config,
+                                       args=args_server)
+
+                # Test if client and server are in the same major version
+                if not client.login():
+                    logger.error(
+                        "The server version is not compatible with the client")
+
+                # Start the client loop
+                client.serve_forever(return_to_browser=True)
+
+                logger.debug("Disconnect Glances client from the %s server" %
+                             self.get_servers_list()[self.screen.get_active()]['key'])
+                self.screen.set_active(None)
 
     def end(self):
-        """End of the client session."""
-        pass
+        """End of the client browser session."""
+        self.screen.end()
