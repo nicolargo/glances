@@ -27,7 +27,6 @@ from datetime import timedelta
 from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-
 PROCESS_TREE = True  # TODO remove that and take command line parameter
 
 
@@ -71,6 +70,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_process_tree_curses_data(self, node, args, first_level=True, max_node_count=None):
+        """ Get curses data to display for a process tree. """
         ret = []
         node_count = 0
         if (not node.is_root) and ((max_node_count is None) or (max_node_count > 0)):
@@ -81,13 +81,6 @@ class Plugin(GlancesPlugin):
             # stop if we have enough nodes to display
             if (max_node_count is not None) and (node_count >= max_node_count):
                 break
-
-            has_other_children = False
-            if child is node.children[-1]:
-                prefix = "└─"
-            else:
-                prefix = "├─"
-                has_other_children = True
 
             if max_node_count is None:
                 children_max_node_count = None
@@ -103,39 +96,46 @@ class Plugin(GlancesPlugin):
                 node_count += min(children_max_node_count, len(child))
 
             if not node.is_root:
-                # TODO remove msg index hardcoding
-                child_data[12]["msg"] = "%s%s" % (prefix, child_data[12]["msg"])
-                # TODO this code is an ugly hack and should be reworked
-                i = 0
-                for m in child_data:
-                    if m["msg"] == "\n":
-                        i = 0
-                    elif i == 12:
-                        if first_level:
-                            m["msg"] = " %s" % (m["msg"])
-                        else:
-                            m["msg"] = "   %s" % (m["msg"])
-                    i += 1
-                if has_other_children:
-                    add = False
-                    i = 0
-                    for m in child_data:
-                        if m["msg"] == "\n":
-                            i = 0
-                        elif i == 12:
-                            if add:
-                                old_str = m["msg"]
-                                if first_level:
-                                    m["msg"] = " │" + old_str[2:]
-                                else:
-                                    m["msg"] = old_str[:3] + "│" + old_str[4:]
-                            else:
-                                add = True
-                        i += 1
+                child_data = self.add_tree_decoration(child_data, child is node.children[-1], first_level)
             ret.extend(child_data)
         return ret
 
+    def add_tree_decoration(self, child_data, is_last_child, first_level):
+        """ Add tree curses decoration and indentation to a subtree. """
+        # find process command indices in messages
+        pos = []
+        for i, m in enumerate(child_data):
+            if (m["msg"] == "\n") and (m is not child_data[-1]):
+                # new line pos + 12
+                # TODO find a way to get rid of hardcoded 12 value
+                pos.append(i + 12)
+
+        # draw node prefix
+        if is_last_child:
+            prefix = "└─"
+        else:
+            prefix = "├─"
+        child_data[pos[0]]["msg"] = "%s%s" % (prefix, child_data[pos[0]]["msg"])
+
+        # add indentation
+        for i in pos:
+            if first_level:
+                child_data[i]["msg"] = " %s" % (child_data[i]["msg"])
+            else:
+                child_data[i]["msg"] = "   %s" % (child_data[i]["msg"])
+
+        if not is_last_child:
+            # add '│' tree decoration
+            for i in pos[1:]:
+                old_str = child_data[i]["msg"]
+                if first_level:
+                    child_data[i]["msg"] = " │" + old_str[2:]
+                else:
+                    child_data[i]["msg"] = old_str[:3] + "│" + old_str[4:]
+        return child_data
+
     def get_process_curses_data(self, p, first, args):
+        """ Get curses data to display for a process. """
         ret = []
         ret.append(self.curse_new_line())
         # CPU
