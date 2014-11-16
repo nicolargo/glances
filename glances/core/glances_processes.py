@@ -118,10 +118,11 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=__class__.getWeight, reverse=self.reverse_sorting)
+            self.children.sort(key=self.__class__.getWeight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
-            yield from iter(child)
+            for n in iter(child):
+                yield n
 
     def iterChildren(self, exclude_incomplete_stats=True):
         """
@@ -134,7 +135,7 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=__class__.getWeight, reverse=self.reverse_sorting)
+            self.children.sort(key=self.__class__.getWeight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
             if (not exclude_incomplete_stats) or ("time_since_update" in child.stats):
