@@ -23,10 +23,10 @@
 import json
 import socket
 try:
-    from xmlrpc.client import ServerProxy, Fault
+    from xmlrpc.client import ServerProxy, Fault, ProtocolError
 except ImportError:
     # Python 2
-    from xmlrpclib import ServerProxy, Fault
+    from xmlrpclib import ServerProxy, Fault, ProtocolError
 
 # Import Glances libs
 from glances.core.glances_globals import logger
@@ -69,12 +69,9 @@ class GlancesClientBrowser(object):
                 for v in self.get_servers_list():
                     # !!! Perhaps, it will be better to store the ServerProxy instance in the get_servers_list
                     uri = 'http://%s:%s' % (v['ip'], v['port'])
-                    # Configure the server timeout to 3 seconds
                     t = GlancesClientTransport()
                     t.set_timeout(3)
-                    # !!! How to manage password protection ???
-                    # => Disable autodiscover if password is set ?
-                    # => Display a popup and ask for password ? <=====
+                    # Get common stats
                     try:
                         s = ServerProxy(uri, t)
                     except Exception as e:
@@ -95,6 +92,9 @@ class GlancesClientBrowser(object):
                         except (socket.error, Fault, KeyError) as e:
                             logger.warning(
                                 "Can not grab stats form {0}: {1}".format(uri, e))
+                        except ProtocolError as e:
+                            logger.debug(
+                                "Password protected server. Can not grab stats from {0}: {1}".format(uri, e))
             # List can change size during iteration...
             except RuntimeError:
                 logger.debug(
