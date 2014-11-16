@@ -67,6 +67,12 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
+Glances can detect and display all Glances servers available on you network using the Zeroconf protocol:
+
+.. code-block:: console
+
+    client$ glances --autodiscover
+
 In server mode, you can set the bind address ``-B ADDRESS`` and listening
 TCP port ``-p PORT``.
 
@@ -141,6 +147,7 @@ Command-Line Options
                         enable extended stats on top process
   --output-csv OUTPUT_CSV
                         export stats to a CSV file
+  --autodiscover        run the Glances client browser (list of Glances server)
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -152,6 +159,8 @@ Command-Line Options
                         define password from the command line
   --password            define a client/server password from the prompt or
                         file
+  --disable-autodiscover
+                        Hide Glances server from the auto discover feature
   --snmp-community SNMP_COMMUNITY
                         SNMP community
   --snmp-port SNMP_PORT
@@ -216,8 +225,8 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide network stats
 ``p``
     Sort processes by name
-``q``
-    Quit
+``q`` or ``ESC``
+    Quit the current Glances session 
 ``r``
     Reset history
 ``s``
@@ -238,6 +247,17 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable left sidebar
 ``/``
     Switch between short name / command line (processes name)
+
+In the Glances client browser (accessible through the --autodiscover command line argument):
+
+``ENTER``
+    Run Glances client to the selected server
+``UP``
+    Up in the servers list
+``DOWN``
+    Down in the servers list
+``q`` or ``ESC``
+    Quit Glances 
 
 Configuration
 =============

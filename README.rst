@@ -1,7 +1,5 @@
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
-Give Glances some Bitcoin: `18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW`_
-
 ===============================
 Glances - An eye on your system
 ===============================
@@ -39,6 +37,7 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
+- ``zeroconf`` and ``netifaces`` (for the autodiscovered support)
 
 Installation
 ============
@@ -46,7 +45,7 @@ Installation
 Glances Auto Install script
 ---------------------------
 
-Just enter the following command line:
+To install both dependacies and latest  Glances version, just enter the following command line:
 
 .. code-block:: console
 
@@ -193,6 +192,13 @@ on the server side and run:
 
 on the client one.
 
+You can also detect and display all the Glances servers available on your network:
+
+.. code-block:: console
+
+    $ glances --autodiscover
+
+
 And RTFM, always.
 
 Documentation
@@ -216,7 +222,6 @@ LGPL. See ``COPYING`` for more details.
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
-.. _18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW: bitcoin:18Nbs6kg9UCqtX4RPDM3qMkeKwjDxBFYrW?amount=1X8&label=Glances
 .. _PyPI: https://pypi.python.org/pypi
 .. _pip: http://www.pip-installer.org/
 .. _Homebrew: http://brew.sh/

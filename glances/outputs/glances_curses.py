@@ -967,6 +967,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             ['cpu_percent', _('CPU%'), 5],
             ['mem_percent', _('MEM%'), 5],
             ['ip', _('IP'), 15],
+            ['port', _('PORT'), 5],
             ['hr_name', _('OS'), 16],
         ]
         y = 2
@@ -975,11 +976,12 @@ class GlancesCursesBrowser(_GlancesCurses):
         cpt = 0
         xc = x + 2
         for c in column_def:
-            self.term_window.addnstr(y, xc,
-                                     c[1],
-                                     screen_x - x,
-                                     self.colors_list['BOLD'])
-            xc += c[2] + self.space_between_column
+            if xc < screen_x and y < screen_y:
+                self.term_window.addnstr(y, xc,
+                                         c[1],
+                                         screen_x - x,
+                                         self.colors_list['BOLD'])
+                xc += c[2] + self.space_between_column
             cpt += 1
         y += 1
 
@@ -1011,17 +1013,18 @@ class GlancesCursesBrowser(_GlancesCurses):
                 # Display cursor
                 self.term_window.addnstr(y, xc,
                                          ">",
-                                         screen_x - x,
+                                         screen_x - xc,
                                          self.colors_list['BOLD'])
 
             xc += 2
             for c in column_def:
-                # Display server stats
-                self.term_window.addnstr(y, xc,
-                                         "%s" % server_stat[c[0]],
-                                         screen_x - x,
-                                         self.colors_list['DEFAULT'])
-                xc += c[2] + self.space_between_column
+                if xc < screen_x and y < screen_y:
+                    # Display server stats
+                    self.term_window.addnstr(y, xc,
+                                             "%s" % server_stat[c[0]],
+                                             screen_x - xc,
+                                             self.colors_list['DEFAULT'])
+                    xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...
             y += 1
