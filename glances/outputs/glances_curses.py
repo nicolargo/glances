@@ -995,14 +995,14 @@ class GlancesCursesBrowser(_GlancesCurses):
         line = 0
         for v in servers_list:
             # Get server stats
-            try:
-                server_stat = {}
-                for c in column_def:
+            server_stat = {}
+            for c in column_def:
+                try:
                     server_stat[c[0]] = v[c[0]]
-            except KeyError as e:
-                logger.debug(
-                    "Can not grab stats %s from server (KeyError: %s)".format(c[0], e))
-                continue
+                except KeyError as e:
+                    logger.debug(
+                        "Can not grab stats {0} from server (KeyError: {1})".format(c[0], e))
+                    server_stat[c[0]] = '?'
 
             # Display line for server stats
             cpt = 0
