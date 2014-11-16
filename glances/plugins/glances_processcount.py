@@ -26,6 +26,8 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # Note: history items list is not compliant with process count
 #       if a filter is applyed, the graph will show the filtered processes count
 
+PROCESS_TREE = True  # TODO remove that and take command line parameter
+
 
 class Plugin(GlancesPlugin):
 
@@ -125,6 +127,7 @@ class Plugin(GlancesPlugin):
         else:
             msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
             ret.append(self.curse_add_line(msg))
+        ret[-1]["msg"] += ", %s view" % ("tree" if PROCESS_TREE else "flat")
 
         # Return the message with decoration
         return ret
