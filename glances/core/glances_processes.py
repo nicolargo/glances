@@ -26,8 +26,6 @@ import collections
 import psutil
 import re
 
-PROCESS_TREE = True  # TODO remove that and take command line parameter
-
 
 class ProcessTreeNode(object):
 
@@ -220,8 +218,11 @@ class GlancesProcesses(object):
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
 
-        # Init stats
+        # Wether or not to enable process tree
+        self._enable_tree = False
         self.process_tree = None
+
+        # Init stats
         self.resetsort()
         self.processlist = []
         self.processcount = {
@@ -309,6 +310,14 @@ class GlancesProcesses(object):
     def disable_kernel_threads(self):
         """ Ignore kernel threads in process list. """
         self.no_kernel_threads = True
+
+    def enable_tree(self):
+        """ Enable process tree. """
+        self._enable_tree = True
+
+    def is_tree_enabled(self):
+        """ Return True if process tree is enabled, False instead. """
+        return self._enable_tree
 
     def __get_process_stats(self, proc,
                             mandatory_stats=True,
@@ -558,7 +567,7 @@ class GlancesProcesses(object):
             except:
                 pass
 
-        if PROCESS_TREE:
+        if self._enable_tree:
             self.process_tree = ProcessTreeNode.buildTree(processdict,
                                                           self.getsortkey(),
                                                           self.no_kernel_threads)
@@ -656,7 +665,7 @@ class GlancesProcesses(object):
     def setmanualsortkey(self, sortedby):
         """Set the current sort key for manual sort."""
         self.processmanualsort = sortedby
-        if PROCESS_TREE and (self.process_tree is not None):
+        if self._enable_tree and (self.process_tree is not None):
             self.process_tree.setSorting(sortedby, sortedby != "name")
         return self.processmanualsort
 
