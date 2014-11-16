@@ -110,19 +110,33 @@ class Plugin(GlancesPlugin):
                 # TODO find a way to get rid of hardcoded 12 value
                 pos.append(i + 12)
 
+        # add new curses items for tree decoration
+        new_child_data = []
+        new_pos = []
+        for i, m in enumerate(child_data):
+            if i in pos:
+                new_pos.append(len(new_child_data))
+                new_child_data.append(self.curse_add_line(""))
+            new_child_data.append(m)
+        child_data = new_child_data
+        pos = new_pos
+
         # draw node prefix
         if is_last_child:
             prefix = "└─"
         else:
             prefix = "├─"
-        child_data[pos[0]]["msg"] = "%s%s" % (prefix, child_data[pos[0]]["msg"])
+        child_data[pos[0]]["msg"] = prefix
 
         # add indentation
         for i in pos:
+            spacing = 2
             if first_level:
-                child_data[i]["msg"] = " %s" % (child_data[i]["msg"])
-            else:
-                child_data[i]["msg"] = "   %s" % (child_data[i]["msg"])
+                spacing = 1
+            elif is_last_child and (i is not pos[0]):
+                # compensate indentation for missing '│' char
+                spacing = 3
+            child_data[i]["msg"] = "%s%s" % (" " * spacing, child_data[i]["msg"])
 
         if not is_last_child:
             # add '│' tree decoration
@@ -131,7 +145,7 @@ class Plugin(GlancesPlugin):
                 if first_level:
                     child_data[i]["msg"] = " │" + old_str[2:]
                 else:
-                    child_data[i]["msg"] = old_str[:3] + "│" + old_str[4:]
+                    child_data[i]["msg"] = old_str[:2] + "│" + old_str[3:]
         return child_data
 
     def get_process_curses_data(self, p, first, args):
