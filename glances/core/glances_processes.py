@@ -56,7 +56,7 @@ class ProcessTreeNode(object):
                 lines.append(indent_str)
             else:
                 lines.append("%s[%s]" % (indent_str, current_node.process.name()))
-            indent_str = " " * (len(lines[-1]) -1)
+            indent_str = " " * (len(lines[-1]) - 1)
             children_nodes_to_print = collections.deque()
             for child in current_node.children:
                 if child is current_node.children[-1]:
