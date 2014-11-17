@@ -128,6 +128,8 @@ class GlancesMain(object):
         if not is_windows:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help=_('hide kernel threads in process list'))
+        parser.add_argument('--tree', action='store_true', default=False,
+                            dest='process_tree', help=_('display processes as a tree'))
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help=_('display network rate in byte per second'))
         parser.add_argument('-1', '--percpu', action='store_true', default=False,

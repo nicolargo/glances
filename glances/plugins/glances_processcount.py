@@ -125,6 +125,7 @@ class Plugin(GlancesPlugin):
         else:
             msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
             ret.append(self.curse_add_line(msg))
+        ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
 
         # Return the message with decoration
         return ret
