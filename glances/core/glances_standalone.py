@@ -22,7 +22,7 @@
 # Import Glances libs
 from glances.core.glances_globals import logger
 from glances.core.glances_stats import GlancesStats
-from glances.outputs.glances_curses import GlancesCurses
+from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.core.glances_globals import glances_processes, is_windows
 
 
@@ -66,7 +66,7 @@ class GlancesStandalone(object):
             self.csv_tag = False
 
         # Init screen
-        self.screen = GlancesCurses(args=args)
+        self.screen = GlancesCursesStandalone(args=args)
 
     def serve_forever(self):
         """Main loop for the CLI."""
