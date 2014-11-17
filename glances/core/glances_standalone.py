@@ -49,9 +49,13 @@ class GlancesStandalone(object):
         if args.process_filter is not None:
             glances_processes.set_process_filter(args.process_filter)
 
-        # Ignore kernel threads in process list
         if (not is_windows) and args.no_kernel_threads:
+            # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
+
+        if args.process_tree:
+            # Enable process tree view
+            glances_processes.enable_tree()
 
         # Initial system informations update
         self.stats.update()
