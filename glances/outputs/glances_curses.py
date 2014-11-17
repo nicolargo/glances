@@ -423,7 +423,7 @@ class GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
             self.get_stats_display_height(stats_alert)
-        if self.args.enable_process_extended:
+        if self.args.enable_process_extended and not self.args.process_tree:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
             max_processes_displayed = 0
@@ -709,7 +709,14 @@ class GlancesCurses(object):
                 pass
             else:
                 # New column
-                x = x + len(m['msg'])
+                try:
+                    # Python 2: we need to decode to get real screen size because utf-8 special tree chars
+                    # occupy several bytes
+                    offset = len(m['msg'].decode("utf-8"))
+                except AttributeError:
+                    # Python 3: strings are strings and bytes are bytes, all is good
+                    offset = len(m['msg'])
+                x = x + offset
 
         # Compute the next Glances column/line position
         self.next_column = max(self.next_column, x + self.space_between_column)
