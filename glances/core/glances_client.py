@@ -70,13 +70,18 @@ class GlancesClient(object):
                                                   args.client, args.port)
         else:
             uri = 'http://{0}:{1}'.format(args.client, args.port)
+        logger.debug("Try to connect to {0}".format(uri))
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
         # Configure the server timeout to 7 seconds
         transport.set_timeout(7)
         try:
-            self.client = ServerProxy(uri, transport=transport)
+            if args.password != "":
+                # !!! transport did not work with login/password
+                self.client = ServerProxy(uri)
+            else:
+                self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
             logger.error("Client couldn't create socket {0}: {1}".format(uri, e))
             sys.exit(2)
@@ -110,16 +115,16 @@ class GlancesClient(object):
                 client_version = self.client.init()
             except socket.error as err:
                 # Fallback to SNMP
-                logger.error("Connection to Glances server failed")
+                logger.error("Connection to Glances server failed (%s)" % err)
                 self.set_mode('snmp')
                 fallbackmsg = _("Trying fallback to SNMP...")
                 print(fallbackmsg)
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    logger.error("Connection to server failed (Bad password)")
+                    logger.critical("Connection to server failed (Bad password)")
                 else:
-                    logger.error("Connection to server failed ({0})").format(err)
+                    logger.critical("Connection to server failed ({0})").format(err)
                 if not return_to_browser:
                     sys.exit(2)
                 else:
@@ -129,9 +134,11 @@ class GlancesClient(object):
                 # Init stats
                 self.stats = GlancesStatsClient()
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+                logger.debug(
+                    "Client version: %s / Server version: %s" % (version, client_version))
             else:
                 logger.error(
-                    "Client version: %s / Server version: %s" % (version, client_version))
+                    "Client and server not compatible: Client version: %s / Server version: %s" % (version, client_version))
 
         else:
             self.set_mode('snmp')
