@@ -48,9 +48,6 @@ class GlancesClientTransport(Transport):
     def set_timeout(self, timeout):
         self.timeout = timeout
 
-    def make_connection(self, host):
-        return httplib.HTTPConnection(host, timeout=self.timeout)
-
 
 class GlancesClient(object):
 
@@ -77,11 +74,7 @@ class GlancesClient(object):
         # Configure the server timeout to 7 seconds
         transport.set_timeout(7)
         try:
-            if args.password != "":
-                # !!! transport did not work with login/password
-                self.client = ServerProxy(uri)
-            else:
-                self.client = ServerProxy(uri, transport=transport)
+            self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
             logger.error("Client couldn't create socket {0}: {1}".format(uri, e))
             sys.exit(2)
