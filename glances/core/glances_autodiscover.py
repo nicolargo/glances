@@ -52,12 +52,18 @@ class AutoDiscovered(object):
         """Return the current server list (list of dict)"""
         return self._server_list
 
+    def set_server(self, server_pos, key, value):
+        """Set the key to the value for the server_pos (position in the list)"""
+        self._server_list[server_pos][key] = value
+
     def add_server(self, name, ip, port):
         """Add a new server to the list"""
         new_server = {'key': name,  # Zeroconf name with both hostname and port
                       'name': name.split(':')[0],  # Short name
                       'ip': ip,  # IP address seen by the client
                       'port': port,  # TCP port
+                      'username': 'glances', # Default username
+                      'password': '', # Default password
                       }
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %
@@ -88,6 +94,10 @@ class GlancesAutoDiscoverListener(object):
     def get_servers_list(self):
         """Return the current server list (list of dict)"""
         return self.servers.get_servers_list()
+
+    def set_server(self, server_pos, key, value):
+        """Set the key to the value for the server_pos (position in the list)"""
+        self.servers.set_server(server_pos, key, value)
 
     def addService(self, zeroconf, srv_type, srv_name):
         """Method called when a new Zeroconf client is detected
@@ -140,6 +150,10 @@ class GlancesAutoDiscoverServer(object):
             return self.listener.get_servers_list()
         else:
             return {}
+
+    def set_server(self, server_pos, key, value):
+        """Set the key to the value for the server_pos (position in the list)"""
+        self.listener.set_server(server_pos, key, value)
 
     def close(self):
         if zeroconf_tag:

@@ -202,7 +202,7 @@ class GlancesServer(object):
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
         except Exception as e:
-            logger.error(_("Cannot start Glances server: {0}").format(e))
+            logger.critical(_("Cannot start Glances server: {0}").format(e))
             sys.exit(2)
 
         # The users dict

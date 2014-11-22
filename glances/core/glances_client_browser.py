@@ -93,6 +93,10 @@ class GlancesClientBrowser(object):
                             logger.warning(
                                 "Error while grabbing stats form {0}: {1}".format(uri, e))
                         except ProtocolError as e:
+                            if str(e).find(" 401 ") > 0:
+                               # Error 401 (Authentication failed)
+                               # Password is not the good one...
+                               v['password'] = None
                             logger.debug(
                                 "Can not grab stats from {0}: {1}".format(uri, e))
             # List can change size during iteration...
@@ -105,6 +109,12 @@ class GlancesClientBrowser(object):
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:
+                # A password is needed to access to the server's stats
+                if self.get_servers_list()[self.screen.get_active()]['password'] is None:
+                    self.autodiscover_server.set_server(self.screen.get_active(),
+                                                        'password',
+                                                        self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True))
+
                 # Display the Glance client on the selected server
                 logger.info("Connect Glances client to the %s server" %
                             self.get_servers_list()[self.screen.get_active()]['key'])
@@ -113,10 +123,10 @@ class GlancesClientBrowser(object):
                 args_server = self.args
 
                 # Overwrite connection setting
-                args_server.client = self.get_servers_list(
-                )[self.screen.get_active()]['ip']
-                args_server.port = self.get_servers_list()[self.screen.get_active()][
-                    'port']
+                args_server.client = self.get_servers_list()[self.screen.get_active()]['ip']
+                args_server.port = self.get_servers_list()[self.screen.get_active()]['port']
+                args_server.username = self.get_servers_list()[self.screen.get_active()]['username']
+                args_server.password = self.get_servers_list()[self.screen.get_active()]['password']
                 client = GlancesClient(config=self.config,
                                        args=args_server)
 
