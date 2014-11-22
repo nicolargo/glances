@@ -91,10 +91,10 @@ class GlancesClientBrowser(object):
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
                             logger.warning(
-                                "Can not grab stats form {0}: {1}".format(uri, e))
+                                "Error while grabbing stats form {0}: {1}".format(uri, e))
                         except ProtocolError as e:
                             logger.debug(
-                                "Password protected server. Can not grab stats from {0}: {1}".format(uri, e))
+                                "Can not grab stats from {0}: {1}".format(uri, e))
             # List can change size during iteration...
             except RuntimeError:
                 logger.debug(
@@ -121,15 +121,15 @@ class GlancesClientBrowser(object):
                                        args=args_server)
 
                 # Test if client and server are in the same major version
-                if not client.login():
+                if not client.login(return_to_browser=True):
                     logger.error(
-                        "The server version is not compatible with the client")
+                        "Can not connect to the server (incompatible version or password protection)")
+                else:
+                    # Start the client loop
+                    client.serve_forever(return_to_browser=True)
 
-                # Start the client loop
-                client.serve_forever(return_to_browser=True)
-
-                logger.debug("Disconnect Glances client from the %s server" %
-                             self.get_servers_list()[self.screen.get_active()]['key'])
+                    logger.debug("Disconnect Glances client from the %s server" %
+                                 self.get_servers_list()[self.screen.get_active()]['key'])
                 self.screen.set_active(None)
 
     def end(self):

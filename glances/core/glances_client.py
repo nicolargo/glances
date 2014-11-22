@@ -98,7 +98,7 @@ class GlancesClient(object):
         """
         return self.mode
 
-    def login(self):
+    def login(self, return_to_browser=False):
         """Logon to the server."""
         ret = True
 
@@ -120,7 +120,10 @@ class GlancesClient(object):
                     logger.error("Connection to server failed (Bad password)")
                 else:
                     logger.error("Connection to server failed ({0})").format(err)
-                sys.exit(2)
+                if not return_to_browser:
+                    sys.exit(2)
+                else:
+                    return False
 
             if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
                 # Init stats
@@ -143,7 +146,10 @@ class GlancesClient(object):
 
             if not self.stats.check_snmp():
                 logger.error("Connection to SNMP server failed")
-                sys.exit(2)
+                if not return_to_browser:
+                    sys.exit(2)
+                else:
+                    return False
 
         if ret:
             # Load limits from the configuration file
