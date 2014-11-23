@@ -45,16 +45,21 @@ class GlancesClientBrowser(object):
         self.config = config
 
         # Start the autodiscover mode (Zeroconf listener)
-        if self.args.autodiscover:
+        if not self.args.disable_autodiscover:
             self.autodiscover_server = GlancesAutoDiscoverServer()
+        else:
+            self.autodiscover_server = None
 
         # Init screen
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def get_servers_list(self):
         """Return the current server list (list of dict)"""
-        if self.args.autodiscover:
-            return self.autodiscover_server.get_servers_list()
+        if self.args.browser:
+            if self.autodiscover_server is not None:
+                return self.autodiscover_server.get_servers_list()
+            else:
+                return {}
         else:
             return {}
 

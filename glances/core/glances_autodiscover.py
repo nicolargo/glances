@@ -20,6 +20,7 @@
 """Manage autodiscover Glances server (thk to the ZeroConf protocol)."""
 
 # Import system libs
+import sys
 import socket
 try:
     import netifaces
@@ -136,13 +137,18 @@ class GlancesAutoDiscoverServer(object):
     def __init__(self, args=None):
         if zeroconf_tag:
             logger.info("Init autodiscover mode (Zeroconf protocol)")
-            self.zeroconf = Zeroconf()
+            try:
+                self.zeroconf = Zeroconf()
+            except socker.error as e:
+                logger.critical("Can not start Zeroconf (%s)" % e)
+                sys.exit(2)
             self.listener = GlancesAutoDiscoverListener()
             self.browser = ServiceBrowser(
                 self.zeroconf, zeroconf_type, self.listener)
         else:
-            logger.error(
+            logger.critical(
                 "Can not start autodiscover mode (Zeroconf lib is not installed)")
+            sys.exit(2)
 
     def get_servers_list(self):
         """Return the current server list (dict of dict)"""
