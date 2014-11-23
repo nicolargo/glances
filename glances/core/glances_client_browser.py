@@ -31,8 +31,9 @@ except ImportError:
 # Import Glances libs
 from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCursesBrowser
-from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClientTransport, GlancesClient
+from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
+#from glances.core.glances_staticlist import GlancesStaticServer
 
 
 class GlancesClientBrowser(object):
@@ -44,6 +45,9 @@ class GlancesClientBrowser(object):
         self.args = args
         self.config = config
 
+        # TODO: Init the static server list (if defined)
+        # self.static_server = GlancesStaticServer()
+
         # Start the autodiscover mode (Zeroconf listener)
         if not self.args.disable_autodiscover:
             self.autodiscover_server = GlancesAutoDiscoverServer()
@@ -54,21 +58,24 @@ class GlancesClientBrowser(object):
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def get_servers_list(self):
-        """Return the current server list (list of dict)"""
+        """
+        Return the current server list (list of dict)
+        TODO: should return the merge of static + autodiscover servers list
+        """
         if self.args.browser:
             if self.autodiscover_server is not None:
                 return self.autodiscover_server.get_servers_list()
             else:
-                return {}
+                return []
         else:
-            return {}
+            return []
 
     def serve_forever(self):
         """Main client loop."""
         while True:
             # No need to update the server list
             # It's done by the GlancesAutoDiscoverListener class (glances_autodiscover.py)
-            # For each server in the list, grab elementary stats (CPU, LOAD, MEM)
+            # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
             # logger.debug(self.get_servers_list())
             try:
                 for v in self.get_servers_list():
@@ -119,6 +126,7 @@ class GlancesClientBrowser(object):
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:
+                # Display the Glances client for the selected server
                 logger.debug("Selected server: %s" % self.get_servers_list()[self.screen.get_active()])
                 # A password is needed to access to the server's stats
                 if self.get_servers_list()[self.screen.get_active()]['password'] is None:
@@ -155,6 +163,8 @@ class GlancesClientBrowser(object):
 
                     logger.debug("Disconnect Glances client from the %s server" %
                                  self.get_servers_list()[self.screen.get_active()]['key'])
+                
+                # Return to the browser (no server selected)
                 self.screen.set_active(None)
 
     def end(self):
