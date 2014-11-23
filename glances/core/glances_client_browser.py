@@ -68,12 +68,17 @@ class GlancesClientBrowser(object):
             try:
                 for v in self.get_servers_list():
                     # !!! Perhaps, it will be better to store the ServerProxy instance in the get_servers_list
-                    uri = 'http://%s:%s' % (v['ip'], v['port'])
+                    if v['password'] != "":
+                        uri = 'http://{0}:{1}@{2}:{3}'.format(v['username'], v['password'],
+                                                              v['ip'], v['port'])
+                    else:
+                        uri = 'http://{0}:{1}'.format(v['ip'], v['port'])
+                    # Try to connect to the URI
                     t = GlancesClientTransport()
                     t.set_timeout(3)
                     # Get common stats
                     try:
-                        s = ServerProxy(uri, t)
+                        s = ServerProxy(uri, transport=t)
                     except Exception as e:
                         logger.warning(
                             "Client browser couldn't create socket {0}: {1}".format(uri, e))
@@ -94,9 +99,9 @@ class GlancesClientBrowser(object):
                                 "Error while grabbing stats form {0}: {1}".format(uri, e))
                         except ProtocolError as e:
                             if str(e).find(" 401 ") > 0:
-                               # Error 401 (Authentication failed)
-                               # Password is not the good one...
-                               v['password'] = None
+                                # Error 401 (Authentication failed)
+                                # Password is not the good one...
+                                v['password'] = None
                             logger.debug(
                                 "Can not grab stats from {0}: {1}".format(uri, e))
             # List can change size during iteration...
@@ -109,11 +114,17 @@ class GlancesClientBrowser(object):
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:
+                logger.debug("Selected server: %s" % self.get_servers_list()[self.screen.get_active()])
                 # A password is needed to access to the server's stats
                 if self.get_servers_list()[self.screen.get_active()]['password'] is None:
+                    from hashlib import sha256
+                    # Display a popup to enter password
+                    clear_password = self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True)
+                    # Hash with SHA256
+                    encoded_password = sha256(clear_password).hexdigest()
                     self.autodiscover_server.set_server(self.screen.get_active(),
                                                         'password',
-                                                        self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True))
+                                                        encoded_password)
 
                 # Display the Glance client on the selected server
                 logger.info("Connect Glances client to the %s server" %
@@ -132,8 +143,7 @@ class GlancesClientBrowser(object):
 
                 # Test if client and server are in the same major version
                 if not client.login(return_to_browser=True):
-                    logger.error(
-                        "Can not connect to the server (incompatible version or password protection)")
+                    self.screen.display_popup(_("Sorry, can not connect to %s (see log file for additional information)" % v['name']))
                 else:
                     # Start the client loop
                     client.serve_forever(return_to_browser=True)
