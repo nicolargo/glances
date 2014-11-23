@@ -121,7 +121,7 @@ def main():
         standalone.serve_forever()
 
     elif core.is_client():
-        if core.is_client_autodiscover():
+        if core.is_client_browser():
             logger.info("Start client mode (browser)")
 
             # Import the Glances client browser module

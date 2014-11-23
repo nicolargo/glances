@@ -53,7 +53,7 @@ class Config(object):
 
     def __init__(self, location=None):
         self.location = location
-        
+
         self.config_filename = 'glances.conf'
 
         self.parser = RawConfigParser()
@@ -72,7 +72,8 @@ class Config(object):
                         self.parser.read(config_file)
                     logger.info(_("Read configuration file %s") % config_file)
                 except UnicodeDecodeError as e:
-                    logger.error(_("Cannot decode configuration file '{0}': {1}").format(config_file, e))
+                    logger.error(
+                        _("Cannot decode configuration file '{0}': {1}").format(config_file, e))
                     sys.exit(1)
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file
@@ -100,7 +101,8 @@ class Config(object):
             * {/usr/local,}/etc directory (system-wide settings)
         """
         paths = []
-        conf_path = os.path.realpath(os.path.join(work_path, '..', '..', 'conf'))
+        conf_path = os.path.realpath(
+            os.path.join(work_path, '..', '..', 'conf'))
 
         if self.location is not None:
             paths.append(self.location)
@@ -110,12 +112,15 @@ class Config(object):
 
         if is_linux or is_bsd:
             paths.append(os.path.join(
-                os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'),
+                os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser(
+                    '~/.config'),
                 appname, self.config_filename))
             if hasattr(sys, 'real_prefix') or is_bsd:
-                paths.append(os.path.join(sys.prefix, 'etc', appname, self.config_filename))
+                paths.append(
+                    os.path.join(sys.prefix, 'etc', appname, self.config_filename))
             else:
-                paths.append(os.path.join('/etc', appname, self.config_filename))
+                paths.append(
+                    os.path.join('/etc', appname, self.config_filename))
         elif is_mac:
             paths.append(os.path.join(
                 os.path.expanduser('~/Library/Application Support/'),

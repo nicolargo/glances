@@ -836,6 +836,10 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Init the father class
         _GlancesCurses.__init__(self, args=args)
 
+        # First time scan tag
+        # Used to display a specific message when the browser is started
+        self.first_scan = True
+
         # Init refresh time
         self.__refresh_time = args.time
 
@@ -956,12 +960,17 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # Display top header
         if len(servers_list) == 0:
-            msg = _("No Glances server detected on your network")
+            if self.first_scan:
+                msg = _("Glances is scanning your network (please wait)...")
+            else:
+                msg = _("No Glances server detected on your network")
         elif len(servers_list) == 1:
             msg = _("One Glances server detected on your network")
         else:
             msg = _("%d Glances servers detected on your network" %
                     len(servers_list))
+        if self.args.disable_autodiscover:
+            msg += ' ' + _("(autodiscover is disabled)")
         self.term_window.addnstr(y, x,
                                  msg,
                                  screen_x - x,
