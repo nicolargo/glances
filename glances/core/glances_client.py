@@ -53,7 +53,7 @@ class GlancesClient(object):
 
     """This class creates and manages the TCP client."""
 
-    def __init__(self, config=None, args=None):
+    def __init__(self, config=None, args=None, timeout=7, return_to_browser=False):
         # Store the arg/config
         self.args = args
         self.config = config
@@ -71,13 +71,17 @@ class GlancesClient(object):
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
-        # Configure the server timeout to 7 seconds
-        transport.set_timeout(7)
+        # Configure the server timeout
+        transport.set_timeout(timeout)
         try:
             self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            logger.error("Client couldn't create socket {0}: {1}".format(uri, e))
-            sys.exit(2)
+            msg = _("Client couldn't create socket {0}: {1}").format(uri, e)
+            if not return_to_browser:
+                logger.critical(msg)
+                sys.exit(2)
+            else:
+                logger.error(msg)
 
     def set_mode(self, mode='glances'):
         """Set the client mode.
@@ -115,12 +119,14 @@ class GlancesClient(object):
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    logger.critical("Connection to server failed (Bad password)")
+                    msg = _("Connection to server failed (Bad password)")
                 else:
-                    logger.critical("Connection to server failed ({0})").format(err)
+                    msg = _("Connection to server failed ({0})").format(err)
                 if not return_to_browser:
+                    logger.critical(msg)
                     sys.exit(2)
                 else:
+                    logger.error(msg)
                     return False
 
             if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
