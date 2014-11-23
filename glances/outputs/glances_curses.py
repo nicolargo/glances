@@ -962,6 +962,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         if len(servers_list) == 0:
             if self.first_scan:
                 msg = _("Glances is scanning your network (please wait)...")
+                self.first_scan = False
             else:
                 msg = _("No Glances server detected on your network")
         elif len(servers_list) == 1:
