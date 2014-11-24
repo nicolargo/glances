@@ -19,6 +19,9 @@
 
 """Manage the Glances server static list """
 
+# System lib
+from socket import gethostbyname, gaierror
+
 # Import Glances libs
 from glances.core.glances_globals import logger
 
@@ -45,25 +48,24 @@ class GlancesStaticServer(object):
         elif not config.has_section(self._section):
             logger.warning("No [%s] section in the configuration file. Can not load server list." % self._section)
         else:
+            logger.info("Start reading the [%s] section in the configuration file" % self._section)
             for i in range(1, 256):
                 new_server = {}
                 postfix = 'server_%s_' % str(i)
                 # Read the server name (mandatory)
-                new_server['name'] = config.get_raw_option(self._section, '%sname' % postfix)
+                for s in ['name', 'port']:
+                    new_server[s] = config.get_raw_option(self._section, '%s%s' % (postfix, s))
                 if new_server['name'] is not None:
-                    # Read other optionnal information
-                    for s in ['alias', 'port', 'password']:
-                        new_server[s] = config.get_raw_option(self._section, '%s%s' % (postfix, s))
-
                     # Manage optionnal information
-                    if new_server['alias'] is None:
-                        new_server['alias'] = new_server['name']
                     if new_server['port'] is None:
                         new_server['port'] = 61209
-                    if new_server['password'] is None:
-                        new_server['password'] = ''
                     new_server['username'] = 'glances'
-                    new_server['ip'] = new_server['name']
+                    new_server['password'] = ''
+                    try:
+                        new_server['ip'] = gethostbyname(new_server['name'])
+                    except gaierror as e:
+                        logger.error("Can not get IP address for server %s (%s)" % (new_server['name'], e))
+                        continue
                     new_server['key'] = new_server['name'] + ':' + new_server['port']
                     new_server['status'] = 'UNKNOWN'
 
