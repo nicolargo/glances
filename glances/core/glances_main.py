@@ -82,7 +82,7 @@ class GlancesMain(object):
                             dest='disable_log', help=_('disable log module'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
-        parser.add_argument('--enable-process-extended', action='store_false', default=False,
+        parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help=_('enable extended stats on top process'))
         parser.add_argument('--enable-history', action='store_true', default=False,
                             dest='enable_history', help=_('enable the history mode'))

@@ -33,7 +33,7 @@ from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCursesBrowser
 from glances.core.glances_client import GlancesClientTransport, GlancesClient
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
-#from glances.core.glances_staticlist import GlancesStaticServer
+from glances.core.glances_staticlist import GlancesStaticServer
 
 
 class GlancesClientBrowser(object):
@@ -45,8 +45,8 @@ class GlancesClientBrowser(object):
         self.args = args
         self.config = config
 
-        # TODO: Init the static server list (if defined)
-        # self.static_server = GlancesStaticServer()
+        # Init the static server list (if defined)
+        self.static_server = GlancesStaticServer(config=self.config)
 
         # Start the autodiscover mode (Zeroconf listener)
         if not self.args.disable_autodiscover:
@@ -60,15 +60,16 @@ class GlancesClientBrowser(object):
     def get_servers_list(self):
         """
         Return the current server list (list of dict)
-        TODO: should return the merge of static + autodiscover servers list
+        Merge of static + autodiscover servers list
         """
+        ret = []
+
         if self.args.browser:
+            ret = self.static_server.get_servers_list()
             if self.autodiscover_server is not None:
-                return self.autodiscover_server.get_servers_list()
-            else:
-                return []
-        else:
-            return []
+                ret = self.autodiscover_server.get_servers_list() + self.static_server.get_servers_list()
+
+        return ret
 
     def serve_forever(self):
         """Main client loop."""
@@ -106,14 +107,20 @@ class GlancesClientBrowser(object):
                                 s.getMem())['percent']
                             # OS (Human Readable name)
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
+                            # Status
+                            v['status'] = 'ONLINE'
                         except (socket.error, Fault, KeyError) as e:
-                            logger.warning(
+                            logger.debug(
                                 "Error while grabbing stats form {0}: {1}".format(uri, e))
+                            v['status'] = 'OFFLINE'
                         except ProtocolError as e:
                             if str(e).find(" 401 ") > 0:
                                 # Error 401 (Authentication failed)
                                 # Password is not the good one...
                                 v['password'] = None
+                                v['status'] = 'PROTECTED'
+                            else:
+                                v['status'] = 'OFFLINE'
                             logger.debug(
                                 "Can not grab stats from {0}: {1}".format(uri, e))
             # List can change size during iteration...
@@ -163,7 +170,7 @@ class GlancesClientBrowser(object):
 
                     logger.debug("Disconnect Glances client from the %s server" %
                                  self.get_servers_list()[self.screen.get_active()]['key'])
-                
+
                 # Return to the browser (no server selected)
                 self.screen.set_active(None)
 

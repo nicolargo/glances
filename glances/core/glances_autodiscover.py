@@ -65,6 +65,7 @@ class AutoDiscovered(object):
                       'port': port,  # TCP port
                       'username': 'glances', # Default username
                       'password': '', # Default password
+                      'status': 'UNKNOWN', # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
                       }
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %
