@@ -437,7 +437,8 @@ class _GlancesCurses(object):
             max_processes_displayed = 0
         if glances_processes.get_max_processes() is None or \
            glances_processes.get_max_processes() != max_processes_displayed:
-            logger.debug("Set number of displayed processes to %s" % max_processes_displayed)
+            logger.debug("Set number of displayed processes to %s" %
+                         max_processes_displayed)
             glances_processes.set_max_processes(max_processes_displayed)
 
         stats_processlist = stats.get_plugin(
@@ -635,7 +636,8 @@ class _GlancesCurses(object):
             textbox.edit()
             self.set_cursor(0)
             if textbox.gather() != '':
-                logger.debug("User enters the following process filter patern: %s" % textbox.gather())
+                logger.debug(
+                    "User enters the following process filter patern: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
                 logger.debug("User clears the process filter patern")
@@ -720,7 +722,8 @@ class _GlancesCurses(object):
                     # occupy several bytes
                     offset = len(m['msg'].decode("utf-8"))
                 except AttributeError:
-                    # Python 3: strings are strings and bytes are bytes, all is good
+                    # Python 3: strings are strings and bytes are bytes, all is
+                    # good
                     offset = len(m['msg'])
                 x = x + offset
 
@@ -836,6 +839,14 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Init the father class
         _GlancesCurses.__init__(self, args=args)
 
+        _colors_list = {
+            'UNKNOWN': self.no_color,
+            'ONLINE': self.default_color2,
+            'OFFLINE': self.ifCRITICAL_color2,
+            'PROTECTED': self.ifWARNING_color2,
+        }
+        self.colors_list = dict(self.colors_list.items() + _colors_list.items())
+
         # First time scan tag
         # Used to display a specific message when the browser is started
         self.first_scan = True
@@ -925,7 +936,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Getkey
             pressedkey = self.__catch_key(servers_list)
             # Is it an exit or select server key ?
-            exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10)
+            exitkey = (
+                pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10)
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(servers_list)
@@ -990,6 +1002,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             ['load_min5', _('LOAD'), 6],
             ['cpu_percent', _('CPU%'), 5],
             ['mem_percent', _('MEM%'), 5],
+            ['status', _('STATUS'), 8],
             ['ip', _('IP'), 15],
             ['port', _('PORT'), 5],
             ['hr_name', _('OS'), 16],
@@ -1047,7 +1060,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     self.term_window.addnstr(y, xc,
                                              "%s" % server_stat[c[0]],
                                              screen_x - xc,
-                                             self.colors_list['DEFAULT'])
+                                             self.colors_list[v['status']])
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...
