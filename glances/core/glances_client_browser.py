@@ -67,7 +67,7 @@ class GlancesClientBrowser(object):
         if self.args.browser:
             ret = self.static_server.get_servers_list()
             if self.autodiscover_server is not None:
-                ret = self.autodiscover_server.get_servers_list() + self.static_server.get_servers_list()
+                ret = self.static_server.get_servers_list() + self.autodiscover_server.get_servers_list()
 
         return ret
 
@@ -142,9 +142,15 @@ class GlancesClientBrowser(object):
                     clear_password = self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True)
                     # Hash with SHA256
                     encoded_password = sha256(clear_password).hexdigest()
-                    self.autodiscover_server.set_server(self.screen.get_active(),
-                                                        'password',
-                                                        encoded_password)
+                    # Static list then dynamic one
+                    if self.screen.get_active() >= len(self.static_server.get_servers_list()):
+                        self.autodiscover_server.set_server(self.screen.get_active() - len(self.static_server.get_servers_list()),
+                                                            'password',
+                                                            encoded_password)
+                    else:
+                        self.static_server.set_server(self.screen.get_active(),
+                                                      'password',
+                                                      encoded_password)
 
                 # Display the Glance client on the selected server
                 logger.info("Connect Glances client to the %s server" %
