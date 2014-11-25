@@ -141,29 +141,32 @@ class GlancesAutoDiscoverServer(object):
             try:
                 self.zeroconf = Zeroconf()
             except socker.error as e:
-                logger.critical("Can not start Zeroconf (%s)" % e)
-                sys.exit(2)
-            self.listener = GlancesAutoDiscoverListener()
-            self.browser = ServiceBrowser(
-                self.zeroconf, zeroconf_type, self.listener)
+                logger.error("Can not start Zeroconf (%s)" % e)
+                self.zeroconf_enable_tag = False
+            else:                
+                self.listener = GlancesAutoDiscoverListener()
+                self.browser = ServiceBrowser(
+                    self.zeroconf, zeroconf_type, self.listener)
+                self.zeroconf_enable_tag = True
         else:
-            logger.critical(
+            logger.error(
                 "Can not start autodiscover mode (Zeroconf lib is not installed)")
-            sys.exit(2)
+            self.zeroconf_enable_tag = False
 
     def get_servers_list(self):
         """Return the current server list (dict of dict)"""
-        if zeroconf_tag:
+        if zeroconf_tag and self.zeroconf_enable_tag:
             return self.listener.get_servers_list()
         else:
             return []
 
     def set_server(self, server_pos, key, value):
         """Set the key to the value for the server_pos (position in the list)"""
-        self.listener.set_server(server_pos, key, value)
+        if zeroconf_tag and self.zeroconf_enable_tag:
+            self.listener.set_server(server_pos, key, value)
 
     def close(self):
-        if zeroconf_tag:
+        if zeroconf_tag and self.zeroconf_enable_tag:
             self.zeroconf.close()
 
 
