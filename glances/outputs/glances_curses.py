@@ -849,7 +849,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             'OFFLINE': self.ifCRITICAL_color2,
             'PROTECTED': self.ifWARNING_color2,
         }
-        self.colors_list = dict(self.colors_list.items() + _colors_list.items())
+        self.colors_list.update(_colors_list)
 
         # First time scan tag
         # Used to display a specific message when the browser is started
