@@ -1004,7 +1004,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             ['mem_percent', _('MEM%'), 5],
             ['status', _('STATUS'), 8],
             ['ip', _('IP'), 15],
-            ['port', _('PORT'), 5],
+            # ['port', _('PORT'), 5],
             ['hr_name', _('OS'), 16],
         ]
         y = 2
