@@ -94,6 +94,13 @@ class Plugin(GlancesPlugin):
                 self.stats['os_version'] = ' '.join(os_version[::2])
             else:
                 self.stats['os_version'] = ""
+            # Add human readable name
+            self.stats['hr_name'] = self.stats['os_name']
+            self.stats['hr_name'] += ' ' + self.stats['os_version']
+            if self.stats['os_name'] == "Linux":
+                self.stats['hr_name'] = self.stats['linux_distro']
+            self.stats['hr_name'] += ' (' + self.stats['platform'] + ')'
+
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             try:
@@ -104,10 +111,12 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
             if self.get_short_system_name() == 'windows':
-                for r,v in snmp_to_human['windows'].iteritems():
+                for r, v in snmp_to_human['windows'].iteritems():
                     if re.search(r, self.stats['system_name']):
-                        self.stats['os_name'] = v 
+                        self.stats['os_name'] = v
                         break
+            # Add human readable name
+            self.stats['hr_name'] = self.stats['os_name']
 
         return self.stats
 

@@ -20,7 +20,7 @@ systems, processes and so on.
 The command-line options are the following:
 .TP
 .B \-h, \-\-help
-display the help and exit
+show this help message and exit
 .TP
 .B \-V, \-\-version
 show program's version number and exit
@@ -28,14 +28,11 @@ show program's version number and exit
 .B \-d, \-\-debug
 Enable debug mode (log file is /tmp/glances.log)
 .TP
-.B \-b, \-\-byte
-display network rate in byte per second [default: bit per second]
-.TP
 .B \-C CONF_FILE, \-\-config CONF_FILE
 path to the configuration file
 .TP
-.B \-\-enable-history
-enable the history mode
+.B \-b, \-\-byte
+display network rate in byte per second [default: bit per second]
 .TP
 .B \-\-disable-bold
 disable bold mode in the terminal
@@ -64,11 +61,23 @@ disable log module
 .B \-\-enable-process-extended
 enable extended stats on top process
 .TP
+.B \-\-enable-history
+enable the history mode
+.TP
+B \-\-path-history PATH_HISTORY
+set the export path for graph history
+.TP
 .B \-\-output-csv OUTPUT_CSV
 export stats to a CSV file
 .TP
 .B \-s, \-\-server
 run Glances in server mode
+.TP
+.B \-\-browser
+start the client browser (display list of servers)
+.TP
+.B \-\-disable-autodiscover
+disable autodiscover feature
 .TP
 .B \-c CLIENT, \-\-client CLIENT
 connect to a Glances server by IPv4/IPv6 address or hostname
@@ -121,7 +130,7 @@ Optimize display for white background
 You can use the following keys while in Glances:
 .TP
 .B ENTER
-Set the process filter patern (as a regular expression)
+Set the process filter pattern (as a regular expression)
 .TP
 .B a
 Sort process list automatically

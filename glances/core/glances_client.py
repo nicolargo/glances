@@ -25,35 +25,35 @@ import socket
 import sys
 try:
     from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
-except ImportError:  
+except ImportError:
     # Python 2
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
 try:
     import http.client as httplib
-except:  
+except:
     # Python 2
     import httplib
 
 # Import Glances libs
 from glances.core.glances_globals import version, logger
 from glances.core.glances_stats import GlancesStatsClient
-from glances.outputs.glances_curses import GlancesCurses
+from glances.outputs.glances_curses import GlancesCursesClient
+from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 
 
 class GlancesClientTransport(Transport):
+
     """This class overwrite the default XML-RPC transport and manage timeout"""
-    
+
     def set_timeout(self, timeout):
         self.timeout = timeout
 
-    def make_connection(self, host):
-        return httplib.HTTPConnection(host, timeout=self.timeout)
-
 
 class GlancesClient(object):
+
     """This class creates and manages the TCP client."""
 
-    def __init__(self, config=None, args=None):
+    def __init__(self, config=None, args=None, timeout=7, return_to_browser=False):
         # Store the arg/config
         self.args = args
         self.config = config
@@ -67,16 +67,21 @@ class GlancesClient(object):
                                                   args.client, args.port)
         else:
             uri = 'http://{0}:{1}'.format(args.client, args.port)
+        logger.debug("Try to connect to {0}".format(uri))
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
-        # Configure the server timeout to 7 seconds
-        transport.set_timeout(7)
+        # Configure the server timeout
+        transport.set_timeout(timeout)
         try:
-            self.client = ServerProxy(uri, transport = transport)
+            self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            logger.error(_("Couldn't create socket {0}: {1}").format(uri, e))
-            sys.exit(2)
+            msg = _("Client couldn't create socket {0}: {1}").format(uri, e)
+            if not return_to_browser:
+                logger.critical(msg)
+                sys.exit(2)
+            else:
+                logger.error(msg)
 
     def set_mode(self, mode='glances'):
         """Set the client mode.
@@ -95,7 +100,7 @@ class GlancesClient(object):
         """
         return self.mode
 
-    def login(self):
+    def login(self, return_to_browser=False):
         """Logon to the server."""
         ret = True
 
@@ -107,30 +112,41 @@ class GlancesClient(object):
                 client_version = self.client.init()
             except socket.error as err:
                 # Fallback to SNMP
-                logger.error(_("Connection to Glances server failed"))
+                logger.error("Connection to Glances server failed (%s)" % err)
                 self.set_mode('snmp')
                 fallbackmsg = _("Trying fallback to SNMP...")
-                print(fallbackmsg)
+                if not return_to_browser:
+                    print(fallbackmsg)
+                else:
+                    logger.info(fallbackmsg)
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    logger.error(_("Connection to server failed (Bad password)"))
+                    msg = _("Connection to server failed (Bad password)")
                 else:
-                    logger.error(_("Connection to server failed ({0})").format(err))
-                sys.exit(2)
+                    msg = _("Connection to server failed ({0})").format(err)
+                if not return_to_browser:
+                    logger.critical(msg)
+                    sys.exit(2)
+                else:
+                    logger.error(msg)
+                    return False
 
             if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
                 # Init stats
                 self.stats = GlancesStatsClient()
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+                logger.debug(
+                    "Client version: %s / Server version: %s" % (version, client_version))
             else:
-                logger.error("Client version: %s / Server version: %s" % (version, client_version))
+                logger.error(
+                    "Client and server not compatible: Client version: %s / Server version: %s" % (version, client_version))
 
         else:
             self.set_mode('snmp')
 
-        if self.get_mode() == 'snmp':            
-            logger.info(_("Trying to grab stats by SNMP..."))
+        if self.get_mode() == 'snmp':
+            logger.info("Trying to grab stats by SNMP...")
             # Fallback to SNMP if needed
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
@@ -138,8 +154,11 @@ class GlancesClient(object):
             self.stats = GlancesStatsClientSNMP(args=self.args)
 
             if not self.stats.check_snmp():
-                logger.error(_("Connection to SNMP server failed"))
-                sys.exit(2)
+                logger.error("Connection to SNMP server failed")
+                if not return_to_browser:
+                    sys.exit(2)
+                else:
+                    return False
 
         if ret:
             # Load limits from the configuration file
@@ -147,7 +166,7 @@ class GlancesClient(object):
             self.stats.load_limits(self.config)
 
             # Init screen
-            self.screen = GlancesCurses(args=self.args)
+            self.screen = GlancesCursesClient(args=self.args)
 
         # Return result
         return ret
@@ -202,14 +221,19 @@ class GlancesClient(object):
             # Grab success
             return "SNMP"
 
-    def serve_forever(self):
+    def serve_forever(self, return_to_browser=False):
         """Main client loop."""
-        while True:
+
+        exitkey = False
+
+        while True and not exitkey:
             # Update the stats
             cs_status = self.update()
 
             # Update the screen
-            self.screen.update(self.stats, cs_status=cs_status)
+            exitkey = self.screen.update(self.stats,
+                                         cs_status=cs_status,
+                                         return_to_browser=return_to_browser)
 
     def end(self):
         """End of the client session."""

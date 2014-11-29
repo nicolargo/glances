@@ -82,7 +82,7 @@ class GlancesMain(object):
                             dest='disable_log', help=_('disable log module'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
-        parser.add_argument('--enable-process-extended', action='store_false', default=False,
+        parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help=_('enable extended stats on top process'))
         parser.add_argument('--enable-history', action='store_true', default=False,
                             dest='enable_history', help=_('enable the history mode'))
@@ -96,6 +96,10 @@ class GlancesMain(object):
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
         parser.add_argument('-s', '--server', action='store_true', default=False,
                             dest='server', help=_('run Glances in server mode'))
+        parser.add_argument('--browser', action='store_true', default=False,
+                            dest='browser', help=_('start the client browser (list of servers)'))
+        parser.add_argument('--disable-autodiscover', action='store_true', default=False,
+                            dest='disable_autodiscover', help=_('disable autodiscover feature'))
         parser.add_argument('-p', '--port', default=None, type=int, dest='port',
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
@@ -122,7 +126,7 @@ class GlancesMain(object):
                             dest='webserver', help=_('run Glances in web server mode'))
         # Display options
         parser.add_argument('-f', '--process-filter', default=None, type=str,
-                            dest='process_filter', help=_('set the process filter patern (regular expression)'))
+                            dest='process_filter', help=_('set the process filter pattern (regular expression)'))
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help=_('force short name for processes name'))
         if not is_windows:
@@ -159,6 +163,10 @@ class GlancesMain(object):
                 args.port = self.web_server_port
             else:
                 args.port = self.server_port
+
+        # Autodiscover
+        if args.disable_autodiscover:
+            logger.info("Auto discover mode is disabled")
 
         # In web server mode, defaul refresh time: 5 sec
         if args.webserver:
@@ -236,11 +244,15 @@ class GlancesMain(object):
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.args.client and not self.args.server and not self.args.webserver
+        return not self.args.client and not self.args.browser and not self.args.server and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return self.args.client and not self.args.server
+        return (self.args.client or self.args.browser) and not self.args.server
+
+    def is_client_browser(self):
+        """Return True if Glances is running in client browser mode."""
+        return self.args.browser and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
