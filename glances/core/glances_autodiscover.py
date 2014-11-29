@@ -140,10 +140,10 @@ class GlancesAutoDiscoverServer(object):
             logger.info("Init autodiscover mode (Zeroconf protocol)")
             try:
                 self.zeroconf = Zeroconf()
-            except socker.error as e:
+            except socket.error as e:
                 logger.error("Can not start Zeroconf (%s)" % e)
                 self.zeroconf_enable_tag = False
-            else:                
+            else:
                 self.listener = GlancesAutoDiscoverListener()
                 self.browser = ServiceBrowser(
                     self.zeroconf, zeroconf_type, self.listener)
@@ -187,18 +187,22 @@ class GlancesAutoDiscoverClient(object):
             if zeroconf_tag:
                 logger.info(
                     "Announce the Glances server on the local area network (using %s IP address)" % zeroconf_bind_address)
-                self.zeroconf = Zeroconf()
-                self.info = ServiceInfo(zeroconf_type,
-                                        hostname + ':' +
-                                        str(args.port) + '.' + zeroconf_type,
-                                        address=socket.inet_aton(
-                                            zeroconf_bind_address),
-                                        port=args.port,
-                                        weight=0,
-                                        priority=0,
-                                        properties={},
-                                        server=hostname)
-                self.zeroconf.registerService(self.info)
+                try:
+                    self.zeroconf = Zeroconf()
+                except socket.error as e:
+                    logger.error("Can not start Zeroconf (%s)" % e)
+                else:
+                    self.info = ServiceInfo(zeroconf_type,
+                                            hostname + ':' +
+                                            str(args.port) + '.' + zeroconf_type,
+                                            address=socket.inet_aton(
+                                                zeroconf_bind_address),
+                                            port=args.port,
+                                            weight=0,
+                                            priority=0,
+                                            properties={},
+                                            server=hostname)
+                    self.zeroconf.registerService(self.info)
             else:
                 logger.error(
                     "Can not announce Glances server on the network (Zeroconf lib is not installed)")
