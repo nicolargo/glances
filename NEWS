@@ -5,9 +5,19 @@ Glances Version 2.x
 Version 2.2
 ===========
 
-    * Improve graph history feature (issue #428)
+Enhancements and news features:
+
+    * Add centralized curse interface with a Glances servers list to monitor (issue #418)
+    * Add processes tree view (--tree) (issue #444)
+    * Improve graph history feature (issue #69)
     * Extended stats is disable by default (use --enable-process-extended to enable it - issue #430)
-    * Add a key ('F') and a command line option (--fs-free-space) to display FS free space instead of used space (issue #411)
+    * Add a short key ('F') and a command line option (--fs-free-space) to display FS free space instead of used space (issue #411)
+    * Add a short key ('2') and a command line option (--disable-left-sidebar) to disable/enable the side bar (issue #429)
+
+Bugs corrected:
+
+    * Correct issue on battery stat update (issue #433)
+    * Correct issue on process no longer exist (issues #414 and #432)
 
 Version 2.1.2
 =============
@@ -22,6 +32,7 @@ Version 2.1.1
 =============
 
 Enhancement:
+
     * Automaticaly compute top processes number for the current screen (issue #408)
     * CPU and Memory footprint optimization (issue #401)
 
