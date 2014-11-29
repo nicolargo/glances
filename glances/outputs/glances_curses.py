@@ -972,18 +972,18 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # Display top header
         if len(servers_list) == 0:
-            if self.first_scan:
+            if self.first_scan and not self.args.disable_autodiscover:
                 msg = _("Glances is scanning your network (please wait)...")
                 self.first_scan = False
             else:
-                msg = _("No Glances server detected on your network")
+                msg = _("No Glances servers available")
         elif len(servers_list) == 1:
-            msg = _("One Glances server detected on your network")
+            msg = _("One Glances server available")
         else:
-            msg = _("%d Glances servers detected on your network" %
+            msg = _("%d Glances servers available" %
                     len(servers_list))
         if self.args.disable_autodiscover:
-            msg += ' ' + _("(autodiscover is disabled)")
+            msg += ' ' + _("(auto discover is disabled)")
         self.term_window.addnstr(y, x,
                                  msg,
                                  screen_x - x,
