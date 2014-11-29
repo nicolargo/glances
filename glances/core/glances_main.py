@@ -126,7 +126,7 @@ class GlancesMain(object):
                             dest='webserver', help=_('run Glances in web server mode'))
         # Display options
         parser.add_argument('-f', '--process-filter', default=None, type=str,
-                            dest='process_filter', help=_('set the process filter patern (regular expression)'))
+                            dest='process_filter', help=_('set the process filter pattern (regular expression)'))
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help=_('force short name for processes name'))
         if not is_windows:
