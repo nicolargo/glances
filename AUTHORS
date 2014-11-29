@@ -26,6 +26,8 @@ Packagers
 Rémi Verchère for the Debian package
 https://github.com/rverchere/debian-glances
 
+Philip Lacroix for the Slackware (SlackBuild) package
+
 gasol.wu@gmail.com for the FreeBSD port
 
 Frederic Aoustin (https://github.com/fraoustin) and Nicolas Bourges (installer) for the Windows port
