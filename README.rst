@@ -37,7 +37,7 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
-- ``zeroconf`` and ``netifaces`` (for the autodiscovered support)
+- ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
 
 Installation
 ============
@@ -192,11 +192,11 @@ on the server side and run:
 
 on the client one.
 
-You can also detect and display all the Glances servers available on your network:
+You can also detect and display all Glances servers available on your network or defined in the configuration file:
 
 .. code-block:: console
 
-    $ glances --autodiscover
+    $ glances --browser
 
 
 And RTFM, always.

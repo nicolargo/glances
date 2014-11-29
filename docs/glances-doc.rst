@@ -67,18 +67,20 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
-Glances can detect and display all Glances servers available on you network using the Zeroconf protocol:
+Glances can centralize available Glances servers using the ``--browser`` option. The server list can be staticaly defined in the Glances configuration file (section [serverlist]). Glances can also detect and display all Glances servers available on you network (auto discover mode is based on the the Zeroconf protocol):
 
 .. code-block:: console
 
-    client$ glances --autodiscover
+    client$ glances --browser
+
+It is possible to disable the auto discover mode ``--disable-autodiscover``.
 
 In server mode, you can set the bind address ``-B ADDRESS`` and listening
 TCP port ``-p PORT``.
 
 In client mode, you can set the TCP port of the server ``-p PORT``.
 
-You can also set a password to access to the server ``--password``.
+You can set a password to access to the server ``--password``.
 
 Default binding address is ``0.0.0.0`` (Glances will listen on all the
 available network interfaces) and TCP port is ``61209``.
@@ -95,13 +97,13 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
 
     client$ glances -c @snmpserver
 
-Note: Stats grabbed by SNMP request are limited.
+Note: Stats grabbed by SNMP request are limited (operating system dependent).
 
 Web Server Mode
 ---------------
 
 If you want to remotely monitor a machine, called ``server``, from any
-device with a web browser, just run on the server:
+device with a web browser, just run the server with the ``-w`` option:
 
 .. code-block:: console
 
@@ -145,13 +147,18 @@ Command-Line Options
   --disable-log         disable log module
   --enable-process-extended
                         enable extended stats on top process
+  --enable-history      enable the history mode
+  --path-history PATH_HISTORY
+                        Set the export path for graph history
   --output-csv OUTPUT_CSV
                         export stats to a CSV file
-  --autodiscover        run the Glances client browser (list of Glances server)
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
   -s, --server          run Glances in server mode
+  --browser             run the Glances client browser (list of Glances server)
+  --disable-autodiscover
+                        disable autodiscover feature
   -p PORT, --port PORT  define the client/server TCP port [default: 61209]
   -B BIND_ADDRESS, --bind BIND_ADDRESS
                         bind server to the given IPv4/IPv6 address or hostname
@@ -177,6 +184,9 @@ Command-Line Options
   -f PROCESS_FILTER, --process-filter PROCESS_FILTER
                         set the process filter patern (regular expression)
   --process-short-name  force short name for processes name
+  --hide-kernel-threads
+                        hide kernel threads in process list
+  --tree                display processes as a tree
   -b, --byte            display network rate in byte per second
   -1, --percpu          start Glances in per CPU mode
   --fs-free-space       display FS free space instead of used
@@ -248,7 +258,7 @@ The following commands (key pressed) are supported while in Glances:
 ``/``
     Switch between short name / command line (processes name)
 
-In the Glances client browser (accessible through the --autodiscover command line argument):
+In the Glances client browser (accessible through the --browser command line argument):
 
 ``ENTER``
     Run Glances client to the selected server
