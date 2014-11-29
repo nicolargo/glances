@@ -16,6 +16,7 @@ Enhancements and news features:
 
 Bugs corrected:
 
+    * Correct a bug with Glances pip install --user (issue #383)
     * Correct issue on battery stat update (issue #433)
     * Correct issue on process no longer exist (issues #414 and #432)
 
