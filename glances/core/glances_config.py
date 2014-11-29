@@ -89,6 +89,7 @@ class Config(object):
         The list is built taking into account of the OS, priority and location.
 
         * running from source: /path/to/glances/conf
+        * per-user install: ~/.local/etc/glances (Unix-like only)
         * Linux: ~/.config/glances, /etc/glances
         * BSD: ~/.config/glances, /usr/local/etc/glances
         * Mac: ~/Library/Application Support/glances, /usr/local/etc/glances
@@ -97,6 +98,7 @@ class Config(object):
         The config file will be searched in the following order of priority:
             * /path/to/file (via -C flag)
             * /path/to/glances/conf
+            * user's local directory (per-user install settings)
             * user's home directory (per-user settings)
             * {/usr/local,}/etc directory (system-wide settings)
         """
@@ -109,6 +111,9 @@ class Config(object):
 
         if os.path.exists(conf_path):
             paths.append(os.path.join(conf_path, self.config_filename))
+
+        if not is_windows:
+            paths.append(os.path.join(os.path.expanduser('~/.local'), 'etc', appname, self.config_filename))
 
         if is_linux or is_bsd:
             paths.append(os.path.join(
