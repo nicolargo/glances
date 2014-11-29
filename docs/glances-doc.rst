@@ -242,6 +242,8 @@ The following commands (key pressed) are supported while in Glances:
 ``s``
     Show/hide sensors stats
 ``t``
+    Sort process by CPU times (TIME+)
+``T``
     View network I/O as combination
 ``u``
     View cumulative network I/O

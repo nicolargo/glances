@@ -308,7 +308,11 @@ class _GlancesCurses(object):
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
         elif self.pressedkey == ord('t'):
-            # 't' > View network traffic as sum Rx+Tx
+            # 't' > Sort processes by TIME usage
+            self.args.process_sorted_by = 'cpu_times'
+            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+        elif self.pressedkey == ord('T'):
+            # 'T' > View network traffic as sum Rx+Tx
             self.args.network_sum = not self.args.network_sum
         elif self.pressedkey == ord('u'):
             # 'u' > View cumulative network IO (instead of bitrate)

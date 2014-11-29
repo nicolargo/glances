@@ -348,7 +348,7 @@ class GlancesProcesses(object):
             # Process CPU, MEM percent and name
             try:
                 procstat.update(
-                    proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name'], ad_value=''))
+                    proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name', 'cpu_times'], ad_value=''))
             except psutil.NoSuchProcess:
                 # Correct issue #414
                 return None
@@ -603,7 +603,9 @@ class GlancesProcesses(object):
                 try:
                     processiter = sorted(
                         processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
-                except TypeError:
+                except (KeyError, TypeError) as e:
+                    logger.error("Can not sort process list by %s (%s)" % (self.getsortkey(), e))
+                    logger.error("%s" % str(processdict.items()[0]))
                     # Fallback to all process (issue #423)
                     processloop = processdict.items()
                     first = False
