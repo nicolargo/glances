@@ -383,7 +383,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>2}'.format(_("S"))
         ret.append(self.curse_add_line(msg))
         msg = '{0:>9}'.format(_("TIME+"))
-        ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
         msg = '{0:>6}'.format(_("IOR/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = '{0:>6}'.format(_("IOW/s"))
