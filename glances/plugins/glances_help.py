@@ -139,7 +139,7 @@ class Plugin(GlancesPlugin):
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
-        msg = '{0}: {1}'.format("ENTER", _("Edit the process filter patern"))
+        msg = '{0}: {1}'.format("ENTER", _("Edit the process filter pattern"))
         ret.append(self.curse_add_line(msg))
 
 
