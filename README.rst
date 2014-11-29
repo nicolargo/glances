@@ -84,7 +84,7 @@ At the moment, packages exist for the following GNU/Linux distributions:
 - Debian (Testing/Sid)
 - Fedora/CentOS/RHEL
 - Gentoo
-- Slackware
+- Slackware (SlackBuild)
 - Ubuntu (13.04+)
 - Void Linux
 
