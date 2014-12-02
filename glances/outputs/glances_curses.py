@@ -1003,6 +1003,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Item description: [stats_id, column name, column size]
         column_def = [
             ['name', _('Name'), 16],
+            ['alias', None, None],
             ['load_min5', _('LOAD'), 6],
             ['cpu_percent', _('CPU%'), 5],
             ['mem_percent', _('MEM%'), 5],
@@ -1017,7 +1018,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         cpt = 0
         xc = x + 2
         for c in column_def:
-            if xc < screen_x and y < screen_y:
+            if xc < screen_x and y < screen_y and c[1] is not None:
                 self.term_window.addnstr(y, xc,
                                          c[1],
                                          screen_x - x,
@@ -1044,6 +1045,9 @@ class GlancesCursesBrowser(_GlancesCurses):
                     logger.debug(
                         "Can not grab stats {0} from server (KeyError: {1})".format(c[0], e))
                     server_stat[c[0]] = '?'
+                # Display alias instead of name
+                if c[0] == 'alias' and v[c[0]] is not None:
+                    server_stat['name'] = v[c[0]]
 
             # Display line for server stats
             cpt = 0
@@ -1057,9 +1061,13 @@ class GlancesCursesBrowser(_GlancesCurses):
                                          screen_x - xc,
                                          self.colors_list['BOLD'])
 
+            # Display alias instead of name
+            server_stat
+
+            # Display the line
             xc += 2
             for c in column_def:
-                if xc < screen_x and y < screen_y:
+                if xc < screen_x and y < screen_y and c[1] is not None:
                     # Display server stats
                     self.term_window.addnstr(y, xc,
                                              "%s" % server_stat[c[0]],

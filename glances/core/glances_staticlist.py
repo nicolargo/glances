@@ -53,7 +53,7 @@ class GlancesStaticServer(object):
                 new_server = {}
                 postfix = 'server_%s_' % str(i)
                 # Read the server name (mandatory)
-                for s in ['name', 'port']:
+                for s in ['name', 'port', 'alias']:
                     new_server[s] = config.get_raw_option(self._section, '%s%s' % (postfix, s))
                 if new_server['name'] is not None:
                     # Manage optionnal information
