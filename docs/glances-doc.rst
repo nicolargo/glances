@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.1.2.
+This manual describes *Glances* version 2.2.
 
 Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
 
-October 2014
+December 2014
 
 .. contents:: Table of Contents
 
@@ -67,7 +67,7 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
-Glances can centralize available Glances servers using the ``--browser`` option. The server list can be staticaly defined in the Glances configuration file (section [serverlist]). Glances can also detect and display all Glances servers available on you network (auto discover mode is based on the the Zeroconf protocol):
+Glances can centralize available Glances servers using the ``--browser`` option. The server list can be staticaly defined in the Glances configuration file (section [serverlist]). Glances can also detect and display all Glances servers available on you network (auto discover mode is based on the the Zeroconf protocol only available on GNU/Linux and Mac OS X):
 
 .. code-block:: console
 

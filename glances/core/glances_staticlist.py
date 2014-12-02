@@ -67,7 +67,12 @@ class GlancesStaticServer(object):
                         logger.error("Can not get IP address for server %s (%s)" % (new_server['name'], e))
                         continue
                     new_server['key'] = new_server['name'] + ':' + new_server['port']
+                    
+                    # Default status is 'UNKNOWN'
                     new_server['status'] = 'UNKNOWN'
+
+                    # Server type is 'STATIC'
+                    new_server['type'] = 'STATIC'
 
                     # Add the server to the list
                     logger.debug("Add server %s to the static list" % new_server['name'])
