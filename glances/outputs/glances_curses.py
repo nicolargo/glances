@@ -845,6 +845,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         _colors_list = {
             'UNKNOWN': self.no_color,
+            'SNMP': self.default_color2,
             'ONLINE': self.default_color2,
             'OFFLINE': self.ifCRITICAL_color2,
             'PROTECTED': self.ifWARNING_color2,
@@ -886,16 +887,20 @@ class GlancesCursesBrowser(_GlancesCurses):
         """Return the cursor position"""
         return self.cursor_position
 
-    def cursor_up(self):
+    def cursor_up(self, servers_list):
         """Set the cursor to position N-1 in the list"""
         if self.cursor_position > 0:
             self.cursor_position -= 1
+        else:
+            self.cursor_position = len(servers_list) - 1
         return self.cursor_position
 
     def cursor_down(self, servers_list):
         """Set the cursor to position N-1 in the list"""
         if self.cursor_position < len(servers_list) - 1:
             self.cursor_position += 1
+        else:
+            self.cursor_position = 0
         return self.cursor_position
 
     def __catch_key(self, servers_list):
@@ -915,7 +920,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif self.pressedkey == 259:
             # 'UP' > Up in the server list
             logger
-            self.cursor_up()
+            self.cursor_up(servers_list)
         elif self.pressedkey == 258:
             # 'DOWN' > Down in the server list
             self.cursor_down(servers_list)
@@ -1046,8 +1051,11 @@ class GlancesCursesBrowser(_GlancesCurses):
                         "Can not grab stats {0} from server (KeyError: {1})".format(c[0], e))
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
-                if c[0] == 'alias' and v[c[0]] is not None:
-                    server_stat['name'] = v[c[0]]
+                try:
+                    if c[0] == 'alias' and v[c[0]] is not None:
+                        server_stat['name'] = v[c[0]]
+                except KeyError as e:
+                    pass
 
             # Display line for server stats
             cpt = 0

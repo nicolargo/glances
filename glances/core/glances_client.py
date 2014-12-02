@@ -235,6 +235,8 @@ class GlancesClient(object):
                                          cs_status=cs_status,
                                          return_to_browser=return_to_browser)
 
+        return self.get_mode()
+
     def end(self):
         """End of the client session."""
         self.screen.end()

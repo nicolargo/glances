@@ -66,6 +66,7 @@ class AutoDiscovered(object):
                       'username': 'glances', # Default username
                       'password': '', # Default password
                       'status': 'UNKNOWN', # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
+                      'type': 'DYNAMIC', # Server type: 'STATIC' or 'DYNAMIC'
                       }
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %
