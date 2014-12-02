@@ -100,11 +100,10 @@ class GlancesClientBrowser(object):
                             # LOAD
                             v['load_min5'] = json.loads(s.getLoad())['min5']
                             # CPU%
-                            v['cpu_percent'] = 100 - \
-                                json.loads(s.getCpu())['idle']
+                            cpu_percent = 100 - json.loads(s.getCpu())['idle']
+                            v['cpu_percent'] = '{0:.1f}'.format(cpu_percent)
                             # MEM%
-                            v['mem_percent'] = json.loads(
-                                s.getMem())['percent']
+                            v['mem_percent'] = json.loads(s.getMem())['percent']
                             # OS (Human Readable name)
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
                             # Status
