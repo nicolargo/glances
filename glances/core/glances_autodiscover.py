@@ -177,11 +177,11 @@ class GlancesAutoDiscoverClient(object):
 
     def __init__(self, hostname, args=None):
         if netifaces_tag:
-            try:
-                zeroconf_bind_address = netifaces.ifaddresses(
-                    netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
-            except:
+            # -B @ overwrite the dynamic IPv4 choice
+            if args.bind_address != '0.0.0.0':
                 zeroconf_bind_address = args.bind_address
+            else:
+                zeroconf_bind_address = self.find_active_ip_address()
             print("Announce the Glances server on the local area network (using %s IP address)" %
                   zeroconf_bind_address)
 
@@ -210,6 +210,16 @@ class GlancesAutoDiscoverClient(object):
         else:
             logger.error(
                 "Can not announce Glances server on the network (Netifaces lib is not installed)")
+
+    def find_active_ip_address(self):
+        """Try to find the active IP addresses"""
+        try:
+            # Interface of the default gatewau
+            gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
+            # IP address for the interface
+            return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
+        except:
+            return None
 
     def close(self):
         if zeroconf_tag:
