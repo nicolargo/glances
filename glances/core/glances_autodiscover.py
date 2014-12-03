@@ -35,6 +35,15 @@ except ImportError:
 # Import Glances libs
 from glances.core.glances_globals import appname, logger
 
+# Need Zeroconf 0.16 or higher
+try:
+    from zeroconf import __version__ as __zeroconf_version__
+    zeroconf_version_t = tuple([int(i) for i in __zeroconf_version__.split('.')])
+    logger.debug("Zeroconf Python lib %s detected" % __zeroconf_version__)
+    if (zeroconf_version_t[0] == 0) and (zeroconf_version_t[1] < 16):
+        logger.warning("Please install Zeroconf Python lib 0.16 or higher")
+except ImportError:
+    pass
 
 # Global var
 zeroconf_type = "_%s._tcp." % appname
@@ -63,10 +72,10 @@ class AutoDiscovered(object):
                       'name': name.split(':')[0],  # Short name
                       'ip': ip,  # IP address seen by the client
                       'port': port,  # TCP port
-                      'username': 'glances', # Default username
-                      'password': '', # Default password
-                      'status': 'UNKNOWN', # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
-                      'type': 'DYNAMIC', # Server type: 'STATIC' or 'DYNAMIC'
+                      'username': 'glances',  # Default username
+                      'password': '',  # Default password
+                      'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
+                      'type': 'DYNAMIC',  # Server type: 'STATIC' or 'DYNAMIC'
                       }
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %

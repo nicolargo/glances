@@ -193,14 +193,18 @@ class GlancesClientBrowser(object):
                     # Return connection type: 'glances' or 'snmp'
                     connection_type = client.serve_forever(return_to_browser=True)
 
-                    logger.debug("Disconnect Glances client from the %s server" %
-                                 self.get_servers_list()[self.screen.get_active()]['key'])
-
-                    # Set the ONLINE status for the selected server
-                    if connection_type == 'snmp':
-                        self.set_in_selected('status', 'SNMP')
+                    try:
+                        logger.debug("Disconnect Glances client from the %s server" %
+                                     self.get_servers_list()[self.screen.get_active()]['key'])
+                    except IndexError:
+                        # Server did not exist anymore
+                        pass
                     else:
-                        self.set_in_selected('status', 'ONLINE')
+                        # Set the ONLINE status for the selected server
+                        if connection_type == 'snmp':
+                            self.set_in_selected('status', 'SNMP')
+                        else:
+                            self.set_in_selected('status', 'ONLINE')
 
                 # Return to the browser (no server selected)
                 self.screen.set_active(None)

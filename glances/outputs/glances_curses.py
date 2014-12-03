@@ -1079,7 +1079,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     # Display server stats
                     self.term_window.addnstr(y, xc,
                                              "%s" % server_stat[c[0]],
-                                             screen_x - xc,
+                                             c[2],
                                              self.colors_list[v['status']])
                     xc += c[2] + self.space_between_column
                 cpt += 1
