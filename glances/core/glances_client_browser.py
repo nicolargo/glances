@@ -135,7 +135,8 @@ class GlancesClientBrowser(object):
                             # Optional stats (load is not available on Windows OS)
                             try:
                                 # LOAD
-                                v['load_min5'] = json.loads(s.getLoad())['min5']
+                                load_min5 = json.loads(s.getLoad())['min5']
+                                v['load_min5'] = '{0:.2f}'.format(load_min5)
                             except Exception as e:
                                 logger.warning(
                                     "Error while grabbing stats form {0}: {1}".format(uri, e))
