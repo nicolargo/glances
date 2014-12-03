@@ -40,6 +40,9 @@ def get_data_files():
 
 def get_requires():
     requires = ['psutil>=2.0.0']
+    if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+        requires += ['zeroconf>=0.16']
+        requires += ['netifaces']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
     if sys.version_info < (2, 7):

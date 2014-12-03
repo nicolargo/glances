@@ -20,7 +20,6 @@
 """Manage autodiscover Glances server (thk to the ZeroConf protocol)."""
 
 # Import system libs
-import sys
 import socket
 try:
     import netifaces
@@ -35,6 +34,7 @@ except ImportError:
 
 # Import Glances libs
 from glances.core.glances_globals import appname, logger
+
 
 # Global var
 zeroconf_type = "_%s._tcp." % appname
@@ -102,7 +102,7 @@ class GlancesAutoDiscoverListener(object):
         """Set the key to the value for the server_pos (position in the list)"""
         self.servers.set_server(server_pos, key, value)
 
-    def addService(self, zeroconf, srv_type, srv_name):
+    def add_service(self, zeroconf, srv_type, srv_name):
         """Method called when a new Zeroconf client is detected
         Return True if the zeroconf client is a Glances server
         Note: the return code will never be used
@@ -111,10 +111,10 @@ class GlancesAutoDiscoverListener(object):
             return False
         logger.debug("Check new Zeroconf server: %s / %s" %
                      (srv_type, srv_name))
-        info = zeroconf.getServiceInfo(srv_type, srv_name)
+        info = zeroconf.get_service_info(srv_type, srv_name)
         if info:
-            new_server_ip = socket.inet_ntoa(info.getAddress())
-            new_server_port = info.getPort()
+            new_server_ip = socket.inet_ntoa(info.address)
+            new_server_port = info.port
 
             # Add server to the global dict
             self.servers.add_server(srv_name, new_server_ip, new_server_port)
@@ -125,7 +125,7 @@ class GlancesAutoDiscoverListener(object):
                 "New Glances server detected, but Zeroconf info failed to be grabbed")
         return True
 
-    def removeService(self, zeroconf, srv_type, srv_name):
+    def remove_service(self, zeroconf, srv_type, srv_name):
         # Remove the server from the list
         self.servers.remove_server(srv_name)
         logger.info(
@@ -203,7 +203,7 @@ class GlancesAutoDiscoverClient(object):
                                             priority=0,
                                             properties={},
                                             server=hostname)
-                    self.zeroconf.registerService(self.info)
+                    self.zeroconf.register_service(self.info)
             else:
                 logger.error(
                     "Can not announce Glances server on the network (Zeroconf lib is not installed)")
@@ -213,5 +213,5 @@ class GlancesAutoDiscoverClient(object):
 
     def close(self):
         if zeroconf_tag:
-            self.zeroconf.unregisterService(self.info)
+            self.zeroconf.unregister_service(self.info)
             self.zeroconf.close()
