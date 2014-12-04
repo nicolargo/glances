@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
         # Configuration file path
         try:
             msg = '{0}: {1}'.format(_("Configuration file"), self.config.get_loaded_config_file())
-        except AttributeError as e:
+        except AttributeError:
             pass
         else:
             ret.append(self.curse_new_line())

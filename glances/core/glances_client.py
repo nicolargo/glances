@@ -30,7 +30,7 @@ except ImportError:
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
 try:
     import http.client as httplib
-except:
+except ImportError:
     # Python 2
     import httplib
 
@@ -214,7 +214,7 @@ class GlancesClient(object):
         # Update the stats
         try:
             self.stats.update()
-        except:
+        except Exception:
             # Client can not get SNMP server stats
             return "Disconnected"
         else:

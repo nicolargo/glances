@@ -80,7 +80,7 @@ class MonitorList(object):
                     value["description"] = description
                     try:
                         re.compile(regex)
-                    except:
+                    except Exception:
                         continue
                     else:
                         value["regex"] = regex

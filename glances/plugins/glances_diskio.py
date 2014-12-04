@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
             # write_time: time spent writing to disk (in milliseconds)
             try:
                 diskiocounters = psutil.disk_io_counters(perdisk=True)
-            except:
+            except Exception:
                 return self.stats
 
             # Previous disk IO stats are stored in the diskio_old variable

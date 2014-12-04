@@ -152,7 +152,7 @@ class Plugin(GlancesPlugin):
                 msg = ' ({0} {1} {2})'.format(self.stats['os_name'],
                                               self.stats['os_version'],
                                               self.stats['platform'])
-            except:
+            except Exception:
                 msg = ' ({0})'.format(self.stats['os_name'])
         ret.append(self.curse_add_line(msg, optional=True))
 
