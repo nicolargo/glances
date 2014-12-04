@@ -207,18 +207,15 @@ class GlancesMain(object):
 
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
-            logger.critical(
-                _("Process filter is only available in standalone mode"))
+            logger.critical("Process filter is only available in standalone mode")
             sys.exit(2)
 
         # Check graph output path
         if args.enable_history and args.path_history is not None:
             if not os.access(args.path_history, os.W_OK):
-                logger.critical(
-                    _("History output path (%s) do not exist or is not writable") % args.path_history)
+                logger.critical("History output path {0} do not exist or is not writable".format(args.path_history))
                 sys.exit(2)
-            logger.debug(_("History output path is set to %s") %
-                         args.path_history)
+            logger.debug("History output path is set to {0}".format(args.path_history))
 
         return args
 

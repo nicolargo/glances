@@ -40,7 +40,7 @@ class GlancesPlugin(object):
         """Init the plugin of plugins class."""
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
-        # logger.debug(_("Init plugin %s") % self.plugin_name)
+        # logger.debug("Init plugin %s" % self.plugin_name)
 
         # Init the args
         self.args = args
@@ -82,8 +82,7 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             iList = [i['name'] for i in self.get_items_history_list()]
-            logger.debug(_("Stats history activated for plugin %s (items: %s)") % (
-                self.plugin_name, iList))
+            logger.debug("Stats history activated for plugin {0} (items: {0})".format(self.plugin_name, iList))
             ret = {}
         return ret
 
@@ -91,8 +90,7 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)"""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             iList = [i['name'] for i in self.get_items_history_list()]
-            logger.debug(
-                _("Reset history for plugin %s (items: %s)") % (self.plugin_name, iList))
+            logger.debug("Reset history for plugin {0} (items: {0})".format(self.plugin_name, iList))
             self.stats_history = {}
         return self.stats_history
 
@@ -219,7 +217,7 @@ class GlancesPlugin(object):
                 try:
                     return json.dumps({item: self.stats[item]})
                 except KeyError as e:
-                    logger.error(_("Can not get item %s (%s)") % (item, e))
+                    logger.error("Cannot get item {0} ({1})".format(item, e))
             else:
                 return None
         else:
@@ -228,7 +226,7 @@ class GlancesPlugin(object):
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
                 return json.dumps({item: map(itemgetter(item), self.stats)})
             except (KeyError, ValueError) as e:
-                logger.error(_("Can not get item %s (%s)") % (item, e))
+                logger.error("Cannot get item {0} ({1})".format(item, e))
                 return None
 
     def get_stats_value(self, item, value):
@@ -244,8 +242,7 @@ class GlancesPlugin(object):
             try:
                 return json.dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
-                logger.error(
-                    _("Can not get item(%s)=value(%s) (%s)") % (item, value, e))
+                logger.error("Cannot get item({0})=value({1}) ({2})".format(item, value, e))
                 return None
 
     def load_limits(self, config):

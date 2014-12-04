@@ -70,10 +70,9 @@ class Config(object):
                         self.parser.read(config_file, encoding='utf-8')
                     else:
                         self.parser.read(config_file)
-                    logger.info(_("Read configuration file %s") % config_file)
+                    logger.info("Read configuration file '{0}'".format(config_file))
                 except UnicodeDecodeError as e:
-                    logger.error(
-                        _("Cannot decode configuration file '{0}': {1}").format(config_file, e))
+                    logger.error("Cannot decode configuration file '{0}': {1}".format(config_file, e))
                     sys.exit(1)
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file
