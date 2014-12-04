@@ -283,16 +283,14 @@ class GlancesProcesses(object):
 
     def set_process_filter(self, value):
         """Set the process filter"""
-        logger.info(_("Set process filter to %s") % value)
+        logger.info("Set process filter to {0}".format(value))
         self.process_filter = value
         if value is not None:
             try:
                 self.process_filter_re = re.compile(value)
-                logger.debug(
-                    _("Process filter regular expression compilation OK: %s") % self.get_process_filter())
+                logger.debug("Process filter regex compilation OK: {0}".format(self.get_process_filter()))
             except Exception:
-                logger.error(
-                    _("Can not compile process filter regular expression: %s") % value)
+                logger.error("Cannot compile process filter regex: {0}".format(value))
                 self.process_filter_re = None
         else:
             self.process_filter_re = None

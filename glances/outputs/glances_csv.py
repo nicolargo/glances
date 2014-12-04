@@ -46,10 +46,10 @@ class GlancesCSV(object):
                 self.csv_file = open(self.csv_filename, 'wb')
             self.writer = csv.writer(self.csv_file)
         except IOError as e:
-            logger.critical(_("Error: Cannot create the CSV file: {0}").format(e))
+            logger.critical("Cannot create the CSV file: {0}".format(e))
             sys.exit(2)
 
-        logger.info(_("Stats dumped to CSV file: {0}").format(self.csv_filename))
+        logger.info("Stats dumped to CSV file: {0}".format(self.csv_filename))
 
     def exit(self):
         """Close the CSV file."""

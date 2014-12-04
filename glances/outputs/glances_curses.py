@@ -33,8 +33,7 @@ if not is_windows:
         import curses.panel
         from curses.textpad import Textbox
     except ImportError:
-        logger.critical(
-            'Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -63,7 +62,7 @@ class _GlancesCurses(object):
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            logger.critical(_("Error: Cannot init the curses library.\n"))
+            logger.critical("Cannot init the curses library.\n")
             sys.exit(1)
 
         # Set curses options

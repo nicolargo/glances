@@ -27,7 +27,8 @@ from glances.plugins.glances_plugin import GlancesPlugin
 try:
     import batinfo
 except ImportError:
-    logger.debug(_("Cannot grab battery sensor. Missing BatInfo library."))
+    logger.debug("Batinfo library not found. Glances cannot grab battery info.")
+    pass
 
 
 class Plugin(GlancesPlugin):
