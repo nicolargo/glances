@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_linux, is_bsd, is_mac, is_windows, logger
+from glances.core.glances_globals import glances_processes, is_windows
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

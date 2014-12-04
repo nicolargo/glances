@@ -19,11 +19,9 @@
 
 """File system plugin."""
 
-# Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
-
-# PSutil lib for local grab
 import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # The snmpd.conf needs to be edited.

@@ -31,8 +31,8 @@ except ImportError:
 # Import Glances libs
 from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCursesBrowser
-from glances.core.glances_client import GlancesClientTransport, GlancesClient
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
+from glances.core.glances_client import GlancesClient, GlancesClientTransport
 from glances.core.glances_staticlist import GlancesStaticServer
 
 
@@ -220,7 +220,6 @@ class GlancesClientBrowser(object):
             self.static_server.set_server(self.screen.get_active(),
                                           key,
                                           value)
-
 
     def end(self):
         """End of the client browser session."""

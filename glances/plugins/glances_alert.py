@@ -20,7 +20,6 @@
 """Alert plugin."""
 
 # Import system lib
-import types
 from datetime import datetime
 
 # Import Glances libs

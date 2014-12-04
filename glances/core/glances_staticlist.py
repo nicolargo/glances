@@ -20,7 +20,7 @@
 """Manage the Glances server static list """
 
 # System lib
-from socket import gethostbyname, gaierror
+from socket import gaierror, gethostbyname
 
 # Import Glances libs
 from glances.core.glances_globals import logger
@@ -67,7 +67,7 @@ class GlancesStaticServer(object):
                         logger.error("Can not get IP address for server %s (%s)" % (new_server['name'], e))
                         continue
                     new_server['key'] = new_server['name'] + ':' + new_server['port']
-                    
+
                     # Default status is 'UNKNOWN'
                     new_server['status'] = 'UNKNOWN'
 

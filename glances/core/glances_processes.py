@@ -17,14 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import Glances lib
-from glances.core.glances_globals import is_linux, is_bsd, is_mac, is_windows, logger
-from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
-
 # Import Python lib
 import collections
-import psutil
 import re
+
+# Import psutil
+import psutil
+
+# Import Glances lib
+from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows, logger
+from glances.core.glances_timer import getTimeSinceLastUpdate, Timer
 
 
 class ProcessTreeNode(object):

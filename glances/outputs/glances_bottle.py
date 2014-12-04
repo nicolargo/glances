@@ -19,6 +19,7 @@
 
 """Web interface class."""
 
+import json
 import os
 import sys
 
@@ -32,7 +33,6 @@ except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     print(_("Install it using pip: # pip install bottle"))
     sys.exit(2)
-import json
 
 
 class GlancesBottle(object):
@@ -147,9 +147,9 @@ class GlancesBottle(object):
         self.stats.update()
 
         try:
-            plist = json.dumps(self.plugins_list) 
+            plist = json.dumps(self.plugins_list)
         except Exception as e:
-            abort(404, "Can not get plugin list (%s)" % str(e))            
+            abort(404, "Can not get plugin list (%s)" % str(e))
         return plist
 
     def _api_all(self):

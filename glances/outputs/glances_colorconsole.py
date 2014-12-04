@@ -21,8 +21,6 @@ import sys
 import threading
 import time
 
-from glances.core.glances_globals import logger
-
 import msvcrt
 try:
     import colorconsole

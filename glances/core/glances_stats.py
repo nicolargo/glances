@@ -21,10 +21,10 @@
 
 import collections
 import os
-import sys
 import re
+import sys
 
-from glances.core.glances_globals import plugins_path, sys_path, logger
+from glances.core.glances_globals import logger, plugins_path, sys_path
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {'.*Linux.*': 'linux',
@@ -116,7 +116,7 @@ class GlancesStats(object):
         if input_stats == {}:
             # For standalone and server modes
             # For each plugins, call the update method
-            for p in self._plugins:                
+            for p in self._plugins:
                 # logger.debug(_("Update %s stats") % p)
                 self._plugins[p].update()
         else:
@@ -185,7 +185,7 @@ class GlancesStatsServer(GlancesStats):
         ret = {}
         for p in self._plugins:
             ret[p] = self.all_stats[p]
-        return ret                
+        return ret
 
     def getAllPlugins(self):
         """Return the plugins list."""
@@ -214,7 +214,7 @@ class GlancesStatsClient(GlancesStats):
             # Add the plugin to the dictionary
             # The key is the plugin name
             # for example, the file glances_xxx.py
-            # generate self._plugins_list["xxx"] = ...            
+            # generate self._plugins_list["xxx"] = ...
             logger.debug(_("Init %s plugin") % item)
             self._plugins[item] = plugin.Plugin()
         # Restoring system path
@@ -274,7 +274,7 @@ class GlancesStatsClientSNMP(GlancesStats):
 
         if oid_system_name == '':
             return short_system_name
-        
+
         # Find the short name in the oid_to_short_os_name dict
         try:
             iteritems = oid_to_short_system_name.iteritems()
@@ -287,7 +287,6 @@ class GlancesStatsClientSNMP(GlancesStats):
                 break
 
         return short_system_name
-
 
     def update(self):
         """Update the stats using SNMP."""

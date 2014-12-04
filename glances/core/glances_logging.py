@@ -21,8 +21,8 @@
 
 import logging
 import logging.config
-import tempfile
 import os
+import tempfile
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -69,6 +69,7 @@ LOGGING_CFG = {
         }
     }
 }
+
 
 def glancesLogger():
     _logger = logging.getLogger()
