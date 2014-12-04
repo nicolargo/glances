@@ -227,7 +227,7 @@ class GlancesAutoDiscoverClient(object):
             gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
             # IP address for the interface
             return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
-        except:
+        except Exception:
             return None
 
     def close(self):

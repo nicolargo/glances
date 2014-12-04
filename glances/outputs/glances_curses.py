@@ -95,14 +95,14 @@ class _GlancesCurses(object):
             curses.init_pair(8, curses.COLOR_BLUE, -1)
             try:
                 curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-            except:
+            except Exception:
                 if args.theme_white:
                     curses.init_pair(9, curses.COLOR_BLACK, -1)
                 else:
                     curses.init_pair(9, curses.COLOR_WHITE, -1)
             try:
                 curses.init_pair(10, curses.COLOR_CYAN, -1)
-            except:
+            except Exception:
                 if args.theme_white:
                     curses.init_pair(10, curses.COLOR_BLACK, -1)
                 else:
@@ -553,7 +553,7 @@ class _GlancesCurses(object):
         elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
             try:
                 self.glances_history.graph_enabled()
-            except:
+            except Exception:
                 self.display_popup(
                     _("History disabled\nEnable it using --enable-history"))
             else:
@@ -717,7 +717,7 @@ class _GlancesCurses(object):
                                          # Do not disply outside the screen
                                          screen_x - x,
                                          self.colors_list[m['decoration']])
-            except:
+            except Exception:
                 pass
             else:
                 # New column
@@ -803,7 +803,7 @@ class _GlancesCurses(object):
                 # Size with all options
                 c = len(max(''.join([i['msg']
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
-        except:
+        except Exception:
             return 0
         else:
             return c
@@ -815,7 +815,7 @@ class _GlancesCurses(object):
         """
         try:
             c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
-        except:
+        except Exception:
             return 0
         else:
             return c + 1

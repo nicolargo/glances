@@ -288,7 +288,7 @@ class GlancesProcesses(object):
                 self.process_filter_re = re.compile(value)
                 logger.debug(
                     _("Process filter regular expression compilation OK: %s") % self.get_process_filter())
-            except:
+            except Exception:
                 logger.error(
                     _("Can not compile process filter regular expression: %s") % value)
                 self.process_filter_re = None
@@ -487,7 +487,7 @@ class GlancesProcesses(object):
                     pass
                 except psutil.AccessDenied:
                     procstat['memory_swap'] = None
-                except:
+                except Exception:
                     # Add a dirty except to handle the PsUtil issue #413
                     procstat['memory_swap'] = None
 
@@ -495,7 +495,7 @@ class GlancesProcesses(object):
             try:
                 procstat['tcp'] = len(proc.connections(kind="tcp"))
                 procstat['udp'] = len(proc.connections(kind="udp"))
-            except:
+            except Exception:
                 procstat['tcp'] = None
                 procstat['udp'] = None
 
@@ -570,7 +570,7 @@ class GlancesProcesses(object):
             # Update thread number (global statistics)
             try:
                 self.processcount['thread'] += proc.num_threads()
-            except:
+            except Exception:
                 pass
 
         if self._enable_tree:

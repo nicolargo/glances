@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
             try:
                 # In hundredths of seconds
                 self.stats = str(timedelta(seconds=int(uptime) / 100))
-            except:
+            except Exception:
                 pass
 
         # Return the result
