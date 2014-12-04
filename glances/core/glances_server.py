@@ -32,7 +32,7 @@ except ImportError:  # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
-from glances.core.glances_globals import version, logger
+from glances.core.glances_globals import logger, version
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 from glances.core.glances_autodiscover import GlancesAutoDiscoverClient

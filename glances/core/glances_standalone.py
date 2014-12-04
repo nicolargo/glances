@@ -20,10 +20,9 @@
 """Manage the Glances standalone session."""
 
 # Import Glances libs
-from glances.core.glances_globals import logger
+from glances.core.glances_globals import glances_processes, is_windows, logger
 from glances.core.glances_stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
-from glances.core.glances_globals import glances_processes, is_windows
 
 
 class GlancesStandalone(object):

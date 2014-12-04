@@ -37,9 +37,9 @@ from glances.core.glances_globals import (
     is_mac,
     is_py3,
     is_windows,
+    logger,
     sys_prefix,
-    work_path,
-    logger
+    work_path
 )
 
 

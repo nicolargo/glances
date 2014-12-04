@@ -19,11 +19,11 @@
 
 """Disk I/O plugin."""
 
+import psutil
+
 # Import Glances libs
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-
-import psutil
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set

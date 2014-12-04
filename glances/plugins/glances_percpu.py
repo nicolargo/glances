@@ -19,11 +19,9 @@
 
 """Per-CPU plugin."""
 
-# Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
-
-# Check for psutil already done in the glances_core script
 import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

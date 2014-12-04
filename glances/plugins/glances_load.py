@@ -23,7 +23,6 @@
 import os
 
 # Import Glances libs
-from glances.core.glances_globals import logger
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 

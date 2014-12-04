@@ -21,13 +21,13 @@
 
 # Import system libs
 import argparse
-import sys
 import os
+import sys
 import tempfile
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, psutil_version, version, logger, is_windows
+from glances.core.glances_globals import appname, is_windows, logger, psutil_version, version
 
 
 class GlancesMain(object):

@@ -35,10 +35,9 @@ except ImportError:
     import httplib
 
 # Import Glances libs
-from glances.core.glances_globals import version, logger
+from glances.core.glances_globals import logger, version
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
-from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 
 
 class GlancesClientTransport(Transport):

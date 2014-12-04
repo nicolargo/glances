@@ -24,12 +24,12 @@ I am your father...
 """
 
 # Import system libs
-from datetime import datetime
 import json
+from datetime import datetime
 from operator import itemgetter
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3, glances_logs, logger
+from glances.core.glances_globals import glances_logs, is_py3, logger
 
 
 class GlancesPlugin(object):

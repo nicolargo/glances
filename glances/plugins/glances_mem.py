@@ -19,9 +19,9 @@
 
 """Virtual memory plugin."""
 
-from glances.plugins.glances_plugin import GlancesPlugin
-
 import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0
@@ -117,7 +117,7 @@ class Plugin(GlancesPlugin):
             if self.get_short_system_name() in ('windows', 'esxi'):
                 # Mem stats for Windows|Vmware Esxi are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
@@ -129,7 +129,7 @@ class Plugin(GlancesPlugin):
                             self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
                             self.stats['percent'] = float(self.stats['used'] * 100 / self.stats['total'])
-                            self.stats['free'] = self.stats['total'] - self.stats['used'] 
+                            self.stats['free'] = self.stats['total'] - self.stats['used']
                             break
             else:
                 # Default behavor for others OS

@@ -21,10 +21,10 @@
 
 import base64
 
+import psutil
+
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-
-import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
