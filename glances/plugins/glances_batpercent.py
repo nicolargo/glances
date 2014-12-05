@@ -87,7 +87,7 @@ class GlancesGrabBat(object):
             self.update()
         except Exception as e:
             self.initok = False
-            logger.debug("Can not init GlancesGrabBat class (%s)" % e)
+            logger.debug("Cannot init GlancesGrabBat class (%s)" % e)
 
     def update(self):
         """Update the stats."""

@@ -254,7 +254,7 @@ class GlancesStatsClientSNMP(GlancesStats):
                                        user=self.args.snmp_user,
                                        auth=self.args.snmp_auth)
 
-        # If we can not grab the hostname, then exit...
+        # If we cannot grab the hostname, then exit...
         ret = clientsnmp.get_by_oid("1.3.6.1.2.1.1.5.0") != {}
         if ret:
             # Get the OS name (need to grab the good OID...)
@@ -281,7 +281,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         except AttributeError:
             # Correct issue #386
             iteritems = oid_to_short_system_name.items()
-        for r,v in iteritems:
+        for r, v in iteritems:
             if re.search(r, oid_system_name):
                 short_system_name = v
                 break

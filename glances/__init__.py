@@ -27,15 +27,15 @@ __license__ = 'LGPL'
 # Import system lib
 import gettext
 import locale
+import platform
 import signal
 import sys
-import platform
 
 # Import psutil
 try:
     from psutil import __version__ as __psutil_version
 except ImportError:
-    print('psutil library not found. Glances cannot start.')
+    print('PSutil library not found. Glances cannot start.')
     sys.exit(1)
 
 # Import Glances libs

@@ -127,7 +127,7 @@ class GlancesClientBrowser(object):
                             else:
                                 v['status'] = 'OFFLINE'
                             logger.debug(
-                                "Can not grab stats from {0}: {1}".format(uri, e))
+                                "Cannot grab stats from {0}: {1}".format(uri, e))
                         else:
                             # Status
                             v['status'] = 'ONLINE'
@@ -184,7 +184,7 @@ class GlancesClientBrowser(object):
 
                 # Test if client and server are in the same major version
                 if not client.login(return_to_browser=True):
-                    self.screen.display_popup(_("Sorry, can not connect to %s (see log file for additional information)" % v['name']))
+                    self.screen.display_popup(_("Sorry, cannot connect to %s (see log file for additional information)" % v['name']))
 
                     # Set the ONLINE status for the selected server
                     self.set_in_selected('status', 'OFFLINE')
