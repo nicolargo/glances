@@ -214,7 +214,7 @@ class GlancesClient(object):
         try:
             self.stats.update()
         except Exception:
-            # Client can not get SNMP server stats
+            # Client cannot get SNMP server stats
             return "Disconnected"
         else:
             # Grab success

@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
             node_data = self.get_process_curses_data(node.stats, False, args)
             node_count += 1
             ret.extend(node_data)
-        for child in node.iterChildren():
+        for child in node.iter_children():
             # stop if we have enough nodes to display
             if (max_node_count is not None) and (node_count >= max_node_count):
                 break
@@ -439,7 +439,7 @@ class Plugin(GlancesPlugin):
         else:
             # Others sorts
             if tree:
-                self.stats.setSorting(sortedby, sortedreverse)
+                self.stats.set_sorting(sortedby, sortedreverse)
             else:
                 try:
                     listsorted = sorted(self.stats,

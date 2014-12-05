@@ -635,7 +635,7 @@ class _GlancesCurses(object):
             subpop.refresh()
             # Create the textbox inside the subwindows
             self.set_cursor(2)
-            textbox = glances_textbox(subpop, insert_mode=False)
+            textbox = GlancesTextbox(subpop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
             if textbox.gather() != '':
@@ -1047,7 +1047,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     server_stat[c[0]] = v[c[0]]
                 except KeyError as e:
                     logger.debug(
-                        "Can not grab stats {0} from server (KeyError: {1})".format(c[0], e))
+                        "Cannot grab stats {0} from server (KeyError: {1})".format(c[0], e))
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
                 try:
@@ -1090,10 +1090,8 @@ class GlancesCursesBrowser(_GlancesCurses):
 
 
 if not is_windows:
-    class glances_textbox(Textbox):
+    class GlancesTextbox(Textbox):
 
-        """
-        """
         def __init__(*args, **kwargs):
             Textbox.__init__(*args, **kwargs)
 

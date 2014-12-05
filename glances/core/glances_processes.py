@@ -70,7 +70,7 @@ class ProcessTreeNode(object):
                 nodes_to_print.append(children_nodes_to_print)
         return "\n".join(lines)
 
-    def setSorting(self, key, reverse):
+    def set_sorting(self, key, reverse):
         """ Set sorting key or func for user with __iter__ (affects the whole tree from this node). """
         if (self.sort_key != key) or (self.reverse_sorting != reverse):
             nodes_to_flag_unsorted = collections.deque([self])
@@ -81,7 +81,7 @@ class ProcessTreeNode(object):
                 current_node.reverse_sorting = reverse
                 nodes_to_flag_unsorted.extend(current_node.children)
 
-    def getWeight(self):
+    def get_weight(self):
         """ Return "weight" of a process and all its children for sorting. """
         if self.sort_key == "name":
             return self.stats[self.sort_key]
@@ -120,13 +120,13 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=self.__class__.getWeight, reverse=self.reverse_sorting)
+            self.children.sort(key=self.__class__.get_weight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
             for n in iter(child):
                 yield n
 
-    def iterChildren(self, exclude_incomplete_stats=True):
+    def iter_children(self, exclude_incomplete_stats=True):
         """
         Iterator returning ProcessTreeNode in sorted order (only children of this node, non recursive).
 
@@ -137,13 +137,13 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=self.__class__.getWeight, reverse=self.reverse_sorting)
+            self.children.sort(key=self.__class__.get_weight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
             if (not exclude_incomplete_stats) or ("time_since_update" in child.stats):
                 yield child
 
-    def findProcess(self, process):
+    def find_process(self, process):
         """ Search in tree for the ProcessTreeNode owning process, return it or None if not found. """
         nodes_to_search = collections.deque([self])
         while nodes_to_search:
@@ -153,7 +153,7 @@ class ProcessTreeNode(object):
             nodes_to_search.extend(current_node.children)
 
     @staticmethod
-    def buildTree(process_dict, sort_key, hide_kernel_threads):
+    def build_tree(process_dict, sort_key, hide_kernel_threads):
         """ Build a process tree using using parent/child relationships, and return the tree root node. """
         tree_root = ProcessTreeNode(root=True)
         nodes_to_add_last = collections.deque()
@@ -173,7 +173,7 @@ class ProcessTreeNode(object):
                 # parent is a kernel thread, add this node at the top level
                 tree_root.children.append(new_node)
             else:
-                parent_node = tree_root.findProcess(parent_process)
+                parent_node = tree_root.find_process(parent_process)
                 if parent_node is not None:
                     # parent is already in the tree, add a new child
                     parent_node.children.append(new_node)
@@ -195,7 +195,7 @@ class ProcessTreeNode(object):
                     # consider no parent, add this node at the top level
                     tree_root.children.append(node_to_add)
                 else:
-                    parent_node = tree_root.findProcess(parent_process)
+                    parent_node = tree_root.find_process(parent_process)
                     if parent_node is not None:
                         # parent is already in the tree, add a new child
                         parent_node.children.append(node_to_add)
@@ -353,7 +353,7 @@ class GlancesProcesses(object):
                 # Correct issue #414
                 return None
             if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
-                # Do not display process if we can not get the basic
+                # Do not display process if we cannot get the basic
                 # cpu_percent or memory_percent stats
                 return None
 
@@ -574,9 +574,9 @@ class GlancesProcesses(object):
                 pass
 
         if self._enable_tree:
-            self.process_tree = ProcessTreeNode.buildTree(processdict,
-                                                          self.getsortkey(),
-                                                          self.no_kernel_threads)
+            self.process_tree = ProcessTreeNode.build_tree(processdict,
+                                                           self.getsortkey(),
+                                                           self.no_kernel_threads)
 
             for i, node in enumerate(self.process_tree):
                 # Only retreive stats for visible processes (get_max_processes)
@@ -604,7 +604,7 @@ class GlancesProcesses(object):
                     processiter = sorted(
                         processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
                 except (KeyError, TypeError) as e:
-                    logger.error("Can not sort process list by %s (%s)" % (self.getsortkey(), e))
+                    logger.error("Cannot sort process list by %s (%s)" % (self.getsortkey(), e))
                     logger.error("%s" % str(processdict.items()[0]))
                     # Fallback to all process (issue #423)
                     processloop = processdict.items()
@@ -674,7 +674,7 @@ class GlancesProcesses(object):
         """Set the current sort key for manual sort."""
         self.processmanualsort = sortedby
         if self._enable_tree and (self.process_tree is not None):
-            self.process_tree.setSorting(sortedby, sortedby != "name")
+            self.process_tree.set_sorting(sortedby, sortedby != "name")
         return self.processmanualsort
 
     def setautosortkey(self, sortedby):
