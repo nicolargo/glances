@@ -22,7 +22,7 @@
 import os
 import sys
 
-from glances.core.glances_logging import glancesLogger
+from glances.core.glances_logging import glances_logger
 
 # Global information
 appname = 'glances'
@@ -63,7 +63,7 @@ sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 locale_dir = get_locale_path([i18n_path, user_i18n_path, sys_i18n_path])
 
 # Create and init the logging instance
-logger = glancesLogger()
+logger = glances_logger()
 
 # Instances shared between all Glances scripts
 # ============================================

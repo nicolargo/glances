@@ -20,10 +20,9 @@
 """Manage the Glances standalone session."""
 
 # Import Glances libs
-from glances.core.glances_globals import logger
+from glances.core.glances_globals import glances_processes, is_windows, logger
 from glances.core.glances_stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
-from glances.core.glances_globals import glances_processes, is_windows
 
 
 class GlancesStandalone(object):
@@ -39,10 +38,10 @@ class GlancesStandalone(object):
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
-            logger.info(_("Extended stats for top process are disabled (default behavior)"))
+            logger.info("Extended stats for top process are disabled (default behavior)")
             glances_processes.disable_extended()
         else:
-            logger.debug(_("Extended stats for top process are enabled"))
+            logger.debug("Extended stats for top process are enabled")
             glances_processes.enable_extended()
 
         # Manage optionnal process filter

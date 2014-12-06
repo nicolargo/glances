@@ -27,7 +27,12 @@ try:
 except ImportError:
     netifaces_tag = True
 try:
-    from zeroconf import ServiceBrowser, ServiceInfo, Zeroconf
+    from zeroconf import (
+        __version__ as __zeroconf_version,
+        ServiceBrowser,
+        ServiceInfo,
+        Zeroconf
+    )
     zeroconf_tag = True
 except ImportError:
     zeroconf_tag = False
@@ -35,15 +40,12 @@ except ImportError:
 # Import Glances libs
 from glances.core.glances_globals import appname, logger
 
-# Need Zeroconf 0.16 or higher
-try:
-    from zeroconf import __version__ as __zeroconf_version__
-    zeroconf_version_t = tuple([int(i) for i in __zeroconf_version__.split('.')])
-    logger.debug("Zeroconf Python lib %s detected" % __zeroconf_version__)
-    if (zeroconf_version_t[0] == 0) and (zeroconf_version_t[1] < 16):
-        logger.warning("Please install Zeroconf Python lib 0.16 or higher")
-except ImportError:
-    pass
+# Zeroconf 0.16 or higher is needed
+zeroconf_min_version = (0, 16, 0)
+zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
+logger.debug("Zeroconf library {0} detected.".format(__zeroconf_version))
+if zeroconf_version < zeroconf_min_version:
+    logger.warning("Please install zeroconf 0.16 or higher.")
 
 # Global var
 zeroconf_type = "_%s._tcp." % appname
@@ -92,7 +94,7 @@ class AutoDiscovered(object):
                         len(self._server_list), self._server_list))
                 except ValueError:
                     logger.error(
-                        "Can not remove server %s from the list" % name)
+                        "Cannot remove server %s from the list" % name)
 
 
 class GlancesAutoDiscoverListener(object):
@@ -151,7 +153,7 @@ class GlancesAutoDiscoverServer(object):
             try:
                 self.zeroconf = Zeroconf()
             except socket.error as e:
-                logger.error("Can not start Zeroconf (%s)" % e)
+                logger.error("Cannot start Zeroconf (%s)" % e)
                 self.zeroconf_enable_tag = False
             else:
                 self.listener = GlancesAutoDiscoverListener()
@@ -159,8 +161,7 @@ class GlancesAutoDiscoverServer(object):
                     self.zeroconf, zeroconf_type, self.listener)
                 self.zeroconf_enable_tag = True
         else:
-            logger.error(
-                "Can not start autodiscover mode (Zeroconf lib is not installed)")
+            logger.error("Cannot start autodiscover mode (Zeroconf lib is not installed)")
             self.zeroconf_enable_tag = False
 
     def get_servers_list(self):
@@ -200,7 +201,7 @@ class GlancesAutoDiscoverClient(object):
                 try:
                     self.zeroconf = Zeroconf()
                 except socket.error as e:
-                    logger.error("Can not start Zeroconf (%s)" % e)
+                    logger.error("Cannot start Zeroconf (%s)" % e)
                 else:
                     self.info = ServiceInfo(zeroconf_type,
                                             hostname + ':' +
@@ -215,10 +216,10 @@ class GlancesAutoDiscoverClient(object):
                     self.zeroconf.register_service(self.info)
             else:
                 logger.error(
-                    "Can not announce Glances server on the network (Zeroconf lib is not installed)")
+                    "Cannot announce Glances server on the network (Zeroconf lib is not installed)")
         else:
             logger.error(
-                "Can not announce Glances server on the network (Netifaces lib is not installed)")
+                "Cannot announce Glances server on the network (Netifaces lib is not installed)")
 
     def find_active_ip_address(self):
         """Try to find the active IP addresses"""
@@ -227,7 +228,7 @@ class GlancesAutoDiscoverClient(object):
             gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
             # IP address for the interface
             return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
-        except:
+        except Exception:
             return None
 
     def close(self):

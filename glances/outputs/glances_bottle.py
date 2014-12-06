@@ -19,6 +19,7 @@
 
 """Web interface class."""
 
+import json
 import os
 import sys
 
@@ -32,7 +33,6 @@ except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     print(_("Install it using pip: # pip install bottle"))
     sys.exit(2)
-import json
 
 
 class GlancesBottle(object):
@@ -147,9 +147,9 @@ class GlancesBottle(object):
         self.stats.update()
 
         try:
-            plist = json.dumps(self.plugins_list) 
+            plist = json.dumps(self.plugins_list)
         except Exception as e:
-            abort(404, "Can not get plugin list (%s)" % str(e))            
+            abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
 
     def _api_all(self):
@@ -169,7 +169,7 @@ class GlancesBottle(object):
             # Get the JSON value of the stat ID
             statval = json.dumps(self.stats.getAllAsDict())
         except Exception as e:
-            abort(404, "Can not get stats (%s)" % str(e))
+            abort(404, "Cannot get stats (%s)" % str(e))
         return statval
 
     def _api(self, plugin):
@@ -192,7 +192,7 @@ class GlancesBottle(object):
             # Get the JSON value of the stat ID
             statval = self.stats.get_plugin(plugin).get_stats()
         except Exception as e:
-            abort(404, "Can not get plugin %s (%s)" % (plugin, str(e)))
+            abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
         return statval
 
     def _api_limits(self, plugin):
@@ -215,7 +215,7 @@ class GlancesBottle(object):
             # Get the JSON value of the stat ID
             limits = self.stats.get_plugin(plugin).get_limits()
         except Exception as e:
-            abort(404, "Can not get limits for plugin %s (%s)" % (plugin, str(e)))
+            abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
         return limits
 
     def _api_item(self, plugin, item):
@@ -238,7 +238,7 @@ class GlancesBottle(object):
         plist = self.stats.get_plugin(plugin).get_stats_item(item)
 
         if plist is None:
-            abort(404, "Can not get item %s in plugin %s" % (item, plugin))
+            abort(404, "Cannot get item %s in plugin %s" % (item, plugin))
         else:
             return plist
 
@@ -261,7 +261,7 @@ class GlancesBottle(object):
         pdict = self.stats.get_plugin(plugin).get_stats_value(item, value)
 
         if pdict is None:
-            abort(404, "Can not get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
+            abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
         else:
             return pdict
 

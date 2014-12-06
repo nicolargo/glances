@@ -20,7 +20,7 @@
 """Manage the Glances server static list """
 
 # System lib
-from socket import gethostbyname, gaierror
+from socket import gaierror, gethostbyname
 
 # Import Glances libs
 from glances.core.glances_globals import logger
@@ -44,9 +44,9 @@ class GlancesStaticServer(object):
         server_list = []
 
         if config is None:
-            logger.warning("No configuration file available. Can not load server list.")
+            logger.warning("No configuration file available. Cannot load server list.")
         elif not config.has_section(self._section):
-            logger.warning("No [%s] section in the configuration file. Can not load server list." % self._section)
+            logger.warning("No [%s] section in the configuration file. Cannot load server list." % self._section)
         else:
             logger.info("Start reading the [%s] section in the configuration file" % self._section)
             for i in range(1, 256):
@@ -64,10 +64,10 @@ class GlancesStaticServer(object):
                     try:
                         new_server['ip'] = gethostbyname(new_server['name'])
                     except gaierror as e:
-                        logger.error("Can not get IP address for server %s (%s)" % (new_server['name'], e))
+                        logger.error("Cannot get IP address for server %s (%s)" % (new_server['name'], e))
                         continue
                     new_server['key'] = new_server['name'] + ':' + new_server['port']
-                    
+
                     # Default status is 'UNKNOWN'
                     new_server['status'] = 'UNKNOWN'
 

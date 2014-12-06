@@ -21,10 +21,10 @@
 
 import base64
 
+import psutil
+
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-
-import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
@@ -234,7 +234,7 @@ class Plugin(GlancesPlugin):
                 ifname = i['interface_name'].split(':')[0]
             if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
-                ifname = '_' + ifname[-ifname_max_width+1:]
+                ifname = '_' + ifname[-ifname_max_width + 1:]
             if args.byte:
                 # Bytes per second (for dummy)
                 if args.network_cumul:

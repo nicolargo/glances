@@ -21,8 +21,8 @@
 
 import logging
 import logging.config
-import tempfile
 import os
+import tempfile
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -42,22 +42,22 @@ LOGGING_CFG = {
     },
     'handlers': {
         'file': {
-            'level':'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'standard',
             # http://stackoverflow.com/questions/847850/cross-platform-way-of-getting-temp-directory-in-python
             'filename': os.path.join(tempfile.gettempdir(), 'glances.log')
         },
-        'console':{
-            'level':'CRITICAL',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'CRITICAL',
+            'class': 'logging.StreamHandler',
             'formatter': 'short'
         }
     },
     'loggers': {
         'debug': {
-            'handlers':['file', 'console'],
-            'level':'DEBUG',
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
         },
         'verbose': {
             'handlers': ['file', 'console'],
@@ -70,7 +70,8 @@ LOGGING_CFG = {
     }
 }
 
-def glancesLogger():
+
+def glances_logger():
     _logger = logging.getLogger()
     try:
         logging.config.dictConfig(LOGGING_CFG)

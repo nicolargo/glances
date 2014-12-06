@@ -79,13 +79,13 @@ class Plugin(GlancesPlugin):
                 self.stats = self.__set_type(self.glancesgrabsensors.get(),
                                              'temperature_core')
             except Exception as e:
-                logger.error("Can not grab sensors temperatures (%s)" % e)
+                logger.error("Cannot grab sensors temperatures (%s)" % e)
             # Update HDDtemp stats
             try:
                 hddtemp = self.__set_type(self.hddtemp_plugin.update(),
                                           'temperature_hdd')
             except Exception as e:
-                logger.error("Can not grab HDD temperature (%s)" % e)
+                logger.error("Cannot grab HDD temperature (%s)" % e)
             else:
                 # Append HDD temperature
                 self.stats.extend(hddtemp)
@@ -94,7 +94,7 @@ class Plugin(GlancesPlugin):
                 batpercent = self.__set_type(self.batpercent_plugin.update(),
                                              'battery')
             except Exception as e:
-                logger.error("Can not grab battery percent (%s)" % e)
+                logger.error("Cannot grab battery percent (%s)" % e)
             else:
                 # Append Batteries %
                 self.stats.extend(batpercent)

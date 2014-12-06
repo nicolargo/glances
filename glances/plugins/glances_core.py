@@ -19,9 +19,9 @@
 
 """CPU core plugin."""
 
-from glances.plugins.glances_plugin import GlancesPlugin
-
 import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

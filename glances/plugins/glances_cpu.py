@@ -19,9 +19,9 @@
 
 """CPU plugin."""
 
-from glances.plugins.glances_plugin import GlancesPlugin
-
 import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
@@ -101,7 +101,7 @@ class Plugin(GlancesPlugin):
                 # You can find the CPU utilization of windows system by querying the oid
                 # Give also the number of core (number of element in the table)
                 try:
-                    cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()], 
+                    cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                     bulk=True)
                 except KeyError:
                     self.reset()
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
                     self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
                 except KeyError:
                     self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
-               
+
                 if self.stats['idle'] == '':
                     self.reset()
                     return self.stats
@@ -171,7 +171,7 @@ class Plugin(GlancesPlugin):
             msg = '{0:8}'.format(_("user:"))
             ret.append(self.curse_add_line(msg))
             msg = '{0:>6.1%}'.format(self.stats['user'] / 100)
-            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))            
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['user'], header="user")))
         elif 'idle' in self.stats:
             msg = '{0:8}'.format(_("idle:"))
             ret.append(self.curse_add_line(msg))
