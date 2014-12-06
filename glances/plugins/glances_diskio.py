@@ -19,11 +19,11 @@
 
 """Disk I/O plugin."""
 
+import psutil
+
 # Import Glances libs
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-
-import psutil
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
             # write_time: time spent writing to disk (in milliseconds)
             try:
                 diskiocounters = psutil.disk_io_counters(perdisk=True)
-            except:
+            except Exception:
                 return self.stats
 
             # Previous disk IO stats are stored in the diskio_old variable

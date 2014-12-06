@@ -27,7 +27,8 @@ from glances.plugins.glances_plugin import GlancesPlugin
 try:
     import batinfo
 except ImportError:
-    logger.debug(_("Cannot grab battery sensor. Missing BatInfo library."))
+    logger.debug("Batinfo library not found. Glances cannot grab battery info.")
+    pass
 
 
 class Plugin(GlancesPlugin):
@@ -86,7 +87,7 @@ class GlancesGrabBat(object):
             self.update()
         except Exception as e:
             self.initok = False
-            logger.debug("Can not init GlancesGrabBat class (%s)" % e)
+            logger.debug("Cannot init GlancesGrabBat class (%s)" % e)
 
     def update(self):
         """Update the stats."""

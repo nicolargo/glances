@@ -27,15 +27,15 @@ __license__ = 'LGPL'
 # Import system lib
 import gettext
 import locale
+import platform
 import signal
 import sys
-import platform
 
 # Import psutil
 try:
     from psutil import __version__ as __psutil_version
 except ImportError:
-    print('psutil library not found. Glances cannot start.')
+    print('PSutil library not found. Glances cannot start.')
     sys.exit(1)
 
 # Import Glances libs
@@ -143,8 +143,7 @@ def main():
 
             # Test if client and server are in the same major version
             if not client.login():
-                logger.critical(
-                    _("The server version is not compatible with the client"))
+                logger.critical("The server version is not compatible with the client")
                 sys.exit(2)
 
         # Start the client loop
@@ -164,8 +163,7 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print(_("Glances server is running on {0}:{1}").format(
-            args.bind_address, args.port))
+        print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if args.password != "":

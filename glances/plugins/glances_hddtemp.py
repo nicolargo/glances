@@ -20,7 +20,7 @@
 """HDD temperature plugin."""
 
 # Import system libs
-import os.path
+import os
 import socket
 
 # Import Glances libs

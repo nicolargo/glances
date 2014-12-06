@@ -72,7 +72,7 @@ class MonitorList(object):
                 countmin = self.config.get_raw_option(section, key + "countmin")
                 countmax = self.config.get_raw_option(section, key + "countmax")
             except Exception as e:
-                logger.error(_("Cannot read monitored list: {0}").format(e))
+                logger.error("Cannot read monitored list: {0}".format(e))
                 pass
             else:
                 if description is not None and regex is not None:
@@ -80,7 +80,7 @@ class MonitorList(object):
                     value["description"] = description
                     try:
                         re.compile(regex)
-                    except:
+                    except Exception:
                         continue
                     else:
                         value["regex"] = regex

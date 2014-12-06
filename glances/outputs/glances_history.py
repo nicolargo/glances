@@ -29,10 +29,9 @@ from glances.core.glances_globals import logger
 try:
     from matplotlib import __version__ as matplotlib_version
     import matplotlib.pyplot as plt
-except:
+except ImportError:
     matplotlib_check = False
-    logger.warning(
-        'Can not load Matplotlib library. Please install it using "pip install matplotlib"')
+    logger.warning('Cannot load Matplotlib library. Please install it using "pip install matplotlib"')
 else:
     matplotlib_check = True
     logger.info('Load Matplotlib version %s' % matplotlib_version)

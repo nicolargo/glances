@@ -42,7 +42,7 @@ class Plugin(GlancesPlugin):
 
     def load_limits(self, config):
         """Load the monitored list from the conf file."""
-        logger.debug(_("Monitor plugin configuration detected in the configuration file"))
+        logger.debug("Monitor plugin configuration detected in the configuration file")
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
@@ -88,7 +88,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_process:  
+        if self.stats == [] or args.disable_process:
             return ret
 
         # Build the string message

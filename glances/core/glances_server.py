@@ -32,7 +32,7 @@ except ImportError:  # Python 2
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
-from glances.core.glances_globals import version, logger
+from glances.core.glances_globals import logger, version
 from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 from glances.core.glances_autodiscover import GlancesAutoDiscoverClient
@@ -114,7 +114,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
-            logger.error(_("Couldn't open socket: {0}").format(e))
+            logger.error("Couldn't open socket: {0}".format(e))
             sys.exit(1)
 
         SimpleXMLRPCServer.__init__(self, (bind_address, bind_port),
@@ -202,7 +202,7 @@ class GlancesServer(object):
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
         except Exception as e:
-            logger.critical(_("Cannot start Glances server: {0}").format(e))
+            logger.critical("Cannot start Glances server: {0}".format(e))
             sys.exit(2)
 
         # The users dict

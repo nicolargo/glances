@@ -20,7 +20,6 @@
 """Alert plugin."""
 
 # Import system lib
-import types
 from datetime import datetime
 
 # Import Glances libs
@@ -126,6 +125,6 @@ class Plugin(GlancesPlugin):
         Compare a with b using the tolerance (if numerical)
         """
         if str(int(a)).isdigit() and str(int(b)).isdigit():
-            return abs(a-b) <= max(abs(a), abs(b)) * tolerance
+            return abs(a - b) <= max(abs(a), abs(b)) * tolerance
         else:
             return a == b

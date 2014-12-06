@@ -33,8 +33,7 @@ if not is_windows:
         import curses.panel
         from curses.textpad import Textbox
     except ImportError:
-        logger.critical(
-            'Curses module not found. Glances cannot start in standalone mode.')
+        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -63,7 +62,7 @@ class _GlancesCurses(object):
         # Init the curses screen
         self.screen = curses.initscr()
         if not self.screen:
-            logger.critical(_("Error: Cannot init the curses library.\n"))
+            logger.critical("Cannot init the curses library.\n")
             sys.exit(1)
 
         # Set curses options
@@ -95,14 +94,14 @@ class _GlancesCurses(object):
             curses.init_pair(8, curses.COLOR_BLUE, -1)
             try:
                 curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-            except:
+            except Exception:
                 if args.theme_white:
                     curses.init_pair(9, curses.COLOR_BLACK, -1)
                 else:
                     curses.init_pair(9, curses.COLOR_WHITE, -1)
             try:
                 curses.init_pair(10, curses.COLOR_CYAN, -1)
-            except:
+            except Exception:
                 if args.theme_white:
                     curses.init_pair(10, curses.COLOR_BLACK, -1)
                 else:
@@ -553,7 +552,7 @@ class _GlancesCurses(object):
         elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
             try:
                 self.glances_history.graph_enabled()
-            except:
+            except Exception:
                 self.display_popup(
                     _("History disabled\nEnable it using --enable-history"))
             else:
@@ -636,7 +635,7 @@ class _GlancesCurses(object):
             subpop.refresh()
             # Create the textbox inside the subwindows
             self.set_cursor(2)
-            textbox = glances_textbox(subpop, insert_mode=False)
+            textbox = GlancesTextbox(subpop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
             if textbox.gather() != '':
@@ -717,7 +716,7 @@ class _GlancesCurses(object):
                                          # Do not disply outside the screen
                                          screen_x - x,
                                          self.colors_list[m['decoration']])
-            except:
+            except Exception:
                 pass
             else:
                 # New column
@@ -803,7 +802,7 @@ class _GlancesCurses(object):
                 # Size with all options
                 c = len(max(''.join([i['msg']
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
-        except:
+        except Exception:
             return 0
         else:
             return c
@@ -815,7 +814,7 @@ class _GlancesCurses(object):
         """
         try:
             c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
-        except:
+        except Exception:
             return 0
         else:
             return c + 1
@@ -1048,7 +1047,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     server_stat[c[0]] = v[c[0]]
                 except KeyError as e:
                     logger.debug(
-                        "Can not grab stats {0} from server (KeyError: {1})".format(c[0], e))
+                        "Cannot grab stats {0} from server (KeyError: {1})".format(c[0], e))
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
                 try:
@@ -1091,10 +1090,8 @@ class GlancesCursesBrowser(_GlancesCurses):
 
 
 if not is_windows:
-    class glances_textbox(Textbox):
+    class GlancesTextbox(Textbox):
 
-        """
-        """
         def __init__(*args, **kwargs):
             Textbox.__init__(*args, **kwargs)
 

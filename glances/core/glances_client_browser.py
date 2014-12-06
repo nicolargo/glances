@@ -31,8 +31,8 @@ except ImportError:
 # Import Glances libs
 from glances.core.glances_globals import logger
 from glances.outputs.glances_curses import GlancesCursesBrowser
-from glances.core.glances_client import GlancesClientTransport, GlancesClient
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
+from glances.core.glances_client import GlancesClient, GlancesClientTransport
 from glances.core.glances_staticlist import GlancesStaticServer
 
 
@@ -127,7 +127,7 @@ class GlancesClientBrowser(object):
                             else:
                                 v['status'] = 'OFFLINE'
                             logger.debug(
-                                "Can not grab stats from {0}: {1}".format(uri, e))
+                                "Cannot grab stats from {0}: {1}".format(uri, e))
                         else:
                             # Status
                             v['status'] = 'ONLINE'
@@ -184,7 +184,7 @@ class GlancesClientBrowser(object):
 
                 # Test if client and server are in the same major version
                 if not client.login(return_to_browser=True):
-                    self.screen.display_popup(_("Sorry, can not connect to %s (see log file for additional information)" % v['name']))
+                    self.screen.display_popup(_("Sorry, cannot connect to %s (see log file for additional information)" % v['name']))
 
                     # Set the ONLINE status for the selected server
                     self.set_in_selected('status', 'OFFLINE')
@@ -220,7 +220,6 @@ class GlancesClientBrowser(object):
             self.static_server.set_server(self.screen.get_active(),
                                           key,
                                           value)
-
 
     def end(self):
         """End of the client browser session."""

@@ -30,15 +30,14 @@ except ImportError:
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
 try:
     import http.client as httplib
-except:
+except ImportError:
     # Python 2
     import httplib
 
 # Import Glances libs
-from glances.core.glances_globals import version, logger
+from glances.core.glances_globals import logger, version
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
-from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 
 
 class GlancesClientTransport(Transport):
@@ -76,7 +75,7 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            msg = _("Client couldn't create socket {0}: {1}").format(uri, e)
+            msg = "Client couldn't create socket {0}: {1}".format(uri, e)
             if not return_to_browser:
                 logger.critical(msg)
                 sys.exit(2)
@@ -122,9 +121,9 @@ class GlancesClient(object):
             except ProtocolError as err:
                 # Others errors
                 if str(err).find(" 401 ") > 0:
-                    msg = _("Connection to server failed (Bad password)")
+                    msg = "Connection to server failed (bad password)"
                 else:
-                    msg = _("Connection to server failed ({0})").format(err)
+                    msg = "Connection to server failed ({0})".format(err)
                 if not return_to_browser:
                     logger.critical(msg)
                     sys.exit(2)
@@ -179,7 +178,7 @@ class GlancesClient(object):
             return self.update_snmp()
         else:
             self.end()
-            logger.critical(_("Unknown server mode: {0}").format(self.get_mode()))
+            logger.critical("Unknown server mode: {0}".format(self.get_mode()))
             sys.exit(2)
 
     def update_glances(self):
@@ -214,8 +213,8 @@ class GlancesClient(object):
         # Update the stats
         try:
             self.stats.update()
-        except:
-            # Client can not get SNMP server stats
+        except Exception:
+            # Client cannot get SNMP server stats
             return "Disconnected"
         else:
             # Grab success
