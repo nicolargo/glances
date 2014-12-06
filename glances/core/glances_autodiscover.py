@@ -21,6 +21,7 @@
 
 # Import system libs
 import socket
+import sys
 try:
     import netifaces
     netifaces_tag = True
@@ -41,11 +42,13 @@ except ImportError:
 from glances.core.glances_globals import appname, logger
 
 # Zeroconf 0.16 or higher is needed
-zeroconf_min_version = (0, 16, 0)
-zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
-logger.debug("Zeroconf library {0} detected.".format(__zeroconf_version))
-if zeroconf_version < zeroconf_min_version:
-    logger.warning("Please install zeroconf 0.16 or higher.")
+if zeroconf_tag:
+    zeroconf_min_version = (0, 16, 0)
+    zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
+    logger.debug("Zeroconf version {0} detected.".format(__zeroconf_version))
+    if zeroconf_version < zeroconf_min_version:
+        logger.critical("Please install zeroconf 0.16 or higher.")
+        sys.exit(1)
 
 # Global var
 zeroconf_type = "_%s._tcp." % appname
