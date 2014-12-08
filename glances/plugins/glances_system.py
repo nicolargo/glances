@@ -64,6 +64,33 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    def _linux_os_release(self):
+        """This function tries to determine the name of a Linux distribution.
+
+        It checks for the /etc/os-release file. It takes the name from the
+        'NAME' field and the version from 'VERSION_ID'.
+        An empty string is returned if the above values cannot be determined.
+        """
+        pretty_name = ''
+        ashtray = {}
+        keys = ['NAME', 'VERSION_ID']
+        try:
+            with open(os.path.join('/etc', 'os-release')) as f:
+                for line in f:
+                    for key in keys:
+                        if line.startswith(key):
+                            ashtray[key] = line.strip().split('=')[1][1:-1]
+        except OSError:
+            return pretty_name
+
+        if ashtray:
+            if 'NAME' in ashtray:
+                pretty_name = ashtray['NAME']
+            if 'VERSION_ID' in ashtray:
+                pretty_name += ' {0}'.format(ashtray['VERSION_ID'])
+
+        return pretty_name
+
     def update(self):
         """Update the host/system info using the input method.
 
@@ -77,12 +104,11 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = platform.system()
             self.stats['hostname'] = platform.node()
             self.stats['platform'] = platform.architecture()[0]
-            is_archlinux = os.path.exists(os.path.join("/", "etc", "arch-release"))
             if self.stats['os_name'] == "Linux":
-                if is_archlinux:
-                    self.stats['linux_distro'] = "Arch Linux"
+                linux_distro = platform.linux_distribution()
+                if linux_distro[0] == '':
+                    self.stats['linux_distro'] = self._linux_os_release()
                 else:
-                    linux_distro = platform.linux_distribution()
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'] == "FreeBSD":
@@ -95,11 +121,11 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats['os_version'] = ""
             # Add human readable name
-            self.stats['hr_name'] = self.stats['os_name']
-            self.stats['hr_name'] += ' ' + self.stats['os_version']
             if self.stats['os_name'] == "Linux":
                 self.stats['hr_name'] = self.stats['linux_distro']
-            self.stats['hr_name'] += ' (' + self.stats['platform'] + ')'
+            else:
+                self.stats['hr_name'] = '{0} {1}'.format(self.stats['os_name'], self.stats['os_version'])
+            self.stats['hr_name'] += ' ({0})'.format(self.stats['platform'])
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
@@ -142,7 +168,7 @@ class Plugin(GlancesPlugin):
         msg = self.stats['hostname']
         ret.append(self.curse_add_line(msg, "TITLE"))
         # System info
-        if self.stats['os_name'] == "Linux":
+        if self.stats['os_name'] == "Linux" and self.stats['linux_distro']:
             msg = ' ({0} {1} / {2} {3})'.format(self.stats['linux_distro'],
                                                 self.stats['platform'],
                                                 self.stats['os_name'],
