@@ -96,6 +96,8 @@ class ProcessTreeNode(object):
             elif self.sort_key == "io_counters":
                 stats = current_node.stats[self.sort_key]
                 total += stats[0] - stats[2] + stats[1] - stats[3]
+            elif self.sort_key == "cpu_times":
+                total += sum(current_node.stats[self.sort_key])
             else:
                 total += current_node.stats[self.sort_key]
             nodes_to_sum.extend(current_node.children)
