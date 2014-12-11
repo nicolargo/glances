@@ -93,21 +93,21 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             # Loop over fs
-            for fs in range(len(fs_stat)):
+            for fs in fs_stat:
                 fs_current = {}
-                fs_current['device_name'] = fs_stat[fs].device
-                fs_current['fs_type'] = fs_stat[fs].fstype
-                fs_current['mnt_point'] = fs_stat[fs].mountpoint
+                fs_current['device_name'] = fs.device
+                fs_current['fs_type'] = fs.fstype
+                fs_current['mnt_point'] = fs.mountpoint
                 # Grab the disk usage
                 try:
-                    fs_usage = psutil.disk_usage(fs_current['mnt_point'])
+                    fs_usage = psutil.disk_usage(fs.mountpoint)
                 except OSError:
                     # Correct issue #346
                     # Disk is ejected during the command
                     continue
                 fs_current['size'] = fs_usage.total
                 fs_current['used'] = fs_usage.used
-                # fs_current['avail'] = fs_usage.free
+                fs_current['free'] = fs_usage.total - fs_usage.used
                 fs_current['percent'] = fs_usage.percent
                 self.stats.append(fs_current)
 
@@ -197,7 +197,7 @@ class Plugin(GlancesPlugin):
             msg = '{0:{width}}'.format(mnt_point, width=fsname_max_width)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:
-                msg = '{0:>7}'.format(self.auto_unit(i['size'] - i['used']))
+                msg = '{0:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{0:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
