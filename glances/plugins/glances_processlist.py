@@ -359,10 +359,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Compute the sort key
-        if glances_processes.getmanualsortkey() is None:
-            process_sort_key = glances_processes.getautosortkey()
-        else:
-            process_sort_key = glances_processes.getmanualsortkey()
+        process_sort_key = glances_processes.getsortkey()
         sort_style = 'SORT'
 
         # Header
