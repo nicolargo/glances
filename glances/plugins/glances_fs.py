@@ -19,6 +19,8 @@
 
 """File system plugin."""
 
+import operator
+
 import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -181,7 +183,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=lambda fs: fs['mnt_point']):
+        for i in sorted(self.stats, key=operator.itemgetter('mnt_point')):
             # New line
             ret.append(self.curse_new_line())
             if i['device_name'] == '' or i['device_name'] == 'none':

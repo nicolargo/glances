@@ -20,6 +20,7 @@
 """Process list plugin."""
 
 # Import sys libs
+import operator
 import os
 from datetime import timedelta
 
@@ -429,7 +430,7 @@ class Plugin(GlancesPlugin):
                                 process[sortedby][3],
                                 reverse=sortedreverse)
             except Exception:
-                self.stats.sort(key=lambda process: process['cpu_percent'],
+                self.stats.sort(key=operator.itemgetter('cpu_percent'),
                                 reverse=sortedreverse)
         else:
             # Others sorts
@@ -437,10 +438,10 @@ class Plugin(GlancesPlugin):
                 self.stats.set_sorting(sortedby, sortedreverse)
             else:
                 try:
-                    self.stats.sort(key=lambda process: process[sortedby],
+                    self.stats.sort(key=operator.itemgetter(sortedby),
                                     reverse=sortedreverse)
                 except (KeyError, TypeError):
-                    self.stats.sort(key=lambda process: process['name'],
+                    self.stats.sort(key=operator.itemgetter('name'),
                                     reverse=False)
 
         return self.stats

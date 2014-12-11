@@ -19,6 +19,7 @@
 
 # Import Python lib
 import collections
+import operator
 import re
 
 # Import psutil
@@ -709,11 +710,11 @@ class GlancesProcesses(object):
                                       process[sortedby][3],
                                       reverse=sortedreverse)
             except Exception:
-                self.processlist.sort(key=lambda process: process['cpu_percent'],
+                self.processlist.sort(key=operator.itemgetter('cpu_percent'),
                                       reverse=sortedreverse)
         else:
             # Others sorts
-            self.processlist.sort(key=lambda process: process[sortedby],
+            self.processlist.sort(key=operator.itemgetter(sortedby),
                                   reverse=sortedreverse)
 
         return self.processlist
