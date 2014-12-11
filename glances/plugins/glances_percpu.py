@@ -130,7 +130,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # No per CPU stat ? Exit...
-        if self.stats == []:
+        if not self.stats:
             msg = _("PER CPU not available")
             ret.append(self.curse_add_line(msg, "TITLE"))
             return ret

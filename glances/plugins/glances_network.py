@@ -185,7 +185,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_network:
+        if not self.stats or args.disable_network:
             return ret
 
         # Max size for the interface name

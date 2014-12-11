@@ -158,7 +158,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_fs:
+        if not self.stats or args.disable_fs:
             return ret
 
         # Max size for the fsname name

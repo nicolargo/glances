@@ -355,7 +355,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_process:
+        if not self.stats or args.disable_process:
             return ret
 
         # Compute the sort key
