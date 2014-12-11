@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        if self.stats == []:
+        if not self.stats:
             msg = _("No warning or critical alert detected")
             ret.append(self.curse_add_line(msg, "TITLE"))
         else:
