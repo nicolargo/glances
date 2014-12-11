@@ -704,21 +704,16 @@ class GlancesProcesses(object):
             # Sum of io_r + io_w
             try:
                 # Sort process by IO rate (sum IO read + IO write)
-                listsorted = sorted(self.processlist,
-                                    key=lambda process: process[sortedby][0] -
-                                    process[sortedby][2] + process[sortedby][1] -
-                                    process[sortedby][3],
-                                    reverse=sortedreverse)
+                self.processlist.sort(key=lambda process: process[sortedby][0] -
+                                      process[sortedby][2] + process[sortedby][1] -
+                                      process[sortedby][3],
+                                      reverse=sortedreverse)
             except Exception:
-                listsorted = sorted(self.processlist,
-                                    key=lambda process: process['cpu_percent'],
-                                    reverse=sortedreverse)
+                self.processlist.sort(key=lambda process: process['cpu_percent'],
+                                      reverse=sortedreverse)
         else:
             # Others sorts
-            listsorted = sorted(self.processlist,
-                                key=lambda process: process[sortedby],
-                                reverse=sortedreverse)
-
-        self.processlist = listsorted
+            self.processlist.sort(key=lambda process: process[sortedby],
+                                  reverse=sortedreverse)
 
         return self.processlist
