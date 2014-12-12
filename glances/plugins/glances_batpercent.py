@@ -103,7 +103,7 @@ class GlancesGrabBat(object):
 
     def getcapacitypercent(self):
         """Get batteries capacity percent."""
-        if not self.initok or self.bat.stat == []:
+        if not self.initok or not self.bat.stat:
             return []
 
         # Init the bsum (sum of percent)

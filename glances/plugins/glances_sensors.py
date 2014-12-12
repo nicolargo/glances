@@ -125,7 +125,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_sensors:
+        if not self.stats or args.disable_sensors:
             return ret
 
         # Build the string message

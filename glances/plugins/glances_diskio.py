@@ -19,6 +19,8 @@
 
 """Disk I/O plugin."""
 
+import operator
+
 import psutil
 
 # Import Glances libs
@@ -122,7 +124,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_diskio:
+        if not self.stats or args.disable_diskio:
             return ret
 
         # Build the string message
@@ -134,7 +136,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>7}'.format(_("W/s"))
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=lambda diskio: diskio['disk_name']):
+        for i in sorted(self.stats, key=operator.itemgetter('disk_name')):
             # Do not display hidden interfaces
             if self.is_hide(i['disk_name']):
                 continue

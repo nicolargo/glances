@@ -20,6 +20,7 @@
 """Process list plugin."""
 
 # Import sys libs
+import operator
 import os
 from datetime import timedelta
 
@@ -355,14 +356,11 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_process:
+        if not self.stats or args.disable_process:
             return ret
 
         # Compute the sort key
-        if glances_processes.getmanualsortkey() is None:
-            process_sort_key = glances_processes.getautosortkey()
-        else:
-            process_sort_key = glances_processes.getmanualsortkey()
+        process_sort_key = glances_processes.getsortkey()
         sort_style = 'SORT'
 
         # Header
@@ -427,30 +425,23 @@ class Plugin(GlancesPlugin):
             # Sum of io_r + io_w
             try:
                 # Sort process by IO rate (sum IO read + IO write)
-                listsorted = sorted(self.stats,
-                                    key=lambda process: process[sortedby][0] -
-                                    process[sortedby][2] + process[sortedby][1] -
-                                    process[sortedby][3],
-                                    reverse=sortedreverse)
+                self.stats.sort(key=lambda process: process[sortedby][0] -
+                                process[sortedby][2] + process[sortedby][1] -
+                                process[sortedby][3],
+                                reverse=sortedreverse)
             except Exception:
-                listsorted = sorted(self.stats,
-                                    key=lambda process: process['cpu_percent'],
-                                    reverse=sortedreverse)
+                self.stats.sort(key=operator.itemgetter('cpu_percent'),
+                                reverse=sortedreverse)
         else:
             # Others sorts
             if tree:
                 self.stats.set_sorting(sortedby, sortedreverse)
             else:
                 try:
-                    listsorted = sorted(self.stats,
-                                        key=lambda process: process[sortedby],
-                                        reverse=sortedreverse)
+                    self.stats.sort(key=operator.itemgetter(sortedby),
+                                    reverse=sortedreverse)
                 except (KeyError, TypeError):
-                    listsorted = sorted(self.stats,
-                                        key=lambda process: process['name'],
-                                        reverse=False)
-
-        if not tree:
-            self.stats = listsorted
+                    self.stats.sort(key=operator.itemgetter('name'),
+                                    reverse=False)
 
         return self.stats

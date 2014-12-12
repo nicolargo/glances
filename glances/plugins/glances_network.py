@@ -20,6 +20,7 @@
 """Network plugin."""
 
 import base64
+import operator
 
 import psutil
 
@@ -185,7 +186,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if self.stats == [] or args.disable_network:
+        if not self.stats or args.disable_network:
             return ret
 
         # Max size for the interface name
@@ -223,7 +224,7 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format(_("Tx/s"))
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
-        for i in sorted(self.stats, key=lambda network: network['interface_name']):
+        for i in sorted(self.stats, key=operator.itemgetter('interface_name')):
             # Do not display hidden interfaces
             if self.is_hide(i['interface_name']):
                 continue
