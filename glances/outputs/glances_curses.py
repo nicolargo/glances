@@ -664,7 +664,7 @@ class _GlancesCurses(object):
         # Exit if:
         # - the plugin_stats message is empty
         # - the display tag = False
-        if plugin_stats['msgdict'] == [] or not plugin_stats['display']:
+        if not plugin_stats['msgdict'] or not plugin_stats['display']:
             # Exit
             return 0
 
