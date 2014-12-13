@@ -137,7 +137,7 @@ Windows
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
-- Install the colorconsole library: http://code.google.com/p/colorconsole/downloads/list
+- Install the `colorconsole`_ library: http://code.google.com/p/colorconsole/downloads/list
 - Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
@@ -224,9 +224,6 @@ LGPL. See ``COPYING`` for more details.
 .. _@glances_system: https://twitter.com/glances_system
 .. _PyPI: https://pypi.python.org/pypi
 .. _pip: http://www.pip-installer.org/
-.. _Homebrew: http://brew.sh/
-.. _MacPorts: https://www.macports.org/
 .. _colorconsole: https://pypi.python.org/pypi/colorconsole
-.. _Puppet: https://puppetlabs.com/puppet/what-is-puppet/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
