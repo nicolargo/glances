@@ -198,7 +198,6 @@ You can also detect and display all Glances servers available on your network or
 
     $ glances --browser
 
-
 And RTFM, always.
 
 Documentation
