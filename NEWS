@@ -14,6 +14,8 @@ Enhancements and news features:
     * Add a short key ('F') and a command line option (--fs-free-space) to display FS free space instead of used space (issue #411)
     * Add a short key ('2') and a command line option (--disable-left-sidebar) to disable/enable the side bar (issue #429)
     * Add CPU times sort short key ('t') in the curse interface (issue #449)
+    * Refactor operating system detection for GNU/Linux operating system
+    * Code optimization
 
 Bugs corrected:
 
