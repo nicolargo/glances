@@ -20,6 +20,7 @@
 # Import Python lib
 import collections
 import operator
+import os
 import re
 
 # Import psutil
@@ -28,6 +29,15 @@ import psutil
 # Import Glances lib
 from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows, logger
 from glances.core.glances_timer import getTimeSinceLastUpdate, Timer
+
+
+def is_kernel_thread(proc):
+    """ Return True if proc is a kernel thread, False instead. """
+    try:
+        return os.getpgid(proc.pid) == 0
+    except OSError:  # Python >= 3.3 raises ProcessLookupError, which inherits OSError
+        # return False is process is dead
+        return False
 
 
 class ProcessTreeNode(object):
@@ -171,9 +181,6 @@ class ProcessTreeNode(object):
                 parent_process = None
             if parent_process is None:
                 # no parent, add this node at the top level
-                tree_root.children.append(new_node)
-            elif hide_kernel_threads and (not is_windows) and (parent_process.gids().real == 0):
-                # parent is a kernel thread, add this node at the top level
                 tree_root.children.append(new_node)
             else:
                 parent_node = tree_root.find_process(parent_process)
@@ -536,8 +543,8 @@ class GlancesProcesses(object):
         processdict = {}
         for proc in psutil.process_iter():
             # Ignore kernel threads if needed
-            if (self.no_kernel_threads and (not is_windows)  # gids() is only available on unix
-                    and (proc.gids().real == 0)):
+            if (self.no_kernel_threads and (not is_windows)
+                    and is_kernel_thread(proc)):
                 continue
 
             # If self.get_max_processes() is None: Only retreive mandatory stats
