@@ -80,7 +80,7 @@ class Plugin(GlancesPlugin):
                     for key in keys:
                         if line.startswith(key):
                             ashtray[key] = line.strip().split('=')[1][1:-1]
-        except OSError:
+        except (OSError, IOError):
             return pretty_name
 
         if ashtray:
