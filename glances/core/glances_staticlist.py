@@ -23,7 +23,7 @@
 from socket import gaierror, gethostbyname
 
 # Import Glances libs
-from glances.core.glances_globals import logger
+from glances.core.glances_logging import logger
 
 
 class GlancesStaticServer(object):

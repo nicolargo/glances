@@ -27,7 +27,8 @@ import tempfile
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, is_windows, logger, psutil_version, version
+from glances.core.glances_globals import appname, is_windows, psutil_version, version
+from glances.core.glances_logging import logger
 
 
 class GlancesMain(object):

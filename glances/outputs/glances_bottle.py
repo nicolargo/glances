@@ -24,14 +24,13 @@ import os
 import sys
 
 # Import Glances libs
-from glances.core.glances_globals import logger
+from glances.core.glances_logging import logger
 
 # Import mandatory Bottle lib
 try:
     from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
-    print(_("Install it using pip: # pip install bottle"))
     sys.exit(2)
 
 

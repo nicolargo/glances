@@ -24,7 +24,8 @@ import os
 import re
 import sys
 
-from glances.core.glances_globals import logger, plugins_path, sys_path
+from glances.core.glances_globals import plugins_path, sys_path
+from glances.core.glances_logging import logger
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {'.*Linux.*': 'linux',

@@ -39,7 +39,8 @@ except ImportError:
     zeroconf_tag = False
 
 # Import Glances libs
-from glances.core.glances_globals import appname, logger
+from glances.core.glances_globals import appname
+from glances.core.glances_logging import logger
 
 # Zeroconf 0.16 or higher is needed
 if zeroconf_tag:
