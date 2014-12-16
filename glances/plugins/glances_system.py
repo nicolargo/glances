@@ -137,7 +137,11 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
             if self.get_short_system_name() == 'windows':
-                for r, v in snmp_to_human['windows'].iteritems():
+                try:
+                    iteritems = snmp_to_human['windows'].iteritems()
+                except AttributeError:
+                    iteritems = snmp_to_human['windows'].items()
+                for r, v in iteritems:
                     if re.search(r, self.stats['system_name']):
                         self.stats['os_name'] = v
                         break

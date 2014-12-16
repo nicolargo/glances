@@ -103,7 +103,7 @@ class ProcessTreeNode(object):
         nodes_to_sum = collections.deque([self])
         while nodes_to_sum:
             current_node = nodes_to_sum.pop()
-            if callable(self.sort_key):
+            if isinstance(self.sort_key, collections.Callable):
                 total += self.sort_key(current_node.stats)
             elif self.sort_key == "io_counters":
                 stats = current_node.stats[self.sort_key]
