@@ -23,7 +23,7 @@ import time
 
 import msvcrt
 
-from glances.core.glances_globals import logger
+from glances.core.glances_logging import logger
 
 try:
     import colorconsole

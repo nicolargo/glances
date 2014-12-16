@@ -29,11 +29,11 @@ except ImportError:
     from xmlrpclib import ServerProxy, Fault, ProtocolError
 
 # Import Glances libs
-from glances.core.glances_globals import logger
-from glances.outputs.glances_curses import GlancesCursesBrowser
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClient, GlancesClientTransport
+from glances.core.glances_logging import logger
 from glances.core.glances_staticlist import GlancesStaticServer
+from glances.outputs.glances_curses import GlancesCursesBrowser
 
 
 class GlancesClientBrowser(object):

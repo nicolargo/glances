@@ -27,14 +27,8 @@ import sys
 import uuid
 
 # Import Glances lib
-from glances.core.glances_globals import (
-    appname,
-    is_bsd,
-    is_linux,
-    is_mac,
-    is_windows,
-    logger
-)
+from glances.core.glances_globals import appname, is_bsd, is_linux, is_mac, is_windows
+from glances.core.glances_logging import logger
 
 # Trick: bind raw_input to input in Python 2
 try:

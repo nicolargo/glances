@@ -27,7 +27,8 @@ import re
 import psutil
 
 # Import Glances lib
-from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows, logger
+from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows
+from glances.core.glances_logging import logger
 from glances.core.glances_timer import getTimeSinceLastUpdate, Timer
 
 

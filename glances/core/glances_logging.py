@@ -82,3 +82,5 @@ def glances_logger():
                             level=logging.DEBUG,
                             format='%(asctime)s -- %(levelname)s -- %(message)s')
     return _logger
+
+logger = glances_logger()

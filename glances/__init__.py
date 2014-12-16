@@ -40,7 +40,8 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir, logger
+from glances.core.glances_globals import gettext_domain, locale_dir
+from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
 
 # Get PSutil version
