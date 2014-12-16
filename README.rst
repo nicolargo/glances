@@ -6,6 +6,8 @@ Glances - An eye on your system
 
 .. image:: https://api.flattr.com/button/flattr-badge-large.png
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
+.. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=master
+        :target: https://scrutinizer-ci.com/g/nicolargo/glances/
 .. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://badge.fury.io/py/Glances.png
