@@ -25,7 +25,8 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes, is_windows
+from glances.core.glances_globals import is_windows
+from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

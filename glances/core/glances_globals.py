@@ -64,14 +64,3 @@ locale_dir = get_locale_path([i18n_path, user_i18n_path, sys_i18n_path])
 
 # Create and init the logging instance
 logger = glances_logger()
-
-# Instances shared between all Glances scripts
-# ============================================
-
-# Glances_processes for processcount and processlist plugins
-from glances.core.glances_processes import GlancesProcesses
-glances_processes = GlancesProcesses()
-
-# The global instance for the logs
-from glances.core.glances_logs import GlancesLogs
-glances_logs = GlancesLogs()
