@@ -725,3 +725,5 @@ class GlancesProcesses(object):
                                   reverse=sortedreverse)
 
         return self.processlist
+
+glances_processes = GlancesProcesses()

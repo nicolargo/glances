@@ -23,7 +23,7 @@
 from datetime import datetime
 
 # Import Glances libs
-from glances.core.glances_globals import glances_logs
+from glances.core.glances_logs import glances_logs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
