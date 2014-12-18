@@ -104,6 +104,7 @@ class Plugin(GlancesPlugin):
                 if self.stats['nb_log_core'] > 0:
                     self.stats['idle'] = self.stats['idle'] / self.stats['nb_log_core']
                 self.stats['idle'] = 100 - self.stats['idle']
+                self.stats['total'] = 100 - self.stats['idle']
 
             else:
                 # Default behavor
@@ -119,6 +120,7 @@ class Plugin(GlancesPlugin):
                 # Convert SNMP stats to float
                 for key in list(self.stats.keys()):
                     self.stats[key] = float(self.stats[key])
+                self.stats['total'] = 100 - self.stats['idle']
 
         # Update the history list
         self.update_stats_history()
