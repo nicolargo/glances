@@ -7,6 +7,7 @@ Version 2.X
 
     * Fix incorrect kernel thread detection with --hide-kernel-threads (issue #457)
     * Handle IOError exception if no /etc/os-release to use Glances on Synology DSM (issue #458)
+    * Check issue error in client/server mode (issue #459) 
 
 Version 2.2
 ===========
