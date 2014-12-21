@@ -306,6 +306,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag
+        elif self.pressedkey == ord('R'):
+            # 'R' > Hide RAID plugins
+            self.args.disable_raid = not self.args.disable_raid
         elif self.pressedkey == ord('s'):
             # 's' > Show/hide sensors stats (Linux-only)
             self.args.disable_sensors = not self.args.disable_sensors
@@ -424,6 +427,8 @@ class _GlancesCurses(object):
             'diskio').get_stats_display(args=self.args)
         stats_fs = stats.get_plugin('fs').get_stats_display(
             args=self.args, max_width=plugin_max_width)
+        stats_raid = stats.get_plugin('raid').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
         stats_sensors = stats.get_plugin(
             'sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
@@ -507,7 +512,8 @@ class _GlancesCurses(object):
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         self.init_column()
         if (not (self.args.disable_network and self.args.disable_diskio
-                 and self.args.disable_fs and self.args.disable_sensors)) \
+                 and self.args.disable_fs and self.args.disable_raid
+                 and self.args.disable_sensors)) \
                 and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
@@ -515,6 +521,8 @@ class _GlancesCurses(object):
             self.display_plugin(stats_diskio)
             self.new_line()
             self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_raid)
             self.new_line()
             self.display_plugin(stats_sensors)
             self.new_line()
