@@ -75,6 +75,8 @@ class GlancesMain(object):
                             dest='disable_fs', help=_('disable filesystem module'))
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help=_('disable sensors module'))
+        parser.add_argument('--disable-raid', action='store_true', default=False,
+                            dest='disable_raid', help=_('disable RAID module'))
         parser.add_argument('--disable-left-sidebar', action='store_true', default=False,
                             dest='disable_left_sidebar', help=_('disable network, disk io, FS and sensors modules'))
         parser.add_argument('--disable-process', action='store_true', default=False,
