@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 # !!! Path ONLY for dev
-                mds = MdStat('/home/nicolargo/dev/pymdstat/tests/mdstat.08')
+                mds = MdStat('/home/nicolargo/dev/pymdstat/tests/mdstat.04')
                 self.stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
@@ -86,11 +86,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:10}'.format(_('RAID disks'))
+        msg = '{0:11}'.format(_('RAID disks'))
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{0:>6}'.format(_("Used"))
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format(_("Avail"))
+        msg = '{0:>6}'.format(_("Avail"))
         ret.append(self.curse_add_line(msg))
         # Data
         arrays = self.stats.keys()
@@ -105,9 +105,9 @@ class Plugin(GlancesPlugin):
             msg = '{0:<5}{1:>6}'.format(array_type, array)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['status'] == 'active':
-                msg = '{0:>5}'.format(self.stats[array]['used'])
+                msg = '{0:>6}'.format(self.stats[array]['used'])
                 ret.append(self.curse_add_line(msg, status))
-                msg = '{0:>7}'.format(self.stats[array]['available'])
+                msg = '{0:>6}'.format(self.stats[array]['available'])
                 ret.append(self.curse_add_line(msg, status))
             elif self.stats[array]['status'] == 'inactive':
                 ret.append(self.curse_new_line())
