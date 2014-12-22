@@ -111,24 +111,28 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, status))
             elif self.stats[array]['status'] == 'inactive':
                 ret.append(self.curse_new_line())
-                msg = '|_ Status {}'.format(self.stats[array]['status'])
+                msg = '└─ Status {}'.format(self.stats[array]['status'])
                 ret.append(self.curse_add_line(msg, status))
                 components = self.stats[array]['components'].keys()
                 components.sort()
-                for component in components:
+                for i, component in enumerate(components):
+                    if i == len(components) - 1:
+                        tree_char = '└─'
+                    else:
+                        tree_char = '├─'
                     ret.append(self.curse_new_line())
-                    msg = '   |_ disk {0}: '.format(self.stats[array]['components'][component])
+                    msg = '   {0} disk {1}: '.format(tree_char, self.stats[array]['components'][component])
                     ret.append(self.curse_add_line(msg))
                     msg = '{0}'.format(component)
                     ret.append(self.curse_add_line(msg))
             if self.stats[array]['used'] < self.stats[array]['available']:
                 # Display current array configuration
                 ret.append(self.curse_new_line())
-                msg = '|_ Degraded mode'
+                msg = '└─ Degraded mode'
                 ret.append(self.curse_add_line(msg, status))
                 if len(self.stats[array]['config']) < 17:
                     ret.append(self.curse_new_line())
-                    msg = '   |_ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
+                    msg = '   └─ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
                     ret.append(self.curse_add_line(msg))
 
         return ret
