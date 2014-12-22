@@ -291,6 +291,7 @@ class GlancesBottle(object):
         html += self.display_plugin('network', self.stats.get_plugin('network').get_stats_display(args=self.args))
         html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_stats_display(args=self.args))
         html += self.display_plugin('fs', self.stats.get_plugin('fs').get_stats_display(args=self.args))
+        html += self.display_plugin('raid', self.stats.get_plugin('raid').get_stats_display(args=self.args))
         html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_stats_display(args=self.args))
         html += '</aside>'
         html += '<section id="rightstats">'
