@@ -61,8 +61,7 @@ class Plugin(GlancesPlugin):
         if self.get_input() == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
-                # !!! Path ONLY for dev
-                mds = MdStat('/home/nicolargo/dev/pymdstat/tests/mdstat.04')
+                mds = MdStat()
                 self.stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
