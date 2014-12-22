@@ -65,7 +65,8 @@ setup(
         'BATINFO': ['batinfo'],
         'SNMP': ['pysnmp'],
         'CHART': ['matplotlib'],
-        'BROWSER': ['zeroconf>=0.16', 'netifaces']
+        'BROWSER': ['zeroconf>=0.16', 'netifaces'],
+        'RAID': ['pymdstat']
     },
     packages=['glances'],
     include_package_data=True,
