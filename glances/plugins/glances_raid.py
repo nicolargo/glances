@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 # !!! Path ONLY for dev
-                mds = MdStat('/home/nicolargo/dev/pymdstat/tests/mdstat.09')
+                mds = MdStat('/home/nicolargo/dev/pymdstat/tests/mdstat.08')
                 self.stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
@@ -101,7 +101,8 @@ class Plugin(GlancesPlugin):
             # Display the current status
             status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
             # Data: RAID type name | disk used | disk available
-            msg = '{0:<5}{1:>6}'.format(self.stats[array]['type'].upper(), array)
+            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else _('UNKNOWN')
+            msg = '{0:<5}{1:>6}'.format(array_type, array)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['status'] == 'active':
                 msg = '{0:>5}'.format(self.stats[array]['used'])
