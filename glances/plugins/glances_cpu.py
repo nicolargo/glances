@@ -145,7 +145,7 @@ class Plugin(GlancesPlugin):
         # Total CPU usage
         msg = '{0:>5}%'.format(self.stats['total'])
         if idle_tag:
-            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['total']), header="system"))
+            ret.append(self.curse_add_line(msg, self.get_alert_log(self.stats['total'], header="system")))
         else:
             ret.append(self.curse_add_line(msg))
         # Nice CPU
