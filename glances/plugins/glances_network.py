@@ -58,6 +58,10 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'interface_name'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
@@ -113,6 +117,7 @@ class Plugin(GlancesPlugin):
                     except KeyError:
                         continue
                     else:
+                        netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
                 # Save stats to compute next bitrate
@@ -175,7 +180,7 @@ class Plugin(GlancesPlugin):
                 self.network_old = network_new
 
         # Update the history list
-        self.update_stats_history('interface_name')
+        self.update_stats_history(self.get_key())
 
         return self.stats
 
@@ -224,7 +229,7 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format(_("Tx/s"))
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter('interface_name')):
+        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hidden interfaces
             if self.is_hide(i['interface_name']):
                 continue

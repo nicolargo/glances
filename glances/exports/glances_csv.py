@@ -26,16 +26,21 @@ import sys
 # Import Glances lib
 from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
+from glances.exports.glances_export import GlancesExport
 
 # List of stats enabled in the CSV output
-csv_stats_list = ['cpu', 'load', 'mem', 'memswap']
+# !!! TODO: should be configurable from the conf file
+csv_stats_list = ['cpu', 'load', 'mem', 'memswap', 'network']
 
 
-class GlancesCSV(object):
+class GlancesCSV(GlancesExport):
 
     """This class manages the CSV output."""
 
     def __init__(self, args=None):
+        """Init the CSV export IF."""
+        GlancesExport.__init__(self, args=args)
+
         # CSV file name
         self.csv_filename = args.output_csv
 
@@ -50,7 +55,9 @@ class GlancesCSV(object):
             logger.critical("Cannot create the CSV file: {0}".format(e))
             sys.exit(2)
 
-        logger.info("Stats dumped to CSV file: {0}".format(self.csv_filename))
+        logger.info("Stats exported to CSV file: {0}".format(self.csv_filename))
+
+        self.first_line = True
 
     def exit(self):
         """Close the CSV file."""
@@ -58,6 +65,10 @@ class GlancesCSV(object):
 
     def update(self, stats):
         """Update stats in the CSV output file."""
+        csv_header = []
+        csv_data = []
+
+        # Get the stats
         all_stats = stats.getAll()
         plugins = stats.getAllPlugins()
 
@@ -65,13 +76,28 @@ class GlancesCSV(object):
         i = 0
         for plugin in plugins:
             if plugin in csv_stats_list:
-                fieldnames = all_stats[i].keys()
-                fieldvalues = all_stats[i].values()
-                # First line: header
-                csv_header = ['# ' + plugin + ': ' + '|'.join(fieldnames)]
-                self.writer.writerow(csv_header)
-                # Second line: stats
-                self.writer.writerow(list(fieldvalues))
+                if type(all_stats[i]) is list:
+                    for item in all_stats[i]:
+                        # First line: header
+                        if self.first_line:
+                            fieldnames = item.keys()
+                            csv_header += map(lambda x: plugin+'_'+item['key']+'_'+x, item)
+                        # Others lines: stats
+                        fieldvalues = item.values()
+                        csv_data += fieldvalues
+                elif type(all_stats[i]) is dict:
+                    # First line: header
+                    if self.first_line:
+                        fieldnames = all_stats[i].keys()
+                        csv_header += map(lambda x: plugin+'_'+x, fieldnames)
+                    # Others lines: stats
+                    fieldvalues = all_stats[i].values()
+                    csv_data += fieldvalues
             i += 1
 
+        # Export to CSV
+        if self.first_line:
+            self.writer.writerow(csv_header)
+            self.first_line = False
+        self.writer.writerow(csv_data)
         self.csv_file.flush()
