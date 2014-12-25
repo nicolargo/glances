@@ -72,6 +72,10 @@ class GlancesPlugin(object):
         """Return the human-readable stats."""
         return str(self.stats)
 
+    def get_key(self):
+        """Return the key of the list"""
+        return None
+
     def add_item_history(self, key, value):
         """Add an new item (key, value) to the current history"""
         try:
