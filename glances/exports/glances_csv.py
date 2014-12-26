@@ -30,7 +30,7 @@ from glances.exports.glances_export import GlancesExport
 
 # List of stats enabled in the CSV output
 # !!! TODO: should be configurable from the conf file
-csv_stats_list = ['cpu', 'load', 'mem', 'memswap', 'network']
+csv_stats_list = ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
 
 
 class GlancesCSV(GlancesExport):
@@ -81,7 +81,7 @@ class GlancesCSV(GlancesExport):
                         # First line: header
                         if self.first_line:
                             fieldnames = item.keys()
-                            csv_header += map(lambda x: plugin+'_'+item['key']+'_'+x, item)
+                            csv_header += map(lambda x: plugin+'_'+item[item['key']]+'_'+x, item)
                         # Others lines: stats
                         fieldvalues = item.values()
                         csv_data += fieldvalues

@@ -51,6 +51,10 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'disk_name'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
@@ -104,6 +108,7 @@ class Plugin(GlancesPlugin):
                     except KeyError:
                         continue
                     else:
+                        diskstat['key'] = self.get_key()
                         self.stats.append(diskstat)
 
                 # Save stats to compute next bitrate
@@ -136,7 +141,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>7}'.format(_("W/s"))
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter('disk_name')):
+        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hidden interfaces
             if self.is_hide(i['disk_name']):
                 continue
