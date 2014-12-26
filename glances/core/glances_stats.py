@@ -24,7 +24,7 @@ import os
 import re
 import sys
 
-from glances.core.glances_globals import plugins_path, sys_path
+from glances.core.glances_globals import plugins_path, exports_path, sys_path
 from glances.core.glances_logging import logger
 
 # SNMP OID regexp pattern to short system name dict
@@ -41,17 +41,21 @@ class GlancesStats(object):
     """This class stores, updates and gives stats."""
 
     def __init__(self, config=None, args=None):
-        # Init the plugin list dict
-        self._plugins = collections.defaultdict(dict)
-
         # Set the argument instance
         self.args = args
 
         # Set the config instance
         self.config = config
 
+        # Init the plugin list dict
+        self._plugins = collections.defaultdict(dict)
         # Load the plugins
         self.load_plugins(args=args)
+
+        # Init the export modules list dict
+        self._exports = collections.defaultdict(dict)
+        # Load the plugins
+        self.load_exports(args=args)
 
         # Load the limits
         self.load_limits(config)
@@ -96,14 +100,39 @@ class GlancesStats(object):
                     self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
                 else:
                     self._plugins[plugin_name] = plugin.Plugin(args=args)
-        # Restoring system path
-        sys.path = sys_path
         # Log plugins list
         logger.debug("Available plugins list: {0}".format(self.getAllPlugins()))
+
+    def load_exports(self, args=None):
+        """Load all exports module in the 'exports' folder."""
+        header = "glances_"
+        # Transform the arguments list into a dict
+        # The aim is to chec if the export module should be loaded
+        args_var = vars(locals()['args'])
+        for item in os.listdir(exports_path):
+            export_name = os.path.basename(item)[len(header):-3].lower()
+            if (item.startswith(header) and
+                    item.endswith(".py") and
+                    item != (header + "export.py") and
+                    item != (header + "history.py") and
+                    args_var['export_' + export_name] is not None):
+                # Import the export module
+                export_module = __import__(os.path.basename(item)[:-3])
+                # Add the export to the dictionary
+                # The key is the module name
+                # for example, the file glances_xxx.py
+                # generate self._exports_list["xxx"] = ...
+                self._exports[export_name] = export_module.Export(args=args)
+        # Log plugins list
+        logger.debug("Available exports modules list: {0}".format(self.getAllExports()))
 
     def getAllPlugins(self):
         """Return the plugins list."""
         return [p for p in self._plugins]
+
+    def getAllExports(self):
+        """Return the exports modules list."""
+        return [p for p in self._exports]
 
     def load_limits(self, config=None):
         """Load the stats limits."""
@@ -130,6 +159,12 @@ class GlancesStats(object):
         """Wrapper method to update the stats."""
         self.__update__(input_stats)
 
+    def export(self, input_stats={}):
+        """Export all the stats."""
+        for e in self._exports:
+            # logger.debug("Update %s stats" % p)
+            self._exports[e].update(input_stats)
+
     def getAll(self):
         """Return all the stats (list)"""
         return [self._plugins[p].get_raw() for p in self._plugins]
@@ -153,6 +188,13 @@ class GlancesStats(object):
             return self._plugins[plugin_name]
         else:
             return None
+
+    def end(self):
+        """End of the Glances stats"""
+        # Close the export module
+        for e in self._exports:
+            # logger.debug("Update %s stats" % p)
+            self._exports[e].exit()
 
 
 class GlancesStatsServer(GlancesStats):

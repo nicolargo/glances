@@ -33,16 +33,16 @@ from glances.exports.glances_export import GlancesExport
 csv_stats_list = ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
 
 
-class GlancesCSV(GlancesExport):
+class Export(GlancesExport):
 
-    """This class manages the CSV output."""
+    """This class manages the CSV export module."""
 
     def __init__(self, args=None):
         """Init the CSV export IF."""
         GlancesExport.__init__(self, args=args)
 
         # CSV file name
-        self.csv_filename = args.output_csv
+        self.csv_filename = args.export_csv
 
         # Set the CSV output file
         try:

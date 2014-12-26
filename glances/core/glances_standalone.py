@@ -61,15 +61,6 @@ class GlancesStandalone(object):
         # Initial system informations update
         self.stats.update()
 
-        # Init CSV output
-        if args.output_csv is not None:
-            from glances.exports.glances_csv import GlancesCSV
-
-            self.csvoutput = GlancesCSV(args=args)
-            self.csv_tag = True
-        else:
-            self.csv_tag = False
-
         # Init screen
         self.screen = GlancesCursesStandalone(args=args)
 
@@ -82,14 +73,12 @@ class GlancesStandalone(object):
             # Update the screen
             self.screen.update(self.stats)
 
-            # Update the CSV output
-            if self.csv_tag:
-                self.csvoutput.update(self.stats)
+            # Export stats using export modules
+            self.stats.export(self.stats)
 
     def end(self):
-        """End of the CLI."""
+        """End of the standalone CLI."""
         self.screen.end()
 
-        # Close the CSV file
-        if self.csv_tag:
-            self.csvoutput.exit()
+        # Exit from export modules
+        self.stats.end()
