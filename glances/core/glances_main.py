@@ -91,9 +91,9 @@ class GlancesMain(object):
                             dest='enable_history', help=_('enable the history mode'))
         parser.add_argument('--path-history', default=tempfile.gettempdir(),
                             dest='path_history', help=_('Set the export path for graph history'))
-        # CSV output feature
-        parser.add_argument('--output-csv', default=None,
-                            dest='output_csv', help=_('export stats to a CSV file'))
+        # Export modules feature
+        parser.add_argument('--export-csv', default=None,
+                            dest='export_csv', help=_('export stats to a CSV file'))
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
