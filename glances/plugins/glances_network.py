@@ -174,6 +174,7 @@ class Plugin(GlancesPlugin):
                     except KeyError:
                         continue
                     else:
+                        netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
                 # Save stats to compute next bitrate
