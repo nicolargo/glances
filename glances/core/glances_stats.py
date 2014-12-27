@@ -170,8 +170,6 @@ class GlancesStats(object):
                                       args=(input_stats,))
             # threads.append(thread)
             thread.start()
-            # logger.debug("Update %s stats" % p)
-            # self._exports[e].update(input_stats)
 
     def getAll(self):
         """Return all the stats (list)"""
@@ -201,7 +199,6 @@ class GlancesStats(object):
         """End of the Glances stats"""
         # Close the export module
         for e in self._exports:
-            # logger.debug("Update %s stats" % p)
             self._exports[e].exit()
 
 
