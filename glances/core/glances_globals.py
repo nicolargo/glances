@@ -44,9 +44,13 @@ sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
 # Set the plugins path
 plugins_path = os.path.realpath(os.path.join(work_path, '..', 'plugins'))
-sys_path = sys.path[:]
-sys.path.insert(0, plugins_path)
 
+# Set the export module path
+exports_path = os.path.realpath(os.path.join(work_path, '..', 'exports'))
+
+sys_path = sys.path[:]
+sys.path.insert(1, plugins_path)
+sys.path.insert(1, exports_path)
 
 def get_locale_path(paths):
     for path in paths:
