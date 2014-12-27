@@ -73,6 +73,10 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'mnt_point'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
@@ -111,6 +115,7 @@ class Plugin(GlancesPlugin):
                 fs_current['used'] = fs_usage.used
                 fs_current['free'] = fs_usage.total - fs_usage.used
                 fs_current['percent'] = fs_usage.percent
+                fs_current['key'] = self.get_key()
                 self.stats.append(fs_current)
 
         elif self.get_input() == 'snmp':
@@ -137,6 +142,7 @@ class Plugin(GlancesPlugin):
                     fs_current['size'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
                     fs_current['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
                     fs_current['percent'] = float(fs_current['used'] * 100 / fs_current['size'])
+                    fs_current['key'] = self.get_key()
                     self.stats.append(fs_current)
             else:
                 # Default behavor
@@ -147,6 +153,7 @@ class Plugin(GlancesPlugin):
                     fs_current['size'] = int(fs_stat[fs]['size']) * 1024
                     fs_current['used'] = int(fs_stat[fs]['used']) * 1024
                     fs_current['percent'] = float(fs_stat[fs]['percent'])
+                    fs_current['key'] = self.get_key()
                     self.stats.append(fs_current)
 
         # Update the history list
@@ -183,7 +190,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter('mnt_point')):
+        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # New line
             ret.append(self.curse_new_line())
             if i['device_name'] == '' or i['device_name'] == 'none':

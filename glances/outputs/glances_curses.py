@@ -192,7 +192,7 @@ class _GlancesCurses(object):
         if args.enable_history:
             logger.info('Stats history enabled with output path %s' %
                         args.path_history)
-            from glances.outputs.glances_history import GlancesHistory
+            from glances.exports.glances_history import GlancesHistory
             self.glances_history = GlancesHistory(args.path_history)
             if not self.glances_history.graph_enabled():
                 args.enable_history = False
