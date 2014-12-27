@@ -23,6 +23,7 @@ import collections
 import os
 import re
 import sys
+import threading
 
 from glances.core.glances_globals import plugins_path, exports_path, sys_path
 from glances.core.glances_logging import logger
@@ -160,10 +161,17 @@ class GlancesStats(object):
         self.__update__(input_stats)
 
     def export(self, input_stats={}):
-        """Export all the stats."""
+        """Export all the stats.
+        Each export module is ran in a dedicated thread."""
+        # threads = []
         for e in self._exports:
+            logger.debug("Export stats using the %s module" % e)
+            thread = threading.Thread(target=self._exports[e].update,
+                                      args=(input_stats,))
+            # threads.append(thread)
+            thread.start()
             # logger.debug("Update %s stats" % p)
-            self._exports[e].update(input_stats)
+            # self._exports[e].update(input_stats)
 
     def getAll(self):
         """Return all the stats (list)"""
