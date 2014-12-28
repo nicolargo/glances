@@ -106,6 +106,8 @@ class GlancesStats(object):
 
     def load_exports(self, args=None):
         """Load all exports module in the 'exports' folder."""
+        if args is None:
+            return False
         header = "glances_"
         # Transform the arguments list into a dict
         # The aim is to chec if the export module should be loaded
@@ -127,6 +129,7 @@ class GlancesStats(object):
                 self._exports[export_name] = export_module.Export(args=args)
         # Log plugins list
         logger.debug("Available exports modules list: {0}".format(self.getAllExports()))
+        return True
 
     def getAllPlugins(self):
         """Return the plugins list."""
