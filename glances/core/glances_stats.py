@@ -252,10 +252,21 @@ class GlancesStatsClient(GlancesStats):
 
     """This class stores, updates and gives stats for the client."""
 
-    def __init__(self):
+    def __init__(self, config=None, args=None):
         """Init the GlancesStatsClient class."""
         # Init the plugin list dict
         self._plugins = collections.defaultdict(dict)
+
+        # Init the configuration
+        self.config = config
+
+        # Init the arguments
+        self.args = args
+
+        # Init the export modules list dict
+        self._exports = collections.defaultdict(dict)
+        # Load the plugins
+        self.load_exports(args=args)
 
     def set_plugins(self, input_plugins):
         """Set the plugin list according to the Glances server."""
@@ -292,6 +303,11 @@ class GlancesStatsClientSNMP(GlancesStats):
 
         # Load plugins
         self.load_plugins(args=self.args)
+
+        # Init the export modules list dict
+        self._exports = collections.defaultdict(dict)
+        # Load the plugins
+        self.load_exports(args=args)
 
     def check_snmp(self):
         """Chek if SNMP is available on the server."""
