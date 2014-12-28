@@ -56,27 +56,6 @@ class GlancesBottle(object):
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
-        # Define the style (CSS) list (hash table) for stats
-        self.__style_list = {
-            'DEFAULT': '',
-            'UNDERLINE': 'underline',
-            'BOLD': 'bold',
-            'SORT': 'sort',
-            'OK': 'ok',
-            'FILTER': 'filter',
-            'TITLE': 'title',
-            'CAREFUL': 'careful',
-            'WARNING': 'warning',
-            'CRITICAL': 'critical',
-            'OK_LOG': 'ok_log',
-            'CAREFUL_LOG': 'careful_log',
-            'WARNING_LOG': 'warning_log',
-            'CRITICAL_LOG': 'critical_log',
-            'NICE': 'nice',
-            'STATUS': 'status',
-            'PROCESS': ''
-        }
-
     def _route(self):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
@@ -269,78 +248,23 @@ class GlancesBottle(object):
 
         stats: Stats database to display
         """
-        html = template('header', refresh_time=refresh_time)
-        html += '<header>'
-        html += self.display_plugin('system', self.stats.get_plugin('system').get_stats_display(args=self.args))
-        html += self.display_plugin('uptime', self.stats.get_plugin('uptime').get_stats_display(args=self.args))
-        html += '</header>'
-        html += template('newline')
-        html += '<section>'
-        html += self.display_plugin('cpu', self.stats.get_plugin('cpu').get_stats_display(args=self.args))
-        load_msg = self.stats.get_plugin('load').get_stats_display(args=self.args)
-        if load_msg['msgdict'] != []:
-            # Load is not available on all OS
-            # Only display if stat is available
-            html += self.display_plugin('load', load_msg)
-        html += self.display_plugin('mem', self.stats.get_plugin('mem').get_stats_display(args=self.args))
-        html += self.display_plugin('memswap', self.stats.get_plugin('memswap').get_stats_display(args=self.args))
-        html += '</section>'
-        html += template('newline')
-        html += '<div>'
-        html += '<aside id="lefttstats">'
-        html += self.display_plugin('network', self.stats.get_plugin('network').get_stats_display(args=self.args))
-        html += self.display_plugin('diskio', self.stats.get_plugin('diskio').get_stats_display(args=self.args))
-        html += self.display_plugin('fs', self.stats.get_plugin('fs').get_stats_display(args=self.args))
-        html += self.display_plugin('raid', self.stats.get_plugin('raid').get_stats_display(args=self.args))
-        html += self.display_plugin('sensors', self.stats.get_plugin('sensors').get_stats_display(args=self.args))
-        html += '</aside>'
-        html += '<section id="rightstats">'
-        html += self.display_plugin('alert', self.stats.get_plugin('alert').get_stats_display(args=self.args))
-        html += self.display_plugin('processcount', self.stats.get_plugin('processcount').get_stats_display(args=self.args))
-        html += self.display_plugin('monitor', self.stats.get_plugin('monitor').get_stats_display(args=self.args))
-        html += self.display_plugin('processlist', self.stats.get_plugin('processlist').get_stats_display(args=self.args))
-        html += '</section>'
-        html += '</div>'
-        html += template('newline')
-        html += template('footer')
 
-        return html
+        stats = {
+            'system': self.stats.get_plugin('system').get_stats_display(args=self.args),
+            'uptime': self.stats.get_plugin('uptime').get_stats_display(args=self.args),
+            'cpu': self.stats.get_plugin('cpu').get_stats_display(args=self.args),
+            'load': self.stats.get_plugin('load').get_stats_display(args=self.args),
+            'mem': self.stats.get_plugin('mem').get_stats_display(args=self.args),
+            'memswap': self.stats.get_plugin('memswap').get_stats_display(args=self.args),
+            'network': self.stats.get_plugin('network').get_stats_display(args=self.args),
+            'diskio': self.stats.get_plugin('diskio').get_stats_display(args=self.args),
+            'fs': self.stats.get_plugin('fs').get_stats_display(args=self.args),
+            'raid': self.stats.get_plugin('raid').get_stats_display(args=self.args),
+            'sensors': self.stats.get_plugin('sensors').get_stats_display(args=self.args),
+            'alert': self.stats.get_plugin('alert').get_stats_display(args=self.args),
+            'processcount': self.stats.get_plugin('processcount').get_stats_display(args=self.args),
+            'monitor': self.stats.get_plugin('monitor').get_stats_display(args=self.args),
+            'processlist': self.stats.get_plugin('processlist').get_stats_display(args=self.args)
+        }
 
-    def display_plugin(self, plugin_name, plugin_stats):
-        """Generate the Bottle template for the plugin_stats."""
-        # Template header
-        tpl = """ \
-                %#Template for Bottle
-              """
-        tpl += '<article class="plugin" id="%s">' % plugin_name
-
-        tpl += '<div id="table">'
-        tpl += '<div class="row">'
-        for m in plugin_stats['msgdict']:
-            # New line
-            if m['msg'].startswith('\n'):
-                tpl += '</div>'
-                tpl += '<div class="row">'
-                continue
-            if plugin_name == 'processlist' and m['splittable']:
-                # Processlist: Display first 20 chars of the process name
-                if m['msg'].split(' ', 1)[0] != '':
-                    tpl += '<span class="cell" id="%s">&nbsp;%s</span>' % \
-                        (self.__style_list[m['decoration']],
-                         m['msg'].split(' ', 1)[0].replace(' ', '&nbsp;')[:20])
-            elif m['optional']:
-                # Manage optional stats (responsive design)
-                tpl += '<span class="cell hide" id="%s">%s</span>' % \
-                    (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
-            else:
-                # Display stat
-                tpl += '<span class="cell" id="%s">%s</span>' % \
-                    (self.__style_list[m['decoration']], m['msg'].replace(' ', '&nbsp;'))
-        tpl += '</div>'
-        tpl += '</div>'
-
-        tpl += """ \
-                </article>
-                %#End Template for Bottle
-               """
-        return template(tpl)
+        return template('base', refresh_time=refresh_time, stats=stats)
