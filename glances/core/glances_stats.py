@@ -126,7 +126,7 @@ class GlancesStats(object):
                 # The key is the module name
                 # for example, the file glances_xxx.py
                 # generate self._exports_list["xxx"] = ...
-                self._exports[export_name] = export_module.Export(args=args)
+                self._exports[export_name] = export_module.Export(args=args, config=self.config)
         # Log plugins list
         logger.debug("Available exports modules list: {0}".format(self.getAllExports()))
         return True
