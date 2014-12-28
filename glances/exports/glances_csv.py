@@ -33,9 +33,9 @@ class Export(GlancesExport):
 
     """This class manages the CSV export module."""
 
-    def __init__(self, args=None):
+    def __init__(self, config=None, args=None):
         """Init the CSV export IF."""
-        GlancesExport.__init__(self, args=args)
+        GlancesExport.__init__(self, config=config, args=args)
 
         # CSV file name
         self.csv_filename = args.export_csv
