@@ -2,162 +2,93 @@ body {
     background: black;
     color: #BBB;
     font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono", monospace;
-    font-size: 100%;
 }
-header,footer,
-article,section,
-hgroup,nav,
-figure,div,aside {
-    display: block;
+.plugin {
+    margin-bottom: 20px;
 }
-section {
-    text-align: justify;
-}
-section > article {
-    display: inline-block;
-    vertical-align: top;
-    *display: inline;
-    zoom: 1;
-}
-section:after {
-    content: "";
+.plugin table {
     width: 100%;
-    display: inline-block;
 }
-aside {
-    float: left;
-    margin-right: 2%;
+.plugin table tr td:not(:first-child) {
+    text-align: right;
 }
-div#newline{
-    clear: both;
-    height: 1em;
-}
-#underline{
+
+.underline{
     text-decoration: underline
 }
-#bold{
+.bold{
     font-weight: bold;
 }
-#sort{
+.sort{
     font-weight: bold;
 }
-#sort:after{
+.sort:after{
     content: '\25BC'
 }
-/*Theme*/
-#title{
+.text-right {
+    text-align: right;
+}
+
+/* Theme */
+
+.title{
     font-weight: bold;
     color: white;
 }
-#table {
-    display: table;
-}
-.row {
-    display: table-row;
-}
-.cell {
-    display: table-cell;
-}
-#ok {
+.ok {
     color: green;
 }
-#filter {
+.filter {
     color: cyan;
 }
-#ok_log {
+.ok_log {
     background-color: green;
     color: white;
 }
-#careful {
+.careful {
     color: blueviolet;
 }
-#careful_log {
+.careful_log {
     background-color: blueviolet;
     color: white;
 }
-#warning {
+.warning {
     color: orange;
 }
-#warning_log {
+.warning_log {
     background-color: orange;
     color: white;
 }
-#critical {
+.critical {
     color: red;
 }
-#critical_log {
+.critical_log {
     background-color: red;
     color: white;
 }
-#nice {
+.nice {
     color: magenta;
 }
-#status {
+.status {
     color: green;
 }
-/*Plugins*/
-#system {
-    float: left;
+.process {
+    color: green;
 }
-#uptime {
-    float: right;
+
+/* Plugins */
+#cpu table tr td:nth-child(3),
+#mem table tr td:nth-child(3),
+#monitor table tr td:nth-child(3) {
+    text-align: left;
+    padding-left: 20px;
 }
-#cpu {}
-#load {}
-#mem {}
-#memswap {}
-#leftstats {}
-#network {
-    margin-bottom: 1em;
-}
-#diskio {
-    margin-bottom: 1em;
-}
-#fs {
-    margin-bottom: 1em;
-}
-#raid {
-    margin-bottom: 1em;
-}
-#sensors {}
-#rightstats {}
-#alert {
-    display: block;
-}
-#processcount {
-    display: block;
-    margin: 1em;
-}
-#monitor {
-    display: block;
-    margin: 1em;
-}
-#processlist {}
-/*
-article#processlist>div>div>span:last-child {
-    visibility: hidden;
+#processlist table tr td {
+    padding: 0px 5px 0px 5px;
     white-space: nowrap;
+    text-align: right;
 }
-*/
-#now {}
-/*Responsive design*/
-@media only screen and (max-width: 1600px) {
-    body { font-size:90%; }
-}
-@media only screen and (max-width: 1280px) {
-    body { font-size:80%; }
-}
-@media only screen and (max-width: 1024px) {
-    body { font-size:80%; }
-    #processlist .hide { display: none; }
-}
-@media only screen and (max-width: 768px) {
-    body { font-size:70%; }
-    aside { margin-right: 1%; }
-    .hide { display: none; }
-}
-@media only screen and (max-width: 480px) {
-    body { font-size:60%; }
-    aside { margin-right: 1%; }
-    .hide { display: none; }
+#processlist table tr td:nth-child(6),
+#processlist table tr td:nth-child(12) {
+    text-align: left;
 }
