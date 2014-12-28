@@ -5,6 +5,7 @@ Glances Version 2.x
 Version 2.X
 ===========
 
+    * The Web inteface is now based on BootStarp / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
     * Add the RAID plugins (issue #447)
 
 Version 2.2.1
