@@ -116,7 +116,8 @@ class GlancesStats(object):
                     item.endswith(".py") and
                     item != (header + "export.py") and
                     item != (header + "history.py") and
-                    args_var['export_' + export_name] is not None):
+                    args_var['export_' + export_name] is not None and
+                    args_var['export_' + export_name] is not False):
                 # Import the export module
                 export_module = __import__(os.path.basename(item)[:-3])
                 # Add the export to the dictionary

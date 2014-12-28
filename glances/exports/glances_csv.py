@@ -28,10 +28,6 @@ from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
 from glances.exports.glances_export import GlancesExport
 
-# List of stats enabled in the CSV output
-# !!! TODO: should be configurable from the conf file
-csv_stats_list = ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
-
 
 class Export(GlancesExport):
 
@@ -61,6 +57,7 @@ class Export(GlancesExport):
 
     def exit(self):
         """Close the CSV file."""
+        logger.debug("Finalise export interface %s" % self.export_name)
         self.csv_file.close()
 
     def update(self, stats):
@@ -75,7 +72,7 @@ class Export(GlancesExport):
         # Loop over available plugin
         i = 0
         for plugin in plugins:
-            if plugin in csv_stats_list:
+            if plugin in self.plugins_to_export():
                 if type(all_stats[i]) is list:
                     for item in all_stats[i]:
                         # First line: header

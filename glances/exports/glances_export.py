@@ -42,3 +42,11 @@ class GlancesExport(object):
 
         # Init the args
         self.args = args
+
+    def exit(self):
+        """Close the export module."""
+        logger.debug("Finalise export interface %s" % self.export_name)
+
+    def plugins_to_export(self):
+        """Return the list of plugins to export"""
+        return ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'processcount']

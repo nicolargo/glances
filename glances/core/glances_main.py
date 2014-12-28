@@ -94,6 +94,8 @@ class GlancesMain(object):
         # Export modules feature
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help=_('export stats to a CSV file'))
+        parser.add_argument('--export-influxdb', action='store_true', default=False,
+                            dest='export_influxdb', help=_('export stats to an InfluxDB server'))
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
