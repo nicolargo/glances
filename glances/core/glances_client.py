@@ -136,7 +136,7 @@ class GlancesClient(object):
 
             if self.get_mode() == 'glances' and version.split('.')[0] == client_version.split('.')[0]:
                 # Init stats
-                self.stats = GlancesStatsClient()
+                self.stats = GlancesStatsClient(config=self.config, args=self.args)
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
                 logger.debug(
                     "Client version: %s / Server version: %s" % (version, client_version))
@@ -153,7 +153,7 @@ class GlancesClient(object):
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
             # Init stats
-            self.stats = GlancesStatsClientSNMP(args=self.args)
+            self.stats = GlancesStatsClientSNMP(config=self.config, args=self.args)
 
             if not self.stats.check_snmp():
                 self.log_and_exit("Connection to SNMP server failed")
@@ -233,6 +233,9 @@ class GlancesClient(object):
             exitkey = self.screen.update(self.stats,
                                          cs_status=cs_status,
                                          return_to_browser=self.return_to_browser)
+
+            # Export stats using export modules
+            self.stats.export(self.stats)
 
         return self.get_mode()
 
