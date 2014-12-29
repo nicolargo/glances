@@ -40,6 +40,7 @@ Optional dependencies:
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
 - ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
+- ``influxdb`` (for the InfluxDB export module)
 
 Installation
 ============
@@ -201,6 +202,11 @@ You can also detect and display all Glances servers available on your network or
     $ glances --browser
 
 And RTFM, always.
+
+Gateway to others services
+==========================
+
+Glances can export stats to: CSV file and/or InfluxDB server.
 
 Documentation
 =============

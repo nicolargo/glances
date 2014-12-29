@@ -150,8 +150,10 @@ Command-Line Options
   --enable-history      enable the history mode
   --path-history PATH_HISTORY
                         Set the export path for graph history
-  --output-csv OUTPUT_CSV
+  --export-csv CSV_FILE
                         export stats to a CSV file
+  --export-influxdb
+                        export stats to an InfluxDB server
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -665,19 +667,37 @@ Each alert message displays the following information:
 4. {min,avg,max} values or number of running processes for monitored
    processes list alerts
 
-Other Outputs
-=============
+Gateway to others services
+==========================
+
+*CSV*
 
 It is possible to export statistics to CSV file.
 
 .. code-block:: console
 
-    $ glances --output-csv /tmp/glances.csv
+    $ glances --export-csv /tmp/glances.csv
 
-CSV files have two lines per stats:
+CSV file description:
+- Stats description (first line)
+- Stats (others lines)
 
-- Stats description
-- Stats (comma separated)
+*InfluxDB*
+
+You can alos export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:
+
+    [influxdb]
+    host=localhost
+    port=8086
+    user=root
+    password=root
+    db=glances
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-influxdb
 
 APIs Documentations
 ===================
