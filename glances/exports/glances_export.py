@@ -34,11 +34,20 @@ class GlancesExport(object):
 
     """Main class for Glances' export IF."""
 
-    def __init__(self, args=None):
+    def __init__(self, config=None, args=None):
         """Init the export class."""
         # Export name (= module name without glances_)
         self.export_name = self.__class__.__module__[len('glances_'):]
         logger.debug("Init export interface %s" % self.export_name)
 
-        # Init the args
+        # Init the config & args
+        self.config = config
         self.args = args
+
+    def exit(self):
+        """Close the export module."""
+        logger.debug("Finalise export interface %s" % self.export_name)
+
+    def plugins_to_export(self):
+        """Return the list of plugins to export"""
+        return ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'processcount']
