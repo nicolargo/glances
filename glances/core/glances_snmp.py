@@ -49,18 +49,24 @@ class GlancesSNMPClient(object):
         self.user = user
         self.auth = auth
 
+    def __buid_result(self, varBinds):
+        """Build the results"""
+        ret = {}
+        for name, val in varBinds:
+            if str(val) == '':
+                ret[name.prettyPrint()] = ''
+            else:
+                ret[name.prettyPrint()] = val.prettyPrint()
+                # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
+                if ret[name.prettyPrint()].startswith('b\''):
+                    ret[name.prettyPrint()] = ret[name.prettyPrint()][2:-1]
+        return ret
+
     def __get_result__(self, errorIndication, errorStatus, errorIndex, varBinds):
         """Put results in table."""
         ret = {}
         if not errorIndication or not errorStatus:
-            for name, val in varBinds:
-                if str(val) == '':
-                    ret[name.prettyPrint()] = ''
-                else:
-                    ret[name.prettyPrint()] = val.prettyPrint()
-                    # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
-                    if ret[name.prettyPrint()].startswith('b\''):
-                        ret[name.prettyPrint()] = ret[name.prettyPrint()][2:-1]
+            ret = self.__buid_result(varBinds)
         return ret
 
     def get_by_oid(self, *oid):
@@ -89,16 +95,7 @@ class GlancesSNMPClient(object):
         ret = []
         if not errorIndication or not errorStatus:
             for varBindTableRow in varBindTable:
-                item = {}
-                for name, val in varBindTableRow:
-                    if str(val) == '':
-                        item[name.prettyPrint()] = ''
-                    else:
-                        item[name.prettyPrint()] = val.prettyPrint()
-                        # In Python 3, prettyPrint() return 'b'linux'' instead of 'linux'
-                        if item[name.prettyPrint()].startswith('b\''):
-                            item[name.prettyPrint()] = item[name.prettyPrint()][2:-1]
-                ret.append(item)
+                ret.append(self.__buid_result(varBindTableRow))
         return ret
 
     def getbulk_by_oid(self, non_repeaters, max_repetitions, *oid):
