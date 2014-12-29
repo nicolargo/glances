@@ -176,6 +176,7 @@ class GlancesMain(object):
         # In web server mode, defaul refresh time: 5 sec
         if args.webserver:
             args.time = 5
+            args.process_short_name = True
 
         # Server or client login/password
         args.username = self.username

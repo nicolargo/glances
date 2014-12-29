@@ -9,17 +9,9 @@
                 <tr>
                 % else:
                     % if stats['display']:
-                        % if plugin_name == 'processlist':
-                            % if not msg['splittable'] or msg['splittable'] and msg['decoration'] == 'PROCESS':
-                            <td class="{{ msg['decoration'].lower() }}">
-                                {{ msg['msg'] }}
-                            </td>
-                            % end
-                        % else:
-                            <td class="{{ msg['decoration'].lower() }} {{ 'hidden-xs hidden-sm' if msg['optional'] else '' }}">
-                                {{ msg['msg'] }}  
-                            </td>
-                        % end
+                        <td class="{{ msg['decoration'].lower() }} {{ 'hidden-xs hidden-sm' if msg['optional'] else '' }}">
+                            {{ msg['msg'] }}  
+                        </td>
                     % end
                 % end
             % end
