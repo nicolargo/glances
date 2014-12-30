@@ -24,7 +24,6 @@ from influxdb import InfluxDBClient, client
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
 from ConfigParser import NoSectionError, NoOptionError
 from glances.exports.glances_export import GlancesExport
@@ -35,7 +34,7 @@ class Export(GlancesExport):
     """This class manages the InfluxDB export module."""
 
     def __init__(self, config=None, args=None):
-        """Init the CSV export IF."""
+        """Init the InfluxDB export IF."""
         GlancesExport.__init__(self, config=config, args=args)
 
         # Load the InfluxDB configuration file

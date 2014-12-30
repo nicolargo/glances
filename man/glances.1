@@ -67,8 +67,14 @@ enable the history mode
 B \-\-path-history PATH_HISTORY
 set the export path for graph history
 .TP
-.B \-\-output-csv OUTPUT_CSV
+.B \-\-export-csv CSV_FILE
 export stats to a CSV file
+.TP
+.B \-\-export-influxdb
+export stats to an InfluxDB server
+.TP
+.B \-\-export-statsd
+export stats to a Statsd server
 .TP
 .B \-s, \-\-server
 run Glances in server mode
