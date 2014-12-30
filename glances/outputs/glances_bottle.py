@@ -90,7 +90,6 @@ class GlancesBottle(object):
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
-        response.content_type = 'text/html'
         # Manage parameter
         if refresh_time is None:
             refresh_time = self.args.time
@@ -103,13 +102,11 @@ class GlancesBottle(object):
 
     def _css(self, filename):
         """Bottle callback for *.css files."""
-        response.content_type = 'text/html'
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
 
     def _js(self, filename):
         """Bottle callback for *.js files."""
-        response.content_type = 'text/html'
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
