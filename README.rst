@@ -206,7 +206,7 @@ And RTFM, always.
 Gateway to others services
 ==========================
 
-Glances can export stats to: CSV file and/or InfluxDB server.
+Glances can export stats to: CSV file, InfluxDB and Statsd server.
 
 Documentation
 =============

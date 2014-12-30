@@ -66,7 +66,8 @@ setup(
         'SNMP': ['pysnmp'],
         'CHART': ['matplotlib'],
         'BROWSER': ['zeroconf>=0.16', 'netifaces'],
-        'RAID': ['pymdstat']
+        'RAID': ['pymdstat'],
+        'EXPORT': ['influxdb', 'statsd']
     },
     packages=['glances'],
     include_package_data=True,
