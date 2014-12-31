@@ -154,6 +154,8 @@ Command-Line Options
                         export stats to a CSV file
   --export-influxdb
                         export stats to an InfluxDB server
+  --export-statsd
+                        export stats to a Statsd server
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -684,7 +686,7 @@ CSV file description:
 
 *InfluxDB*
 
-You can alos export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:
+You can export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:
 
     [influxdb]
     host=localhost
@@ -698,6 +700,32 @@ and run Glances with:
 .. code-block:: console
 
     $ glances --export-influxdb
+
+*Statsd*
+
+You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:
+
+    [statsd]
+    host=localhost
+    port=8125
+    prefix=glances
+
+Note: the prefix option is optionnal ('glances by default')
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-statsd
+
+Glances will generate stats as:
+
+    'glances.cpu.user': 12.5,
+    'glances.cpu.total': 14.9,
+    'glances.load.cpucore': 4,
+    'glances.load.min1': 0.19,
+    ...
+
 
 APIs Documentations
 ===================
