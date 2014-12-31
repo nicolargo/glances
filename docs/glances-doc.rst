@@ -688,6 +688,8 @@ CSV file description:
 
 You can export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:
 
+.. code-block::
+
     [influxdb]
     host=localhost
     port=8086
@@ -705,6 +707,8 @@ and run Glances with:
 
 You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:
 
+.. code-block::
+
     [statsd]
     host=localhost
     port=8125
@@ -719,6 +723,8 @@ and run Glances with:
     $ glances --export-statsd
 
 Glances will generate stats as:
+
+.. code-block::
 
     'glances.cpu.user': 12.5,
     'glances.cpu.total': 14.9,
