@@ -1,6 +1,6 @@
 You are in the main Glances's source folder. This page is **ONLY** for developpers purposes.
 
-If you are lookink for user manual, please follow this link: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+If you are looking for the user manual, please follow this link: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 
 ===
 
