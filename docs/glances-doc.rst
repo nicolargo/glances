@@ -226,7 +226,7 @@ The following commands (key pressed) are supported while in Glances:
 ``F``
     Switch between FS used and free space
 ``g``
-    Generate hraphs for current history
+    Generate graphs for current history
 ``h``
     Show/hide the help screen
 ``i``
@@ -240,7 +240,7 @@ The following commands (key pressed) are supported while in Glances:
 ``p``
     Sort processes by name
 ``q`` or ``ESC``
-    Quit the current Glances session 
+    Quit the current Glances session
 ``r``
     Reset history
 ``s``
@@ -273,7 +273,7 @@ In the Glances client browser (accessible through the --browser command line arg
 ``DOWN``
     Down in the servers list
 ``q`` or ``ESC``
-    Quit Glances 
+    Quit Glances
 
 Configuration
 =============
@@ -582,7 +582,7 @@ In standalone mode, additionals informations are provided for the top process:
 * CPU affinity (number of cores used by the process)
 * Extended memory information (swap, shared, text, lib, data and dirty on Linux)
 * Open threads, files and network sessions (TCP and UDP)
-* IO nice level  
+* IO nice level
 
 The extended stats feature could be enabled using the --enable-process-extended option (command line) or the ``e`` key (curses interface).
 
