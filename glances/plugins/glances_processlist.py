@@ -235,18 +235,18 @@ class Plugin(GlancesPlugin):
         # IO read/write
         if 'io_counters' in p:
             # IO read
-            io_rs = (p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update']
+            io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
             if io_rs == 0:
                 msg = '{0:>6}'.format("0")
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=False))
+                msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             # IO write
-            io_ws = (p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update']
+            io_ws = int((p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update'])
             if io_ws == 0:
                 msg = '{0:>6}'.format("0")
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=False))
+                msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         else:
             msg = '{0:>6}'.format("?")
