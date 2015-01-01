@@ -316,27 +316,29 @@ class GlancesPlugin(object):
         except KeyError:
             return 'DEFAULT'
 
-        # Init the return post string
-        log_str = ""
+        # Get the stat_name = plugin_name (+ header)
+        if header == "":
+            stat_name = self.plugin_name
+        else:
+            stat_name = self.plugin_name + '_' + header
 
         # Manage log
+        log_str = ""
         if log:
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
-            # Get the stat_name = plugin_name (+ header)
-            if header == "":
-                stat_name = self.plugin_name
-            else:
-                stat_name = self.plugin_name + '_' + header
             # Add the log to the list
             glances_logs.add(ret, stat_name.upper(), value, [])
 
         # Manage action
-        action = self.__get_limit_action(ret.lower(), header=header)
-        if action is not None:
-            # An action is available for the current alert, run it
-            self.actions.run(action)
+        # Here is a command line for the current trigger ?
+        command = self.__get_limit_action(ret.lower(), header=header)
+        if command is not None:
+            # Acommand line is available for the current alert, run it
+            self.actions.run(stat_name, ret.lower(), command)
+        else:
+            self.actions.set(stat_name, ret.lower())
 
         # Default is ok
         return ret + log_str

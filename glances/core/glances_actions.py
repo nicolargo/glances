@@ -30,11 +30,44 @@ class GlancesActions(object):
 
     """This class manage action if an alert is reached"""
 
-    def run(self, commands):
-        """Run the commands (in background)
-        - commands: a list of command line"""
+    def __init__(self):
+        """Init GlancesActions class"""
 
+        # Dict with the criticity status
+        # - key: stat_name
+        # - value: criticity
+        # Goal: avoid to execute the same command twice
+        self.status = {}
+
+    def get(self, stat_name):
+        """Get the stat_name criticity"""
+        try:
+            return self.status[stat_name]
+        except KeyError:
+            return None
+
+    def set(self, stat_name, criticity):
+        """Set the stat_name to criticity"""
+        self.status[stat_name] = criticity
+
+    def run(self, stat_name, criticity, commands):
+        """Run the commands (in background)
+        - stats_name: plugin_name (+ header)
+        - criticity: criticity of the trigger
+        - commands: a list of command line
+
+        Return True if the commands have been ran"""
+
+        if self.get(stat_name) == criticity:
+            # Action already executed => Exit
+            return False
+
+        # Ran all actions in background
         for cmd in commands:
-            logger.info("Action triggered: {0}".format(cmd))
+            logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd))
             splitted_cmd = cmd.split()
             Popen(splitted_cmd)
+
+        self.set(stat_name, criticity)
+
+        return True
