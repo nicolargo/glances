@@ -117,6 +117,8 @@ and on the client enter the following URL in your favorite web browser:
 
 where ``@server`` is the IP address or hostname of the server.
 
+To change the refresh rate of the page, just add the period in seconds between refreshes at the end of the URL, ie. to refresh every 10s, use ``http://@server:61208/10``.
+
 The Glances web interface follows responsive web design principles.
 
 Screenshot from Chrome on Android
