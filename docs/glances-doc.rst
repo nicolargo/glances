@@ -741,7 +741,7 @@ Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be
 APIs documentations are available at:
 
 - XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
-- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+- RESTFUL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
 
 Support
 =======
