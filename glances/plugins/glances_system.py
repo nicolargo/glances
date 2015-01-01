@@ -118,6 +118,10 @@ class Plugin(GlancesPlugin):
             elif self.stats['os_name'] == "Windows":
                 os_version = platform.win32_ver()
                 self.stats['os_version'] = ' '.join(os_version[::2])
+                # if the python version is 32 bit perhaps the windows operating system is 64bit
+                if self.stats['platform'] == '32bit':
+                    if 'PROCESSOR_ARCHITEW6432' in os.environ:
+                        self.stats['platform'] = '64bit'
             else:
                 self.stats['os_version'] = ""
             # Add human readable name
