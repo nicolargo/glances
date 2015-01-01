@@ -736,12 +736,12 @@ Glances will generate stats as:
 APIs Documentations
 ===================
 
-Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be used by another client software.
+Glances includes a `XML-RPC server`_ and a `RESTFUL-JSON`_ API which and can be used by another client software.
 
 APIs documentations are available at:
 
 - XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
-- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+- RESTFUL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFUL-JSON-API
 
 Support
 =======
@@ -759,5 +759,5 @@ Feel free to contribute !
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
-.. _RESTFULL-JSON: http://jsonapi.org/
+.. _RESTFUL-JSON: http://jsonapi.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
