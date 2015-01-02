@@ -64,6 +64,10 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'label'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
