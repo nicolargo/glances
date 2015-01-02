@@ -21,6 +21,7 @@
 
 # Import system lib
 from subprocess import Popen
+import pystache
 
 # Import Glances lib
 from glances.core.glances_logging import logger
@@ -50,11 +51,12 @@ class GlancesActions(object):
         """Set the stat_name to criticity"""
         self.status[stat_name] = criticity
 
-    def run(self, stat_name, criticity, commands):
+    def run(self, stat_name, criticity, commands, mustache_dict=None):
         """Run the commands (in background)
         - stats_name: plugin_name (+ header)
         - criticity: criticity of the trigger
-        - commands: a list of command line
+        - commands: a list of command line with optional {{mustache}}
+        - mustache_dict: Plugin stats (can be use within {{mustache}})
 
         Return True if the commands have been ran"""
 
@@ -64,10 +66,13 @@ class GlancesActions(object):
 
         # Ran all actions in background
         for cmd in commands:
-            logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd))
-            splitted_cmd = cmd.split()
+            # Replace {{arg}} by the dict one (Thk to {Mustache})
+            cmd_full = pystache.render(cmd, mustache_dict)
+            # Execute the action
+            logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd_full))
+            logger.debug("Stats value for the trigger: {0}".format(mustache_dict))
             try:
-                Popen(splitted_cmd)
+                Popen(cmd_full, shell=True)
             except OSError as e:
                 logger.error("Can't execute the action ({0})".format(e))
 
