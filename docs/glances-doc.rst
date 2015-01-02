@@ -4,9 +4,9 @@ Glances
 
 This manual describes *Glances* version 2.2.
 
-Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
+Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-December 2014
+Junuary 2015
 
 .. contents:: Table of Contents
 
@@ -668,6 +668,26 @@ Each alert message displays the following information:
 3. alert name
 4. {min,avg,max} values or number of running processes for monitored
    processes list alerts
+
+Actions
+-------
+
+Glances can trigger actions on events. 
+
+By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:
+
+  [load]
+  critical=5.0
+  critical_action=python /path/to/foo.py
+
+All the stats are usable in the command line by the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a warning space trigger is reached:
+
+[fs]
+warning=70
+warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+
+Note: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
+
 
 Gateway to others services
 ==========================

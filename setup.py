@@ -67,7 +67,8 @@ setup(
         'CHART': ['matplotlib'],
         'BROWSER': ['zeroconf>=0.16', 'netifaces'],
         'RAID': ['pymdstat'],
-        'EXPORT': ['influxdb', 'statsd']
+        'EXPORT': ['influxdb', 'statsd'],
+        'ACTION': ['pystache']
     },
     packages=['glances'],
     include_package_data=True,
