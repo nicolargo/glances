@@ -41,6 +41,8 @@ Optional dependencies:
 - ``pysnmp`` (for SNMP support)
 - ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
 - ``influxdb`` (for the InfluxDB export module)
+- ``statsd`` (for the StatsD export module)
+- ``pystache`` (for the action script feature)
 
 Installation
 ============
