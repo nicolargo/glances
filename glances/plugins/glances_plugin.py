@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -32,6 +32,7 @@ from operator import itemgetter
 from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
 from glances.core.glances_logs import glances_logs
+from glances.core.glances_actions import GlancesActions
 
 
 class GlancesPlugin(object):
@@ -63,6 +64,9 @@ class GlancesPlugin(object):
 
         # Init the limits dictionnary
         self.limits = dict()
+
+        # Init the actions
+        self.actions = GlancesActions()
 
     def __repr__(self):
         """Return the raw stats."""
@@ -263,6 +267,8 @@ class GlancesPlugin(object):
                 except ValueError:
                     self.limits[
                         self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
+                logger.debug("Load limit: {0} = {1}".format(self.plugin_name + '_' + s,
+                                                            self.limits[self.plugin_name + '_' + s]))
 
     def set_limits(self, input_limits):
         """Set the limits to input_limits."""
@@ -299,30 +305,53 @@ class GlancesPlugin(object):
         # Manage limits
         ret = 'OK'
         try:
-            if value > self.__get_limit_critical(header=header):
+            if value > self.__get_limit('critical', header=header):
                 ret = 'CRITICAL'
-            elif value > self.__get_limit_warning(header=header):
+            elif value > self.__get_limit('warning', header=header):
                 ret = 'WARNING'
-            elif value > self.__get_limit_careful(header=header):
+            elif value > self.__get_limit('careful', header=header):
                 ret = 'CAREFUL'
             elif current < min:
                 ret = 'CAREFUL'
         except KeyError:
             return 'DEFAULT'
 
-        # Manage log (if needed)
+        # Get the stat_name = plugin_name (+ header)
+        if header == "":
+            stat_name = self.plugin_name
+        else:
+            stat_name = self.plugin_name + '_' + header
+
+        # Manage log
         log_str = ""
         if log:
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
-            # Get the stat_name = plugin_name (+ header)
-            if header == "":
-                stat_name = self.plugin_name
-            else:
-                stat_name = self.plugin_name + '_' + header
             # Add the log to the list
             glances_logs.add(ret, stat_name.upper(), value, [])
+
+        # Manage action
+        # Here is a command line for the current trigger ?
+        try:
+            command = self.__get_limit_action(ret.lower(), header=header)
+        except KeyError:
+            # Reset the trigger
+            self.actions.set(stat_name, ret.lower())
+        else:
+            # A command line is available for the current alert, run it
+            # Build the {{mustache}} dictionnary
+            if type(self.stats) is list:
+                # If the stats are stored in a list of dict (fs plugin for exemple)
+                # Return the dict for the current header
+                try:
+                    mustache_dict = (item for item in self.stats if item[self.get_key()] == header).next()
+                except StopIteration:
+                    mustache_dict = {}
+            else:
+                # Use the stats dict
+                mustache_dict = self.stats
+            self.actions.run(stat_name, ret.lower(), command, mustache_dict=mustache_dict)
 
         # Default is ok
         return ret + log_str
@@ -331,23 +360,41 @@ class GlancesPlugin(object):
         """Get the alert log."""
         return self.get_alert(current, min, max, header, log=True)
 
-    def __get_limit_critical(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'critical']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
+    def __get_limit(self, criticity, header=""):
+        """Return the limit value for the alert"""
+        prefix = self.plugin_name + '_'
+        if header != "":
+            prefix += header + '_'
 
-    def __get_limit_warning(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'warning']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
+        # Get the limit for stat + header
+        # Exemple: network_wlan0_rx_careful
+        try:
+            limit = self.limits[prefix + criticity]
+        except KeyError:
+            # Try fallback to plugin default limit
+            # Exemple: network_careful
+            limit = self.limits[self.plugin_name + '_' + criticity]
 
-    def __get_limit_careful(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'careful']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
+        # Return the limit
+        return limit
+
+    def __get_limit_action(self, criticity, header=""):
+        """Return the action for the alert"""
+        prefix = self.plugin_name + '_'
+        if header != "":
+            prefix += header + '_'
+
+        # Get the limit for stat + header
+        # Exemple: network_wlan0_rx_careful_action
+        try:
+            action = self.limits[prefix + criticity + '_action']
+        except KeyError:
+            # Try fallback to plugin default limit
+            # Exemple: network_careful_action
+            action = self.limits[self.plugin_name + '_' + criticity + '_action']
+
+        # Return the action list
+        return action
 
     def get_conf_value(self, value, header="", plugin_name=None):
         """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -697,6 +697,7 @@ class _GlancesCurses(object):
 
         # Display
         x = display_x
+        x_max = x
         y = display_y
         for m in plugin_stats['msgdict']:
             # New line
@@ -740,9 +741,11 @@ class _GlancesCurses(object):
                     # good
                     offset = len(m['msg'])
                 x = x + offset
+                if x > x_max:
+                    x_max = x
 
         # Compute the next Glances column/line position
-        self.next_column = max(self.next_column, x + self.space_between_column)
+        self.next_column = max(self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
 
     def erase(self):
