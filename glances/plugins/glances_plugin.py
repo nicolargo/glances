@@ -333,12 +333,25 @@ class GlancesPlugin(object):
 
         # Manage action
         # Here is a command line for the current trigger ?
-        command = self.__get_limit_action(ret.lower(), header=header)
-        if command is not None:
-            # Acommand line is available for the current alert, run it
-            self.actions.run(stat_name, ret.lower(), command)
-        else:
+        try:
+            command = self.__get_limit_action(ret.lower(), header=header)
+        except KeyError:
+            # Reset the trigger
             self.actions.set(stat_name, ret.lower())
+        else:
+            # A command line is available for the current alert, run it
+            # Build the {{mustache}} dictionnary
+            if type(self.stats) is list:
+                # If the stats are stored in a list of dict (fs plugin for exemple)
+                # Return the dict for the current header
+                try:
+                    mustache_dict = (item for item in self.stats if item[self.get_key()] == header).next()
+                except StopIteration:
+                    mustache_dict = {}
+            else:
+                # Use the stats dict
+                mustache_dict = self.stats
+            self.actions.run(stat_name, ret.lower(), command, mustache_dict=mustache_dict)
 
         # Default is ok
         return ret + log_str
@@ -352,37 +365,36 @@ class GlancesPlugin(object):
         prefix = self.plugin_name + '_'
         if header != "":
             prefix += header + '_'
-        action = self.limits[prefix + criticity]
-        return action
+
+        # Get the limit for stat + header
+        # Exemple: network_wlan0_rx_careful
+        try:
+            limit = self.limits[prefix + criticity]
+        except KeyError:
+            # Try fallback to plugin default limit
+            # Exemple: network_careful
+            limit = self.limits[self.plugin_name + '_' + criticity]
+
+        # Return the limit
+        return limit
 
     def __get_limit_action(self, criticity, header=""):
         """Return the action for the alert"""
         prefix = self.plugin_name + '_'
         if header != "":
             prefix += header + '_'
+
+        # Get the limit for stat + header
+        # Exemple: network_wlan0_rx_careful_action
         try:
             action = self.limits[prefix + criticity + '_action']
         except KeyError:
-            action = None
+            # Try fallback to plugin default limit
+            # Exemple: network_careful_action
+            action = self.limits[self.plugin_name + '_' + criticity + '_action']
+
+        # Return the action list
         return action
-
-    # def __get_limit_critical(self, header=""):
-    #     if header == "":
-    #         return self.limits[self.plugin_name + '_' + 'critical']
-    #     else:
-    #         return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
-
-    # def __get_limit_warning(self, header=""):
-    #     if header == "":
-    #         return self.limits[self.plugin_name + '_' + 'warning']
-    #     else:
-    #         return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
-
-    # def __get_limit_careful(self, header=""):
-    #     if header == "":
-    #         return self.limits[self.plugin_name + '_' + 'careful']
-    #     else:
-    #         return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
 
     def get_conf_value(self, value, header="", plugin_name=None):
         """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""
