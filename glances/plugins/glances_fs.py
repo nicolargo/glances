@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -209,7 +209,9 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{0:>7}'.format(self.auto_unit(i['used']))
-            ret.append(self.curse_add_line(msg, self.get_alert(i['used'], max=i['size'])))
+            ret.append(self.curse_add_line(msg, self.get_alert(i['used'],
+                                                               max=i['size'],
+                                                               header=i['mnt_point'])))
             msg = '{0:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
