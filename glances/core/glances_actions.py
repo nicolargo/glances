@@ -66,7 +66,10 @@ class GlancesActions(object):
         for cmd in commands:
             logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd))
             splitted_cmd = cmd.split()
-            Popen(splitted_cmd)
+            try:
+                Popen(splitted_cmd)
+            except OSError as e:
+                logger.error("Can't execute the action ({0})".format(e))
 
         self.set(stat_name, criticity)
 
