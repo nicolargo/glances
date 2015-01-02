@@ -684,11 +684,11 @@ By action, we mean all shell command line. For example, if you want to execute t
 
 All the stats are usable in the command line by the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a warning space trigger is reached:
 
-[fs]
-warning=70
-warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+  [fs]
+  warning=70
+  warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
 
-Note: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
+*Note*: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
 
 
 Gateway to others services
