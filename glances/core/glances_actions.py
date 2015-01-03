@@ -19,12 +19,18 @@
 
 """Manage on alert actions."""
 
-# Import system lib
-from subprocess import Popen
-import pystache
-
 # Import Glances lib
 from glances.core.glances_logging import logger
+
+# Import system lib
+from subprocess import Popen
+try:
+    import pystache
+except ImportError:
+    logger.warning("PyStache lib not installed (action script with mustache will not work)")
+    pystache_tag = False
+else:
+    pystache_tag = True
 
 
 class GlancesActions(object):
@@ -67,7 +73,10 @@ class GlancesActions(object):
         # Ran all actions in background
         for cmd in commands:
             # Replace {{arg}} by the dict one (Thk to {Mustache})
-            cmd_full = pystache.render(cmd, mustache_dict)
+            if pystache_tag:
+                cmd_full = pystache.render(cmd, mustache_dict)
+            else:
+                cmd_full = cmd
             # Execute the action
             logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd_full))
             logger.debug("Stats value for the trigger: {0}".format(mustache_dict))
