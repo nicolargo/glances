@@ -109,12 +109,6 @@ To install the binary package:
 
 .. code-block:: console
 
-    # pkg_add -r py27-glances
-
-Using pkgng:
-
-.. code-block:: console
-
     # pkg install py27-glances
 
 To install Glances from ports:
