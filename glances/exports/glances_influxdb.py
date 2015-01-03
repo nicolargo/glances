@@ -93,34 +93,7 @@ class Export(GlancesExport):
             sys.exit(2)
         return db
 
-    def update(self, stats):
-        """Update stats to the InfluxDB server."""
-        if not self.export_enable:
-            return False
-
-        # Get the stats
-        all_stats = stats.getAll()
-        plugins = stats.getAllPlugins()
-
-        # Loop over available plugin
-        i = 0
-        for plugin in plugins:
-            if plugin in self.plugins_to_export():
-                if type(all_stats[i]) is list:
-                    for item in all_stats[i]:
-                        export_names = map(
-                            lambda x: item[item['key']] + '_' + x, item.keys())
-                        export_values = item.values()
-                        self.write_to_influxdb(plugin, export_names, export_values)
-                elif type(all_stats[i]) is dict:
-                    export_names = all_stats[i].keys()
-                    export_values = all_stats[i].values()
-                    self.write_to_influxdb(plugin, export_names, export_values)
-            i += 1
-
-        return True
-
-    def write_to_influxdb(self, name, columns, points):
+    def export(self, name, columns, points):
         """Write the points to the InfluxDB server"""
         data = [
             {
@@ -131,4 +104,4 @@ class Export(GlancesExport):
         try:
             self.client.write_points(data)
         except Exception as e:
-            logger.critical("Can not export stats to InfluxDB (%s)" % e)
+            logger.error("Can not export stats to InfluxDB (%s)" % e)
