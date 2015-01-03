@@ -62,6 +62,7 @@ class GlancesBottle(object):
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
+        self._app.route('/favicon.ico', method="GET", callback=self._favicon)
         # REST API
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
@@ -109,6 +110,11 @@ class GlancesBottle(object):
         """Bottle callback for *.js files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+
+    def _favicon(self):
+        """Bottle callback for favicon."""
+        # Return the static file
+        return static_file('favicon.ico', root=self.STATIC_PATH)
 
     def _api_plugins(self):
         """
