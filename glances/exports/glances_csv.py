@@ -53,6 +53,8 @@ class Export(GlancesExport):
 
         logger.info("Stats exported to CSV file: {0}".format(self.csv_filename))
 
+        self.export_enable = True
+
         self.first_line = True
 
     def exit(self):

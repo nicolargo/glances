@@ -85,34 +85,7 @@ class Export(GlancesExport):
                            self.port,
                            prefix=prefix)
 
-    def update(self, stats):
-        """Update stats to the InfluxDB server."""
-        if not self.export_enable:
-            return False
-
-        # Get the stats
-        all_stats = stats.getAll()
-        plugins = stats.getAllPlugins()
-
-        # Loop over available plugin
-        i = 0
-        for plugin in plugins:
-            if plugin in self.plugins_to_export():
-                if type(all_stats[i]) is list:
-                    for item in all_stats[i]:
-                        export_names = map(
-                            lambda x: item[item['key']] + '.' + x, item.keys())
-                        export_values = item.values()
-                        self.__export(plugin, export_names, export_values)
-                elif type(all_stats[i]) is dict:
-                    export_names = all_stats[i].keys()
-                    export_values = all_stats[i].values()
-                    self.__export(plugin, export_names, export_values)
-            i += 1
-
-        return True
-
-    def __export(self, name, columns, points):
+    def export(self, name, columns, points):
         """Export the stats to the Statsd server"""
         for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
@@ -122,4 +95,4 @@ class Export(GlancesExport):
             try:
                 self.client.gauge(stat_name, stat_value)
             except Exception as e:
-                logger.critical("Can not export stats to Statsd (%s)" % e)
+                logger.error("Can not export stats to Statsd (%s)" % e)
