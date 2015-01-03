@@ -302,25 +302,25 @@ class GlancesPlugin(object):
         except TypeError:
             return 'DEFAULT'
 
+        # Build the stat_name = plugin_name + header
+        if header == "":
+            stat_name = self.plugin_name
+        else:
+            stat_name = self.plugin_name + '_' + header
+
         # Manage limits
         ret = 'OK'
         try:
-            if value > self.__get_limit('critical', header=header):
+            if value > self.__get_limit('critical', stat_name=stat_name):
                 ret = 'CRITICAL'
-            elif value > self.__get_limit('warning', header=header):
+            elif value > self.__get_limit('warning', stat_name=stat_name):
                 ret = 'WARNING'
-            elif value > self.__get_limit('careful', header=header):
+            elif value > self.__get_limit('careful', stat_name=stat_name):
                 ret = 'CAREFUL'
             elif current < min:
                 ret = 'CAREFUL'
         except KeyError:
             return 'DEFAULT'
-
-        # Get the stat_name = plugin_name (+ header)
-        if header == "":
-            stat_name = self.plugin_name
-        else:
-            stat_name = self.plugin_name + '_' + header
 
         # Manage log
         log_str = ""
@@ -334,7 +334,7 @@ class GlancesPlugin(object):
         # Manage action
         # Here is a command line for the current trigger ?
         try:
-            command = self.__get_limit_action(ret.lower(), header=header)
+            command = self.__get_limit_action(ret.lower(), stat_name=stat_name)
         except KeyError:
             # Reset the trigger
             self.actions.set(stat_name, ret.lower())
@@ -360,16 +360,12 @@ class GlancesPlugin(object):
         """Get the alert log."""
         return self.get_alert(current, min, max, header, log=True)
 
-    def __get_limit(self, criticity, header=""):
+    def __get_limit(self, criticity, stat_name=""):
         """Return the limit value for the alert"""
-        prefix = self.plugin_name + '_'
-        if header != "":
-            prefix += header + '_'
-
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful
         try:
-            limit = self.limits[prefix + criticity]
+            limit = self.limits[stat_name + '_' + criticity]
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful
@@ -378,16 +374,12 @@ class GlancesPlugin(object):
         # Return the limit
         return limit
 
-    def __get_limit_action(self, criticity, header=""):
+    def __get_limit_action(self, criticity, stat_name=""):
         """Return the action for the alert"""
-        prefix = self.plugin_name + '_'
-        if header != "":
-            prefix += header + '_'
-
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful_action
         try:
-            action = self.limits[prefix + criticity + '_action']
+            action = self.limits[stat_name + '_' + criticity + '_action']
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful_action
@@ -397,7 +389,7 @@ class GlancesPlugin(object):
         return action
 
     def get_conf_value(self, value, header="", plugin_name=None):
-        """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""
+        """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
         if plugin_name is None:
             plugin_name = self.plugin_name
         if header == "":
