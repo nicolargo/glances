@@ -56,6 +56,12 @@ To install both dependacies and latest  Glances version, just enter the followin
 
     curl -L http://bit.ly/glances | /bin/bash
 
+or 
+
+.. code-block:: console
+
+    wget -O- http://bit.ly/glances | /bin/bash
+
 *Note*: Only supported on some GNU/Linux distributions.
 If you want to support others distribs, please contribute to `glancesautoinstall`_.
 
