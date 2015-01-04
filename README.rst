@@ -44,6 +44,7 @@ Optional dependencies:
 - ``influxdb`` (for the InfluxDB export module)
 - ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
+- ``docker-py`` (for the Docker monitoring support) [Linux-only]
 
 Installation
 ============
