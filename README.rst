@@ -56,7 +56,7 @@ To install both dependacies and latest  Glances version, just enter the followin
 
     curl -L http://bit.ly/glances | /bin/bash
 
-or 
+or
 
 .. code-block:: console
 
@@ -68,10 +68,10 @@ If you want to support others distribs, please contribute to `glancesautoinstall
 PyPI: The simple way
 --------------------
 
-Glances is on `PyPI`_. By using PyPI, you are sure to have the latest
+Glances is on ``PyPI``. By using PyPI, you are sure to have the latest
 stable version.
 
-To install, simply use `pip`_:
+To install, simply use ``pip``:
 
 .. code-block:: console
 
@@ -120,7 +120,7 @@ To install Glances from ports:
 OS X
 ----
 
-OS X users can install Glances using `Homebrew`_ or `MacPorts`_.
+OS X users can install Glances using ``Homebrew`` or ``MacPorts``.
 
 Homebrew
 ````````
@@ -142,7 +142,7 @@ Windows
 
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
-- Install the `colorconsole`_ library: http://code.google.com/p/colorconsole/downloads/list
+- Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
 - Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
@@ -163,7 +163,7 @@ on Debian/Ubuntu you need to install first the *python-dev* package.
 Puppet
 ------
 
-You can install Glances using `Puppet`_: https://github.com/rverchere/puppet-glances
+You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-glances
 
 Usage
 =====
@@ -227,12 +227,9 @@ License
 
 LGPL. See ``COPYING`` for more details.
 
-.. _psutil: https://code.google.com/p/psutil/
+.. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
-.. _PyPI: https://pypi.python.org/pypi
-.. _pip: http://www.pip-installer.org/
-.. _colorconsole: https://pypi.python.org/pypi/colorconsole
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
