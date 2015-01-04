@@ -61,11 +61,15 @@ class Plugin(GlancesPlugin):
     def connect(self, version=None):
         """Connect to the Docker server"""
         # Init connection to the Docker API
-        if version is None:
-            ret = docker.Client(base_url='unix://var/run/docker.sock')
-        else:
-            ret = docker.Client(base_url='unix://var/run/docker.sock',
-                                version=version)
+        try:
+            if version is None:
+                ret = docker.Client(base_url='unix://var/run/docker.sock')
+            else:
+                ret = docker.Client(base_url='unix://var/run/docker.sock',
+                                    version=version)
+        except NameError:
+            # docker lib not found
+            return None
         try:
             ret.version()
         except requests.exceptions.ConnectionError as e:
