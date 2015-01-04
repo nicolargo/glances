@@ -38,6 +38,7 @@ Optional dependencies:
 - ``py3sensors`` (for hardware monitoring support) [Linux-only]
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``batinfo`` (for battery monitoring support) [Linux-only]
+- ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
 - ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
 - ``influxdb`` (for the InfluxDB export module)
@@ -63,8 +64,8 @@ or
 
     wget -O- http://bit.ly/glances | /bin/bash
 
-*Note*: Only supported on some GNU/Linux distributions.
-If you want to support other distributions, please contribute to `glancesautoinstall`_.
+*Note*: Only supported on some GNU/Linux distributions. If you want to
+support other distributions, please contribute to `glancesautoinstall`_.
 
 PyPI: The simple way
 --------------------
@@ -149,7 +150,7 @@ Windows
 Source
 ------
 
-To install Glances version X.Y from source:
+To install Glances from source:
 
 .. code-block:: console
 
@@ -198,25 +199,26 @@ on the server side and run:
 
 on the client one.
 
-You can also detect and display all Glances servers available on your network or defined in the configuration file:
+You can also detect and display all Glances servers available on your
+network or defined in the configuration file:
 
 .. code-block:: console
 
     $ glances --browser
 
-And RTFM, always.
+and RTFM, always.
 
 Gateway to other services
 =========================
 
-Glances can export stats to: CSV file, InfluxDB and Statsd server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
 
 Documentation
 =============
 
 For complete documentation see `glances-doc`_.
 
-If you have any question (after RTFM !), please post it on the official Q&A `forum`_.
+If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
 
 Author
 ======
