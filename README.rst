@@ -50,7 +50,8 @@ Installation
 Glances Auto Install script
 ---------------------------
 
-To install both dependacies and latest  Glances version, just enter the following command line:
+To install both dependencies and latest Glances version, just enter the
+following command line:
 
 .. code-block:: console
 
@@ -63,7 +64,7 @@ or
     wget -O- http://bit.ly/glances | /bin/bash
 
 *Note*: Only supported on some GNU/Linux distributions.
-If you want to support others distribs, please contribute to `glancesautoinstall`_.
+If you want to support other distributions, please contribute to `glancesautoinstall`_.
 
 PyPI: The simple way
 --------------------
@@ -205,8 +206,8 @@ You can also detect and display all Glances servers available on your network or
 
 And RTFM, always.
 
-Gateway to others services
-==========================
+Gateway to other services
+=========================
 
 Glances can export stats to: CSV file, InfluxDB and Statsd server.
 
