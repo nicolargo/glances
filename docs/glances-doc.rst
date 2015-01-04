@@ -671,6 +671,13 @@ Each alert message displays the following information:
 4. {min,avg,max} values or number of running processes for monitored
    processes list alerts
 
+Docker
+------
+
+If you use Docker, Glances can help you to monitor your container. Glances uses the Docker API through the Docker-Py library.
+
+.. image:: images/docker.png
+
 Actions
 -------
 
