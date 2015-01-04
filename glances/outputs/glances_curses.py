@@ -266,6 +266,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('D'):
+            # 'D' > Show/hide Docker stats
+            self.args.disable_docker = not self.args.disable_docker
         elif self.pressedkey == ord('e'):
             # 'e' > Enable/Disable extended stats for top process
             self.args.enable_process_extended = not self.args.enable_process_extended
@@ -432,6 +435,8 @@ class _GlancesCurses(object):
         stats_sensors = stats.get_plugin(
             'sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
+        stats_docker = stats.get_plugin('docker').get_stats_display(
+            args=self.args)
         stats_processcount = stats.get_plugin(
             'processcount').get_stats_display(args=self.args)
         stats_monitor = stats.get_plugin(
@@ -441,7 +446,8 @@ class _GlancesCurses(object):
 
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
-            self.get_stats_display_height(stats_alert)
+            self.get_stats_display_height(stats_alert) - \
+            self.get_stats_display_height(stats_docker)
         if self.args.enable_process_extended and not self.args.process_tree:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
@@ -534,8 +540,10 @@ class _GlancesCurses(object):
             self.next_line = self.saved_line
 
             # Display right sidebar
-            # (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+            # ((DOCKER)+PROCESS_COUNT+(MONITORED)+PROCESS_LIST+ALERT)
             self.new_column()
+            self.new_line()
+            self.display_plugin(stats_docker)
             self.new_line()
             self.display_plugin(stats_processcount)
             if glances_processes.get_process_filter() is None and cs_status == 'None':

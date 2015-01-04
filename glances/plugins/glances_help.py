@@ -139,6 +139,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         msg = msg_col.format("/", _("Enable/disable short processes name"))
         ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        msg = msg_col.format("D", _("Enable/disable Docker stats"))
+        ret.append(self.curse_add_line(msg))        
+
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
