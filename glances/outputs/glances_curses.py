@@ -431,7 +431,7 @@ class _GlancesCurses(object):
         stats_fs = stats.get_plugin('fs').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_raid = stats.get_plugin('raid').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
+            args=self.args)
         stats_sensors = stats.get_plugin(
             'sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
