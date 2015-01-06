@@ -78,7 +78,8 @@ def tempfile_name():
         print("Warning: can't write logs to file {} (permission denied)".format(ret))
         ret = tempfile.mkstemp(prefix='glances', suffix='.tmp', text=True)
         print("Create a new log file: {}".format(ret[1]))
-    return ret[1]
+        return ret[1]
+    return ret
 
 
 def glances_logger():
