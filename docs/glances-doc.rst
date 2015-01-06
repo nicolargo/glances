@@ -332,6 +332,8 @@ By default, the log file is under:
 :Linux, \*BSD and OS X: ``/tmp/glances.log``
 :Windows: ``%APPDATA%\Local\temp\glances.log``
 
+If glances.log is not writable, a new file will be created and returned to the user console.
+
 Anatomy Of The Application
 ==========================
 
