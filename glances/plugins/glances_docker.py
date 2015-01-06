@@ -111,7 +111,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # The Docker-py lib is mandatory
-        if not docker_tag or self.args.disable_docker:
+        if not docker_tag or (self.args is not None and self.args.disable_docker):
             return self.stats
 
         if self.get_input() == 'local':
