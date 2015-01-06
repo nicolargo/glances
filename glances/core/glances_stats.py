@@ -55,7 +55,7 @@ class GlancesStats(object):
 
         # Init the export modules list dict
         self._exports = collections.defaultdict(dict)
-        # Load the plugins
+        # Load the exports modules
         self.load_exports(args=args)
 
         # Load the limits
