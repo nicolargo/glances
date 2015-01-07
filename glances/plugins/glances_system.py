@@ -29,7 +29,10 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
-                        'system_name': '1.3.6.1.2.1.1.1.0'}}
+                        'system_name': '1.3.6.1.2.1.1.1.0'},
+	                    'netapp': {'hostname': '1.3.6.1.2.1.1.5.0',
+                                   'system_name': '1.3.6.1.2.1.1.1.0',
+		                           'platform': '1.3.6.1.4.1.789.1.1.5.0'}}
 
 # SNMP to human read
 # Dict (key: OS short name) of dict (reg exp OID to human)
