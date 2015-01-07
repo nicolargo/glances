@@ -34,7 +34,8 @@ oid_to_short_system_name = {'.*Linux.*': 'linux',
                             '.*BSD.*': 'bsd',
                             '.*Windows.*': 'windows',
                             '.*Cisco.*': 'cisco',
-                            '.*VMware ESXi.*': 'esxi'}
+                            '.*VMware ESXi.*': 'esxi',
+			                '.*NetApp.*': 'netapp'}
 
 
 class GlancesStats(object):
@@ -55,7 +56,7 @@ class GlancesStats(object):
 
         # Init the export modules list dict
         self._exports = collections.defaultdict(dict)
-        # Load the exports modules
+        # Load the plugins
         self.load_exports(args=args)
 
         # Load the limits
