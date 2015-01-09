@@ -46,7 +46,8 @@ pid = None
 
 # Unitary test is only available from a GNU/Linus machine
 if not is_linux:
-    print('ERROR: RESTFul API unitaries tests should be ran on GNU/Linux operating system')
+    print(
+        'ERROR: RESTFul API unitaries tests should be ran on GNU/Linux operating system')
     sys.exit(2)
 else:
     print('Unitary tests for {0} {1}'.format(appname, version))
@@ -82,25 +83,25 @@ class TestGlances(unittest.TestCase):
     def test_000_start_server(self):
         """Start the Glances Web Server"""
         print('INFO: [TEST_000] Start the Glances Web Server')
-    
+
         global pid
-    
+
         cmdline = "/usr/bin/python -m glances -w -p %s" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
         print("Please wait...")
         time.sleep(1)
-    
+
         self.assertTrue(pid is not None)
 
     def test_001_all(self):
         """All"""
         method = "all"
-        print('INFO: [TEST_001] Connection test')
+        print('INFO: [TEST_001] Get all stats')
 
         print("HTTP RESTFul request: %s/%s" % (URL, method))
-        req = requests.get("%s/%s" % (URL, method))        
+        req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
 
@@ -118,7 +119,7 @@ class TestGlances(unittest.TestCase):
 
     def test_003_plugins(self):
         """Plugins"""
-        method = "pluginslist"        
+        method = "pluginslist"
         print('INFO: [TEST_003] Plugins')
 
         plist = requests.get("%s/%s" % (URL, method))
@@ -146,7 +147,7 @@ class TestGlances(unittest.TestCase):
         ilist = requests.get("%s/%s" % (URL, method))
 
         for i in ilist.json():
-            print("HTTP RESTFul request: %s/%s/%s" % (URL, method,i))
+            print("HTTP RESTFul request: %s/%s/%s" % (URL, method, i))
             req = requests.get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), types.DictType)
@@ -159,6 +160,17 @@ class TestGlances(unittest.TestCase):
 
         print("%s/%s/pid/0" % (URL, method))
         req = requests.get("%s/%s/pid/0" % (URL, method))
+
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), types.DictType)
+
+    def test_006_all_limits(self):
+        """All"""
+        method = "all/limits"
+        print('INFO: [TEST_006] Get all limits')
+
+        print("HTTP RESTFul request: %s/%s" % (URL, method))
+        req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), types.DictType)
