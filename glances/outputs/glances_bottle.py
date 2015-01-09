@@ -65,6 +65,7 @@ class GlancesBottle(object):
         # REST API
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
+        self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
@@ -146,6 +147,23 @@ class GlancesBottle(object):
         except Exception as e:
             abort(404, "Cannot get stats (%s)" % str(e))
         return statval
+
+    def _api_all_limits(self):
+        """
+        Glances API RESTFul implementation
+        Return the JSON representation of all the plugins limits
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the stat ID
+            limits = json.dumps(self.stats.getAllLimitsAsDict())
+        except Exception as e:
+            abort(404, "Cannot get limits (%s)" % (str(e)))
+        return limits
 
     def _api(self, plugin):
         """
