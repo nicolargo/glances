@@ -51,6 +51,36 @@ class GlancesMain(object):
     username = "glances"
     password = ""
 
+    # Exemple of use
+    example_of_use = "\
+Examples of use:\n\
+\n\
+Monitor local machine (standalone mode):\n\
+  $ glances\n\
+\n\
+Monitor local machine with the Web interface (Web UI):\n\
+  $ glances -w\n\
+  Glances web server started on http://0.0.0.0:61208/\n\
+\n\
+Monitor local machine and export stats to a CSV file (standalone mode):\n\
+  $ glances --export-csv\n\
+\n\
+Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):\n\
+  $ glances -t 5 --export-influxdb -t 5\n\
+\n\
+Start a Glances server (server mode):\n\
+  $ glances -s\n\
+\n\
+Connect Glances to a Glances server (client mode):\n\
+  $ glances -c <ip_server>\n\
+\n\
+Connect Glances to a Glances server and export stats to a StatsD server (client mode):\n\
+  $ glances -c <ip_server> --export-statsd\n\
+\n\
+Start the client browser (browser mode):\n\
+  $ glances --browser\n\
+    "
+
     def __init__(self):
         """Manage the command line arguments."""
         self.args = self.parse_args()
@@ -59,7 +89,10 @@ class GlancesMain(object):
         """Init all the command line arguments."""
         _version = "Glances v" + version + " with psutil v" + psutil_version
         parser = argparse.ArgumentParser(
-            prog=appname, conflict_handler='resolve')
+            prog=appname,
+            conflict_handler='resolve',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=self.example_of_use)
         parser.add_argument(
             '-V', '--version', action='version', version=_version)
         parser.add_argument('-d', '--debug', action='store_true', default=False,
@@ -80,7 +113,7 @@ class GlancesMain(object):
         parser.add_argument('--disable-docker', action='store_true', default=False,
                             dest='disable_docker', help=_('disable Docker module'))
         parser.add_argument('--disable-left-sidebar', action='store_true', default=False,
-                            dest='disable_left_sidebar', help=_('disable network, disk io, FS and sensors modules'))
+                            dest='disable_left_sidebar', help=_('disable network, disk io, FS and sensors modules (need Py3Sensors lib)'))
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help=_('disable process module'))
         parser.add_argument('--disable-log', action='store_true', default=False,
@@ -90,16 +123,16 @@ class GlancesMain(object):
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help=_('enable extended stats on top process'))
         parser.add_argument('--enable-history', action='store_true', default=False,
-                            dest='enable_history', help=_('enable the history mode'))
+                            dest='enable_history', help=_('enable the history mode (need MatPlotLib lib)'))
         parser.add_argument('--path-history', default=tempfile.gettempdir(),
                             dest='path_history', help=_('Set the export path for graph history'))
         # Export modules feature
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help=_('export stats to a CSV file'))
         parser.add_argument('--export-influxdb', action='store_true', default=False,
-                            dest='export_influxdb', help=_('export stats to an InfluxDB server'))
+                            dest='export_influxdb', help=_('export stats to an InfluxDB server (need InfluDB lib)'))
         parser.add_argument('--export-statsd', action='store_true', default=False,
-                            dest='export_statsd', help=_('export stats to a Statsd server'))
+                            dest='export_statsd', help=_('export stats to a Statsd server (need StatsD lib)'))
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
@@ -132,7 +165,7 @@ class GlancesMain(object):
         parser.add_argument('-t', '--time', default=self.refresh_time, type=float,
                             dest='time', help=_('set refresh time in seconds [default: {0} sec]').format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
-                            dest='webserver', help=_('run Glances in web server mode'))
+                            dest='webserver', help=_('run Glances in web server mode (need Bootle lib)'))
         # Display options
         parser.add_argument('-f', '--process-filter', default=None, type=str,
                             dest='process_filter', help=_('set the process filter pattern (regular expression)'))
