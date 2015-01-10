@@ -1,5 +1,3 @@
-Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
-
 ===============================
 Glances - An eye on your system
 ===============================
@@ -15,10 +13,11 @@ Glances - An eye on your system
 .. image:: https://pypip.in/d/Glances/badge.png
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
-.. image:: https://d2weczhvl823v0.cloudfront.net/nicolargo/glances/trend.png
-        :target: https://bitdeli.com/nicolargo
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+
+Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
 **Glances** is a cross-platform curses-based system monitoring tool
 written in Python.
@@ -34,7 +33,7 @@ Requirements
 - ``psutil >= 2.0.0``
 - ``setuptools``
 
-Optional dependencies:
+Optionals dependencies:
 
 - ``bottle`` (for Web server mode)
 - ``py3sensors`` (for hardware monitoring support) [Linux-only]
@@ -54,8 +53,7 @@ Installation
 Glances Auto Install script
 ---------------------------
 
-To install both dependencies and latest Glances version, just enter the
-following command line:
+To install both dependencies and latest Glances production ready version (aka *master* branch), just enter the following command line:
 
 .. code-block:: console
 
@@ -85,11 +83,24 @@ To install, simply use ``pip``:
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
+*Note 2*: You can also install the following libs in order to use optionnal features:
+
+.. code-block:: console
+
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache
+
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
     pip install --upgrade Glances
+
+If you need to install Glances in a specific user location, use:
+
+.. code-block:: console
+
+    export PYTHONUSERBASE=~/mylocalpath
+    pip install --user Glances
 
 GNU/Linux
 ---------
@@ -148,7 +159,7 @@ Windows
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Download Glances from here: http://nicolargo.github.io/glances/
+- Install Glances Download Glances from here: http://nicolargo.github.io/glances/
 
 Source
 ------
@@ -178,7 +189,6 @@ For the standalone mode, just run:
 .. code-block:: console
 
     $ glances
-
 
 For the Web server mode, run:
 
@@ -211,17 +221,17 @@ network or defined in the configuration file:
 
 and RTFM, always.
 
-Gateway to other services
-=========================
-
-Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
-
 Documentation
 =============
 
 For complete documentation see `glances-doc`_.
 
 If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
+
+Gateway to other services
+=========================
+
+Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
 
 Author
 ======
