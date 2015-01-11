@@ -236,9 +236,10 @@ class Plugin(GlancesPlugin):
                 continue
             # Format stats
             # Is there an alias for the interface name ?
+            ifrealname = i['interface_name'].split(':')[0]
             ifname = self.has_alias(i['interface_name'])
             if ifname is None:
-                ifname = i['interface_name'].split(':')[0]
+                ifname = ifrealname
             if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
                 ifname = '_' + ifname[-ifname_max_width + 1:]
@@ -277,10 +278,10 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format(rx)
                 ret.append(self.curse_add_line(
                     msg, self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
-                                        header=ifname + '_rx')))
+                                        header=ifrealname + '_rx')))
                 msg = '{0:>7}'.format(tx)
                 ret.append(self.curse_add_line(
                     msg, self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
-                                        header=ifname + '_tx')))
+                                        header=ifrealname + '_tx')))
 
         return ret
