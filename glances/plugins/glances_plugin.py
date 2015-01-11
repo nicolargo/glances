@@ -292,7 +292,9 @@ class GlancesPlugin(object):
         If defined 'header' is added between the plugin name and the status.
         Only useful for stats with several alert status.
 
-        If log=True than return the logged status.
+        If log=True than add log if necessary
+        elif log=False than do not log
+        elig log=None than apply the config given in the conf file
         """
         # Compute the %
         try:
@@ -324,7 +326,7 @@ class GlancesPlugin(object):
 
         # Manage log
         log_str = ""
-        if log:
+        if self.__get_limit_log(stat_name=stat_name, default_action=log):
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
@@ -376,17 +378,35 @@ class GlancesPlugin(object):
 
     def __get_limit_action(self, criticity, stat_name=""):
         """Return the action for the alert"""
-        # Get the limit for stat + header
+        # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
         try:
-            action = self.limits[stat_name + '_' + criticity + '_action']
+            ret = self.limits[stat_name + '_' + criticity + '_action']
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful_action
-            action = self.limits[self.plugin_name + '_' + criticity + '_action']
+            ret = self.limits[self.plugin_name + '_' + criticity + '_action']
 
         # Return the action list
-        return action
+        return ret
+
+    def __get_limit_log(self, stat_name, default_action=False):
+        """Return the log tag for the alert"""
+        # Get the log tag for stat + header
+        # Exemple: network_wlan0_rx_log
+        try:
+            log_tag = self.limits[stat_name + '_log']
+        except KeyError:
+            # Try fallback to plugin default log
+            # Exemple: network_log
+            try:
+                log_tag = self.limits[self.plugin_name + '_log']
+            except KeyError:
+                # By defaukt, log are disabled
+                return default_action
+
+        # Return the action list
+        return log_tag[0].lower() == 'true'
 
     def get_conf_value(self, value, header="", plugin_name=None):
         """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
