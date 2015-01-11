@@ -320,6 +320,34 @@ e.g., on Linux:
 On OS X, you should copy the configuration file to
 ``~/Library/Application Support/glances/``.
 
+*Configuration file description*
+
+Each plugin and export module can have a section.
+
+Example for the CPU plugin:
+
+.. code-block::
+
+    [cpu]
+    user_careful=50
+    user_warning=70
+    user_critical=90
+    iowait_careful=50
+    iowait_warning=70
+    iowait_critical=90
+    system_careful=50
+    system_warning=70
+    system_critical=90
+    steal_careful=50
+    steal_warning=70
+    steal_critical=90
+
+By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:
+
+.. code-block::
+
+    steal_log=True
+
 Logs and debug mode
 ===================
 
