@@ -28,7 +28,7 @@ from glances.core.glances_logging import logger
 
 # Import mandatory Bottle lib
 try:
-    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response
+    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response, request
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -48,6 +48,9 @@ class GlancesBottle(object):
 
         # Init Bottle
         self._app = Bottle()
+        # Enable CORS (issue #479)
+        self._app.install(EnableCors())
+        # Define routes
         self._route()
 
         # Update the template path (glances/outputs/bottle)
@@ -116,6 +119,12 @@ class GlancesBottle(object):
         """Bottle callback for favicon."""
         # Return the static file
         return static_file('favicon.ico', root=self.STATIC_PATH)
+
+    def enable_cors(self):
+        """Enable CORS"""
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
 
     def _api_plugins(self):
         """
@@ -289,3 +298,21 @@ class GlancesBottle(object):
         }
 
         return template('base', refresh_time=refresh_time, stats=stats)
+
+
+class EnableCors(object):
+    name = 'enable_cors'
+    api = 2
+
+    def apply(self, fn, context):
+        def _enable_cors(*args, **kwargs):
+            # set CORS headers
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+            if request.method != 'OPTIONS':
+                # actual request; reply with the actual response
+                return fn(*args, **kwargs)
+
+        return _enable_cors
