@@ -131,7 +131,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def msg_curse(self, args=None):
-        """Return the list to display in the curse interface."""
+        """Return the list to display in the UI"""
         # Init the return message
         ret = []
 
