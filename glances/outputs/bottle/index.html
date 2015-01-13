@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html ng-app="glancesApp">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glances</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<link rel="stylesheet" type="text/css" href="normalize.css" />
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script src="angular.min.js"></script>
+<script src="controllers.js"></script>
+</head>
+
+<body ng-controller="bodyController">
+
+	<div ng-show="!result" class="container-fluid">Loading...</div>
+	<div ng-show="result" class="container-fluid">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="pull-left">
+
+					<section id="system" class="plugin">
+						<span class="title">Refresh time&nbsp;</span> <span class="default hidden-xs hidden-sm">{{refreshTime}}s
+							<button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime == 0">-</button>
+							<button ng-click="refreshTime = refreshTime + 1">+</button>
+						</span> <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="default hidden-xs hidden-sm">({{result["system"].os_name}} {{result["system"].os_version}} {{result["system"].platform}})</span>
+					</section>
+
+				</div>
+				<div class="pull-right">
+					<section id="uptime" class="plugin">
+						<span class="default">Uptime: {{result["uptime"]}}</span>
+					</section>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-sm-3">
+				<section id="cpu" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">CPU</td>
+								<td class="default">{{result["cpu"].total}}%</td>
+							</tr>
+							<tr>
+								<td class="default">user:</td>
+								<td ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">{{result["cpu"].user}}%</td>
+							</tr>
+							<tr>
+								<td class="default">system:</td>
+								<td ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">{{result["cpu"].system}}%</td>
+							</tr>
+							<tr>
+								<td class="default">idle:</td>
+								<td class="default">{{result["cpu"].idle}}%</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			</div>
+			<div class="col-sm-3 col-lg-2 col-lg-offset-1"></div>
+			<div class="col-sm-3 col-lg-3">
+				<section id="mem" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">MEM</td>
+								<td class="default">{{result["mem"].percent}}%</td>
+							</tr>
+							<tr>
+								<td class="default">total:</td>
+								<td class="default">{{result["mem"].total | bytes:2}}</td>
+							</tr>
+							<tr>
+								<td class="default">used:</td>
+								<td ng-class="getClass('mem', 'mem_', result['mem'].percent, 1)">{{result["mem"].used | bytes:2}}</td>
+							</tr>
+							<tr>
+								<td class="default">free:</td>
+								<td class="default">{{result["mem"].free | bytes:2}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			</div>
+			<div class="col-sm-3 col-lg-2 col-lg-offset-1">
+				<section id="memswap" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">SWAP</td>
+								<td class="default">{{result["memswap"].percent}}%</td>
+							</tr>
+							<tr>
+								<td class="default">total:</td>
+								<td class="default">{{result["memswap"].total | bytes:2}}</td>
+							</tr>
+							<tr>
+								<td class="default">used:</td>
+								<td ng-class="getClass('memswap', 'memswap_', result['memswap'].percent, 1)">{{result["memswap"].used | bytes:2}}</td>
+							</tr>
+							<tr>
+								<td class="default">free:</td>
+								<td class="default">{{result["memswap"].free | bytes:2}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-3">
+				<section id="network" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">NETWORK</td>
+								<td class="default">Rx/s</td>
+								<td class="default">Tx/s</td>
+							</tr>
+							<tr ng-repeat="network in result['network']">
+								<td class="default">{{network.interface_name | min_size}}}</td>
+								<td class="default">{{network.rx | bytes}}</td>
+								<td class="default">{{network.tx | bytes}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+
+				<section id="diskio" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">DISK I/O</td>
+								<td class="default">R/s</td>
+								<td class="default">W/s</td>
+							</tr>
+							<tr ng-repeat="disk in result['diskio']">
+								<td class="default">{{disk.disk_name | min_size}}</td>
+								<td class="default">{{disk.read_bytes | bytes}}</td>
+								<td class="default">{{disk.write_bytes | bytes}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				<section id="fs" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title">FILE SYS</td>
+								<td class="default">Used</td>
+								<td class="default">Total</td>
+							</tr>
+							<tr ng-repeat="fs in result['fs']">
+								<td class="default">{{fs.mnt_point}} ({{fs.device_name}})</td>
+								<td ng-class="getClass('fs', 'fs_', fs.percent, 0)">{{fs.size - fs.free | bytes}}</td>
+								<td class="default">{{fs.size | bytes}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				<!--
+				<section id="sensors" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title"></td>
+							</tr>
+							<tr ng-repeat="sensor in result['sensors']">
+								<td>TODO</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				-->
+			</div>
+			<div class="col-sm-9">
+				<section id="alert" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td class="title" ng-show="!result['alert'].length">No warning or critical alert detected</td>
+								<td class="title" ng-repeat="alert in result['alert']">{{alert}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+
+				<section id="processcount" class="plugin">
+					<span class="title"> TASKS </span> <span class="default"> {{result["processcount"].total}} </span> <span class="default"> ({{result["processcount"].thread}} thr), </span> <span class="default"> {{result["processcount"].running}} run, </span> <span class="default">
+						{{result["processcount"].sleeping}} slp, </span> <span class="default"> {{result["processcount"].stopped}} oth </span> <span class="default" ng-show="!predicate"> sorted automatically </span> <span class="default" ng-show="!predicate"> by cpu_percent, flat view </span>
+				</section>
+
+				<div class="row">
+					<div class="col-sm-9"></div>
+				</div>
+
+				<!-- <pre>Sorting predicate = {{predicate}}; reverse = {{reverse}}</pre>-->
+
+				<section id="processlist" class="plugin">
+					<table class="table">
+						<tbody>
+							<tr>
+								<td ng-click="predicate = 'cpu_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'cpu_percent' || predicate == '')}">CPU%</td>
+								<td ng-click="predicate = 'memory_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memory_percent')}" class="default">MEM%</td>
+								<td ng-click="predicate = 'memvirt'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memvirt')}" class="default hidden-xs hidden-sm">VIRT</td>
+								<td ng-click="predicate = 'memres'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memres')}" class="default hidden-xs hidden-sm">RES</td>
+								<td ng-click="predicate = 'pid'; reverse=!reverse" ng-class="{'sort' : (predicate == 'pid')}" class="default">PID</td>
+								<td ng-click="predicate = 'username'; reverse=!reverse" ng-class="{'sort' : (predicate == 'username')}" class="default">USER</td>
+								<td ng-click="predicate = 'nice'; reverse=!reverse" ng-class="{'sort' : (predicate == 'nice')}" class="default">NI</td>
+								<td ng-click="predicate = 'status'; reverse=!reverse" ng-class="{'sort' : (predicate == 'status')}" class="default">S</td>
+								<td ng-click="predicate = 'timemillis'; reverse=!reverse" ng-class="{'sort' : (predicate == 'timemillis')}" class="default hidden-xs hidden-sm">TIME+</td>
+								<td ng-click="predicate = 'io_read'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_read')}" class="default hidden-xs hidden-sm">IOR/s</td>
+								<td ng-click="predicate = 'io_write'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_write')}" class="default hidden-xs hidden-sm">IOW/s</td>
+								<td ng-click="predicate = 'name'; reverse=!reverse" ng-class="{'sort' : (predicate == 'name')}" class="default">Command</td>
+							</tr>
+							<tr ng-repeat="process in result['processlist'] | orderBy:predicate:reverse">
+								<td ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</td>
+								<td ng-class="getClass('processlist', 'processlist_mem_', process.memory_percent, 0)">{{process.memory_percent | number:1}}</td>
+								<td class="default hidden-xs hidden-sm">{{process.memvirt | bytes:1}}</td>
+								<td class="default hidden-xs hidden-sm">{{process.memres | bytes:1}}</td>
+								<td class="default">{{process.pid}}</td>
+								<td class="default">{{process.username}}</td>
+								<td class="default">{{process.nice | exclamation}}</td>
+								<td class="status">{{process.status}}</td>
+								<td class="default hidden-xs hidden-sm">{{process.timeformatted}}</td>
+								<td class="default hidden-xs hidden-sm">{{process.io_read | bytes}}</td>
+								<td class="default hidden-xs hidden-sm">{{process.io_write | bytes}}</td>
+								<td class="default">{{process.name}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

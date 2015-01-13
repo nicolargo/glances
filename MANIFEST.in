@@ -3,7 +3,7 @@ include COPYING
 include NEWS
 include README.rst
 include conf/glances.conf
-include glances/outputs/bottle/*.tpl
+include glances/outputs/bottle/*.html
 include glances/outputs/static/css/*.css
 include glances/outputs/static/js/*.js
 include man/glances.1
