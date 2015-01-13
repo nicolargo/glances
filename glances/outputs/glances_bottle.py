@@ -273,26 +273,9 @@ class GlancesBottle(object):
         stats: Stats database to display
         """
 
-        stats = {
-            'system': self.stats.get_plugin('system').get_stats_display(args=self.args),
-            'uptime': self.stats.get_plugin('uptime').get_stats_display(args=self.args),
-            'cpu': self.stats.get_plugin('cpu').get_stats_display(args=self.args),
-            'load': self.stats.get_plugin('load').get_stats_display(args=self.args),
-            'mem': self.stats.get_plugin('mem').get_stats_display(args=self.args),
-            'memswap': self.stats.get_plugin('memswap').get_stats_display(args=self.args),
-            'network': self.stats.get_plugin('network').get_stats_display(args=self.args),
-            'diskio': self.stats.get_plugin('diskio').get_stats_display(args=self.args),
-            'fs': self.stats.get_plugin('fs').get_stats_display(args=self.args),
-            'raid': self.stats.get_plugin('raid').get_stats_display(args=self.args),
-            'sensors': self.stats.get_plugin('sensors').get_stats_display(args=self.args),
-            'alert': self.stats.get_plugin('alert').get_stats_display(args=self.args),
-            'processcount': self.stats.get_plugin('processcount').get_stats_display(args=self.args),
-            'monitor': self.stats.get_plugin('monitor').get_stats_display(args=self.args),
-            'processlist': self.stats.get_plugin('processlist').get_stats_display(args=self.args)
-        }
-
-        return template('base', refresh_time=refresh_time, stats=stats)
-
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
+        f = open(path)
+        return f.read()
 
 class EnableCors(object):
     name = 'enable_cors'
