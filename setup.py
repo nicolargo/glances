@@ -70,6 +70,7 @@ setup(
         'CHART': ['matplotlib'],
         'BROWSER': ['zeroconf>=0.16', 'netifaces'],
         'RAID': ['pymdstat'],
+        'DOCKER': ['docker-py'],
         'EXPORT': ['influxdb', 'statsd'],
         'ACTION': ['pystache']
     },
