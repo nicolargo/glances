@@ -247,5 +247,5 @@ class GlancesBottle(object):
         """
 
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
-        f = open(path, encoding="utf-8")
+        f = open(path)
         return f.read()
