@@ -39,146 +39,146 @@
             <div class="col-sm-3">
                 <section id="cpu" class="plugin">
                     <div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">CPU</div>
-							<div class="table-cell">{{result["cpu"].total}}%</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">user:</div>
-							<div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
-								{{result["cpu"].user}}%
-							</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">system:</div>
-							<div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
-								{{result["cpu"].system}}%
-							</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">idle:</div>
-							<div class="table-cell">{{result["cpu"].idle}}%</div>
-						</div>
-					</div>
+                        <div class="table-row">
+                            <div class="table-cell text-left title">CPU</div>
+                            <div class="table-cell">{{result["cpu"].total}}%</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">user:</div>
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
+                                {{result["cpu"].user}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">system:</div>
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
+                                {{result["cpu"].system}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">idle:</div>
+                            <div class="table-cell">{{result["cpu"].idle}}%</div>
+                        </div>
+                    </div>
                 </section>
             </div>
             <div class="col-sm-3 col-lg-2 col-lg-offset-1"></div>
             <div class="col-sm-3 col-lg-3">
                 <section id="mem" class="plugin">
                     <div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">MEM</div>
-							<div class="table-cell">{{result["mem"].percent}}%</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">total:</div>
-							<div class="table-cell">{{result["mem"].total | bytes:2}}</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">used:</div>
-							<div class="table-cell" ng-class="getClass('mem', 'mem_', result['mem'].percent, 1)">
-								{{result["mem"].used | bytes:2}}
-							</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">free:</div>
-							<div class="table-cell">{{result["mem"].free | bytes:2}}</div>
-						</div>
-					</div>
+                        <div class="table-row">
+                            <div class="table-cell text-left title">MEM</div>
+                            <div class="table-cell">{{result["mem"].percent}}%</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">total:</div>
+                            <div class="table-cell">{{result["mem"].total | bytes:2}}</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">used:</div>
+                            <div class="table-cell" ng-class="getClass('mem', 'mem_', result['mem'].percent, 1)">
+                                {{result["mem"].used | bytes:2}}
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">free:</div>
+                            <div class="table-cell">{{result["mem"].free | bytes:2}}</div>
+                        </div>
+                    </div>
                 </section>
             </div>
             <div class="col-sm-3 col-lg-2 col-lg-offset-1">
                 <section id="memswap" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">SWAP</div>
-							<div class="table-cell">{{result["memswap"].percent}}%</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">total:</div>
-							<div class="table-cell">{{result["memswap"].total | bytes:2}}</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">used:</div>
-							<div class="table-cell" ng-class="getClass('memswap', 'memswap_', result['memswap'].percent, 1)">
-								{{result["memswap"].used | bytes:2}}
-							</div>
-						</div>
-						<div class="table-row">
-							<div class="table-cell text-left">free:</div>
-							<div class="table-cell">{{result["memswap"].free | bytes:2}}</div>
-						</div>
-					</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">SWAP</div>
+                            <div class="table-cell">{{result["memswap"].percent}}%</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">total:</div>
+                            <div class="table-cell">{{result["memswap"].total | bytes:2}}</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">used:</div>
+                            <div class="table-cell" ng-class="getClass('memswap', 'memswap_', result['memswap'].percent, 1)">
+                                {{result["memswap"].used | bytes:2}}
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">free:</div>
+                            <div class="table-cell">{{result["memswap"].free | bytes:2}}</div>
+                        </div>
+                    </div>
                 </section>
             </div>
         </div>
         <div class="row">
             <div class="col-sm-3">
                 <section id="network" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">NETWORK</div>
-							<div class="table-cell">Rx/s</div>
-							<div class="table-cell">Tx/s</div>
-						</div>
-						<div class="table-row" ng-repeat="network in result['network']">
-							<div class="table-cell text-left">{{network.interface_name | min_size}}</div>
-							<div class="table-cell">{{network.rx | bytes}}</div>
-							<div class="table-cell">{{network.tx | bytes}}</div>
-						</div>
-					</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">NETWORK</div>
+                            <div class="table-cell">Rx/s</div>
+                            <div class="table-cell">Tx/s</div>
+                        </div>
+                        <div class="table-row" ng-repeat="network in result['network']">
+                            <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
+                            <div class="table-cell">{{network.rx | bytes}}</div>
+                            <div class="table-cell">{{network.tx | bytes}}</div>
+                        </div>
+                    </div>
                 </section>
 
                 <section id="diskio" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">DISK I/O</div>
-							<div class="table-cell">R/s</div>
-							<div class="table-cell">W/s</div>
-						</div>
-						<div class="table-row" ng-repeat="disk in result['diskio']">
-							<div class="table-cell text-left">{{disk.disk_name | min_size}}</div>
-							<div class="table-cell">{{disk.read_bytes | bytes}}</div>
-							<div class="table-cell">{{disk.write_bytes | bytes}}</div>
-						</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">DISK I/O</div>
+                            <div class="table-cell">R/s</div>
+                            <div class="table-cell">W/s</div>
+                        </div>
+                        <div class="table-row" ng-repeat="disk in result['diskio']">
+                            <div class="table-cell text-left">{{disk.disk_name | min_size}}</div>
+                            <div class="table-cell">{{disk.read_bytes | bytes}}</div>
+                            <div class="table-cell">{{disk.write_bytes | bytes}}</div>
+                        </div>
                     </div>
                 </section>
                 <section id="fs" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title">FILE SYS</div>
-							<div class="table-cell">Used</div>
-							<div class="table-cell">Total</div>
-						</div>
-						<div class="table-row" ng-repeat="fs in result['fs']">
-							<div class="table-cell text-left">{{fs.mnt_point}} ({{fs.device_name}})</div>
-							<div class="table-cell" ng-class="getClass('fs', 'fs_', fs.percent, 0)">
-								{{fs.size - fs.free | bytes}}
-							</div>
-							<div class="table-cell">{{fs.size | bytes}}</div>
-						</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">FILE SYS</div>
+                            <div class="table-cell">Used</div>
+                            <div class="table-cell">Total</div>
+                        </div>
+                        <div class="table-row" ng-repeat="fs in result['fs']">
+                            <div class="table-cell text-left">{{fs.mnt_point}} ({{fs.device_name}})</div>
+                            <div class="table-cell" ng-class="getClass('fs', 'fs_', fs.percent, 0)">
+                                {{fs.size - fs.free | bytes}}
+                            </div>
+                            <div class="table-cell">{{fs.size | bytes}}</div>
+                        </div>
                     </div>
                 </section>
                 <!--
                 <section id="sensors" class="plugin">
                     <div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title"></div>
-						</div>
-						<div class="table-row" ng-repeat="sensor in result['sensors']">
-							<div class="table-cell">TODO</div>
-						</div>
+                        <div class="table-row">
+                            <div class="table-cell text-left title"></div>
+                        </div>
+                        <div class="table-row" ng-repeat="sensor in result['sensors']">
+                            <div class="table-cell">TODO</div>
+                        </div>
                     </div>
                 </section>
                 -->
             </div>
             <div class="col-sm-9">
                 <section id="alert" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell text-left title" ng-show="!result['alert'].length">No warning or critical alert detected</div>
-							<div class="table-cell text-left title" ng-repeat="alert in result['alert']">{{alert}}</div>
-						</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title" ng-show="!result['alert'].length">No warning or critical alert detected</div>
+                            <div class="table-cell text-left title" ng-repeat="alert in result['alert']">{{alert}}</div>
+                        </div>
                     </div>
                 </section>
 
@@ -194,35 +194,35 @@
                 <!-- <pre>Sorting predicate = {{predicate}}; reverse = {{reverse}}</pre>-->
 
                 <section id="processlist" class="plugin">
-					<div class="table">
-						<div class="table-row">
-							<div class="table-cell" ng-click="predicate = 'cpu_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'cpu_percent' || predicate == '')}">CPU%</div>
-							<div class="table-cell" ng-click="predicate = 'memory_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memory_percent')}">MEM%</div>
-							<div class="table-cell" ng-click="predicate = 'memvirt'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memvirt')}" class="hidden-xs hidden-sm">VIRT</div>
-							<div class="table-cell" ng-click="predicate = 'memres'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memres')}" class="hidden-xs hidden-sm">RES</div>
-							<div class="table-cell" ng-click="predicate = 'pid'; reverse=!reverse" ng-class="{'sort' : (predicate == 'pid')}">PID</div>
-							<div class="table-cell text-left" ng-click="predicate = 'username'; reverse=!reverse" ng-class="{'sort' : (predicate == 'username')}">USER</div>
-							<div class="table-cell" ng-click="predicate = 'nice'; reverse=!reverse" ng-class="{'sort' : (predicate == 'nice')}">NI</div>
-							<div class="table-cell" ng-click="predicate = 'status'; reverse=!reverse" ng-class="{'sort' : (predicate == 'status')}">S</div>
-							<div class="table-cell" ng-click="predicate = 'timemillis'; reverse=!reverse" ng-class="{'sort' : (predicate == 'timemillis')}" class="hidden-xs hidden-sm">TIME+</div>
-							<div class="table-cell" ng-click="predicate = 'io_read'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_read')}" class="hidden-xs hidden-sm">IOR/s</div>
-							<div class="table-cell" ng-click="predicate = 'io_write'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_write')}" class="hidden-xs hidden-sm">IOW/s</div>
-							<div class="table-cell text-left" ng-click="predicate = 'name'; reverse=!reverse" ng-class="{'sort' : (predicate == 'name')}">Command</div>
-						</div>
-						<div class="table-row" ng-repeat="process in result['processlist'] | orderBy:predicate:reverse">
-							<div class="table-cell" ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</div>
-							<div class="table-cell" ng-class="getClass('processlist', 'processlist_mem_', process.memory_percent, 0)">{{process.memory_percent | number:1}}</div>
-							<div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes:1}}</div>
-							<div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes:1}}</div>
-							<div class="table-cell">{{process.pid}}</div>
-							<div class="table-cell text-left">{{process.username}}</div>
-							<div class="table-cell">{{process.nice | exclamation}}</div>
-							<div class="table-cell status">{{process.status}}</div>
-							<div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
-							<div class="table-cell hidden-xs hidden-sm">{{process.io_read | bytes}}</div>
-							<div class="table-cell hidden-xs hidden-sm">{{process.io_write | bytes}}</div>
-							<div class="table-cell text-left">{{process.name}}</div>
-						</div>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell" ng-click="predicate = 'cpu_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'cpu_percent' || predicate == '')}">CPU%</div>
+                            <div class="table-cell" ng-click="predicate = 'memory_percent'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memory_percent')}">MEM%</div>
+                            <div class="table-cell" ng-click="predicate = 'memvirt'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memvirt')}" class="hidden-xs hidden-sm">VIRT</div>
+                            <div class="table-cell" ng-click="predicate = 'memres'; reverse=!reverse" ng-class="{'sort' : (predicate == 'memres')}" class="hidden-xs hidden-sm">RES</div>
+                            <div class="table-cell" ng-click="predicate = 'pid'; reverse=!reverse" ng-class="{'sort' : (predicate == 'pid')}">PID</div>
+                            <div class="table-cell text-left" ng-click="predicate = 'username'; reverse=!reverse" ng-class="{'sort' : (predicate == 'username')}">USER</div>
+                            <div class="table-cell" ng-click="predicate = 'nice'; reverse=!reverse" ng-class="{'sort' : (predicate == 'nice')}">NI</div>
+                            <div class="table-cell" ng-click="predicate = 'status'; reverse=!reverse" ng-class="{'sort' : (predicate == 'status')}">S</div>
+                            <div class="table-cell" ng-click="predicate = 'timemillis'; reverse=!reverse" ng-class="{'sort' : (predicate == 'timemillis')}" class="hidden-xs hidden-sm">TIME+</div>
+                            <div class="table-cell" ng-click="predicate = 'io_read'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_read')}" class="hidden-xs hidden-sm">IOR/s</div>
+                            <div class="table-cell" ng-click="predicate = 'io_write'; reverse=!reverse" ng-class="{'sort' : (predicate == 'io_write')}" class="hidden-xs hidden-sm">IOW/s</div>
+                            <div class="table-cell text-left" ng-click="predicate = 'name'; reverse=!reverse" ng-class="{'sort' : (predicate == 'name')}">Command</div>
+                        </div>
+                        <div class="table-row" ng-repeat="process in result['processlist'] | orderBy:predicate:reverse">
+                            <div class="table-cell" ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</div>
+                            <div class="table-cell" ng-class="getClass('processlist', 'processlist_mem_', process.memory_percent, 0)">{{process.memory_percent | number:1}}</div>
+                            <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes:1}}</div>
+                            <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes:1}}</div>
+                            <div class="table-cell">{{process.pid}}</div>
+                            <div class="table-cell text-left">{{process.username}}</div>
+                            <div class="table-cell">{{process.nice | exclamation}}</div>
+                            <div class="table-cell status">{{process.status}}</div>
+                            <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
+                            <div class="table-cell hidden-xs hidden-sm">{{process.io_read | bytes}}</div>
+                            <div class="table-cell hidden-xs hidden-sm">{{process.io_write | bytes}}</div>
+                            <div class="table-cell text-left">{{process.name}}</div>
+                        </div>
                     </div>
                 </section>
             </div>
