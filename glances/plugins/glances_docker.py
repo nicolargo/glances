@@ -53,10 +53,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Init the Docker API
-        self.docker_client = self.connect()
-        if self.docker_client is None:
-            global docker_tag
-            docker_tag = False
+        self.docker_client = False
 
     def connect(self, version=None):
         """Connect to the Docker server"""
@@ -109,6 +106,14 @@ class Plugin(GlancesPlugin):
         """
         # Reset stats
         self.reset()
+
+        # Get the current Docker API client
+        if not self.docker_client:
+            # First time, try to connect to the server
+            self.docker_client = self.connect()
+            if self.docker_client is None:
+                global docker_tag
+                docker_tag = False
 
         # The Docker-py lib is mandatory
         if not docker_tag or (self.args is not None and self.args.disable_docker):
