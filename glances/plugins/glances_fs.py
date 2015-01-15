@@ -48,11 +48,11 @@ snmp_oid = {'default': {'mnt_point': '1.3.6.1.4.1.2021.9.1.2',
                         'alloc_unit': '1.3.6.1.2.1.25.2.3.1.4',
                         'size': '1.3.6.1.2.1.25.2.3.1.5',
                         'used': '1.3.6.1.2.1.25.2.3.1.6'},
-	        'netapp': {'mnt_point': '1.3.6.1.4.1.789.1.5.4.1.2',
-		              'device_name': '1.3.6.1.4.1.789.1.5.4.1.10',
-		              'size': '1.3.6.1.4.1.789.1.5.4.1.3',
-		              'used': '1.3.6.1.4.1.789.1.5.4.1.4',
-		              'percent': '1.3.6.1.4.1.789.1.5.4.1.6'}}
+            'netapp': {'mnt_point': '1.3.6.1.4.1.789.1.5.4.1.2',
+                       'device_name': '1.3.6.1.4.1.789.1.5.4.1.10',
+                       'size': '1.3.6.1.4.1.789.1.5.4.1.3',
+                       'used': '1.3.6.1.4.1.789.1.5.4.1.4',
+                       'percent': '1.3.6.1.4.1.789.1.5.4.1.6'}}
 snmp_oid['esxi'] = snmp_oid['windows']
 
 # Define the history items list
@@ -70,7 +70,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
+        GlancesPlugin.__init__(
+            self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -144,9 +145,12 @@ class Plugin(GlancesPlugin):
                     fs_current = {}
                     fs_current['device_name'] = ''
                     fs_current['mnt_point'] = fs.partition(' ')[0]
-                    fs_current['size'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['used'] = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['percent'] = float(fs_current['used'] * 100 / fs_current['size'])
+                    fs_current['size'] = int(
+                        fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['used'] = int(
+                        fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    fs_current['percent'] = float(
+                        fs_current['used'] * 100 / fs_current['size'])
                     fs_current['key'] = self.get_key()
                     self.stats.append(fs_current)
             else:
@@ -202,7 +206,8 @@ class Plugin(GlancesPlugin):
                 mnt_point = i['mnt_point'][-fsname_max_width + 1:]
             elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
-                mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
+                mnt_point = i['mnt_point'] + \
+                    ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(i['mnt_point']) > fsname_max_width:
                 # Cut mount point name if it is too long
                 mnt_point = '_' + i['mnt_point'][-fsname_max_width + 1:]
