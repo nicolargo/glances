@@ -22,8 +22,6 @@
 import os
 import sys
 
-from glances.core.glances_logging import glances_logger
-
 # Global information
 appname = 'glances'
 version = __import__('glances').__version__
@@ -61,17 +59,3 @@ i18n_path = os.path.realpath(os.path.join(work_path, '..', '..', 'i18n'))
 user_i18n_path = os.path.join(os.path.expanduser('~/.local'), 'share', 'locale')
 sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
 locale_dir = get_locale_path([i18n_path, user_i18n_path, sys_i18n_path])
-
-# Create and init the logging instance
-logger = glances_logger()
-
-# Instances shared between all Glances scripts
-# ============================================
-
-# Glances_processes for processcount and processlist plugins
-from glances.core.glances_processes import GlancesProcesses
-glances_processes = GlancesProcesses()
-
-# The global instance for the logs
-from glances.core.glances_logs import GlancesLogs
-glances_logs = GlancesLogs()

@@ -20,7 +20,7 @@
 """Process count plugin."""
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes
+from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Note: history items list is not compliant with process count

@@ -24,7 +24,7 @@ import time
 from datetime import datetime
 
 # Import Glances libs
-from glances.core.glances_globals import glances_processes
+from glances.core.glances_processes import glances_processes
 
 
 class GlancesLogs(object):
@@ -195,3 +195,5 @@ class GlancesLogs(object):
         # The list is now the clean one
         self.logs_list = clean_logs_list
         return self.len()
+
+glances_logs = GlancesLogs()

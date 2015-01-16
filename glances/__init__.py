@@ -20,7 +20,7 @@
 """Init the Glances software."""
 
 __appname__ = 'glances'
-__version__ = '2.2'
+__version__ = '2.2.1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
@@ -40,7 +40,8 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir, logger
+from glances.core.glances_globals import gettext_domain, locale_dir
+from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
 
 # Get PSutil version

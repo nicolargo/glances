@@ -35,7 +35,8 @@ except ImportError:
     import httplib
 
 # Import Glances libs
-from glances.core.glances_globals import logger, version
+from glances.core.glances_globals import version
+from glances.core.glances_logging import logger
 from glances.core.glances_stats import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
 
@@ -60,6 +61,9 @@ class GlancesClient(object):
         # Client mode:
         self.set_mode()
 
+        # Return to browser or exit
+        self.return_to_browser = return_to_browser
+
         # Build the URI
         if args.password != "":
             uri = 'http://{0}:{1}@{2}:{3}'.format(args.username, args.password,
@@ -75,12 +79,15 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(uri, transport=transport)
         except Exception as e:
-            msg = "Client couldn't create socket {0}: {1}".format(uri, e)
-            if not return_to_browser:
-                logger.critical(msg)
-                sys.exit(2)
-            else:
-                logger.error(msg)
+            self.log_and_exit("Client couldn't create socket {0}: {1}".format(uri, e))
+
+    def log_and_exit(self, msg=''):
+        """Log and (exit)"""
+        if not self.return_to_browser:
+            logger.critical(msg)
+            sys.exit(2)
+        else:
+            logger.error(msg)
 
     def set_mode(self, mode='glances'):
         """Set the client mode.
@@ -99,7 +106,7 @@ class GlancesClient(object):
         """
         return self.mode
 
-    def login(self, return_to_browser=False):
+    def login(self):
         """Logon to the server."""
         ret = True
 
@@ -114,7 +121,7 @@ class GlancesClient(object):
                 logger.error("Connection to Glances server failed (%s)" % err)
                 self.set_mode('snmp')
                 fallbackmsg = _("Trying fallback to SNMP...")
-                if not return_to_browser:
+                if not self.return_to_browser:
                     print(fallbackmsg)
                 else:
                     logger.info(fallbackmsg)
@@ -124,22 +131,18 @@ class GlancesClient(object):
                     msg = "Connection to server failed (bad password)"
                 else:
                     msg = "Connection to server failed ({0})".format(err)
-                if not return_to_browser:
-                    logger.critical(msg)
-                    sys.exit(2)
-                else:
-                    logger.error(msg)
-                    return False
+                self.log_and_exit(msg)
+                return False
 
-            if self.get_mode() == 'glances' and version[:3] == client_version[:3]:
+            if self.get_mode() == 'glances' and version.split('.')[0] == client_version.split('.')[0]:
                 # Init stats
                 self.stats = GlancesStatsClient()
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
                 logger.debug(
                     "Client version: %s / Server version: %s" % (version, client_version))
-            else:
-                logger.error(
-                    "Client and server not compatible: Client version: %s / Server version: %s" % (version, client_version))
+            elif self.get_mode() == 'glances':
+                self.log_and_exit("Client and server not compatible: Client version: %s / Server version: %s" % (version, client_version))
+                return False
 
         else:
             self.set_mode('snmp')
@@ -153,11 +156,8 @@ class GlancesClient(object):
             self.stats = GlancesStatsClientSNMP(args=self.args)
 
             if not self.stats.check_snmp():
-                logger.error("Connection to SNMP server failed")
-                if not return_to_browser:
-                    sys.exit(2)
-                else:
-                    return False
+                self.log_and_exit("Connection to SNMP server failed")
+                return False
 
         if ret:
             # Load limits from the configuration file
@@ -220,7 +220,7 @@ class GlancesClient(object):
             # Grab success
             return "SNMP"
 
-    def serve_forever(self, return_to_browser=False):
+    def serve_forever(self):
         """Main client loop."""
 
         exitkey = False
@@ -232,7 +232,7 @@ class GlancesClient(object):
             # Update the screen
             exitkey = self.screen.update(self.stats,
                                          cs_status=cs_status,
-                                         return_to_browser=return_to_browser)
+                                         return_to_browser=self.return_to_browser)
 
         return self.get_mode()
 

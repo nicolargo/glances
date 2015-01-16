@@ -29,11 +29,11 @@ except ImportError:
     from xmlrpclib import ServerProxy, Fault, ProtocolError
 
 # Import Glances libs
-from glances.core.glances_globals import logger
-from glances.outputs.glances_curses import GlancesCursesBrowser
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClient, GlancesClientTransport
+from glances.core.glances_logging import logger
 from glances.core.glances_staticlist import GlancesStaticServer
+from glances.outputs.glances_curses import GlancesCursesBrowser
 
 
 class GlancesClientBrowser(object):
@@ -180,10 +180,11 @@ class GlancesClientBrowser(object):
                 args_server.username = self.get_servers_list()[self.screen.get_active()]['username']
                 args_server.password = self.get_servers_list()[self.screen.get_active()]['password']
                 client = GlancesClient(config=self.config,
-                                       args=args_server)
+                                       args=args_server,
+                                       return_to_browser=True)
 
                 # Test if client and server are in the same major version
-                if not client.login(return_to_browser=True):
+                if not client.login():
                     self.screen.display_popup(_("Sorry, cannot connect to %s (see log file for additional information)" % v['name']))
 
                     # Set the ONLINE status for the selected server
@@ -191,7 +192,7 @@ class GlancesClientBrowser(object):
                 else:
                     # Start the client loop
                     # Return connection type: 'glances' or 'snmp'
-                    connection_type = client.serve_forever(return_to_browser=True)
+                    connection_type = client.serve_forever()
 
                     try:
                         logger.debug("Disconnect Glances client from the %s server" %

@@ -24,7 +24,8 @@ import re
 import subprocess
 
 # Import Glances lib
-from glances.core.glances_globals import glances_processes, logger
+from glances.core.glances_logging import logger
+from glances.core.glances_processes import glances_processes
 
 
 class MonitorList(object):

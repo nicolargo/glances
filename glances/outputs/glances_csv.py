@@ -24,7 +24,8 @@ import csv
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import is_py3, logger
+from glances.core.glances_globals import is_py3
+from glances.core.glances_logging import logger
 
 # List of stats enabled in the CSV output
 csv_stats_list = ['cpu', 'load', 'mem', 'memswap']

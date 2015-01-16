@@ -23,7 +23,7 @@
 import os
 
 # Import Glances lib
-from glances.core.glances_globals import logger
+from glances.core.glances_logging import logger
 
 # Import specific lib
 try:

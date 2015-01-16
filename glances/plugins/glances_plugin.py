@@ -29,7 +29,9 @@ from datetime import datetime
 from operator import itemgetter
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, is_py3, logger
+from glances.core.glances_globals import is_py3
+from glances.core.glances_logging import logger
+from glances.core.glances_logs import glances_logs
 
 
 class GlancesPlugin(object):

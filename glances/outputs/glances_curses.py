@@ -23,7 +23,10 @@
 import sys
 
 # Import Glances lib
-from glances.core.glances_globals import glances_logs, glances_processes, is_mac, is_windows, logger
+from glances.core.glances_globals import is_mac, is_windows
+from glances.core.glances_logging import logger
+from glances.core.glances_logs import glances_logs
+from glances.core.glances_processes import glances_processes
 from glances.core.glances_timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
