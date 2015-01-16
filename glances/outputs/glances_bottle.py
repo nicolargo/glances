@@ -277,6 +277,7 @@ class GlancesBottle(object):
         f = open(path)
         return f.read()
 
+
 class EnableCors(object):
     name = 'enable_cors'
     api = 2
