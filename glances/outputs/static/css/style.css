@@ -3,14 +3,21 @@ body {
     color: #BBB;
     font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono", monospace;
 }
-.plugin {
-    margin-bottom: 20px;
-}
-.plugin table {
+
+.table {
+    display: table;
     width: 100%;
 }
-.plugin table tr td:not(:first-child) {
+.table-row {
+    display: table-row;
+}
+.table-cell {
+    display: table-cell;
     text-align: right;
+}
+
+.plugin {
+    margin-bottom: 20px;
 }
 
 .underline{
@@ -27,6 +34,9 @@ body {
 }
 .text-right {
     text-align: right;
+}
+.text-left {
+    text-align: left;
 }
 
 /* Theme */
@@ -77,18 +87,7 @@ body {
 }
 
 /* Plugins */
-#cpu table tr td:nth-child(3),
-#mem table tr td:nth-child(3),
-#monitor table tr td:nth-child(3) {
-    text-align: left;
-    padding-left: 20px;
-}
-#processlist table tr td {
+#processlist .table-cell {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;
-    text-align: right;
-}
-#processlist table tr td:nth-child(6),
-#processlist table tr td:nth-child(12) {
-    text-align: left;
 }
