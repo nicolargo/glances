@@ -22,7 +22,6 @@
 import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_logging import logger
 
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
@@ -158,8 +157,6 @@ class Plugin(GlancesPlugin):
         for key in ['nice', 'irq', 'iowait', 'steal']:
             if key in self.stats:
                 self.views[key]['optional'] = True
-
-        logger.info(self.views)
 
     def msg_curse(self, args=None):
         """Return the list to display in the UI"""
