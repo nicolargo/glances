@@ -125,8 +125,10 @@
                         </div>
                         <div class="table-row" ng-repeat="network in result['network']">
                             <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
-                            <div class="table-cell">{{network.rx | bytes}}</div>
-                            <div class="table-cell">{{network.tx | bytes}}</div>
+                            <div class="table-cell" ng-if="networkSortByBytes">{{network.rx | bytes}}</div>
+                            <div class="table-cell" ng-if="networkSortByBytes">{{network.tx | bytes}}</div>
+                            <div class="table-cell" ng-if="!networkSortByBytes">{{network.rx | bits}}</div>
+                            <div class="table-cell" ng-if="!networkSortByBytes">{{network.tx | bits}}</div>
                         </div>
                     </div>
                 </section>
