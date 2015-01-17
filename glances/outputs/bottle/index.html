@@ -15,7 +15,7 @@
     <script src="controllers.js"></script>
 </head>
 
-<body ng-controller="bodyController">
+<body ng-controller="bodyController" ng-keydown="onKeyDown($event)">
 
     <div ng-show="!result" class="container-fluid">Loading...</div>
     <div ng-show="result" class="container-fluid">
