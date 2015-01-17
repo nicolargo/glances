@@ -35,15 +35,15 @@ glancesApp.filter('bytes', function() {
 glancesApp.filter('bits', function() {
 	return function (bits, precision) {
 		if (isNaN(parseFloat(bits)) || !isFinite(bits) || bits == 0){
-			return '0bit';
+			return '0b';
 		}
-		var units = ['bit', 'kbit', 'Mbit', 'Gbit', 'Tbit', 'Pbit'],
+		var units = ['b', 'kb', 'Mb', 'Gb', 'Tb', 'Pb'],
 		number = Math.floor(Math.log(bits) / Math.log(1000));
 		return (bits / Math.pow(1000, Math.floor(number))).toFixed(precision) + units[number];
 	}
 });
 
-glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q',  function($scope, $http, $interval, $q) { //$routeParams
+glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q',  function($scope, $http, $interval, $q) {
 
 	$scope.limitSuffix = ['critical', 'careful', 'warning']
 	$scope.refreshTime = 3
@@ -61,8 +61,7 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
 	}
 	$scope.networkSortByBytes = false
 
-	/*
-	$scope.init_refresh_time = function() {
+	/*$scope.init_refresh_time = function() {
 	    if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
 	        var new_refresh_time = parseInt($routeParams.refresh_time)
 	        if (new_refres_time >= 1) {
