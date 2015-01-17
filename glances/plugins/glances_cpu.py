@@ -133,7 +133,30 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history()
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert and log
+        for key in ['user', 'system', 'iowait']:
+            if key in self.stats:
+                self.views[key]['decoration'] = self.get_alert_log(self.stats[key], header=key)
+        self.views['total']['decoration'] = self.get_alert_log(self.stats['total'], header="system")
+        # Alert only
+        for key in ['steal']:
+            if key in self.stats:
+                self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
+        # Optional
+        for key in ['nice', 'irq', 'iowait', 'steal']:
+            if key in self.stats:
+                self.views[key]['optional'] = True
 
     def msg_curse(self, args=None):
         """Return the list to display in the UI"""
@@ -155,15 +178,15 @@ class Plugin(GlancesPlugin):
         msg = '{0:>5}%'.format(self.stats['total'])
         if idle_tag:
             ret.append(self.curse_add_line(
-                msg, self.get_alert_log(self.stats['total'], header="system")))
+                msg, self.get_views(key='total', option='decoration')))
         else:
             ret.append(self.curse_add_line(msg))
         # Nice CPU
         if 'nice' in self.stats:
             msg = '  {0:8}'.format(_("nice:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
             msg = '{0:>5}%'.format(self.stats['nice'])
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # User CPU
@@ -172,7 +195,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['user'])
             ret.append(self.curse_add_line(
-                msg, self.get_alert_log(self.stats['user'], header="user")))
+                msg, self.get_views(key='user', option='decoration')))
         elif 'idle' in self.stats:
             msg = '{0:8}'.format(_("idle:"))
             ret.append(self.curse_add_line(msg))
@@ -181,9 +204,9 @@ class Plugin(GlancesPlugin):
         # IRQ CPU
         if 'irq' in self.stats:
             msg = '  {0:8}'.format(_("irq:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
             msg = '{0:>5}%'.format(self.stats['irq'])
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # System CPU
@@ -192,7 +215,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['system'])
             ret.append(self.curse_add_line(
-                msg, self.get_alert_log(self.stats['system'], header="system")))
+                msg, self.get_views(key='system', option='decoration')))
         else:
             msg = '{0:8}'.format(_("core:"))
             ret.append(self.curse_add_line(msg))
@@ -201,10 +224,11 @@ class Plugin(GlancesPlugin):
         # IOWait CPU
         if 'iowait' in self.stats:
             msg = '  {0:8}'.format(_("iowait:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='iowait', option='optional')))
             msg = '{0:>5}%'.format(self.stats['iowait'])
             ret.append(self.curse_add_line(
-                msg, self.get_alert_log(self.stats['iowait'], header="iowait"), optional=True))
+                msg, self.get_views(key='iowait', option='decoration'),
+                optional=self.get_views(key='iowait', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Idle CPU
@@ -216,10 +240,11 @@ class Plugin(GlancesPlugin):
         # Steal CPU usage
         if 'steal' in self.stats:
             msg = '  {0:8}'.format(_("steal:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='steal', option='optional')))
             msg = '{0:>5}%'.format(self.stats['steal'])
             ret.append(self.curse_add_line(
-                msg, self.get_alert(self.stats['steal'], header="steal"), optional=True))
+                msg, self.get_views(key='steal', option='decoration'),
+                optional=self.get_views(key='steal', option='optional')))
 
         # Return the message with decoration
         return ret
