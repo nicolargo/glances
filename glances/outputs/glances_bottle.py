@@ -16,17 +16,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Web interface class."""
+# Import Glances libs
+# Import mandatory Bottle lib
 
 import json
 import os
 import sys
 
-# Import Glances libs
+from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
 
-# Import mandatory Bottle lib
+
 try:
     from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response
 except ImportError:
@@ -138,15 +139,22 @@ class GlancesBottle(object):
         """
         response.content_type = 'application/json'
 
-        # Update the stat
-        self.stats.update()
-
-        try:
-            # Get the JSON value of the stat ID
-            statval = json.dumps(self.stats.getAllAsDict())
-        except Exception as e:
-            abort(404, "Cannot get stats (%s)" % str(e))
-        return statval
+        if not self.args.debug:
+            # Update the stat
+            self.stats.update()
+    
+            try:
+                # Get the JSON value of the stat ID
+                statval = json.dumps(self.stats.getAllAsDict())
+            except Exception as e:
+                abort(404, "Cannot get stats (%s)" % str(e))
+            return statval
+        else:
+            path = "~/glances/"
+            if is_windows:
+                path = "D:\\glances\\"
+            f = open(path + "debug.json")
+            return f.read()
 
     def _api_all_limits(self):
         """
