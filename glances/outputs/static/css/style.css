@@ -29,7 +29,10 @@ body {
 .sort{
     font-weight: bold;
 }
-.sort:after{
+.sort_asc:after {
+    content: '\25B2'
+}
+.sort_desc:after {
     content: '\25BC'
 }
 .text-right {
