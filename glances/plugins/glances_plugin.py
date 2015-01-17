@@ -69,7 +69,7 @@ class GlancesPlugin(object):
         self.actions = GlancesActions()
 
         # Init the views
-        self.views = None
+        self.views = dict()
 
     def __repr__(self):
         """Return the raw stats."""
@@ -258,19 +258,43 @@ class GlancesPlugin(object):
                 logger.error("Cannot get item({0})=value({1}) ({2})".format(item, value, e))
                 return None
 
-    def set_views(self, input_viewss):
+    def update_views(self):
+        """Default builder fo the stats views
+        The V of MVC
+        A dict of dict with the needed information to display the stats.
+        Example for the stat xxx:
+        'xxx': {'decoration': 'DEFAULT',
+                'optional': False,
+                'additional': False,
+                'splittable': False}
+        """
+        ret = {}
+        for key in self.get_raw().keys():
+            value = {'decoration': 'DEFAULT',
+                     'optional': False,
+                     'additional': False,
+                     'splittable': False}
+            ret[key] = value
+        self.views = ret
+        return self.views
+
+    def set_views(self, input_views):
         """Set the views to input_views."""
         self.views = input_views
         return self.views
 
-    def get_views(self):
+    def get_views(self, key=None, option=None):
         """Return the views object.
-        A dict of dict with the information to display the stats (The V of MVC)
-        By default return all the key/val: 'xxx': self.get_alert(self.stats['xxx'], header="xxx")
-        """
-        for key in self.get_raw().keys():
-            logger.info(">>> key: %s" % key)
-        return self.views
+        If key is None, return all the view for the current plugin
+        else if option is None return the view for the specific key (all option)
+        else return the view fo the specific key/option"""
+        if key is None:
+            return self.views
+        else:
+            if option is None:
+                return self.views[key]
+            else:
+                return self.views[key][option]
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
