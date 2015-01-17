@@ -68,6 +68,9 @@ class GlancesPlugin(object):
         # Init the actions
         self.actions = GlancesActions()
 
+        # Init the views
+        self.views = None
+
     def __repr__(self):
         """Return the raw stats."""
         return self.stats
@@ -254,6 +257,20 @@ class GlancesPlugin(object):
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item({0})=value({1}) ({2})".format(item, value, e))
                 return None
+
+    def set_views(self, input_viewss):
+        """Set the views to input_views."""
+        self.views = input_views
+        return self.views
+
+    def get_views(self):
+        """Return the views object.
+        A dict of dict with the information to display the stats (The V of MVC)
+        By default return all the key/val: 'xxx': self.get_alert(self.stats['xxx'], header="xxx")
+        """
+        for key in self.get_raw().keys():
+            logger.info(">>> key: %s" % key)
+        return self.views
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
