@@ -43,7 +43,7 @@ glancesApp.filter('bits', function() {
 	}
 });
 
-glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', function($scope, $http, $interval, $q) {
+glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q',  function($scope, $http, $interval, $q) { //$routeParams
 
 	$scope.limitSuffix = ['critical', 'careful', 'warning']
 	$scope.refreshTime = 3
@@ -60,6 +60,17 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
 		'alert' : true
 	}
 	$scope.networkSortByBytes = false
+
+	/*
+	$scope.init_refresh_time = function() {
+	    if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
+	        var new_refresh_time = parseInt($routeParams.refresh_time)
+	        if (new_refres_time >= 1) {
+	            $scope.refreshTime = new_refres_time
+	        }
+	    }
+	}*/
+	
 	
 	$scope.initLimits = function() {
 		$scope.pluginsList();
@@ -70,6 +81,9 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
 	}
 	
 	$scope.sortBy = function(column) {
+	    if (column == undefined) {
+	        // sort automatically
+	    }
 		angular.element(document.querySelector($scope.lastSortColumn)).removeClass('sort sort_asc sort_desc')
 		
 		if ($scope.sortColumn == column) {
@@ -185,6 +199,7 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
 		return "ok";
 	}
     
+	//$scope.init_refresh_time();
     $scope.initLimits();
     
     var stop;
@@ -220,7 +235,7 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
     $scope.onKeyDown = function($event) {
     	console.log($event)
     	if ($event.keyCode == keycodes.a) {	// a  Sort processes automatically 
-    		$scope.sortBy('')
+    		$scope.sortBy()
     	} else if ($event.keyCode == keycodes.c) {//c  Sort processes by CPU%
     		$scope.sortBy('cpu_percent')
     	} else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%  
