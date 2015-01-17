@@ -167,7 +167,7 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
 				var limitName = limitNamePrefix + $scope.limitSuffix[i]
 				var limit = $scope.pluginLimits[pluginName][limitName]
 				
-				if (value > limit) {
+				if (value >= limit) {
 					//console.log("value = " + value + " - limit = " + limit)
 					var pos = limitName.lastIndexOf("_")
 					var className = limitName.substring(pos + 1)
