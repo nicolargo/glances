@@ -25,7 +25,7 @@
 
 					<section id="system" class="plugin">
 						<span class="title">Refresh time&nbsp;</span> <span class="default hidden-xs hidden-sm">{{refreshTime}}s
-							<button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime == 0">-</button>
+							<button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime == 1">-</button>
 							<button ng-click="refreshTime = refreshTime + 1">+</button>
 						</span> <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="default hidden-xs hidden-sm">({{result["system"].os_name}} {{result["system"].os_version}} {{result["system"].platform}})</span>
 					</section>
@@ -168,16 +168,16 @@
 					</table>
 				</section>
 				
-				<section id="sensors" class="plugin" ng-show="show.sensors">
+				<section id="sensors" class="plugin" ng-show="show.sensors && result['sensors'].length > 0">
 					<table class="table">
 						<tbody>
 							<tr>
 								<td class="title">SENSORS</td>
-								<td class="default">°C</td>
+								<td class="default">&#176;C</td>
 							</tr>
 							<tr ng-repeat="sensor in result['sensors']">
 								<td class="default">{{sensor.label}}</td>
-								<td class="default">{{sensor.value}}</td>
+								<td ng-class="getClass('sensors', 'sensors_' + sensor.type + '_', sensor.value, 0)">{{sensor.value}}</td>
 							</tr>
 						</tbody>
 					</table>
