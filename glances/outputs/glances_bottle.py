@@ -151,10 +151,18 @@ class GlancesBottle(object):
             return statval
         else:
             path = "~/glances/"
-            if is_windows:
+            if is_windows:  
                 path = "D:\\glances\\"
-            f = open(path + "debug.json")
-            return f.read()
+            filepath = path + "debug.json"
+            
+            if os.path.exists(filepath):
+                logger.debug("File exists : {0}.".format(filepath))
+                
+                f = open(path + "debug.json")
+                return f.read()
+            
+            logger.warn("File does not exist : {0}.".format(filepath))
+            return ""
 
     def _api_all_limits(self):
         """
