@@ -172,10 +172,12 @@
 					<table class="table">
 						<tbody>
 							<tr>
-								<td class="title"></td>
+								<td class="title">SENSORS</td>
+								<td class="default">°C</td>
 							</tr>
 							<tr ng-repeat="sensor in result['sensors']">
-								<td>TODO</td>
+								<td class="default">{{sensor.label}}</td>
+								<td class="default">{{sensor.value}}</td>
 							</tr>
 						</tbody>
 					</table>
