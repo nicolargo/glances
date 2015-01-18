@@ -46,6 +46,10 @@ class Plugin(GlancesPlugin):
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'pid'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
