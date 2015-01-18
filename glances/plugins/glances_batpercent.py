@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -56,6 +56,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update battery capacity stats using the input method."""
         # Reset stats

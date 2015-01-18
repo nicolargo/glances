@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@ from glances.core.glances_logging import logger
 
 
 try:
-    from bottle import Bottle, static_file, abort, response
+    from bottle import Bottle, static_file, abort, response, request
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -49,6 +49,9 @@ class GlancesBottle(object):
 
         # Init Bottle
         self._app = Bottle()
+        # Enable CORS (issue #479)
+        self._app.install(EnableCors())
+        # Define routes
         self._route()
 
         # Path where the statics files are stored
@@ -65,12 +68,17 @@ class GlancesBottle(object):
         self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
         self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
         
+        self._app.route('/favicon.ico', method="GET", callback=self._favicon)
+
         # REST API
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/pluginslimits', method="GET", callback=self._api_plugins_limits)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
+        self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
+        self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
+        self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
@@ -128,6 +136,11 @@ class GlancesBottle(object):
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
     
+    def _favicon(self):
+        """Bottle callback for favicon."""
+        # Return the static file
+        return static_file('favicon.ico', root=self.STATIC_PATH)
+
     def _api_plugins(self):
         """
         Glances API RESTFul implementation
@@ -193,6 +206,40 @@ class GlancesBottle(object):
             f = open(filepath)
             return f.read()
 
+    def _api_all_limits(self):
+        """
+        Glances API RESTFul implementation
+        Return the JSON representation of all the plugins limits
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the stat limits
+            limits = json.dumps(self.stats.getAllLimitsAsDict())
+        except Exception as e:
+            abort(404, "Cannot get limits (%s)" % (str(e)))
+        return limits
+
+    def _api_all_views(self):
+        """
+        Glances API RESTFul implementation
+        Return the JSON representation of all the plugins views
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the stat view
+            limits = json.dumps(self.stats.getAllViewsAsDict())
+        except Exception as e:
+            abort(404, "Cannot get views (%s)" % (str(e)))
+        return limits
+
     def _api(self, plugin):
         """
         Glances API RESTFul implementation
@@ -233,11 +280,34 @@ class GlancesBottle(object):
         # self.stats.update()
 
         try:
-            # Get the JSON value of the stat ID
-            limits = self.stats.get_plugin(plugin).get_limits()
+            # Get the JSON value of the stat limits
+            ret = self.stats.get_plugin(plugin).get_limits()
         except Exception as e:
             abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
-        return limits
+        return ret
+
+    def _api_views(self, plugin):
+        """
+        Glances API RESTFul implementation
+        Return the JSON views of a given plugin
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        # self.stats.update()
+
+        try:
+            # Get the JSON value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views()
+        except Exception as e:
+            abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
+        return ret
 
     def _api_item(self, plugin, item):
         """
@@ -286,3 +356,20 @@ class GlancesBottle(object):
         else:
             return pdict
 
+
+class EnableCors(object):
+    name = 'enable_cors'
+    api = 2
+
+    def apply(self, fn, context):
+        def _enable_cors(*args, **kwargs):
+            # set CORS headers
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+            if request.method != 'OPTIONS':
+                # actual request; reply with the actual response
+                return fn(*args, **kwargs)
+
+        return _enable_cors

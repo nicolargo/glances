@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -139,6 +139,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         msg = msg_col.format("/", _("Enable/disable short processes name"))
         ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        msg = msg_col.format("D", _("Enable/disable Docker stats"))
+        ret.append(self.curse_add_line(msg))        
+
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -266,6 +266,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('D'):
+            # 'D' > Show/hide Docker stats
+            self.args.disable_docker = not self.args.disable_docker
         elif self.pressedkey == ord('e'):
             # 'e' > Enable/Disable extended stats for top process
             self.args.enable_process_extended = not self.args.enable_process_extended
@@ -428,10 +431,12 @@ class _GlancesCurses(object):
         stats_fs = stats.get_plugin('fs').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_raid = stats.get_plugin('raid').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
+            args=self.args)
         stats_sensors = stats.get_plugin(
             'sensors').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
+        stats_docker = stats.get_plugin('docker').get_stats_display(
+            args=self.args)
         stats_processcount = stats.get_plugin(
             'processcount').get_stats_display(args=self.args)
         stats_monitor = stats.get_plugin(
@@ -441,7 +446,8 @@ class _GlancesCurses(object):
 
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
-            self.get_stats_display_height(stats_alert)
+            self.get_stats_display_height(stats_alert) - \
+            self.get_stats_display_height(stats_docker)
         if self.args.enable_process_extended and not self.args.process_tree:
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
@@ -534,8 +540,10 @@ class _GlancesCurses(object):
             self.next_line = self.saved_line
 
             # Display right sidebar
-            # (PROCESS_COUNT+MONITORED+PROCESS_LIST+ALERT)
+            # ((DOCKER)+PROCESS_COUNT+(MONITORED)+PROCESS_LIST+ALERT)
             self.new_column()
+            self.new_line()
+            self.display_plugin(stats_docker)
             self.new_line()
             self.display_plugin(stats_processcount)
             if glances_processes.get_process_filter() is None and cs_status == 'None':
@@ -697,6 +705,7 @@ class _GlancesCurses(object):
 
         # Display
         x = display_x
+        x_max = x
         y = display_y
         for m in plugin_stats['msgdict']:
             # New line
@@ -740,9 +749,11 @@ class _GlancesCurses(object):
                     # good
                     offset = len(m['msg'])
                 x = x + offset
+                if x > x_max:
+                    x_max = x
 
         # Compute the next Glances column/line position
-        self.next_column = max(self.next_column, x + self.space_between_column)
+        self.next_column = max(self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
 
     def erase(self):

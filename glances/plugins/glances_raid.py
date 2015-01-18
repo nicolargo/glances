@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -71,6 +71,9 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # No standard way for the moment...
             pass
+
+        # Update the view
+        self.update_views()
 
         return self.stats
 

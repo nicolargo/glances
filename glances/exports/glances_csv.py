@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -52,6 +52,8 @@ class Export(GlancesExport):
             sys.exit(2)
 
         logger.info("Stats exported to CSV file: {0}".format(self.csv_filename))
+
+        self.export_enable = True
 
         self.first_line = True
 
