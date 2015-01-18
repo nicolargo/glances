@@ -183,7 +183,24 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history(self.get_key())
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert
+        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+            ifrealname = i['interface_name'].split(':')[0]
+            self.views[i[self.get_key()]]['rx']['decoration'] = self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
+                                                                               header=ifrealname + '_rx')
+            self.views[i[self.get_key()]]['tx']['decoration'] = self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
+                                                                               header=ifrealname + '_tx')
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -277,11 +294,9 @@ class Plugin(GlancesPlugin):
             else:
                 msg = '{0:>7}'.format(rx)
                 ret.append(self.curse_add_line(
-                    msg, self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
-                                        header=ifrealname + '_rx')))
+                    msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration')))
                 msg = '{0:>7}'.format(tx)
                 ret.append(self.curse_add_line(
-                    msg, self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
-                                        header=ifrealname + '_tx')))
+                    msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration')))
 
         return ret
