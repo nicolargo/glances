@@ -269,13 +269,28 @@ class GlancesPlugin(object):
                 'splittable': False}
         """
         ret = {}
-        for key in self.get_raw().keys():
-            value = {'decoration': 'DEFAULT',
-                     'optional': False,
-                     'additional': False,
-                     'splittable': False}
-            ret[key] = value
+
+        if type(self.get_raw()) is list:
+            # Stats are stored in a list of dict (ex: NETWORK, FS...)
+            for i in self.get_raw():
+                ret[i[self.get_key()]] = {}
+                for key in i.keys():
+                    value = {'decoration': 'DEFAULT',
+                             'optional': False,
+                             'additional': False,
+                             'splittable': False}
+                    ret[i[self.get_key()]][key] = value
+        else:
+            # Stats are stored in a dict (ex: CPU, LOAD...)
+            for key in self.get_raw().keys():
+                value = {'decoration': 'DEFAULT',
+                         'optional': False,
+                         'additional': False,
+                         'splittable': False}
+                ret[key] = value
+
         self.views = ret
+
         return self.views
 
     def set_views(self, input_views):
@@ -283,18 +298,26 @@ class GlancesPlugin(object):
         self.views = input_views
         return self.views
 
-    def get_views(self, key=None, option=None):
+    def get_views(self, item=None, key=None, option=None):
         """Return the views object.
         If key is None, return all the view for the current plugin
         else if option is None return the view for the specific key (all option)
-        else return the view fo the specific key/option"""
+        else return the view fo the specific key/option
+
+        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)"""
+
+        if item is None:
+            item_views = self.views
+        else:
+            item_views = self.views[item]
+
         if key is None:
-            return self.views
+            return item_views
         else:
             if option is None:
-                return self.views[key]
+                return item_views[key]
             else:
-                return self.views[key][option]
+                return item_views[key][option]
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
