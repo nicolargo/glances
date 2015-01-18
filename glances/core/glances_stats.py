@@ -288,9 +288,11 @@ class GlancesStatsClient(GlancesStats):
     def update(self, input_stats):
         """Update all the stats."""
         # For Glances client mode
-        # Update plugin stats with items sent by the server
         for p in input_stats:
+            # Update plugin stats with items sent by the server
             self._plugins[p].set_stats(input_stats[p])
+            # Update the views for the updated stats
+            self._plugins[p].update_views()
 
 
 class GlancesStatsClientSNMP(GlancesStats):

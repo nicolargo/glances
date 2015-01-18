@@ -95,7 +95,8 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {0})".format(self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {0} (items: {0})".format(
+                self.plugin_name, init_list))
             ret = {}
         return ret
 
@@ -103,7 +104,8 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)"""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {0})".format(self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {0} (items: {0})".format(
+                self.plugin_name, reset_list))
             self.stats_history = {}
         return self.stats_history
 
@@ -255,7 +257,8 @@ class GlancesPlugin(object):
             try:
                 return json.dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
-                logger.error("Cannot get item({0})=value({1}) ({2})".format(item, value, e))
+                logger.error(
+                    "Cannot get item({0})=value({1}) ({2})".format(item, value, e))
                 return None
 
     def update_views(self):
@@ -270,7 +273,7 @@ class GlancesPlugin(object):
         """
         ret = {}
 
-        if type(self.get_raw()) is list:
+        if type(self.get_raw()) is list and self.get_raw() is not None and self.get_key() is not None:
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
@@ -280,7 +283,7 @@ class GlancesPlugin(object):
                              'additional': False,
                              'splittable': False}
                     ret[i[self.get_key()]][key] = value
-        else:
+        elif type(self.get_raw()) is dict and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in self.get_raw().keys():
                 value = {'decoration': 'DEFAULT',
@@ -411,13 +414,15 @@ class GlancesPlugin(object):
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
                 try:
-                    mustache_dict = (item for item in self.stats if item[self.get_key()] == header).next()
+                    mustache_dict = (
+                        item for item in self.stats if item[self.get_key()] == header).next()
                 except StopIteration:
                     mustache_dict = {}
             else:
                 # Use the stats dict
                 mustache_dict = self.stats
-            self.actions.run(stat_name, ret.lower(), command, mustache_dict=mustache_dict)
+            self.actions.run(
+                stat_name, ret.lower(), command, mustache_dict=mustache_dict)
 
         # Default is ok
         return ret + log_str
