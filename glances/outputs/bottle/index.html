@@ -23,10 +23,12 @@
             <div class="col-sm-12">
                 <div class="pull-left">
                     <section id="system" class="plugin">
-                        <span class="title">Refresh time&nbsp;</span> <span class="hidden-xs hidden-sm">{{refreshTime}}s
+                        <!--<span class="title">Refresh time&nbsp;</span> <span class="hidden-xs hidden-sm">{{refreshTime}}s
                             <button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime <= 1">-</button>
                             <button ng-click="refreshTime = refreshTime + 1">+</button>
-                        </span> <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].os_name}} {{result["system"].os_version}} {{result["system"].platform}})</span>
+                        </span> 
+                        -->
+                        <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].os_name}} {{result["system"].os_version}} {{result["system"].platform}})</span>
                     </section>
                 </div>
                 <div class="pull-right">
@@ -38,7 +40,7 @@
         </div>
 
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-3 col-lg-2">
                 <section id="cpu" class="plugin">
                     <div class="table">
                         <div class="table-row">
@@ -64,8 +66,65 @@
                     </div>
                 </section>
             </div>
-            <div class="col-sm-3 col-lg-2 col-lg-offset-1"></div>
-            <div class="col-sm-3 col-lg-3">
+            <div class="col-sm-3 col-lg-2">
+                <section id="cpu_more" class="plugin">
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left">nice:</div>
+                            <div class="table-cell">
+                                {{result["cpu"].nice}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">irq:</div>
+                            <div class="table-cell">
+                                {{result["cpu"].irq}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">iowait:</div>
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_iowait_', result['cpu'].iowait, 1)">
+                                {{result["cpu"].iowait}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">steal:</div>
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_steal_', result['cpu'].steal, 0)">
+                                {{result["cpu"].steal}}%
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="col-sm-3 col-lg-2"><!-- col-lg-2 col-lg-offset-1 -->
+                <section id="loading" class="plugin">
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">LOAD</div>
+                            <div class="table-cell">{{result["load"].cpucore}}-core</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">1 min:</div>
+                            <div class="table-cell">
+                                {{result["load"].min1}}
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">5 min:</div>
+                            <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min5, 0)">
+                                {{result["load"].min5}}
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">15 min:</div>
+                            <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min15, 1)">
+                                {{result["load"].min15}}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="col-sm-3 col-lg-2">
                 <section id="mem" class="plugin">
                     <div class="table">
                         <div class="table-row">
@@ -89,7 +148,29 @@
                     </div>
                 </section>
             </div>
-            <div class="col-sm-3 col-lg-2 col-lg-offset-1">
+            <div class="col-sm-3 col-lg-2">
+                <section id="mem_more" class="plugin">
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left">active:</div>
+                            <div class="table-cell">{{result["mem"].active | bytes:2}}</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">inactive:</div>
+                            <div class="table-cell">{{result["mem"].inactive | bytes:2}}</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">buffers:</div>
+                            <div class="table-cell">{{result["mem"].buffers | bytes:2}}</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">cached:</div>
+                            <div class="table-cell">{{result["mem"].cached | bytes:2}}</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="col-sm-3 col-lg-2   ">
                 <section id="memswap" class="plugin">
                     <div class="table">
                         <div class="table-row">
@@ -115,7 +196,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-3" ng-show="show.sidebar">
                 <section id="network" class="plugin" ng-show="show.network">
                     <div class="table">
                         <div class="table-row">
@@ -177,6 +258,9 @@
                 </section>
             </div>
             <div class="col-sm-9">
+                <section id="containers" class="plugin">
+                    <span class="title">CONTAINERS</span> 1 (served by Docker 1.2.0)
+                </section>
                 <section id="alert" class="plugin" ng-show="show.alert">
                     <div class="table">
                         <div class="table-row">
