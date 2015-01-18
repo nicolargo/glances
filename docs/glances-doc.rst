@@ -4,9 +4,9 @@ Glances
 
 This manual describes *Glances* version 2.2.
 
-Copyright © 2012-2014 Nicolas Hennion <nicolas@nicolargo.com>
+Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-December 2014
+Junuary 2015
 
 .. contents:: Table of Contents
 
@@ -117,6 +117,8 @@ and on the client enter the following URL in your favorite web browser:
 
 where ``@server`` is the IP address or hostname of the server.
 
+To change the refresh rate of the page, just add the period in seconds between refreshes at the end of the URL, ie. to refresh every 10s, use ``http://@server:61208/10``.
+
 The Glances web interface follows responsive web design principles.
 
 Screenshot from Chrome on Android
@@ -226,7 +228,7 @@ The following commands (key pressed) are supported while in Glances:
 ``F``
     Switch between FS used and free space
 ``g``
-    Generate hraphs for current history
+    Generate graphs for current history
 ``h``
     Show/hide the help screen
 ``i``
@@ -240,7 +242,7 @@ The following commands (key pressed) are supported while in Glances:
 ``p``
     Sort processes by name
 ``q`` or ``ESC``
-    Quit the current Glances session 
+    Quit the current Glances session
 ``r``
     Reset history
 ``s``
@@ -273,7 +275,7 @@ In the Glances client browser (accessible through the --browser command line arg
 ``DOWN``
     Down in the servers list
 ``q`` or ``ESC``
-    Quit Glances 
+    Quit Glances
 
 Configuration
 =============
@@ -318,6 +320,34 @@ e.g., on Linux:
 On OS X, you should copy the configuration file to
 ``~/Library/Application Support/glances/``.
 
+*Configuration file description*
+
+Each plugin and export module can have a section.
+
+Example for the CPU plugin:
+
+.. code-block::
+
+    [cpu]
+    user_careful=50
+    user_warning=70
+    user_critical=90
+    iowait_careful=50
+    iowait_warning=70
+    iowait_critical=90
+    system_careful=50
+    system_warning=70
+    system_critical=90
+    steal_careful=50
+    steal_warning=70
+    steal_critical=90
+
+By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:
+
+.. code-block::
+
+    steal_log=True
+
 Logs and debug mode
 ===================
 
@@ -329,6 +359,8 @@ By default, the log file is under:
 
 :Linux, \*BSD and OS X: ``/tmp/glances.log``
 :Windows: ``%APPDATA%\Local\temp\glances.log``
+
+If glances.log is not writable, a new file will be created and returned to the user console.
 
 Anatomy Of The Application
 ==========================
@@ -582,7 +614,7 @@ In standalone mode, additionals informations are provided for the top process:
 * CPU affinity (number of cores used by the process)
 * Extended memory information (swap, shared, text, lib, data and dirty on Linux)
 * Open threads, files and network sessions (TCP and UDP)
-* IO nice level  
+* IO nice level
 
 The extended stats feature could be enabled using the --enable-process-extended option (command line) or the ``e`` key (curses interface).
 
@@ -669,6 +701,33 @@ Each alert message displays the following information:
 4. {min,avg,max} values or number of running processes for monitored
    processes list alerts
 
+Docker
+------
+
+If you use Docker, Glances can help you to monitor your container. Glances uses the Docker API through the Docker-Py library.
+
+.. image:: images/docker.png
+
+Actions
+-------
+
+Glances can trigger actions on events. 
+
+By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:
+
+  [load]
+  critical=5.0
+  critical_action=python /path/to/foo.py
+
+All the stats are usable in the command line by the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a warning space trigger is reached:
+
+  [fs]
+  warning=70
+  warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+
+*Note*: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
+
+
 Gateway to others services
 ==========================
 
@@ -736,12 +795,12 @@ Glances will generate stats as:
 APIs Documentations
 ===================
 
-Glances includes a `XML-RPC server`_ and a `RESTFULL-JSON`_ API which and can be used by another client software.
+Glances includes a `XML-RPC server`_ and a `RESTFUL-JSON`_ API which and can be used by another client software.
 
 APIs documentations are available at:
 
 - XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
-- RESTFULL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+- RESTFUL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
 
 Support
 =======
@@ -759,5 +818,5 @@ Feel free to contribute !
 
 .. _psutil: https://code.google.com/p/psutil/
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
-.. _RESTFULL-JSON: http://jsonapi.org/
+.. _RESTFUL-JSON: http://jsonapi.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users

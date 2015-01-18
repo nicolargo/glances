@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -29,11 +29,15 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
 snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
-                        'system_name': '1.3.6.1.2.1.1.1.0'}}
+                        'system_name': '1.3.6.1.2.1.1.1.0'},
+            'netapp': {'hostname': '1.3.6.1.2.1.1.5.0',
+                       'system_name': '1.3.6.1.2.1.1.1.0',
+                       'platform': '1.3.6.1.4.1.789.1.1.5.0'}}
 
 # SNMP to human read
 # Dict (key: OS short name) of dict (reg exp OID to human)
-# Windows: http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
+# Windows:
+# http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
 snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
                              'Windows Version 6.2': 'Windows 8 or Server 2012',
                              'Windows Version 6.1': 'Windows 7 or Server 2008R2',
@@ -118,19 +122,26 @@ class Plugin(GlancesPlugin):
             elif self.stats['os_name'] == "Windows":
                 os_version = platform.win32_ver()
                 self.stats['os_version'] = ' '.join(os_version[::2])
+                # if the python version is 32 bit perhaps the windows operating
+                # system is 64bit
+                if self.stats['platform'] == '32bit':
+                    if 'PROCESSOR_ARCHITEW6432' in os.environ:
+                        self.stats['platform'] = '64bit'
             else:
                 self.stats['os_version'] = ""
             # Add human readable name
             if self.stats['os_name'] == "Linux":
                 self.stats['hr_name'] = self.stats['linux_distro']
             else:
-                self.stats['hr_name'] = '{0} {1}'.format(self.stats['os_name'], self.stats['os_version'])
+                self.stats['hr_name'] = '{0} {1}'.format(
+                    self.stats['os_name'], self.stats['os_version'])
             self.stats['hr_name'] += ' ({0})'.format(self.stats['platform'])
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             try:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()])
+                self.stats = self.set_stats_snmp(
+                    snmp_oid=snmp_oid[self.get_short_system_name()])
             except KeyError:
                 self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavor: display all the information
