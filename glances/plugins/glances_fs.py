@@ -168,7 +168,20 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history('mnt_point')
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert
+        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+            self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(i['used'], max=i['size'], header=i['mnt_point'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -219,9 +232,9 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format(self.auto_unit(i['free']))
             else:
                 msg = '{0:>7}'.format(self.auto_unit(i['used']))
-            ret.append(self.curse_add_line(msg, self.get_alert(i['used'],
-                                                               max=i['size'],
-                                                               header=i['mnt_point'])))
+            ret.append(self.curse_add_line(msg, self.get_views(item=i[self.get_key()],
+                                                               key='used',
+                                                               option='decoration')))
             msg = '{0:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
