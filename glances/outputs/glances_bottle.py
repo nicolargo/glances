@@ -58,7 +58,8 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
-
+        self._app.route('/help', method="GET", callback=self._help)
+        
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
         self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
@@ -102,6 +103,10 @@ class GlancesBottle(object):
 
         # Display
         return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
+
+    def _help(self):
+        """Bottle callback for /help """
+        return static_file("help.html", root=os.path.join(self.STATIC_PATH, 'html'))
 
     def _html(self, filename):
         """Bottle callback for *.html files."""
