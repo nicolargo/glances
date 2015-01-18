@@ -74,7 +74,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'sensors' : true,
         'sidebar' : true,
         'alert' : true,
-        'short_process_name': false
+        'short_process_name': false,
+	'per_cpu': false
     }
     $scope.networkSortByBytes = false
 
@@ -301,8 +302,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.x) {//x  Delete warning and critical alerts
             //$scope.sort_by('')
-        } else if ($event.keyCode == keycodes.ONE) {//1  Global CPU or per-CPU stats
-            //$scope.sort_by('')
+        } else if ($event.keyCode == keycodes.ONE && $event.shiftKey) {//1  Global CPU or per-CPU stats
+            $scope.show_hide('per_cpu')
         } else if ($event.keyCode == keycodes.h) {//h  Show/hide this help screen
             window.location = "/help"
             //$location.path("/help")
