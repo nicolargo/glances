@@ -1,9 +1,2 @@
-var glancesApp = angular.module('glancesApp', []);
+var glancesApp = angular.module('glancesApp', ['ngRoute']);
 
-/*
-glancesApp.config([ '$routeProvider', function($routeProvider) {
-    $routeProvider.when('/:refresh_time', {
-        templateUrl : 'index.html',
-        controller : 'GlancesStatsController'
-    });
-} ]);*/

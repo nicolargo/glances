@@ -29,7 +29,7 @@ from glances.core.glances_logging import logger
 
 
 try:
-    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response
+    from bottle import Bottle, static_file, abort, response
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -51,9 +51,6 @@ class GlancesBottle(object):
         self._app = Bottle()
         self._route()
 
-        # Update the template path (glances/outputs/bottle)
-        TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
-
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
@@ -61,10 +58,15 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
+
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
+        self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
+        self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
+        
         # REST API
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
+        self._app.route('/api/2/pluginslimits', method="GET", callback=self._api_plugins_limits)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
@@ -99,8 +101,13 @@ class GlancesBottle(object):
         self.stats.update()
 
         # Display
-        return self.display(self.stats, refresh_time=refresh_time)
+        return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
 
+    def _html(self, filename):
+        """Bottle callback for *.html files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'html'))
+    
     def _css(self, filename):
         """Bottle callback for *.css files."""
         # Return the static file
@@ -111,6 +118,11 @@ class GlancesBottle(object):
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
+    def _js_map(self, filename):
+        """Bottle callback for *.js.map files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+    
     def _api_plugins(self):
         """
         Glances API RESTFul implementation
@@ -128,6 +140,25 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
 
+    def _api_plugins_limits(self):
+        """
+        Glances API RESTFul implementation
+        Return the limits for each plugins
+        or 404 error
+        """
+        response.content_type = 'application/json'
+
+        result = {}
+        for plugin in self.plugins_list:
+            try:
+                # Get the JSON value of the stat ID
+                limits = self.stats.get_plugin(plugin).get_limits()
+                result[plugin] = limits
+            except Exception as e:
+                pass
+        return result
+
+    
     def _api_all(self):
         """
         Glances API RESTFul implementation
@@ -154,7 +185,7 @@ class GlancesBottle(object):
                 path = "D:\\glances\\"
             filepath = path + "debug.json"
             
-            f = open("/home/sylvain/glances/debug.json")
+            f = open(filepath)
             return f.read()
 
     def _api(self, plugin):
@@ -250,12 +281,3 @@ class GlancesBottle(object):
         else:
             return pdict
 
-    def display(self, stats, refresh_time=None):
-        """Display stats on the web page.
-
-        stats: Stats database to display
-        """
-
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
-        f = open(path)
-        return f.read()
