@@ -5,6 +5,9 @@ glancesApp.config([ '$routeProvider', '$locationProvider', function($routeProvid
     }).when('/:refresh_time', {
         templateUrl : 'stats.html',
         controller : 'statsController'
+    }).when('/help', {
+        templateUrl : 'help.html',
+        controller : 'helpController'
     });
     
     $locationProvider.html5Mode(true);
@@ -56,7 +59,7 @@ glancesApp.filter('bits', function() {
 });
 
 
-glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', function($scope, $http, $interval, $q, $routeParams) {
+glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', '$location', function($scope, $http, $interval, $q, $routeParams, $location) {
 
     $scope.limitSuffix = ['critical', 'careful', 'warning']
     $scope.refreshTime = 3
@@ -70,7 +73,9 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'fs' : true,
         'sensors' : true,
         'sidebar' : true,
-        'alert' : true
+        'alert' : true,
+        'short_process_name': false,
+	'per_cpu': false
     }
     $scope.networkSortByBytes = false
 
@@ -97,6 +102,9 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             // sort automatically
             $scope.sortColumn = undefined
             return
+        }
+        if (column == 'name' && !$scope.show.short_process_name) {
+            column = 'cmdline'
         }
         angular.element(document.querySelector($scope.lastSortColumn)).removeClass('sort sort_asc sort_desc')
         
@@ -156,6 +164,24 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
                 var millisecondsStr = leftpad(milliseconds)
                 return hour +":" + minutes + ":" + seconds + "." + millisecondsStr
             };
+
+            function dateformat(input) {
+                var millis = input * 1000.0;
+                var d = new Date(millis)
+                var year = d.getFullYear()
+                var month = leftpad(d.getMonth() + 1) // JANUARY = 0
+                var day = leftpad(d.getDate())
+                return year + "-" + month + "-" + day + " " + datetimeformat(input)
+                
+            }
+            function datetimeformat(input) {
+                var millis = input * 1000.0;
+                var d = new Date(millis)
+                var hour = leftpad(d.getUTCHours()) // TODO : multiple days ( * (d.getDay() * 24)))
+                var minutes = leftpad(d.getUTCMinutes())
+                var seconds = leftpad(d.getUTCSeconds())
+                return hour + ":" + minutes + ":" + seconds
+            }
         
             for (var i = 0; i < response['processlist'].length; i++) {
                 var process = response['processlist'][i]
@@ -165,6 +191,11 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
                 process.timemillis = timemillis(process.cpu_times)
                 process.io_read  = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update
                 process.io_write = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update
+            }
+            for (var i = 0; i < response['alert'].length; i++) {
+                var alert = response['alert'][i]
+                alert.begin = dateformat(alert[0])
+                alert.end = datetimeformat(alert[1] - alert[0])
             }
             $scope.result = response;
             canceler.resolve()
@@ -249,7 +280,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             $scope.show_hide('diskio')
         } else if ($event.keyCode == keycodes.f) {//f  Show/hide filesystem stats
             $scope.show_hide('fs')
-        } else if ($event.keyCode == keycodes.n) {//n  Show/hide network stats
+        } else if ($event.keyCode == keycodes.n) {//n sort_by Show/hide network stats
             $scope.show_hide('network')
         } else if ($event.keyCode == keycodes.s) {//s  Show/hide sensors stats
             $scope.show_hide('sensors')
@@ -260,7 +291,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         } else if ($event.keyCode == keycodes.e) {//e  Enable/disable top extended stats
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.SLASH) {// SLASH  Enable/disable short processes name
-            //$scope.sort_by('')
+            $scope.show_hide('short_process_name')
         } else if ($event.keyCode == keycodes.D) {//D  Enable/disable Docker stats
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.b) {//b  Bytes or bits for network I/O
@@ -271,10 +302,11 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.x) {//x  Delete warning and critical alerts
             //$scope.sort_by('')
-        } else if ($event.keyCode == keycodes.ONE) {//1  Global CPU or per-CPU stats
-            //$scope.sort_by('')
+        } else if ($event.keyCode == keycodes.ONE && $event.shiftKey) {//1  Global CPU or per-CPU stats
+            $scope.show_hide('per_cpu')
         } else if ($event.keyCode == keycodes.h) {//h  Show/hide this help screen
-            //$scope.sort_by('')
+            window.location = "/help"
+            //$location.path("/help")
         } else if ($event.keyCode == keycodes.T) {//T  View network I/O as combination
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.u) {//u  View cumulative network I/O
