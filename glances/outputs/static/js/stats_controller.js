@@ -61,7 +61,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     $scope.limitSuffix = ['critical', 'careful', 'warning']
     $scope.refreshTime = 3
     $scope.pluginLimits = []
-    $scope.sortColumn = 'cpu_percent'
+    $scope.sortColumn = ''
     $scope.sortOrderAsc = false
     $scope.lastSortColumn = '#column_' + $scope.sortColumn 
     $scope.show = {
@@ -72,7 +72,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'sidebar' : true,
         'alert' : true
     }
-    $scope.networksort_byBytes = false
+    $scope.networkSortByBytes = false
 
     $scope.init_refresh_time = function() {
         if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
@@ -95,6 +95,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     $scope.sort_by = function(column) {
         if (column == undefined) {
             // sort automatically
+            $scope.sortColumn = undefined
+            return
         }
         angular.element(document.querySelector($scope.lastSortColumn)).removeClass('sort sort_asc sort_desc')
         
@@ -262,7 +264,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         } else if ($event.keyCode == keycodes.D) {//D  Enable/disable Docker stats
             //$scope.sort_by('')
         } else if ($event.keyCode == keycodes.b) {//b  Bytes or bits for network I/O
-            $scope.networksort_byBytes = !$scope.networksort_byBytes
+            $scope.networkSortByBytes = !$scope.networkSortByBytes
         } else if ($event.keyCode == keycodes.l) {//l  Show/hide alert logs
             $scope.show_hide('alert')
         } else if ($event.keyCode == keycodes.w) {//w  Delete warning alerts
