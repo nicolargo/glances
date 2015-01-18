@@ -24,26 +24,49 @@
         <div class="row">
             <div class="col-sm-3 col-lg-2">
                 <section id="cpu" class="plugin">
-                    <div class="table">
+                    <div class="table" ng-show="!show.per_cpu">
                         <div class="table-row">
                             <div class="table-cell text-left title">CPU</div>
                             <div class="table-cell">{{result["cpu"].total}}%</div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">user:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 0)">
                                 {{result["cpu"].user}}%
                             </div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">system:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 0)">
                                 {{result["cpu"].system}}%
                             </div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">idle:</div>
                             <div class="table-cell">{{result["cpu"].idle}}%</div>
+                        </div>
+                    </div>
+
+		            <div class="table" ng-show="show.per_cpu">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">PER CPU</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">user:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_user_', percpu.user, 0)">
+                                {{percpu.user}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">system:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_system_', percpu.system, 0)">
+                                {{percpu.system}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">idle:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.idle}}%</div>
                         </div>
                     </div>
                 </section>
