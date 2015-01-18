@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -130,7 +130,19 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history()
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert and log
+        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], max=self.stats['total'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -162,7 +174,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
+            msg, self.get_views(key='used', option='decoration')))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage

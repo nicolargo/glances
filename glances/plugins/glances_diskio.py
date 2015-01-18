@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -43,7 +43,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
+        GlancesPlugin.__init__(
+            self, args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -121,7 +122,24 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history('disk_name')
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert
+        for i in self.stats:
+            disk_real_name = i['disk_name']
+            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(int(i['read_bytes'] // i['time_since_update']),
+                                                                                       header=disk_real_name + '_rx')
+            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(int(i['write_bytes'] // i['time_since_update']),
+                                                                                        header=disk_real_name + '_tx')
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -146,9 +164,10 @@ class Plugin(GlancesPlugin):
             if self.is_hide(i['disk_name']):
                 continue
             # Is there an alias for the disk name ?
+            disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])
             if disk_name is None:
-                disk_name = i['disk_name']
+                disk_name = disk_real_name
             # New line
             ret.append(self.curse_new_line())
             if len(disk_name) > 9:
@@ -156,11 +175,19 @@ class Plugin(GlancesPlugin):
                 disk_name = '_' + disk_name[-8:]
             msg = '{0:9}'.format(disk_name)
             ret.append(self.curse_add_line(msg))
-            txps = self.auto_unit(int(i['read_bytes'] // i['time_since_update']))
-            rxps = self.auto_unit(int(i['write_bytes'] // i['time_since_update']))
+            txps = self.auto_unit(
+                int(i['read_bytes'] // i['time_since_update']))
+            rxps = self.auto_unit(
+                int(i['write_bytes'] // i['time_since_update']))
             msg = '{0:>7}'.format(txps)
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg,
+                                           self.get_views(item=i[self.get_key()],
+                                                          key='read_bytes',
+                                                          option='decoration')))
             msg = '{0:>7}'.format(rxps)
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg,
+                                           self.get_views(item=i[self.get_key()],
+                                                          key='write_bytes',
+                                                          option='decoration')))
 
         return ret

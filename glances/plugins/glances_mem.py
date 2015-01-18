@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -155,7 +155,23 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history()
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert and log
+        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], max=self.stats['total'])
+        # Optional
+        for key in ['active', 'inactive', 'buffers', 'cached']:
+            if key in self.stats:
+                self.views[key]['optional'] = True
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -176,9 +192,9 @@ class Plugin(GlancesPlugin):
         # Active memory usage
         if 'active' in self.stats:
             msg = '  {0:9}'.format(_("active:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['active']))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
@@ -189,9 +205,9 @@ class Plugin(GlancesPlugin):
         # Inactive memory usage
         if 'inactive' in self.stats:
             msg = '  {0:9}'.format(_("inactive:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['inactive']))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
@@ -199,13 +215,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['used'], max=self.stats['total'])))
+            msg, self.get_views(key='used', option='decoration')))
         # Buffers memory usage
         if 'buffers' in self.stats:
             msg = '  {0:9}'.format(_("buffers:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['buffers']))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
@@ -216,8 +232,8 @@ class Plugin(GlancesPlugin):
         # Cached memory usage
         if 'cached' in self.stats:
             msg = '  {0:9}'.format(_("cached:"))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['cached']))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))
 
         return ret

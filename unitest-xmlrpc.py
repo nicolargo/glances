@@ -31,7 +31,7 @@ import json
 import types
 try:
     from xmlrpc.client import ServerProxy
-except ImportError:  
+except ImportError:
     # Python 2
     from xmlrpclib import ServerProxy
 
@@ -50,7 +50,8 @@ pid = None
 
 # Unitary test is only available from a GNU/Linus machine
 if not is_linux:
-    print('ERROR: XML/RPC API unitaries tests should be ran on GNU/Linux operating system')
+    print(
+        'ERROR: XML/RPC API unitaries tests should be ran on GNU/Linux operating system')
     sys.exit(2)
 else:
     print('Unitary tests for {0} {1}'.format(appname, version))
@@ -77,6 +78,7 @@ client = ServerProxy(URL)
 # Unitest class
 # ==============
 
+
 class TestGlances(unittest.TestCase):
 
     """Test Glances class."""
@@ -88,16 +90,16 @@ class TestGlances(unittest.TestCase):
     def test_000_start_server(self):
         """Start the Glances Web Server"""
         print('INFO: [TEST_000] Start the Glances Web Server')
-    
+
         global pid
-    
+
         cmdline = "/usr/bin/python -m glances -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
         print("Please wait...")
         time.sleep(1)
-    
+
         self.assertTrue(pid is not None)
 
     def test_001_all(self):
@@ -194,6 +196,24 @@ class TestGlances(unittest.TestCase):
 
         req = json.loads(client.getProcessList())
         self.assertIsInstance(req, types.ListType)
+
+    def test_010_all_limits(self):
+        """All limits"""
+        method = "getAllLimits()"
+        print('INFO: [TEST_010] Method: %s' % method)
+
+        req = json.loads(client.getAllLimits())
+        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req['cpu'], types.DictType)
+
+    def test_011_all_views(self):
+        """All views"""
+        method = "getAllViews()"
+        print('INFO: [TEST_011] Method: %s' % method)
+
+        req = json.loads(client.getAllViews())
+        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req['cpu'], types.DictType)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server"""
