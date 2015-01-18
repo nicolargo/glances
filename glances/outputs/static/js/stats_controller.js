@@ -116,7 +116,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     }
     
     $scope.plugins_limits = function() {
-        $http.get('/api/2/pluginslimits').success(function(response, status, headers, config) {
+        $http.get('/api/2/all/limits').success(function(response, status, headers, config) {
                 $scope.limits = response
         }).error(function(response, status, headers, config) {
             console.log('error : ' + response+ status + headers + config);
