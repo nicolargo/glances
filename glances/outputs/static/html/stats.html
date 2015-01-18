@@ -5,12 +5,12 @@
             <div class="col-sm-12">
                 <div class="pull-left">
                     <section id="system" class="plugin">
-                        <span class="title">Refresh time&nbsp;</span> <span class="hidden-xs hidden-sm">{{refreshTime}}s
+                        <!--<span class="title">Refresh time&nbsp;</span> <span class="hidden-xs hidden-sm">{{refreshTime}}s
                             <button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime <= 1">-</button>
                             <button ng-click="refreshTime = refreshTime + 1">+</button>
-                        </span> 
+                        </span> -->
                         
-                        <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].os_name}} {{result["system"].os_version}} {{result["system"].platform}})</span>
+                        <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].hr_name}} / {{result["system"].os_name}} {{result["system"].os_version}})</span>
                     </section>
                 </div>
                 <div class="pull-right">
@@ -24,26 +24,49 @@
         <div class="row">
             <div class="col-sm-3 col-lg-2">
                 <section id="cpu" class="plugin">
-                    <div class="table">
+                    <div class="table" ng-show="!show.per_cpu">
                         <div class="table-row">
                             <div class="table-cell text-left title">CPU</div>
                             <div class="table-cell">{{result["cpu"].total}}%</div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">user:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 0)">
                                 {{result["cpu"].user}}%
                             </div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">system:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
+                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 0)">
                                 {{result["cpu"].system}}%
                             </div>
                         </div>
                         <div class="table-row">
                             <div class="table-cell text-left">idle:</div>
                             <div class="table-cell">{{result["cpu"].idle}}%</div>
+                        </div>
+                    </div>
+
+		            <div class="table" ng-show="show.per_cpu">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">PER CPU</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">user:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_user_', percpu.user, 0)">
+                                {{percpu.user}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">system:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_system_', percpu.system, 0)">
+                                {{percpu.system}}%
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell text-left">idle:</div>
+                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.idle}}%</div>
                         </div>
                     </div>
                 </section>
@@ -186,7 +209,7 @@
                             <div class="table-cell">Rx/s</div>
                             <div class="table-cell">Tx/s</div>
                         </div>
-                        <div class="table-row" ng-repeat="network in result['network']">
+                        <div class="table-row" ng-repeat="network in result['network'] | orderBy: network.interface_name">
                             <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
                             <div class="table-cell" ng-if="networkSortByBytes">{{network.rx | bytes}}</div>
                             <div class="table-cell" ng-if="networkSortByBytes">{{network.tx | bytes}}</div>
@@ -240,21 +263,30 @@
                 </section>
             </div>
             <div class="col-sm-9">
-                <section id="containers" class="plugin">
+                <!--<section id="containers" class="plugin">
                     <span class="title">CONTAINERS</span> 1 (served by 1.2.0)
+                </section>-->
+                <section id="alerts" ng-show="show.alert">
+                    <span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span>
+                    <span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
                 </section>
                 <section id="alert" class="plugin" ng-show="show.alert">
                     <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left title" ng-show="!result['alert'].length">No warning or critical alert detected</div>
-                            <div class="table-cell text-left title" ng-repeat="alert in result['alert']">{{alert}}</div>
+                        <div class="table-row" ng-repeat="alert in result['alert']">
+		                    <div class="table-cell text-left">
+{{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
+							</div>
                         </div>
                     </div>
                 </section>
 
                 <section id="processcount" class="plugin">
                     <span class="title">TASKS</span> {{result["processcount"].total}} ({{result["processcount"].thread}} thr), {{result["processcount"].running}} run,
-                        {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth <span ng-show="!sortColumn"> sorted automatically </span> <span ng-show="!sortColumn"> by cpu_percent, flat view </span>
+                        {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth 
+    <span ng-show="!sortColumn"> sorted automatically </span>
+    <span ng-show="sortColumn">sorted </span> 
+    <span> by {{sortColumn}}, flat view </span>
+
                 </section>
 
                 <div class="row">
@@ -289,7 +321,8 @@
                             <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
                             <div class="table-cell hidden-xs hidden-sm">{{process.io_read | bytes}}</div>
                             <div class="table-cell hidden-xs hidden-sm">{{process.io_write | bytes}}</div>
-                            <div class="table-cell text-left">{{process.name}}</div>
+                            <div class="table-cell text-left" ng-if="show.short_process_name">{{process.name}}</div>
+                            <div class="table-cell text-left" ng-if="!show.short_process_name">{{process.cmdline}}</div>
                         </div>
                     </div>
                 </section>
