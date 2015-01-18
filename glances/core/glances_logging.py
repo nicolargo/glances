@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -71,14 +71,28 @@ LOGGING_CFG = {
 }
 
 
+def tempfile_name():
+    """Return the tempfile name (full path)"""
+    ret = os.path.join(tempfile.gettempdir(), 'glances.log')
+    if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
+        print("Warning: can't write logs to file {} (permission denied)".format(ret))
+        ret = tempfile.mkstemp(prefix='glances', suffix='.tmp', text=True)
+        print("Create a new log file: {}".format(ret[1]))
+        return ret[1]
+    return ret
+
+
 def glances_logger():
+    """Build and return the logger"""
+    temp_path = tempfile_name()
     _logger = logging.getLogger()
     try:
+        LOGGING_CFG['handlers']['file']['filename'] = temp_path
         logging.config.dictConfig(LOGGING_CFG)
     except AttributeError:
         # dictConfig is only available for Python 2.7 or higher
         # Minimal configuration for Python 2.6
-        logging.basicConfig(filename=os.path.join(tempfile.gettempdir(), 'glances.log'),
+        logging.basicConfig(filename=temp_path,
                             level=logging.DEBUG,
                             format='%(asctime)s -- %(levelname)s -- %(message)s')
     return _logger

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -32,6 +32,7 @@ from operator import itemgetter
 from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
 from glances.core.glances_logs import glances_logs
+from glances.core.glances_actions import GlancesActions
 
 
 class GlancesPlugin(object):
@@ -64,6 +65,12 @@ class GlancesPlugin(object):
         # Init the limits dictionnary
         self.limits = dict()
 
+        # Init the actions
+        self.actions = GlancesActions()
+
+        # Init the views
+        self.views = dict()
+
     def __repr__(self):
         """Return the raw stats."""
         return self.stats
@@ -88,7 +95,8 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {0})".format(self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {0} (items: {0})".format(
+                self.plugin_name, init_list))
             ret = {}
         return ret
 
@@ -96,7 +104,8 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)"""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {0})".format(self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {0} (items: {0})".format(
+                self.plugin_name, reset_list))
             self.stats_history = {}
         return self.stats_history
 
@@ -248,8 +257,70 @@ class GlancesPlugin(object):
             try:
                 return json.dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
-                logger.error("Cannot get item({0})=value({1}) ({2})".format(item, value, e))
+                logger.error(
+                    "Cannot get item({0})=value({1}) ({2})".format(item, value, e))
                 return None
+
+    def update_views(self):
+        """Default builder fo the stats views
+        The V of MVC
+        A dict of dict with the needed information to display the stats.
+        Example for the stat xxx:
+        'xxx': {'decoration': 'DEFAULT',
+                'optional': False,
+                'additional': False,
+                'splittable': False}
+        """
+        ret = {}
+
+        if type(self.get_raw()) is list and self.get_raw() is not None and self.get_key() is not None:
+            # Stats are stored in a list of dict (ex: NETWORK, FS...)
+            for i in self.get_raw():
+                ret[i[self.get_key()]] = {}
+                for key in i.keys():
+                    value = {'decoration': 'DEFAULT',
+                             'optional': False,
+                             'additional': False,
+                             'splittable': False}
+                    ret[i[self.get_key()]][key] = value
+        elif type(self.get_raw()) is dict and self.get_raw() is not None:
+            # Stats are stored in a dict (ex: CPU, LOAD...)
+            for key in self.get_raw().keys():
+                value = {'decoration': 'DEFAULT',
+                         'optional': False,
+                         'additional': False,
+                         'splittable': False}
+                ret[key] = value
+
+        self.views = ret
+
+        return self.views
+
+    def set_views(self, input_views):
+        """Set the views to input_views."""
+        self.views = input_views
+        return self.views
+
+    def get_views(self, item=None, key=None, option=None):
+        """Return the views object.
+        If key is None, return all the view for the current plugin
+        else if option is None return the view for the specific key (all option)
+        else return the view fo the specific key/option
+
+        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)"""
+
+        if item is None:
+            item_views = self.views
+        else:
+            item_views = self.views[item]
+
+        if key is None:
+            return item_views
+        else:
+            if option is None:
+                return item_views[key]
+            else:
+                return item_views[key][option]
 
     def load_limits(self, config):
         """Load the limits from the configuration file."""
@@ -263,6 +334,8 @@ class GlancesPlugin(object):
                 except ValueError:
                     self.limits[
                         self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
+                logger.debug("Load limit: {0} = {1}".format(self.plugin_name + '_' + s,
+                                                            self.limits[self.plugin_name + '_' + s]))
 
     def set_limits(self, input_limits):
         """Set the limits to input_limits."""
@@ -286,7 +359,9 @@ class GlancesPlugin(object):
         If defined 'header' is added between the plugin name and the status.
         Only useful for stats with several alert status.
 
-        If log=True than return the logged status.
+        If log=True than add log if necessary
+        elif log=False than do not log
+        elig log=None than apply the config given in the conf file
         """
         # Compute the %
         try:
@@ -296,33 +371,58 @@ class GlancesPlugin(object):
         except TypeError:
             return 'DEFAULT'
 
+        # Build the stat_name = plugin_name + header
+        if header == "":
+            stat_name = self.plugin_name
+        else:
+            stat_name = self.plugin_name + '_' + header
+
         # Manage limits
         ret = 'OK'
         try:
-            if value > self.__get_limit_critical(header=header):
+            if value > self.__get_limit('critical', stat_name=stat_name):
                 ret = 'CRITICAL'
-            elif value > self.__get_limit_warning(header=header):
+            elif value > self.__get_limit('warning', stat_name=stat_name):
                 ret = 'WARNING'
-            elif value > self.__get_limit_careful(header=header):
+            elif value > self.__get_limit('careful', stat_name=stat_name):
                 ret = 'CAREFUL'
             elif current < min:
                 ret = 'CAREFUL'
         except KeyError:
             return 'DEFAULT'
 
-        # Manage log (if needed)
+        # Manage log
         log_str = ""
-        if log:
+        if self.__get_limit_log(stat_name=stat_name, default_action=log):
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
-            # Get the stat_name = plugin_name (+ header)
-            if header == "":
-                stat_name = self.plugin_name
-            else:
-                stat_name = self.plugin_name + '_' + header
             # Add the log to the list
             glances_logs.add(ret, stat_name.upper(), value, [])
+
+        # Manage action
+        # Here is a command line for the current trigger ?
+        try:
+            command = self.__get_limit_action(ret.lower(), stat_name=stat_name)
+        except KeyError:
+            # Reset the trigger
+            self.actions.set(stat_name, ret.lower())
+        else:
+            # A command line is available for the current alert, run it
+            # Build the {{mustache}} dictionnary
+            if type(self.stats) is list:
+                # If the stats are stored in a list of dict (fs plugin for exemple)
+                # Return the dict for the current header
+                try:
+                    mustache_dict = (
+                        item for item in self.stats if item[self.get_key()] == header).next()
+                except StopIteration:
+                    mustache_dict = {}
+            else:
+                # Use the stats dict
+                mustache_dict = self.stats
+            self.actions.run(
+                stat_name, ret.lower(), command, mustache_dict=mustache_dict)
 
         # Default is ok
         return ret + log_str
@@ -331,26 +431,54 @@ class GlancesPlugin(object):
         """Get the alert log."""
         return self.get_alert(current, min, max, header, log=True)
 
-    def __get_limit_critical(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'critical']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'critical']
+    def __get_limit(self, criticity, stat_name=""):
+        """Return the limit value for the alert"""
+        # Get the limit for stat + header
+        # Exemple: network_wlan0_rx_careful
+        try:
+            limit = self.limits[stat_name + '_' + criticity]
+        except KeyError:
+            # Try fallback to plugin default limit
+            # Exemple: network_careful
+            limit = self.limits[self.plugin_name + '_' + criticity]
 
-    def __get_limit_warning(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'warning']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'warning']
+        # Return the limit
+        return limit
 
-    def __get_limit_careful(self, header=""):
-        if header == "":
-            return self.limits[self.plugin_name + '_' + 'careful']
-        else:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'careful']
+    def __get_limit_action(self, criticity, stat_name=""):
+        """Return the action for the alert"""
+        # Get the action for stat + header
+        # Exemple: network_wlan0_rx_careful_action
+        try:
+            ret = self.limits[stat_name + '_' + criticity + '_action']
+        except KeyError:
+            # Try fallback to plugin default limit
+            # Exemple: network_careful_action
+            ret = self.limits[self.plugin_name + '_' + criticity + '_action']
+
+        # Return the action list
+        return ret
+
+    def __get_limit_log(self, stat_name, default_action=False):
+        """Return the log tag for the alert"""
+        # Get the log tag for stat + header
+        # Exemple: network_wlan0_rx_log
+        try:
+            log_tag = self.limits[stat_name + '_log']
+        except KeyError:
+            # Try fallback to plugin default log
+            # Exemple: network_log
+            try:
+                log_tag = self.limits[self.plugin_name + '_log']
+            except KeyError:
+                # By defaukt, log are disabled
+                return default_action
+
+        # Return the action list
+        return log_tag[0].lower() == 'true'
 
     def get_conf_value(self, value, header="", plugin_name=None):
-        """Return the configuration (header_)value for the current plugin (or the one given by the plugin_name var)"""
+        """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
         if plugin_name is None:
             plugin_name = self.plugin_name
         if header == "":
