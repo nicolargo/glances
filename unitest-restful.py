@@ -124,8 +124,6 @@ class TestGlances(unittest.TestCase):
 
         plist = requests.get("%s/%s" % (URL, method))
 
-        print(plist.json())
-
         for p in plist.json():
             print("HTTP RESTFul request: %s/%s" % (URL, p))
             req = requests.get("%s/%s" % (URL, p))
@@ -174,6 +172,43 @@ class TestGlances(unittest.TestCase):
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), types.DictType)
+
+    def test_007_all_views(self):
+        """All"""
+        method = "all/views"
+        print('INFO: [TEST_007] Get all views')
+
+        print("HTTP RESTFul request: %s/%s" % (URL, method))
+        req = requests.get("%s/%s" % (URL, method))
+
+        self.assertTrue(req.ok)
+        self.assertIsInstance(req.json(), types.DictType)
+
+    def test_008_plugins_limits(self):
+        """Plugins limits"""
+        method = "pluginslist"
+        print('INFO: [TEST_008] Plugins limits')
+
+        plist = requests.get("%s/%s" % (URL, method))
+
+        for p in plist.json():
+            print("HTTP RESTFul request: %s/%s/limits" % (URL, p))
+            req = requests.get("%s/%s/limits" % (URL, p))
+            self.assertTrue(req.ok)
+            self.assertIsInstance(req.json(), types.DictType)
+
+    def test_009_plugins_views(self):
+        """Plugins views"""
+        method = "pluginslist"
+        print('INFO: [TEST_009] Plugins views')
+
+        plist = requests.get("%s/%s" % (URL, method))
+
+        for p in plist.json():
+            print("HTTP RESTFul request: %s/%s/views" % (URL, p))
+            req = requests.get("%s/%s/views" % (URL, p))
+            self.assertTrue(req.ok)
+            self.assertIsInstance(req.json(), types.DictType)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server"""

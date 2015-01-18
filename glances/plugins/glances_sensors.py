@@ -172,13 +172,10 @@ class Plugin(GlancesPlugin):
                 msg = '{0:18}'.format(label)
                 ret.append(self.curse_add_line(msg))
                 msg = '{0:>5}'.format(i['value'])
-                try:
-                    ret.append(self.curse_add_line(
-                        msg, self.get_views(item=i[self.get_key()],
-                                            key='value',
-                                            option='decoration')))
-                except TypeError:
-                    pass
+                ret.append(self.curse_add_line(
+                    msg, self.get_views(item=i[self.get_key()],
+                                        key='value',
+                                        option='decoration')))
 
         return ret
 

@@ -70,8 +70,10 @@ class GlancesBottle(object):
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
+        self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
+        self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
@@ -151,7 +153,7 @@ class GlancesBottle(object):
         self.stats.update()
 
         try:
-            # Get the JSON value of the stat ID
+            # Get the JSON value of the stat value
             statval = json.dumps(self.stats.getAllAsDict())
         except Exception as e:
             abort(404, "Cannot get stats (%s)" % str(e))
@@ -168,10 +170,27 @@ class GlancesBottle(object):
         response.content_type = 'application/json'
 
         try:
-            # Get the JSON value of the stat ID
+            # Get the JSON value of the stat limits
             limits = json.dumps(self.stats.getAllLimitsAsDict())
         except Exception as e:
             abort(404, "Cannot get limits (%s)" % (str(e)))
+        return limits
+
+    def _api_all_views(self):
+        """
+        Glances API RESTFul implementation
+        Return the JSON representation of all the plugins views
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the stat view
+            limits = json.dumps(self.stats.getAllViewsAsDict())
+        except Exception as e:
+            abort(404, "Cannot get views (%s)" % (str(e)))
         return limits
 
     def _api(self, plugin):
@@ -214,11 +233,34 @@ class GlancesBottle(object):
         # self.stats.update()
 
         try:
-            # Get the JSON value of the stat ID
-            limits = self.stats.get_plugin(plugin).get_limits()
+            # Get the JSON value of the stat limits
+            ret = self.stats.get_plugin(plugin).get_limits()
         except Exception as e:
             abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
-        return limits
+        return ret
+
+    def _api_views(self, plugin):
+        """
+        Glances API RESTFul implementation
+        Return the JSON views of a given plugin
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        # self.stats.update()
+
+        try:
+            # Get the JSON value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views()
+        except Exception as e:
+            abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
+        return ret
 
     def _api_item(self, plugin, item):
         """

@@ -72,6 +72,9 @@ class Plugin(GlancesPlugin):
             # No standard way for the moment...
             pass
 
+        # Update the view
+        self.update_views()
+
         return self.stats
 
     def msg_curse(self, args=None):
