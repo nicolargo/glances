@@ -253,7 +253,7 @@ glancesApp.controller('bodyController', [ '$scope', '$http', '$interval', '$q', 
     		$scope.showHide('network')
     	} else if ($event.keyCode == keycodes.s) {//s  Show/hide sensors stats
     		$scope.showHide('sensors')
-    	} else if ($event.keyCode == keycodes.TWO) {//2  Show/hide left sidebar
+    	} else if ($event.keyCode == keycodes.TWO && $event.shiftKey) {//2  Show/hide left sidebar
     		$scope.showHide('sidebar')
     	} else if ($event.keyCode == keycodes.z) {//z  Enable/disable processes stats
     		//$scope.enableDisable('processStats')

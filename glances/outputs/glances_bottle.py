@@ -154,14 +154,8 @@ class GlancesBottle(object):
                 path = "D:\\glances\\"
             filepath = path + "debug.json"
             
-            if os.path.exists(filepath):
-                logger.debug("File exists : {0}.".format(filepath))
-                
-                f = open(path + "debug.json")
-                return f.read()
-            
-            logger.warn("File does not exist : {0}.".format(filepath))
-            return ""
+            f = open("/home/sylvain/glances/debug.json")
+            return f.read()
 
     def _api(self, plugin):
         """
