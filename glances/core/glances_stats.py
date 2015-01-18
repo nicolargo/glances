@@ -190,6 +190,17 @@ class GlancesStats(object):
             ret[p] = self._plugins[p].get_limits()
         return ret
 
+    def getAllViews(self):
+        """Return the plugins views"""
+        return [self._plugins[p].get_views() for p in self._plugins]
+
+    def getAllViewsAsDict(self):
+        """Return all the stats views (dict)"""
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self._plugins[p].get_views()
+        return ret
+
     def get_plugin_list(self):
         """Return the plugin list."""
         self._plugins

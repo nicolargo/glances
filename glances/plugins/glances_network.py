@@ -195,7 +195,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in self.stats:
             ifrealname = i['interface_name'].split(':')[0]
             self.views[i[self.get_key()]]['rx']['decoration'] = self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
                                                                                header=ifrealname + '_rx')

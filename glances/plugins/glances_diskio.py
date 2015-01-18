@@ -134,7 +134,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in self.stats:
             disk_real_name = i['disk_name']
             self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(int(i['read_bytes'] // i['time_since_update']),
                                                                                        header=disk_real_name + '_rx')
