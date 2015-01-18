@@ -121,11 +121,12 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         GlancesPlugin.update_views(self)
 
-        # Add specifics informations
-        # Alert and log
-        self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])
-        # Alert only
-        self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])
+        if self.views != {}:
+            # Add specifics informations
+            # Alert and log
+            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])
+            # Alert only
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
