@@ -29,7 +29,7 @@ from glances.core.glances_logging import logger
 
 
 try:
-    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response, request
+    from bottle import Bottle, static_file, abort, response, request
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -54,9 +54,6 @@ class GlancesBottle(object):
         # Define routes
         self._route()
 
-        # Update the template path (glances/outputs/bottle)
-        TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
-
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
@@ -64,15 +61,24 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
+        self._app.route('/help', method="GET", callback=self._help)
+        
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
+        self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
+        self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
+        
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
+
         # REST API
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
+        self._app.route('/api/2/pluginslimits', method="GET", callback=self._api_plugins_limits)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
+        self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
+        self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
@@ -104,8 +110,17 @@ class GlancesBottle(object):
         self.stats.update()
 
         # Display
-        return self.display(self.stats, refresh_time=refresh_time)
+        return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
 
+    def _help(self):
+        """Bottle callback for /help """
+        return static_file("help.html", root=os.path.join(self.STATIC_PATH, 'html'))
+
+    def _html(self, filename):
+        """Bottle callback for *.html files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'html'))
+    
     def _css(self, filename):
         """Bottle callback for *.css files."""
         # Return the static file
@@ -116,6 +131,11 @@ class GlancesBottle(object):
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
+    def _js_map(self, filename):
+        """Bottle callback for *.js.map files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+    
     def _favicon(self):
         """Bottle callback for favicon."""
         # Return the static file
@@ -138,6 +158,25 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
 
+    def _api_plugins_limits(self):
+        """
+        Glances API RESTFul implementation
+        Return the limits for each plugins
+        or 404 error
+        """
+        response.content_type = 'application/json'
+
+        result = {}
+        for plugin in self.plugins_list:
+            try:
+                # Get the JSON value of the stat ID
+                limits = self.stats.get_plugin(plugin).get_limits()
+                result[plugin] = limits
+            except Exception as e:
+                pass
+        return result
+
+    
     def _api_all(self):
         """
         Glances API RESTFul implementation
@@ -160,9 +199,11 @@ class GlancesBottle(object):
             return statval
         else:
             path = "~/glances/"
-            if is_windows:
+            if is_windows:  
                 path = "D:\\glances\\"
-            f = open(path + "debug.json")
+            filepath = path + "debug.json"
+            
+            f = open(filepath)
             return f.read()
 
     def _api_all_limits(self):
@@ -176,10 +217,27 @@ class GlancesBottle(object):
         response.content_type = 'application/json'
 
         try:
-            # Get the JSON value of the stat ID
+            # Get the JSON value of the stat limits
             limits = json.dumps(self.stats.getAllLimitsAsDict())
         except Exception as e:
             abort(404, "Cannot get limits (%s)" % (str(e)))
+        return limits
+
+    def _api_all_views(self):
+        """
+        Glances API RESTFul implementation
+        Return the JSON representation of all the plugins views
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the stat view
+            limits = json.dumps(self.stats.getAllViewsAsDict())
+        except Exception as e:
+            abort(404, "Cannot get views (%s)" % (str(e)))
         return limits
 
     def _api(self, plugin):
@@ -222,11 +280,34 @@ class GlancesBottle(object):
         # self.stats.update()
 
         try:
-            # Get the JSON value of the stat ID
-            limits = self.stats.get_plugin(plugin).get_limits()
+            # Get the JSON value of the stat limits
+            ret = self.stats.get_plugin(plugin).get_limits()
         except Exception as e:
             abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
-        return limits
+        return ret
+
+    def _api_views(self, plugin):
+        """
+        Glances API RESTFul implementation
+        Return the JSON views of a given plugin
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        # self.stats.update()
+
+        try:
+            # Get the JSON value of the stat views
+            ret = self.stats.get_plugin(plugin).get_views()
+        except Exception as e:
+            abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
+        return ret
 
     def _api_item(self, plugin, item):
         """
@@ -275,15 +356,15 @@ class GlancesBottle(object):
         else:
             return pdict
 
-    def display(self, stats, refresh_time=None):
-        """Display stats on the web page.
+    # def display(self, stats, refresh_time=None):
+    #     """Display stats on the web page.
 
-        stats: Stats database to display
-        """
+    #     stats: Stats database to display
+    #     """
 
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
-        f = open(path)
-        return f.read()
+    #     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
+    #     f = open(path)
+    #     return f.read()
 
 
 class EnableCors(object):
