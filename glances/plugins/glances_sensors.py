@@ -136,6 +136,8 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         # Alert
         for i in self.stats:
+            if i['value'] == []:
+                continue
             if i['type'] == 'battery':
                 self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
             else:
