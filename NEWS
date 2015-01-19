@@ -13,7 +13,7 @@ Enhancements and news features:
     * Refactor export module (CSV export option is now --export-csv). It is now possible to export stats from the Glances client mode (issue #463)
     * The Web inteface is now based on BootStarp / RWD grid (issue #417, #366 and #461) Thanks to Nicolas Hart @nclsHart
     * Add the RAID plugin (issue #447)
-    * Add the Docker plugin (issue #440)
+    * Add the Docker plugin (issue #440) with per container CPU and memory monitoring (issue #490) 
     * It is possible, through the configuration file, to define if an alarm should be logged or not (using the _log option) (issue #437)
     * You can now set alarm for Disk IO
     * API: add getAllLimits and getAllViews methods (issue#481)
