@@ -35,7 +35,7 @@ oid_to_short_system_name = {'.*Linux.*': 'linux',
                             '.*Windows.*': 'windows',
                             '.*Cisco.*': 'cisco',
                             '.*VMware ESXi.*': 'esxi',
-			                '.*NetApp.*': 'netapp'}
+                            '.*NetApp.*': 'netapp'}
 
 
 class GlancesStats(object):
@@ -147,23 +147,13 @@ class GlancesStats(object):
             # logger.debug("Load limits for %s" % p)
             self._plugins[p].load_limits(config)
 
-    def __update__(self, input_stats):
-        """Update all the stats."""
-        if input_stats == {}:
-            # For standalone and server modes
-            # For each plugins, call the update method
-            for p in self._plugins:
-                # logger.debug("Update %s stats" % p)
-                self._plugins[p].update()
-        else:
-            # For Glances client mode
-            # Update plugin stats with items sent by the server
-            for p in input_stats:
-                self._plugins[p].set_stats(input_stats[p])
-
-    def update(self, input_stats={}):
+    def update(self):
         """Wrapper method to update the stats."""
-        self.__update__(input_stats)
+        # For standalone and server modes
+        # For each plugins, call the update method
+        for p in self._plugins:
+            # logger.debug("Update %s stats" % p)
+            self._plugins[p].update()
 
     def export(self, input_stats={}):
         """Export all the stats.
@@ -189,11 +179,26 @@ class GlancesStats(object):
             ret[p] = self._plugins[p].get_raw()
         return ret
 
+    def getAllLimits(self):
+        """Return the plugins limits list."""
+        return [self._plugins[p].get_limits() for p in self._plugins]
+
     def getAllLimitsAsDict(self):
         """Return all the stats limits (dict)"""
         ret = {}
         for p in self._plugins:
             ret[p] = self._plugins[p].get_limits()
+        return ret
+
+    def getAllViews(self):
+        """Return the plugins views"""
+        return [self._plugins[p].get_views() for p in self._plugins]
+
+    def getAllViewsAsDict(self):
+        """Return all the stats views (dict)"""
+        ret = {}
+        for p in self._plugins:
+            ret[p] = self._plugins[p].get_views()
         return ret
 
     def get_plugin_list(self):
@@ -228,11 +233,19 @@ class GlancesStatsServer(GlancesStats):
 
     def update(self, input_stats={}):
         """Update the stats."""
+        # Force update of all the stats
         GlancesStats.update(self)
 
+        # Build all_stats variable (concatenation of all the stats)
+        self.all_stats = self._set_stats(input_stats)
+
+    def _set_stats(self, input_stats):
+        """Set the stats to the input_stats one"""
         # Build the all_stats with the get_raw() method of the plugins
+        ret = collections.defaultdict(dict)
         for p in self._plugins:
-            self.all_stats[p] = self._plugins[p].get_raw()
+            ret[p] = self._plugins[p].get_raw()
+        return ret
 
     def getAll(self):
         """Return the stats as a list"""
@@ -246,21 +259,6 @@ class GlancesStatsServer(GlancesStats):
         for p in self._plugins:
             ret[p] = self.all_stats[p]
         return ret
-
-    def getAllLimitsAsDict(self):
-        """Return the stats limits as a dict"""
-        ret = {}
-        for p in self._plugins:
-            ret[p] = self._plugins[p].get_limits()
-        return ret
-
-    def getAllPlugins(self):
-        """Return the plugins list."""
-        return [p for p in self._plugins]
-
-    def getAllLimits(self):
-        """Return the plugins limits list."""
-        return [self._plugins[p].get_limits() for p in self._plugins]
 
 
 class GlancesStatsClient(GlancesStats):
@@ -293,10 +291,19 @@ class GlancesStatsClient(GlancesStats):
             # The key is the plugin name
             # for example, the file glances_xxx.py
             # generate self._plugins_list["xxx"] = ...
-            logger.debug("Init {0} plugin".format(item))
+            logger.debug("Server uses {0} plugin".format(item))
             self._plugins[item] = plugin.Plugin()
         # Restoring system path
         sys.path = sys_path
+
+    def update(self, input_stats):
+        """Update all the stats."""
+        # For Glances client mode
+        for p in input_stats:
+            # Update plugin stats with items sent by the server
+            self._plugins[p].set_stats(input_stats[p])
+            # Update the views for the updated stats
+            self._plugins[p].update_views()
 
 
 class GlancesStatsClientSNMP(GlancesStats):
