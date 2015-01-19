@@ -108,7 +108,11 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
+
             pass
+
+        # Update the view
+        self.update_views()
 
         return self.stats
 
@@ -123,6 +127,19 @@ class Plugin(GlancesPlugin):
         for i in stats:
             i.update({'type': sensor_type})
         return stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert
+        for i in self.stats:
+            if i['type'] == 'battery':
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
+            else:
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(i['value'], header=i['type'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -143,27 +160,22 @@ class Plugin(GlancesPlugin):
             msg = '{0:>6}'.format(_("°C"))
         ret.append(self.curse_add_line(msg))
 
-        for item in self.stats:
-            if item['value'] is not None and item['value'] != []:
+        for i in self.stats:
+            if i['value'] is not None and i['value'] != []:
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
-                label = self.has_alias(item['label'].lower())
+                label = self.has_alias(i['label'].lower())
                 if label is None:
-                    label = item['label']
+                    label = i['label']
                 label = label[:18]
                 msg = '{0:18}'.format(label)
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>5}'.format(item['value'])
-                if item['type'] == 'battery':
-                    try:
-                        ret.append(self.curse_add_line(
-                            msg, self.get_alert(100 - item['value'], header=item['type'])))
-                    except TypeError:
-                        pass
-                else:
-                    ret.append(
-                        self.curse_add_line(msg, self.get_alert(item['value'], header=item['type'])))
+                msg = '{0:>5}'.format(i['value'])
+                ret.append(self.curse_add_line(
+                    msg, self.get_views(item=i[self.get_key()],
+                                        key='value',
+                                        option='decoration')))
 
         return ret
 
