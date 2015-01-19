@@ -16,6 +16,7 @@ Enhancements and news features:
     * Add the Docker plugin (issue #440)
     * It is possible, through the configuration file, to define if an alarm should be logged or not (using the _log option) (issue #437)
     * You can now set alarm for Disk IO
+    * API: add getAllLimits and getAllViews methods (issue#481)
 
 Bugs corrected:
 

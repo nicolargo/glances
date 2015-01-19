@@ -122,7 +122,24 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history('disk_name')
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        # Add specifics informations
+        # Alert
+        for i in self.stats:
+            disk_real_name = i['disk_name']
+            self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(int(i['read_bytes'] // i['time_since_update']),
+                                                                                       header=disk_real_name + '_rx')
+            self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(int(i['write_bytes'] // i['time_since_update']),
+                                                                                        header=disk_real_name + '_tx')
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -164,11 +181,13 @@ class Plugin(GlancesPlugin):
                 int(i['write_bytes'] // i['time_since_update']))
             msg = '{0:>7}'.format(txps)
             ret.append(self.curse_add_line(msg,
-                                           self.get_alert(int(i['read_bytes'] // i['time_since_update']),
-                                                          header=disk_real_name + '_rx')))
+                                           self.get_views(item=i[self.get_key()],
+                                                          key='read_bytes',
+                                                          option='decoration')))
             msg = '{0:>7}'.format(rxps)
             ret.append(self.curse_add_line(msg,
-                                           self.get_alert(int(i['write_bytes'] // i['time_since_update']),
-                                                          header=disk_real_name + '_tx')))
+                                           self.get_views(item=i[self.get_key()],
+                                                          key='write_bytes',
+                                                          option='decoration')))
 
         return ret

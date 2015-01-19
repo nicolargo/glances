@@ -111,7 +111,22 @@ class Plugin(GlancesPlugin):
         # Update the history list
         self.update_stats_history()
 
+        # Update the view
+        self.update_views()
+
         return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+        if self.views != {}:
+            # Add specifics informations
+            # Alert and log
+            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])
+            # Alert only
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -144,7 +159,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6.2f}'.format(self.stats['min5'])
         ret.append(self.curse_add_line(
-            msg, self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])))
+            msg, self.get_views(key='min5', option='decoration')))
         # New line
         ret.append(self.curse_new_line())
         # 15min load
@@ -152,6 +167,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6.2f}'.format(self.stats['min15'])
         ret.append(self.curse_add_line(
-            msg, self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])))
+            msg, self.get_views(key='min15', option='decoration')))
 
         return ret
