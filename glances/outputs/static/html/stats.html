@@ -1,5 +1,11 @@
-
-    <div ng-show="!result" class="container-fluid">Loading...</div>
+    <div ng-show="!result" class="container-fluid" id="loading-page">
+        <div class="row">
+            <div class="col-sm-6 col-sm-offset-3">
+                <div class="glances-logo"></div>
+                <div class="loader">Loading...</div>
+            </div>
+        </div>
+    </div>
     <div ng-show="result" class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
@@ -47,7 +53,7 @@
                         </div>
                     </div>
 
-		            <div class="table" ng-show="show.per_cpu">
+    	            <div class="table" ng-show="show.per_cpu">
                         <div class="table-row">
                             <div class="table-cell text-left title">PER CPU</div>
                             <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
@@ -273,9 +279,9 @@
                 <section id="alert" class="plugin" ng-show="show.alert">
                     <div class="table">
                         <div class="table-row" ng-repeat="alert in result['alert']">
-		                    <div class="table-cell text-left">
-{{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
-							</div>
+    	                    <div class="table-cell text-left">
+    {{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
+    						</div>
                         </div>
                     </div>
                 </section>
