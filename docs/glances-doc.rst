@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.2.
+This manual describes *Glances* version 2.3.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-Junuary 2015
+January 2015
 
 .. contents:: Table of Contents
 
@@ -719,7 +719,7 @@ By action, we mean all shell command line. For example, if you want to execute t
   critical=5.0
   critical_action=python /path/to/foo.py
 
-All the stats are usable in the command line by the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a warning space trigger is reached:
+All the stats are available in the command line through the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a space trigger warning is reached:
 
   [fs]
   warning=70
