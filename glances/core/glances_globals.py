@@ -28,7 +28,7 @@ version = __import__('glances').__version__
 psutil_version = __import__('glances').__psutil_version
 
 # PY3?
-is_py3 = sys.version_info >= (3, 3)
+is_py3 = sys.version_info >= (3, 0)
 
 # Operating system flag
 # Note: Somes libs depends of OS
