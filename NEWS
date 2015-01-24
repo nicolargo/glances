@@ -23,6 +23,10 @@ Bugs corrected:
 
     *  R/W error with the glances.log file (issue #474) 
 
+Other enhancement:
+    
+    * Alert < 3 seconds are no longer displayed
+
 Version 2.2.1
 =============
 
