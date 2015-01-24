@@ -47,6 +47,7 @@
                 <div class="col-sm-9">
                     % include('plugin_table', plugin_name="alert", stats=stats['alert'])
                     % include('plugin_text', plugin_name="processcount", stats=stats['processcount'])
+                    % include('plugin_table', plugin_name="docker", stats=stats['docker'])
                     <div class="row">
                         <div class="col-sm-9">
                             % include('plugin_table', plugin_name="monitor", stats=stats['monitor'])        

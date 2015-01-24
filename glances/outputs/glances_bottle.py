@@ -330,7 +330,8 @@ class GlancesBottle(object):
             'alert': self.stats.get_plugin('alert').get_stats_display(args=self.args),
             'processcount': self.stats.get_plugin('processcount').get_stats_display(args=self.args),
             'monitor': self.stats.get_plugin('monitor').get_stats_display(args=self.args),
-            'processlist': self.stats.get_plugin('processlist').get_stats_display(args=self.args)
+            'processlist': self.stats.get_plugin('processlist').get_stats_display(args=self.args),
+            'docker': self.stats.get_plugin('docker').get_stats_display(args=self.args)
         }
 
         return template('base', refresh_time=refresh_time, stats=stats)
