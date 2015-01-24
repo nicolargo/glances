@@ -151,7 +151,7 @@ class GlancesLogs(object):
                 self.reset_process_sort()
 
                 endtime = time.mktime(datetime.now().timetuple())
-                if endtime - self.logs_list[item_index][0] > self.peak_time:
+                if endtime - self.logs_list[item_index][0] > peak_time:
                     # If event is > peak_time seconds
                     self.logs_list[item_index][1] = endtime
                 else:
