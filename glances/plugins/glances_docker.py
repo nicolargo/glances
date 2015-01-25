@@ -76,17 +76,20 @@ class Plugin(GlancesPlugin):
             # Connexion error (Docker not detected)
             # Let this message in debug mode
             logger.debug("Can't connect to the Docker server (%s)" % e)
-            ret = None
+            return None
         except docker.errors.APIError as e:
             if version is None:
                 # API error (Version mismatch ?)
                 logger.debug("Docker API error (%s)" % e)
                 # Try the connection with the server version
                 import re
-                version = re.search('server\:\ (.*)\)\"\)', str(e))
+                version = re.search('server\:\ (.*)\)\".*\)', str(e))
                 if version:
                     logger.debug("Try connection with Docker API version %s" % version.group(1))
                     ret = self.connect(version=version.group(1))
+                else:
+                    logger.debug("Can not retreive Docker server version")
+                    ret = None
             else:
                 # API error
                 logger.error("Docker API error (%s)" % e)
@@ -96,6 +99,10 @@ class Plugin(GlancesPlugin):
             # Connexion error (Docker not detected)
             logger.error("Can't connect to the Docker server (%s)" % e)
             ret = None
+
+        # Log an info if Docker plugin is disabled
+        if ret is None:
+            logger.debug("Docker plugin is disable because an error has been detected")
 
         return ret
 
