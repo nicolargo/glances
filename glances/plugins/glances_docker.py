@@ -168,13 +168,17 @@ class Plugin(GlancesPlugin):
         Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}"""
         ret = {}
         # Read the stats
-        with open('/sys/fs/cgroup/cpuacct/docker/' + id + '/cpuacct.stat', 'r') as f:
-            for line in f:
-                m = re.search(r"(system|user)\s+(\d+)", line)
-                if m:
-                    ret[m.group(1)] = int(m.group(2))
+        try:
+            with open('/sys/fs/cgroup/cpuacct/docker/' + id + '/cpuacct.stat', 'r') as f:
+                for line in f:
+                    m = re.search(r"(system|user)\s+(\d+)", line)
+                    if m:
+                        ret[m.group(1)] = int(m.group(2))
+        except IOError as e:
+            logger.error("Can not grab container CPU stat ({0})".format(e))
+            return ret
         # Get the user ticks
-        ticks = self.get_user_ticks()
+        ticks = self.get_user_ticks()        
         if isinstance(ret["system"], numbers.Number) and isinstance(ret["user"], numbers.Number):
             ret["total"] = ret["system"] + ret["user"]
             for k in ret.keys():
@@ -188,11 +192,15 @@ class Plugin(GlancesPlugin):
         Output: a dict {'rss': 1015808, 'cache': 356352}"""
         ret = {}
         # Read the stats
-        with open('/sys/fs/cgroup/memory/docker/' + id + '/memory.stat', 'r') as f:
-            for line in f:
-                m = re.search(r"(rss|cache)\s+(\d+)", line)
-                if m:
-                    ret[m.group(1)] = int(m.group(2))
+        try:
+            with open('/sys/fs/cgroup/memory/docker/' + id + '/memory.stat', 'r') as f:
+                for line in f:
+                    m = re.search(r"(rss|cache)\s+(\d+)", line)
+                    if m:
+                        ret[m.group(1)] = int(m.group(2))
+        except IOError as e:
+            logger.error("Can not grab container MEM stat ({0})".format(e))
+            return ret
         # Return the stats
         return ret
 
