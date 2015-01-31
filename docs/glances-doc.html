@@ -123,9 +123,9 @@ td.option-group {
 <div class="document" id="glances">
 <h1 class="title">Glances</h1>
 
-<p>This manual describes <em>Glances</em> version 2.2.1.</p>
-<p>Copyright © 2012-2014 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>December 2014</p>
+<p>This manual describes <em>Glances</em> version 2.3.</p>
+<p>Copyright © 2011-2015 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
+<p>January 2015</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -156,11 +156,13 @@ td.option-group {
 <li><a class="reference internal" href="#processes-list" id="id25">Processes List</a></li>
 <li><a class="reference internal" href="#monitored-processes-list" id="id26">Monitored Processes List</a></li>
 <li><a class="reference internal" href="#logs" id="id27">Logs</a></li>
+<li><a class="reference internal" href="#docker" id="id28">Docker</a></li>
+<li><a class="reference internal" href="#actions" id="id29">Actions</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#other-outputs" id="id28">Other Outputs</a></li>
-<li><a class="reference internal" href="#apis-documentations" id="id29">APIs Documentations</a></li>
-<li><a class="reference internal" href="#support" id="id30">Support</a></li>
+<li><a class="reference internal" href="#gateway-to-others-services" id="id30">Gateway to others services</a></li>
+<li><a class="reference internal" href="#apis-documentations" id="id31">APIs Documentations</a></li>
+<li><a class="reference internal" href="#support" id="id32">Support</a></li>
 </ul>
 </div>
 <div class="section" id="introduction">
@@ -235,6 +237,7 @@ device with a web browser, just run the server with the <tt class="docutils lite
 http://&#64;server:61208
 </pre>
 <p>where <tt class="docutils literal">&#64;server</tt> is the IP address or hostname of the server.</p>
+<p>To change the refresh rate of the page, just add the period in seconds between refreshes at the end of the URL, ie. to refresh every 10s, use <tt class="docutils literal"><span class="pre">http://&#64;server:61208/10</span></tt>.</p>
 <p>The Glances web interface follows responsive web design principles.</p>
 <p>Screenshot from Chrome on Android</p>
 <img alt="images/screenshot-web2.png" src="images/screenshot-web2.png" />
@@ -308,9 +311,17 @@ http://&#64;server:61208
 </tr>
 <tr><td>&nbsp;</td><td>Set the export path for graph history</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--output-csv <var>OUTPUT_CSV</var></span></kbd></td>
+<kbd><span class="option">--export-csv <var>CSV_FILE</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>export stats to a CSV file</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--export-influxdb</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>export stats to an InfluxDB server</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--export-statsd</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>export stats to a Statsd server</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-c <var>CLIENT</var></span>, <span class="option">--client <var>CLIENT</var></span></kbd></td>
 </tr>
@@ -442,7 +453,7 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">F</tt></dt>
 <dd>Switch between FS used and free space</dd>
 <dt><tt class="docutils literal">g</tt></dt>
-<dd>Generate hraphs for current history</dd>
+<dd>Generate graphs for current history</dd>
 <dt><tt class="docutils literal">h</tt></dt>
 <dd>Show/hide the help screen</dd>
 <dt><tt class="docutils literal">i</tt></dt>
@@ -532,6 +543,28 @@ cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
 </pre>
 <p>On OS X, you should copy the configuration file to
 <tt class="docutils literal">~/Library/Application Support/glances/</tt>.</p>
+<p><em>Configuration file description</em></p>
+<p>Each plugin and export module can have a section.</p>
+<p>Example for the CPU plugin:</p>
+<pre class="code literal-block">
+[cpu]
+user_careful=50
+user_warning=70
+user_critical=90
+iowait_careful=50
+iowait_warning=70
+iowait_critical=90
+system_careful=50
+system_warning=70
+system_critical=90
+steal_careful=50
+steal_warning=70
+steal_critical=90
+</pre>
+<p>By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:</p>
+<pre class="code literal-block">
+steal_log=True
+</pre>
 </div>
 <div class="section" id="logs-and-debug-mode">
 <h1><a class="toc-backref" href="#id14">Logs and debug mode</a></h1>
@@ -550,6 +583,7 @@ can ben logged using the -d option on the command line.</p>
 </tr>
 </tbody>
 </table>
+<p>If glances.log is not writable, a new file will be created and returned to the user console.</p>
 </div>
 <div class="section" id="anatomy-of-the-application">
 <h1><a class="toc-backref" href="#id15">Anatomy Of The Application</a></h1>
@@ -667,6 +701,8 @@ adapted dynamically.</p>
 </div>
 <p><em>Note</em>: limit values can be overwritten in the configuration file under
 the <tt class="docutils literal">[filesystem]</tt> section.</p>
+<p>If a RAID controller is detected on you system, its status will be displayed:</p>
+<img alt="images/raid.png" src="images/raid.png" />
 </div>
 <div class="section" id="sensors">
 <h2><a class="toc-backref" href="#id24">Sensors</a></h2>
@@ -833,30 +869,86 @@ progress</li>
 processes list alerts</li>
 </ol>
 </div>
+<div class="section" id="docker">
+<h2><a class="toc-backref" href="#id28">Docker</a></h2>
+<p>If you use Docker, Glances can help you to monitor your container. Glances uses the Docker API through the Docker-Py library.</p>
+<img alt="images/docker.png" src="images/docker.png" />
 </div>
-<div class="section" id="other-outputs">
-<h1><a class="toc-backref" href="#id28">Other Outputs</a></h1>
+<div class="section" id="actions">
+<h2><a class="toc-backref" href="#id29">Actions</a></h2>
+<p>Glances can trigger actions on events.</p>
+<p>By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:</p>
+<pre class="code literal-block">
+[load]
+critical=5.0
+critical_action=python /path/to/foo.py
+</pre>
+<p>All the stats are available in the command line through the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a space trigger warning is reached:</p>
+<pre class="code literal-block">
+[fs]
+warning=70
+warning_action=echo {{mnt_point}} {{used}}/{{size}} &gt; /tmp/fs.alert
+</pre>
+<p><em>Note</em>: You can use all the stats for the current plugin (see <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a> for the stats list)</p>
+</div>
+</div>
+<div class="section" id="gateway-to-others-services">
+<h1><a class="toc-backref" href="#id30">Gateway to others services</a></h1>
+<p><em>CSV</em></p>
 <p>It is possible to export statistics to CSV file.</p>
 <pre class="code console literal-block">
-<span class="generic prompt">$</span> glances --output-csv /tmp/glances.csv
+<span class="generic prompt">$</span> glances --export-csv /tmp/glances.csv
 </pre>
-<p>CSV files have two lines per stats:</p>
-<ul class="simple">
-<li>Stats description</li>
-<li>Stats (comma separated)</li>
-</ul>
+<p>CSV file description:
+- Stats description (first line)
+- Stats (others lines)</p>
+<p><em>InfluxDB</em></p>
+<p>You can export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:</p>
+<pre class="code literal-block">
+[influxdb]
+host=localhost
+port=8086
+user=root
+password=root
+db=glances
+</pre>
+<p>and run Glances with:</p>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances --export-influxdb
+</pre>
+<p><em>Statsd</em></p>
+<p>You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:</p>
+<pre class="code literal-block">
+[statsd]
+host=localhost
+port=8125
+prefix=glances
+</pre>
+<p>Note: the prefix option is optionnal ('glances by default')</p>
+<p>and run Glances with:</p>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances --export-statsd
+</pre>
+<p>Glances will generate stats as:</p>
+<pre class="code literal-block">
+'glances.cpu.user': 12.5,
+'glances.cpu.total': 14.9,
+'glances.load.cpucore': 4,
+'glances.load.min1': 0.19,
+...
+</pre>
 </div>
 <div class="section" id="apis-documentations">
-<h1><a class="toc-backref" href="#id29">APIs Documentations</a></h1>
-<p>Glances includes a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and a <a class="reference external" href="http://jsonapi.org/">RESTFULL-JSON</a> API which and can be used by another client software.</p>
+<h1><a class="toc-backref" href="#id31">APIs Documentations</a></h1>
+<p>Glances includes a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and a <a class="reference external" href="http://jsonapi.org/">RESTFUL-JSON</a> API which and can be used by another client software.</p>
 <p>APIs documentations are available at:</p>
 <ul class="simple">
 <li>XML-RPC: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a></li>
-<li>RESTFULL-JSON: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API</a></li>
+<li>RESTFUL-JSON: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API</a></li>
 </ul>
 </div>
 <div class="section" id="support">
-<h1><a class="toc-backref" href="#id30">Support</a></h1>
+<h1><a class="toc-backref" href="#id32">Support</a></h1>
 <p>To post a question about Glances use case, please post it to the offical Q&amp;A <a class="reference external" href="https://groups.google.com/forum/?hl=en#!forum/glances-users">forum</a>.</p>
 <p>To report a bug or a feature request use the bug tracking system at
 <a class="reference external" href="https://github.com/nicolargo/glances/issues">https://github.com/nicolargo/glances/issues</a>.</p>

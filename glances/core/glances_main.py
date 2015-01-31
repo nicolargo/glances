@@ -66,7 +66,7 @@ Monitor local machine and export stats to a CSV file (standalone mode):\n\
   $ glances --export-csv\n\
 \n\
 Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):\n\
-  $ glances -t 5 --export-influxdb -t 5\n\
+  $ glances -t 5 --export-influxdb\n\
 \n\
 Start a Glances server (server mode):\n\
   $ glances -s\n\
