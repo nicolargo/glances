@@ -1,3 +1,7 @@
+    <div ng-show="!result" class="container-fluid" id="loading-page">
+        <div class="glances-logo"></div>
+        <div class="loader">Loading...</div>
+    </div>
 
     <div ng-show="help_screen" class="container-fluid">
     
@@ -66,7 +70,6 @@
         </div>
     </div>
     
-    <div ng-show="!result && !help_screen" class="container-fluid">Loading...</div>
     <div ng-show="result && !help_screen" class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
@@ -114,7 +117,7 @@
                         </div>
                     </div>
 
-		            <div class="table" ng-show="show.per_cpu">
+    	            <div class="table" ng-show="show.per_cpu">
                         <div class="table-row">
                             <div class="table-cell text-left title">PER CPU</div>
                             <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
@@ -340,9 +343,9 @@
                 <section id="alert" class="plugin" ng-show="show.alert">
                     <div class="table">
                         <div class="table-row" ng-repeat="alert in result['alert']">
-		                    <div class="table-cell text-left">
-{{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
-							</div>
+    	                    <div class="table-cell text-left">
+    {{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
+    						</div>
                         </div>
                     </div>
                 </section>
@@ -363,18 +366,18 @@
                 <section id="processlist" class="plugin">
                     <div class="table">
                         <div class="table-row">
-                            <div id="column_cpu_percent"     ng-click="sort_by('cpu_percent')"    class="table-cell sort sort_desc">CPU%</div>
-                            <div id="column_memory_percent"  ng-click="sort_by('memory_percent')" class="table-cell">MEM%</div>
-                            <div id="column_memvirt"         ng-click="sort_by('memvirt')"        class="table-cell hidden-xs hidden-sm">VIRT</div>
-                            <div id="column_memres"          ng-click="sort_by('memres')"         class="table-cell hidden-xs hidden-sm">RES</div>
-                            <div id="column_pid"             ng-click="sort_by('pid')"            class="table-cell">PID</div>
-                            <div id="column_username"        ng-click="sort_by('username')"       class="table-cell">USER</div>
-                            <div id="column_nice"            ng-click="sort_by('nice')"           class="table-cell">NI</div>
-                            <div id="column_status"          ng-click="sort_by('status')"         class="table-cell">S</div>
-                            <div id="column_timemillis"      ng-click="sort_by('timemillis')"     class="table-cell hidden-xs hidden-sm">TIME+</div>
-                            <div id="column_io_read"         ng-click="sort_by('io_read')"        class="table-cell hidden-xs hidden-sm">IOR/s</div>
-                            <div id="column_io_write"        ng-click="sort_by('io_write')"       class="table-cell hidden-xs hidden-sm">IOW/s</div>
-                            <div id="column_name"            ng-click="sort_by('name')"           class="table-cell">Command</div>
+                            <div id="column_cpu_percent"     ng-click="sortBy('cpu_percent')"    class="table-cell sort sort_desc">CPU%</div>
+                            <div id="column_memory_percent"  ng-click="sortBy('memory_percent')" class="table-cell">MEM%</div>
+                            <div id="column_memvirt"         ng-click="sortBy('memvirt')"        class="table-cell hidden-xs hidden-sm">VIRT</div>
+                            <div id="column_memres"          ng-click="sortBy('memres')"         class="table-cell hidden-xs hidden-sm">RES</div>
+                            <div id="column_pid"             ng-click="sortBy('pid')"            class="table-cell">PID</div>
+                            <div id="column_username"        ng-click="sortBy('username')"       class="table-cell text-left">USER</div>
+                            <div id="column_nice"            ng-click="sortBy('nice')"           class="table-cell">NI</div>
+                            <div id="column_status"          ng-click="sortBy('status')"         class="table-cell">S</div>
+                            <div id="column_timemillis"      ng-click="sortBy('timemillis')"     class="table-cell hidden-xs hidden-sm">TIME+</div>
+                            <div id="column_io_read"         ng-click="sortBy('io_read')"        class="table-cell hidden-xs hidden-sm">IOR/s</div>
+                            <div id="column_io_write"        ng-click="sortBy('io_write')"       class="table-cell hidden-xs hidden-sm">IOW/s</div>
+                            <div id="column_name"            ng-click="sortBy('name')"           class="table-cell text-left">Command</div>
                         </div>
                         <div class="table-row" ng-repeat="process in result['processlist'] | orderBy:sortColumn:!sortOrderAsc">
                             <div class="table-cell" ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</div>

@@ -33,6 +33,9 @@ except ImportError as e:
     docker_tag = False
 else:
     docker_tag = True
+import os
+import re
+import numbers
 
 
 class Plugin(GlancesPlugin):
@@ -73,17 +76,20 @@ class Plugin(GlancesPlugin):
             # Connexion error (Docker not detected)
             # Let this message in debug mode
             logger.debug("Can't connect to the Docker server (%s)" % e)
-            ret = None
+            return None
         except docker.errors.APIError as e:
             if version is None:
                 # API error (Version mismatch ?)
                 logger.debug("Docker API error (%s)" % e)
                 # Try the connection with the server version
                 import re
-                version = re.search('server\:\ (.*)\)\"\)', str(e))
+                version = re.search('server\:\ (.*)\)\".*\)', str(e))
                 if version:
                     logger.debug("Try connection with Docker API version %s" % version.group(1))
                     ret = self.connect(version=version.group(1))
+                else:
+                    logger.debug("Can not retreive Docker server version")
+                    ret = None
             else:
                 # API error
                 logger.error("Docker API error (%s)" % e)
@@ -93,6 +99,10 @@ class Plugin(GlancesPlugin):
             # Connexion error (Docker not detected)
             logger.error("Can't connect to the Docker server (%s)" % e)
             ret = None
+
+        # Log an info if Docker plugin is disabled
+        if ret is None:
+            logger.debug("Docker plugin is disable because an error has been detected")
 
         return ret
 
@@ -140,13 +150,65 @@ class Plugin(GlancesPlugin):
             #            u'Names': [u'/webstack_nginx_1'],
             #            u'Id': u'b0da859e84eb4019cf1d965b15e9323006e510352c402d2f442ea632d61faaa5'}]
             self.stats['containers'] = self.docker_client.containers()
+            # Get CPU and MEMORY stats for containers
+            for c in self.stats['containers']:
+                c['cpu'] = self.get_docker_cpu(c['Id'])
+                c['memory'] = self.get_docker_memory(c['Id'])
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             # Not available
             pass
 
+        logger.info(self.stats)
+
         return self.stats
+
+    def get_docker_cpu(self, id):
+        """Return the container CPU usage by reading /sys/fs/cgroup/...
+        Input: id is the full container id
+        Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}"""
+        ret = {}
+        # Read the stats
+        try:
+            with open('/sys/fs/cgroup/cpuacct/docker/' + id + '/cpuacct.stat', 'r') as f:
+                for line in f:
+                    m = re.search(r"(system|user)\s+(\d+)", line)
+                    if m:
+                        ret[m.group(1)] = int(m.group(2))
+        except IOError as e:
+            logger.error("Can not grab container CPU stat ({0})".format(e))
+            return ret
+        # Get the user ticks
+        ticks = self.get_user_ticks()        
+        if isinstance(ret["system"], numbers.Number) and isinstance(ret["user"], numbers.Number):
+            ret["total"] = ret["system"] + ret["user"]
+            for k in ret.keys():
+                ret[k] = float(ret[k]) / ticks
+        # Return the stats
+        return ret
+
+    def get_docker_memory(self, id):
+        """Return the container MEMORY usage by reading /sys/fs/cgroup/...
+        Input: id is the full container id
+        Output: a dict {'rss': 1015808, 'cache': 356352}"""
+        ret = {}
+        # Read the stats
+        try:
+            with open('/sys/fs/cgroup/memory/docker/' + id + '/memory.stat', 'r') as f:
+                for line in f:
+                    m = re.search(r"(rss|cache)\s+(\d+)", line)
+                    if m:
+                        ret[m.group(1)] = int(m.group(2))
+        except IOError as e:
+            logger.error("Can not grab container MEM stat ({0})".format(e))
+            return ret
+        # Return the stats
+        return ret
+
+    def get_user_ticks(self):
+        """return the user ticks by reading the environment variable"""
+        return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -175,6 +237,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>26}'.format(_("Status"))
         ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format(_("CPU%"))
+        ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format(_("MEM"))
+        ret.append(self.curse_add_line(msg))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
         # Data
@@ -196,6 +262,18 @@ class Plugin(GlancesPlugin):
             msg = container['Status'].replace("minute", "min")
             msg = '{0:>26}'.format(msg[0:25])
             ret.append(self.curse_add_line(msg, status))
+            # CPU
+            try:
+                msg = '{0:>6.1f}'.format(container['cpu']['total'])
+            except KeyError:
+                msg = '{0:>6}'.format('?')
+            ret.append(self.curse_add_line(msg))
+            # MEM
+            try:
+                msg = '{0:>6}'.format(self.auto_unit(container['memory']['rss']))
+            except KeyError:
+                msg = '{0:>6}'.format('?')
+            ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
             ret.append(self.curse_add_line(msg))

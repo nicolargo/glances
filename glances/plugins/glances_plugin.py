@@ -413,14 +413,15 @@ class GlancesPlugin(object):
             if type(self.stats) is list:
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
-                try:
-                    mustache_dict = (
-                        item for item in self.stats if item[self.get_key()] == header).next()
-                except StopIteration:
-                    mustache_dict = {}
+                mustache_dict = {}
+                for item in self.stats:
+                    if item[self.get_key()] == header:
+                        mustache_dict = item
+                        break
             else:
                 # Use the stats dict
                 mustache_dict = self.stats
+            # Run the action
             self.actions.run(
                 stat_name, ret.lower(), command, mustache_dict=mustache_dict)
 
