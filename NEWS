@@ -2,6 +2,11 @@
 Glances Version 2.x
 ==============================================================================
 
+Version 2.4
+===========
+
+    ...
+
 Version 2.3
 ===========
 
@@ -22,6 +27,10 @@ Enhancements and news features:
 Bugs corrected:
 
     *  R/W error with the glances.log file (issue #474) 
+
+Other enhancement:
+    
+    * Alert < 3 seconds are no longer displayed
 
 Version 2.2.1
 =============

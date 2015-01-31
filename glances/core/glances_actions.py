@@ -70,6 +70,11 @@ class GlancesActions(object):
             # Action already executed => Exit
             return False
 
+        logger.debug("Run action {0} for {1} ({2}) with stats {3}".format(commands,
+                                                                          stat_name,
+                                                                          criticity,
+                                                                          mustache_dict))
+
         # Ran all actions in background
         for cmd in commands:
             # Replace {{arg}} by the dict one (Thk to {Mustache})

@@ -167,3 +167,26 @@ source : https://github.com/lukehaas/css-loaders
         box-shadow: 0 2.5em 0 0 #56CA69;
     }
 }
+
+#cpu table tr td:nth-child(3),
+#mem table tr td:nth-child(3),
+#monitor table tr td:nth-child(3) {
+    text-align: left;
+    padding-left: 20px;
+}
+#processlist table tr td {
+    text-align: right;
+}
+#processlist table tr td,
+#docker table tr td {
+    padding: 0px 5px 0px 5px;
+    white-space: nowrap;
+}
+#processlist table tr td:nth-child(6),
+#processlist table tr td:nth-child(12) {
+    text-align: left;
+}
+#docker table tr td:nth-child(2),
+#docker table tr td:nth-child(6) {
+    text-align: left;
+}

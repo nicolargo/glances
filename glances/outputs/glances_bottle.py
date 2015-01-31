@@ -362,16 +362,6 @@ class GlancesBottle(object):
         else:
             return pdict
 
-    # def display(self, stats, refresh_time=None):
-    #     """Display stats on the web page.
-
-    #     stats: Stats database to display
-    #     """
-
-    #     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "bottle", "index.html")
-    #     f = open(path)
-    #     return f.read()
-
 
 class EnableCors(object):
     name = 'enable_cors'
