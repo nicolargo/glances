@@ -20,7 +20,7 @@
 """Init the Glances software."""
 
 __appname__ = 'glances'
-__version__ = '2.3'
+__version__ = '2.4beta'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
