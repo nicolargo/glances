@@ -5,9 +5,6 @@ glancesApp.config([ '$routeProvider', '$locationProvider', function($routeProvid
     }).when('/:refresh_time', {
         templateUrl : 'stats.html',
         controller : 'statsController'
-    }).when('/help', {
-        templateUrl : 'help.html',
-        controller : 'helpController'
     });
     
     $locationProvider.html5Mode(true);
@@ -59,7 +56,7 @@ glancesApp.filter('bits', function() {
 });
 
 
-glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', '$location', function($scope, $http, $interval, $q, $routeParams, $location) {
+glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', function($scope, $http, $interval, $q, $routeParams) {
 
     $scope.limitSuffix = ['critical', 'careful', 'warning']
     $scope.refreshTime = 3
@@ -74,10 +71,18 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'sensors' : true,
         'sidebar' : true,
         'alert' : true,
-        'short_process_name': false,
-	'per_cpu': false
+        'short_process_name': true,
+        'per_cpu': false,
+        'warning_alerts':true,
+        'warning_critical_alerts':true,
+        'process_stats':true,
+        'top_extended_stats':true,
+        'docker_stats':true,
+        'network_io_combination':false,
+        'network_io_cumulative':false,
+        'filesystem_freespace':false,
+        'network_by_bytes':true
     }
-    $scope.networkSortByBytes = false
 
     $scope.init_refresh_time = function() {
         if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
@@ -287,38 +292,37 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         } else if ($event.keyCode == keycodes.TWO && $event.shiftKey) {//2  Show/hide left sidebar
             $scope.show_hide('sidebar')
         } else if ($event.keyCode == keycodes.z) {//z  Enable/disable processes stats
-            //$scope.enableDisable('processStats')
+            $scope.show_hide('process_stats')
         } else if ($event.keyCode == keycodes.e) {//e  Enable/disable top extended stats
-            //$scope.sort_by('')
+            $scope.show_hide('top_extended_stats')
         } else if ($event.keyCode == keycodes.SLASH) {// SLASH  Enable/disable short processes name
             $scope.show_hide('short_process_name')
-        } else if ($event.keyCode == keycodes.D) {//D  Enable/disable Docker stats
-            //$scope.sort_by('')
+        } else if ($event.keyCode == keycodes.D && $event.shiftKey) {//D  Enable/disable Docker stats
+            $scope.show_hide('docker_stats')
         } else if ($event.keyCode == keycodes.b) {//b  Bytes or bits for network I/O
-            $scope.networkSortByBytes = !$scope.networkSortByBytes
+            $scope.show_hide('network_by_bytes')
         } else if ($event.keyCode == keycodes.l) {//l  Show/hide alert logs
             $scope.show_hide('alert')
         } else if ($event.keyCode == keycodes.w) {//w  Delete warning alerts
-            //$scope.sort_by('')
+            $scope.show_hide('warning_alerts')
         } else if ($event.keyCode == keycodes.x) {//x  Delete warning and critical alerts
-            //$scope.sort_by('')
+            $scope.show_hide('warning_critical_alerts')
         } else if ($event.keyCode == keycodes.ONE && $event.shiftKey) {//1  Global CPU or per-CPU stats
             $scope.show_hide('per_cpu')
         } else if ($event.keyCode == keycodes.h) {//h  Show/hide this help screen
-            window.location = "/help"
-            //$location.path("/help")
-        } else if ($event.keyCode == keycodes.T) {//T  View network I/O as combination
-            //$scope.sort_by('')
+            $scope.show_hide('help')
+        } else if ($event.keyCode == keycodes.T && $event.shiftKey) {//T  View network I/O as combination
+            $scope.show_hide('network_io_combination')
         } else if ($event.keyCode == keycodes.u) {//u  View cumulative network I/O
-            //$scope.sort_by('')
-        } else if ($event.keyCode == keycodes.F) {//F  Show filesystem free space
-            //$scope.sort_by('')
+            $scope.show_hide('network_io_cumulative')
+        } else if ($event.keyCode == keycodes.F && $event.shiftKey) {//F  Show filesystem free space
+            $scope.show_hide('filesystem_freespace')
         } else if ($event.keyCode == keycodes.g) {//g  Generate graphs for current history
-            //$scope.sort_by('')
+            // not available
         } else if ($event.keyCode == keycodes.r) {//r  Reset history
-            //$scope.sort_by('')
+            // not available
         } else if ($event.keyCode == keycodes.q) {//q  Quit (Esc and Ctrl-C also work)
-            //$scope.sort_by('')
+            // not available
         }
     }
 } ]);
