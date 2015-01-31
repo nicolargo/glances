@@ -156,14 +156,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         var network_by_bytes = $scope.show.network_by_bytes
         var postdata = {network_by_bytes: network_by_bytes, network_sum: network_io_combination, network_cumul : network_io_cumulative}
         
-        debugger
-        
-        console.log(postdata)
-
         $http.post('/api/2/network/viewdata', postdata).success(function(response, status, headers, config) {
             $scope.viewdata['network'] = response
-            console.log(network_io_combination)
-            console.log(network_io_cumulative)
         }).error(function(response, status, headers, config) {
             console.log('error : ' + response+ status + headers + config);
         });
