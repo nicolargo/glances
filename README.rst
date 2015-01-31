@@ -13,8 +13,6 @@ Glances - An eye on your system
 .. image:: https://pypip.in/d/Glances/badge.png
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-        :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
@@ -233,6 +231,16 @@ Gateway to other services
 
 Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
 
+How to contribute ?
+===================
+
+If you want to contribute to the Glances project, read this `Wiki`_ page.
+
+There is also a chat dedicated to the Glances' developpers:
+
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+        :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 Author
 ======
 
@@ -249,3 +257,4 @@ LGPL. See ``COPYING`` for more details.
 .. _@glances_system: https://twitter.com/glances_system
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
+.. _Wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
