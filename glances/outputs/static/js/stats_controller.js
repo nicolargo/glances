@@ -63,6 +63,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     $scope.pluginLimits = []
     $scope.sortColumn = ''
     $scope.sortOrderAsc = false
+    $scope.help_screen = false
     $scope.lastSortColumn = '#column_' + $scope.sortColumn 
     $scope.show = {
         'diskio' : true,
@@ -98,8 +99,18 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         $scope.plugins_limits();
     }
     
+    $scope.init_help = function() {
+        $http.get('/api/2/help').success(function(response, status, headers, config) {
+            $scope.help = response
+        });
+    }
+    
     $scope.show_hide = function(bloc) {
-        $scope.show[bloc] = !$scope.show[bloc] 
+        if(bloc == 'help') {
+            $scope.help_screen = !$scope.help_screen
+        } else {
+            $scope.show[bloc] = !$scope.show[bloc]
+        }
     }
     
     $scope.sort_by = function(column) {
@@ -236,6 +247,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     
     $scope.init_refresh_time();
     $scope.init_limits();
+    $scope.init_help();
     
     var stop;
     $scope.configure_refresh = function () {
