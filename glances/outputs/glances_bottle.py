@@ -179,7 +179,7 @@ class GlancesBottle(object):
         """
         response.content_type = 'application/json'
 
-        if not self.args.debug:
+        if not self.args.debug_json:
             # Update the stat
             self.stats.update()
     

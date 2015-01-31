@@ -185,6 +185,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--theme-white', action='store_true', default=False,
                             dest='theme_white', help=_('optimize display for white background'))
 
+        parser.add_argument('--debug-json', action='store_true', default=False, dest='debug_json', help=argparse.SUPPRESS)
         return parser
 
     def parse_args(self):
