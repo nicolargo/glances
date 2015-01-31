@@ -514,6 +514,10 @@ Alerts are set for used disk space.
 *Note*: limit values can be overwritten in the configuration file under
 the ``[filesystem]`` section.
 
+If a RAID controller is detected on you system, its status will be displayed:
+
+.. image:: images/raid.png
+
 Sensors
 -------
 
