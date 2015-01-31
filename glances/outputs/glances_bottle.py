@@ -61,7 +61,6 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
-        self._app.route('/help', method="GET", callback=self._help)
         
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
@@ -71,8 +70,8 @@ class GlancesBottle(object):
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
 
         # REST API
+        self._app.route('/api/2/help', method="GET", callback=self._api_help)
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
-        self._app.route('/api/2/pluginslimits', method="GET", callback=self._api_plugins_limits)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
         self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
@@ -112,10 +111,6 @@ class GlancesBottle(object):
         # Display
         return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
 
-    def _help(self):
-        """Bottle callback for /help """
-        return static_file("help.html", root=os.path.join(self.STATIC_PATH, 'html'))
-
     def _html(self, filename):
         """Bottle callback for *.html files."""
         # Return the static file
@@ -141,6 +136,22 @@ class GlancesBottle(object):
         # Return the static file
         return static_file('favicon.ico', root=self.STATIC_PATH)
 
+    def _api_help(self):
+        """
+        Glances API RESTFul implementation
+        Return the help data
+        or 404 error
+        """
+        response.content_type = 'application/json'
+
+        # Update the stat
+        view_data = self.stats.get_plugin("help").get_view_data()
+        try:
+            plist = json.dumps(view_data, sort_keys=True)
+        except Exception as e:
+            abort(404, "Cannot get help view data (%s)" % str(e))
+        return plist    
+    
     def _api_plugins(self):
         """
         Glances API RESTFul implementation
@@ -158,25 +169,6 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
 
-    def _api_plugins_limits(self):
-        """
-        Glances API RESTFul implementation
-        Return the limits for each plugins
-        or 404 error
-        """
-        response.content_type = 'application/json'
-
-        result = {}
-        for plugin in self.plugins_list:
-            try:
-                # Get the JSON value of the stat ID
-                limits = self.stats.get_plugin(plugin).get_limits()
-                result[plugin] = limits
-            except Exception as e:
-                pass
-        return result
-
-    
     def _api_all(self):
         """
         Glances API RESTFul implementation
