@@ -100,12 +100,15 @@ class GlancesLogs(object):
 
         return process_auto_by
 
-    def add(self, item_state, item_type, item_value, proc_list=[], proc_desc=""):
+    def add(self, item_state, item_type, item_value,
+            proc_list=[], proc_desc="",
+            peak_time=3):
         """Add a new item to the logs list.
 
         If 'item' is a 'new one', add the new item at the beginning of the logs
         list.
         If 'item' is not a 'new one', update the existing item.
+        If event < peak_time the the alert is not setoff
         """
         # Add or update the log
         item_index = self.__itemexist__(item_type)
@@ -147,9 +150,13 @@ class GlancesLogs(object):
                 # Reset the automatic process sort key
                 self.reset_process_sort()
 
-                # Close the item
-                self.logs_list[item_index][1] = time.mktime(
-                    datetime.now().timetuple())
+                endtime = time.mktime(datetime.now().timetuple())
+                if endtime - self.logs_list[item_index][0] > peak_time:
+                    # If event is > peak_time seconds
+                    self.logs_list[item_index][1] = endtime
+                else:
+                    # If event <= peak_time seconds, ignore
+                    self.logs_list.remove(self.logs_list[item_index])
             else:
                 # Update the item
                 # State

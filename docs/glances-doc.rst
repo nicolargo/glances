@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.2.
+This manual describes *Glances* version 2.3.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-Junuary 2015
+January 2015
 
 .. contents:: Table of Contents
 
@@ -514,6 +514,10 @@ Alerts are set for used disk space.
 *Note*: limit values can be overwritten in the configuration file under
 the ``[filesystem]`` section.
 
+If a RAID controller is detected on you system, its status will be displayed:
+
+.. image:: images/raid.png
+
 Sensors
 -------
 
@@ -715,15 +719,19 @@ Glances can trigger actions on events.
 
 By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:
 
-  [load]
-  critical=5.0
-  critical_action=python /path/to/foo.py
+.. code-block::
 
-All the stats are usable in the command line by the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a warning space trigger is reached:
+    [load]
+    critical=5.0
+    critical_action=python /path/to/foo.py
 
-  [fs]
-  warning=70
-  warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
+All the stats are available in the command line through the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a space trigger warning is reached:
+
+.. code-block::
+
+    [fs]
+    warning=70
+    warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
 
 *Note*: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
 

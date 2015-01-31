@@ -67,6 +67,7 @@ class GlancesBottle(object):
         self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
         self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
         
+        self._app.route('/<filename:re:.*\.png>', method="GET", callback=self._images)
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
 
         # REST API
@@ -130,6 +131,11 @@ class GlancesBottle(object):
         """Bottle callback for *.js.map files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+
+    def _images(self, filename):
+        """Bottle callback for *.png files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'images'))
     
     def _favicon(self):
         """Bottle callback for favicon."""
