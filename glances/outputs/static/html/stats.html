@@ -276,15 +276,15 @@
                     <div class="table">
                         <div class="table-row">
                             <div class="table-cell text-left title">NETWORK</div>
-                            <div class="table-cell">Rx/s</div>
-                            <div class="table-cell">Tx/s</div>
+                            <div class="table-cell" ng-if="viewdata['network'].title_rx_tx">{{viewdata['network'].title_rx_tx}}</div>
+                            <div class="table-cell" ng-if="viewdata['network'].title_rx">{{viewdata['network'].title_rx}}</div>
+                            <div class="table-cell" ng-if="viewdata['network'].title_tx">{{viewdata['network'].title_tx}}</div>
                         </div>
-                        <div class="table-row" ng-repeat="network in result['network'] | orderBy: network.interface_name">
-                            <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
-                            <div class="table-cell" ng-if="show.network_by_bytes">{{network.rx | bytes}}</div>
-                            <div class="table-cell" ng-if="show.network_by_bytes">{{network.tx | bytes}}</div>
-                            <div class="table-cell" ng-if="!show.network_by_bytes">{{network.rx | bits}}</div>
-                            <div class="table-cell" ng-if="!show.network_by_bytes">{{network.tx | bits}}</div>
+                        <div class="table-row" ng-repeat="interface in viewdata['network'].interfaces | orderBy: interface.interface_name">
+                            <div class="table-cell text-left">{{interface.interface_name}}</div>
+                            <div class="table-cell" ng-if="interface.rx_tx">{{interface.rx_tx}}</div>
+                            <div class="table-cell" ng-if="interface.rx">{{interface.rx}}</div>
+                            <div class="table-cell" ng-if="interface.tx">{{interface.tx}}</div>
                         </div>
                     </div>
                 </section>

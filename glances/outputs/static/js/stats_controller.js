@@ -64,7 +64,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     $scope.sortColumn = ''
     $scope.sortOrderAsc = false
     $scope.help_screen = false
-    $scope.lastSortColumn = '#column_' + $scope.sortColumn 
+    $scope.lastSortColumn = '#column_' + $scope.sortColumn
+    $scope.viewdata = []
     $scope.show = {
         'diskio' : true,
         'network' : true,
@@ -149,11 +150,30 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     
     var canceler = undefined;
     
+    $scope.refreshViewData = function() {
+        var network_io_combination = $scope.show.network_io_combination
+        var network_io_cumulative = $scope.show.network_io_cumulative
+        var network_by_bytes = $scope.show.network_by_bytes
+        var postdata = {network_by_bytes: network_by_bytes, network_sum: network_io_combination, network_cumul : network_io_cumulative}
+        
+        debugger
+        
+        console.log(postdata)
+
+        $http.post('/api/2/network/viewdata', postdata).success(function(response, status, headers, config) {
+            $scope.viewdata['network'] = response
+            console.log(network_io_combination)
+            console.log(network_io_cumulative)
+        }).error(function(response, status, headers, config) {
+            console.log('error : ' + response+ status + headers + config);
+        });
+    }
     /**
      * Refresh all the data of the view
      */
     $scope.refreshData = function() {
         canceler = $q.defer();
+
         $http.get('/api/2/all', {timeout: canceler.promise}).success(function(response, status, headers, config) {
             //alert('success');
             
@@ -254,6 +274,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         if (!angular.isDefined(stop)) {
             //$scope.refreshData();
             stop = $interval(function() {
+                $scope.refreshViewData();
                 $scope.refreshData();
             }, $scope.refreshTime * 1000); // in milliseconds
         }
@@ -291,7 +312,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             $scope.sort_by('name')
         } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
             $scope.sort_by('io_read')
-        } else if ($event.keyCode == keycodes.t) {//t  Sort processes by CPU times
+        } else if ($event.keyCode == keycodes.t && !$event.shiftKey) {//t  Sort processes by CPU times
             $scope.sort_by('timemillis')
         } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
             $scope.show_hide('diskio')
@@ -313,6 +334,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             $scope.show_hide('docker_stats')
         } else if ($event.keyCode == keycodes.b) {//b  Bytes or bits for network I/O
             $scope.show_hide('network_by_bytes')
+            $scope.refreshViewData()
         } else if ($event.keyCode == keycodes.l) {//l  Show/hide alert logs
             $scope.show_hide('alert')
         } else if ($event.keyCode == keycodes.w) {//w  Delete warning alerts
@@ -325,8 +347,10 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             $scope.show_hide('help')
         } else if ($event.keyCode == keycodes.T && $event.shiftKey) {//T  View network I/O as combination
             $scope.show_hide('network_io_combination')
+            $scope.refreshViewData()
         } else if ($event.keyCode == keycodes.u) {//u  View cumulative network I/O
             $scope.show_hide('network_io_cumulative')
+            $scope.refreshViewData()
         } else if ($event.keyCode == keycodes.F && $event.shiftKey) {//F  Show filesystem free space
             $scope.show_hide('filesystem_freespace')
         } else if ($event.keyCode == keycodes.g) {//g  Generate graphs for current history
@@ -336,5 +360,6 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         } else if ($event.keyCode == keycodes.q) {//q  Quit (Esc and Ctrl-C also work)
             // not available
         }
+        
     }
 } ]);

@@ -1114,7 +1114,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 if not is_windows:
     class GlancesTextbox(Textbox):
 
-        def __init__(*args, **kwargs):
+        def __init__(self, *args, **kwargs):
             Textbox.__init__(*args, **kwargs)
 
         def do_command(self, ch):

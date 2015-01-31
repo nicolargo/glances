@@ -79,8 +79,10 @@ class GlancesBottle(object):
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
         self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
+        self._app.route('/api/2/:plugin/viewdata', method=["GET", "POST"], callback=self._api_viewdata)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
+        
 
     def start(self, stats):
         """Start the bottle."""
@@ -157,6 +159,29 @@ class GlancesBottle(object):
         except Exception as e:
             abort(404, "Cannot get help view data (%s)" % str(e))
         return plist    
+
+    def _api_viewdata(self, plugin):
+        """
+        Glances API RESTFul implementation
+        Return the view data
+        or 404 error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        #self.stats.update()
+        
+        # Update the stat
+        view_data = self.stats.get_plugin(plugin).get_view_data(request.json)
+        
+        try:
+            plist = json.dumps(view_data, sort_keys=True)
+        except Exception as e:
+            abort(404, "Cannot get help view data (%s)" % str(e))
+        return plist   
     
     def _api_plugins(self):
         """

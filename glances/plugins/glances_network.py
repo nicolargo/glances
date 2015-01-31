@@ -16,20 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Network plugin."""
-
-import base64
-import operator
-
-import psutil
-
-from glances.core.glances_timer import getTimeSinceLastUpdate
-from glances.plugins.glances_plugin import GlancesPlugin
-
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
+
+import base64
+import collections
+import operator
+
+from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.plugins.glances_plugin import GlancesPlugin
+import psutil
+
+
 snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
                         'cumulative_rx': '1.3.6.1.2.1.2.2.1.10',
                         'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
@@ -55,6 +55,8 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        self.args = args
+        
         # Init the stats
         self.reset()
 
@@ -65,6 +67,7 @@ class Plugin(GlancesPlugin):
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
+        self.view_data = collections.defaultdict()
 
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -185,7 +188,7 @@ class Plugin(GlancesPlugin):
 
         # Update the view
         self.update_views()
-
+        
         return self.stats
 
     def update_views(self):
@@ -201,51 +204,43 @@ class Plugin(GlancesPlugin):
                                                                                header=ifrealname + '_rx')
             self.views[i[self.get_key()]]['tx']['decoration'] = self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
                                                                                header=ifrealname + '_tx')
-
-    def msg_curse(self, args=None, max_width=None):
-        """Return the dict to display in the curse interface."""
-
-        # Init the return message
-        ret = []
-
-        # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_network:
-            return ret
-
+    
+    def generate_view_data(self, max_width=None):
+        self.view_data = {}
+        
         # Max size for the interface name
         if max_width is not None and max_width >= 23:
             # Interface size name = max_width - space for interfaces bitrate
             ifname_max_width = max_width - 14
         else:
             ifname_max_width = 9
-
-        # Build the string message
-        # Header
-        msg = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
-        ret.append(self.curse_add_line(msg, "TITLE"))
-        if args.network_cumul:
+            
+        
+        self.view_data['title'] = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
+        self.view_data['network_cumul'] = self.args.network_cumul
+        self.view_data['network_sum'] = self.args.network_sum
+        
+        if self.args.network_cumul:
             # Cumulative stats
-            if args.network_sum:
+            if self.args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx"))
-                ret.append(self.curse_add_line(msg))
+                self.view_data['title_rx_tx'] = '{0:>14}'.format(_("Rx+Tx"))
             else:
                 # Rx/Tx stats
-                msg = '{0:>7}'.format(_("Rx"))
-                ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx"))
-                ret.append(self.curse_add_line(msg))
+                self.view_data['title_rx'] = '{0:>7}'.format(_("Rx"))
+                self.view_data['title_tx'] = '{0:>7}'.format(_("Tx"))
         else:
             # Bitrate stats
-            if args.network_sum:
+            if self.args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx/s"))
-                ret.append(self.curse_add_line(msg))
+                self.view_data['title_rx_tx'] = '{0:>14}'.format(_("Rx+Tx/s"))
             else:
-                msg = '{0:>7}'.format(_("Rx/s"))
-                ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx/s"))
-                ret.append(self.curse_add_line(msg))
+                self.view_data['title_rx'] = '{0:>7}'.format(_("Rx/s"))
+                self.view_data['title_tx'] = '{0:>7}'.format(_("Tx/s"))
+
+        self.view_data['interfaces'] = []
+        
+        n = 0
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hidden interfaces
@@ -260,9 +255,9 @@ class Plugin(GlancesPlugin):
             if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
                 ifname = '_' + ifname[-ifname_max_width + 1:]
-            if args.byte:
+            if self.args.byte:
                 # Bytes per second (for dummy)
-                if args.network_cumul:
+                if self.args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx']))
                     tx = self.auto_unit(int(i['cumulative_tx']))
                     sx = self.auto_unit(int(i['cumulative_tx'])
@@ -274,7 +269,7 @@ class Plugin(GlancesPlugin):
                                         + int(i['tx'] // i['time_since_update']))
             else:
                 # Bits per second (for real network administrator | Default)
-                if args.network_cumul:
+                if self.args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
                     sx = self.auto_unit(int(i['cumulative_rx'] * 8)
@@ -284,19 +279,62 @@ class Plugin(GlancesPlugin):
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"
                     sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8) +
                                         int(i['tx'] // i['time_since_update'] * 8)) + "b"
+            interface = {}
+            interface['interface_name'] = '{0:{width}}'.format(ifname, width=ifname_max_width)
+            if self.args.network_sum:
+                interface['rx_tx'] = '{0:>14}'.format(sx)
+            else:
+                interface['rx'] = '{0:>7}'.format(rx)
+                interface['tx'] = '{0:>7}'.format(tx)
+            self.view_data['interfaces'].append(interface)
+            n = n + 1
+                
+    def get_view_data(self, options):
+        if options:
+            if 'network_cumul' in options:
+                self.args.network_cumul = options.get('network_cumul')
+            if 'network_sum' in options:
+                self.args.network_sum = options.get('network_sum')
+            if 'network_by_bytes' in options:
+                self.args.byte = options.get('network_by_bytes')        
+        self.generate_view_data()
+        return self.view_data
+
+    def msg_curse(self, args=None, max_width=None):
+        """Return the dict to display in the curse interface."""
+
+        # Init the return message
+        ret = []
+
+        # Only process if stats exist and display plugin enable...
+        if not self.stats or args.disable_network:
+            return ret
+
+        # Build the string message
+        # Header
+        ret.append(self.curse_add_line(self.view_data['title'], "TITLE"))
+        
+        if 'title_rx_tx' in self.view_data:
+            ret.append(self.curse_add_line(self.view_data['title_rx_tx']))
+        else:
+            ret.append(self.curse_add_line(self.view_data['title_rx']))
+            ret.append(self.curse_add_line(self.view_data['title_tx']))
+
+        
+        # Interface list (sorted by name)
+        for i in self.view_data['interfaces']:
+            interface = i
+            
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:{width}}'.format(ifname, width=ifname_max_width)
-            ret.append(self.curse_add_line(msg))
+            
+            ret.append(self.curse_add_line(interface['interface_name']))
             if args.network_sum:
-                msg = '{0:>14}'.format(sx)
-                ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_add_line(self.curse_add_line(interface['tx_rx'])))
             else:
-                msg = '{0:>7}'.format(rx)
                 ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration')))
-                msg = '{0:>7}'.format(tx)
+                    self.curse_add_line(interface['rx']), self.get_views(item=i[self.get_key()], key='rx', option='decoration')))
                 ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration')))
+                    self.curse_add_line(interface['tx']), self.get_views(item=i[self.get_key()], key='tx', option='decoration')))
 
         return ret
