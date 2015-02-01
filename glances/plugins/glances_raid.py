@@ -181,6 +181,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_new_line())
                 ret.append(self.curse_add_line(raid['degraded_mode'], raid['status_label']))
                 if 'config' in raid:
+                    ret.append(self.curse_new_line())
                     ret.append(self.curse_add_line(raid['config']))
 
         return ret
