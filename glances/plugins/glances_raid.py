@@ -114,7 +114,7 @@ class Plugin(GlancesPlugin):
                 raid['available'] = '{0:>6}'.format(self.stats[array]['available'])
             elif raid['current_status'] == 'inactive':
                 raid['status'] = '└─ Status {}'.format(self.stats[array]['status'])
-                components = self.stats[array]['components'].keys()
+                components = list(self.stats[array]['components'].keys())
                 components.sort()
                 
                 raid['components'] = []
@@ -209,7 +209,7 @@ class MdStatMock:
            'config': 'UU',
            'status': 'active',
            'type': 'raid1',
-           'used': '2'},
+           'used': '1'},
           'md1': {'available': '2',
            'components': {'sda2': '0', 'sdb2': '1'},
            'config': 'UU',
@@ -219,7 +219,7 @@ class MdStatMock:
           'md2': {'available': '2',
            'components': {'sda3': '0', 'sdb3': '1'},
            'config': 'UU',
-           'status': 'active',
+           'status': 'inactive',
            'type': 'raid1',
            'used': '2'},
           'md3': {'available': '10',
