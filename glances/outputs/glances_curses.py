@@ -36,7 +36,8 @@ if not is_windows:
         import curses.panel
         from curses.textpad import Textbox
     except ImportError:
-        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
+        logger.critical(
+            "Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -472,7 +473,9 @@ class _GlancesCurses(object):
             # ... and exit
             return False
 
+        # ==================================
         # Display first line (system+uptime)
+        # ==================================
         self.new_line()
         l = self.get_stats_display_width(
             stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
@@ -480,42 +483,68 @@ class _GlancesCurses(object):
         self.new_column()
         self.display_plugin(stats_uptime)
 
+        # ========================================================
         # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
-        # CPU|PERCPU
+        # ========================================================
         self.init_column()
         self.new_line()
+        # Init quicklook
+        stats_quicklook = {'msgdict': []}
+        # Start with the mandatory stats:
+        # CPU | PERCPU
         if self.args.percpu:
-            l = self.get_stats_display_width(stats_percpu)
+            cpu_width = self.get_stats_display_width(stats_percpu)
         else:
-            l = self.get_stats_display_width(stats_cpu)
-        l += self.get_stats_display_width(stats_load) + self.get_stats_display_width(
-            stats_mem) + self.get_stats_display_width(stats_memswap)
-        # Space between column
-        space_number = int(stats_load['msgdict'] != [
-        ]) + int(stats_mem['msgdict'] != []) + int(stats_memswap['msgdict'] != [])
+            cpu_width = self.get_stats_display_width(stats_cpu, without_option=(screen_x < 80))
+        l = cpu_width
+        # MEM & SWAP & LOAD
+        mem_width = self.get_stats_display_width(stats_mem, without_option=(screen_x < 100))
+        l += mem_width
+        l += self.get_stats_display_width(stats_memswap)
+        l += self.get_stats_display_width(stats_load)
+        # Quicklook plugin size is dynamic
+        if screen_x > 126:
+            # TO be adapted to the screen...
+            quicklook_width = 16
+            try:
+                stats_quicklook = stats.get_plugin(
+                    'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
+            except AttributeError as e:
+                logger.debug("Quicklook plugin not available (%s)" % e)
+            else:
+                l += self.get_stats_display_width(stats_quicklook)
+        # Compute space between column
+        space_number = int(stats_quicklook['msgdict'] != [])
+        space_number += int(stats_mem['msgdict'] != [])
+        space_number += int(stats_memswap['msgdict'] != [])
+        space_number += int(stats_load['msgdict'] != [])
         if space_number == 0:
             space_number = 1
         if screen_x > (space_number * self.space_between_column + l):
             self.space_between_column = int((screen_x - l) / space_number)
         # Display
+        # logger.info(">>> Screen X: %s / Stats size: %s / Space size: %s / Nb space: %s" % (screen_x, l, self.space_between_column, space_number))
+        self.display_plugin(stats_quicklook)
+        self.new_column()
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
             self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
         self.new_column()
-        self.display_plugin(stats_load)
-        self.new_column()
-        self.display_plugin(stats_mem, display_optional=(
-            screen_x >= (space_number * self.space_between_column + l)))
+        self.display_plugin(stats_mem, display_optional=(screen_x >= 100))
         self.new_column()
         self.display_plugin(stats_memswap)
+        self.new_column()
+        self.display_plugin(stats_load)
         # Space between column
         self.space_between_column = 3
 
         # Backup line position
         self.saved_line = self.next_line
 
+        # =============================================================
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
+        # =============================================================
         self.init_column()
         if (not (self.args.disable_network and self.args.disable_diskio
                  and self.args.disable_fs and self.args.disable_raid
@@ -534,6 +563,9 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_now)
 
+        # ====================================
+        # Display right stats (process and co)
+        # ====================================
         # If space available...
         if screen_x > 52:
             # Restore line position
@@ -753,7 +785,8 @@ class _GlancesCurses(object):
                     x_max = x
 
         # Compute the next Glances column/line position
-        self.next_column = max(self.next_column, x_max + self.space_between_column)
+        self.next_column = max(
+            self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
 
     def erase(self):
