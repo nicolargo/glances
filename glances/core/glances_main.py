@@ -118,6 +118,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_process', help=_('disable process module'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
+        parser.add_argument('--disable-quicklook', action='store_true', default=False,
+                            dest='disable_quicklook', help=_('disable quicklook module'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--enable-process-extended', action='store_true', default=False,

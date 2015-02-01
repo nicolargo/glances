@@ -1,0 +1,103 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of Glances.
+#
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+#
+# Glances is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Glances is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+"""Quicklook plugin."""
+
+import psutil
+
+from glances.plugins.glances_plugin import GlancesPlugin
+from glances.core.glances_cpu_percent import cpu_percent
+from glances.outputs.glances_bars import Bar
+from glances.core.glances_logging import logger
+
+
+class Plugin(GlancesPlugin):
+
+    """Glances quicklook plugin.
+
+    'stats' is a dictionary.
+    """
+
+    def __init__(self, args=None):
+        """Init the quicklook plugin."""
+        GlancesPlugin.__init__(self, args=args)
+
+        # We want to display the stat in the curse interface
+        self.display_curse = True
+
+        # Init stats
+        self.reset()
+
+    def reset(self):
+        """Reset/init the stats."""
+        self.stats = {}
+
+    @GlancesPlugin._log_result_decorator
+    def update(self):
+        """Update quicklook stats using the input method."""
+        # Reset stats
+        self.reset()
+
+        # Grab quicklook stats: CPU, MEM and SWAP
+        if self.get_input() == 'local':
+            # Get the latest CPU percent value
+            self.stats['cpu'] = cpu_percent.get()
+            # Use the PsUtil lib for the memory (virtual and swap)
+            self.stats['mem'] = psutil.virtual_memory().percent
+            self.stats['swap'] = psutil.swap_memory().percent
+        elif self.get_input() == 'snmp':
+            # Not available
+            pass
+
+        # Update the view
+        self.update_views()
+
+        return self.stats
+
+    def update_views(self):
+        """Update stats views"""
+        # Call the father's method
+        GlancesPlugin.update_views(self)
+
+    def msg_curse(self, args=None, max_width=10):
+        """Return the list to display in the UI"""
+        # Init the return message
+        ret = []
+
+        # Only process if stats exist...
+        if self.stats == {} or args.disable_quicklook:
+            return ret
+
+        # Build the string message
+        bar = Bar(max_width, pre_char='|', post_char='|', empty_char=' ')
+        bar.set_percent(self.stats['cpu'])
+        msg = '{0:>4} {1}'.format(_("CPU"), bar)
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        bar.set_percent(self.stats['mem'])
+        msg = '{0:>4} {1}'.format(_("MEM"), bar)
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        bar.set_percent(self.stats['swap'])
+        msg = '{0:>4} {1}'.format(_("SWAP"), bar)
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+
+        # Return the message with decoration
+        return ret
