@@ -319,6 +319,30 @@
                         </div>
                     </div>
                 </section>
+                <section id="raid" class="plugin" ng-show="show.raid && viewdata['raid'].length > 0">
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell text-left title">{{viewdata['raid'].title}}</div>
+                            <div class="table-cell">{{viewdata['raid'].title_used}}</div>
+                            <div class="table-cell">{{viewdata['raid'].title_avail}}</div>
+                        </div>
+                        <div class="table-row" ng-repeat="raid in viewdata['raid'].raid">
+                            <div class="table-cell text-left">{{raid.type}}</div>
+                            <div class="table-cell" ng-if="raid['current_status'] == 'active'" ng-class="raid.status_label">{{raid.used}}</div>
+                            <div class="table-cell" ng-if="raid['current_status'] == 'active'" ng-class="raid.status_label">{{raid.available}}</div>
+                            
+                            <div class="table-cell" ng-if="raid['current_status'] == 'inactive'" ng-class="raid.status_label">{{raid.status}}</div>
+                            
+                            <div class="table-row" ng-repeat="component in components">
+                                <div class="table-cell">{{raid.treechar}}</div>
+                                <div class="table-cell">{{raid.component}}</div>    
+                            </div>
+                            
+                            <div class="table-cell" ng-if="raid['display_degradedmode']" ng-class="raid.status_label">{{raid.degraded_mode}}</div>
+                            <div class="table-cell" ng-if="raid['config']">{{raid.config}}</div>
+                        </div>
+                    </div>
+                </section>
                 <section id="sensors" class="plugin" ng-show="show.sensors && result['sensors'].length > 0">
                     <div class="table">
                         <div class="table-row">
@@ -336,19 +360,6 @@
                 <!--<section id="containers" class="plugin">
                     <span class="title">CONTAINERS</span> 1 (served by 1.2.0)
                 </section>-->
-                <section id="alerts" ng-show="show.alert">
-                    <span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span>
-                    <span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
-                </section>
-                <section id="alert" class="plugin" ng-show="show.alert">
-                    <div class="table">
-                        <div class="table-row" ng-repeat="alert in result['alert']">
-    	                    <div class="table-cell text-left">
-    {{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
-    						</div>
-                        </div>
-                    </div>
-                </section>
 
                 <section id="processcount" class="plugin">
                     <span class="title">TASKS</span> {{result["processcount"].total}} ({{result["processcount"].thread}} thr), {{result["processcount"].running}} run,
@@ -399,3 +410,17 @@
             </div>
         </div>
     </div>
+    
+	<div id="menufixe">
+		<section id="alerts" ng-show="show.alert">
+			<span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span> 
+			<span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
+		</section>
+		<section id="alert" class="plugin" ng-show="show.alert">
+			<div class="table">
+				<div class="table-row" ng-repeat="alert in result['alert']">
+					<div class="table-cell text-left">{{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})</div>
+				</div>
+			</div>
+		</section>
+	</div>

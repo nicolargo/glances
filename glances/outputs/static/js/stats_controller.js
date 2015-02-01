@@ -83,7 +83,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'network_io_combination':false,
         'network_io_cumulative':false,
         'filesystem_freespace':false,
-        'network_by_bytes':true
+        'network_by_bytes':true,
+        'raid': true
     }
 
     $scope.init_refresh_time = function() {
@@ -158,6 +159,12 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         
         $http.post('/api/2/network/viewdata', postdata).success(function(response, status, headers, config) {
             $scope.viewdata['network'] = response
+        }).error(function(response, status, headers, config) {
+            console.log('error : ' + response+ status + headers + config);
+        });
+        
+        $http.post('/api/2/raid/viewdata').success(function(response, status, headers, config) {
+            $scope.viewdata['raid'] = response
         }).error(function(response, status, headers, config) {
             console.log('error : ' + response+ status + headers + config);
         });
@@ -351,6 +358,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             // not available
         } else if ($event.keyCode == keycodes.r) {//r  Reset history
             // not available
+            //TODO : remove
+            $scope.show_hide('raid')
         } else if ($event.keyCode == keycodes.q) {//q  Quit (Esc and Ctrl-C also work)
             // not available
         }

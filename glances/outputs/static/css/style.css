@@ -41,6 +41,21 @@ body {
 .text-left {
     text-align: left;
 }
+.menufixe {
+	position: absolute;
+	top: 0;
+	left: 1%;
+    width: 98%;
+	z-index: 2;
+	text-align: center;
+	background-color: #ffecce;
+	border: 1px solid #666666;
+	line-height: 2em;
+	margin: 0;
+}
+html>body .menufixe {
+    position: fixed
+}
 
 /* Theme */
 

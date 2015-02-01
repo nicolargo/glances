@@ -129,11 +129,13 @@ class Plugin(GlancesPlugin):
                     raid['components'].append(compo)
                     
             if raid['current_used'] < raid['current_available']:
+                raid['display_degradedmode'] = True
                 # Display current array configuration
                 raid['degraded_mode'] = '└─ Degraded mode'
                 if len(self.stats[array]['config']) < 17:
                     raid['config'] = '   └─ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
-        
+            else:
+                raid['display_degradedmode'] = False
         
             self.view_data['raid'].append(raid)
 
@@ -177,7 +179,7 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(component['treechar']))
                     ret.append(self.curse_add_line(component['component']))
                     
-            if raid['current_used'] < raid['current_available']:
+            if raid['display_degradedmode']:
                 ret.append(self.curse_new_line())
                 ret.append(self.curse_add_line(raid['degraded_mode'], raid['status_label']))
                 if 'config' in raid:
