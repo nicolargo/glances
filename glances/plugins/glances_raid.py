@@ -48,13 +48,13 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
-        # init view data
-        self.view_data = {}
-        
     def reset(self):
         """Reset/init the stats."""
         self.stats = {}
 
+        # init view data
+        self.view_data = {}
+                
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update RAID stats using the input method."""
@@ -64,7 +64,10 @@ class Plugin(GlancesPlugin):
         if self.get_input() == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
-                mds = MdStat()
+                if self.args.debug_json:
+                    mds = MdStatMock()
+                else:
+                    mds = MdStat()
                 self.stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
@@ -89,7 +92,7 @@ class Plugin(GlancesPlugin):
         
         self.view_data['raid'] = []
         # Data
-        arrays = self.stats.keys()
+        arrays = list(self.stats.keys())
         arrays.sort()
         for array in arrays:
             # Display the current status
@@ -132,7 +135,7 @@ class Plugin(GlancesPlugin):
                     raid['config'] = '   └─ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
         
         
-        self.view_data['raid'].append(raid)
+            self.view_data['raid'].append(raid)
 
 
     def get_view_data(self, args=None):        
@@ -144,7 +147,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_raid:
+        if not self.stats or args.disable_raid or not self.view_data:
             return ret
 
         # Build the string message
@@ -159,7 +162,7 @@ class Plugin(GlancesPlugin):
             # Display the current status
 
             # Data: RAID type name | disk used | disk available
-            ret.append(self.curse_add_line(raid['name']))
+            ret.append(self.curse_add_line(raid['type']))
             
             if raid['current_status'] == 'active':
                 ret.append(self.curse_add_line(raid['used'], raid['status_label']))
@@ -192,3 +195,75 @@ class Plugin(GlancesPlugin):
         if used < available:
             return 'WARNING'
         return 'OK'
+
+
+class MdStatMock:
+    
+    def __init__(self):
+        self.personalities = ['raid1', 'raid6', 'raid5', 'raid4']
+        self.arrays = ['md2', 'md3', 'md0', 'md1']
+        
+    def get_stats(self):
+        return {'arrays': {'md0': {'available': '2',
+           'components': {'sda1': '0', 'sdb1': '1'},
+           'config': 'UU',
+           'status': 'active',
+           'type': 'raid1',
+           'used': '2'},
+          'md1': {'available': '2',
+           'components': {'sda2': '0', 'sdb2': '1'},
+           'config': 'UU',
+           'status': 'active',
+           'type': 'raid1',
+           'used': '2'},
+          'md2': {'available': '2',
+           'components': {'sda3': '0', 'sdb3': '1'},
+           'config': 'UU',
+           'status': 'active',
+           'type': 'raid1',
+           'used': '2'},
+          'md3': {'available': '10',
+           'components': {'sdc1': '0',
+            'sdd1': '1',
+            'sde1': '2',
+            'sdf1': '3',
+            'sdg1': '4',
+            'sdh1': '5',
+            'sdi1': '6',
+            'sdj1': '7',
+            'sdk1': '8',
+            'sdl1': '9'},
+           'config': 'UUUUUUUUUU',
+           'status': 'active',
+           'type': 'raid5',
+           'used': '10'}},
+         'personalities': ['raid1', 'raid6', 'raid5', 'raid4']}
+        
+        
+    def personalities(self):
+        return self.personalities
+
+    def arrays(self):
+        return self.arrays
+    
+    def type(self, label):
+        pos = self.personalities.index(label)
+        if (pos >= 0):
+            return self.arrays[pos]
+        
+    def status(self, label):
+        return 'active'
+
+    def components(self, label):
+        return ['sdk1', 'sdj1', 'sde1', 'sdl1', 'sdg1', 'sdf1', 'sdh1', 'sdc1', 'sdd1', 'sdi1']
+    
+    def available(self, label):
+        return 10
+    
+    def used(self, label):
+        return 10
+    
+    def config(self, label):
+        return 'UUUUUUUUUU'
+
+    

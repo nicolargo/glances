@@ -307,7 +307,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_network:
+        if not self.stats or args.disable_network or not self.view_data:
             return ret
 
         # Build the string message
