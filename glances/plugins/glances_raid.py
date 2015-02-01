@@ -48,6 +48,9 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
+        # init view data
+        self.view_data = {}
+        
     def reset(self):
         """Reset/init the stats."""
         self.stats = {}
@@ -75,8 +78,66 @@ class Plugin(GlancesPlugin):
         # Update the view
         self.update_views()
 
+        self.generate_view_data()
+        
         return self.stats
 
+    def generate_view_data(self):
+        self.view_data['title'] = '{0:11}'.format(_('RAID disks'))
+        self.view_data['title_used'] = '{0:>6}'.format(_("Used"))
+        self.view_data['title_avail'] = '{0:>6}'.format(_("Avail"))
+        
+        self.view_data['raid'] = []
+        # Data
+        arrays = self.stats.keys()
+        arrays.sort()
+        for array in arrays:
+            # Display the current status
+            status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
+            
+            raid = {}
+            raid['status_label'] = status
+            raid['current_status'] = self.stats[array]['status']
+            raid['current_used'] = self.stats[array]['used']
+            raid['current_available'] = self.stats[array]['available']
+            
+            # Data: RAID type name | disk used | disk available
+            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else _('UNKNOWN')
+            
+            raid['type'] = '{0:<5}{1:>6}'.format(array_type, array)
+            
+            if raid['current_status'] == 'active':
+                raid['used'] = '{0:>6}'.format(self.stats[array]['used'])
+                raid['available'] = '{0:>6}'.format(self.stats[array]['available'])
+            elif raid['current_status'] == 'inactive':
+                raid['status'] = '└─ Status {}'.format(self.stats[array]['status'])
+                components = self.stats[array]['components'].keys()
+                components.sort()
+                
+                raid['components'] = []
+                for i, component in enumerate(components):
+                    if i == len(components) - 1:
+                        tree_char = '└─'
+                    else:
+                        tree_char = '├─'
+                    compo = {}
+                    compo['treechar'] = '   {0} disk {1}: '.format(tree_char, self.stats[array]['components'][component])
+                    compo['component'] = '{0}'.format(component)
+                    raid['components'].append(compo)
+                    
+            if raid['current_used'] < raid['current_available']:
+                # Display current array configuration
+                raid['degraded_mode'] = '└─ Degraded mode'
+                if len(self.stats[array]['config']) < 17:
+                    raid['config'] = '   └─ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
+        
+        
+        self.view_data['raid'].append(raid)
+
+
+    def get_view_data(self, args=None):        
+        return self.view_data
+    
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
@@ -88,54 +149,36 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:11}'.format(_('RAID disks'))
-        ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>6}'.format(_("Used"))
-        ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("Avail"))
-        ret.append(self.curse_add_line(msg))
-        # Data
-        arrays = self.stats.keys()
-        arrays.sort()
-        for array in arrays:
+        ret.append(self.curse_add_line(self.view_data['title'], "TITLE"))
+        ret.append(self.curse_add_line(self.view_data['title_used']))
+        ret.append(self.curse_add_line(self.view_data['title_avail']))
+        
+        for raid in self.view_data['raid']:
             # New line
             ret.append(self.curse_new_line())
             # Display the current status
-            status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
+
             # Data: RAID type name | disk used | disk available
-            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else _('UNKNOWN')
-            msg = '{0:<5}{1:>6}'.format(array_type, array)
-            ret.append(self.curse_add_line(msg))
-            if self.stats[array]['status'] == 'active':
-                msg = '{0:>6}'.format(self.stats[array]['used'])
-                ret.append(self.curse_add_line(msg, status))
-                msg = '{0:>6}'.format(self.stats[array]['available'])
-                ret.append(self.curse_add_line(msg, status))
-            elif self.stats[array]['status'] == 'inactive':
+            ret.append(self.curse_add_line(raid['name']))
+            
+            if raid['current_status'] == 'active':
+                ret.append(self.curse_add_line(raid['used'], raid['status_label']))
+                ret.append(self.curse_add_line(raid['available'], raid['status_label']))
+            elif raid['current_status'] == 'inactive':
                 ret.append(self.curse_new_line())
-                msg = '└─ Status {}'.format(self.stats[array]['status'])
-                ret.append(self.curse_add_line(msg, status))
-                components = self.stats[array]['components'].keys()
-                components.sort()
-                for i, component in enumerate(components):
-                    if i == len(components) - 1:
-                        tree_char = '└─'
-                    else:
-                        tree_char = '├─'
+                ret.append(self.curse_add_line(raid['status'], raid['status_label']))
+                
+                components = raid['components']
+                for component in components:
                     ret.append(self.curse_new_line())
-                    msg = '   {0} disk {1}: '.format(tree_char, self.stats[array]['components'][component])
-                    ret.append(self.curse_add_line(msg))
-                    msg = '{0}'.format(component)
-                    ret.append(self.curse_add_line(msg))
-            if self.stats[array]['used'] < self.stats[array]['available']:
-                # Display current array configuration
+                    ret.append(self.curse_add_line(component['treechar']))
+                    ret.append(self.curse_add_line(component['component']))
+                    
+            if raid['current_used'] < raid['current_available']:
                 ret.append(self.curse_new_line())
-                msg = '└─ Degraded mode'
-                ret.append(self.curse_add_line(msg, status))
-                if len(self.stats[array]['config']) < 17:
-                    ret.append(self.curse_new_line())
-                    msg = '   └─ {0}'.format(self.stats[array]['config'].replace('_', 'A'))
-                    ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_add_line(raid['degraded_mode'], raid['status_label']))
+                if 'config' in raid:
+                    ret.append(self.curse_add_line(raid['config']))
 
         return ret
 
