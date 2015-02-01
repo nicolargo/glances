@@ -113,7 +113,7 @@ class Plugin(GlancesPlugin):
                 raid['used'] = '{0:>6}'.format(self.stats[array]['used'])
                 raid['available'] = '{0:>6}'.format(self.stats[array]['available'])
             elif raid['current_status'] == 'inactive':
-                raid['status'] = '└─ Status {}'.format(self.stats[array]['status'])
+                raid['status'] = '└─ Status {0}'.format(self.stats[array]['status'])
                 components = list(self.stats[array]['components'].keys())
                 components.sort()
                 
