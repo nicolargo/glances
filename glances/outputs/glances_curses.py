@@ -249,6 +249,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('2'):
             # '2' > Enable/disable left sidebar
             self.args.disable_left_sidebar = not self.args.disable_left_sidebar
+        elif self.pressedkey == ord('3'):
+            # '3' > Enable/disable quicklook
+            self.args.disable_quicklook = not self.args.disable_quicklook
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
@@ -494,7 +497,7 @@ class _GlancesCurses(object):
         # CPU | PERCPU
         if self.args.percpu:
             cpu_width = self.get_stats_display_width(stats_percpu)
-            quicklook_adapt = 116
+            quicklook_adapt = 114
         else:
             cpu_width = self.get_stats_display_width(stats_cpu, without_option=(screen_x < 80))
             quicklook_adapt = 108
@@ -504,7 +507,7 @@ class _GlancesCurses(object):
         l += self.get_stats_display_width(stats_memswap)
         l += self.get_stats_display_width(stats_load)
         # Quicklook plugin size is dynamic
-        if screen_x > 126:
+        if screen_x > 126 and not self.args.disable_quicklook:
             # Limit the size to be align with the process
             quicklook_width = min(screen_x - quicklook_adapt, 87)
             try:

@@ -149,6 +149,7 @@ Command-Line Options
   --disable-log         disable log module
   --enable-process-extended
                         enable extended stats on top process
+  --disable-quicklook   disable the Quicklook module
   --enable-history      enable the history mode
   --path-history PATH_HISTORY
                         Set the export path for graph history
@@ -263,6 +264,8 @@ The following commands (key pressed) are supported while in Glances:
     Switch between global CPU and per-CPU stats
 ``2``
     Enable/disable left sidebar
+``3``
+    Enable/disable the Quicklook module
 ``/``
     Switch between short name / command line (processes name)
 
