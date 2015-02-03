@@ -141,7 +141,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         msg = msg_col.format("D", _("Enable/disable Docker stats"))
-        ret.append(self.curse_add_line(msg))        
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_new_line())
+        msg = msg_col.format("3", _("Enable/disable Quicklook plugin"))
+        ret.append(self.curse_add_line(msg))
 
 
         ret.append(self.curse_new_line())
