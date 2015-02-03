@@ -75,6 +75,12 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         GlancesPlugin.update_views(self)
 
+        # Add specifics informations
+        # Alert only
+        for key in ['cpu', 'mem', 'swap']:
+            if key in self.stats:
+                self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
+
     def msg_curse(self, args=None, max_width=10):
         """Return the list to display in the UI"""
         # Init the return message
@@ -84,20 +90,19 @@ class Plugin(GlancesPlugin):
         if self.stats == {} or args.disable_quicklook:
             return ret
 
-        # Build the string message
+        # Define the bar
         bar = Bar(max_width, pre_char='|', post_char='|', empty_char=' ')
-        bar.set_percent(self.stats['cpu'])
-        msg = '{0:>4} {1}'.format(_("CPU"), bar)
-        ret.append(self.curse_add_line(msg))
-        ret.append(self.curse_new_line())
-        bar.set_percent(self.stats['mem'])
-        msg = '{0:>4} {1}'.format(_("MEM"), bar)
-        ret.append(self.curse_add_line(msg))
-        ret.append(self.curse_new_line())
-        bar.set_percent(self.stats['swap'])
-        msg = '{0:>4} {1}'.format(_("SWAP"), bar)
-        ret.append(self.curse_add_line(msg))
-        ret.append(self.curse_new_line())
+
+        # Build the string message
+        for key in ['cpu', 'mem', 'swap']:
+            bar.set_percent(self.stats[key])
+            msg = '{0:>4} '.format(key.upper())
+            ret.append(self.curse_add_line(msg))
+            msg = '{0}'.format(bar)
+            ret.append(self.curse_add_line(msg,
+                                           self.get_views(key=key,
+                                                          option='decoration')))
+            ret.append(self.curse_new_line())
 
         # Return the message with decoration
         return ret
