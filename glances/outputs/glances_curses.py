@@ -494,18 +494,19 @@ class _GlancesCurses(object):
         # CPU | PERCPU
         if self.args.percpu:
             cpu_width = self.get_stats_display_width(stats_percpu)
+            quicklook_adapt = 116
         else:
             cpu_width = self.get_stats_display_width(stats_cpu, without_option=(screen_x < 80))
+            quicklook_adapt = 108
         l = cpu_width
         # MEM & SWAP & LOAD
-        mem_width = self.get_stats_display_width(stats_mem, without_option=(screen_x < 100))
-        l += mem_width
+        l += self.get_stats_display_width(stats_mem, without_option=(screen_x < 100))
         l += self.get_stats_display_width(stats_memswap)
         l += self.get_stats_display_width(stats_load)
         # Quicklook plugin size is dynamic
         if screen_x > 126:
-            # TO be adapted to the screen...
-            quicklook_width = 16
+            # Limit the size to be align with the process
+            quicklook_width = min(screen_x - quicklook_adapt, 87)
             try:
                 stats_quicklook = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
@@ -523,7 +524,6 @@ class _GlancesCurses(object):
         if screen_x > (space_number * self.space_between_column + l):
             self.space_between_column = int((screen_x - l) / space_number)
         # Display
-        # logger.info(">>> Screen X: %s / Stats size: %s / Space size: %s / Nb space: %s" % (screen_x, l, self.space_between_column, space_number))
         self.display_plugin(stats_quicklook)
         self.new_column()
         if self.args.percpu:
