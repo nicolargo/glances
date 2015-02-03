@@ -398,6 +398,16 @@ Disconnected:
 
 .. image:: images/disconnected.png
 
+QUICKLOOK
+---------
+
+The quicklook plugin is only display on wide screen and propose a bar view for CPU and memory (virtual and swap).
+
+.. image:: images/quicklook.png
+
+*Note*: limit values can be overwritten in the configuration file under
+the ``[quicklook]`` section.
+
 CPU
 ---
 
