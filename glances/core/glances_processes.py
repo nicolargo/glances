@@ -243,6 +243,7 @@ class GlancesProcesses(object):
 
         # Init stats
         self.resetsort()
+        self.allprocesslist = []
         self.processlist = []
         self.processcount = {
             'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
@@ -627,6 +628,7 @@ class GlancesProcesses(object):
                 # Get all processes stats
                 processloop = processdict.items()
                 first = False
+
             for i in processloop:
                 # Already existing mandatory stats
                 procstat = i[1]
@@ -647,6 +649,13 @@ class GlancesProcesses(object):
                 # Next...
                 first = False
 
+        # Build the all processes list used by the minitored list
+        self.allprocesslist = processdict.values()
+
+        # logger.info("*"*120)
+        # logger.info("ALL=%s" % self.allprocesslist)
+        # logger.info("DIS=%s" % self.processlist)
+
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():
             self.username_cache = {}
@@ -657,6 +666,10 @@ class GlancesProcesses(object):
     def getcount(self):
         """Get the number of processes."""
         return self.processcount
+
+    def getalllist(self):
+        """Get the allprocesslist."""
+        return self.allprocesslist
 
     def getlist(self, sortedby=None):
         """Get the processlist."""
