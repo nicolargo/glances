@@ -150,7 +150,6 @@ Command-Line Options
   --enable-process-extended
                         enable extended stats on top process
   --disable-quicklook   disable the Quicklook module
-  --enable-history      enable the history mode
   --path-history PATH_HISTORY
                         Set the export path for graph history
   --export-csv CSV_FILE
