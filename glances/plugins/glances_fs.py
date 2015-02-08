@@ -105,6 +105,17 @@ class Plugin(GlancesPlugin):
             except UnicodeDecodeError:
                 return self.stats
 
+            # Optionnal hack to allow logicals mounts points (issue #448)
+            # Ex: Had to put 'allow=zfs' in the [fs] section of the conf file
+            #     to allow zfs monitoring
+            for fstype in self.get_conf_value('allow'):
+                try:
+                    fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fstype) >= 0]
+                except UnicodeDecodeError:
+                    return self.stats
+
+            logger.info(fs_stat)
+
             # Loop over fs
             for fs in fs_stat:
                 fs_current = {}
@@ -182,7 +193,8 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         # Alert
         for i in self.stats:
-            self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(i['used'], max=i['size'], header=i['mnt_point'])
+            self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
+                i['used'], max=i['size'], header=i['mnt_point'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
