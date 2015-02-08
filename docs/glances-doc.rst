@@ -530,6 +530,13 @@ If a RAID controller is detected on you system, its status will be displayed:
 
 .. image:: images/raid.png
 
+By default, the plugin only display physical devices only (hard disks, USB keys) and ignore all others. To allow others FS type, you had to use the following section in the configuration file:
+
+::
+
+    [fs]
+    allow=zfs,misc
+
 Sensors
 -------
 
