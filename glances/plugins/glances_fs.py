@@ -114,8 +114,6 @@ class Plugin(GlancesPlugin):
                 except UnicodeDecodeError:
                     return self.stats
 
-            logger.info(fs_stat)
-
             # Loop over fs
             for fs in fs_stat:
                 fs_current = {}
