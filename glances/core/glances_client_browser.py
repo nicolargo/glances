@@ -84,7 +84,7 @@ class GlancesClientBrowser(object):
                     # Do not retreive stats for statics server
                     # Why ? Because for each offline servers, the timeout will be reached
                     # So ? The curse interface freezes
-                    if (v['type'] == 'STATIC' and v['status'] in ['UNKNOWN', 'SNMP', 'OFFLINE']):
+                    if v['type'] == 'STATIC' and v['status'] in ['UNKNOWN', 'SNMP', 'OFFLINE']:
                         continue
 
                     # Select the connection mode (with or without password)
