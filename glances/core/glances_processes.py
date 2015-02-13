@@ -36,7 +36,8 @@ def is_kernel_thread(proc):
     """ Return True if proc is a kernel thread, False instead. """
     try:
         return os.getpgid(proc.pid) == 0
-    except OSError:  # Python >= 3.3 raises ProcessLookupError, which inherits OSError
+    # Python >= 3.3 raises ProcessLookupError, which inherits OSError
+    except OSError:
         # return False is process is dead
         return False
 
@@ -69,7 +70,8 @@ class ProcessTreeNode(object):
             if current_node.is_root:
                 lines.append(indent_str)
             else:
-                lines.append("%s[%s]" % (indent_str, current_node.process.name()))
+                lines.append("%s[%s]" %
+                             (indent_str, current_node.process.name()))
             indent_str = " " * (len(lines[-1]) - 1)
             children_nodes_to_print = collections.deque()
             for child in current_node.children:
@@ -77,14 +79,15 @@ class ProcessTreeNode(object):
                     tree_char = "└─"
                 else:
                     tree_char = "├─"
-                children_nodes_to_print.appendleft((indent_str + tree_char, child))
+                children_nodes_to_print.appendleft(
+                    (indent_str + tree_char, child))
             if children_nodes_to_print:
                 nodes_to_print.append(children_nodes_to_print)
         return "\n".join(lines)
 
     def set_sorting(self, key, reverse):
         """ Set sorting key or func for user with __iter__ (affects the whole tree from this node). """
-        if (self.sort_key != key) or (self.reverse_sorting != reverse):
+        if self.sort_key != key or self.reverse_sorting != reverse:
             nodes_to_flag_unsorted = collections.deque([self])
             while nodes_to_flag_unsorted:
                 current_node = nodes_to_flag_unsorted.pop()
@@ -134,7 +137,8 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=self.__class__.get_weight, reverse=self.reverse_sorting)
+            self.children.sort(
+                key=self.__class__.get_weight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
             for n in iter(child):
@@ -151,10 +155,11 @@ class ProcessTreeNode(object):
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
-            self.children.sort(key=self.__class__.get_weight, reverse=self.reverse_sorting)
+            self.children.sort(
+                key=self.__class__.get_weight, reverse=self.reverse_sorting)
             self.children_sorted = True
         for child in self.children:
-            if (not exclude_incomplete_stats) or ("time_since_update" in child.stats):
+            if not exclude_incomplete_stats or "time_since_update" in child.stats:
                 yield child
 
     def find_process(self, process):
@@ -162,7 +167,7 @@ class ProcessTreeNode(object):
         nodes_to_search = collections.deque([self])
         while nodes_to_search:
             current_node = nodes_to_search.pop()
-            if (not current_node.is_root) and (current_node.process.pid == process.pid):
+            if not current_node.is_root and current_node.process.pid == process.pid:
                 return current_node
             nodes_to_search.extend(current_node.children)
 
@@ -192,13 +197,16 @@ class ProcessTreeNode(object):
                     # parent is not in tree, add this node later
                     nodes_to_add_last.append(new_node)
 
-        # next pass(es): add nodes to their parents if it could not be done in previous pass
+        # next pass(es): add nodes to their parents if it could not be done in
+        # previous pass
         while nodes_to_add_last:
-            node_to_add = nodes_to_add_last.popleft()  # pop from left and append to right to avoid infinite loop
+            # pop from left and append to right to avoid infinite loop
+            node_to_add = nodes_to_add_last.popleft()
             try:
                 parent_process = node_to_add.process.parent()
             except psutil.NoSuchProcess:
-                # parent is dead, consider no parent, add this node at the top level
+                # parent is dead, consider no parent, add this node at the top
+                # level
                 tree_root.children.append(node_to_add)
             else:
                 if parent_process is None:
@@ -300,9 +308,11 @@ class GlancesProcesses(object):
         if value is not None:
             try:
                 self.process_filter_re = re.compile(value)
-                logger.debug("Process filter regex compilation OK: {0}".format(self.get_process_filter()))
+                logger.debug(
+                    "Process filter regex compilation OK: {0}".format(self.get_process_filter()))
             except Exception:
-                logger.error("Cannot compile process filter regex: {0}".format(value))
+                logger.error(
+                    "Cannot compile process filter regex: {0}".format(value))
                 self.process_filter_re = None
         else:
             self.process_filter_re = None
@@ -545,8 +555,7 @@ class GlancesProcesses(object):
         processdict = {}
         for proc in psutil.process_iter():
             # Ignore kernel threads if needed
-            if (self.no_kernel_threads and (not is_windows)
-                    and is_kernel_thread(proc)):
+            if self.no_kernel_threads and not is_windows and is_kernel_thread(proc):
                 continue
 
             # If self.get_max_processes() is None: Only retreive mandatory stats
@@ -562,10 +571,8 @@ class GlancesProcesses(object):
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
-            if (is_bsd and processdict[proc]['name'] == 'idle' or
-                    is_windows and processdict[proc]['name'] == 'System Idle Process' or
-                    is_mac and processdict[proc]['name'] == 'kernel_task'):
-                continue
+            if is_bsd and processdict[proc]['name'] == 'idle' or is_windows and processdict[proc]['name'] == 'System Idle Process' or is_mac and processdict[proc]['name'] == 'kernel_task':
+                    continue
             # Update processcount (global statistics)
             try:
                 self.processcount[str(proc.status())] += 1
@@ -592,7 +599,7 @@ class GlancesProcesses(object):
 
             for i, node in enumerate(self.process_tree):
                 # Only retreive stats for visible processes (get_max_processes)
-                if (self.get_max_processes() is not None) and (i >= self.get_max_processes()):
+                if self.get_max_processes() is not None and i >= self.get_max_processes():
                     break
 
                 # add standard stats
@@ -616,7 +623,8 @@ class GlancesProcesses(object):
                     processiter = sorted(
                         processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
                 except (KeyError, TypeError) as e:
-                    logger.error("Cannot sort process list by %s (%s)" % (self.getsortkey(), e))
+                    logger.error(
+                        "Cannot sort process list by %s (%s)" % (self.getsortkey(), e))
                     logger.error("%s" % str(processdict.items()[0]))
                     # Fallback to all process (issue #423)
                     processloop = processdict.items()

@@ -77,13 +77,13 @@ class Plugin(GlancesPlugin):
         """ Get curses data to display for a process tree. """
         ret = []
         node_count = 0
-        if (not node.is_root) and ((max_node_count is None) or (max_node_count > 0)):
+        if not node.is_root and ((max_node_count is None) or (max_node_count > 0)):
             node_data = self.get_process_curses_data(node.stats, False, args)
             node_count += 1
             ret.extend(node_data)
         for child in node.iter_children():
             # stop if we have enough nodes to display
-            if (max_node_count is not None) and (node_count >= max_node_count):
+            if max_node_count is not None and node_count >= max_node_count:
                 break
 
             if max_node_count is None:
@@ -109,7 +109,7 @@ class Plugin(GlancesPlugin):
         # find process command indices in messages
         pos = []
         for i, m in enumerate(child_data):
-            if (m["msg"] == "\n") and (m is not child_data[-1]):
+            if m["msg"] == "\n" and m is not child_data[-1]:
                 # new line pos + 12
                 # TODO find a way to get rid of hardcoded 12 value
                 pos.append(i + 12)
