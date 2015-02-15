@@ -296,6 +296,9 @@ class _GlancesCurses(object):
             # 'i' > Sort processes by IO rate (not available on OS X)
             self.args.process_sorted_by = 'io_counters'
             glances_processes.setmanualsortkey(self.args.process_sorted_by)
+        elif self.pressedkey == ord('I'):
+            # 'I' > Show/hide IP module
+            self.args.disable_ip = not self.args.disable_ip
         elif self.pressedkey == ord('l'):
             # 'l' > Show/hide log messages
             self.args.disable_log = not self.args.disable_log
@@ -430,6 +433,10 @@ class _GlancesCurses(object):
         stats_memswap = stats.get_plugin('memswap').get_stats_display()
         stats_network = stats.get_plugin('network').get_stats_display(
             args=self.args, max_width=plugin_max_width)
+        try:
+            stats_ip = stats.get_plugin('ip').get_stats_display(args=self.args)
+        except AttributeError:
+            stats_ip = None
         stats_diskio = stats.get_plugin(
             'diskio').get_stats_display(args=self.args)
         stats_fs = stats.get_plugin('fs').get_stats_display(
@@ -479,10 +486,17 @@ class _GlancesCurses(object):
         # ==================================
         # Display first line (system+uptime)
         # ==================================
+        # Space between column
+        self.space_between_column = 0
         self.new_line()
-        l = self.get_stats_display_width(
-            stats_system) + self.get_stats_display_width(stats_uptime) + self.space_between_column
-        self.display_plugin(stats_system, display_optional=(screen_x >= l))
+        l_uptime = self.get_stats_display_width(
+            stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime) 
+        self.display_plugin(
+            stats_system, display_optional=(screen_x >= l_uptime))
+        self.new_column()
+        self.display_plugin(stats_ip)
+        # Space between column
+        self.space_between_column = 3
         self.new_column()
         self.display_plugin(stats_uptime)
 
@@ -499,11 +513,13 @@ class _GlancesCurses(object):
             cpu_width = self.get_stats_display_width(stats_percpu)
             quicklook_adapt = 114
         else:
-            cpu_width = self.get_stats_display_width(stats_cpu, without_option=(screen_x < 80))
+            cpu_width = self.get_stats_display_width(
+                stats_cpu, without_option=(screen_x < 80))
             quicklook_adapt = 108
         l = cpu_width
         # MEM & SWAP & LOAD
-        l += self.get_stats_display_width(stats_mem, without_option=(screen_x < 100))
+        l += self.get_stats_display_width(stats_mem,
+                                          without_option=(screen_x < 100))
         l += self.get_stats_display_width(stats_memswap)
         l += self.get_stats_display_width(stats_load)
         # Quicklook plugin size is dynamic
@@ -545,9 +561,9 @@ class _GlancesCurses(object):
         # Backup line position
         self.saved_line = self.next_line
 
-        # =============================================================
+        # ==================================================================
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
-        # =============================================================
+        # ==================================================================
         self.init_column()
         if (not (self.args.disable_network and self.args.disable_diskio
                  and self.args.disable_fs and self.args.disable_raid
@@ -718,7 +734,7 @@ class _GlancesCurses(object):
         # Exit if:
         # - the plugin_stats message is empty
         # - the display tag = False
-        if not plugin_stats['msgdict'] or not plugin_stats['display']:
+        if plugin_stats is None or not plugin_stats['msgdict'] or not plugin_stats['display']:
             # Exit
             return 0
 
