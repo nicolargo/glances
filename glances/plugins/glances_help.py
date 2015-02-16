@@ -41,11 +41,11 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-        
+
         # init data dictionary
         self.view_data = {}
         self.generate_view_data()
-        
+
     def update(self):
         """No stats. It is just a plugin to display the help."""
         pass
@@ -58,15 +58,15 @@ class Plugin(GlancesPlugin):
             self.view_data['configuration_file'] = '{0}: {1}'.format(_("Configuration file"), self.config.get_loaded_config_file())
         except AttributeError:
             pass
-        
+
         msg_col = ' {0:1}  {1:35}'
         msg_col2 = '   {0:1}  {1:35}'
         self.view_data['sort_auto']                         = msg_col.format("a", _("Sort processes automatically"))
         self.view_data['sort_network']                      = msg_col2.format("b", _("Bytes or bits for network I/O"))
         self.view_data['sort_cpu']                          = msg_col.format("c", _("Sort processes by CPU%"))
         self.view_data['show_hide_alert']                   = msg_col2.format("l", _("Show/hide alert logs"))
-        
-        
+
+
         self.view_data['show_mem']                          = msg_col.format("m", _("Sort processes by MEM%"))
         self.view_data['delete_warning_alerts']             = msg_col2.format("w", _("Delete warning alerts"))
         self.view_data['sort_proc']                         = msg_col.format("p", _("Sort processes by name"))
@@ -91,16 +91,16 @@ class Plugin(GlancesPlugin):
         self.view_data['enable_disable_short_processname']  = msg_col.format("/", _("Enable/disable short processes name"))
         self.view_data['enable_disable_docker']             = msg_col.format("D", _("Enable/disable Docker stats"))
         self.view_data['edit_pattern_filter']               = '{0}: {1}'.format("ENTER", _("Edit the process filter pattern"))
-        
-        
-    def get_view_data(self, args=None):        
+
+
+    def get_view_data(self, args=None):
         return self.view_data
-    
+
     def msg_curse(self, args=None):
         """Return the list to display in the curse interface."""
         # Init the return message
         ret = []
-        
+
         # Build the string message
         # Header
         ret.append(self.curse_add_line(self.view_data['version'], "TITLE"))
@@ -121,10 +121,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['sort_cpu']))
         ret.append(self.curse_add_line(self.view_data['show_hide_alert']))
         ret.append(self.curse_new_line())
-        
 
-        
-        ret.append(self.curse_add_line(self.view_data['show_mem']))        
+
+
+        ret.append(self.curse_add_line(self.view_data['show_mem']))
         ret.append(self.curse_add_line(self.view_data['delete_warning_alerts']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['sort_proc']))
@@ -158,13 +158,12 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
         ret.append(self.curse_new_line())
-        
-        ret.append(self.curse_add_line(self.view_data['enable_disable_docker']))        
 
+        ret.append(self.curse_add_line(self.view_data['enable_disable_docker']))
 
         ret.append(self.curse_new_line())
         ret.append(self.curse_new_line())
-        
+
         ret.append(self.curse_add_line(self.view_data['edit_pattern_filter']))
 
         # Return the message with decoration
