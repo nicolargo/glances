@@ -149,7 +149,7 @@ Command-Line Options
   --disable-log         disable log module
   --enable-process-extended
                         enable extended stats on top process
-  --enable-history      enable the history mode
+  --disable-quicklook   disable the Quicklook module
   --path-history PATH_HISTORY
                         Set the export path for graph history
   --export-csv CSV_FILE
@@ -263,6 +263,8 @@ The following commands (key pressed) are supported while in Glances:
     Switch between global CPU and per-CPU stats
 ``2``
     Enable/disable left sidebar
+``3``
+    Enable/disable the Quicklook module
 ``/``
     Switch between short name / command line (processes name)
 
@@ -395,6 +397,16 @@ Disconnected:
 
 .. image:: images/disconnected.png
 
+QUICKLOOK
+---------
+
+The quicklook plugin is only display on wide screen and propose a bar view for CPU and memory (virtual and swap).
+
+.. image:: images/quicklook.png
+
+*Note*: limit values can be overwritten in the configuration file under
+the ``[quicklook]`` section.
+
 CPU
 ---
 
@@ -517,6 +529,13 @@ the ``[filesystem]`` section.
 If a RAID controller is detected on you system, its status will be displayed:
 
 .. image:: images/raid.png
+
+By default, the plugin only display physical devices only (hard disks, USB keys) and ignore all others. To allow others FS type, you had to use the following section in the configuration file:
+
+::
+
+    [fs]
+    allow=zfs,misc
 
 Sensors
 -------

@@ -94,7 +94,7 @@ class GlancesGrabBat(object):
         """Update the stats."""
         if self.initok:
             self.bat.update()
-            self.bat_list = [{'label': _("Battery (%)"), 'value': self.getcapacitypercent()}]
+            self.bat_list = [{'label': _("Battery"), 'value': self.getcapacitypercent(), 'unit': '%'}]
         else:
             self.bat_list = []
 

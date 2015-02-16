@@ -34,7 +34,7 @@ class GlancesWebServer(object):
         # Init stats
         self.stats = GlancesStats(config)
 
-        if (not is_windows) and args.no_kernel_threads:
+        if not is_windows and args.no_kernel_threads:
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 

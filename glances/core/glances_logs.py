@@ -195,7 +195,7 @@ class GlancesLogs(object):
         """
         # Create a new clean list
         clean_logs_list = []
-        while (self.len() > 0):
+        while self.len() > 0:
             item = self.logs_list.pop()
             if item[1] < 0 or (not critical and item[2].startswith("CRITICAL")):
                 clean_logs_list.insert(0, item)
