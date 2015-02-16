@@ -21,6 +21,7 @@
 
 # Import system lib
 import sys
+import re
 
 # Import Glances lib
 from glances.core.glances_globals import is_mac, is_windows
@@ -490,7 +491,7 @@ class _GlancesCurses(object):
         self.space_between_column = 0
         self.new_line()
         l_uptime = self.get_stats_display_width(
-            stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime) 
+            stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime)
         self.display_plugin(
             stats_system, display_optional=(screen_x >= l_uptime))
         self.new_column()
@@ -501,7 +502,7 @@ class _GlancesCurses(object):
         self.display_plugin(stats_uptime)
 
         # ========================================================
-        # Display second line (CPU|PERCPU+LOAD+MEM+SWAP+<SUMMARY>)
+        # Display second line (<SUMMARY>+CPU|PERCPU+LOAD+MEM+SWAP)
         # ========================================================
         self.init_column()
         self.new_line()
@@ -523,6 +524,7 @@ class _GlancesCurses(object):
         l += self.get_stats_display_width(stats_memswap)
         l += self.get_stats_display_width(stats_load)
         # Quicklook plugin size is dynamic
+        l_ql = 0
         if screen_x > 126 and not self.args.disable_quicklook:
             # Limit the size to be align with the process
             quicklook_width = min(screen_x - quicklook_adapt, 87)
@@ -532,19 +534,20 @@ class _GlancesCurses(object):
             except AttributeError as e:
                 logger.debug("Quicklook plugin not available (%s)" % e)
             else:
-                l += self.get_stats_display_width(stats_quicklook)
+                l_ql = self.get_stats_display_width(stats_quicklook)
+        # Display Quicklook
+        self.display_plugin(stats_quicklook)
+        self.new_column()
         # Compute space between column
         space_number = int(stats_quicklook['msgdict'] != [])
         space_number += int(stats_mem['msgdict'] != [])
         space_number += int(stats_memswap['msgdict'] != [])
         space_number += int(stats_load['msgdict'] != [])
-        if space_number == 0:
+        if space_number < 1:
             space_number = 1
         if screen_x > (space_number * self.space_between_column + l):
-            self.space_between_column = int((screen_x - l) / space_number)
-        # Display
-        self.display_plugin(stats_quicklook)
-        self.new_column()
+            self.space_between_column = int((screen_x - l_ql - l) / space_number)
+        # Display others stats
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
@@ -870,11 +873,11 @@ class _GlancesCurses(object):
         try:
             if without_option:
                 # Size without options
-                c = len(max(''.join([(i['msg'] if not i['optional'] else "")
+                c = len(max(''.join([(re.sub(r'[^\x00-\x7F]+',' ', i['msg']) if not i['optional'] else "")
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
-                c = len(max(''.join([i['msg']
+                c = len(max(''.join([re.sub(r'[^\x00-\x7F]+',' ', i['msg'])
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
         except Exception:
             return 0
