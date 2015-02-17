@@ -4,7 +4,7 @@
     </div>
 
     <div ng-show="help_screen" class="container-fluid">
-    
+
         <div class="row">
             <div class="col-sm-2 col-lg-10">{{help.version}} {{help.psutil_version}}</div>
         </div>
@@ -69,7 +69,7 @@
             <div class="col-sm-2 col-lg-3">{{help.edit_pattern_filter}}</div>
         </div>
     </div>
-    
+
     <div ng-show="result && !help_screen" class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
@@ -79,7 +79,7 @@
                             <button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime <= 1">-</button>
                             <button ng-click="refreshTime = refreshTime + 1">+</button>
                         </span> -->
-                        
+
                         <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].hr_name}} / {{result["system"].os_name}} {{result["system"].os_version}})</span>
                     </section>
                 </div>
@@ -272,8 +272,8 @@
         </div>
         <div class="row">
             <div class="col-sm-3" ng-show="show.sidebar">
-                <section id="network" class="plugin" ng-show="show.network">
-                    <div class="table">
+                <div class="table">
+                    <section id="network" class="plugin table-row-group" ng-show="show.network">
                         <div class="table-row">
                             <div class="table-cell text-left title">NETWORK</div>
                             <div class="table-cell">Rx/s</div>
@@ -286,11 +286,8 @@
                             <div class="table-cell" ng-if="!show.network_by_bytes">{{network.rx | bits}}</div>
                             <div class="table-cell" ng-if="!show.network_by_bytes">{{network.tx | bits}}</div>
                         </div>
-                    </div>
-                </section>
-
-                <section id="diskio" class="plugin" ng-show="show.diskio">
-                    <div class="table">
+                    </section>
+                    <section id="diskio" class="plugin table-row-group" ng-show="show.diskio">
                         <div class="table-row">
                             <div class="table-cell text-left title">DISK I/O</div>
                             <div class="table-cell">R/s</div>
@@ -301,10 +298,8 @@
                             <div class="table-cell">{{disk.read_bytes | bytes}}</div>
                             <div class="table-cell">{{disk.write_bytes | bytes}}</div>
                         </div>
-                    </div>
-                </section>
-                <section id="fs" class="plugin" ng-show="show.fs">
-                    <div class="table">
+                    </section>
+                    <section id="fs" class="plugin table-row-group" ng-show="show.fs">
                         <div class="table-row">
                             <div class="table-cell text-left title">FILE SYS</div>
                             <div class="table-cell">Used</div>
@@ -317,10 +312,8 @@
                             </div>
                             <div class="table-cell">{{fs.size | bytes}}</div>
                         </div>
-                    </div>
-                </section>
-                <section id="sensors" class="plugin" ng-show="show.sensors && result['sensors'].length > 0">
-                    <div class="table">
+                    </section>
+                    <section id="sensors" class="plugin table-row-group" ng-show="show.sensors && result['sensors'].length > 0">
                         <div class="table-row">
                             <div class="table-cell text-left title">SENSORS</div>
                             <div class="table-cell">&#176;C</div>
@@ -329,8 +322,8 @@
                             <div class="table-cell text-left">{{sensor.label}}</div>
                             <div class="table-cell" ng-class="getClass('sensors', 'sensors_' + sensor.type + '_', sensor.value, 0)">{{sensor.value}}</div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>
             <div class="col-sm-9">
                 <!--<section id="containers" class="plugin">
@@ -352,9 +345,9 @@
 
                 <section id="processcount" class="plugin">
                     <span class="title">TASKS</span> {{result["processcount"].total}} ({{result["processcount"].thread}} thr), {{result["processcount"].running}} run,
-                        {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth 
+                        {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth
     <span ng-show="!sortColumn"> sorted automatically </span>
-    <span ng-show="sortColumn">sorted </span> 
+    <span ng-show="sortColumn">sorted </span>
     <span> by {{sortColumn}}, flat view </span>
 
                 </section>
