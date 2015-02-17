@@ -5,7 +5,15 @@ Glances Version 2.x
 Version 2.4
 ===========
 
-    ...
+Enhancements and news features:
+
+    * Grab FAN speed in the Glances sensors plugin (issue #501)
+    * Allow logical mounts points in the FS plugin (issue #448)
+
+Bugs corrected:
+
+    * Correct monitor list, all processes are take into account (issue #507)
+    * Correct duplicated --enable-history in the doc (issue #511)
 
 Version 2.3
 ===========

@@ -102,6 +102,8 @@ Start the client browser (browser mode):\n\
         # Enable or disable option on startup
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help=_('disable network module'))
+        parser.add_argument('--disable-ip', action='store_true', default=False,
+                            dest='disable_ip', help=_('disable IP module'))
         parser.add_argument('--disable-diskio', action='store_true', default=False,
                             dest='disable_diskio', help=_('disable disk I/O module'))
         parser.add_argument('--disable-fs', action='store_true', default=False,
@@ -118,6 +120,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_process', help=_('disable process module'))
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help=_('disable log module'))
+        parser.add_argument('--disable-quicklook', action='store_true', default=False,
+                            dest='disable_quicklook', help=_('disable quicklook module'))
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help=_('disable bold mode in the terminal'))
         parser.add_argument('--enable-process-extended', action='store_true', default=False,

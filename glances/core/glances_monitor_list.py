@@ -127,18 +127,11 @@ class MonitorList(object):
         # Iter upon the monitored list
         for i in range(0, len(self.get())):
             # Search monitored processes by a regular expression
-            processlist = glances_processes.getlist()
+            processlist = glances_processes.getalllist()
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
-            if self.command(i) is None:
-                # If there is no command specified in the conf file
-                # then display CPU and MEM %
-                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
-                    sum([p['cpu_percent'] for p in monitoredlist]),
-                    sum([p['memory_percent'] for p in monitoredlist]))
-                continue
-            else:
+            if self.command(i) is not None:
                 # Execute the user command line
                 try:
                     self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i),
@@ -147,6 +140,13 @@ class MonitorList(object):
                     self.__monitor_list[i]['result'] = _("Error: ") + self.command(i)
                 except Exception:
                     self.__monitor_list[i]['result'] = _("Cannot execute command")
+
+            if self.command(i) is None or self.__monitor_list[i]['result'] == '':
+                # If there is no command specified in the conf file
+                # then display CPU and MEM %
+                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
+                    sum([p['cpu_percent'] for p in monitoredlist]),
+                    sum([p['memory_percent'] for p in monitoredlist]))
 
         return self.__monitor_list
 
