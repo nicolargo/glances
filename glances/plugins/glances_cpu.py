@@ -22,6 +22,7 @@
 import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.core.glances_cpu_percent import cpu_percent
 # from glances.core.glances_logging import logger
 
 # SNMP OID
@@ -82,7 +83,7 @@ class Plugin(GlancesPlugin):
             # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
             # The following stats are returned by the API but not displayed in the UI:
             # softirq (Linux), guest (Linux 2.6.24+), guest_nice (Linux 3.2.0+)
-            self.stats['total'] = psutil.cpu_percent(interval=0.0)
+            self.stats['total'] = cpu_percent.get()
             cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
             for stat in ['user', 'system', 'idle', 'nice', 'iowait',
                          'irq', 'softirq', 'steal', 'guest', 'guest_nice']:

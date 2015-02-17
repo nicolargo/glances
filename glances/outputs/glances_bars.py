@@ -40,11 +40,18 @@ class Bar(object):
 
     """
 
-    def __init__(self, size):
+    def __init__(self, size,
+                 pre_char='[',
+                 post_char=']',
+                 empty_char='_'):
         # Bar size
         self.__size = size
         # Bar current percent
         self.__percent = 0
+        # Char used for the decoration
+        self.__pre_char = pre_char
+        self.__post_char = post_char
+        self.__empty_char = empty_char
 
     def get_size(self):
         return self.__size
@@ -69,5 +76,5 @@ class Bar(object):
         if frac > 0:
             ret += curses_bars[int(frac * 8)]
             whole += 1
-        ret += '_' * int(self.get_size() - whole)
-        return ret
+        ret += self.__empty_char * int(self.get_size() - whole)
+        return self.__pre_char + ret + self.__post_char
