@@ -110,6 +110,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_fs', help=_('disable filesystem module'))
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help=_('disable sensors module'))
+        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
+                            dest='disable_hddtemp', help=_('disable HD Temperature module'))
         parser.add_argument('--disable-raid', action='store_true', default=False,
                             dest='disable_raid', help=_('disable RAID module'))
         parser.add_argument('--disable-docker', action='store_true', default=False,
@@ -263,6 +265,11 @@ Start the client browser (browser mode):\n\
                 logger.critical("History output path {0} do not exist or is not writable".format(args.path_history))
                 sys.exit(2)
             logger.debug("History output path is set to {0}".format(args.path_history))
+
+        # Disable HDDTemp if sensors are disabled
+        if args.disable_sensors:
+            args.disable_hddtemp = True
+            logger.debug("Sensors and HDDTemp are disabled")
 
         return args
 
