@@ -9,6 +9,7 @@ Enhancements and news features:
 
     * Grab FAN speed in the Glances sensors plugin (issue #501)
     * Allow logical mounts points in the FS plugin (issue #448)
+    * Add a --disable-hddtemp to disable HDD temperature module at startup (issue #515)
 
 Bugs corrected:
 

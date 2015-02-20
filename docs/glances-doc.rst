@@ -143,6 +143,7 @@ Command-Line Options
   --disable-fs          disable filesystem module
   --disable-network     disable network module
   --disable-sensors     disable sensors module
+  --disable-hddtemp     disable HDDTemp module
   --disable-left-sidebar
                         disable left sidebar
   --disable-process     disable process module
