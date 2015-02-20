@@ -92,7 +92,7 @@ class GlancesGrabHDDTemp(object):
         self.reset()
 
         # Only update if --disable-hddtemp is not set
-        if self.args.disable_hddtemp:
+        if self.args is None or self.args.disable_hddtemp:
             return
 
         # Fetch the data
