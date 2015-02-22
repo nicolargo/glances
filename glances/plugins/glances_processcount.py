@@ -77,7 +77,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             return ret
 
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Display the filter (if it exists)

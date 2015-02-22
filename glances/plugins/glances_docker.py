@@ -214,7 +214,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist (and non null) and display plugin enable...
-        if self.stats == {} or args.disable_docker or len(self.stats['containers']) == 0:
+        if not self.stats or args.disable_docker or len(self.stats['containers']) == 0:
             return ret
 
         # Build the string message
