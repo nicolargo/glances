@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Custom logging class"""
+"""Custom logging class."""
 
 import logging
 try:
@@ -77,18 +77,19 @@ LOGGING_CFG = {
 
 
 def tempfile_name():
-    """Return the tempfile name (full path)"""
+    """Return the tempfile name (full path)."""
     ret = os.path.join(tempfile.gettempdir(), 'glances.log')
     if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
-        print("Warning: can't write logs to file {} (permission denied)".format(ret))
+        print("WARNING: Couldn't write to log file {0}: (Permission denied)".format(ret))
         ret = tempfile.mkstemp(prefix='glances', suffix='.tmp', text=True)
-        print("Create a new log file: {}".format(ret[1]))
+        print("Create a new log file: {0}".format(ret[1]))
         return ret[1]
+
     return ret
 
 
 def glances_logger():
-    """Build and return the logger"""
+    """Build and return the logger."""
     temp_path = tempfile_name()
     _logger = logging.getLogger()
     LOGGING_CFG['handlers']['file']['filename'] = temp_path
