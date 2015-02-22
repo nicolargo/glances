@@ -20,7 +20,12 @@
 """Custom logging class"""
 
 import logging
-import logging.config
+try:
+    # Python 2.6
+    from logutils.dictconfig import dictConfig
+except ImportError:
+    # Python >= 2.7
+    from logging.config import dictConfig
 import os
 import tempfile
 
@@ -86,15 +91,9 @@ def glances_logger():
     """Build and return the logger"""
     temp_path = tempfile_name()
     _logger = logging.getLogger()
-    try:
-        LOGGING_CFG['handlers']['file']['filename'] = temp_path
-        logging.config.dictConfig(LOGGING_CFG)
-    except AttributeError:
-        # dictConfig is only available for Python 2.7 or higher
-        # Minimal configuration for Python 2.6
-        logging.basicConfig(filename=temp_path,
-                            level=logging.DEBUG,
-                            format='%(asctime)s -- %(levelname)s -- %(message)s')
+    LOGGING_CFG['handlers']['file']['filename'] = temp_path
+    dictConfig(LOGGING_CFG)
+
     return _logger
 
 logger = glances_logger()
