@@ -161,11 +161,13 @@ class GlancesPlugin(object):
         self.stats = input_stats
         return self.stats
 
-    def set_stats_snmp(self, bulk=False, snmp_oid={}):
+    def set_stats_snmp(self, bulk=False, snmp_oid=None):
         """Update stats using SNMP.
 
         If bulk=True, use a bulk request instead of a get request.
         """
+        snmp_oid = snmp_oid or {}
+
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
