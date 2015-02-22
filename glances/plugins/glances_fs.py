@@ -24,7 +24,6 @@ import operator
 import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_logging import logger
 
 # SNMP OID
 # The snmpd.conf needs to be edited.

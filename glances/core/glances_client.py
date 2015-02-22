@@ -28,11 +28,6 @@ try:
 except ImportError:
     # Python 2
     from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
-try:
-    import http.client as httplib
-except ImportError:
-    # Python 2
-    import httplib
 
 # Import Glances libs
 from glances.core.glances_globals import version

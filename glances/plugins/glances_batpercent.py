@@ -28,7 +28,6 @@ try:
     import batinfo
 except ImportError:
     logger.debug("Batinfo library not found. Glances cannot grab battery info.")
-    pass
 
 
 class Plugin(GlancesPlugin):
