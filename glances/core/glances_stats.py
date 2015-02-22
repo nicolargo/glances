@@ -155,10 +155,12 @@ class GlancesStats(object):
             # logger.debug("Update %s stats" % p)
             self._plugins[p].update()
 
-    def export(self, input_stats={}):
+    def export(self, input_stats=None):
         """Export all the stats.
         Each export module is ran in a dedicated thread."""
         # threads = []
+        input_stats = input_stats or {}
+
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
             thread = threading.Thread(target=self._exports[e].update,
@@ -231,8 +233,10 @@ class GlancesStatsServer(GlancesStats):
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
 
-    def update(self, input_stats={}):
+    def update(self, input_stats=None):
         """Update the stats."""
+        input_stats = input_stats or {}
+
         # Force update of all the stats
         GlancesStats.update(self)
 
