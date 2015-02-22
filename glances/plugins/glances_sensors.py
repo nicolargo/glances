@@ -178,7 +178,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
-            if i['value'] is not None and i['value'] != []:
+            if i['value']:
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
@@ -234,7 +234,7 @@ class GlancesGrabSensors(object):
                     elif feature.name.startswith(b'fan'):
                         # Fan speed sensor
                         sensors_current['unit'] = SENSOR_FAN_UNIT
-                    if sensors_current != {}:
+                    if sensors_current:
                         sensors_current['label'] = feature.label
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)

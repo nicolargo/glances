@@ -111,7 +111,9 @@ class GlancesPlugin(object):
 
     def update_stats_history(self, item_name=''):
         """Update stats history"""
-        if self.stats != [] and self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+        if (self.stats and self.args is not None and
+                self.args.enable_history and
+                self.get_items_history_list() is not None):
             self.add_item_history('date', datetime.now())
             for i in self.get_items_history_list():
                 if type(self.stats) is list:
@@ -203,7 +205,7 @@ class GlancesPlugin(object):
                                 item_key = item[oid]
                             else:
                                 item_stats[key] = item[oid]
-                    if item_stats != {}:
+                    if item_stats:
                         ret[item_key] = item_stats
                     index += 1
         else:
