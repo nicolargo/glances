@@ -205,7 +205,7 @@ class GlancesStats(object):
 
     def get_plugin_list(self):
         """Return the plugin list."""
-        self._plugins
+        return self._plugins
 
     def get_plugin(self, plugin_name):
         """Return the plugin name."""

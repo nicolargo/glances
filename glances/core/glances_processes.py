@@ -571,8 +571,10 @@ class GlancesProcesses(object):
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
-            if is_bsd and processdict[proc]['name'] == 'idle' or is_windows and processdict[proc]['name'] == 'System Idle Process' or is_mac and processdict[proc]['name'] == 'kernel_task':
-                    continue
+            if (is_bsd and processdict[proc]['name'] == 'idle' or
+                    is_windows and processdict[proc]['name'] == 'System Idle Process' or
+                    is_mac and processdict[proc]['name'] == 'kernel_task'):
+                continue
             # Update processcount (global statistics)
             try:
                 self.processcount[str(proc.status())] += 1

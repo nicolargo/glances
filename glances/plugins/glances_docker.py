@@ -19,6 +19,10 @@
 
 """Docker plugin."""
 
+import numbers
+import os
+import re
+
 # Import Glances libs
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -33,9 +37,6 @@ except ImportError as e:
     docker_tag = False
 else:
     docker_tag = True
-import os
-import re
-import numbers
 
 
 class Plugin(GlancesPlugin):
@@ -82,7 +83,6 @@ class Plugin(GlancesPlugin):
                 # API error (Version mismatch ?)
                 logger.debug("Docker API error (%s)" % e)
                 # Try the connection with the server version
-                import re
                 version = re.search('server\:\ (.*)\)\".*\)', str(e))
                 if version:
                     logger.debug("Try connection with Docker API version %s" % version.group(1))
@@ -252,7 +252,7 @@ class Plugin(GlancesPlugin):
             if len(name) > 20:
                 name = '_' + name[:-19]
             else:
-                name[0:20]
+                name = name[:20]
             msg = ' {0:20}'.format(name)
             ret.append(self.curse_add_line(msg))
             # Status

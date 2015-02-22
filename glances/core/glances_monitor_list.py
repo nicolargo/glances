@@ -74,7 +74,6 @@ class MonitorList(object):
                 countmax = self.config.get_raw_option(section, key + "countmax")
             except Exception as e:
                 logger.error("Cannot read monitored list: {0}".format(e))
-                pass
             else:
                 if description is not None and regex is not None:
                     # Build the new item

@@ -28,7 +28,6 @@ try:
     from pymdstat import MdStat
 except ImportError:
     logger.debug("pymdstat library not found. Glances cannot grab RAID info.")
-    pass
 
 
 class Plugin(GlancesPlugin):
