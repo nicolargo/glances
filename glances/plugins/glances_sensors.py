@@ -156,7 +156,7 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         # Alert
         for i in self.stats:
-            if i['value'] == []:
+            if not i['value']:
                 continue
             if i['type'] == 'battery':
                 self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
@@ -169,7 +169,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if  not self.stats or args.disable_sensors or self.stats == []:
+        if not self.stats or args.disable_sensors:
             return ret
 
         # Build the string message

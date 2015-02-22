@@ -150,7 +150,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message
