@@ -31,7 +31,6 @@ def get_data_files():
         conf_path = os.path.join(os.environ.get('APPDATA'), 'glances')
     else:  # Unix-like + per-user install
         conf_path = os.path.join('etc', 'glances')
-
     data_files.append((conf_path, ['conf/glances.conf']))
 
     for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
@@ -45,8 +44,8 @@ def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info < (2, 7):
-        requires += ['argparse']
+    if sys.version_info == (2, 6):
+        requires += ['argparse', 'logutils']
 
     return requires
 
