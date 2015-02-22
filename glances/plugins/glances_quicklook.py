@@ -24,7 +24,7 @@ import psutil
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
-from glances.core.glances_logging import logger
+#from glances.core.glances_logging import logger
 
 
 class Plugin(GlancesPlugin):
