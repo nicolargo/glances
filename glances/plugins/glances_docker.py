@@ -162,14 +162,14 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_docker_cpu(self, id):
+    def get_docker_cpu(self, container_id):
         """Return the container CPU usage by reading /sys/fs/cgroup/...
         Input: id is the full container id
         Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}"""
         ret = {}
         # Read the stats
         try:
-            with open('/sys/fs/cgroup/cpuacct/docker/' + id + '/cpuacct.stat', 'r') as f:
+            with open('/sys/fs/cgroup/cpuacct/docker/' + container_id + '/cpuacct.stat', 'r') as f:
                 for line in f:
                     m = re.search(r"(system|user)\s+(\d+)", line)
                     if m:
@@ -186,14 +186,14 @@ class Plugin(GlancesPlugin):
         # Return the stats
         return ret
 
-    def get_docker_memory(self, id):
+    def get_docker_memory(self, container_id):
         """Return the container MEMORY usage by reading /sys/fs/cgroup/...
         Input: id is the full container id
         Output: a dict {'rss': 1015808, 'cache': 356352}"""
         ret = {}
         # Read the stats
         try:
-            with open('/sys/fs/cgroup/memory/docker/' + id + '/memory.stat', 'r') as f:
+            with open('/sys/fs/cgroup/memory/docker/' + container_id + '/memory.stat', 'r') as f:
                 for line in f:
                     m = re.search(r"(rss|cache)\s+(\d+)", line)
                     if m:
