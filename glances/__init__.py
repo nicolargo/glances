@@ -95,7 +95,13 @@ def main():
     Run it...
     """
     # Setup translations
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error:
+        # Setting LC_ALL to '' should not generate an error unless LC_ALL is not
+        # defined in the user environment, which can be the case when used via SSH.
+        # So simply skip this error, as python will use the C locale by default.
+        pass
     gettext.install(gettext_domain, locale_dir)
 
     # Share global var
