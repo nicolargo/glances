@@ -350,7 +350,7 @@ class GlancesPlugin(object):
         """Return the limits object."""
         return self.limits
 
-    def get_alert(self, current=0, min=0, max=100, header="", log=False):
+    def get_alert(self, current=0, minimum=0, maximum=100, header="", log=False):
         """Return the alert status relative to a current value.
 
         Use this function for minor stats.
@@ -369,7 +369,7 @@ class GlancesPlugin(object):
         """
         # Compute the %
         try:
-            value = (current * 100) / max
+            value = (current * 100) / maximum
         except ZeroDivisionError:
             return 'DEFAULT'
         except TypeError:
@@ -390,7 +390,7 @@ class GlancesPlugin(object):
                 ret = 'WARNING'
             elif value > self.__get_limit('careful', stat_name=stat_name):
                 ret = 'CAREFUL'
-            elif current < min:
+            elif current < minimum:
                 ret = 'CAREFUL'
         except KeyError:
             return 'DEFAULT'
@@ -432,9 +432,9 @@ class GlancesPlugin(object):
         # Default is ok
         return ret + log_str
 
-    def get_alert_log(self, current=0, min=0, max=100, header=""):
+    def get_alert_log(self, current=0, minimum=0, maximum=100, header=""):
         """Get the alert log."""
-        return self.get_alert(current, min, max, header, log=True)
+        return self.get_alert(current, minimum, maximum, header, log=True)
 
     def __get_limit(self, criticity, stat_name=""):
         """Return the limit value for the alert"""

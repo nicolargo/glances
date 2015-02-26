@@ -167,7 +167,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], max=self.stats['total'])
+        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
         # Optional
         for key in ['active', 'inactive', 'buffers', 'cached']:
             if key in self.stats:

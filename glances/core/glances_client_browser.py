@@ -163,7 +163,7 @@ class GlancesClientBrowser(object):
                     # Display a popup to enter password
                     clear_password = self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True)
                     # Hash with SHA256
-                    encoded_password = sha256(clear_password).hexdigest()
+                    encoded_password = sha256(clear_password.encode('utf-8')).hexdigest()
                     # Store the password for the selected server
                     self.set_in_selected('password', encoded_password)
 
