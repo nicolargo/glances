@@ -241,16 +241,16 @@ class GlancesGrabSensors(object):
 
         return self.sensors_list
 
-    def get(self, type='temperature_core'):
+    def get(self, sensor_type='temperature_core'):
         """Get sensors list."""
         self.__update__()
-        if type == 'temperature_core':
+        if sensor_type == 'temperature_core':
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_TEMP_UNIT]
-        elif type == 'fan_speed':
+        elif sensor_type == 'fan_speed':
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_FAN_UNIT]
         else:
             # Unknown type
-            logger.debug("Unknown sensor type %s" % type)
+            logger.debug("Unknown sensor type %s" % sensor_type)
             ret = []
         return ret
 
