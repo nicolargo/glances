@@ -91,7 +91,6 @@ class GlancesClient(object):
         - 'snmp' = SNMP (fallback)
         """
         self.mode = mode
-        return self.mode
 
     def get_mode(self):
         """Get the client mode.

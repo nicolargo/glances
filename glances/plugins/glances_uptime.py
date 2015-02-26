@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
             self.stats = str(uptime).split('.')[0]
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            uptime = self.set_stats_snmp(snmp_oid=snmp_oid)['_uptime']
+            uptime = self.get_stats_snmp(snmp_oid=snmp_oid)['_uptime']
             try:
                 # In hundredths of seconds
                 self.stats = str(timedelta(seconds=int(uptime) / 100))

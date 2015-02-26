@@ -139,10 +139,10 @@ class Plugin(GlancesPlugin):
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
             try:
-                self.stats = self.set_stats_snmp(
+                self.stats = self.get_stats_snmp(
                     snmp_oid=snmp_oid[self.get_short_system_name()])
             except KeyError:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavor: display all the information
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips

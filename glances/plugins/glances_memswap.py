@@ -89,7 +89,7 @@ class Plugin(GlancesPlugin):
             if self.get_short_system_name() == 'windows':
                 # Mem stats for Windows OS are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
@@ -109,7 +109,7 @@ class Plugin(GlancesPlugin):
                                 'total'] - self.stats['used']
                             break
             else:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
                     self.reset()

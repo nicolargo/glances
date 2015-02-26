@@ -128,10 +128,10 @@ class Plugin(GlancesPlugin):
 
             # SNMP bulk command to get all network interface in one shot
             try:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                     bulk=True)
             except KeyError:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
+                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
                                                     bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
