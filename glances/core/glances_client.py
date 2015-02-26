@@ -53,8 +53,8 @@ class GlancesClient(object):
         self.args = args
         self.config = config
 
-        # Client mode:
-        self.set_mode()
+        # Default client mode
+        self._client_mode = 'glances'
 
         # Return to browser or exit
         self.return_to_browser = return_to_browser
@@ -84,21 +84,19 @@ class GlancesClient(object):
         else:
             logger.error(msg)
 
-    def set_mode(self, mode='glances'):
+    @property
+    def client_mode(self):
+        """Get the client mode."""
+        return self._client_mode
+
+    @client_mode.setter
+    def client_mode(self, mode):
         """Set the client mode.
 
         - 'glances' = Glances server (default)
         - 'snmp' = SNMP (fallback)
         """
-        self.mode = mode
-
-    def get_mode(self):
-        """Get the client mode.
-
-        - 'glances' = Glances server (default)
-        - 'snmp' = SNMP (fallback)
-        """
-        return self.mode
+        self._client_mode = mode
 
     def login(self):
         """Logon to the server."""
@@ -106,15 +104,14 @@ class GlancesClient(object):
 
         if not self.args.snmp_force:
             # First of all, trying to connect to a Glances server
-            self.set_mode('glances')
             client_version = None
             try:
                 client_version = self.client.init()
             except socket.error as err:
                 # Fallback to SNMP
-                logger.error("Connection to Glances server failed (%s)" % err)
-                self.set_mode('snmp')
-                fallbackmsg = _("Trying fallback to SNMP...")
+                self.client_mode = 'snmp'
+                logger.error("Connection to Glances server failed: {0}".format(err))
+                fallbackmsg = _("No Glances server found. Trying fallback to SNMP...")
                 if not self.return_to_browser:
                     print(fallbackmsg)
                 else:
@@ -128,22 +125,25 @@ class GlancesClient(object):
                 self.log_and_exit(msg)
                 return False
 
-            if self.get_mode() == 'glances' and version.split('.')[0] == client_version.split('.')[0]:
-                # Init stats
-                self.stats = GlancesStatsClient(config=self.config, args=self.args)
-                self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-                logger.debug(
-                    "Client version: %s / Server version: %s" % (version, client_version))
-            elif self.get_mode() == 'glances':
-                self.log_and_exit("Client and server not compatible: Client version: %s / Server version: %s" % (version, client_version))
-                return False
+            if self.client_mode == 'glances':
+                # Check that both client and server are in the same major version
+                if version.split('.')[0] == client_version.split('.')[0]:
+                    # Init stats
+                    self.stats = GlancesStatsClient(config=self.config, args=self.args)
+                    self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
+                    logger.debug("Client version: {0} / Server version: {1}".format(version, client_version))
+                else:
+                    self.log_and_exit("Client and server not compatible: \
+                                      Client version: {0} / Server version: {1}".format(version, client_version))
+                    return False
 
         else:
-            self.set_mode('snmp')
+            self.client_mode = 'snmp'
 
-        if self.get_mode() == 'snmp':
+        # SNMP mode
+        if self.client_mode == 'snmp':
             logger.info("Trying to grab stats by SNMP...")
-            # Fallback to SNMP if needed
+
             from glances.core.glances_stats import GlancesStatsClientSNMP
 
             # Init stats
@@ -166,13 +166,13 @@ class GlancesClient(object):
 
     def update(self):
         """Update stats from Glances/SNMP server."""
-        if self.get_mode() == 'glances':
+        if self.client_mode == 'glances':
             return self.update_glances()
-        elif self.get_mode() == 'snmp':
+        elif self.client_mode == 'snmp':
             return self.update_snmp()
         else:
             self.end()
-            logger.critical("Unknown server mode: {0}".format(self.get_mode()))
+            logger.critical("Unknown server mode: {0}".format(self.client_mode))
             sys.exit(2)
 
     def update_glances(self):
@@ -231,7 +231,7 @@ class GlancesClient(object):
             # Export stats using export modules
             self.stats.export(self.stats)
 
-        return self.get_mode()
+        return self.client_mode
 
     def end(self):
         """End of the client session."""
