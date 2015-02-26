@@ -89,16 +89,12 @@ class GlancesLogs(object):
             process_auto_by = 'cpu_percent'
         glances_processes.setautosortkey(process_auto_by)
 
-        return process_auto_by
-
     def reset_process_sort(self):
         """Reset the process_auto_by variable."""
         # Default sort is...
         process_auto_by = 'cpu_percent'
         glances_processes.setautosortkey(process_auto_by)
         glances_processes.setmanualsortkey(None)
-
-        return process_auto_by
 
     def add(self, item_state, item_type, item_value,
             proc_list=None, proc_desc="", peak_time=3):

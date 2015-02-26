@@ -91,7 +91,7 @@ class Plugin(GlancesPlugin):
                               'cpucore': self.nb_log_core}
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            self.stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
             if self.stats['min1'] == '':
                 self.reset()

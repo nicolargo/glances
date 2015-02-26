@@ -138,10 +138,10 @@ class Plugin(GlancesPlugin):
 
             # SNMP bulk command to get all file system in one shot
             try:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                               bulk=True)
             except KeyError:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
                                               bulk=True)
 
             # Loop over fs

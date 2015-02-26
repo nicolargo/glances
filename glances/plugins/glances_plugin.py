@@ -107,7 +107,6 @@ class GlancesPlugin(object):
             logger.debug("Reset history for plugin {0} (items: {0})".format(
                 self.plugin_name, reset_list))
             self.stats_history = {}
-        return self.stats_history
 
     def update_stats_history(self, item_name=''):
         """Update stats history"""
@@ -127,7 +126,6 @@ class GlancesPlugin(object):
                     # Stats is not a list
                     # Add the item to the history directly
                     self.add_item_history(i['name'], self.stats[i['name']])
-        return self.stats_history
 
     def get_stats_history(self):
         """Return the stats history"""
@@ -148,7 +146,6 @@ class GlancesPlugin(object):
         """
         self.input_method = input_method
         self.short_system_name = short_system_name
-        return self.input_method
 
     def get_input(self):
         """Get the input method."""
@@ -161,9 +158,8 @@ class GlancesPlugin(object):
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
         self.stats = input_stats
-        return self.stats
 
-    def set_stats_snmp(self, bulk=False, snmp_oid=None):
+    def get_stats_snmp(self, bulk=False, snmp_oid=None):
         """Update stats using SNMP.
 
         If bulk=True, use a bulk request instead of a get request.
@@ -303,7 +299,6 @@ class GlancesPlugin(object):
     def set_views(self, input_views):
         """Set the views to input_views."""
         self.views = input_views
-        return self.views
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
@@ -344,7 +339,6 @@ class GlancesPlugin(object):
     def set_limits(self, input_limits):
         """Set the limits to input_limits."""
         self.limits = input_limits
-        return self.limits
 
     def get_limits(self):
         """Return the limits object."""

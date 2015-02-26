@@ -295,7 +295,6 @@ class GlancesProcesses(object):
     def set_max_processes(self, value):
         """Set the maximum number of processes showed in the UI interfaces"""
         self.max_processes = value
-        return self.max_processes
 
     def get_max_processes(self):
         """Get the maximum number of processes showed in the UI interfaces"""
@@ -316,7 +315,6 @@ class GlancesProcesses(object):
                 self.process_filter_re = None
         else:
             self.process_filter_re = None
-        return self.process_filter
 
     def get_process_filter(self):
         """Get the process filter"""
@@ -709,12 +707,10 @@ class GlancesProcesses(object):
         self.processmanualsort = sortedby
         if self._enable_tree and (self.process_tree is not None):
             self.process_tree.set_sorting(sortedby, sortedby != "name")
-        return self.processmanualsort
 
     def setautosortkey(self, sortedby):
         """Set the current sort key for automatic sort."""
         self.processautosort = sortedby
-        return self.processautosort
 
     def resetsort(self):
         """Set the default sort: Auto"""

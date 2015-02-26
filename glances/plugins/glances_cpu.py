@@ -96,7 +96,7 @@ class Plugin(GlancesPlugin):
                 # You can find the CPU utilization of windows system by querying the oid
                 # Give also the number of core (number of element in the table)
                 try:
-                    cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                     bulk=True)
                 except KeyError:
                     self.reset()
@@ -117,10 +117,10 @@ class Plugin(GlancesPlugin):
             else:
                 # Default behavor
                 try:
-                    self.stats = self.set_stats_snmp(
+                    self.stats = self.get_stats_snmp(
                         snmp_oid=snmp_oid[self.get_short_system_name()])
                 except KeyError:
-                    self.stats = self.set_stats_snmp(
+                    self.stats = self.get_stats_snmp(
                         snmp_oid=snmp_oid['default'])
 
                 if self.stats['idle'] == '':

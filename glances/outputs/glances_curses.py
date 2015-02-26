@@ -944,7 +944,6 @@ class GlancesCursesBrowser(_GlancesCurses):
     def set_active(self, index=None):
         """Set the active server or None if no server selected"""
         self.active_server = index
-        return self.active_server
 
     def get_active(self):
         """Return the active server (the one display in front) or None if it is the browser list"""
@@ -957,7 +956,6 @@ class GlancesCursesBrowser(_GlancesCurses):
     def cursor_set(self, pos):
         """Set the cursor position and return it"""
         self.cursor_position = pos
-        return self.cursor_position
 
     def cursor_get(self):
         """Return the cursor position"""
@@ -969,7 +967,6 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor_position -= 1
         else:
             self.cursor_position = len(servers_list) - 1
-        return self.cursor_position
 
     def cursor_down(self, servers_list):
         """Set the cursor to position N-1 in the list"""
@@ -977,7 +974,6 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor_position += 1
         else:
             self.cursor_position = 0
-        return self.cursor_position
 
     def __catch_key(self, servers_list):
         # Catch the browser pressed key

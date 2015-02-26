@@ -64,7 +64,6 @@ class Bar(object):
 
     def set_size(self, size):
         self.__size = size
-        return self.__size
 
     def get_percent(self):
         return self.__percent
@@ -73,7 +72,6 @@ class Bar(object):
         assert percent >= 0
         assert percent <= 100
         self.__percent = percent
-        return self.__percent
 
     def __str__(self):
         """Return the bars"""

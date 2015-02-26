@@ -117,7 +117,7 @@ class Plugin(GlancesPlugin):
             if self.get_short_system_name() in ('windows', 'esxi'):
                 # Mem stats for Windows|Vmware Esxi are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
@@ -133,7 +133,7 @@ class Plugin(GlancesPlugin):
                             break
             else:
                 # Default behavor for others OS
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
                     self.reset()
