@@ -36,7 +36,7 @@ class GlancesStandalone(object):
         self.stats = GlancesStats(config=config, args=args)
 
         # Default number of processes to displayed is set to 50
-        glances_processes.set_max_processes(50)
+        glances_processes.max_processes = 50
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
@@ -48,7 +48,7 @@ class GlancesStandalone(object):
 
         # Manage optionnal process filter
         if args.process_filter is not None:
-            glances_processes.set_process_filter(args.process_filter)
+            glances_processes.process_filter = args.process_filter
 
         if (not is_windows) and args.no_kernel_threads:
             # Ignore kernel threads in process list

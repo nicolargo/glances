@@ -365,7 +365,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Compute the sort key
-        process_sort_key = glances_processes.getsortkey()
+        process_sort_key = glances_processes.sort_key
         sort_style = 'SORT'
 
         # Header
@@ -401,7 +401,7 @@ class Plugin(GlancesPlugin):
             ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
                                                          args,
                                                          first_level=True,
-                                                         max_node_count=glances_processes.get_max_processes()))
+                                                         max_node_count=glances_processes.max_processes))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
