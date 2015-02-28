@@ -932,30 +932,30 @@ class GlancesCursesBrowser(_GlancesCurses):
         self.__refresh_time = args.time
 
         # Init the cursor position for the client browser
-        self.cursor_init()
+        self.cursor_position = 0
 
         # Active Glances server number
-        self.set_active()
+        self._active_server = None
 
-    def set_active(self, index=None):
-        """Set the active server or None if no server selected"""
-        self.active_server = index
+    @property
+    def active_server(self):
+        """Return the active server or None if it's the browser list."""
+        return self._active_server
 
-    def get_active(self):
-        """Return the active server (the one display in front) or None if it is the browser list"""
-        return self.active_server
+    @active_server.setter
+    def active_server(self, index):
+        """Set the active server or None if no server selected."""
+        self._active_server = index
 
-    def cursor_init(self):
-        """Init the cursor position to the top of the list"""
-        return self.cursor_set(0)
-
-    def cursor_set(self, pos):
-        """Set the cursor position and return it"""
-        self.cursor_position = pos
-
-    def cursor_get(self):
-        """Return the cursor position"""
+    @property
+    def cursor(self):
+        """Get the cursor position."""
         return self.cursor_position
+
+    @cursor.setter
+    def cursor(self, position):
+        """Set the cursor position."""
+        self.cursor_position = position
 
     def cursor_up(self, servers_list):
         """Set the cursor to position N-1 in the list"""
@@ -983,8 +983,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
-            logger.debug("Server number %s selected" % (self.cursor_get() + 1))
-            self.set_active(self.cursor_get())
+            logger.debug("Server number {0} selected".format(self.cursor + 1))
+            self.active_server = self.cursor
         elif self.pressedkey == 259:
             # 'UP' > Up in the server list
             logger
@@ -1021,7 +1021,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Wait 100ms...
             curses.napms(100)
 
-        return self.get_active()
+        return self.active_server
 
     def flush(self, servers_list):
         """Update the servers' list screen.
@@ -1102,9 +1102,9 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # If a servers has been deleted from the list...
         # ... and if the cursor is in the latest position
-        if self.cursor_get() > len(servers_list) - 1:
+        if self.cursor > len(servers_list) - 1:
             # Set the cursor position to the latest item
-            self.cursor_set(len(servers_list) - 1)
+            self.cursor = len(servers_list) - 1
 
         # Display table
         line = 0
@@ -1130,12 +1130,10 @@ class GlancesCursesBrowser(_GlancesCurses):
             xc = x
 
             # Is the line selected ?
-            if line == self.cursor_get():
+            if line == self.cursor:
                 # Display cursor
-                self.term_window.addnstr(y, xc,
-                                         ">",
-                                         screen_x - xc,
-                                         self.colors_list['BOLD'])
+                self.term_window.addnstr(
+                    y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
 
             # Display alias instead of name
             server_stat
@@ -1145,10 +1143,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             for c in column_def:
                 if xc < screen_x and y < screen_y and c[1] is not None:
                     # Display server stats
-                    self.term_window.addnstr(y, xc,
-                                             "%s" % server_stat[c[0]],
-                                             c[2],
-                                             self.colors_list[v['status']])
+                    self.term_window.addnstr(
+                        y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...
