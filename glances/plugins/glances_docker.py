@@ -22,8 +22,10 @@
 import numbers
 import os
 import re
+import json
 
 # Import Glances libs
+from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -154,6 +156,8 @@ class Plugin(GlancesPlugin):
             for c in self.stats['containers']:
                 c['cpu'] = self.get_docker_cpu(c['Id'])
                 c['memory'] = self.get_docker_memory(c['Id'])
+                # !!! Refresh problem
+                # c['network'] = self.get_docker_network(c['Id'])
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
@@ -178,7 +182,7 @@ class Plugin(GlancesPlugin):
             logger.error("Can not grab container CPU stat ({0})".format(e))
             return ret
         # Get the user ticks
-        ticks = self.get_user_ticks()        
+        ticks = self.get_user_ticks()
         if isinstance(ret["system"], numbers.Number) and isinstance(ret["user"], numbers.Number):
             ret["total"] = ret["system"] + ret["user"]
             for k in ret.keys():
@@ -203,6 +207,48 @@ class Plugin(GlancesPlugin):
             return ret
         # Return the stats
         return ret
+
+    def get_docker_network(self, container_id):
+        """Return the container network usage using the Docker API (v1.0 or higher)
+        Input: id is the full container id
+        Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}"""
+
+        # Init the returned dict
+        network_new = {}
+
+        # Grab network interface stat using the Docker API stats method
+        # Read the rx/tx stats (in bytes)
+        docker_stats = self.docker_client.stats(container_id)
+        for docker_stat in docker_stats:
+            netiocounters = json.loads(docker_stat)["network"]
+            docker_stats.close()
+
+        # Previous network interface stats are stored in the network_old variable
+        if not hasattr(self, 'netiocounters_old'):
+            # First call, we init the network_old var
+            self.netiocounters_old = {}
+            try:
+                self.netiocounters_old[container_id] = netiocounters
+            except (IOError, UnboundLocalError):
+                pass
+        elif container_id not in self.netiocounters_old:
+            try:
+                self.netiocounters_old[container_id] = netiocounters
+            except (IOError, UnboundLocalError):
+                pass
+        else:
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net')
+            network_new['rx'] = netiocounters["rx_bytes"] - self.netiocounters_old[container_id]["rx_bytes"]
+            network_new['tx'] = netiocounters["tx_bytes"] - self.netiocounters_old[container_id]["tx_bytes"]
+
+            # Save stats to compute next bitrate
+            self.netiocounters_old[container_id] = netiocounters
+
+        # Return the stats
+        return network_new
 
     def get_user_ticks(self):
         """return the user ticks by reading the environment variable"""
@@ -237,8 +283,12 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(_("CPU%"))
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("MEM"))
+        msg = '{0:>7}'.format(_("MEM"))
         ret.append(self.curse_add_line(msg))
+        # msg = '{0:>6}'.format(_("Rx/s"))
+        # ret.append(self.curse_add_line(msg))
+        # msg = '{0:>6}'.format(_("Tx/s"))
+        # ret.append(self.curse_add_line(msg))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
         # Data
@@ -268,10 +318,18 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             # MEM
             try:
-                msg = '{0:>6}'.format(self.auto_unit(container['memory']['rss']))
+                msg = '{0:>7}'.format(self.auto_unit(container['memory']['rss']))
             except KeyError:
-                msg = '{0:>6}'.format('?')
+                msg = '{0:>7}'.format('?')
             ret.append(self.curse_add_line(msg))
+            # NET RX/TX
+            # for r in ['rx', 'tx']:
+            #     try:
+            #         value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
+            #         msg = '{0:>6}'.format(value)
+            #     except KeyError:
+            #         msg = '{0:>6}'.format('?')
+            #     ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
             ret.append(self.curse_add_line(msg))
