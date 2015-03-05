@@ -57,7 +57,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 mds = MdStat()
@@ -66,7 +66,7 @@ class Plugin(GlancesPlugin):
                 logger.debug("Can not grab RAID stats (%s)" % e)
                 return self.stats
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
             pass

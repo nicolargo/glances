@@ -66,7 +66,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab the stat using the PsUtil disk_io_counters method
             # read_count: number of reads
@@ -114,7 +114,7 @@ class Plugin(GlancesPlugin):
 
                 # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
             pass

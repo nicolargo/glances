@@ -55,13 +55,13 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Grab quicklook stats: CPU, MEM and SWAP
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Get the latest CPU percent value
             self.stats['cpu'] = cpu_percent.get()
             # Use the PsUtil lib for the memory (virtual and swap)
             self.stats['mem'] = psutil.virtual_memory().percent
             self.stats['swap'] = psutil.swap_memory().percent
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Not available
             pass
 
