@@ -53,7 +53,7 @@ class Plugin(GlancesPlugin):
 
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             percpu_percent = psutil.cpu_percent(interval=0.0, percpu=True)
             percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
             for cputimes in percpu_times_percent:

@@ -83,7 +83,7 @@ class Plugin(GlancesPlugin):
         # Reset the stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the dedicated lib
             self.stats = []
             # Get the temperature
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
                 # Append Batteries %
                 self.stats.extend(batpercent)
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04

@@ -131,7 +131,7 @@ class Plugin(GlancesPlugin):
         if not docker_tag or (self.args is not None and self.args.disable_docker):
             return self.stats
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats
             # Exemple: {
             #     "KernelVersion": "3.16.4-tinycore64",
@@ -159,7 +159,7 @@ class Plugin(GlancesPlugin):
                 # !!! Refresh problem
                 # c['network'] = self.get_docker_network(c['Id'])
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not available
             pass

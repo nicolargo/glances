@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab SWAP using the PSUtil swap_memory method
             sm_stats = psutil.swap_memory()
@@ -84,12 +84,12 @@ class Plugin(GlancesPlugin):
                          'sin', 'sout']:
                 if hasattr(sm_stats, swap):
                     self.stats[swap] = getattr(sm_stats, swap)
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            if self.get_short_system_name() == 'windows':
+            if self.short_system_name == 'windows':
                 # Mem stats for Windows OS are stored in the FS table
                 try:
-                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                   bulk=True)
                 except KeyError:
                     self.reset()

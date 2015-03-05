@@ -47,7 +47,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Set the message position
-        self.set_align('right')
+        self.align = 'right'
 
         # Init the stats
         self.reset()
@@ -61,14 +61,14 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             uptime = datetime.now() - \
                 datetime.fromtimestamp(psutil.boot_time())
 
             # Convert uptime to string (because datetime is not JSONifi)
             self.stats = str(uptime).split('.')[0]
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             uptime = self.get_stats_snmp(snmp_oid=snmp_oid)['_uptime']
             try:
