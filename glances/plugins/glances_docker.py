@@ -22,7 +22,6 @@
 import numbers
 import os
 import re
-import json
 
 # Import Glances libs
 from glances.core.glances_timer import getTimeSinceLastUpdate
@@ -152,12 +151,31 @@ class Plugin(GlancesPlugin):
             #            u'Names': [u'/webstack_nginx_1'],
             #            u'Id': u'b0da859e84eb4019cf1d965b15e9323006e510352c402d2f442ea632d61faaa5'}]
             self.stats['containers'] = self.docker_client.containers()
-            # Get CPU and MEMORY stats for containers
+            # Get stats for all containers
             for c in self.stats['containers']:
-                c['cpu'] = self.get_docker_cpu(c['Id'])
-                c['memory'] = self.get_docker_memory(c['Id'])
-                # !!! Refresh problem
-                # c['network'] = self.get_docker_network(c['Id'])
+                if not hasattr(self, 'docker_stats'):
+                    # Create a dict with all the containers' stats instance
+                    self.docker_stats = {}
+
+                if c['Id'] not in self.docker_stats:
+                    # Create the stats instance for the current container
+                    try:
+                        self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
+                    except AttributeError as e:
+                        logger.debug("Can not call Docker stats method {}".format(e))
+
+                # Get the docker stats
+                try:
+                    all_stats = self.docker_stats[c['Id']].next()
+                except:
+                    all_stats = {}
+
+                # !!! DEBUG
+                # logger.info(all_stats)
+
+                c['cpu'] = self.get_docker_cpu(c['Id'], all_stats)
+                c['memory'] = self.get_docker_memory(c['Id'], all_stats)
+                # c['network'] = self.get_docker_network(c['Id'], all_stats)
 
         elif self.get_input() == 'snmp':
             # Update stats using SNMP
@@ -166,7 +184,7 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_docker_cpu(self, container_id):
+    def get_docker_cpu_old(self, container_id):
         """Return the container CPU usage by reading /sys/fs/cgroup/...
         Input: id is the full container id
         Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}"""
@@ -181,16 +199,33 @@ class Plugin(GlancesPlugin):
         except IOError as e:
             logger.error("Can not grab container CPU stat ({0})".format(e))
             return ret
-        # Get the user ticks
-        ticks = self.get_user_ticks()
         if isinstance(ret["system"], numbers.Number) and isinstance(ret["user"], numbers.Number):
             ret["total"] = ret["system"] + ret["user"]
-            for k in ret.keys():
-                ret[k] = float(ret[k]) / ticks
         # Return the stats
         return ret
 
-    def get_docker_memory(self, container_id):
+    def get_docker_cpu(self, container_id, all_stats):
+        """Return the container CPU usage
+        Input: id is the full container id
+               all_stats is the output of the stats method of the Docker API
+        Output: a dict {'total': 1.49}"""
+        ret = {}
+        # Read the stats
+        try:
+            ret['total'] = all_stats['cpu_stats']['total_usage']
+        except KeyError as e:
+            # all_stats do not have CPU information
+            logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
+            # Trying fallback to old grab method
+            ret = self.get_docker_cpu_old(container_id)
+        # Get the user ticks
+        ticks = self.get_user_ticks()
+        for k in ret.keys():
+            ret[k] = float(ret[k]) / ticks
+        # Return the stats
+        return ret
+
+    def get_docker_memory_old(self, container_id):
         """Return the container MEMORY usage by reading /sys/fs/cgroup/...
         Input: id is the full container id
         Output: a dict {'rss': 1015808, 'cache': 356352}"""
@@ -208,7 +243,25 @@ class Plugin(GlancesPlugin):
         # Return the stats
         return ret
 
-    def get_docker_network(self, container_id):
+    def get_docker_memory(self, container_id, all_stats):
+        """Return the container MEMORY
+        Input: id is the full container id
+               all_stats is the output of the stats method of the Docker API
+        Output: a dict {'rss': 1015808, 'cache': 356352}"""
+        ret = {}
+        # Read the stats
+        try:
+            ret['rss'] = all_stats['memory_stats']['stats']['rss']
+            ret['cache'] = all_stats['memory_stats']['stats']['cache']
+        except KeyError as e:
+            # all_stats do not have MEM information
+            logger.debug("Can not grab MEM usage for container {0} ({1})".format(container_id, e))
+            # Trying fallback to old grab method
+            ret = self.get_docker_memory_old(container_id)
+        # Return the stats
+        return ret
+
+    def get_docker_network(self, container_id, all_stats):
         """Return the container network usage using the Docker API (v1.0 or higher)
         Input: id is the full container id
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}"""
@@ -216,12 +269,14 @@ class Plugin(GlancesPlugin):
         # Init the returned dict
         network_new = {}
 
-        # Grab network interface stat using the Docker API stats method
         # Read the rx/tx stats (in bytes)
-        docker_stats = self.docker_client.stats(container_id)
-        for docker_stat in docker_stats:
-            netiocounters = json.loads(docker_stat)["network"]
-            docker_stats.close()
+        try:
+            netiocounters = all_stats["network"]
+        except KeyError as e:
+            # all_stats do not have NETWORK information
+            logger.debug("Can not grab NET usage for container {0} ({1})".format(container_id, e))
+            # No fallback available...
+            return network_new
 
         # Previous network interface stats are stored in the network_old variable
         if not hasattr(self, 'netiocounters_old'):
@@ -285,10 +340,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(_("MEM"))
         ret.append(self.curse_add_line(msg))
-        # msg = '{0:>6}'.format(_("Rx/s"))
-        # ret.append(self.curse_add_line(msg))
-        # msg = '{0:>6}'.format(_("Tx/s"))
-        # ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format(_("Rx/s"))
+        ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format(_("Tx/s"))
+        ret.append(self.curse_add_line(msg))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
         # Data
@@ -323,13 +378,13 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>7}'.format('?')
             ret.append(self.curse_add_line(msg))
             # NET RX/TX
-            # for r in ['rx', 'tx']:
-            #     try:
-            #         value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
-            #         msg = '{0:>6}'.format(value)
-            #     except KeyError:
-            #         msg = '{0:>6}'.format('?')
-            #     ret.append(self.curse_add_line(msg))
+            for r in ['rx', 'tx']:
+                try:
+                    value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
+                    msg = '{0:>6}'.format(value)
+                except KeyError:
+                    msg = '{0:>6}'.format('?')
+                ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
             ret.append(self.curse_add_line(msg))
