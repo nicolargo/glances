@@ -76,7 +76,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
@@ -89,7 +89,7 @@ class Plugin(GlancesPlugin):
                               'min5': load[1],
                               'min15': load[2],
                               'cpucore': self.nb_log_core}
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             self.stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 

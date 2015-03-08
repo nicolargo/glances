@@ -183,13 +183,13 @@ class GlancesStats(object):
 
     def getAllLimits(self):
         """Return the plugins limits list."""
-        return [self._plugins[p].get_limits() for p in self._plugins]
+        return [self._plugins[p].limits for p in self._plugins]
 
     def getAllLimitsAsDict(self):
         """Return all the stats limits (dict)"""
         ret = {}
         for p in self._plugins:
-            ret[p] = self._plugins[p].get_limits()
+            ret[p] = self._plugins[p].limits
         return ret
 
     def getAllViews(self):
@@ -387,7 +387,8 @@ class GlancesStatsClientSNMP(GlancesStats):
         # For each plugins, call the update method
         for p in self._plugins:
             # Set the input method to SNMP
-            self._plugins[p].set_input('snmp', self.system_name)
+            self._plugins[p].input_method = 'snmp'
+            self._plugins[p].short_system_name = self.system_name
             try:
                 self._plugins[p].update()
             except Exception as e:

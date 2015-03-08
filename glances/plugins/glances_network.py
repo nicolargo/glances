@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Grab network interface stat using the PsUtil net_io_counter method
@@ -123,12 +123,12 @@ class Plugin(GlancesPlugin):
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
 
             # SNMP bulk command to get all network interface in one shot
             try:
-                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                     bulk=True)
             except KeyError:
                 netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
@@ -154,7 +154,7 @@ class Plugin(GlancesPlugin):
                         netstat = {}
                         # Windows: a tips is needed to convert HEX to TXT
                         # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
-                        if self.get_short_system_name() == 'windows':
+                        if self.short_system_name == 'windows':
                             try:
                                 netstat['interface_name'] = str(base64.b16decode(net[2:-2].upper()))
                             except TypeError:

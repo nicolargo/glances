@@ -47,7 +47,7 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """Update the monitored list."""
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Monitor list only available in a full Glances environment
             # Check if the glances_monitor instance is init
             if self.glances_monitors is None:

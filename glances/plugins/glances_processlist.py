@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.gettree()
             else:
                 self.stats = glances_processes.getlist()
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
 

@@ -93,7 +93,7 @@ class Plugin(GlancesPlugin):
         # Reset the list
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Grab the stats using the PsUtil disk_partitions
@@ -133,19 +133,19 @@ class Plugin(GlancesPlugin):
                 fs_current['key'] = self.get_key()
                 self.stats.append(fs_current)
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
 
             # SNMP bulk command to get all file system in one shot
             try:
-                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                               bulk=True)
             except KeyError:
                 fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
                                               bulk=True)
 
             # Loop over fs
-            if self.get_short_system_name() in ('windows', 'esxi'):
+            if self.short_system_name in ('windows', 'esxi'):
                 # Windows or ESXi tips
                 for fs in fs_stat:
                     # Memory stats are grabed in the same OID table (ignore it)

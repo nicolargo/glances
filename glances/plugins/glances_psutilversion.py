@@ -45,7 +45,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Return PsUtil version as a tuple
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # PsUtil version only available in local
             try:
                 self.stats = tuple([int(num) for num in __psutil_version.split('.')])

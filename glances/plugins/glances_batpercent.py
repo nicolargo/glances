@@ -61,12 +61,12 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats
             self.glancesgrabbat.update()
             self.stats = self.glancesgrabbat.get()
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not avalaible
             pass

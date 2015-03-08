@@ -49,11 +49,11 @@ class GlancesPlugin(object):
         self.args = args
 
         # Init the default alignement (for curses)
-        self.set_align('left')
+        self._align = 'left'
 
         # Init the input method
-        self.input_method = 'local'
-        self.short_system_name = None
+        self._input_method = 'local'
+        self._short_system_name = None
 
         # Init the stats list
         self.stats = None
@@ -63,7 +63,7 @@ class GlancesPlugin(object):
         self.stats_history = self.init_stats_history()
 
         # Init the limits dictionnary
-        self.limits = dict()
+        self._limits = dict()
 
         # Init the actions
         self.actions = GlancesActions()
@@ -135,25 +135,30 @@ class GlancesPlugin(object):
         """Return the items history list"""
         return self.items_history_list
 
-    def set_input(self, input_method, short_system_name=None):
+    @property
+    def input_method(self):
+        """Get the input method."""
+        return self._input_method
+
+    @input_method.setter
+    def input_method(self, input_method):
         """Set the input method.
 
         * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
-
-        For SNMP, short_system_name is detected short OS name
         """
-        self.input_method = input_method
-        self.short_system_name = short_system_name
+        self._input_method = input_method
 
-    def get_input(self):
-        """Get the input method."""
-        return self.input_method
+    @property
+    def short_system_name(self):
+        """Get the short detected OS name (SNMP)."""
+        return self._short_system_name
 
-    def get_short_system_name(self):
-        """Get the short detected OS name"""
-        return self.short_system_name
+    @short_system_name.setter
+    def short_system_name(self, short_name):
+        """Set the short detected OS name (SNMP)."""
+        self._short_system_name = short_name
 
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
@@ -325,24 +330,24 @@ class GlancesPlugin(object):
         """Load the limits from the configuration file."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            for s, v in config.items(self.plugin_name):
+            for level, v in config.items(self.plugin_name):
                 # Read limits
+                limit = '_'.join([self.plugin_name, level])
                 try:
-                    self.limits[
-                        self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
+                    self._limits[limit] = config.get_option(self.plugin_name, level)
                 except ValueError:
-                    self.limits[
-                        self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
-                logger.debug("Load limit: {0} = {1}".format(self.plugin_name + '_' + s,
-                                                            self.limits[self.plugin_name + '_' + s]))
+                    self._limits[limit] = config.get_raw_option(self.plugin_name, level).split(",")
+                logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
 
-    def set_limits(self, input_limits):
-        """Set the limits to input_limits."""
-        self.limits = input_limits
-
-    def get_limits(self):
+    @property
+    def limits(self):
         """Return the limits object."""
-        return self.limits
+        return self._limits
+
+    @limits.setter
+    def limits(self, input_limits):
+        """Set the limits to input_limits."""
+        self._limits = input_limits
 
     def get_alert(self, current=0, minimum=0, maximum=100, header="", log=False):
         """Return the alert status relative to a current value.
@@ -435,11 +440,11 @@ class GlancesPlugin(object):
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful
         try:
-            limit = self.limits[stat_name + '_' + criticity]
+            limit = self._limits[stat_name + '_' + criticity]
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful
-            limit = self.limits[self.plugin_name + '_' + criticity]
+            limit = self._limits[self.plugin_name + '_' + criticity]
 
         # Return the limit
         return limit
@@ -449,11 +454,11 @@ class GlancesPlugin(object):
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
         try:
-            ret = self.limits[stat_name + '_' + criticity + '_action']
+            ret = self._limits[stat_name + '_' + criticity + '_action']
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful_action
-            ret = self.limits[self.plugin_name + '_' + criticity + '_action']
+            ret = self._limits[self.plugin_name + '_' + criticity + '_action']
 
         # Return the action list
         return ret
@@ -463,12 +468,12 @@ class GlancesPlugin(object):
         # Get the log tag for stat + header
         # Exemple: network_wlan0_rx_log
         try:
-            log_tag = self.limits[stat_name + '_log']
+            log_tag = self._limits[stat_name + '_log']
         except KeyError:
             # Try fallback to plugin default log
             # Exemple: network_log
             try:
-                log_tag = self.limits[self.plugin_name + '_log']
+                log_tag = self._limits[self.plugin_name + '_log']
             except KeyError:
                 # By defaukt, log are disabled
                 return default_action
@@ -482,12 +487,12 @@ class GlancesPlugin(object):
             plugin_name = self.plugin_name
         if header == "":
             try:
-                return self.limits[plugin_name + '_' + value]
+                return self._limits[plugin_name + '_' + value]
             except KeyError:
                 return []
         else:
             try:
-                return self.limits[plugin_name + '_' + header + '_' + value]
+                return self._limits[plugin_name + '_' + header + '_' + value]
             except KeyError:
                 return []
 
@@ -498,7 +503,7 @@ class GlancesPlugin(object):
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist"""
         try:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
+            return self._limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
         except (KeyError, IndexError):
             return None
 
@@ -520,7 +525,7 @@ class GlancesPlugin(object):
         if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
         if hasattr(self, 'align'):
-            align_curse = self.align
+            align_curse = self._align
 
         if max_width is not None:
             ret = {'display': display_curse,
@@ -566,16 +571,18 @@ class GlancesPlugin(object):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def set_align(self, align='left'):
-        """Set the Curse align"""
-        if align in ('left', 'right', 'bottom'):
-            self.align = align
-        else:
-            self.align = 'left'
+    @property
+    def align(self):
+        """Get the curse align."""
+        return self._align
 
-    def get_align(self):
-        """Get the Curse align"""
-        return self.align
+    @align.setter
+    def align(self, value):
+        """Set the curse align.
+
+        value: left, right, bottom.
+        """
+        self._align = value
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.
