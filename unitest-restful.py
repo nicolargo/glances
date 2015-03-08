@@ -91,7 +91,7 @@ class TestGlances(unittest.TestCase):
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
         print("Please wait...")
-        time.sleep(1)
+        time.sleep(3)
 
         self.assertTrue(pid is not None)
 
