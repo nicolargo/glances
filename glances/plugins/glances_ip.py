@@ -61,7 +61,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local' and netifaces_tag:
+        if self.input_method == 'local' and netifaces_tag:
             # Update stats using the netifaces lib
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
@@ -76,7 +76,7 @@ class Plugin(GlancesPlugin):
                 except KeyError as e:
                     logger.debug("Can not grab IP information (%s)".format(e))
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Not implemented yet
             pass
 

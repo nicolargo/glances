@@ -56,7 +56,7 @@ class Plugin(GlancesPlugin):
         # Reset the stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
             except NameError:
                 self.reset()
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # http://stackoverflow.com/questions/5662467/how-to-find-out-the-number-of-cpus-using-snmp
             pass
