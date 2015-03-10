@@ -97,7 +97,7 @@ class GlancesLogs(object):
         glances_processes.sort_key = 'cpu_percent'
 
     def add(self, item_state, item_type, item_value,
-            proc_list=None, proc_desc="", peak_time=3):
+            proc_list=None, proc_desc="", peak_time=6):
         """Add a new item to the logs list.
 
         If 'item' is a 'new one', add the new item at the beginning of the logs
