@@ -80,7 +80,7 @@ class Export(GlancesExport):
                             self.influxdb_password,
                             self.influxdb_db)
         try:
-            get_all_db = db.get_database_list()[0].values()
+            get_all_db = db.get_list_database()[0].values()
         except client.InfluxDBClientError as e:
             logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.influxdb_db, e))
             sys.exit(2)
