@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for key in ['cpu', 'mem', 'swap']:
-            bar.set_percent(self.stats[key])
+            bar.percent = self.stats[key]
             msg = '{0:>4} '.format(key.upper())
             ret.append(self.curse_add_line(msg))
             msg = '{0}'.format(bar)
