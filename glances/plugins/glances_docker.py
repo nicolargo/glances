@@ -161,17 +161,15 @@ class Plugin(GlancesPlugin):
                     # Create the stats instance for the current container
                     try:
                         self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
+                        logger.debug("Create Docker stats object for container {}".format(c['Id']))
                     except AttributeError as e:
-                        logger.debug("Can not call Docker stats method {}".format(e))
+                        logger.error("Can not call Docker stats method {}".format(e))
 
                 # Get the docker stats
                 try:
                     all_stats = self.docker_stats[c['Id']].next()
                 except:
                     all_stats = {}
-
-                # !!! DEBUG
-                # logger.info(all_stats)
 
                 c['cpu'] = self.get_docker_cpu(c['Id'], all_stats)
                 c['memory'] = self.get_docker_memory(c['Id'], all_stats)
@@ -210,14 +208,19 @@ class Plugin(GlancesPlugin):
                all_stats is the output of the stats method of the Docker API
         Output: a dict {'total': 1.49}"""
         ret = {}
+
         # Read the stats
-        try:
-            ret['total'] = all_stats['cpu_stats']['total_usage']
-        except KeyError as e:
-            # all_stats do not have CPU information
-            logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
-            # Trying fallback to old grab method
-            ret = self.get_docker_cpu_old(container_id)
+        # try:
+        #     ret['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
+        # except KeyError as e:
+        #     # all_stats do not have CPU information
+        #     logger.error("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
+        #     # Trying fallback to old grab method
+        #     ret = self.get_docker_cpu_old(container_id)
+
+        # Did not work has expected, replace by the old method...
+        ret = self.get_docker_cpu_old(container_id)
+
         # Get the user ticks
         ticks = self.get_user_ticks()
         for k in ret.keys():
@@ -247,15 +250,17 @@ class Plugin(GlancesPlugin):
         """Return the container MEMORY
         Input: id is the full container id
                all_stats is the output of the stats method of the Docker API
-        Output: a dict {'rss': 1015808, 'cache': 356352}"""
+        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}"""
         ret = {}
         # Read the stats
         try:
             ret['rss'] = all_stats['memory_stats']['stats']['rss']
             ret['cache'] = all_stats['memory_stats']['stats']['cache']
+            ret['usage'] = all_stats['memory_stats']['usage']
+            ret['max_usage'] = all_stats['memory_stats']['max_usage']
         except KeyError as e:
             # all_stats do not have MEM information
-            logger.debug("Can not grab MEM usage for container {0} ({1})".format(container_id, e))
+            logger.error("Can not grab MEM usage for container {0} ({1})".format(container_id, e))
             # Trying fallback to old grab method
             ret = self.get_docker_memory_old(container_id)
         # Return the stats
@@ -286,7 +291,8 @@ class Plugin(GlancesPlugin):
                 self.netiocounters_old[container_id] = netiocounters
             except (IOError, UnboundLocalError):
                 pass
-        elif container_id not in self.netiocounters_old:
+
+        if container_id not in self.netiocounters_old:
             try:
                 self.netiocounters_old[container_id] = netiocounters
             except (IOError, UnboundLocalError):
@@ -298,6 +304,8 @@ class Plugin(GlancesPlugin):
             network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net')
             network_new['rx'] = netiocounters["rx_bytes"] - self.netiocounters_old[container_id]["rx_bytes"]
             network_new['tx'] = netiocounters["tx_bytes"] - self.netiocounters_old[container_id]["tx_bytes"]
+            network_new['cumulative_rx'] = netiocounters["rx_bytes"]
+            network_new['cumulative_tx'] = netiocounters["tx_bytes"]
 
             # Save stats to compute next bitrate
             self.netiocounters_old[container_id] = netiocounters
@@ -340,10 +348,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(_("MEM"))
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("Rx/s"))
-        ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("Tx/s"))
-        ret.append(self.curse_add_line(msg))
+        # msg = '{0:>6}'.format(_("Rx/s"))
+        # ret.append(self.curse_add_line(msg))
+        # msg = '{0:>6}'.format(_("Tx/s"))
+        # ret.append(self.curse_add_line(msg))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
         # Data
@@ -373,18 +381,18 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             # MEM
             try:
-                msg = '{0:>7}'.format(self.auto_unit(container['memory']['rss']))
+                msg = '{0:>7}'.format(self.auto_unit(container['memory']['usage']))
             except KeyError:
                 msg = '{0:>7}'.format('?')
             ret.append(self.curse_add_line(msg))
             # NET RX/TX
-            for r in ['rx', 'tx']:
-                try:
-                    value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
-                    msg = '{0:>6}'.format(value)
-                except KeyError:
-                    msg = '{0:>6}'.format('?')
-                ret.append(self.curse_add_line(msg))
+            # for r in ['rx', 'tx']:
+            #     try:
+            #         value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
+            #         msg = '{0:>6}'.format(value)
+            #     except KeyError:
+            #         msg = '{0:>6}'.format('?')
+            #     ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
             ret.append(self.curse_add_line(msg))
