@@ -8,6 +8,9 @@ from setuptools import setup
 
 is_chroot = os.stat('/').st_ino != 2
 
+if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.6 or 3.3 to run.')
+    sys.exit(1)
 
 def get_data_files():
     data_files = [
