@@ -150,9 +150,8 @@ class Plugin(GlancesPlugin):
         for key in ['user', 'system', 'iowait']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert_log(self.stats[key], header=key)
-        self.views['total']['decoration'] = self.get_alert_log(self.stats['total'], header=key)
         # Alert only
-        for key in ['steal']:
+        for key in ['steal', 'total']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Optional
