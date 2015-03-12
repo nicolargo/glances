@@ -20,13 +20,17 @@
 """InfluxDB interface class."""
 
 # Import sys libs
-from influxdb import InfluxDBClient, client
 import sys
+try:
+    from configparser import NoOptionError, NoSectionError
+except ImportError:  # Python 2
+    from ConfigParser import NoOptionError, NoSectionError
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from ConfigParser import NoSectionError, NoOptionError
 from glances.exports.glances_export import GlancesExport
+
+from influxdb import InfluxDBClient, client
 
 
 class Export(GlancesExport):
