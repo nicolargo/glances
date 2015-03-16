@@ -390,7 +390,7 @@
               "function": "mean",
               "column": "wlan0.tx",
               "series": "network",
-              "query": "select mean(wlan0.tx) from \"network\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(wlan0.tx*-1) from \"network\" where $timeFilter group by time($interval) order asc",
               "alias": "Tx"
             }
           ],
