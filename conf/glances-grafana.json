@@ -18,7 +18,7 @@
         {
           "title": "Core",
           "error": false,
-          "span": 2,
+          "span": 1,
           "editable": true,
           "type": "singlestat",
           "id": 5,
@@ -161,6 +161,56 @@
           },
           "seriesOverrides": [],
           "links": []
+        },
+        {
+          "title": "Processes",
+          "error": false,
+          "span": 1,
+          "editable": true,
+          "type": "singlestat",
+          "id": 18,
+          "links": [],
+          "maxDataPoints": 100,
+          "interval": null,
+          "targets": [
+            {
+              "function": "mean",
+              "column": "total",
+              "series": "processcount",
+              "query": "select mean(total) from \"processcount\" where $timeFilter group by time($interval) order asc"
+            }
+          ],
+          "cacheTimeout": null,
+          "format": "none",
+          "prefix": "",
+          "postfix": "",
+          "nullText": null,
+          "valueMaps": [
+            {
+              "value": "null",
+              "op": "=",
+              "text": "N/A"
+            }
+          ],
+          "nullPointMode": "connected",
+          "valueName": "avg",
+          "prefixFontSize": "50%",
+          "valueFontSize": "80%",
+          "postfixFontSize": "50%",
+          "thresholds": "",
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "sparkline": {
+            "show": true,
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "fillColor": "rgba(31, 118, 189, 0.18)"
+          }
         }
       ]
     },
@@ -222,15 +272,6 @@
           "targets": [
             {
               "function": "mean",
-              "column": "total",
-              "series": "cpu",
-              "query": "select mean(total) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
-              "alias": "Total",
-              "fill": "null"
-            },
-            {
-              "target": "",
-              "function": "mean",
               "column": "user",
               "series": "cpu",
               "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
@@ -244,6 +285,15 @@
               "series": "cpu",
               "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
               "alias": "System",
+              "fill": "null"
+            },
+            {
+              "target": "",
+              "function": "mean",
+              "column": "iowait",
+              "series": "cpu",
+              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
+              "alias": "IoWait",
               "fill": "null"
             }
           ],
@@ -329,7 +379,7 @@
       "collapse": false,
       "panels": [
         {
-          "title": "Net (Wlan0)",
+          "title": "Net (Enp0s25)",
           "error": false,
           "span": 6,
           "editable": true,
@@ -354,7 +404,7 @@
             "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
           "lines": true,
-          "fill": 0,
+          "fill": 3,
           "linewidth": 1,
           "points": false,
           "pointradius": 5,
@@ -379,19 +429,21 @@
           "targets": [
             {
               "function": "mean",
-              "column": "wlan0.rx",
+              "column": "enp0s25.rx",
               "series": "network",
-              "query": "select mean(wlan0.rx) from \"network\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(enp0s25.rx) from \"network\" where $timeFilter group by time($interval) fill(null) order asc",
               "alias": "Rx",
-              "interval": ""
+              "interval": "",
+              "fill": "null"
             },
             {
               "target": "",
               "function": "mean",
-              "column": "wlan0.tx",
+              "column": "enp0s25.tx*-1",
               "series": "network",
-              "query": "select mean(wlan0.tx*-1) from \"network\" where $timeFilter group by time($interval) order asc",
-              "alias": "Tx"
+              "query": "select mean(enp0s25.tx*-1) from \"network\" where $timeFilter group by time($interval) fill(null) order asc",
+              "alias": "Tx",
+              "fill": "null"
             }
           ],
           "aliasColors": {},
@@ -549,7 +601,7 @@
         {
           "title": "/ Size",
           "error": false,
-          "span": 6,
+          "span": 4,
           "editable": true,
           "type": "graph",
           "id": 11,
@@ -616,6 +668,425 @@
           "aliasColors": {},
           "seriesOverrides": [],
           "links": []
+        },
+        {
+          "title": "/ used",
+          "error": false,
+          "span": 1,
+          "editable": true,
+          "type": "singlestat",
+          "id": 16,
+          "links": [],
+          "maxDataPoints": 100,
+          "interval": null,
+          "targets": [
+            {
+              "function": "mean",
+              "column": "\"/.percent\"",
+              "series": "fs",
+              "query": "select mean(\"/.percent\") from \"fs\" where $timeFilter group by time($interval) order asc"
+            }
+          ],
+          "cacheTimeout": null,
+          "format": "percent",
+          "prefix": "",
+          "postfix": "",
+          "nullText": null,
+          "valueMaps": [
+            {
+              "value": "null",
+              "op": "=",
+              "text": "N/A"
+            }
+          ],
+          "nullPointMode": "connected",
+          "valueName": "avg",
+          "prefixFontSize": "50%",
+          "valueFontSize": "80%",
+          "postfixFontSize": "50%",
+          "thresholds": "0,70,90",
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "rgba(71, 212, 59, 0.4)",
+            "rgba(245, 150, 40, 0.73)",
+            "rgba(225, 40, 40, 0.59)"
+          ],
+          "sparkline": {
+            "show": true,
+            "full": false,
+            "lineColor": "rgb(193, 71, 31)",
+            "fillColor": "rgba(31, 118, 189, 0.18)"
+          }
+        },
+        {
+          "title": "/home used",
+          "error": false,
+          "span": 1,
+          "editable": true,
+          "type": "singlestat",
+          "id": 17,
+          "links": [],
+          "maxDataPoints": 100,
+          "interval": null,
+          "targets": [
+            {
+              "function": "mean",
+              "column": "\"/home.percent\"",
+              "series": "fs",
+              "query": "select mean(\"/home.percent\") from \"fs\" where $timeFilter group by time($interval) order asc"
+            }
+          ],
+          "cacheTimeout": null,
+          "format": "percent",
+          "prefix": "",
+          "postfix": "",
+          "nullText": null,
+          "valueMaps": [
+            {
+              "value": "null",
+              "op": "=",
+              "text": "N/A"
+            }
+          ],
+          "nullPointMode": "connected",
+          "valueName": "avg",
+          "prefixFontSize": "50%",
+          "valueFontSize": "80%",
+          "postfixFontSize": "50%",
+          "thresholds": "0,70,90",
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "rgba(71, 212, 59, 0.4)",
+            "rgba(245, 150, 40, 0.73)",
+            "rgba(225, 40, 40, 0.59)"
+          ],
+          "sparkline": {
+            "show": true,
+            "full": false,
+            "lineColor": "rgb(193, 71, 31)",
+            "fillColor": "rgba(31, 118, 189, 0.18)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "New row",
+      "height": "25px",
+      "editable": true,
+      "collapse": false,
+      "panels": [
+        {
+          "title": "CPU details",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "text",
+          "id": 13,
+          "mode": "text",
+          "content": "",
+          "style": {},
+          "links": []
+        }
+      ]
+    },
+    {
+      "title": "New row",
+      "height": "250px",
+      "editable": true,
+      "collapse": false,
+      "panels": [
+        {
+          "title": "CPU user",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "id": 12,
+          "datasource": null,
+          "renderer": "flot",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "short",
+            "short"
+          ],
+          "grid": {
+            "leftMax": null,
+            "rightMax": null,
+            "leftMin": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 0,
+          "linewidth": 1,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": false,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": false
+          },
+          "targets": [
+            {
+              "function": "mean",
+              "column": "user",
+              "series": "cpu",
+              "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "mean"
+            },
+            {
+              "target": "",
+              "function": "min",
+              "column": "user",
+              "series": "cpu",
+              "query": "select min(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "min"
+            },
+            {
+              "target": "",
+              "function": "max",
+              "column": "user",
+              "series": "cpu",
+              "query": "select max(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "max"
+            }
+          ],
+          "aliasColors": {
+            "max": "#890F02"
+          },
+          "seriesOverrides": [
+            {
+              "alias": "max",
+              "fillBelowTo": "min",
+              "lines": false
+            },
+            {
+              "alias": "min",
+              "lines": false
+            },
+            {
+              "alias": "mean",
+              "zindex": 3,
+              "linewidth": 2
+            }
+          ],
+          "links": []
+        },
+        {
+          "title": "CPU system",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "id": 14,
+          "datasource": null,
+          "renderer": "flot",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "short",
+            "short"
+          ],
+          "grid": {
+            "leftMax": null,
+            "rightMax": null,
+            "leftMin": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 0,
+          "linewidth": 1,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": false,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": false
+          },
+          "targets": [
+            {
+              "function": "mean",
+              "column": "system",
+              "series": "cpu",
+              "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "mean"
+            },
+            {
+              "target": "",
+              "function": "min",
+              "column": "system",
+              "series": "cpu",
+              "query": "select min(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "min"
+            },
+            {
+              "target": "",
+              "function": "max",
+              "column": "system",
+              "series": "cpu",
+              "query": "select max(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "max"
+            }
+          ],
+          "aliasColors": {
+            "max": "#890F02"
+          },
+          "seriesOverrides": [
+            {
+              "alias": "max",
+              "fillBelowTo": "min",
+              "lines": false
+            },
+            {
+              "alias": "min",
+              "lines": false
+            },
+            {
+              "alias": "mean",
+              "zindex": 3,
+              "linewidth": 2
+            }
+          ],
+          "links": []
+        },
+        {
+          "title": "CPU iowait",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "id": 15,
+          "datasource": null,
+          "renderer": "flot",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "short",
+            "short"
+          ],
+          "grid": {
+            "leftMax": null,
+            "rightMax": null,
+            "leftMin": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 0,
+          "linewidth": 1,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": false,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": false
+          },
+          "targets": [
+            {
+              "function": "mean",
+              "column": "iowait",
+              "series": "cpu",
+              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "mean"
+            },
+            {
+              "target": "",
+              "function": "min",
+              "column": "iowait",
+              "series": "cpu",
+              "query": "select min(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "min"
+            },
+            {
+              "target": "",
+              "function": "max",
+              "column": "iowait",
+              "series": "cpu",
+              "query": "select max(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "interval": "60s",
+              "alias": "max"
+            }
+          ],
+          "aliasColors": {
+            "max": "#890F02"
+          },
+          "seriesOverrides": [
+            {
+              "alias": "max",
+              "fillBelowTo": "min",
+              "lines": false
+            },
+            {
+              "alias": "min",
+              "lines": false
+            },
+            {
+              "alias": "mean",
+              "zindex": 3,
+              "linewidth": 2
+            }
+          ],
+          "links": []
         }
       ]
     }
@@ -654,7 +1125,7 @@
     }
   ],
   "time": {
-    "from": "now-6h",
+    "from": "now-12h",
     "to": "now"
   },
   "templating": {
@@ -663,6 +1134,7 @@
   "annotations": {
     "list": []
   },
+  "refresh": false,
   "version": 6,
   "hideAllLegends": false
 }
