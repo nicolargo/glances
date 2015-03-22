@@ -118,24 +118,23 @@ class GlancesLogs(object):
                 # Create the new log item
                 # Time is stored in Epoch format
                 # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-                item = []
-                # START DATE
-                item.append(time.mktime(datetime.now().timetuple()))
-                item.append(-1)               # END DATE
-                item.append(item_state)       # STATE: WARNING|CRITICAL
-                item.append(item_type)        # TYPE: CPU, LOAD, MEM...
-                item.append(item_value)       # MAX
-                item.append(item_value)       # AVG
-                item.append(item_value)       # MIN
-                item.append(item_value)       # SUM
-                item.append(1)                # COUNT
-                # Process list is sorted automaticaly
-                # Overwrite the user choise
-                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                #                     reverse=True)
-                # item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
-                item.append([])               # TOP 3 PROCESS LIST
-                item.append(proc_desc)        # MONITORED PROCESSES DESC
+                item = [
+                    time.mktime(datetime.now().timetuple()),  # START DATE
+                    -1,  # END DATE
+                    item_state,  # STATE: WARNING|CRITICAL
+                    item_type,  # TYPE: CPU, LOAD, MEM...
+                    item_value,  # MAX
+                    item_value,  # AVG
+                    item_value,  # MIN
+                    item_value,  # SUM
+                    1,  # COUNT
+                    # Process list is sorted automatically
+                    # Overwrite the user choice
+                    # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                    #                     reverse=True)
+                    # topprocess[0:3],  # TOP 3 PROCESS LIST
+                    [],  # TOP 3 PROCESS LIST
+                    proc_desc]  # MONITORED PROCESSES DESC
 
                 # Add the item to the list
                 self.logs_list.insert(0, item)

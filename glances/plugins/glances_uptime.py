@@ -63,8 +63,7 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            uptime = datetime.now() - \
-                datetime.fromtimestamp(psutil.boot_time())
+            uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
 
             # Convert uptime to string (because datetime is not JSONifi)
             self.stats = str(uptime).split('.')[0]
@@ -82,11 +81,4 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None):
         """Return the string to display in the curse interface."""
-        # Init the return message
-        ret = []
-
-        # Add the line with decoration
-        ret.append(self.curse_add_line(_("Uptime: {0}").format(self.stats)))
-
-        # Return the message with decoration
-        return ret
+        return [self.curse_add_line(_("Uptime: {0}").format(self.stats))]
