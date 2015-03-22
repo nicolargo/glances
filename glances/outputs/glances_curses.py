@@ -987,7 +987,6 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.active_server = self.cursor
         elif self.pressedkey == 259:
             # 'UP' > Up in the server list
-            logger
             self.cursor_up(servers_list)
         elif self.pressedkey == 258:
             # 'DOWN' > Down in the server list
@@ -1134,9 +1133,6 @@ class GlancesCursesBrowser(_GlancesCurses):
                 # Display cursor
                 self.term_window.addnstr(
                     y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
-
-            # Display alias instead of name
-            server_stat
 
             # Display the line
             xc += 2
