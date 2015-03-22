@@ -761,7 +761,7 @@ class _GlancesCurses(object):
             # New line
             if m['msg'].startswith('\n'):
                 # Go to the next line
-                y = y + 1
+                y += 1
                 # Return to the first column
                 x = display_x
                 continue
@@ -798,7 +798,7 @@ class _GlancesCurses(object):
                     # Python 3: strings are strings and bytes are bytes, all is
                     # good
                     offset = len(m['msg'])
-                x = x + offset
+                x += offset
                 if x > x_max:
                     x_max = x
 

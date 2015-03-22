@@ -93,7 +93,7 @@ class GlancesGrabBat(object):
         """Update the stats."""
         if self.initok:
             self.bat.update()
-            self.bat_list = [{'label': _("Battery"), 'value': self.getcapacitypercent(), 'unit': '%'}]
+            self.bat_list = [{'label': _("Battery"), 'value': self.battery_percent, 'unit': '%'}]
         else:
             self.bat_list = []
 
@@ -101,7 +101,8 @@ class GlancesGrabBat(object):
         """Get the stats."""
         return self.bat_list
 
-    def getcapacitypercent(self):
+    @property
+    def battery_percent(self):
         """Get batteries capacity percent."""
         if not self.initok or not self.bat.stat:
             return []
@@ -111,7 +112,7 @@ class GlancesGrabBat(object):
         bsum = 0
         for b in self.bat.stat:
             try:
-                bsum = bsum + int(b.capacity)
+                bsum += int(b.capacity)
             except ValueError:
                 return []
 
