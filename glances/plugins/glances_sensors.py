@@ -187,8 +187,8 @@ class Plugin(GlancesPlugin):
                     label = i['label']
                 try:
                     msg = "{0:12} {1:3}".format(label[:11], i['unit'])
-                except KeyError:
-                    msg = '{0:16}'.format(label[:15])
+                except (KeyError, UnicodeEncodeError):
+                    msg = "{0:16}".format(label[:15])
                 ret.append(self.curse_add_line(msg))
                 msg = '{0:>7}'.format(i['value'])
                 ret.append(self.curse_add_line(
