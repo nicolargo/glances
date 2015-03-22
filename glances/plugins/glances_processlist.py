@@ -154,8 +154,7 @@ class Plugin(GlancesPlugin):
 
     def get_process_curses_data(self, p, first, args):
         """ Get curses data to display for a process. """
-        ret = []
-        ret.append(self.curse_new_line())
+        ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             msg = '{0:>6.1f}'.format(p['cpu_percent'])
