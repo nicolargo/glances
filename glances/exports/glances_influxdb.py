@@ -42,11 +42,12 @@ class Export(GlancesExport):
         GlancesExport.__init__(self, config=config, args=args)
 
         # Load the InfluxDB configuration file
-        self.influxdb_host = None
-        self.influxdb_port = None
-        self.influxdb_user = None
-        self.influxdb_password = None
-        self.influxdb_db = None
+        self.host = None
+        self.port = None
+        self.user = None
+        self.password = None
+        self.db = None
+        self.prefix = None
         self.export_enable = self.load_conf()
         if not self.export_enable:
             sys.exit(2)
@@ -59,11 +60,11 @@ class Export(GlancesExport):
         if self.config is None:
             return False
         try:
-            self.influxdb_host = self.config.get_raw_option(section, "host")
-            self.influxdb_port = self.config.get_raw_option(section, "port")
-            self.influxdb_user = self.config.get_raw_option(section, "user")
-            self.influxdb_password = self.config.get_raw_option(section, "password")
-            self.influxdb_db = self.config.get_raw_option(section, "db")
+            self.host = self.config.get_raw_option(section, "host")
+            self.port = self.config.get_raw_option(section, "port")
+            self.user = self.config.get_raw_option(section, "user")
+            self.password = self.config.get_raw_option(section, "password")
+            self.db = self.config.get_raw_option(section, "db")
         except NoSectionError:
             logger.critical("No InfluxDB configuration found")
             return False
@@ -72,39 +73,50 @@ class Export(GlancesExport):
             return False
         else:
             logger.debug("Load InfluxDB from the Glances configuration file")
+        # Prefix is optional
+        try:
+            self.prefix = self.config.get_raw_option(section, "prefix")
+        except NoOptionError as e:
+            pass
         return True
 
     def init(self):
         """Init the connection to the InfluxDB server"""
         if not self.export_enable:
             return None
-        db = InfluxDBClient(self.influxdb_host,
-                            self.influxdb_port,
-                            self.influxdb_user,
-                            self.influxdb_password,
-                            self.influxdb_db)
+        db = InfluxDBClient(self.host,
+                            self.port,
+                            self.user,
+                            self.password,
+                            self.db)
         try:
             get_all_db = db.get_list_database()[0].values()
         except client.InfluxDBClientError as e:
-            logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.influxdb_db, e))
+            logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.db, e))
             sys.exit(2)
 
-        if self.influxdb_db in get_all_db:
+        if self.db in get_all_db:
             logger.info(
                 "Stats will be exported to InfluxDB server: {0}".format(db._baseurl))
         else:
-            logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.influxdb_db)
+            logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
             sys.exit(2)
         return db
 
     def export(self, name, columns, points):
         """Write the points to the InfluxDB server"""
+        # Manage prefix
+        if self.prefix is not None:
+            name = self.prefix + '.' + name
+        logger.info(self.prefix)
+        # Create DB input
         data = [
             {
                 "name": name,
                 "columns": columns,
                 "points": [points]
             }]
+        # Write input to the InfluxDB database
         try:
             self.client.write_points(data)
         except Exception as e:
