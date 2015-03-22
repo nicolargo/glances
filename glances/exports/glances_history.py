@@ -176,8 +176,7 @@ class GlancesHistory(object):
                 fig.set_size_inches(20, 10)
                 plt.legend(handles, labels, loc=1, prop={'size': 9})
                 plt.xlabel('Date')
-                plt.savefig(
-                    os.path.join(self.output_folder, 'glances_%s.png' % (p)), dpi=72)
+                plt.savefig(os.path.join(self.output_folder, 'glances_%s.png' % p), dpi=72)
                 index_all += 1
 
             plt.close()
