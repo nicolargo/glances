@@ -115,10 +115,6 @@ class Plugin(GlancesPlugin):
 
             # Loop over fs
             for fs in fs_stat:
-                fs_current = {}
-                fs_current['device_name'] = fs.device
-                fs_current['fs_type'] = fs.fstype
-                fs_current['mnt_point'] = fs.mountpoint
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
@@ -126,11 +122,15 @@ class Plugin(GlancesPlugin):
                     # Correct issue #346
                     # Disk is ejected during the command
                     continue
-                fs_current['size'] = fs_usage.total
-                fs_current['used'] = fs_usage.used
-                fs_current['free'] = fs_usage.total - fs_usage.used
-                fs_current['percent'] = fs_usage.percent
-                fs_current['key'] = self.get_key()
+                fs_current = {
+                    'device_name': fs.device,
+                    'fs_type': fs.fstype,
+                    'mnt_point': fs.mountpoint,
+                    'size': fs_usage.total,
+                    'used': fs_usage.used,
+                    'free': fs_usage.total - fs_usage.used,
+                    'percent': fs_usage.percent,
+                    'key': self.get_key()}
                 self.stats.append(fs_current)
 
         elif self.input_method == 'snmp':
@@ -148,30 +148,30 @@ class Plugin(GlancesPlugin):
             if self.short_system_name in ('windows', 'esxi'):
                 # Windows or ESXi tips
                 for fs in fs_stat:
-                    # Memory stats are grabed in the same OID table (ignore it)
+                    # Memory stats are grabbed in the same OID table (ignore it)
                     if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
                         continue
-                    fs_current = {}
-                    fs_current['device_name'] = ''
-                    fs_current['mnt_point'] = fs.partition(' ')[0]
-                    fs_current['size'] = int(
-                        fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['used'] = int(
-                        fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['percent'] = float(
-                        fs_current['used'] * 100 / fs_current['size'])
-                    fs_current['key'] = self.get_key()
+                    size = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    used = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    percent = float(used * 100 / size)
+                    fs_current = {
+                        'device_name': '',
+                        'mnt_point': fs.partition(' ')[0],
+                        'size': size,
+                        'used': used,
+                        'percent': percent,
+                        'key': self.get_key()}
                     self.stats.append(fs_current)
             else:
-                # Default behavor
+                # Default behavior
                 for fs in fs_stat:
-                    fs_current = {}
-                    fs_current['device_name'] = fs_stat[fs]['device_name']
-                    fs_current['mnt_point'] = fs
-                    fs_current['size'] = int(fs_stat[fs]['size']) * 1024
-                    fs_current['used'] = int(fs_stat[fs]['used']) * 1024
-                    fs_current['percent'] = float(fs_stat[fs]['percent'])
-                    fs_current['key'] = self.get_key()
+                    fs_current = {
+                        'device_name': fs_stat[fs]['device_name'],
+                        'mnt_point': fs,
+                        'size': int(fs_stat[fs]['size']) * 1024,
+                        'used': int(fs_stat[fs]['used']) * 1024,
+                        'percent': float(fs_stat[fs]['percent']),
+                        'key': self.get_key()}
                     self.stats.append(fs_current)
 
         # Update the history list

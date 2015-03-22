@@ -96,16 +96,15 @@ class Plugin(GlancesPlugin):
                 diskio_new = diskiocounters
                 for disk in diskio_new:
                     try:
-                        # Try necessary to manage dynamic disk creation/del
-                        diskstat = {}
-                        diskstat['time_since_update'] = time_since_update
-                        diskstat['disk_name'] = disk
-                        diskstat['read_bytes'] = (
-                            diskio_new[disk].read_bytes -
-                            self.diskio_old[disk].read_bytes)
-                        diskstat['write_bytes'] = (
-                            diskio_new[disk].write_bytes -
-                            self.diskio_old[disk].write_bytes)
+                        read_bytes = (diskio_new[disk].read_bytes -
+                                      self.diskio_old[disk].read_bytes)
+                        write_bytes = (diskio_new[disk].write_bytes -
+                                       self.diskio_old[disk].write_bytes)
+                        diskstat = {
+                            'time_since_update': time_since_update,
+                            'disk_name': disk,
+                            'read_bytes': read_bytes,
+                            'write_bytes': write_bytes}
                     except KeyError:
                         continue
                     else:
