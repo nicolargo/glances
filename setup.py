@@ -71,7 +71,7 @@ setup(
         'BROWSER': ['zeroconf>=0.16', 'netifaces'],
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb', 'statsd'],
+        'EXPORT': ['influxdb', 'statsd', 'rabbitmq'],
         'ACTION': ['pystache']
     },
     packages=['glances'],
