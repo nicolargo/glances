@@ -31,6 +31,7 @@ from glances.core.glances_logging import logger
 from glances.exports.glances_export import GlancesExport
 
 from influxdb import InfluxDBClient, client
+from influxdb.influxdb08 import InfluxDBClient as InfluxDBClient_Legacy
 
 
 class Export(GlancesExport):
@@ -84,16 +85,27 @@ class Export(GlancesExport):
         """Init the connection to the InfluxDB server"""
         if not self.export_enable:
             return None
-        db = InfluxDBClient(host=self.host,
-                            port=self.port,
-                            username=self.user,
-                            password=self.password,
-                            database=self.db)
+
         try:
-            get_all_db = db.get_list_database()[0].values()
+            db = InfluxDBClient(host=self.host,
+                                port=self.port,
+                                username=self.user,
+                                password=self.password,
+                                database=self.db)
+            get_all_db = [i['name'] for i in db.get_list_database()]
         except client.InfluxDBClientError as e:
-            logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.db, e))
-            sys.exit(2)
+            try:
+                # https://github.com/influxdb/influxdb-python/issues/138
+                logger.debug("Trying fallback to InfluxDB v0.8")
+                db = InfluxDBClient_Legacy(host=self.host,
+                                           port=self.port,
+                                           username=self.user,
+                                           password=self.password,
+                                           database=self.db)
+                get_all_db = [i['name'] for i in db.get_list_database()]
+            except:
+                logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.db, e))
+                sys.exit(2)
 
         if self.db in get_all_db:
             logger.info(
