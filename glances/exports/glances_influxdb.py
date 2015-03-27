@@ -84,11 +84,11 @@ class Export(GlancesExport):
         """Init the connection to the InfluxDB server"""
         if not self.export_enable:
             return None
-        db = InfluxDBClient(self.host,
-                            self.port,
-                            self.user,
-                            self.password,
-                            self.db)
+        db = InfluxDBClient(host=self.host,
+                            port=self.port,
+                            username=self.user,
+                            password=self.password,
+                            database=self.db)
         try:
             get_all_db = db.get_list_database()[0].values()
         except client.InfluxDBClientError as e:
