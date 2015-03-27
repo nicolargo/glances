@@ -188,6 +188,7 @@ Command-Line Options
   --snmp-force          force SNMP mode
   -t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
   -w, --webserver       run Glances in web server mode
+  -q, --quiet           run Glances in quiet mode (nothing is displayed)
   -f PROCESS_FILTER, --process-filter PROCESS_FILTER
                         set the process filter patern (regular expression)
   --process-short-name  force short name for processes name

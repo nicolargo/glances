@@ -173,6 +173,8 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode (need Bootle lib)'))
         # Display options
+        parser.add_argument('-q', '--quiet', default=False, action='store_true',
+                            dest='quiet', help=_('Do not display the Curse interface'))
         parser.add_argument('-f', '--process-filter', default=None, type=str,
                             dest='process_filter', help=_('set the process filter pattern (regular expression)'))
         parser.add_argument('--process-short-name', action='store_true', default=False,
@@ -189,7 +191,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--fs-free-space', action='store_false', default=False,
                             dest='fs_free_space', help=_('display FS free space instead of used'))
         parser.add_argument('--theme-white', action='store_true', default=False,
-                            dest='theme_white', help=_('optimize display for white background'))
+                            dest='theme_white', help=_('optimize display colors for white background'))
 
         return parser
 

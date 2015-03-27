@@ -32,11 +32,11 @@ class GlancesStandalone(object):
     """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):
+        # Quiet mode
+        self._quiet = args.quiet
+
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
-
-        # Default number of processes to displayed is set to 50
-        glances_processes.max_processes = 50
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
@@ -61,8 +61,20 @@ class GlancesStandalone(object):
         # Initial system informations update
         self.stats.update()
 
-        # Init screen
-        self.screen = GlancesCursesStandalone(args=args)
+        if self.quiet:
+            logger.info("Quiet mode is ON: Nothing will be displayed")
+            # In quiet mode, nothing is displayed
+            glances_processes.max_processes = 0
+        else:
+            # Default number of processes to displayed is set to 50
+            glances_processes.max_processes = 50
+
+            # Init screen
+            self.screen = GlancesCursesStandalone(args=args)
+
+    @property
+    def quiet(self):
+        return self._quiet
 
     def serve_forever(self):
         """Main loop for the CLI."""
@@ -71,14 +83,16 @@ class GlancesStandalone(object):
             self.stats.update()
 
             # Update the screen
-            self.screen.update(self.stats)
+            if not self.quiet:
+                self.screen.update(self.stats)
 
             # Export stats using export modules
             self.stats.export(self.stats)
 
     def end(self):
         """End of the standalone CLI."""
-        self.screen.end()
+        if not self.quiet:
+            self.screen.end()
 
         # Exit from export modules
         self.stats.end()
