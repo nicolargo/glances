@@ -96,7 +96,7 @@ class Export(GlancesExport):
         except client.InfluxDBClientError as e:
             try:
                 # https://github.com/influxdb/influxdb-python/issues/138
-                logger.debug("Trying fallback to InfluxDB v0.8")
+                logger.info("Trying fallback to InfluxDB v0.8")
                 db = InfluxDBClient_Legacy(host=self.host,
                                            port=self.port,
                                            username=self.user,
