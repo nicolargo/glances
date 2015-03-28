@@ -120,7 +120,7 @@ class Export(GlancesExport):
         # Manage prefix
         if self.prefix is not None:
             name = self.prefix + '.' + name
-        logger.info(self.prefix)
+        # logger.info(self.prefix)
         # Create DB input
         data = [
             {
