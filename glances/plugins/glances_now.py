@@ -39,7 +39,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Set the message position
-        self.set_align('bottom')
+        self.align = 'bottom'
 
     def update(self):
         """Update current date/time."""

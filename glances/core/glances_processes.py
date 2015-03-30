@@ -250,11 +250,11 @@ class GlancesProcesses(object):
         self.process_tree = None
 
         # Init stats
-        self.resetsort()
+        self.auto_sort = True
+        self._sort_key = 'cpu_percent'
         self.allprocesslist = []
         self.processlist = []
-        self.processcount = {
-            'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
@@ -263,13 +263,12 @@ class GlancesProcesses(object):
         # Extended stats for top process is enable by default
         self.disable_extended_tag = False
 
-        # Maximum number of processes showed in the UI interface
-        # None if no limit
-        self.max_processes = None
+        # Maximum number of processes showed in the UI (None if no limit)
+        self._max_processes = None
 
         # Process filter is a regular expression
-        self.process_filter = None
-        self.process_filter_re = None
+        self._process_filter = None
+        self._process_filter_re = None
 
         # Whether or not to hide kernel threads
         self.no_kernel_threads = False
@@ -292,48 +291,49 @@ class GlancesProcesses(object):
         """Disable extended process stats."""
         self.disable_extended_tag = True
 
-    def set_max_processes(self, value):
-        """Set the maximum number of processes showed in the UI interfaces"""
-        self.max_processes = value
-        return self.max_processes
+    @property
+    def max_processes(self):
+        """Get the maximum number of processes showed in the UI."""
+        return self._max_processes
 
-    def get_max_processes(self):
-        """Get the maximum number of processes showed in the UI interfaces"""
-        return self.max_processes
+    @max_processes.setter
+    def max_processes(self, value):
+        """Set the maximum number of processes showed in the UI."""
+        self._max_processes = value
 
-    def set_process_filter(self, value):
-        """Set the process filter"""
+    @property
+    def process_filter(self):
+        """Get the process filter."""
+        return self._process_filter
+
+    @process_filter.setter
+    def process_filter(self, value):
+        """Set the process filter."""
         logger.info("Set process filter to {0}".format(value))
-        self.process_filter = value
+        self._process_filter = value
         if value is not None:
             try:
-                self.process_filter_re = re.compile(value)
-                logger.debug(
-                    "Process filter regex compilation OK: {0}".format(self.get_process_filter()))
+                self._process_filter_re = re.compile(value)
+                logger.debug("Process filter regex compilation OK: {0}".format(self.process_filter))
             except Exception:
-                logger.error(
-                    "Cannot compile process filter regex: {0}".format(value))
-                self.process_filter_re = None
+                logger.error("Cannot compile process filter regex: {0}".format(value))
+                self._process_filter_re = None
         else:
-            self.process_filter_re = None
-        return self.process_filter
+            self._process_filter_re = None
 
-    def get_process_filter(self):
-        """Get the process filter"""
-        return self.process_filter
-
-    def get_process_filter_re(self):
-        """Get the process regular expression compiled"""
-        return self.process_filter_re
+    @property
+    def process_filter_re(self):
+        """Get the process regular expression compiled."""
+        return self._process_filter_re
 
     def is_filtered(self, value):
         """Return True if the value should be filtered"""
-        if self.get_process_filter() is None:
+        if self.process_filter is None:
             # No filter => Not filtered
             return False
         else:
-            # logger.debug(self.get_process_filter() + " <> " + value + " => " + str(self.get_process_filter_re().match(value) is None))
-            return self.get_process_filter_re().match(value) is None
+            # logger.debug(self.process_filter + " <> " + value + " => " + str(self.process_filter_re.match(value) is None))
+            return self.process_filter_re.match(value) is None
 
     def disable_kernel_threads(self):
         """ Ignore kernel threads in process list. """
@@ -541,8 +541,7 @@ class GlancesProcesses(object):
         """
         # Reset the stats
         self.processlist = []
-        self.processcount = {
-            'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -558,11 +557,11 @@ class GlancesProcesses(object):
             if self.no_kernel_threads and not is_windows and is_kernel_thread(proc):
                 continue
 
-            # If self.get_max_processes() is None: Only retreive mandatory stats
+            # If self.max_processes is None: Only retreive mandatory stats
             # Else: retreive mandatory and standard stats
             s = self.__get_process_stats(proc,
                                          mandatory_stats=True,
-                                         standard_stats=self.get_max_processes() is None)
+                                         standard_stats=self.max_processes is None)
             # Continue to the next process if it has to be filtered
             if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
                 continue
@@ -571,8 +570,10 @@ class GlancesProcesses(object):
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
-            if is_bsd and processdict[proc]['name'] == 'idle' or is_windows and processdict[proc]['name'] == 'System Idle Process' or is_mac and processdict[proc]['name'] == 'kernel_task':
-                    continue
+            if (is_bsd and processdict[proc]['name'] == 'idle' or
+                    is_windows and processdict[proc]['name'] == 'System Idle Process' or
+                    is_mac and processdict[proc]['name'] == 'kernel_task'):
+                continue
             # Update processcount (global statistics)
             try:
                 self.processcount[str(proc.status())] += 1
@@ -594,12 +595,12 @@ class GlancesProcesses(object):
 
         if self._enable_tree:
             self.process_tree = ProcessTreeNode.build_tree(processdict,
-                                                           self.getsortkey(),
+                                                           self.sort_key,
                                                            self.no_kernel_threads)
 
             for i, node in enumerate(self.process_tree):
-                # Only retreive stats for visible processes (get_max_processes)
-                if self.get_max_processes() is not None and i >= self.get_max_processes():
+                # Only retreive stats for visible processes (max_processes)
+                if self.max_processes is not None and i >= self.max_processes:
                     break
 
                 # add standard stats
@@ -615,22 +616,21 @@ class GlancesProcesses(object):
 
         else:
             # Process optimization
-            # Only retreive stats for visible processes (get_max_processes)
-            if self.get_max_processes() is not None:
+            # Only retreive stats for visible processes (max_processes)
+            if self.max_processes is not None:
                 # Sort the internal dict and cut the top N (Return a list of tuple)
                 # tuple=key (proc), dict (returned by __get_process_stats)
                 try:
                     processiter = sorted(
-                        processdict.items(), key=lambda x: x[1][self.getsortkey()], reverse=True)
+                        processdict.items(), key=lambda x: x[1][self.sort_key], reverse=True)
                 except (KeyError, TypeError) as e:
-                    logger.error(
-                        "Cannot sort process list by %s (%s)" % (self.getsortkey(), e))
+                    logger.error("Cannot sort process list by {0}: {1}".format(self.sort_key, e))
                     logger.error("%s" % str(processdict.items()[0]))
                     # Fallback to all process (issue #423)
                     processloop = processdict.items()
                     first = False
                 else:
-                    processloop = processiter[0:self.get_max_processes()]
+                    processloop = processiter[0:self.max_processes]
                     first = True
             else:
                 # Get all processes stats
@@ -640,7 +640,7 @@ class GlancesProcesses(object):
             for i in processloop:
                 # Already existing mandatory stats
                 procstat = i[1]
-                if self.get_max_processes() is not None:
+                if self.max_processes is not None:
                     # Update with standard stats
                     # and extended stats but only for TOP (first) process
                     s = self.__get_process_stats(i[0],
@@ -687,37 +687,17 @@ class GlancesProcesses(object):
         """Get the process tree."""
         return self.process_tree
 
-    def getsortkey(self):
-        """Get the current sort key"""
-        if self.getmanualsortkey() is not None:
-            return self.getmanualsortkey()
-        else:
-            return self.getautosortkey()
+    @property
+    def sort_key(self):
+        """Get the current sort key."""
+        return self._sort_key
 
-    def getmanualsortkey(self):
-        """Get the current sort key for manual sort."""
-        return self.processmanualsort
-
-    def getautosortkey(self):
-        """Get the current sort key for automatic sort."""
-        return self.processautosort
-
-    def setmanualsortkey(self, sortedby):
-        """Set the current sort key for manual sort."""
-        self.processmanualsort = sortedby
-        if self._enable_tree and (self.process_tree is not None):
-            self.process_tree.set_sorting(sortedby, sortedby != "name")
-        return self.processmanualsort
-
-    def setautosortkey(self, sortedby):
-        """Set the current sort key for automatic sort."""
-        self.processautosort = sortedby
-        return self.processautosort
-
-    def resetsort(self):
-        """Set the default sort: Auto"""
-        self.setmanualsortkey(None)
-        self.setautosortkey('cpu_percent')
+    @sort_key.setter
+    def sort_key(self, key):
+        """Set the current sort key."""
+        self._sort_key = key
+        if not self.auto_sort and self._enable_tree and self.process_tree is not None:
+            self.process_tree.set_sorting(key, key != "name")
 
     def getsortlist(self, sortedby=None):
         """Get the sorted processlist."""

@@ -155,10 +155,12 @@ class GlancesStats(object):
             # logger.debug("Update %s stats" % p)
             self._plugins[p].update()
 
-    def export(self, input_stats={}):
+    def export(self, input_stats=None):
         """Export all the stats.
         Each export module is ran in a dedicated thread."""
         # threads = []
+        input_stats = input_stats or {}
+
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
             thread = threading.Thread(target=self._exports[e].update,
@@ -181,13 +183,13 @@ class GlancesStats(object):
 
     def getAllLimits(self):
         """Return the plugins limits list."""
-        return [self._plugins[p].get_limits() for p in self._plugins]
+        return [self._plugins[p].limits for p in self._plugins]
 
     def getAllLimitsAsDict(self):
         """Return all the stats limits (dict)"""
         ret = {}
         for p in self._plugins:
-            ret[p] = self._plugins[p].get_limits()
+            ret[p] = self._plugins[p].limits
         return ret
 
     def getAllViews(self):
@@ -203,7 +205,7 @@ class GlancesStats(object):
 
     def get_plugin_list(self):
         """Return the plugin list."""
-        self._plugins
+        return self._plugins
 
     def get_plugin(self, plugin_name):
         """Return the plugin name."""
@@ -231,8 +233,10 @@ class GlancesStatsServer(GlancesStats):
         # all_stats is a dict of dicts filled by the server
         self.all_stats = collections.defaultdict(dict)
 
-    def update(self, input_stats={}):
+    def update(self, input_stats=None):
         """Update the stats."""
+        input_stats = input_stats or {}
+
         # Force update of all the stats
         GlancesStats.update(self)
 
@@ -383,7 +387,8 @@ class GlancesStatsClientSNMP(GlancesStats):
         # For each plugins, call the update method
         for p in self._plugins:
             # Set the input method to SNMP
-            self._plugins[p].set_input('snmp', self.system_name)
+            self._plugins[p].input_method = 'snmp'
+            self._plugins[p].short_system_name = self.system_name
             try:
                 self._plugins[p].update()
             except Exception as e:

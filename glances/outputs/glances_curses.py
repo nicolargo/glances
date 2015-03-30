@@ -177,9 +177,6 @@ class _GlancesCurses(object):
         # Init refresh time
         self.__refresh_time = args.time
 
-        # Init process sort method
-        self.args.process_sorted_by = 'auto'
-
         # Init edit filter tag
         self.edit_filter = False
 
@@ -257,17 +254,17 @@ class _GlancesCurses(object):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
         elif self.pressedkey == ord('a'):
-            # 'a' > Sort processes automatically
-            self.args.process_sorted_by = 'auto'
-            glances_processes.resetsort()
+            # 'a' > Sort processes automatically and reset to 'cpu_percent'
+            glances_processes.auto_sort = True
+            glances_processes.sort_key = 'cpu_percent'
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             # self.net_byteps_tag = not self.net_byteps_tag
             self.args.byte = not self.args.byte
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
-            self.args.process_sorted_by = 'cpu_percent'
-            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'cpu_percent'
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
@@ -295,8 +292,8 @@ class _GlancesCurses(object):
             self.args.help_tag = not self.args.help_tag
         elif self.pressedkey == ord('i'):
             # 'i' > Sort processes by IO rate (not available on OS X)
-            self.args.process_sorted_by = 'io_counters'
-            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'io_counters'
         elif self.pressedkey == ord('I'):
             # 'I' > Show/hide IP module
             self.args.disable_ip = not self.args.disable_ip
@@ -305,15 +302,15 @@ class _GlancesCurses(object):
             self.args.disable_log = not self.args.disable_log
         elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
-            self.args.process_sorted_by = 'memory_percent'
-            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'memory_percent'
         elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
             self.args.disable_network = not self.args.disable_network
         elif self.pressedkey == ord('p'):
             # 'p' > Sort processes by name
-            self.args.process_sorted_by = 'name'
-            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'name'
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag
@@ -325,8 +322,8 @@ class _GlancesCurses(object):
             self.args.disable_sensors = not self.args.disable_sensors
         elif self.pressedkey == ord('t'):
             # 't' > Sort processes by TIME usage
-            self.args.process_sorted_by = 'cpu_times'
-            glances_processes.setmanualsortkey(self.args.process_sorted_by)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'cpu_times'
         elif self.pressedkey == ord('T'):
             # 'T' > View network traffic as sum Rx+Tx
             self.args.network_sum = not self.args.network_sum
@@ -389,7 +386,7 @@ class _GlancesCurses(object):
         """New column in the curses interface"""
         self.column = self.next_column
 
-    def display(self, stats, cs_status="None"):
+    def display(self, stats, cs_status=None):
         """Display stats on the screen.
 
         stats: Stats database to display
@@ -464,11 +461,10 @@ class _GlancesCurses(object):
             max_processes_displayed -= 4
         if max_processes_displayed < 0:
             max_processes_displayed = 0
-        if glances_processes.get_max_processes() is None or \
-           glances_processes.get_max_processes() != max_processes_displayed:
-            logger.debug("Set number of displayed processes to %s" %
-                         max_processes_displayed)
-            glances_processes.set_max_processes(max_processes_displayed)
+        if (glances_processes.max_processes is None or
+                glances_processes.max_processes != max_processes_displayed):
+            logger.debug("Set number of displayed processes to {0}".format(max_processes_displayed))
+            glances_processes.max_processes = max_processes_displayed
 
         stats_processlist = stats.get_plugin(
             'processlist').get_stats_display(args=self.args)
@@ -600,7 +596,7 @@ class _GlancesCurses(object):
             self.display_plugin(stats_docker)
             self.new_line()
             self.display_plugin(stats_processcount)
-            if glances_processes.get_process_filter() is None and cs_status == 'None':
+            if glances_processes.process_filter is None and cs_status is None:
                 # Do not display stats monitor list if a filter exist
                 self.new_line()
                 self.display_plugin(stats_monitor)
@@ -635,12 +631,12 @@ class _GlancesCurses(object):
         self.reset_history_tag = False
 
         # Display edit filter popup
-        # Only in standalone mode (cs_status == 'None')
-        if self.edit_filter and cs_status == 'None':
+        # Only in standalone mode (cs_status is None)
+        if self.edit_filter and cs_status is None:
             new_filter = self.display_popup(_("Process filter pattern: "),
                                             is_input=True,
-                                            input_value=glances_processes.get_process_filter())
-            glances_processes.set_process_filter(new_filter)
+                                            input_value=glances_processes.process_filter)
+            glances_processes.process_filter = new_filter
         elif self.edit_filter and cs_status != 'None':
             self.display_popup(
                 _("Process filter only available in standalone mode"))
@@ -765,7 +761,7 @@ class _GlancesCurses(object):
             # New line
             if m['msg'].startswith('\n'):
                 # Go to the next line
-                y = y + 1
+                y += 1
                 # Return to the first column
                 x = display_x
                 continue
@@ -802,7 +798,7 @@ class _GlancesCurses(object):
                     # Python 3: strings are strings and bytes are bytes, all is
                     # good
                     offset = len(m['msg'])
-                x = x + offset
+                x += offset
                 if x > x_max:
                     x_max = x
 
@@ -815,7 +811,7 @@ class _GlancesCurses(object):
         """Erase the content of the screen."""
         self.term_window.erase()
 
-    def flush(self, stats, cs_status="None"):
+    def flush(self, stats, cs_status=None):
         """Clear and update the screen.
 
         stats: Stats database to display
@@ -827,7 +823,7 @@ class _GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
-    def update(self, stats, cs_status="None", return_to_browser=False):
+    def update(self, stats, cs_status=None, return_to_browser=False):
         """Update the screen.
 
         Wait for __refresh_time sec / catch key every 100 ms.
@@ -936,32 +932,30 @@ class GlancesCursesBrowser(_GlancesCurses):
         self.__refresh_time = args.time
 
         # Init the cursor position for the client browser
-        self.cursor_init()
+        self.cursor_position = 0
 
         # Active Glances server number
-        self.set_active()
+        self._active_server = None
 
-    def set_active(self, index=None):
-        """Set the active server or None if no server selected"""
-        self.active_server = index
-        return self.active_server
+    @property
+    def active_server(self):
+        """Return the active server or None if it's the browser list."""
+        return self._active_server
 
-    def get_active(self):
-        """Return the active server (the one display in front) or None if it is the browser list"""
-        return self.active_server
+    @active_server.setter
+    def active_server(self, index):
+        """Set the active server or None if no server selected."""
+        self._active_server = index
 
-    def cursor_init(self):
-        """Init the cursor position to the top of the list"""
-        return self.cursor_set(0)
-
-    def cursor_set(self, pos):
-        """Set the cursor position and return it"""
-        self.cursor_position = pos
+    @property
+    def cursor(self):
+        """Get the cursor position."""
         return self.cursor_position
 
-    def cursor_get(self):
-        """Return the cursor position"""
-        return self.cursor_position
+    @cursor.setter
+    def cursor(self, position):
+        """Set the cursor position."""
+        self.cursor_position = position
 
     def cursor_up(self, servers_list):
         """Set the cursor to position N-1 in the list"""
@@ -969,7 +963,6 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor_position -= 1
         else:
             self.cursor_position = len(servers_list) - 1
-        return self.cursor_position
 
     def cursor_down(self, servers_list):
         """Set the cursor to position N-1 in the list"""
@@ -977,7 +970,6 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor_position += 1
         else:
             self.cursor_position = 0
-        return self.cursor_position
 
     def __catch_key(self, servers_list):
         # Catch the browser pressed key
@@ -991,11 +983,10 @@ class GlancesCursesBrowser(_GlancesCurses):
             sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
-            logger.debug("Server number %s selected" % (self.cursor_get() + 1))
-            self.set_active(self.cursor_get())
+            logger.debug("Server number {0} selected".format(self.cursor + 1))
+            self.active_server = self.cursor
         elif self.pressedkey == 259:
             # 'UP' > Up in the server list
-            logger
             self.cursor_up(servers_list)
         elif self.pressedkey == 258:
             # 'DOWN' > Down in the server list
@@ -1029,7 +1020,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Wait 100ms...
             curses.napms(100)
 
-        return self.get_active()
+        return self.active_server
 
     def flush(self, servers_list):
         """Update the servers' list screen.
@@ -1110,9 +1101,9 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # If a servers has been deleted from the list...
         # ... and if the cursor is in the latest position
-        if self.cursor_get() > len(servers_list) - 1:
+        if self.cursor > len(servers_list) - 1:
             # Set the cursor position to the latest item
-            self.cursor_set(len(servers_list) - 1)
+            self.cursor = len(servers_list) - 1
 
         # Display table
         line = 0
@@ -1138,25 +1129,18 @@ class GlancesCursesBrowser(_GlancesCurses):
             xc = x
 
             # Is the line selected ?
-            if line == self.cursor_get():
+            if line == self.cursor:
                 # Display cursor
-                self.term_window.addnstr(y, xc,
-                                         ">",
-                                         screen_x - xc,
-                                         self.colors_list['BOLD'])
-
-            # Display alias instead of name
-            server_stat
+                self.term_window.addnstr(
+                    y, xc, ">", screen_x - xc, self.colors_list['BOLD'])
 
             # Display the line
             xc += 2
             for c in column_def:
                 if xc < screen_x and y < screen_y and c[1] is not None:
                     # Display server stats
-                    self.term_window.addnstr(y, xc,
-                                             "%s" % server_stat[c[0]],
-                                             c[2],
-                                             self.colors_list[v['status']])
+                    self.term_window.addnstr(
+                        y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...

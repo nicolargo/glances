@@ -279,7 +279,7 @@ class GlancesBottle(object):
 
         try:
             # Get the JSON value of the stat limits
-            ret = self.stats.get_plugin(plugin).get_limits()
+            ret = self.stats.get_plugin(plugin).limits
         except Exception as e:
             abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
         return ret

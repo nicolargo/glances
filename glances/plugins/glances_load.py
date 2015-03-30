@@ -76,7 +76,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
@@ -89,9 +89,9 @@ class Plugin(GlancesPlugin):
                               'min5': load[1],
                               'min15': load[2],
                               'cpucore': self.nb_log_core}
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            self.stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
             if self.stats['min1'] == '':
                 self.reset()
@@ -124,9 +124,9 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         try:
             # Alert and log
-            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])
+            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], maximum=100 * self.stats['cpucore'])
             # Alert only
-            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], maximum=100 * self.stats['cpucore'])
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
@@ -137,7 +137,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message

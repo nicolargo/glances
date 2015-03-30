@@ -78,7 +78,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab MEM using the PSUtil virtual_memory method
             vm_stats = psutil.virtual_memory()
@@ -112,12 +112,12 @@ class Plugin(GlancesPlugin):
                 self.stats['free'] += self.stats['cached']
             # used=total-free
             self.stats['used'] = self.stats['total'] - self.stats['free']
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            if self.get_short_system_name() in ('windows', 'esxi'):
+            if self.short_system_name in ('windows', 'esxi'):
                 # Mem stats for Windows|Vmware Esxi are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
@@ -133,7 +133,7 @@ class Plugin(GlancesPlugin):
                             break
             else:
                 # Default behavor for others OS
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
                     self.reset()
@@ -167,7 +167,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], max=self.stats['total'])
+        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
         # Optional
         for key in ['active', 'inactive', 'buffers', 'cached']:
             if key in self.stats:
@@ -179,7 +179,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message

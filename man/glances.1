@@ -49,6 +49,10 @@ disable network module
 .B \-\-disable-sensors
 disable sensors module
 .TP
+.B \-\-disable-hddtemp     
+disable HDDTemp module
+.TP
+.TP
 .B \-\-disable-left-sidebar
 disable network, disk IO, FS and sensors modules
 .TP
@@ -120,6 +124,12 @@ set refresh time in seconds [default: 3 sec]
 .TP
 .B \-w, \-\-webserver
 run Glances in Web server mode
+.TP
+.B \-q, \-\-quiet
+run Glances in quiet mode (nothing is displayed)
+.TP
+.B -\f PROCESS_FILTER, \-\-process\-filter PROCESS_FILTER
+set the process filter patern (regular expression)
 .TP
 .B \-1, \-\-percpu
 start Glances in per CPU mode
@@ -210,9 +220,31 @@ Show/hide processes list (for low CPU consumption)
 Switch between global CPU and per-CPU stats
 .SH EXAMPLES
 .TP
-Refresh information every 5 seconds:
-.B glances
-\-t 5
+Monitor local machine (standalone mode):
+.B $ glances
+.PP
+Monitor local machine with the Web interface (Web UI):
+.B $ glances -w
+.PP
+Glances web server started on http://0.0.0.0:61208/
+.PP
+Monitor local machine and export stats to a CSV file (standalone mode):
+.B $ glances --export-csv
+.PP
+Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
+.B $ glances -t 5 --export-influxdb
+.PP
+Start a Glances server (server mode):
+.B $ glances -s
+.PP
+Connect Glances to a Glances server (client mode):
+.B $ glances -c <ip_server>
+.PP
+Connect Glances to a Glances server and export stats to a StatsD server (client mode):
+.B $ glances -c <ip_server> --export-statsd
+.PP
+Start the client browser (browser mode):
+.B $ glances --browser
 .PP
 .SH EXIT STATUS
 Glances returns a zero exit status if it succeeds to print/grab information.

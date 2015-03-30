@@ -110,6 +110,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_fs', help=_('disable filesystem module'))
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help=_('disable sensors module'))
+        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
+                            dest='disable_hddtemp', help=_('disable HD Temperature module'))
         parser.add_argument('--disable-raid', action='store_true', default=False,
                             dest='disable_raid', help=_('disable RAID module'))
         parser.add_argument('--disable-docker', action='store_true', default=False,
@@ -171,6 +173,8 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help=_('run Glances in web server mode (need Bootle lib)'))
         # Display options
+        parser.add_argument('-q', '--quiet', default=False, action='store_true',
+                            dest='quiet', help=_('Do not display the Curse interface'))
         parser.add_argument('-f', '--process-filter', default=None, type=str,
                             dest='process_filter', help=_('set the process filter pattern (regular expression)'))
         parser.add_argument('--process-short-name', action='store_true', default=False,
@@ -187,7 +191,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--fs-free-space', action='store_false', default=False,
                             dest='fs_free_space', help=_('display FS free space instead of used'))
         parser.add_argument('--theme-white', action='store_true', default=False,
-                            dest='theme_white', help=_('optimize display for white background'))
+                            dest='theme_white', help=_('optimize display colors for white background'))
 
         return parser
 
@@ -263,6 +267,11 @@ Start the client browser (browser mode):\n\
                 logger.critical("History output path {0} do not exist or is not writable".format(args.path_history))
                 sys.exit(2)
             logger.debug("History output path is set to {0}".format(args.path_history))
+
+        # Disable HDDTemp if sensors are disabled
+        if args.disable_sensors:
+            args.disable_hddtemp = True
+            logger.debug("Sensors and HDDTemp are disabled")
 
         return args
 
