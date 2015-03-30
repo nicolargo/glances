@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.gettree()
             else:
                 self.stats = glances_processes.getlist()
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
 
@@ -154,8 +154,7 @@ class Plugin(GlancesPlugin):
 
     def get_process_curses_data(self, p, first, args):
         """ Get curses data to display for a process. """
-        ret = []
-        ret.append(self.curse_new_line())
+        ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             msg = '{0:>6.1f}'.format(p['cpu_percent'])
@@ -365,7 +364,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Compute the sort key
-        process_sort_key = glances_processes.getsortkey()
+        process_sort_key = glances_processes.sort_key
         sort_style = 'SORT'
 
         # Header
@@ -401,7 +400,7 @@ class Plugin(GlancesPlugin):
             ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
                                                          args,
                                                          first_level=True,
-                                                         max_node_count=glances_processes.get_max_processes()))
+                                                         max_node_count=glances_processes.max_processes))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True

@@ -61,7 +61,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local' and netifaces_tag:
+        if self.input_method == 'local' and netifaces_tag:
             # Update stats using the netifaces lib
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
@@ -76,7 +76,7 @@ class Plugin(GlancesPlugin):
                 except KeyError as e:
                     logger.debug("Can not grab IP information (%s)".format(e))
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Not implemented yet
             pass
 
@@ -106,9 +106,11 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Build the string message
-        msg = _(' - IP')
+        msg = _(' - ')
+        ret.append(self.curse_add_line(msg))
+        msg = _('IP ')
         ret.append(self.curse_add_line(msg, 'TITLE'))
-        msg = ' {0:}/{1}'.format(self.stats['address'], self.stats['mask_cidr'])
+        msg = '{0:}/{1}'.format(self.stats['address'], self.stats['mask_cidr'])
         ret.append(self.curse_add_line(msg))
 
         return ret
@@ -117,4 +119,4 @@ class Plugin(GlancesPlugin):
     def ip_to_cidr(ip):
         # Convert IP address to CIDR
         # Exemple: '255.255.255.0' will return 24
-        return sum(map(lambda x: int(x) << 8, ip.split('.'))) / 8128
+        return sum(map(lambda x: int(x) << 8, ip.split('.'))) // 8128

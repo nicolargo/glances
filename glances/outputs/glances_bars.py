@@ -33,7 +33,7 @@ class Bar(object):
     import time
     b = Bar(10)
     for p in range(0, 100):
-        b.set_percent(p)
+        b.percent = p
         print("\r%s" % b),
         time.sleep(0.1)
         sys.stdout.flush()
@@ -43,7 +43,8 @@ class Bar(object):
     def __init__(self, size,
                  pre_char='[',
                  post_char=']',
-                 empty_char='_'):
+                 empty_char='_',
+                 with_text=True):
         # Bar size
         self.__size = size
         # Bar current percent
@@ -52,29 +53,38 @@ class Bar(object):
         self.__pre_char = pre_char
         self.__post_char = post_char
         self.__empty_char = empty_char
+        self.__with_text = with_text
 
-    def get_size(self):
-        return self.__size
+    @property
+    def size(self, with_decoration=False):
+        # Return the bar size, with or without decoration
+        if with_decoration:
+            return self.__size
+        if self.__with_text:
+            return self.__size - 6
 
-    def set_size(self, size):
-        self.__size = size
-        return self.__size
+    # @size.setter
+    # def size(self, value):
+    #     self.__size = value
 
-    def get_percent(self):
+    @property
+    def percent(self):
         return self.__percent
 
-    def set_percent(self, percent):
-        assert percent >= 0
-        assert percent <= 100
-        self.__percent = percent
-        return self.__percent
+    @percent.setter
+    def percent(self, value):
+        assert value >= 0
+        assert value <= 100
+        self.__percent = value
 
     def __str__(self):
-        """Return the bars"""
-        frac, whole = modf(self.get_size() * self.get_percent() / 100.0)
+        """Return the bars."""
+        frac, whole = modf(self.size * self.percent / 100.0)
         ret = curses_bars[8] * int(whole)
         if frac > 0:
             ret += curses_bars[int(frac * 8)]
             whole += 1
-        ret += self.__empty_char * int(self.get_size() - whole)
+        ret += self.__empty_char * int(self.size - whole)
+        if self.__with_text:
+            ret = '{0}{1:>5}%'.format(ret, self.percent)
         return self.__pre_char + ret + self.__post_char
