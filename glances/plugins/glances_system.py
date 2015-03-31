@@ -103,7 +103,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             self.stats['os_name'] = platform.system()
             self.stats['hostname'] = platform.node()
@@ -136,17 +136,17 @@ class Plugin(GlancesPlugin):
                     self.stats['os_name'], self.stats['os_version'])
             self.stats['hr_name'] += ' ({0})'.format(self.stats['platform'])
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             try:
-                self.stats = self.set_stats_snmp(
-                    snmp_oid=snmp_oid[self.get_short_system_name()])
+                self.stats = self.get_stats_snmp(
+                    snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavor: display all the information
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
-            if self.get_short_system_name() == 'windows':
+            if self.short_system_name == 'windows':
                 try:
                     iteritems = snmp_to_human['windows'].iteritems()
                 except AttributeError:

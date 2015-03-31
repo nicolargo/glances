@@ -66,7 +66,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab the stat using the PsUtil disk_io_counters method
             # read_count: number of reads
@@ -96,16 +96,15 @@ class Plugin(GlancesPlugin):
                 diskio_new = diskiocounters
                 for disk in diskio_new:
                     try:
-                        # Try necessary to manage dynamic disk creation/del
-                        diskstat = {}
-                        diskstat['time_since_update'] = time_since_update
-                        diskstat['disk_name'] = disk
-                        diskstat['read_bytes'] = (
-                            diskio_new[disk].read_bytes -
-                            self.diskio_old[disk].read_bytes)
-                        diskstat['write_bytes'] = (
-                            diskio_new[disk].write_bytes -
-                            self.diskio_old[disk].write_bytes)
+                        read_bytes = (diskio_new[disk].read_bytes -
+                                      self.diskio_old[disk].read_bytes)
+                        write_bytes = (diskio_new[disk].write_bytes -
+                                       self.diskio_old[disk].write_bytes)
+                        diskstat = {
+                            'time_since_update': time_since_update,
+                            'disk_name': disk,
+                            'read_bytes': read_bytes,
+                            'write_bytes': write_bytes}
                     except KeyError:
                         continue
                     else:
@@ -114,7 +113,7 @@ class Plugin(GlancesPlugin):
 
                 # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
             pass

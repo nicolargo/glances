@@ -17,10 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Custom logging class"""
+"""Custom logging class."""
 
 import logging
-import logging.config
+try:
+    # Python 2.6
+    from logutils.dictconfig import dictConfig
+except ImportError:
+    # Python >= 2.7
+    from logging.config import dictConfig
 import os
 import tempfile
 
@@ -72,29 +77,24 @@ LOGGING_CFG = {
 
 
 def tempfile_name():
-    """Return the tempfile name (full path)"""
+    """Return the tempfile name (full path)."""
     ret = os.path.join(tempfile.gettempdir(), 'glances.log')
     if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
-        print("Warning: can't write logs to file {} (permission denied)".format(ret))
+        print("WARNING: Couldn't write to log file {0}: (Permission denied)".format(ret))
         ret = tempfile.mkstemp(prefix='glances', suffix='.tmp', text=True)
-        print("Create a new log file: {}".format(ret[1]))
+        print("Create a new log file: {0}".format(ret[1]))
         return ret[1]
+
     return ret
 
 
 def glances_logger():
-    """Build and return the logger"""
+    """Build and return the logger."""
     temp_path = tempfile_name()
     _logger = logging.getLogger()
-    try:
-        LOGGING_CFG['handlers']['file']['filename'] = temp_path
-        logging.config.dictConfig(LOGGING_CFG)
-    except AttributeError:
-        # dictConfig is only available for Python 2.7 or higher
-        # Minimal configuration for Python 2.6
-        logging.basicConfig(filename=temp_path,
-                            level=logging.DEBUG,
-                            format='%(asctime)s -- %(levelname)s -- %(message)s')
+    LOGGING_CFG['handlers']['file']['filename'] = temp_path
+    dictConfig(LOGGING_CFG)
+
     return _logger
 
 logger = glances_logger()

@@ -20,14 +20,18 @@
 """Statsd interface class."""
 
 # Import sys libs
-from statsd import StatsClient
-from numbers import Number
 import sys
+from numbers import Number
+try:
+    from configparser import NoOptionError, NoSectionError
+except ImportError:  # Python 2
+    from ConfigParser import NoOptionError, NoSectionError
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from ConfigParser import NoSectionError, NoOptionError
 from glances.exports.glances_export import GlancesExport
+
+from statsd import StatsClient
 
 
 class Export(GlancesExport):

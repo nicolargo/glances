@@ -9,6 +9,8 @@ Enhancements and news features:
 
     * Grab FAN speed in the Glances sensors plugin (issue #501)
     * Allow logical mounts points in the FS plugin (issue #448)
+    * Add a --disable-hddtemp to disable HDD temperature module at startup (issue #515)
+    * Add a quiet mode (-q). Can be usefull if you need a Statsd or Influxdb provider only.
 
 Bugs corrected:
 

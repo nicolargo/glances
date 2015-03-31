@@ -42,7 +42,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Set the message position
-        self.set_align('bottom')
+        self.align = 'bottom'
 
         # Init the stats
         self.reset()

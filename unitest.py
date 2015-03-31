@@ -78,14 +78,14 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_000] Test the stats update function')
         try:
             stats.update()
-        except:
-            print('ERROR: Stats update failed')
+        except Exception as e:
+            print('ERROR: Stats update failed ({})'.format(e))
             self.assertTrue(False)
         time.sleep(1)
         try:
             stats.update()
-        except:
-            print('ERROR: Stats update failed')
+        except Exception as e:
+            print('ERROR: Stats update failed ({})'.format(e))
             self.assertTrue(False)
 
         self.assertTrue(True)

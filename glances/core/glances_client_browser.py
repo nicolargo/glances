@@ -146,42 +146,40 @@ class GlancesClientBrowser(object):
                     "Server list dictionnary change inside the loop (wait next update)")
 
             # Update the screen (list or Glances client)
-            if self.screen.get_active() is None:
+            if self.screen.active_server is None:
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:
                 # Display the Glances client for the selected server
-                logger.debug("Selected server: %s" % self.get_servers_list()[self.screen.get_active()])
+                logger.debug("Selected server: {0}".format(self.get_servers_list()[self.screen.active_server]))
 
                 # Connection can take time
                 # Display a popup
                 self.screen.display_popup(_("Connect to %s:%s" % (v['name'], v['port'])), duration=1)
 
                 # A password is needed to access to the server's stats
-                if self.get_servers_list()[self.screen.get_active()]['password'] is None:
+                if self.get_servers_list()[self.screen.active_server]['password'] is None:
                     from hashlib import sha256
                     # Display a popup to enter password
                     clear_password = self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True)
                     # Hash with SHA256
-                    encoded_password = sha256(clear_password).hexdigest()
+                    encoded_password = sha256(clear_password.encode('utf-8')).hexdigest()
                     # Store the password for the selected server
                     self.set_in_selected('password', encoded_password)
 
                 # Display the Glance client on the selected server
-                logger.info("Connect Glances client to the %s server" %
-                            self.get_servers_list()[self.screen.get_active()]['key'])
+                logger.info("Connect Glances client to the {0} server".format(
+                    self.get_servers_list()[self.screen.active_server]['key']))
 
                 # Init the client
                 args_server = self.args
 
                 # Overwrite connection setting
-                args_server.client = self.get_servers_list()[self.screen.get_active()]['ip']
-                args_server.port = self.get_servers_list()[self.screen.get_active()]['port']
-                args_server.username = self.get_servers_list()[self.screen.get_active()]['username']
-                args_server.password = self.get_servers_list()[self.screen.get_active()]['password']
-                client = GlancesClient(config=self.config,
-                                       args=args_server,
-                                       return_to_browser=True)
+                args_server.client = self.get_servers_list()[self.screen.active_server]['ip']
+                args_server.port = self.get_servers_list()[self.screen.active_server]['port']
+                args_server.username = self.get_servers_list()[self.screen.active_server]['username']
+                args_server.password = self.get_servers_list()[self.screen.active_server]['password']
+                client = GlancesClient(config=self.config, args=args_server, return_to_browser=True)
 
                 # Test if client and server are in the same major version
                 if not client.login():
@@ -195,8 +193,8 @@ class GlancesClientBrowser(object):
                     connection_type = client.serve_forever()
 
                     try:
-                        logger.debug("Disconnect Glances client from the %s server" %
-                                     self.get_servers_list()[self.screen.get_active()]['key'])
+                        logger.debug("Disconnect Glances client from the {0} server".format(
+                            self.get_servers_list()[self.screen.active_server]['key']))
                     except IndexError:
                         # Server did not exist anymore
                         pass
@@ -208,19 +206,17 @@ class GlancesClientBrowser(object):
                             self.set_in_selected('status', 'ONLINE')
 
                 # Return to the browser (no server selected)
-                self.screen.set_active(None)
+                self.screen.active_server = None
 
     def set_in_selected(self, key, value):
-        """Set the (key, value) for the selected server in the list"""
+        """Set the (key, value) for the selected server in the list."""
         # Static list then dynamic one
-        if self.screen.get_active() >= len(self.static_server.get_servers_list()):
-            self.autodiscover_server.set_server(self.screen.get_active() - len(self.static_server.get_servers_list()),
-                                                key,
-                                                value)
+        if self.screen.active_server >= len(self.static_server.get_servers_list()):
+            self.autodiscover_server.set_server(
+                self.screen.active_server - len(self.static_server.get_servers_list()),
+                key, value)
         else:
-            self.static_server.set_server(self.screen.get_active(),
-                                          key,
-                                          value)
+            self.static_server.set_server(self.screen.active_server, key, value)
 
     def end(self):
         """End of the client browser session."""

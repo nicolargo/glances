@@ -8,6 +8,9 @@ from setuptools import setup
 
 is_chroot = os.stat('/').st_ino != 2
 
+if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.6 or 3.3 to run.')
+    sys.exit(1)
 
 def get_data_files():
     data_files = [
@@ -31,7 +34,6 @@ def get_data_files():
         conf_path = os.path.join(os.environ.get('APPDATA'), 'glances')
     else:  # Unix-like + per-user install
         conf_path = os.path.join('etc', 'glances')
-
     data_files.append((conf_path, ['conf/glances.conf']))
 
     for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
@@ -45,8 +47,8 @@ def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info < (2, 7):
-        requires += ['argparse']
+    if sys.version_info == (2, 6):
+        requires += ['argparse', 'logutils']
 
     return requires
 
@@ -71,7 +73,7 @@ setup(
         'BROWSER': ['zeroconf>=0.16', 'netifaces'],
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb', 'statsd'],
+        'EXPORT': ['influxdb>=1.0.0', 'statsd'],
         'ACTION': ['pystache']
     },
     packages=['glances'],

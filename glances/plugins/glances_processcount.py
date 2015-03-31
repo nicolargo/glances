@@ -52,14 +52,14 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Here, update is call for processcount AND processlist
             glances_processes.update()
 
             # Return the processes count
             self.stats = glances_processes.getcount()
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # !!! TODO
             pass
@@ -77,14 +77,14 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             return ret
 
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Display the filter (if it exists)
-        if glances_processes.get_process_filter() is not None:
+        if glances_processes.process_filter is not None:
             msg = _("Processes filter:")
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = _(" {0} ").format(glances_processes.get_process_filter())
+            msg = _(" {0} ").format(glances_processes.process_filter)
             ret.append(self.curse_add_line(msg, "FILTER"))
             msg = _("(press ENTER to edit)")
             ret.append(self.curse_add_line(msg))
@@ -117,13 +117,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
-        if glances_processes.getmanualsortkey() is None:
+        if glances_processes.auto_sort:
             msg = _("sorted automatically")
             ret.append(self.curse_add_line(msg))
-            msg = _(" by {0}").format(glances_processes.getautosortkey())
+            msg = _(" by {0}").format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         else:
-            msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
+            msg = _("sorted by {0}").format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
 

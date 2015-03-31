@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.3.
+This manual describes *Glances* version 2.4.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-January 2015
+April 2015
 
 .. contents:: Table of Contents
 
@@ -143,6 +143,7 @@ Command-Line Options
   --disable-fs          disable filesystem module
   --disable-network     disable network module
   --disable-sensors     disable sensors module
+  --disable-hddtemp     disable HDDTemp module
   --disable-left-sidebar
                         disable left sidebar
   --disable-process     disable process module
@@ -187,6 +188,7 @@ Command-Line Options
   --snmp-force          force SNMP mode
   -t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
   -w, --webserver       run Glances in web server mode
+  -q, --quiet           run Glances in quiet mode (nothing is displayed)
   -f PROCESS_FILTER, --process-filter PROCESS_FILTER
                         set the process filter patern (regular expression)
   --process-short-name  force short name for processes name
@@ -397,7 +399,7 @@ Disconnected:
 
 .. image:: images/disconnected.png
 
-QUICKLOOK
+QuickLook
 ---------
 
 The quicklook plugin is only display on wide screen and propose a bar view for CPU and memory (virtual and swap).
@@ -789,6 +791,10 @@ and run Glances with:
 
     $ glances --export-influxdb
 
+For Grafana users', Glances provides a dedicated `dashboard`_. Just import the file in your Grafana Web interface.
+
+.. image:: images/grafana.png
+
 *Statsd*
 
 You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:
@@ -847,3 +853,4 @@ Feel free to contribute !
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
 .. _RESTFUL-JSON: http://jsonapi.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
+.. _forum: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json

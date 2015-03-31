@@ -44,21 +44,17 @@ from glances.core.glances_globals import gettext_domain, locale_dir
 from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
 
-# Get PSutil version
-psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
-
-# First log with Glances and PSUtil version
-logger.info('Start Glances {0}'.format(__version__))
-logger.info('{0} {1} and PSutil {2} detected'.format(platform.python_implementation(),
-                                                     platform.python_version(),
-                                                     __psutil_version))
-
-# Check PSutil version
-if psutil_version < psutil_min_version:
-    logger.critical('PSutil 2.0 or higher is needed. Glances cannot start.')
+# Check Python version
+if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.6 or 3.3 to run.')
     sys.exit(1)
 
+# Check PSutil version
+psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
+if psutil_version < psutil_min_version:
+    print('PSutil 2.0 or higher is needed. Glances cannot start.')
+    sys.exit(1)
 
 def __signal_handler(signal, frame):
     """Callback for CTRL-C."""
@@ -94,8 +90,23 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
+    # Log Glances and PSutil version
+    logger.info('Start Glances {0}'.format(__version__))
+    logger.info('{0} {1} and PSutil {2} detected'.format(
+        platform.python_implementation(),
+        platform.python_version(),
+        __psutil_version))
+
     # Setup translations
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error:
+        # Issue #517
+        # Setting LC_ALL to '' should not generate an error unless LC_ALL is not
+        # defined in the user environment, which can be the case when used via SSH.
+        # So simply skip this error, as python will use the C locale by default.
+        logger.warning("No locale LC_ALL variable found. Use the default C locale.")
+        pass
     gettext.install(gettext_domain, locale_dir)
 
     # Share global var
