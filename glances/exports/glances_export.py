@@ -64,7 +64,8 @@ class GlancesExport(object):
                 'fs',
                 'processcount',
                 'ip',
-                'system']
+                'system',
+                'uptime']
 
     def update(self, stats):
         """Update stats to a server.
