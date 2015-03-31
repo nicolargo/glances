@@ -24,7 +24,7 @@ import psutil
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
-from glances.core.glances_logging import logger
+#from glances.core.glances_logging import logger
 
 
 class Plugin(GlancesPlugin):
@@ -55,13 +55,13 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Grab quicklook stats: CPU, MEM and SWAP
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Get the latest CPU percent value
             self.stats['cpu'] = cpu_percent.get()
             # Use the PsUtil lib for the memory (virtual and swap)
             self.stats['mem'] = psutil.virtual_memory().percent
             self.stats['swap'] = psutil.swap_memory().percent
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Not available
             pass
 
@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {} or args.disable_quicklook:
+        if not self.stats or args.disable_quicklook:
             return ret
 
         # Define the bar
@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for key in ['cpu', 'mem', 'swap']:
-            bar.set_percent(self.stats[key])
+            bar.percent = self.stats[key]
             msg = '{0:>4} '.format(key.upper())
             ret.append(self.curse_add_line(msg))
             msg = '{0}'.format(bar)

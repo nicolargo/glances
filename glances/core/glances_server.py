@@ -100,7 +100,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
                 self.send_error(401, 'Authentication failed')
         return False
 
-    def log_message(self, format, *args):
+    def log_message(self, log_format, *args):
         # No message displayed on the server side
         pass
 

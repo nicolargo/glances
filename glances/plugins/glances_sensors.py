@@ -83,7 +83,7 @@ class Plugin(GlancesPlugin):
         # Reset the stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the dedicated lib
             self.stats = []
             # Get the temperature
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
                 # Append Batteries %
                 self.stats.extend(batpercent)
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
@@ -156,7 +156,7 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         # Alert
         for i in self.stats:
-            if i['value'] == []:
+            if not i['value']:
                 continue
             if i['type'] == 'battery':
                 self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
@@ -169,7 +169,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if  not self.stats or args.disable_sensors or self.stats == []:
+        if not self.stats or args.disable_sensors:
             return ret
 
         # Build the string message
@@ -178,7 +178,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
-            if i['value'] is not None and i['value'] != []:
+            if i['value']:
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
@@ -187,8 +187,8 @@ class Plugin(GlancesPlugin):
                     label = i['label']
                 try:
                     msg = "{0:12} {1:3}".format(label[:11], i['unit'])
-                except KeyError:
-                    msg = '{0:16}'.format(label[:15])
+                except (KeyError, UnicodeEncodeError):
+                    msg = "{0:16}".format(label[:15])
                 ret.append(self.curse_add_line(msg))
                 msg = '{0:>7}'.format(i['value'])
                 ret.append(self.curse_add_line(
@@ -234,23 +234,23 @@ class GlancesGrabSensors(object):
                     elif feature.name.startswith(b'fan'):
                         # Fan speed sensor
                         sensors_current['unit'] = SENSOR_FAN_UNIT
-                    if sensors_current != {}:
+                    if sensors_current:
                         sensors_current['label'] = feature.label
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
 
         return self.sensors_list
 
-    def get(self, type='temperature_core'):
+    def get(self, sensor_type='temperature_core'):
         """Get sensors list."""
         self.__update__()
-        if type == 'temperature_core':
+        if sensor_type == 'temperature_core':
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_TEMP_UNIT]
-        elif type == 'fan_speed':
+        elif sensor_type == 'fan_speed':
             ret = [s for s in self.sensors_list if s['unit'] == SENSOR_FAN_UNIT]
         else:
             # Unknown type
-            logger.debug("Unknown sensor type %s" % type)
+            logger.debug("Unknown sensor type %s" % sensor_type)
             ret = []
         return ret
 

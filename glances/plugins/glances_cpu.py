@@ -78,7 +78,7 @@ class Plugin(GlancesPlugin):
 
         # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
         # methods
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Get all possible values for CPU stats: user, system, idle,
             # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
             # The following stats are returned by the API but not displayed in the UI:
@@ -89,14 +89,14 @@ class Plugin(GlancesPlugin):
                          'irq', 'softirq', 'steal', 'guest', 'guest_nice']:
                 if hasattr(cpu_times_percent, stat):
                     self.stats[stat] = getattr(cpu_times_percent, stat)
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            if self.get_short_system_name() in ('windows', 'esxi'):
+            if self.short_system_name in ('windows', 'esxi'):
                 # Windows or VMWare ESXi
                 # You can find the CPU utilization of windows system by querying the oid
                 # Give also the number of core (number of element in the table)
                 try:
-                    cpu_stats = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                     bulk=True)
                 except KeyError:
                     self.reset()
@@ -117,10 +117,10 @@ class Plugin(GlancesPlugin):
             else:
                 # Default behavor
                 try:
-                    self.stats = self.set_stats_snmp(
-                        snmp_oid=snmp_oid[self.get_short_system_name()])
+                    self.stats = self.get_stats_snmp(
+                        snmp_oid=snmp_oid[self.short_system_name])
                 except KeyError:
-                    self.stats = self.set_stats_snmp(
+                    self.stats = self.get_stats_snmp(
                         snmp_oid=snmp_oid['default'])
 
                 if self.stats['idle'] == '':
@@ -150,9 +150,8 @@ class Plugin(GlancesPlugin):
         for key in ['user', 'system', 'iowait']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert_log(self.stats[key], header=key)
-        self.views['total']['decoration'] = self.get_alert_log(self.stats['total'], header="system")
         # Alert only
-        for key in ['steal']:
+        for key in ['steal', 'total']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Optional
@@ -166,7 +165,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message

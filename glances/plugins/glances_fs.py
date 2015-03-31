@@ -24,7 +24,6 @@ import operator
 import psutil
 
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_logging import logger
 
 # SNMP OID
 # The snmpd.conf needs to be edited.
@@ -94,7 +93,7 @@ class Plugin(GlancesPlugin):
         # Reset the list
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Grab the stats using the PsUtil disk_partitions
@@ -116,10 +115,6 @@ class Plugin(GlancesPlugin):
 
             # Loop over fs
             for fs in fs_stat:
-                fs_current = {}
-                fs_current['device_name'] = fs.device
-                fs_current['fs_type'] = fs.fstype
-                fs_current['mnt_point'] = fs.mountpoint
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
@@ -127,52 +122,56 @@ class Plugin(GlancesPlugin):
                     # Correct issue #346
                     # Disk is ejected during the command
                     continue
-                fs_current['size'] = fs_usage.total
-                fs_current['used'] = fs_usage.used
-                fs_current['free'] = fs_usage.total - fs_usage.used
-                fs_current['percent'] = fs_usage.percent
-                fs_current['key'] = self.get_key()
+                fs_current = {
+                    'device_name': fs.device,
+                    'fs_type': fs.fstype,
+                    'mnt_point': fs.mountpoint,
+                    'size': fs_usage.total,
+                    'used': fs_usage.used,
+                    'free': fs_usage.total - fs_usage.used,
+                    'percent': fs_usage.percent,
+                    'key': self.get_key()}
                 self.stats.append(fs_current)
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
 
             # SNMP bulk command to get all file system in one shot
             try:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                               bulk=True)
             except KeyError:
-                fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
+                fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
                                               bulk=True)
 
             # Loop over fs
-            if self.get_short_system_name() in ('windows', 'esxi'):
+            if self.short_system_name in ('windows', 'esxi'):
                 # Windows or ESXi tips
                 for fs in fs_stat:
-                    # Memory stats are grabed in the same OID table (ignore it)
+                    # Memory stats are grabbed in the same OID table (ignore it)
                     if fs == 'Virtual Memory' or fs == 'Physical Memory' or fs == 'Real Memory':
                         continue
-                    fs_current = {}
-                    fs_current['device_name'] = ''
-                    fs_current['mnt_point'] = fs.partition(' ')[0]
-                    fs_current['size'] = int(
-                        fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['used'] = int(
-                        fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
-                    fs_current['percent'] = float(
-                        fs_current['used'] * 100 / fs_current['size'])
-                    fs_current['key'] = self.get_key()
+                    size = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
+                    used = int(fs_stat[fs]['used']) * int(fs_stat[fs]['alloc_unit'])
+                    percent = float(used * 100 / size)
+                    fs_current = {
+                        'device_name': '',
+                        'mnt_point': fs.partition(' ')[0],
+                        'size': size,
+                        'used': used,
+                        'percent': percent,
+                        'key': self.get_key()}
                     self.stats.append(fs_current)
             else:
-                # Default behavor
+                # Default behavior
                 for fs in fs_stat:
-                    fs_current = {}
-                    fs_current['device_name'] = fs_stat[fs]['device_name']
-                    fs_current['mnt_point'] = fs
-                    fs_current['size'] = int(fs_stat[fs]['size']) * 1024
-                    fs_current['used'] = int(fs_stat[fs]['used']) * 1024
-                    fs_current['percent'] = float(fs_stat[fs]['percent'])
-                    fs_current['key'] = self.get_key()
+                    fs_current = {
+                        'device_name': fs_stat[fs]['device_name'],
+                        'mnt_point': fs,
+                        'size': int(fs_stat[fs]['size']) * 1024,
+                        'used': int(fs_stat[fs]['used']) * 1024,
+                        'percent': float(fs_stat[fs]['percent']),
+                        'key': self.get_key()}
                     self.stats.append(fs_current)
 
         # Update the history list
@@ -192,7 +191,7 @@ class Plugin(GlancesPlugin):
         # Alert
         for i in self.stats:
             self.views[i[self.get_key()]]['used']['decoration'] = self.get_alert(
-                i['used'], max=i['size'], header=i['mnt_point'])
+                i['used'], maximum=i['size'], header=i['mnt_point'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
