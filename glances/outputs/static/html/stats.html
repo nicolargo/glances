@@ -326,9 +326,7 @@
                 </div>
             </div>
             <div class="col-sm-9">
-                <!--<section id="containers" class="plugin">
-                    <span class="title">CONTAINERS</span> 1 (served by 1.2.0)
-                </section>-->
+                <section id="containers" class="plugin" ng-include src="'plugins/docker.html'"></section>
                 <section id="alerts" ng-show="show.alert">
                     <span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span>
                     <span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
