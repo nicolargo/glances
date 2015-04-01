@@ -391,7 +391,7 @@ class GlancesProcesses(object):
                     # Get the process IO counters
                     proc_io = proc.io_counters()
                     io_new = [proc_io.read_bytes, proc_io.write_bytes]
-                except (psutil.AccessDenied, psutil.NoSuchProcess):
+                except (psutil.AccessDenied, psutil.NoSuchProcess, NotImplementedError):
                     # Access denied to process IO (no root account)
                     # NoSuchProcess (process die between first and second grab)
                     # Put 0 in all values (for sort) and io_tag = 0 (for
