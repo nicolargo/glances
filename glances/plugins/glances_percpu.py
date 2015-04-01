@@ -42,6 +42,10 @@ class Plugin(GlancesPlugin):
         # Init stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list"""
+        return 'cpu_number'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
@@ -56,9 +60,12 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             percpu_percent = psutil.cpu_percent(interval=0.0, percpu=True)
             percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
+            cpu_number = 0
             for cputimes in percpu_times_percent:
                 for cpupercent in percpu_percent:
-                    cpu = {'total': cpupercent,
+                    cpu = {'key': self.get_key(),
+                           'cpu_number': str(cpu_number),
+                           'total': cpupercent,
                            'user': cputimes.user,
                            'system': cputimes.system,
                            'idle': cputimes.idle}
@@ -78,6 +85,7 @@ class Plugin(GlancesPlugin):
                     if hasattr(cputimes, 'guest_nice'):
                         cpu['guest_nice'] = cputimes.guest_nice
                 self.stats.append(cpu)
+                cpu_number += 1
         else:
             # Update stats using SNMP
             pass
