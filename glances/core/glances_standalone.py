@@ -19,6 +19,8 @@
 
 """Manage the Glances standalone session."""
 
+from time import sleep
+
 # Import Glances libs
 from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
@@ -34,6 +36,7 @@ class GlancesStandalone(object):
     def __init__(self, config=None, args=None):
         # Quiet mode
         self._quiet = args.quiet
+        self.refresh_time = args.time
 
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
@@ -82,9 +85,12 @@ class GlancesStandalone(object):
             # Update system informations
             self.stats.update()
 
-            # Update the screen
             if not self.quiet:
+                # Update the screen
                 self.screen.update(self.stats)
+            else:
+                # Wait...
+                sleep(self.refresh_time)
 
             # Export stats using export modules
             self.stats.export(self.stats)
