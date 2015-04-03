@@ -347,191 +347,209 @@ class GlancesProcesses(object):
         """ Return True if process tree is enabled, False instead. """
         return self._enable_tree
 
+    def __get_mandatory_stats(self, proc, procstat):
+        """
+        Get mandatory_stats: need for the sorting/filter step
+        => cpu_percent, memory_percent, io_counters, name, cmdline
+        """
+        procstat['mandatory_stats'] = True
+
+        # Process CPU, MEM percent and name
+        procstat.update(
+            proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name', 'cpu_times'], ad_value=''))
+        if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
+            # Do not display process if we cannot get the basic
+            # cpu_percent or memory_percent stats
+            raise psutil.NoSuchProcess
+
+        # Process command line (cached with internal cache)
+        try:
+            self.cmdline_cache[procstat['pid']]
+        except KeyError:
+            # Patch for issue #391
+            try:
+                self.cmdline_cache[
+                    procstat['pid']] = ' '.join(proc.cmdline())
+            except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess):
+                self.cmdline_cache[procstat['pid']] = ""
+        procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
+
+        # Process IO
+        # procstat['io_counters'] is a list:
+        # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+        # If io_tag = 0 > Access denied (display "?")
+        # If io_tag = 1 > No access denied (display the IO rate)
+        # Note Disk IO stat not available on Mac OS
+        if not is_mac:
+            try:
+                # Get the process IO counters
+                proc_io = proc.io_counters()
+                io_new = [proc_io.read_bytes, proc_io.write_bytes]
+            except (psutil.AccessDenied, psutil.NoSuchProcess, NotImplementedError):
+                # Access denied to process IO (no root account)
+                # NoSuchProcess (process die between first and second grab)
+                # Put 0 in all values (for sort) and io_tag = 0 (for
+                # display)
+                procstat['io_counters'] = [0, 0] + [0, 0]
+                io_tag = 0
+            else:
+                # For IO rate computation
+                # Append saved IO r/w bytes
+                try:
+                    procstat['io_counters'] = io_new + \
+                        self.io_old[procstat['pid']]
+                except KeyError:
+                    procstat['io_counters'] = io_new + [0, 0]
+                # then save the IO r/w bytes
+                self.io_old[procstat['pid']] = io_new
+                io_tag = 1
+
+            # Append the IO tag (for display)
+            procstat['io_counters'] += [io_tag]
+
+        return procstat
+
+    def __get_standard_stats(self, proc, procstat):
+        """
+        Get standard_stats: for all the displayed processes
+        => username, status, memory_info, cpu_times
+        """
+        procstat['standard_stats'] = True
+
+        # Process username (cached with internal cache)
+        try:
+            self.username_cache[procstat['pid']]
+        except KeyError:
+            try:
+                self.username_cache[procstat['pid']] = proc.username()
+            except psutil.NoSuchProcess:
+                self.username_cache[procstat['pid']] = "?"
+            except (KeyError, psutil.AccessDenied):
+                try:
+                    self.username_cache[procstat['pid']] = proc.uids().real
+                except (KeyError, AttributeError, psutil.AccessDenied):
+                    self.username_cache[procstat['pid']] = "?"
+        procstat['username'] = self.username_cache[procstat['pid']]
+
+        # Process status, nice, memory_info and cpu_times
+        try:
+            procstat.update(
+                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+        except psutil.NoSuchProcess:
+            pass
+        else:
+            procstat['status'] = str(procstat['status'])[:1].upper()
+
+        return procstat
+
+    def __get_extended_stats(self, proc, procstat):
+        """
+        Get extended_stats: only for top processes (see issue #403)
+        => connections (UDP/TCP), memory_swap...
+        """
+        procstat['extended_stats'] = True
+
+        # CPU affinity (Windows and Linux only)
+        try:
+            procstat.update(proc.as_dict(attrs=['cpu_affinity']))
+        except psutil.NoSuchProcess:
+            pass
+        except AttributeError:
+            procstat['cpu_affinity'] = None
+        # Memory extended
+        try:
+            procstat.update(proc.as_dict(attrs=['memory_info_ex']))
+        except psutil.NoSuchProcess:
+            pass
+        except AttributeError:
+            procstat['memory_info_ex'] = None
+        # Number of context switch
+        try:
+            procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
+        except psutil.NoSuchProcess:
+            pass
+        except AttributeError:
+            procstat['num_ctx_switches'] = None
+        # Number of file descriptors (Unix only)
+        try:
+            procstat.update(proc.as_dict(attrs=['num_fds']))
+        except psutil.NoSuchProcess:
+            pass
+        except AttributeError:
+            procstat['num_fds'] = None
+        # Threads number
+        try:
+            procstat.update(proc.as_dict(attrs=['num_threads']))
+        except psutil.NoSuchProcess:
+            pass
+        except AttributeError:
+            procstat['num_threads'] = None
+
+        # Number of handles (Windows only)
+        if is_windows:
+            try:
+                procstat.update(proc.as_dict(attrs=['num_handles']))
+            except psutil.NoSuchProcess:
+                pass
+        else:
+            procstat['num_handles'] = None
+
+        # SWAP memory (Only on Linux based OS)
+        # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        if is_linux:
+            try:
+                procstat['memory_swap'] = sum(
+                    [v.swap for v in proc.memory_maps()])
+            except psutil.NoSuchProcess:
+                pass
+            except psutil.AccessDenied:
+                procstat['memory_swap'] = None
+            except Exception:
+                # Add a dirty except to handle the PsUtil issue #413
+                procstat['memory_swap'] = None
+
+        # Process network connections (TCP and UDP)
+        try:
+            procstat['tcp'] = len(proc.connections(kind="tcp"))
+            procstat['udp'] = len(proc.connections(kind="udp"))
+        except Exception:
+            procstat['tcp'] = None
+            procstat['udp'] = None
+
+        # IO Nice
+        # http://pythonhosted.org/psutil/#psutil.Process.ionice
+        if is_linux or is_windows:
+            try:
+                procstat.update(proc.as_dict(attrs=['ionice']))
+            except psutil.NoSuchProcess:
+                pass
+        else:
+            procstat['ionice'] = None
+
+        return procstat
+
     def __get_process_stats(self, proc,
                             mandatory_stats=True,
                             standard_stats=True,
                             extended_stats=False):
         """
         Get process stats of the proc processes (proc is returned psutil.process_iter())
-        mandatory_stats: need for the sorting/filter step
-        => cpu_percent, memory_percent, io_counters, name, cmdline
-        standard_stats: for all the displayed processes
-        => username, status, memory_info, cpu_times
-        extended_stats: only for top processes (see issue #403)
-        => connections (UDP/TCP), memory_swap...
         """
 
         # Process ID (always)
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
-            procstat['mandatory_stats'] = True
-
-            # Process CPU, MEM percent and name
             try:
-                procstat.update(
-                    proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name', 'cpu_times'], ad_value=''))
+                procstat = self.__get_mandatory_stats(proc, procstat)
             except psutil.NoSuchProcess:
-                # Correct issue #414
                 return None
-            if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
-                # Do not display process if we cannot get the basic
-                # cpu_percent or memory_percent stats
-                return None
-
-            # Process command line (cached with internal cache)
-            try:
-                self.cmdline_cache[procstat['pid']]
-            except KeyError:
-                # Patch for issue #391
-                try:
-                    self.cmdline_cache[
-                        procstat['pid']] = ' '.join(proc.cmdline())
-                except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess):
-                    self.cmdline_cache[procstat['pid']] = ""
-            procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
-
-            # Process IO
-            # procstat['io_counters'] is a list:
-            # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
-            # If io_tag = 0 > Access denied (display "?")
-            # If io_tag = 1 > No access denied (display the IO rate)
-            # Note Disk IO stat not available on Mac OS
-            if not is_mac:
-                try:
-                    # Get the process IO counters
-                    proc_io = proc.io_counters()
-                    io_new = [proc_io.read_bytes, proc_io.write_bytes]
-                except (psutil.AccessDenied, psutil.NoSuchProcess, NotImplementedError):
-                    # Access denied to process IO (no root account)
-                    # NoSuchProcess (process die between first and second grab)
-                    # Put 0 in all values (for sort) and io_tag = 0 (for
-                    # display)
-                    procstat['io_counters'] = [0, 0] + [0, 0]
-                    io_tag = 0
-                else:
-                    # For IO rate computation
-                    # Append saved IO r/w bytes
-                    try:
-                        procstat['io_counters'] = io_new + \
-                            self.io_old[procstat['pid']]
-                    except KeyError:
-                        procstat['io_counters'] = io_new + [0, 0]
-                    # then save the IO r/w bytes
-                    self.io_old[procstat['pid']] = io_new
-                    io_tag = 1
-
-                # Append the IO tag (for display)
-                procstat['io_counters'] += [io_tag]
 
         if standard_stats:
-            procstat['standard_stats'] = True
-
-            # Process username (cached with internal cache)
-            try:
-                self.username_cache[procstat['pid']]
-            except KeyError:
-                try:
-                    self.username_cache[procstat['pid']] = proc.username()
-                except psutil.NoSuchProcess:
-                    self.username_cache[procstat['pid']] = "?"
-                except (KeyError, psutil.AccessDenied):
-                    try:
-                        self.username_cache[procstat['pid']] = proc.uids().real
-                    except (KeyError, AttributeError, psutil.AccessDenied):
-                        self.username_cache[procstat['pid']] = "?"
-            procstat['username'] = self.username_cache[procstat['pid']]
-
-            # Process status, nice, memory_info and cpu_times
-            try:
-                procstat.update(
-                    proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
-            except psutil.NoSuchProcess:
-                pass
-            else:
-                procstat['status'] = str(procstat['status'])[:1].upper()
+            procstat = self.__get_standard_stats(proc, procstat)
 
         if extended_stats and not self.disable_extended_tag:
-            procstat['extended_stats'] = True
-
-            # CPU affinity (Windows and Linux only)
-            try:
-                procstat.update(proc.as_dict(attrs=['cpu_affinity']))
-            except psutil.NoSuchProcess:
-                pass
-            except AttributeError:
-                procstat['cpu_affinity'] = None
-            # Memory extended
-            try:
-                procstat.update(proc.as_dict(attrs=['memory_info_ex']))
-            except psutil.NoSuchProcess:
-                pass
-            except AttributeError:
-                procstat['memory_info_ex'] = None
-            # Number of context switch
-            try:
-                procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
-            except psutil.NoSuchProcess:
-                pass
-            except AttributeError:
-                procstat['num_ctx_switches'] = None
-            # Number of file descriptors (Unix only)
-            try:
-                procstat.update(proc.as_dict(attrs=['num_fds']))
-            except psutil.NoSuchProcess:
-                pass
-            except AttributeError:
-                procstat['num_fds'] = None
-            # Threads number
-            try:
-                procstat.update(proc.as_dict(attrs=['num_threads']))
-            except psutil.NoSuchProcess:
-                pass
-            except AttributeError:
-                procstat['num_threads'] = None
-
-            # Number of handles (Windows only)
-            if is_windows:
-                try:
-                    procstat.update(proc.as_dict(attrs=['num_handles']))
-                except psutil.NoSuchProcess:
-                    pass
-            else:
-                procstat['num_handles'] = None
-
-            # SWAP memory (Only on Linux based OS)
-            # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-            if is_linux:
-                try:
-                    procstat['memory_swap'] = sum(
-                        [v.swap for v in proc.memory_maps()])
-                except psutil.NoSuchProcess:
-                    pass
-                except psutil.AccessDenied:
-                    procstat['memory_swap'] = None
-                except Exception:
-                    # Add a dirty except to handle the PsUtil issue #413
-                    procstat['memory_swap'] = None
-
-            # Process network connections (TCP and UDP)
-            try:
-                procstat['tcp'] = len(proc.connections(kind="tcp"))
-                procstat['udp'] = len(proc.connections(kind="udp"))
-            except Exception:
-                procstat['tcp'] = None
-                procstat['udp'] = None
-
-            # IO Nice
-            # http://pythonhosted.org/psutil/#psutil.Process.ionice
-            if is_linux or is_windows:
-                try:
-                    procstat.update(proc.as_dict(attrs=['ionice']))
-                except psutil.NoSuchProcess:
-                    pass
-            else:
-                procstat['ionice'] = None
-
-            # logger.debug(procstat)
+            procstat = self.__get_extended_stats(proc, procstat)
 
         return procstat
 
@@ -657,12 +675,8 @@ class GlancesProcesses(object):
                 # Next...
                 first = False
 
-        # Build the all processes list used by the minitored list
+        # Build the all processes list used by the monitored list
         self.allprocesslist = processdict.values()
-
-        # logger.info("*"*120)
-        # logger.info("ALL=%s" % self.allprocesslist)
-        # logger.info("DIS=%s" % self.processlist)
 
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():
