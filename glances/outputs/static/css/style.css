@@ -96,7 +96,7 @@ body {
 }
 
 /* Plugins */
-#processlist .table-cell {
+#processlist .table-cell, #containers .table-cell {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;
 }

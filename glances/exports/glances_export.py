@@ -54,7 +54,18 @@ class GlancesExport(object):
 
     def plugins_to_export(self):
         """Return the list of plugins to export"""
-        return ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'processcount']
+        return ['cpu',
+                'percpu',
+                'load',
+                'mem',
+                'memswap',
+                'network',
+                'diskio',
+                'fs',
+                'processcount',
+                'ip',
+                'system',
+                'uptime']
 
     def update(self, stats):
         """Update stats to a server.

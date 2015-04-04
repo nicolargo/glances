@@ -198,7 +198,7 @@ Command-Line Options
   -b, --byte            display network rate in byte per second
   -1, --percpu          start Glances in per CPU mode
   --fs-free-space       display FS free space instead of used
-  --theme-white         optimize display for white background
+  --theme-white         optimize display colors for white background
 
 Interactive Commands
 --------------------
