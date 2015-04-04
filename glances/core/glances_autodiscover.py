@@ -204,6 +204,10 @@ class GlancesAutoDiscoverClient(object):
             else:
                 logger.error("Couldn't find the active IP address: netifaces library not found.")
 
+            # Correct issue #528 (no network interface available)
+            if zeroconf_bind_address is None:
+                zeroconf_bind_address == '0.0.0.0'
+
             logger.info("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
             print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
 
