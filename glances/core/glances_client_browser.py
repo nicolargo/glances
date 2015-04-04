@@ -71,6 +71,15 @@ class GlancesClientBrowser(object):
 
         return ret
 
+    def __get_uri(self, server):
+        """Return the URI for the given server dict"""
+        # Select the connection mode (with or without password)
+        if server['password'] != "":
+            return 'http://{0}:{1}@{2}:{3}'.format(server['username'], server['password'],
+                                                   server['ip'], server['port'])
+        else:
+            return 'http://{0}:{1}'.format(server['ip'], server['port'])
+
     def serve_forever(self):
         """Main client loop."""
         while True:
@@ -87,12 +96,8 @@ class GlancesClientBrowser(object):
                     if v['type'] == 'STATIC' and v['status'] in ['UNKNOWN', 'SNMP', 'OFFLINE']:
                         continue
 
-                    # Select the connection mode (with or without password)
-                    if v['password'] != "":
-                        uri = 'http://{0}:{1}@{2}:{3}'.format(v['username'], v['password'],
-                                                              v['ip'], v['port'])
-                    else:
-                        uri = 'http://{0}:{1}'.format(v['ip'], v['port'])
+                    # Get the server URI
+                    uri = self.__get_uri(v)
 
                     # Try to connect to the server
                     t = GlancesClientTransport()
