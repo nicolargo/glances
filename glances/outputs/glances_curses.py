@@ -363,10 +363,8 @@ class _GlancesCurses(object):
 
     def init_line_column(self):
         """Init the line and column position for the curses inteface"""
-        self.line = 0
-        self.column = 0
-        self.next_line = 0
-        self.next_column = 0
+        self.init_line()
+        self.init_column()
 
     def init_line(self):
         """Init the line position for the curses inteface"""
