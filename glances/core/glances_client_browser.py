@@ -80,7 +80,7 @@ class GlancesClientBrowser(object):
         else:
             return 'http://{0}:{1}'.format(server['ip'], server['port'])
 
-    def serve_forever(self):
+    def __serve_forever(self):
         """Main client loop."""
         while True:
             # No need to update the server list
@@ -212,6 +212,15 @@ class GlancesClientBrowser(object):
 
                 # Return to the browser (no server selected)
                 self.screen.active_server = None
+
+    def serve_forever(self):
+        """Wrapper to the serve_forever function
+        this function will restore the terminal to a sane state
+        before re-raising the exception and generating a traceback"""
+        try:
+            return self.__serve_forever()
+        finally:
+            self.end()
 
     def set_in_selected(self, key, value):
         """Set the (key, value) for the selected server in the list."""
