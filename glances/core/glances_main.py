@@ -139,7 +139,7 @@ Start the client browser (browser mode):\n\
                             dest='export_influxdb', help=_('export stats to an InfluxDB server (need InfluDB lib)'))
         parser.add_argument('--export-statsd', action='store_true', default=False,
                             dest='export_statsd', help=_('export stats to a Statsd server (need StatsD lib)'))
-        parser.add_argument('--export-rabbitmq', action='store_true', default=False, dest='export_rabbitmq', help=_('export stats to rabbitmq broker (need pika lib)'))
+        parser.add_argument('--export-rabbitmq', action='store_true', default=False, dest='export_rabbitmq', help=_('export stats to rabbitmq broker (need pika lib or python3-pika lib)'))
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help=_('connect to a Glances server by IPv4/IPv6 address or hostname'))
