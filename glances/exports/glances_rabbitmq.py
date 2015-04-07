@@ -25,7 +25,7 @@ from numbers import Number
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from ConfigParser import NoSectionError, NoOptionError
+from configparser import NoSectionError, NoOptionError
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ
@@ -46,7 +46,7 @@ class Export(GlancesExport):
         self.rabbitmq_user = None
         self.rabbitmq_password = None
         self.rabbitmq_queue = None
-	self.hostname = socket.gethostname()
+        self.hostname = socket.gethostname()
         self.export_enable = self.load_conf()
         if not self.export_enable:
             sys.exit(2)
@@ -79,25 +79,23 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try: 
-		parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
-		connection = pika.BlockingConnection(parameters)
-        	channel = connection.channel()
-        	return channel
-	except Exception as e:
-		logger.critical("Connection to rabbitMQ failed : %s" % e)
-		return None
+                parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
+                connection = pika.BlockingConnection(parameters)
+                channel = connection.channel()
+                return channel
+        except Exception as e:
+                logger.critical("Connection to rabbitMQ failed : %s" % e)
+                return None
 
     def export(self, name, columns, points):
         """Write the points in RabbitMQ"""
-	if self.client.is_open:
-		logger.error ("ouvert")
-	data = "hostname="+self.hostname+", name="+name+", dateinfo="+datetime.datetime.utcnow().isoformat()
-	for i in range(0, len(columns)):
+        data = "hostname="+self.hostname+", name="+name+", dateinfo="+datetime.datetime.utcnow().isoformat()
+        for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
                 continue
-	    else:
+            else:
             	data += ", "+columns[i]+"="+str(points[i])
-	logger.debug(data)
+        logger.debug(data)
         try:
             self.client.basic_publish(exchange='', routing_key="glances_queue", body=data)
         except Exception as e:
