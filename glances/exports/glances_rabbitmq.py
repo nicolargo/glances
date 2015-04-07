@@ -81,9 +81,8 @@ class Export(GlancesExport):
         """Init the connection to the rabbitmq server"""
         if not self.export_enable:
             return None
-        sparameters = "amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/"
         try: 
-                parameters = pika.URLParameters(sparameters)
+                parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
                 connection = pika.BlockingConnection(parameters)
                 channel = connection.channel()
                 return channel
