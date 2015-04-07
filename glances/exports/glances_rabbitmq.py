@@ -25,7 +25,10 @@ from numbers import Number
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from configparser import NoSectionError, NoOptionError
+try:
+    from configparser import NoOptionError, NoSectionError
+except ImportError:  # Python 2
+    from ConfigParser import NoOptionError, NoSectionError
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ
@@ -78,13 +81,14 @@ class Export(GlancesExport):
         """Init the connection to the rabbitmq server"""
         if not self.export_enable:
             return None
+        sparameters = "amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/"
         try: 
-                parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
+                parameters = pika.URLParameters(sparameters)
                 connection = pika.BlockingConnection(parameters)
                 channel = connection.channel()
                 return channel
         except Exception as e:
-                logger.critical("Connection to rabbitMQ failed : %s" % e)
+                logger.critical("Connection to rabbitMQ failed : %s " % e)
                 return None
 
     def export(self, name, columns, points):
