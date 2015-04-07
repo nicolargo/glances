@@ -25,7 +25,10 @@ from numbers import Number
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from configparser import NoSectionError, NoOptionError
+try:
+    from configparser import NoOptionError, NoSectionError
+except ImportError:  # Python 2
+    from ConfigParser import NoOptionError, NoSectionError
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ
