@@ -159,6 +159,8 @@ Command-Line Options
                         export stats to an InfluxDB server
   --export-statsd
                         export stats to a Statsd server
+  --export-rabbitmq
+                        export stats to a RabbitMQ server
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -823,6 +825,25 @@ Glances will generate stats as:
     'glances.load.cpucore': 4,
     'glances.load.min1': 0.19,
     ...
+
+*RabbitMQ*
+
+You can export statistics to an RabbitMQ server (AMQP Broker). The connection should be defined in the Glances configuration file as following:
+
+.. code-block::
+
+    [rabbitmq]
+    host=localhost
+    port=5672
+    user=glances
+    password=glances
+    queue=glances_queue
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-rabbitmq
 
 
 APIs Documentations
