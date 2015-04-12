@@ -81,7 +81,7 @@ class Export(GlancesExport):
         """Init the connection to the rabbitmq server"""
         if not self.export_enable:
             return None
-        try: 
+        try:
                 parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
                 connection = pika.BlockingConnection(parameters)
                 channel = connection.channel()
@@ -97,9 +97,9 @@ class Export(GlancesExport):
             if not isinstance(points[i], Number):
                 continue
             else:
-            	data += ", "+columns[i]+"="+str(points[i])
+                data += ", " + columns[i] + "=" + str(points[i])
         logger.debug(data)
         try:
-            self.client.basic_publish(exchange='', routing_key="glances_queue", body=data)
+            self.client.basic_publish(exchange='', routing_key=self.rabbitmq_queue, body=data)
         except Exception as e:
             logger.error("Can not export stats to RabbitMQ (%s)" % e)
