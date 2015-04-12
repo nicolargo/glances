@@ -7,16 +7,23 @@ Version 2.4
 
 Enhancements and news features:
 
+    * Implement a 'quick look' plugin (issue #505)
+    * Add a new IP information plugin (issue #509)
+    * Add RabbitMQ export module (issue #540 Thk to @Katyucha)
+    * Add a quiet mode (-q), can be useful using with export module
     * Grab FAN speed in the Glances sensors plugin (issue #501)
     * Allow logical mounts points in the FS plugin (issue #448)
     * Add a --disable-hddtemp to disable HDD temperature module at startup (issue #515)
-    * Add a quiet mode (-q). Can be usefull if you need a Statsd or Influxdb provider only
-    * Add RabbitMQ export module (issue #540 Thk to @Katyucha)
+    * Increase alert minimal delay to 6 seconds (issue #522) 
+    * If the Curses application raises an exception, restore the terminal correctly (issue #537)
 
 Bugs corrected:
 
-    * Correct monitor list, all processes are take into account (issue #507)
-    * Correct duplicated --enable-history in the doc (issue #511)
+    * Monitor list, all processes are take into account (issue #507)
+    * Duplicated --enable-history in the doc (issue #511)
+    * Sensors title is displayed if no sensors are detected (issue #510)
+    * Server mode issue when no network interface is available (issue #528)
+    * DEBUG mode activated by default with Python 2.6 (issue #512) 
 
 Version 2.3
 ===========
