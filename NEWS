@@ -5,7 +5,7 @@ Glances Version 2.x
 Version 2.4
 ===========
 
-Enhancements and news features:
+Enhancements and new features:
 
     * Implement a 'quick look' plugin (issue #505)
     * Add a new IP information plugin (issue #509)
@@ -28,7 +28,7 @@ Bugs corrected:
 Version 2.3
 ===========
 
-Enhancements and news features:
+Enhancements and new features:
 
     * Add the Docker plugin (issue #440) with per container CPU and memory monitoring (issue #490) 
     * Add the RAID plugin (issue #447)
@@ -60,7 +60,7 @@ Version 2.2.1
 Version 2.2
 ===========
 
-Enhancements and news features:
+Enhancements and new features:
 
     * Add centralized curse interface with a Glances servers list to monitor (issue #418)
     * Add processes tree view (--tree) (issue #444)
@@ -165,7 +165,7 @@ Version 2.0
 ===========
 
     Glances v2.0 is not a simple upgrade of the version 1.x but a complete code refactoring.
-    Based on a plugins system, it aims at providing an easy way to add news features.
+    Based on a plugins system, it aims at providing an easy way to add new features.
     - Core defines the basics and commons functions.
     - all stats are grabbed through plugins (see the glances/plugins source folder).
     - also outputs methods (Curse, Web mode, CSV) are managed as plugins.
@@ -371,7 +371,7 @@ Version 1.4.2.1
 Version 1.4.2
 =============
 
-    * Use the news virtual_memory() and virtual_swap() fct (PsUtil)
+    * Use the new virtual_memory() and virtual_swap() fct (PsUtil)
     * Display "Top process" in logs
     * Minor patch on man page for Debian packaging
     * Code optimization (less try and except)
