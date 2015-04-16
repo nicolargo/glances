@@ -41,8 +41,7 @@ class Plugin(GlancesPlugin):
         self.stats = []
 
     def load_limits(self, config):
-        """Load the monitored list from the conf file."""
-        logger.debug("Monitor plugin configuration detected in the configuration file")
+        """Load the monitored list from the config file, if it exists."""
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):

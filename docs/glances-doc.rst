@@ -288,15 +288,20 @@ Configuration
 
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list or to define
-alias.
+Furthermore a configuration file is needed to modify limit alerts, to
+set up monitored processes list, to hide disks or network interfaces or
+to define alias.
 
-By default, the configuration file is under:
+Location
+--------
 
-:Linux: ``/etc/glances/glances.conf``
-:\*BSD and OS X: ``/usr/local/etc/glances/glances.conf``
-:Windows: ``%APPDATA%\glances\glances.conf``
+You can put the configuration file ``glances.conf`` in the following
+locations:
+
+:Linux: ``~/.config/glances, /etc/glances``
+:\*BSD: ``~/.config/glances, /usr/local/etc/glances``
+:OS X: ``~/Library/Application Support/glances, /usr/local/etc/glances``
+:Windows: ``%APPDATA%\glances``
 
 On Windows XP, the ``%APPDATA%`` path is:
 
@@ -309,24 +314,12 @@ Since Windows Vista and newer versions:
 ::
 
     C:\Users\<User>\AppData\Roaming
-    or
-    %userprofile%\AppData\Roaming
 
-You can override the default configuration, located in one of the above
-directories on your system, except for Windows.
+User-specific options override system-wide options and options given on
+the command line override either.
 
-Just copy the ``glances.conf`` file to your ``$XDG_CONFIG_HOME`` directory,
-e.g., on Linux:
-
-.. code-block:: console
-
-    mkdir -p $XDG_CONFIG_HOME/glances
-    cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/
-
-On OS X, you should copy the configuration file to
-``~/Library/Application Support/glances/``.
-
-*Configuration file description*
+Syntax
+------
 
 Each plugin and export module can have a section.
 
@@ -348,7 +341,8 @@ Example for the CPU plugin:
     steal_warning=70
     steal_critical=90
 
-By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:
+By default the ``steal`` CPU time alerts aren't logged. If you want to
+enable log/alert, just add:
 
 .. code-block::
 

@@ -62,11 +62,11 @@ class Export(GlancesExport):
         if self.config is None:
             return False
         try:
-            self.rabbitmq_host = self.config.get_raw_option(section, "host")
-            self.rabbitmq_port = self.config.get_raw_option(section, "port")
-            self.rabbitmq_user = self.config.get_raw_option(section, "user")
-            self.rabbitmq_password = self.config.get_raw_option(section, "password")
-            self.rabbitmq_queue = self.config.get_raw_option(section, "queue")
+            self.rabbitmq_host = self.config.get_value(section, 'host')
+            self.rabbitmq_port = self.config.get_value(section, 'port')
+            self.rabbitmq_user = self.config.get_value(section, 'user')
+            self.rabbitmq_password = self.config.get_value(section, 'password')
+            self.rabbitmq_queue = self.config.get_value(section, 'queue')
         except NoSectionError:
             logger.critical("No rabbitmq configuration found")
             return False
