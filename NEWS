@@ -5,6 +5,12 @@ Glances Version 2.x
 Version 2.4
 ===========
 
+Changes:
+
+    * Glances doesn't provide a system-wide configuration file by default anymore.
+      Just copy it in any of the supported locations. See glances-doc.html for
+      more information.
+
 Enhancements and new features:
 
     * Implement a 'quick look' plugin (issue #505)
