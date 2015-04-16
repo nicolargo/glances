@@ -868,4 +868,4 @@ Feel free to contribute !
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
 .. _RESTFUL-JSON: http://jsonapi.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
-.. _forum: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json
+.. _dashboard: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json
