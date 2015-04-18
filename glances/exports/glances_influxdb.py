@@ -61,11 +61,11 @@ class Export(GlancesExport):
         if self.config is None:
             return False
         try:
-            self.host = self.config.get_raw_option(section, "host")
-            self.port = self.config.get_raw_option(section, "port")
-            self.user = self.config.get_raw_option(section, "user")
-            self.password = self.config.get_raw_option(section, "password")
-            self.db = self.config.get_raw_option(section, "db")
+            self.host = self.config.get_value(section, 'host')
+            self.port = self.config.get_value(section, 'port')
+            self.user = self.config.get_value(section, 'user')
+            self.password = self.config.get_value(section, 'password')
+            self.db = self.config.get_value(section, 'db')
         except NoSectionError:
             logger.critical("No InfluxDB configuration found")
             return False
@@ -76,7 +76,7 @@ class Export(GlancesExport):
             logger.debug("Load InfluxDB from the Glances configuration file")
         # Prefix is optional
         try:
-            self.prefix = self.config.get_raw_option(section, "prefix")
+            self.prefix = self.config.get_value(section, 'prefix')
         except NoOptionError as e:
             pass
         return True
