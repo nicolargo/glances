@@ -360,7 +360,7 @@ class GlancesProcesses(object):
         if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
-            raise psutil.NoSuchProcess
+            return None
 
         # Process command line (cached with internal cache)
         try:
@@ -540,10 +540,7 @@ class GlancesProcesses(object):
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
-            try:
-                procstat = self.__get_mandatory_stats(proc, procstat)
-            except psutil.NoSuchProcess:
-                return None
+            procstat = self.__get_mandatory_stats(proc, procstat)
 
         if standard_stats:
             procstat = self.__get_standard_stats(proc, procstat)
