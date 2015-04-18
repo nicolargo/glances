@@ -542,10 +542,10 @@ class GlancesProcesses(object):
         if mandatory_stats:
             procstat = self.__get_mandatory_stats(proc, procstat)
 
-        if standard_stats:
+        if procstat is not None and standard_stats:
             procstat = self.__get_standard_stats(proc, procstat)
 
-        if extended_stats and not self.disable_extended_tag:
+        if procstat is not None and extended_stats and not self.disable_extended_tag:
             procstat = self.__get_extended_stats(proc, procstat)
 
         return procstat
