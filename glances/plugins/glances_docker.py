@@ -157,6 +157,10 @@ class Plugin(GlancesPlugin):
                     # Create a dict with all the containers' stats instance
                     self.docker_stats = {}
 
+                # TODO: Find a way to correct this
+                # The following optimization is not compatible with the network stats
+                # The self.docker_client.stats method should be call every time in order to have network stats refreshed
+                # Nevertheless, if we call it every time, Glances is slow...
                 if c['Id'] not in self.docker_stats:
                     # Create the stats instance for the current container
                     try:
@@ -167,6 +171,7 @@ class Plugin(GlancesPlugin):
 
                 # Get the docker stats
                 try:
+                    # self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
                     all_stats = self.docker_stats[c['Id']].next()
                 except:
                     all_stats = {}
@@ -418,7 +423,6 @@ class Plugin(GlancesPlugin):
             # for r in ['rx', 'tx']:
             #     try:
             #         value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
-            #         #value = self.auto_unit(int(container['network']['cumulative_' + r])) + 'b'
             #         msg = '{0:>6}'.format(value)
             #     except KeyError:
             #         msg = '{0:>6}'.format('?')
