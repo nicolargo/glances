@@ -49,11 +49,12 @@ class MonitorList(object):
     __monitor_list = []
 
     def __init__(self, config):
-        """Init the monitoring list from the configuration file."""
+        """Init the monitoring list from the configuration file, if it exists."""
         self.config = config
 
         if self.config is not None and self.config.has_section('monitor'):
             # Process monitoring list
+            logger.debug("Monitor list configuration detected")
             self.__set_monitor_list('monitor', 'list')
         else:
             self.__monitor_list = []
@@ -67,11 +68,11 @@ class MonitorList(object):
             value = {}
             key = "list_" + str(l) + "_"
             try:
-                description = self.config.get_raw_option(section, key + "description")
-                regex = self.config.get_raw_option(section, key + "regex")
-                command = self.config.get_raw_option(section, key + "command")
-                countmin = self.config.get_raw_option(section, key + "countmin")
-                countmax = self.config.get_raw_option(section, key + "countmax")
+                description = self.config.get_value(section, key + 'description')
+                regex = self.config.get_value(section, key + 'regex')
+                command = self.config.get_value(section, key + 'command')
+                countmin = self.config.get_value(section, key + 'countmin')
+                countmax = self.config.get_value(section, key + 'countmax')
             except Exception as e:
                 logger.error("Cannot read monitored list: {0}".format(e))
             else:
