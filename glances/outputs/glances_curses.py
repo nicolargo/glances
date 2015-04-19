@@ -328,7 +328,11 @@ class _GlancesCurses(object):
             # 'T' > View network traffic as sum Rx+Tx
             self.args.network_sum = not self.args.network_sum
         elif self.pressedkey == ord('u'):
-            # 'u' > View cumulative network IO (instead of bitrate)
+            # 'u' > Sort processes by USER
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'username'
+        elif self.pressedkey == ord('U'):
+            # 'U' > View cumulative network I/O (instead of bitrate)
             self.args.network_cumul = not self.args.network_cumul
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs

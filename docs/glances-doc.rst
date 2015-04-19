@@ -266,6 +266,8 @@ The following commands (key pressed) are supported while in Glances:
 ``T``
     View network I/O as combination
 ``u``
+    Sort processes by USER
+``U``
     View cumulative network I/O
 ``w``
     Delete finished warning log messages
