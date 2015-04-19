@@ -793,7 +793,7 @@ class _GlancesCurses(object):
                 try:
                     # Python 2: we need to decode to get real screen size because utf-8 special tree chars
                     # occupy several bytes
-                    offset = len(m['msg'].decode("utf-8"))
+                    offset = len(m['msg'].decode("utf-8", "replace"))
                 except AttributeError:
                     # Python 3: strings are strings and bytes are bytes, all is
                     # good
