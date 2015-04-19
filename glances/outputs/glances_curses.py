@@ -689,10 +689,8 @@ class _GlancesCurses(object):
         popup.border()
 
         # Add the message
-        y = 0
-        for m in message.split('\n'):
+        for y, m in enumerate(message.split('\n')):
             popup.addnstr(2 + y, 2, m, len(m))
-            y += 1
 
         if is_input and not is_windows:
             # Create a subwindow for the text field
@@ -1089,16 +1087,14 @@ class GlancesCursesBrowser(_GlancesCurses):
         y = 2
 
         # Display table header
-        cpt = 0
         xc = x + 2
-        for c in column_def:
+        for cpt, c in enumerate(column_def):
             if xc < screen_x and y < screen_y and c[1] is not None:
                 self.term_window.addnstr(y, xc,
                                          c[1],
                                          screen_x - x,
                                          self.colors_list['BOLD'])
                 xc += c[2] + self.space_between_column
-            cpt += 1
         y += 1
 
         # If a servers has been deleted from the list...
