@@ -123,7 +123,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
 
 
-
         ret.append(self.curse_add_line(self.view_data['show_mem']))
         ret.append(self.curse_add_line(self.view_data['delete_warning_alerts']))
         ret.append(self.curse_new_line())

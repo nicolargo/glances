@@ -157,6 +157,10 @@ class Plugin(GlancesPlugin):
                     # Create a dict with all the containers' stats instance
                     self.docker_stats = {}
 
+                # TODO: Find a way to correct this
+                # The following optimization is not compatible with the network stats
+                # The self.docker_client.stats method should be call every time in order to have network stats refreshed
+                # Nevertheless, if we call it every time, Glances is slow...
                 if c['Id'] not in self.docker_stats:
                     # Create the stats instance for the current container
                     try:
@@ -167,6 +171,7 @@ class Plugin(GlancesPlugin):
 
                 # Get the docker stats
                 try:
+                    # self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
                     all_stats = self.docker_stats[c['Id']].next()
                 except:
                     all_stats = {}
@@ -209,24 +214,53 @@ class Plugin(GlancesPlugin):
         Input: id is the full container id
                all_stats is the output of the stats method of the Docker API
         Output: a dict {'total': 1.49}"""
-        ret = {}
+
+        cpu_new = {}
+        ret = {'total': 0.0}
 
         # Read the stats
-        # try:
-        #     ret['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
-        # except KeyError as e:
-        #     # all_stats do not have CPU information
-        #     logger.error("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
-        #     # Trying fallback to old grab method
-        #     ret = self.get_docker_cpu_old(container_id)
+        # For each container, you will find a pseudo-file cpuacct.stat,
+        # containing the CPU usage accumulated by the processes of the container.
+        # Those times are expressed in ticks of 1/USER_HZ of a second.
+        # On x86 systems, USER_HZ is 100.
+        try:
+            cpu_new['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
+            cpu_new['system'] = all_stats['cpu_stats']['system_cpu_usage']
+            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'])
+        except KeyError as e:
+            # all_stats do not have CPU information
+            logger.debug("Can not grab CPU usage for container {0} ({1}). Trying fallback method.".format(container_id, e))
+            # Trying fallback to old grab method
+            ret = self.get_docker_cpu_old(container_id)
+            # Get the user ticks
+            ticks = self.get_user_ticks()
+            for k in ret.keys():
+                ret[k] = float(ret[k]) / ticks
+        else:
+            # Previous CPU stats stored in the cpu_old variable
+            if not hasattr(self, 'cpu_old'):
+                # First call, we init the cpu_old variable
+                self.cpu_old = {}
+                try:
+                    self.cpu_old[container_id] = cpu_new
+                except (IOError, UnboundLocalError):
+                    pass
 
-        # Did not work has expected, replace by the old method...
-        ret = self.get_docker_cpu_old(container_id)
+            if container_id not in self.cpu_old:
+                try:
+                    self.cpu_old[container_id] = cpu_new
+                except (IOError, UnboundLocalError):
+                    pass
+            else:
+                #
+                cpu_delta = float(cpu_new['total'] - self.cpu_old[container_id]['total'])
+                system_delta = float(cpu_new['system'] - self.cpu_old[container_id]['system'])
+                if cpu_delta > 0.0 and system_delta > 0.0:
+                    ret['total'] = (cpu_delta / system_delta) * float(cpu_new['nb_core']) * 100
 
-        # Get the user ticks
-        ticks = self.get_user_ticks()
-        for k in ret.keys():
-            ret[k] = float(ret[k]) / ticks
+                # Save stats to compute next stats
+                self.cpu_old[container_id] = cpu_new
+
         # Return the stats
         return ret
 
@@ -262,7 +296,7 @@ class Plugin(GlancesPlugin):
             ret['max_usage'] = all_stats['memory_stats']['max_usage']
         except KeyError as e:
             # all_stats do not have MEM information
-            logger.error("Can not grab MEM usage for container {0} ({1})".format(container_id, e))
+            logger.debug("Can not grab MEM usage for container {0} ({1}). Trying fallback method.".format(container_id, e))
             # Trying fallback to old grab method
             ret = self.get_docker_memory_old(container_id)
         # Return the stats
@@ -303,7 +337,7 @@ class Plugin(GlancesPlugin):
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
-            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net')
+            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{}'.format(container_id))
             network_new['rx'] = netiocounters["rx_bytes"] - self.netiocounters_old[container_id]["rx_bytes"]
             network_new['tx'] = netiocounters["tx_bytes"] - self.netiocounters_old[container_id]["tx_bytes"]
             network_new['cumulative_rx'] = netiocounters["rx_bytes"]

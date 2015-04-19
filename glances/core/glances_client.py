@@ -219,17 +219,20 @@ class GlancesClient(object):
 
         exitkey = False
 
-        while True and not exitkey:
-            # Update the stats
-            cs_status = self.update()
+        try:
+            while True and not exitkey:
+                # Update the stats
+                cs_status = self.update()
 
-            # Update the screen
-            exitkey = self.screen.update(self.stats,
-                                         cs_status=cs_status,
-                                         return_to_browser=self.return_to_browser)
+                # Update the screen
+                exitkey = self.screen.update(self.stats,
+                                             cs_status=cs_status,
+                                             return_to_browser=self.return_to_browser)
 
-            # Export stats using export modules
-            self.stats.export(self.stats)
+                # Export stats using export modules
+                self.stats.export(self.stats)
+        finally:
+            self.end
 
         return self.client_mode
 

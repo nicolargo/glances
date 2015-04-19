@@ -328,7 +328,11 @@ class _GlancesCurses(object):
             # 'T' > View network traffic as sum Rx+Tx
             self.args.network_sum = not self.args.network_sum
         elif self.pressedkey == ord('u'):
-            # 'u' > View cumulative network IO (instead of bitrate)
+            # 'u' > Sort processes by USER
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'username'
+        elif self.pressedkey == ord('U'):
+            # 'U' > View cumulative network I/O (instead of bitrate)
             self.args.network_cumul = not self.args.network_cumul
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
@@ -363,10 +367,8 @@ class _GlancesCurses(object):
 
     def init_line_column(self):
         """Init the line and column position for the curses inteface"""
-        self.line = 0
-        self.column = 0
-        self.next_line = 0
-        self.next_column = 0
+        self.init_line()
+        self.init_column()
 
     def init_line(self):
         """Init the line position for the curses inteface"""
@@ -687,10 +689,8 @@ class _GlancesCurses(object):
         popup.border()
 
         # Add the message
-        y = 0
-        for m in message.split('\n'):
+        for y, m in enumerate(message.split('\n')):
             popup.addnstr(2 + y, 2, m, len(m))
-            y += 1
 
         if is_input and not is_windows:
             # Create a subwindow for the text field
@@ -793,7 +793,7 @@ class _GlancesCurses(object):
                 try:
                     # Python 2: we need to decode to get real screen size because utf-8 special tree chars
                     # occupy several bytes
-                    offset = len(m['msg'].decode("utf-8"))
+                    offset = len(m['msg'].decode("utf-8", "replace"))
                 except AttributeError:
                     # Python 3: strings are strings and bytes are bytes, all is
                     # good
@@ -1087,16 +1087,14 @@ class GlancesCursesBrowser(_GlancesCurses):
         y = 2
 
         # Display table header
-        cpt = 0
         xc = x + 2
-        for c in column_def:
+        for cpt, c in enumerate(column_def):
             if xc < screen_x and y < screen_y and c[1] is not None:
                 self.term_window.addnstr(y, xc,
                                          c[1],
                                          screen_x - x,
                                          self.colors_list['BOLD'])
                 xc += c[2] + self.space_between_column
-            cpt += 1
         y += 1
 
         # If a servers has been deleted from the list...

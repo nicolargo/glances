@@ -80,6 +80,9 @@ export stats to an InfluxDB server
 .B \-\-export-statsd
 export stats to a Statsd server
 .TP
+.B \-\-export-rabbitmq
+export stats to a RabbitMQ server
+.TP
 .B \-s, \-\-server
 run Glances in server mode
 .TP
@@ -202,6 +205,9 @@ Sort process by CPU times (TIME+)
 View network I/O as combination
 .TP
 .B u
+Sort processes by USER
+.TP
+.B U
 View cumulative network I/O
 .TP
 .B w
@@ -233,6 +239,9 @@ Monitor local machine and export stats to a CSV file (standalone mode):
 .PP
 Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
 .B $ glances -t 5 --export-influxdb
+.PP
+Monitor local machine and export stats to a RabbitMQ server with 5s refresh time (standalone mode):
+.B $ glances -t 5 --export-rabbitmq
 .PP
 Start a Glances server (server mode):
 .B $ glances -s
