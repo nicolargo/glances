@@ -10,10 +10,14 @@ Changes:
     * Glances doesn't provide a system-wide configuration file by default anymore.
       Just copy it in any of the supported locations. See glances-doc.html for
       more information.
+    * The default key bindings have been changed to:
+      - 'u': sort processes by USER
+      - 'U': show cumulative network I/O
 
 Enhancements and new features:
 
     * Implement a 'quick look' plugin (issue #505)
+    * Add sort processes by USER (issue #531)
     * Add a new IP information plugin (issue #509)
     * Add RabbitMQ export module (issue #540 Thk to @Katyucha)
     * Add a quiet mode (-q), can be useful using with export module
