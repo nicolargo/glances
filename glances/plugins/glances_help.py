@@ -55,7 +55,7 @@ class Plugin(GlancesPlugin):
         self.view_data['psutil_version'] = _(" with PSutil {0}").format(psutil_version)
 
         try:
-            self.view_data['configuration_file'] = '{0}: {1}'.format(_("Configuration file"), self.config.get_loaded_config_file())
+            self.view_data['configuration_file'] = '{0}: {1}'.format(_("Configuration file"), self.config.loaded_config_file())
         except AttributeError:
             pass
 
@@ -121,7 +121,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['sort_cpu']))
         ret.append(self.curse_add_line(self.view_data['show_hide_alert']))
         ret.append(self.curse_new_line())
-
 
 
         ret.append(self.curse_add_line(self.view_data['show_mem']))

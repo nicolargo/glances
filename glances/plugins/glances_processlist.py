@@ -379,7 +379,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>6}'.format(_("PID"))
         ret.append(self.curse_add_line(msg))
         msg = ' {0:10}'.format(_("USER"))
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
         msg = '{0:>4}'.format(_("NI"))
         ret.append(self.curse_add_line(msg))
         msg = '{0:>2}'.format(_("S"))
@@ -397,14 +397,13 @@ class Plugin(GlancesPlugin):
         self.tag_proc_time = True
 
         if glances_processes.is_tree_enabled():
-            ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
-                                                         args,
-                                                         first_level=True,
-                                                         max_node_count=glances_processes.max_processes))
+            ret.extend(self.get_process_tree_curses_data(
+                self.sort_stats(process_sort_key), args, first_level=True,
+                max_node_count=glances_processes.max_processes))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
-            for p in self.sortstats(process_sort_key):
+            for p in self.sort_stats(process_sort_key):
                 ret.extend(self.get_process_curses_data(p, first, args))
                 # End of extended stats
                 first = False
@@ -412,15 +411,11 @@ class Plugin(GlancesPlugin):
         # Return the message with decoration
         return ret
 
-    def sortstats(self, sortedby=None):
+    def sort_stats(self, sortedby=None):
         """Return the stats sorted by sortedby variable."""
         if sortedby is None:
             # No need to sort...
             return self.stats
-
-        sortedreverse = True
-        if sortedby == 'name':
-            sortedreverse = False
 
         tree = glances_processes.is_tree_enabled()
 
@@ -432,18 +427,18 @@ class Plugin(GlancesPlugin):
                 self.stats.sort(key=lambda process: process[sortedby][0] -
                                 process[sortedby][2] + process[sortedby][1] -
                                 process[sortedby][3],
-                                reverse=sortedreverse)
+                                reverse=glances_processes.sort_reverse)
             except Exception:
                 self.stats.sort(key=operator.itemgetter('cpu_percent'),
-                                reverse=sortedreverse)
+                                reverse=glances_processes.sort_reverse)
         else:
             # Others sorts
             if tree:
-                self.stats.set_sorting(sortedby, sortedreverse)
+                self.stats.set_sorting(sortedby, glances_processes.sort_reverse)
             else:
                 try:
                     self.stats.sort(key=operator.itemgetter(sortedby),
-                                    reverse=sortedreverse)
+                                    reverse=glances_processes.sort_reverse)
                 except (KeyError, TypeError):
                     self.stats.sort(key=operator.itemgetter('name'),
                                     reverse=False)

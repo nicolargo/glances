@@ -79,7 +79,7 @@ class GlancesStandalone(object):
     def quiet(self):
         return self._quiet
 
-    def serve_forever(self):
+    def __serve_forever(self):
         """Main loop for the CLI."""
         while True:
             # Update system informations
@@ -94,6 +94,15 @@ class GlancesStandalone(object):
 
             # Export stats using export modules
             self.stats.export(self.stats)
+
+    def serve_forever(self):
+        """Wrapper to the serve_forever function
+        this function will restore the terminal to a sane state
+        before re-raising the exception and generating a traceback"""
+        try:
+            return self.__serve_forever()
+        finally:
+            self.end()
 
     def end(self):
         """End of the standalone CLI."""
