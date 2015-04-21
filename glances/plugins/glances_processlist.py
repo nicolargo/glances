@@ -30,6 +30,20 @@ from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
+def convert_timedelta(delta):
+    """Convert timedelta to human-readable time."""
+    # Python 2.7+:
+    # total_seconds = delta.total_seconds()
+    # hours = total_seconds // 3600
+    days, total_seconds = delta.days, delta.seconds
+    hours = days * 24 + total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = str(total_seconds % 60).zfill(2)
+    microseconds = str(delta.microseconds)[:2].zfill(2)
+
+    return hours, minutes, seconds, microseconds
+
+
 class Plugin(GlancesPlugin):
 
     """Glances' processes plugin.
@@ -222,18 +236,20 @@ class Plugin(GlancesPlugin):
         # TIME+
         if self.tag_proc_time:
             try:
-                dtime = timedelta(seconds=sum(p['cpu_times']))
+                delta = timedelta(seconds=sum(p['cpu_times']))
             except Exception:
                 # Catched on some Amazon EC2 server
                 # See https://github.com/nicolargo/glances/issues/87
                 self.tag_proc_time = False
             else:
-                msg = '{0}:{1}.{2}'.format(str(dtime.seconds // 60 % 60),
-                                           str(dtime.seconds % 60).zfill(2),
-                                           str(dtime.microseconds)[:2].zfill(2))
+                hours, minutes, seconds, microseconds = convert_timedelta(delta)
+                if hours:
+                    msg = '{0}h{1}:{2}'.format(hours, minutes, seconds)
+                else:
+                    msg = '{0}:{1}.{2}'.format(minutes, seconds, microseconds)
         else:
             msg = ' '
-        msg = '{0:>9}'.format(msg)
+        msg = '{0:>10}'.format(msg)
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in p:
@@ -384,7 +400,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>2}'.format(_("S"))
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>9}'.format(_("TIME+"))
+        msg = '{0:>10}'.format(_("TIME+"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
         msg = '{0:>6}'.format(_("IOR/s"))
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
