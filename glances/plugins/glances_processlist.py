@@ -247,12 +247,13 @@ class Plugin(GlancesPlugin):
             else:
                 hours, minutes, seconds, microseconds = convert_timedelta(delta)
                 if hours:
-                    msg = '{0}h{1}:{2}'.format(hours, minutes, seconds)
+                    msg = '{0:>4}h'.format(hours)
+                    ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
+                    msg = '{0}:{1}'.format(minutes, seconds)
                 else:
-                    msg = '{0}:{1}.{2}'.format(minutes, seconds, microseconds)
+                    msg = '{0:>4}:{1}.{2}'.format(minutes, seconds, microseconds)
         else:
-            msg = '?'
-        msg = '{0:>10}'.format(msg)
+            msg = '{0:>10}'.format('?')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in p:
