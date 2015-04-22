@@ -58,6 +58,9 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Trying to display proc time
+        self.tag_proc_time = True
+
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
     def get_key(self):
@@ -237,7 +240,7 @@ class Plugin(GlancesPlugin):
         if self.tag_proc_time:
             try:
                 delta = timedelta(seconds=sum(p['cpu_times']))
-            except Exception:
+            except OverflowError:
                 # Catched on some Amazon EC2 server
                 # See https://github.com/nicolargo/glances/issues/87
                 self.tag_proc_time = False
@@ -248,7 +251,7 @@ class Plugin(GlancesPlugin):
                 else:
                     msg = '{0}:{1}.{2}'.format(minutes, seconds, microseconds)
         else:
-            msg = ' '
+            msg = '?'
         msg = '{0:>10}'.format(msg)
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
@@ -408,9 +411,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = ' {0:8}'.format(_("Command"))
         ret.append(self.curse_add_line(msg))
-
-        # Trying to display proc time
-        self.tag_proc_time = True
 
         if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(
