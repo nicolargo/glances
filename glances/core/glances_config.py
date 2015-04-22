@@ -205,12 +205,12 @@ class Config(object):
         # Process list
         if not self.parser.has_section('processlist'):
             self.parser.add_section('processlist')
-            self.parser.set('cpu', 'careful', '50')
-            self.parser.set('cpu', 'warning', '70')
-            self.parser.set('cpu', 'critical', '90')
-            self.parser.set('mem', 'careful', '50')
-            self.parser.set('mem', 'warning', '70')
-            self.parser.set('mem', 'critical', '90')
+            self.parser.set('processlist', 'cpu_careful', '50')
+            self.parser.set('processlist', 'cpu_warning', '70')
+            self.parser.set('processlist', 'cpu_critical', '90')
+            self.parser.set('processlist', 'mem_careful', '50')
+            self.parser.set('processlist', 'mem_warning', '70')
+            self.parser.set('processlist', 'mem_critical', '90')
 
     @property
     def loaded_config_file(self):
