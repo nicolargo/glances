@@ -19,7 +19,6 @@
 
 # Import Python lib
 import collections
-import operator
 import os
 import re
 
@@ -50,13 +49,13 @@ class ProcessTreeNode(object):
     We avoid recursive algorithm to manipulate the tree because function calls are expensive with CPython.
     """
 
-    def __init__(self, process=None, stats=None, sort_key=None, root=False):
+    def __init__(self, process=None, stats=None, sort_key=None, sort_reverse=True, root=False):
         self.process = process
         self.stats = stats
         self.children = []
         self.children_sorted = False
         self.sort_key = sort_key
-        self.reverse_sorting = (self.sort_key != "name")
+        self.sort_reverse = sort_reverse
         self.is_root = root
 
     def __str__(self):
@@ -87,7 +86,7 @@ class ProcessTreeNode(object):
 
     def set_sorting(self, key, reverse):
         """ Set sorting key or func for user with __iter__ (affects the whole tree from this node). """
-        if self.sort_key != key or self.reverse_sorting != reverse:
+        if self.sort_key != key or self.sort_reverse != reverse:
             nodes_to_flag_unsorted = collections.deque([self])
             while nodes_to_flag_unsorted:
                 current_node = nodes_to_flag_unsorted.pop()
@@ -98,7 +97,7 @@ class ProcessTreeNode(object):
 
     def get_weight(self):
         """ Return "weight" of a process and all its children for sorting. """
-        if self.sort_key == "name":
+        if self.sort_key == 'name' or self.sort_key == 'username':
             return self.stats[self.sort_key]
 
         # sum ressource usage for self and children
@@ -138,7 +137,7 @@ class ProcessTreeNode(object):
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
             self.children.sort(
-                key=self.__class__.get_weight, reverse=self.reverse_sorting)
+                key=self.__class__.get_weight, reverse=self.sort_reverse)
             self.children_sorted = True
         for child in self.children:
             for n in iter(child):
@@ -156,7 +155,7 @@ class ProcessTreeNode(object):
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
             # and once before displaying)
             self.children.sort(
-                key=self.__class__.get_weight, reverse=self.reverse_sorting)
+                key=self.__class__.get_weight, reverse=self.sort_reverse)
             self.children_sorted = True
         for child in self.children:
             if not exclude_incomplete_stats or "time_since_update" in child.stats:
@@ -172,14 +171,14 @@ class ProcessTreeNode(object):
             nodes_to_search.extend(current_node.children)
 
     @staticmethod
-    def build_tree(process_dict, sort_key, hide_kernel_threads):
+    def build_tree(process_dict, sort_key, sort_reverse, hide_kernel_threads):
         """ Build a process tree using using parent/child relationships, and return the tree root node. """
         tree_root = ProcessTreeNode(root=True)
         nodes_to_add_last = collections.deque()
 
         # first pass: add nodes whose parent are in the tree
         for process, stats in process_dict.items():
-            new_node = ProcessTreeNode(process, stats, sort_key)
+            new_node = ProcessTreeNode(process, stats, sort_key, sort_reverse)
             try:
                 parent_process = process.parent()
             except psutil.NoSuchProcess:
@@ -347,6 +346,14 @@ class GlancesProcesses(object):
         """ Return True if process tree is enabled, False instead. """
         return self._enable_tree
 
+    @property
+    def sort_reverse(self):
+        """Return True to sort processes in reverse 'key' order, False instead."""
+        if self.sort_key == 'name' or self.sort_key == 'username':
+            return False
+
+        return True
+
     def __get_mandatory_stats(self, proc, procstat):
         """
         Get mandatory_stats: need for the sorting/filter step
@@ -355,12 +362,13 @@ class GlancesProcesses(object):
         procstat['mandatory_stats'] = True
 
         # Process CPU, MEM percent and name
-        procstat.update(
-            proc.as_dict(attrs=['cpu_percent', 'memory_percent', 'name', 'cpu_times'], ad_value=''))
+        procstat.update(proc.as_dict(
+            attrs=['username', 'cpu_percent', 'memory_percent',
+                   'name', 'cpu_times'], ad_value=''))
         if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
-            raise psutil.NoSuchProcess
+            return None
 
         # Process command line (cached with internal cache)
         try:
@@ -540,15 +548,12 @@ class GlancesProcesses(object):
         procstat = proc.as_dict(attrs=['pid'])
 
         if mandatory_stats:
-            try:
-                procstat = self.__get_mandatory_stats(proc, procstat)
-            except psutil.NoSuchProcess:
-                return None
+            procstat = self.__get_mandatory_stats(proc, procstat)
 
-        if standard_stats:
+        if procstat is not None and standard_stats:
             procstat = self.__get_standard_stats(proc, procstat)
 
-        if extended_stats and not self.disable_extended_tag:
+        if procstat is not None and extended_stats and not self.disable_extended_tag:
             procstat = self.__get_extended_stats(proc, procstat)
 
         return procstat
@@ -614,6 +619,7 @@ class GlancesProcesses(object):
         if self._enable_tree:
             self.process_tree = ProcessTreeNode.build_tree(processdict,
                                                            self.sort_key,
+                                                           self.sort_reverse,
                                                            self.no_kernel_threads)
 
             for i, node in enumerate(self.process_tree):
@@ -639,8 +645,9 @@ class GlancesProcesses(object):
                 # Sort the internal dict and cut the top N (Return a list of tuple)
                 # tuple=key (proc), dict (returned by __get_process_stats)
                 try:
-                    processiter = sorted(
-                        processdict.items(), key=lambda x: x[1][self.sort_key], reverse=True)
+                    processiter = sorted(processdict.items(),
+                                         key=lambda x: x[1][self.sort_key],
+                                         reverse=self.sort_reverse)
                 except (KeyError, TypeError) as e:
                     logger.error("Cannot sort process list by {0}: {1}".format(self.sort_key, e))
                     logger.error("%s" % str(processdict.items()[0]))
@@ -710,36 +717,5 @@ class GlancesProcesses(object):
     def sort_key(self, key):
         """Set the current sort key."""
         self._sort_key = key
-        if not self.auto_sort and self._enable_tree and self.process_tree is not None:
-            self.process_tree.set_sorting(key, key != "name")
-
-    def getsortlist(self, sortedby=None):
-        """Get the sorted processlist."""
-        if sortedby is None:
-            # No need to sort...
-            return self.processlist
-
-        sortedreverse = True
-        if sortedby == 'name':
-            sortedreverse = False
-
-        if sortedby == 'io_counters':
-            # Specific case for io_counters
-            # Sum of io_r + io_w
-            try:
-                # Sort process by IO rate (sum IO read + IO write)
-                self.processlist.sort(key=lambda process: process[sortedby][0] -
-                                      process[sortedby][2] + process[sortedby][1] -
-                                      process[sortedby][3],
-                                      reverse=sortedreverse)
-            except Exception:
-                self.processlist.sort(key=operator.itemgetter('cpu_percent'),
-                                      reverse=sortedreverse)
-        else:
-            # Others sorts
-            self.processlist.sort(key=operator.itemgetter(sortedby),
-                                  reverse=sortedreverse)
-
-        return self.processlist
 
 glances_processes = GlancesProcesses()

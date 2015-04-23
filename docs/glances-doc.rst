@@ -67,7 +67,13 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
-Glances can centralize available Glances servers using the ``--browser`` option. The server list can be staticaly defined in the Glances configuration file (section [serverlist]). Glances can also detect and display all Glances servers available on you network (auto discover mode is based on the the Zeroconf protocol only available on GNU/Linux and Mac OS X):
+Glances can centralize available Glances servers using the ``--browser``
+option. The server list can be statically defined in the Glances
+configuration file (section ``[serverlist]``).
+
+Glances can also detect and display all Glances servers available on your
+network (auto-discover mode is based on the the ``zeroconf`` protocol,
+which is only available on GNU/Linux and OS X):
 
 .. code-block:: console
 
@@ -97,7 +103,7 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
 
     client$ glances -c @snmpserver
 
-Note: Stats grabbed by SNMP request are limited (operating system dependent).
+*Note*: stats grabbed by SNMP request are limited (OS dependent).
 
 Web Server Mode
 ---------------
@@ -117,14 +123,18 @@ and on the client enter the following URL in your favorite web browser:
 
 where ``@server`` is the IP address or hostname of the server.
 
-To change the refresh rate of the page, just add the period in seconds between refreshes at the end of the URL, ie. to refresh every 10s, use ``http://@server:61208/10``.
+To change the refresh rate of the page, just add the period in seconds
+at the end of the URL. For example, to refresh the page every 10s:
+
+::
+
+    http://@server:61208/10
 
 The Glances web interface follows responsive web design principles.
 
 Screenshot from Chrome on Android
 
 .. image:: images/screenshot-web2.png
-
 
 Command Reference
 =================
@@ -159,6 +169,8 @@ Command-Line Options
                         export stats to an InfluxDB server
   --export-statsd
                         export stats to a Statsd server
+  --export-rabbitmq
+                        export stats to a RabbitMQ server
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -254,6 +266,8 @@ The following commands (key pressed) are supported while in Glances:
 ``T``
     View network I/O as combination
 ``u``
+    Sort processes by USER
+``U``
     View cumulative network I/O
 ``w``
     Delete finished warning log messages
@@ -270,7 +284,8 @@ The following commands (key pressed) are supported while in Glances:
 ``/``
     Switch between short name / command line (processes name)
 
-In the Glances client browser (accessible through the --browser command line argument):
+In the Glances client browser (accessible through the ``--browser``
+command line argument):
 
 ``ENTER``
     Run Glances client to the selected server
@@ -286,15 +301,20 @@ Configuration
 
 No configuration file is mandatory to use Glances.
 
-Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list or to define
-alias.
+Furthermore a configuration file is needed to modify limit alerts, to
+set up monitored processes list, to hide disks or network interfaces or
+to define alias.
 
-By default, the configuration file is under:
+Location
+--------
 
-:Linux: ``/etc/glances/glances.conf``
-:\*BSD and OS X: ``/usr/local/etc/glances/glances.conf``
-:Windows: ``%APPDATA%\glances\glances.conf``
+You can put the configuration file ``glances.conf`` in the following
+locations:
+
+:Linux: ``~/.config/glances, /etc/glances``
+:\*BSD: ``~/.config/glances, /usr/local/etc/glances``
+:OS X: ``~/Library/Application Support/glances, /usr/local/etc/glances``
+:Windows: ``%APPDATA%\glances``
 
 On Windows XP, the ``%APPDATA%`` path is:
 
@@ -307,24 +327,12 @@ Since Windows Vista and newer versions:
 ::
 
     C:\Users\<User>\AppData\Roaming
-    or
-    %userprofile%\AppData\Roaming
 
-You can override the default configuration, located in one of the above
-directories on your system, except for Windows.
+User-specific options override system-wide options and options given on
+the command line override either.
 
-Just copy the ``glances.conf`` file to your ``$XDG_CONFIG_HOME`` directory,
-e.g., on Linux:
-
-.. code-block:: console
-
-    mkdir -p $XDG_CONFIG_HOME/glances
-    cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/
-
-On OS X, you should copy the configuration file to
-``~/Library/Application Support/glances/``.
-
-*Configuration file description*
+Syntax
+------
 
 Each plugin and export module can have a section.
 
@@ -346,7 +354,8 @@ Example for the CPU plugin:
     steal_warning=70
     steal_critical=90
 
-By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:
+By default the ``steal`` CPU time alerts aren't logged. If you want to
+enable log/alert, just add:
 
 .. code-block::
 
@@ -361,10 +370,11 @@ can ben logged using the -d option on the command line.
 
 By default, the log file is under:
 
-:Linux, \*BSD and OS X: ``/tmp/glances.log``
+:Linux, \*BSD, OS X: ``/tmp/glances.log``
 :Windows: ``%APPDATA%\Local\temp\glances.log``
 
-If glances.log is not writable, a new file will be created and returned to the user console.
+If ``glances.log`` is not writable, a new file will be created and
+returned to the user console.
 
 Anatomy Of The Application
 ==========================
@@ -402,7 +412,8 @@ Disconnected:
 QuickLook
 ---------
 
-The quicklook plugin is only display on wide screen and propose a bar view for CPU and memory (virtual and swap).
+The ``quicklook`` plugin is only displayed on wide screen and propose a
+bar view for CPU and memory (virtual and swap).
 
 .. image:: images/quicklook.png
 
@@ -532,7 +543,9 @@ If a RAID controller is detected on you system, its status will be displayed:
 
 .. image:: images/raid.png
 
-By default, the plugin only display physical devices only (hard disks, USB keys) and ignore all others. To allow others FS type, you had to use the following section in the configuration file:
+By default, the plugin only displays physical devices (hard disks, USB
+keys) and ignore all others. To allow others FS type, you have to use the
+following section in the configuration file:
 
 ::
 
@@ -554,8 +567,8 @@ temperature only.
 
 There is no alert on this information.
 
-*Note*: limit values and sensors alias names can be defined in the configuration
-file under the ``[sensors]`` section.
+*Note*: limit values and sensors alias names can be defined in the
+configuration file under the ``[sensors]`` section.
 
 Processes List
 --------------
@@ -632,7 +645,8 @@ Process status legend:
 ``Z``
     Zombie
 
-In standalone mode, additionals informations are provided for the top process:
+In standalone mode, additional informations are provided for the top
+process:
 
 .. image:: images/processlist-top.png
 
@@ -641,7 +655,8 @@ In standalone mode, additionals informations are provided for the top process:
 * Open threads, files and network sessions (TCP and UDP)
 * IO nice level
 
-The extended stats feature could be enabled using the --enable-process-extended option (command line) or the ``e`` key (curses interface).
+The extended stats feature could be enabled using the ``--enable-process-extended``
+option (command line) or the ``e`` key (curses interface).
 
 *Note*: limit values can be overwritten in the configuration file under
 the ``[process]`` section.
@@ -729,16 +744,19 @@ Each alert message displays the following information:
 Docker
 ------
 
-If you use Docker, Glances can help you to monitor your container. Glances uses the Docker API through the Docker-Py library.
+If you use ``Docker``, Glances can help you to monitor your container.
+Glances uses the Docker API through the ``docker-py`` library.
 
 .. image:: images/docker.png
 
 Actions
 -------
 
-Glances can trigger actions on events. 
+Glances can trigger actions on events.
 
-By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:
+By ``action``, we mean all shell command line. For example, if you want
+to execute the ``foo.py`` script if the last 5 minutes load are critical
+then add the action line to the Glances configuration file:
 
 .. code-block::
 
@@ -746,7 +764,9 @@ By action, we mean all shell command line. For example, if you want to execute t
     critical=5.0
     critical_action=python /path/to/foo.py
 
-All the stats are available in the command line through the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a space trigger warning is reached:
+All the stats are available in the command line through the use of the
+``{{mustache}}`` syntax. Another example would be to create a log file
+containing used vs total disk space if a space trigger warning is reached:
 
 .. code-block::
 
@@ -754,13 +774,15 @@ All the stats are available in the command line through the use of the {{mustach
     warning=70
     warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
 
-*Note*: You can use all the stats for the current plugin (see https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for the stats list)
-
+*Note*: you can use all the stats for the current plugin (see
+https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to for
+the stats list)
 
 Gateway to others services
 ==========================
 
-*CSV*
+CSV
+---
 
 It is possible to export statistics to CSV file.
 
@@ -772,9 +794,12 @@ CSV file description:
 - Stats description (first line)
 - Stats (others lines)
 
-*InfluxDB*
+InfluxDB
+--------
 
-You can export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:
+You can export statistics to an ``InfluxDB`` server (time series server).
+The connection should be defined in the Glances configuration file as
+following:
 
 .. code-block::
 
@@ -791,13 +816,17 @@ and run Glances with:
 
     $ glances --export-influxdb
 
-For Grafana users', Glances provides a dedicated `dashboard`_. Just import the file in your Grafana Web interface.
+For Grafana users, Glances provides a dedicated `dashboard`_. Just import
+the file in your ``Grafana`` web interface.
 
 .. image:: images/grafana.png
 
-*Statsd*
+Statsd
+------
 
-You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:
+You can export statistics to a ``Statsd`` server (welcome to Graphite!).
+The connection should be defined in the Glances configuration file as
+following:
 
 .. code-block::
 
@@ -806,7 +835,7 @@ You can export statistics to a Statsd server (welcome to Graphite !). The connec
     port=8125
     prefix=glances
 
-Note: the prefix option is optionnal ('glances by default')
+*Note*: the prefix option is optional ('glances by default')
 
 and run Glances with:
 
@@ -824,13 +853,35 @@ Glances will generate stats as:
     'glances.load.min1': 0.19,
     ...
 
+RabbitMQ
+--------
 
-APIs Documentations
-===================
+You can export statistics to an ``RabbitMQ`` server (AMQP Broker).
+The connection should be defined in the Glances configuration file as
+following:
 
-Glances includes a `XML-RPC server`_ and a `RESTFUL-JSON`_ API which and can be used by another client software.
+.. code-block::
 
-APIs documentations are available at:
+    [rabbitmq]
+    host=localhost
+    port=5672
+    user=glances
+    password=glances
+    queue=glances_queue
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-rabbitmq
+
+APIs documentation
+==================
+
+Glances includes a `XML-RPC server`_ and a `RESTFUL-JSON`_ API which can
+be used by another client software.
+
+APIs documentation is available at:
 
 - XML-RPC: https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
 - RESTFUL-JSON: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
@@ -838,7 +889,8 @@ APIs documentations are available at:
 Support
 =======
 
-To post a question about Glances use case, please post it to the offical Q&A `forum`_.
+To post a question about Glances use cases, please post it to the
+official Q&A `forum`_.
 
 To report a bug or a feature request use the bug tracking system at
 https://github.com/nicolargo/glances/issues.
@@ -853,4 +905,4 @@ Feel free to contribute !
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
 .. _RESTFUL-JSON: http://jsonapi.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
-.. _forum: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json
+.. _dashboard: https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json

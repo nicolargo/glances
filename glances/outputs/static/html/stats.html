@@ -1,392 +1,64 @@
-    <div ng-show="!result" class="container-fluid" id="loading-page">
-        <div class="glances-logo"></div>
-        <div class="loader">Loading...</div>
-    </div>
+<div ng-show="!result" class="container-fluid" id="loading-page">
+    <div class="glances-logo"></div>
+    <div class="loader">Loading...</div>
+</div>
 
-    <div ng-show="help_screen" class="container-fluid">
+<div ng-show="help_screen" class="container-fluid" ng-include src="'help.html'"></div>
 
-        <div class="row">
-            <div class="col-sm-2 col-lg-10">{{help.version}} {{help.psutil_version}}</div>
-        </div>
-        <div class="row">&nbsp;</div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-10">{{help.configuration_file}}</div>
-        </div>
-        <div class="row">&nbsp;</div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.sort_auto}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.sort_network}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.sort_cpu}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_alert}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.show_mem}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.delete_warning_alerts}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.sort_proc}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.delete_warning_critical_alerts}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.sort_io}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.percpu}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_help}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_diskio}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.view_network_io_combination}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.view_cumulative_network}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_network}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_filesytem_freespace}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_sensors}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.generate_graphs}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.show_hide_left_sidebar}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.reset_history}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.enable_disable_process_stats}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.quit}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.enable_disable_top_extends_stats}}</div>
-            <div class="col-sm-2 col-lg-3">{{help.enable_disable_short_processname}}</div>
-        </div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.enable_disable_docker}}</div>
-        </div>
-        <div class="row">&nbsp;</div>
-        <div class="row">
-            <div class="col-sm-2 col-lg-3">{{help.edit_pattern_filter}}</div>
-        </div>
-    </div>
-
-    <div ng-show="result && !help_screen" class="container-fluid">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="pull-left">
-                    <section id="system" class="plugin">
-                        <!--<span class="title">Refresh time&nbsp;</span> <span class="hidden-xs hidden-sm">{{refreshTime}}s
-                            <button ng-click="refreshTime = refreshTime - 1" ng-disabled="refreshTime <= 1">-</button>
-                            <button ng-click="refreshTime = refreshTime + 1">+</button>
-                        </span> -->
-
-                        <span class="title">{{result["system"].hostname}}&nbsp;</span> <span class="hidden-xs hidden-sm">({{result["system"].hr_name}} / {{result["system"].os_name}} {{result["system"].os_version}})</span>
-                    </section>
-                </div>
-                <div class="pull-right">
-                    <section id="uptime" class="plugin">
-                        <span>Uptime: {{result["uptime"]}}</span>
-                    </section>
-                </div>
+<div ng-show="result && !help_screen" class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="pull-left">
+                <section id="system" class="plugin" ng-include src="'plugins/system.html'"></section>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-3 col-lg-2">
-                <section id="cpu" class="plugin">
-                    <div class="table" ng-show="!show.per_cpu">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">CPU</div>
-                            <div class="table-cell">{{result["cpu"].total}}%</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">user:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
-                                {{result["cpu"].user}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">system:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
-                                {{result["cpu"].system}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">idle:</div>
-                            <div class="table-cell">{{result["cpu"].idle}}%</div>
-                        </div>
-                    </div>
-
-    	            <div class="table" ng-show="show.per_cpu">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">PER CPU</div>
-                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">user:</div>
-                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_user_', percpu.user, 0)">
-                                {{percpu.user}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">system:</div>
-                            <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_system_', percpu.system, 0)">
-                                {{percpu.system}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">idle:</div>
-                            <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.idle}}%</div>
-                        </div>
-                    </div>
-                </section>
+            <div class="pull-left">
+                <section id="ip" class="plugin" ng-include src="'plugins/ip.html'"></section>
             </div>
-            <div class="col-sm-3 col-lg-2">
-                <section id="cpu_more" class="plugin" ng-show="result['cpu'].nice != undefined">
-                    <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left">nice:</div>
-                            <div class="table-cell">
-                                {{result["cpu"].nice}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">irq:</div>
-                            <div class="table-cell">
-                                {{result["cpu"].irq}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">iowait:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_iowait_', result['cpu'].iowait, 1)">
-                                {{result["cpu"].iowait}}%
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">steal:</div>
-                            <div class="table-cell" ng-class="getClass('cpu', 'cpu_steal_', result['cpu'].steal, 0)">
-                                {{result["cpu"].steal}}%
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            <div class="col-sm-3 col-lg-2"><!-- col-lg-2 col-lg-offset-1 -->
-                <section id="loading" class="plugin" ng-show="result['load'].cpucore != undefined">
-                    <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">LOAD</div>
-                            <div class="table-cell">{{result["load"].cpucore}}-core</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">1 min:</div>
-                            <div class="table-cell">
-                                {{result["load"].min1}}
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">5 min:</div>
-                            <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min5, 0)">
-                                {{result["load"].min5}}
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">15 min:</div>
-                            <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min15, 1)">
-                                {{result["load"].min15}}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            <div class="col-sm-3 col-lg-2">
-                <section id="mem" class="plugin">
-                    <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">MEM</div>
-                            <div class="table-cell">{{result["mem"].percent}}%</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">total:</div>
-                            <div class="table-cell">{{result["mem"].total | bytes:2}}</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">used:</div>
-                            <div class="table-cell" ng-class="getClass('mem', 'mem_', result['mem'].percent, 1)">
-                                {{result["mem"].used | bytes:2}}
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">free:</div>
-                            <div class="table-cell">{{result["mem"].free | bytes:2}}</div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            <div class="col-sm-3 col-lg-2">
-                <section id="mem_more" class="plugin">
-                    <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left">active:</div>
-                            <div class="table-cell">{{result["mem"].active | bytes:2}}</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">inactive:</div>
-                            <div class="table-cell">{{result["mem"].inactive | bytes:2}}</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">buffers:</div>
-                            <div class="table-cell">{{result["mem"].buffers | bytes:2}}</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">cached:</div>
-                            <div class="table-cell">{{result["mem"].cached | bytes:2}}</div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            <div class="col-sm-3 col-lg-2   ">
-                <section id="memswap" class="plugin">
-                    <div class="table">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">SWAP</div>
-                            <div class="table-cell">{{result["memswap"].percent}}%</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">total:</div>
-                            <div class="table-cell">{{result["memswap"].total | bytes:2}}</div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">used:</div>
-                            <div class="table-cell" ng-class="getClass('memswap', 'memswap_', result['memswap'].percent, 1)">
-                                {{result["memswap"].used | bytes:2}}
-                            </div>
-                        </div>
-                        <div class="table-row">
-                            <div class="table-cell text-left">free:</div>
-                            <div class="table-cell">{{result["memswap"].free | bytes:2}}</div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-3" ng-show="show.sidebar">
-                <div class="table">
-                    <section id="network" class="plugin table-row-group" ng-show="show.network">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">NETWORK</div>
-                            <div class="table-cell">Rx/s</div>
-                            <div class="table-cell">Tx/s</div>
-                        </div>
-                        <div class="table-row" ng-repeat="network in result['network'] | orderBy: network.interface_name">
-                            <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
-                            <div class="table-cell" ng-if="show.network_by_bytes">{{network.rx | bytes}}</div>
-                            <div class="table-cell" ng-if="show.network_by_bytes">{{network.tx | bytes}}</div>
-                            <div class="table-cell" ng-if="!show.network_by_bytes">{{network.rx | bits}}</div>
-                            <div class="table-cell" ng-if="!show.network_by_bytes">{{network.tx | bits}}</div>
-                        </div>
-                    </section>
-                    <section id="diskio" class="plugin table-row-group" ng-show="show.diskio">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">DISK I/O</div>
-                            <div class="table-cell">R/s</div>
-                            <div class="table-cell">W/s</div>
-                        </div>
-                        <div class="table-row" ng-repeat="disk in result['diskio']">
-                            <div class="table-cell text-left">{{disk.disk_name | min_size}}</div>
-                            <div class="table-cell">{{disk.read_bytes | bytes}}</div>
-                            <div class="table-cell">{{disk.write_bytes | bytes}}</div>
-                        </div>
-                    </section>
-                    <section id="fs" class="plugin table-row-group" ng-show="show.fs">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">FILE SYS</div>
-                            <div class="table-cell">Used</div>
-                            <div class="table-cell">Total</div>
-                        </div>
-                        <div class="table-row" ng-repeat="fs in result['fs']">
-                            <div class="table-cell text-left">{{fs.mnt_point}} ({{fs.device_name}})</div>
-                            <div class="table-cell" ng-class="getClass('fs', 'fs_', fs.percent, 0)">
-                                {{fs.size - fs.free | bytes}}
-                            </div>
-                            <div class="table-cell">{{fs.size | bytes}}</div>
-                        </div>
-                    </section>
-                    <section id="sensors" class="plugin table-row-group" ng-show="show.sensors && result['sensors'].length > 0">
-                        <div class="table-row">
-                            <div class="table-cell text-left title">SENSORS</div>
-                            <div class="table-cell">&#176;C</div>
-                        </div>
-                        <div class="table-row" ng-repeat="sensor in result['sensors']">
-                            <div class="table-cell text-left">{{sensor.label}}</div>
-                            <div class="table-cell" ng-class="getClass('sensors', 'sensors_' + sensor.type + '_', sensor.value, 0)">{{sensor.value}}</div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-            <div class="col-sm-9">
-                <section id="containers" class="plugin" ng-if="result['docker']['containers'].length" ng-include src="'plugins/docker.html'"></section>
-                <section id="alerts" ng-show="show.alert">
-                    <span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span>
-                    <span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
-                </section>
-                <section id="alert" class="plugin" ng-show="show.alert">
-                    <div class="table">
-                        <div class="table-row" ng-repeat="alert in result['alert']">
-    	                    <div class="table-cell text-left">
-    {{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
-    						</div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="processcount" class="plugin">
-                    <span class="title">TASKS</span> {{result["processcount"].total}} ({{result["processcount"].thread}} thr), {{result["processcount"].running}} run,
-                        {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth
-    <span ng-show="!sortColumn"> sorted automatically </span>
-    <span ng-show="sortColumn">sorted </span>
-    <span> by {{sortColumn}}, flat view </span>
-
-                </section>
-
-                <div class="row">
-                    <div class="col-sm-9"></div>
-                </div>
-
-                <section id="processlist" class="plugin">
-                    <div class="table">
-                        <div class="table-row">
-                            <div id="column_cpu_percent"     ng-click="sortBy('cpu_percent')"    class="table-cell sort sort_desc">CPU%</div>
-                            <div id="column_memory_percent"  ng-click="sortBy('memory_percent')" class="table-cell">MEM%</div>
-                            <div id="column_memvirt"         ng-click="sortBy('memvirt')"        class="table-cell hidden-xs hidden-sm">VIRT</div>
-                            <div id="column_memres"          ng-click="sortBy('memres')"         class="table-cell hidden-xs hidden-sm">RES</div>
-                            <div id="column_pid"             ng-click="sortBy('pid')"            class="table-cell">PID</div>
-                            <div id="column_username"        ng-click="sortBy('username')"       class="table-cell text-left">USER</div>
-                            <div id="column_nice"            ng-click="sortBy('nice')"           class="table-cell">NI</div>
-                            <div id="column_status"          ng-click="sortBy('status')"         class="table-cell">S</div>
-                            <div id="column_timemillis"      ng-click="sortBy('timemillis')"     class="table-cell hidden-xs hidden-sm">TIME+</div>
-                            <div id="column_io_read"         ng-click="sortBy('io_read')"        class="table-cell hidden-xs hidden-sm">IOR/s</div>
-                            <div id="column_io_write"        ng-click="sortBy('io_write')"       class="table-cell hidden-xs hidden-sm">IOW/s</div>
-                            <div id="column_name"            ng-click="sortBy('name')"           class="table-cell text-left">Command</div>
-                        </div>
-                        <div class="table-row" ng-repeat="process in result['processlist'] | orderBy:sortColumn:!sortOrderAsc">
-                            <div class="table-cell" ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</div>
-                            <div class="table-cell" ng-class="getClass('processlist', 'processlist_mem_', process.memory_percent, 0)">{{process.memory_percent | number:1}}</div>
-                            <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes:1}}</div>
-                            <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes:1}}</div>
-                            <div class="table-cell">{{process.pid}}</div>
-                            <div class="table-cell text-left">{{process.username}}</div>
-                            <div class="table-cell">{{process.nice | exclamation}}</div>
-                            <div class="table-cell status">{{process.status}}</div>
-                            <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
-                            <div class="table-cell hidden-xs hidden-sm">{{process.io_read | bytes}}</div>
-                            <div class="table-cell hidden-xs hidden-sm">{{process.io_write | bytes}}</div>
-                            <div class="table-cell text-left" ng-if="show.short_process_name">{{process.name}}</div>
-                            <div class="table-cell text-left" ng-if="!show.short_process_name">{{process.cmdline}}</div>
-                        </div>
-                    </div>
-                </section>
+            <div class="pull-right">
+                <section id="uptime" class="plugin" ng-include src="'plugins/uptime.html'"></section>
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-sm-3 col-lg-2">
+            <section id="cpu" class="plugin" ng-include src="'plugins/cpu.html'"></section>
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <section id="cpu_more" class="plugin" ng-show="result['cpu'].nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <section id="load" class="plugin" ng-show="result['load'].cpucore != undefined" ng-include src="'plugins/load.html'"></section>
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <section id="mem" class="plugin" ng-include src="'plugins/mem.html'"></section>
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <section id="mem_more" class="plugin" ng-include src="'plugins/mem_more.html'"></section>
+        </div>
+        <div class="col-sm-3 col-lg-2">
+            <section id="memswap" class="plugin" ng-include src="'plugins/memswap.html'"></section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3" ng-show="show.sidebar">
+            <div class="table">
+                <section id="network" class="plugin table-row-group" ng-show="show.network" ng-include src="'plugins/network.html'"></section>
+                <section id="diskio" class="plugin table-row-group" ng-show="show.diskio" ng-include src="'plugins/diskio.html'"></section>
+                <section id="fs" class="plugin table-row-group" ng-show="show.fs" ng-include src="'plugins/fs.html'"></section>
+                <section id="sensors" class="plugin table-row-group" ng-show="show.sensors && result['sensors'].length > 0" ng-include src="'plugins/sensors.html'"></section>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            <section id="containers" class="plugin" ng-if="result['docker']['containers'].length" ng-include src="'plugins/docker.html'"></section>
+            <section id="alerts" ng-show="show.alert" ng-include src="'plugins/alerts.html'"></section>
+            <section id="alert" class="plugin" ng-show="show.alert" ng-include src="'plugins/alert.html'"></section>
+            <section id="processcount" class="plugin" ng-include src="'plugins/processcount.html'"></section>
+
+            <div class="row">
+                <div class="col-sm-9"></div>
+            </div>
+
+            <section id="processlist" class="plugin" ng-include src="'plugins/processlist.html'"></section>
+        </div>
+    </div>
+</div>

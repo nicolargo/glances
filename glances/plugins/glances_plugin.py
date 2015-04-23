@@ -327,16 +327,16 @@ class GlancesPlugin(object):
                 return item_views[key][option]
 
     def load_limits(self, config):
-        """Load the limits from the configuration file."""
+        """Load limits from the configuration file, if it exists."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
             for level, v in config.items(self.plugin_name):
                 # Read limits
                 limit = '_'.join([self.plugin_name, level])
                 try:
-                    self._limits[limit] = config.get_option(self.plugin_name, level)
+                    self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
-                    self._limits[limit] = config.get_raw_option(self.plugin_name, level).split(",")
+                    self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
                 logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
 
     @property

@@ -1,0 +1,7 @@
+<div class="table">
+    <div class="table-row" ng-repeat="alert in result['alert']">
+        <div class="table-cell text-left">
+{{alert.begin}} ({{(alert[1]-alert[0]) | date : 'h:mm:ss'}}) - {{alert[2]}} on {{alert[3]}} ({{alert[4]}})
+		</div>
+    </div>
+</div>
