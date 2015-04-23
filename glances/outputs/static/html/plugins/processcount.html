@@ -1,0 +1,5 @@
+<span class="title">TASKS</span> {{result["processcount"].total}} ({{result["processcount"].thread}} thr), {{result["processcount"].running}} run,
+    {{result["processcount"].sleeping}} slp, {{result["processcount"].stopped}} oth
+<span ng-show="!sortColumn"> sorted automatically </span>
+<span ng-show="sortColumn">sorted </span>
+<span> by {{sortColumn}}, flat view </span>

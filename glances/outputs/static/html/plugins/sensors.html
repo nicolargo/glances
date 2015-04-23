@@ -1,0 +1,8 @@
+<div class="table-row">
+    <div class="table-cell text-left title">SENSORS</div>
+    <div class="table-cell">&#176;C</div>
+</div>
+<div class="table-row" ng-repeat="sensor in result['sensors']">
+    <div class="table-cell text-left">{{sensor.label}}</div>
+    <div class="table-cell" ng-class="getClass('sensors', 'sensors_' + sensor.type + '_', sensor.value, 0)">{{sensor.value}}</div>
+</div>

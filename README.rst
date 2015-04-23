@@ -31,7 +31,7 @@ Requirements
 - ``psutil >= 2.0.0``
 - ``setuptools``
 
-Optionals dependencies:
+Optional dependencies:
 
 - ``bottle`` (for Web server mode)
 - ``py3sensors`` (for hardware monitoring support) [Linux-only]
@@ -51,7 +51,8 @@ Installation
 Glances Auto Install script
 ---------------------------
 
-To install both dependencies and latest Glances production ready version (aka *master* branch), just enter the following command line:
+To install both dependencies and latest Glances production ready version
+(aka *master* branch), just enter the following command line:
 
 .. code-block:: console
 
@@ -81,7 +82,8 @@ To install, simply use ``pip``:
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
-*Note 2*: You can also install the following libs in order to use optionnal features:
+You can also install the following libraries in order to use optional
+features:
 
 .. code-block:: console
 
@@ -157,7 +159,7 @@ Windows
 - Install Python for Windows: http://www.python.org/getit/
 - Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Install Glances Download Glances from here: http://nicolargo.github.io/glances/
+- Install Glances: http://nicolargo.github.io/glances/
 
 Source
 ------
@@ -236,7 +238,7 @@ How to contribute ?
 
 If you want to contribute to the Glances project, read this `Wiki`_ page.
 
-There is also a chat dedicated to the Glances' developpers:
+There is also a chat dedicated to the Glances developers:
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
