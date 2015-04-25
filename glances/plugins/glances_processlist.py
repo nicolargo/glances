@@ -249,7 +249,7 @@ class Plugin(GlancesPlugin):
                 if hours:
                     msg = '{0:>4}h'.format(hours)
                     ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
-                    msg = '{0}:{1}'.format(minutes, seconds)
+                    msg = '{0}:{1}'.format(str(minutes).zfill(2), seconds)
                 else:
                     msg = '{0:>4}:{1}.{2}'.format(minutes, seconds, microseconds)
         else:
