@@ -232,7 +232,7 @@ class GlancesClient(object):
                 # Export stats using export modules
                 self.stats.export(self.stats)
         finally:
-            self.end
+            self.end()
 
         return self.client_mode
 

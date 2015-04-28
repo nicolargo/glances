@@ -39,7 +39,8 @@ Optional dependencies:
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
-- ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
+- ``zeroconf`` (for the autodiscover mode)
+- ``netifaces`` (for the IP plugin)
 - ``influxdb`` (for the InfluxDB export module)
 - ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
