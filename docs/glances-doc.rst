@@ -181,10 +181,7 @@ Command-Line Options
   -p PORT, --port PORT  define the client/server TCP port [default: 61209]
   -B BIND_ADDRESS, --bind BIND_ADDRESS
                         bind server to the given IPv4/IPv6 address or hostname
-  --password-badidea PASSWORD_ARG
-                        define password from the command line
-  --password            define a client/server password from the prompt or
-                        file
+  --password            define a client/server password
   --disable-autodiscover
                         Hide Glances server from the auto discover feature
   --snmp-community SNMP_COMMUNITY
