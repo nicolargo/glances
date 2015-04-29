@@ -231,7 +231,8 @@ class GlancesClient(object):
 
                 # Export stats using export modules
                 self.stats.export(self.stats)
-        finally:
+        except Exception as e:
+            logger.critical(e)
             self.end()
 
         return self.client_mode
