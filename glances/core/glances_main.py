@@ -153,10 +153,8 @@ Start the client browser (browser mode):\n\
                             help=_('define the client/server TCP port [default: {0}]').format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
                             help=_('bind server to the given IPv4/IPv6 address or hostname'))
-        parser.add_argument('--password-badidea', dest='password_arg',
-                            help=_('define password from the command line'))
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
-                            help=_('define a client/server password from the prompt or file'))
+                            help=_('define a client/server password'))
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help=_('SNMP community'))
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -226,13 +224,7 @@ Start the client browser (browser mode):\n\
 
         # Server or client login/password
         args.username = self.username
-        if args.password_arg is not None:
-            from hashlib import sha256
-            # Password is given as an argument
-            # Hash with SHA256
-            # Only the SHA will be transmit on the network
-            args.password = sha256(args.password_arg).hexdigest()
-        elif args.password_prompt:
+        if args.password_prompt:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
