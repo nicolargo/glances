@@ -95,6 +95,12 @@ body {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;
 }
+gl-monitor-list {
+    display: block;
+}
+gl-monitor-list .table-cell {
+    text-align: left;
+}
 /* Loading page */
 
 #loading-page .glances-logo {

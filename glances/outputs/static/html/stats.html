@@ -53,11 +53,11 @@
             <section id="alerts" ng-show="show.alert" ng-include src="'plugins/alerts.html'"></section>
             <section id="alert" class="plugin" ng-show="show.alert" ng-include src="'plugins/alert.html'"></section>
             <section id="processcount" class="plugin" ng-include src="'plugins/processcount.html'"></section>
-
             <div class="row">
-                <div class="col-sm-9"></div>
+                <div class="col-lg-9">
+                    <gl-monitor-list class="plugin" processes="result['monitor']"></gl-monitor-list>
+                </div>
             </div>
-
             <section id="processlist" class="plugin" ng-include src="'plugins/processlist.html'"></section>
         </div>
     </div>
