@@ -73,7 +73,7 @@ class Plugin(GlancesPlugin):
 
         # Only process if stats exist and display plugin enable...
         if args.disable_process:
-            msg = _("PROCESSES DISABLED (press 'z' to display)")
+            msg = "PROCESSES DISABLED (press 'z' to display)"
             ret.append(self.curse_add_line(msg))
             return ret
 
@@ -82,48 +82,48 @@ class Plugin(GlancesPlugin):
 
         # Display the filter (if it exists)
         if glances_processes.process_filter is not None:
-            msg = _("Processes filter:")
+            msg = 'Processes filter:'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = _(" {0} ").format(glances_processes.process_filter)
+            msg = ' {0} '.format(glances_processes.process_filter)
             ret.append(self.curse_add_line(msg, "FILTER"))
-            msg = _("(press ENTER to edit)")
+            msg = '(press ENTER to edit)'
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_new_line())
 
         # Build the string message
         # Header
-        msg = _("TASKS ")
+        msg = 'TASKS'
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Compute processes
         other = self.stats['total']
-        msg = str(self.stats['total'])
+        msg = '{0:>4}'.format(self.stats['total'])
         ret.append(self.curse_add_line(msg))
 
         if 'thread' in self.stats:
-            msg = _(" ({0} thr),").format(self.stats['thread'])
+            msg = ' ({0} thr),'.format(self.stats['thread'])
             ret.append(self.curse_add_line(msg))
 
         if 'running' in self.stats:
             other -= self.stats['running']
-            msg = _(" {0} run,").format(self.stats['running'])
+            msg = ' {0} run,'.format(self.stats['running'])
             ret.append(self.curse_add_line(msg))
 
         if 'sleeping' in self.stats:
             other -= self.stats['sleeping']
-            msg = _(" {0} slp,").format(self.stats['sleeping'])
+            msg = ' {0} slp,'.format(self.stats['sleeping'])
             ret.append(self.curse_add_line(msg))
 
-        msg = _(" {0} oth ").format(other)
+        msg = ' {0} oth '.format(other)
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
         if glances_processes.auto_sort:
-            msg = _("sorted automatically")
+            msg = 'sorted automatically'
             ret.append(self.curse_add_line(msg))
-            msg = _(" by {0}").format(glances_processes.sort_key)
+            msg = ' by {0}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         else:
-            msg = _("sorted by {0}").format(glances_processes.sort_key)
+            msg = 'sorted by {0}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
 

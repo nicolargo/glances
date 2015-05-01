@@ -97,7 +97,7 @@ class Plugin(GlancesPlugin):
                 msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
             msg = '{0:<3} '.format(m['count'] if m['count'] > 1 else '')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:13} '.format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
+            msg = '{0:13} '.format('RUNNING' if m['count'] >= 1 else 'NOT RUNNING')
             ret.append(self.curse_add_line(msg))
             # Decode to UTF8 (only for Python 3)
             try:

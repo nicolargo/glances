@@ -34,10 +34,10 @@ from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 if is_py3:
-    SENSOR_TEMP_UNIT = _('°C')
+    SENSOR_TEMP_UNIT = '°C'
 else:
-    SENSOR_TEMP_UNIT = _('°C ')
-SENSOR_FAN_UNIT = _('RPM')
+    SENSOR_TEMP_UNIT = '°C '
+SENSOR_FAN_UNIT = 'RPM'
 
 class Plugin(GlancesPlugin):
 
@@ -174,7 +174,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:18}'.format(_("SENSORS"))
+        msg = '{0:18}'.format('SENSORS')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:

@@ -13,6 +13,7 @@ Changes:
     * The default key bindings have been changed to:
       - 'u': sort processes by USER
       - 'U': show cumulative network I/O
+    * No more translations
 
 Enhancements and new features:
 

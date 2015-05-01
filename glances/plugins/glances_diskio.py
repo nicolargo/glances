@@ -151,11 +151,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("DISK I/O"))
+        msg = '{0:9}'.format('DISK I/O')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>7}'.format(_("R/s"))
+        msg = '{0:>7}'.format('R/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format(_("W/s"))
+        msg = '{0:>7}'.format('W/s')
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):

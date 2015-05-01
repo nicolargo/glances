@@ -68,17 +68,17 @@ class Plugin(GlancesPlugin):
         # Build the string message
         # Header
         if not self.stats:
-            msg = _("No warning or critical alert detected")
+            msg = 'No warning or critical alert detected'
             ret.append(self.curse_add_line(msg, "TITLE"))
         else:
             # Header
-            msg = _("Warning or critical alerts")
+            msg = 'Warning or critical alerts'
             ret.append(self.curse_add_line(msg, "TITLE"))
             logs_len = glances_logs.len()
             if logs_len > 1:
-                msg = _(" (lasts {0} entries)").format(logs_len)
+                msg = ' (lasts {0} entries)'.format(logs_len)
             else:
-                msg = _(" (one entry)")
+                msg = ' (one entry)'
             ret.append(self.curse_add_line(msg, "TITLE"))
             # Loop over alerts
             for alert in self.stats:
@@ -90,15 +90,16 @@ class Plugin(GlancesPlugin):
                 # Duration
                 if alert[1] > 0:
                     # If finished display duration
-                    msg = ' ({0})'.format(datetime.fromtimestamp(alert[1]) - datetime.fromtimestamp(alert[0]))
+                    msg = ' ({0})'.format(datetime.fromtimestamp(alert[1]) -
+                                          datetime.fromtimestamp(alert[0]))
                 else:
-                    msg = _(" (ongoing)")
+                    msg = ' (ongoing)'
                 ret.append(self.curse_add_line(msg))
                 ret.append(self.curse_add_line(" - "))
                 # Infos
                 if alert[1] > 0:
                     # If finished do not display status
-                    msg = _("{0} on {1}").format(alert[2], alert[3])
+                    msg = '{0} on {1}'.format(alert[2], alert[3])
                     ret.append(self.curse_add_line(msg))
                 else:
                     msg = str(alert[3])
@@ -107,11 +108,12 @@ class Plugin(GlancesPlugin):
                 if self.approx_equal(alert[6], alert[4], tolerance=0.1):
                     msg = ' ({0:.1f})'.format(alert[5])
                 else:
-                    msg = _(" (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})").format(alert[6], alert[5], alert[4])
+                    msg = ' (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})'.format(
+                        alert[6], alert[5], alert[4])
                 ret.append(self.curse_add_line(msg))
 
                 # else:
-                #     msg = _(" Running...")
+                #     msg = ' Running...'
                 #     ret.append(self.curse_add_line(msg))
 
                 # !!! Debug only

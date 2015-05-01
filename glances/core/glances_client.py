@@ -111,7 +111,7 @@ class GlancesClient(object):
                 # Fallback to SNMP
                 self.client_mode = 'snmp'
                 logger.error("Connection to Glances server failed: {0}".format(err))
-                fallbackmsg = _("No Glances server found. Trying fallback to SNMP...")
+                fallbackmsg = 'No Glances server found. Trying fallback to SNMP...'
                 if not self.return_to_browser:
                     print(fallbackmsg)
                 else:

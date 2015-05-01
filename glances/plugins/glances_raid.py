@@ -87,11 +87,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:11}'.format(_('RAID disks'))
+        msg = '{0:11}'.format('RAID disks')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>6}'.format(_("Used"))
+        msg = '{0:>6}'.format('Used')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("Avail"))
+        msg = '{0:>6}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
         arrays = self.stats.keys()
@@ -102,7 +102,7 @@ class Plugin(GlancesPlugin):
             # Display the current status
             status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
             # Data: RAID type name | disk used | disk available
-            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else _('UNKNOWN')
+            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
             msg = '{0:<5}{1:>6}'.format(array_type, array)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['status'] == 'active':

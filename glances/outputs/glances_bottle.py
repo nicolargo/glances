@@ -86,7 +86,7 @@ class GlancesBottle(object):
         self.plugins_list = self.stats.getAllPlugins()
 
         # Bind the Bottle TCP address/port
-        bindmsg = _("Glances web server started on http://{0}:{1}/").format(self.args.bind_address, self.args.port)
+        bindmsg = 'Glances web server started on http://{0}:{1}/'.format(self.args.bind_address, self.args.port)
         logger.info(bindmsg)
         print(bindmsg)
         self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
