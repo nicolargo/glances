@@ -362,31 +362,31 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Title
-        msg = '{0}'.format(_("CONTAINERS"))
+        msg = '{0}'.format('CONTAINERS')
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = ' {0}'.format(len(self.stats['containers']))
         ret.append(self.curse_add_line(msg))
-        msg = ' ({0} {1})'.format(_("served by Docker"),
+        msg = ' ({0} {1})'.format('served by Docker',
                                   self.stats['version']["Version"])
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
-        msg = '{0:>14}'.format(_("Id"))
+        msg = '{0:>14}'.format('Id')
         ret.append(self.curse_add_line(msg))
-        msg = ' {0:20}'.format(_("Name"))
+        msg = ' {0:20}'.format('Name')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>26}'.format(_("Status"))
+        msg = '{0:>26}'.format('Status')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("CPU%"))
+        msg = '{0:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format(_("MEM"))
+        msg = '{0:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg))
-        # msg = '{0:>6}'.format(_("Rx/s"))
+        # msg = '{0:>6}'.format('Rx/s')
         # ret.append(self.curse_add_line(msg))
-        # msg = '{0:>6}'.format(_("Tx/s"))
+        # msg = '{0:>6}'.format('Tx/s')
         # ret.append(self.curse_add_line(msg))
-        msg = ' {0:8}'.format(_("Command"))
+        msg = ' {0:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
         # Data
         for container in self.stats['containers']:

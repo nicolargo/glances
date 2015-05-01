@@ -155,7 +155,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:7} '.format(_("SWAP"))
+        msg = '{0:7} '.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
         msg = '{0:>6.1%}'.format(self.stats['percent'] / 100)
@@ -163,14 +163,14 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = '{0:8}'.format(_("total:"))
+        msg = '{0:8}'.format('total:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = '{0:8}'.format(_("used:"))
+        msg = '{0:8}'.format('used:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
@@ -178,7 +178,7 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = '{0:8}'.format(_("free:"))
+        msg = '{0:8}'.format('free:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))

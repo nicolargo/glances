@@ -184,54 +184,54 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:5} '.format(_("MEM"))
+        msg = '{0:5} '.format('MEM')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
         msg = '{0:>7.1%}'.format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(msg))
         # Active memory usage
         if 'active' in self.stats:
-            msg = '  {0:9}'.format(_("active:"))
+            msg = '  {0:9}'.format('active:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['active']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = '{0:6}'.format(_("total:"))
+        msg = '{0:6}'.format('total:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # Inactive memory usage
         if 'inactive' in self.stats:
-            msg = '  {0:9}'.format(_("inactive:"))
+            msg = '  {0:9}'.format('inactive:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['inactive']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = '{0:6}'.format(_("used:"))
+        msg = '{0:6}'.format('used:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
             msg, self.get_views(key='used', option='decoration')))
         # Buffers memory usage
         if 'buffers' in self.stats:
-            msg = '  {0:9}'.format(_("buffers:"))
+            msg = '  {0:9}'.format('buffers:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['buffers']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = '{0:6}'.format(_("free:"))
+        msg = '{0:6}'.format('free:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))
         # Cached memory usage
         if 'cached' in self.stats:
-            msg = '  {0:9}'.format(_("cached:"))
+            msg = '  {0:9}'.format('cached:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))
             msg = '{0:>7}'.format(self.auto_unit(self.stats['cached']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))

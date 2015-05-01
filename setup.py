@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import glob
-import os
 import sys
 
 from setuptools import setup
@@ -19,9 +18,6 @@ def get_data_files():
         ('share/doc/glances/images', glob.glob('docs/images/*.png')),
         ('share/man/man1', ['man/glances.1'])
     ]
-
-    for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
-        data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
     return data_files
 

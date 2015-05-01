@@ -226,30 +226,30 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
+        msg = '{0:{width}}'.format('NETWORK', width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx"))
+                msg = '{0:>14}'.format('Rx+Tx')
                 ret.append(self.curse_add_line(msg))
             else:
                 # Rx/Tx stats
-                msg = '{0:>7}'.format(_("Rx"))
+                msg = '{0:>7}'.format('Rx')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx"))
+                msg = '{0:>7}'.format('Tx')
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx/s"))
+                msg = '{0:>14}'.format('Rx+Tx/s')
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = '{0:>7}'.format(_("Rx/s"))
+                msg = '{0:>7}'.format('Rx/s')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx/s"))
+                msg = '{0:>7}'.format('Tx/s')
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):

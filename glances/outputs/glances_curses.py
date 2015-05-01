@@ -617,34 +617,34 @@ class _GlancesCurses(object):
         # Generate history graph
         if self.history_tag and self.args.enable_history:
             self.display_popup(
-                _("Generate graphs history in %s\nPlease wait...") % self.glances_history.get_output_folder())
+                'Generate graphs history in {0}\nPlease wait...'.format(
+                    self.glances_history.get_output_folder()))
             self.display_popup(
-                _("Generate graphs history in %s\nDone: %s graphs generated") % (self.glances_history.get_output_folder(), self.glances_history.generate_graph(stats)))
+                'Generate graphs history in {0}\nDone: {1} graphs generated'.format(
+                    self.glances_history.get_output_folder(),
+                    self.glances_history.generate_graph(stats)))
         elif self.reset_history_tag and self.args.enable_history:
-            self.display_popup(_("Reset history"))
+            self.display_popup('Reset history')
             self.glances_history.reset(stats)
         elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
             try:
                 self.glances_history.graph_enabled()
             except Exception:
-                self.display_popup(
-                    _("History disabled\nEnable it using --enable-history"))
+                self.display_popup('History disabled\nEnable it using --enable-history')
             else:
-                self.display_popup(
-                    _("History disabled\nPlease install MatPlotLib"))
+                self.display_popup('History disabled\nPlease install matplotlib')
         self.history_tag = False
         self.reset_history_tag = False
 
         # Display edit filter popup
         # Only in standalone mode (cs_status is None)
         if self.edit_filter and cs_status is None:
-            new_filter = self.display_popup(_("Process filter pattern: "),
-                                            is_input=True,
-                                            input_value=glances_processes.process_filter)
+            new_filter = self.display_popup(
+                'Process filter pattern: ', is_input=True,
+                input_value=glances_processes.process_filter)
             glances_processes.process_filter = new_filter
         elif self.edit_filter and cs_status != 'None':
-            self.display_popup(
-                _("Process filter only available in standalone mode"))
+            self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 
         return True
@@ -1053,17 +1053,16 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Display top header
         if len(servers_list) == 0:
             if self.first_scan and not self.args.disable_autodiscover:
-                msg = _("Glances is scanning your network (please wait)...")
+                msg = 'Glances is scanning your network. Please wait...'
                 self.first_scan = False
             else:
-                msg = _("No Glances servers available")
+                msg = 'No Glances server available'
         elif len(servers_list) == 1:
-            msg = _("One Glances server available")
+            msg = 'One Glances server available'
         else:
-            msg = _("%d Glances servers available" %
-                    len(servers_list))
+            msg = '{0} Glances servers available'.format(len(servers_list))
         if self.args.disable_autodiscover:
-            msg += ' ' + _("(auto discover is disabled)")
+            msg += ' ' + '(auto discover is disabled)'
         self.term_window.addnstr(y, x,
                                  msg,
                                  screen_x - x,
@@ -1078,15 +1077,15 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Table of table
         # Item description: [stats_id, column name, column size]
         column_def = [
-            ['name', _('Name'), 16],
+            ['name', 'Name', 16],
             ['alias', None, None],
-            ['load_min5', _('LOAD'), 6],
-            ['cpu_percent', _('CPU%'), 5],
-            ['mem_percent', _('MEM%'), 5],
-            ['status', _('STATUS'), 8],
-            ['ip', _('IP'), 15],
-            # ['port', _('PORT'), 5],
-            ['hr_name', _('OS'), 16],
+            ['load_min5', 'LOAD', 6],
+            ['cpu_percent', 'CPU%', 5],
+            ['mem_percent', 'MEM%', 5],
+            ['status', 'STATUS', 8],
+            ['ip', 'IP', 15],
+            # ['port', 'PORT', 5],
+            ['hr_name', 'OS', 16],
         ]
         y = 2
 

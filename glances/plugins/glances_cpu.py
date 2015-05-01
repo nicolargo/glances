@@ -173,7 +173,7 @@ class Plugin(GlancesPlugin):
         # exemple on Windows OS)
         idle_tag = 'user' not in self.stats
         # Header
-        msg = '{0:8}'.format(_("CPU"))
+        msg = '{0:8}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Total CPU usage
         msg = '{0:>5}%'.format(self.stats['total'])
@@ -184,7 +184,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
         # Nice CPU
         if 'nice' in self.stats:
-            msg = '  {0:8}'.format(_("nice:"))
+            msg = '  {0:8}'.format('nice:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
             msg = '{0:>5}%'.format(self.stats['nice'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
@@ -192,19 +192,19 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # User CPU
         if 'user' in self.stats:
-            msg = '{0:8}'.format(_("user:"))
+            msg = '{0:8}'.format('user:')
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['user'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='user', option='decoration')))
         elif 'idle' in self.stats:
-            msg = '{0:8}'.format(_("idle:"))
+            msg = '{0:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg))
         # IRQ CPU
         if 'irq' in self.stats:
-            msg = '  {0:8}'.format(_("irq:"))
+            msg = '  {0:8}'.format('irq:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
             msg = '{0:>5}%'.format(self.stats['irq'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
@@ -212,19 +212,19 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # System CPU
         if 'system' in self.stats and not idle_tag:
-            msg = '{0:8}'.format(_("system:"))
+            msg = '{0:8}'.format('system:')
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['system'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='system', option='decoration')))
         else:
-            msg = '{0:8}'.format(_("core:"))
+            msg = '{0:8}'.format('core:')
             ret.append(self.curse_add_line(msg))
             msg = '{0:>6}'.format(self.stats['nb_log_core'])
             ret.append(self.curse_add_line(msg))
         # IOWait CPU
         if 'iowait' in self.stats:
-            msg = '  {0:8}'.format(_("iowait:"))
+            msg = '  {0:8}'.format('iowait:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='iowait', option='optional')))
             msg = '{0:>5}%'.format(self.stats['iowait'])
             ret.append(self.curse_add_line(
@@ -234,13 +234,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
-            msg = '{0:8}'.format(_("idle:"))
+            msg = '{0:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
             msg = '{0:>5}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg))
         # Steal CPU usage
         if 'steal' in self.stats:
-            msg = '  {0:8}'.format(_("steal:"))
+            msg = '  {0:8}'.format('steal:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='steal', option='optional')))
             msg = '{0:>5}%'.format(self.stats['steal'])
             ret.append(self.curse_add_line(

@@ -160,13 +160,15 @@ class GlancesClientBrowser(object):
 
                 # Connection can take time
                 # Display a popup
-                self.screen.display_popup(_("Connect to %s:%s" % (v['name'], v['port'])), duration=1)
+                self.screen.display_popup(
+                    'Connect to {0}:{1}'.format(v['name'], v['port']), duration=1)
 
                 # A password is needed to access to the server's stats
                 if self.get_servers_list()[self.screen.active_server]['password'] is None:
                     from hashlib import sha256
                     # Display a popup to enter password
-                    clear_password = self.screen.display_popup(_("Password needed for %s: " % v['name']), is_input=True)
+                    clear_password = self.screen.display_popup(
+                        'Password needed for {0}: '.format(v['name']), is_input=True)
                     # Hash with SHA256
                     encoded_password = sha256(clear_password.encode('utf-8')).hexdigest()
                     # Store the password for the selected server
@@ -188,7 +190,9 @@ class GlancesClientBrowser(object):
 
                 # Test if client and server are in the same major version
                 if not client.login():
-                    self.screen.display_popup(_("Sorry, cannot connect to %s (see log file for additional information)" % v['name']))
+                    self.screen.display_popup(
+                        "Sorry, cannot connect to '{0}'\n"
+                        "See 'glances.log' for more details".format(v['name']))
 
                     # Set the ONLINE status for the selected server
                     self.set_in_selected('status', 'OFFLINE')

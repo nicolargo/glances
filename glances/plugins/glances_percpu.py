@@ -99,13 +99,13 @@ class Plugin(GlancesPlugin):
 
         # No per CPU stat ? Exit...
         if not self.stats:
-            msg = _("PER CPU not available")
+            msg = 'PER CPU not available'
             ret.append(self.curse_add_line(msg, "TITLE"))
             return ret
 
         # Build the string message
         # Header
-        msg = '{0:8}'.format(_("PER CPU"))
+        msg = '{0:8}'.format('PER CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Total per-CPU usage
@@ -115,7 +115,7 @@ class Plugin(GlancesPlugin):
 
         # User per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("user:"))
+        msg = '{0:8}'.format('user:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['user'])
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
 
         # System per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("system:"))
+        msg = '{0:8}'.format('system:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['system'])
@@ -131,7 +131,7 @@ class Plugin(GlancesPlugin):
 
         # Idle per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("idle:"))
+        msg = '{0:8}'.format('idle:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['idle'])

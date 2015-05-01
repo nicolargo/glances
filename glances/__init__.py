@@ -25,8 +25,6 @@ __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
 # Import system lib
-import gettext
-import locale
 import platform
 import signal
 import sys
@@ -40,7 +38,6 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir
 from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
 
@@ -96,18 +93,6 @@ def main():
         platform.python_implementation(),
         platform.python_version(),
         __psutil_version))
-
-    # Setup translations
-    try:
-        locale.setlocale(locale.LC_ALL, '')
-    except locale.Error:
-        # Issue #517
-        # Setting LC_ALL to '' should not generate an error unless LC_ALL is not
-        # defined in the user environment, which can be the case when used via SSH.
-        # So simply skip this error, as python will use the C locale by default.
-        logger.warning("No locale LC_ALL variable found. Use the default C locale.")
-        pass
-    gettext.install(gettext_domain, locale_dir)
 
     # Share global var
     global core, standalone, client, server, webserver
@@ -175,7 +160,7 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
+        print('Glances server is running on {0}:{1}'.format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if args.password != "":

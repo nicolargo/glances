@@ -211,14 +211,14 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:{width}}'.format(_("FILE SYS"), width=fsname_max_width)
+        msg = '{0:{width}}'.format('FILE SYS', width=fsname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.fs_free_space:
-            msg = '{0:>7}'.format(_("Free"))
+            msg = '{0:>7}'.format('Free')
         else:
-            msg = '{0:>7}'.format(_("Used"))
+            msg = '{0:>7}'.format('Used')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format(_("Total"))
+        msg = '{0:>7}'.format('Total')
         ret.append(self.curse_add_line(msg))
 
         # Disk list (sorted by name)

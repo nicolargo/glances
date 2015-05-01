@@ -106,9 +106,9 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Build the string message
-        msg = _(' - ')
+        msg = ' - '
         ret.append(self.curse_add_line(msg))
-        msg = _('IP ')
+        msg = 'IP '
         ret.append(self.curse_add_line(msg, 'TITLE'))
         msg = '{0:}/{1}'.format(self.stats['address'], self.stats['mask_cidr'])
         ret.append(self.curse_add_line(msg))

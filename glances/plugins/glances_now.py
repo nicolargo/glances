@@ -44,7 +44,7 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
-        self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
+        self.stats = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         return self.stats
 

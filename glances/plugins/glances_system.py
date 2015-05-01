@@ -169,13 +169,13 @@ class Plugin(GlancesPlugin):
         if args.client:
             # Client mode
             if args.cs_status.lower() == "connected":
-                msg = _("Connected to ")
+                msg = 'Connected to '
                 ret.append(self.curse_add_line(msg, 'OK'))
             elif args.cs_status.lower() == "snmp":
-                msg = _("SNMP from ")
+                msg = 'SNMP from '
                 ret.append(self.curse_add_line(msg, 'OK'))
             elif args.cs_status.lower() == "disconnected":
-                msg = _("Disconnected from ")
+                msg = 'Disconnected from '
                 ret.append(self.curse_add_line(msg, 'CRITICAL'))
 
         # Hostname is mandatory
