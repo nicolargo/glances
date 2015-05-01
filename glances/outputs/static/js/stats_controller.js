@@ -5,7 +5,17 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
     $scope.pluginLimits = [];
     $scope.sorter = {
         column: "cpu_percent",
-        auto: true
+        auto: true,
+        isReverseColumn: function(column) {
+            return !(column == 'username' || column == 'name');
+        },
+        getColumnLabel: function(column) {
+            if (_.isEqual(column, ['io_read', 'io_write'])) {
+                return 'io_counters';
+            } else {
+                return column;
+            }
+        }
     };
     $scope.help_screen = false;
     $scope.show = {
@@ -194,40 +204,26 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
 
     $scope.onKeyDown = function($event) {
         if ($event.keyCode == keycodes.a) { // a  Sort processes automatically
-            $scope.sorter = {
-                column: "cpu_percent",
-                auto: true
-            };
+            $scope.sorter.column = "cpu_percent";
+            $scope.sorter.auto = true;
         } else if ($event.keyCode == keycodes.c) {//c  Sort processes by CPU%
-            $scope.sorter = {
-                column: "cpu_percent",
-                auto: false
-            };
+            $scope.sorter.column =  "cpu_percent";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%
-            $scope.sorter = {
-                column: "memory_percent",
-                auto: false
-            };
+            $scope.sorter.column = "memory_percent";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.p) {//p  Sort processes by name
-            $scope.sorter = {
-                column: "name",
-                auto: false
-            };
+            $scope.sorter.column = "name";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
-            $scope.sorter = {
-                column: ['io_read', 'io_write'],
-                auto: false
-            };
+            $scope.sorter.column = ['io_read', 'io_write'];
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.t) {//t  Sort processes by CPU times
-            $scope.sorter = {
-                column: "timemillis",
-                auto: false
-            };
+            $scope.sorter.column = "timemillis";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.u) {//t  Sort processes by user
-            $scope.sorter = {
-                column: "username",
-                auto: false
-            };
+            $scope.sorter.column = "username";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
             $scope.show_hide('diskio')
         } else if ($event.keyCode == keycodes.f) {//f  Show/hide filesystem stats
@@ -286,10 +282,18 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 return scope.sorter.column;
             }, function(newValue, oldValue) {
 
-                if (attrs.column === newValue) {
-                    element.addClass('sort');
+                if (angular.isArray(newValue)) {
+                    if (newValue.indexOf(attrs.column) !== -1) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
                 } else {
-                    element.removeClass('sort');
+                    if (attrs.column === newValue) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
                 }
 
             });

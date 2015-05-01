@@ -3,4 +3,4 @@
 <span>{{result["processcount"].running}} run,</span>
 <span>{{result["processcount"].sleeping}} slp,</span>
 <span>{{result["processcount"].stopped}} oth</span>
-<span> sorted {{ sorter.auto ? 'automatically' : '' }} by {{ sorter.column }}, flat view</span>
+<span> sorted {{ sorter.auto ? 'automatically' : '' }} by {{ sorter.getColumnLabel(sorter.column) }}, flat view</span>
