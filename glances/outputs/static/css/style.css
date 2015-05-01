@@ -26,20 +26,15 @@ body {
     padding-bottom: 20px;
 }
 
-.underline{
+.underline {
     text-decoration: underline
 }
-.bold{
+.bold {
     font-weight: bold;
 }
-.sort{
+.sort {
     font-weight: bold;
-}
-.sort_asc:after {
-    content: '\25B2'
-}
-.sort_desc:after {
-    content: '\25BC'
+    color: white;
 }
 .text-right {
     text-align: right;
@@ -100,7 +95,6 @@ body {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;
 }
-
 /* Loading page */
 
 #loading-page .glances-logo {

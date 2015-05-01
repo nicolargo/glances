@@ -1,12 +1,13 @@
-glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', function($scope, $http, $interval, $q, $routeParams) {
+glancesApp.controller('statsController', function($scope, $http, $interval, $q, $routeParams) {
 
-    $scope.limitSuffix = ['critical', 'careful', 'warning']
-    $scope.refreshTime = 3
-    $scope.pluginLimits = []
-    $scope.sortColumn = ''
-    $scope.sortOrderAsc = false
-    $scope.help_screen = false
-    $scope.lastSortColumn = '#column_' + $scope.sortColumn
+    $scope.limitSuffix = ['critical', 'careful', 'warning'];
+    $scope.refreshTime = 3;
+    $scope.pluginLimits = [];
+    $scope.sorter = {
+        column: "cpu_percent",
+        auto: true
+    };
+    $scope.help_screen = false;
     $scope.show = {
         'diskio' : true,
         'network' : true,
@@ -25,7 +26,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'network_io_cumulative':false,
         'filesystem_freespace':false,
         'network_by_bytes':true
-    }
+    };
 
     $scope.init_refresh_time = function() {
         if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
@@ -35,7 +36,6 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             }
         }
     }
-
 
     $scope.init_limits = function() {
         $scope.plugins_limits();
@@ -55,32 +55,6 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         }
     }
 
-    $scope.sort_by = function(column) {
-        if (column == undefined) {
-            // sort automatically
-            $scope.sortColumn = undefined
-            return
-        }
-        if (column == 'name' && !$scope.show.short_process_name) {
-            column = 'cmdline'
-        }
-        angular.element(document.querySelector($scope.lastSortColumn)).removeClass('sort sort_asc sort_desc')
-
-        if ($scope.sortColumn == column) {
-            $scope.sortOrderAsc = !$scope.sortOrderAsc
-            if ($scope.sortOrderAsc) {
-                angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_asc')
-            } else {
-                angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_desc')
-            }
-        } else {
-            $scope.sortColumn = column
-            $scope.sortOrderAsc = false
-            $scope.lastSortColumn = '#column_' + $scope.sortColumn
-            angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_desc')
-        }
-    }
-
     $scope.plugins_limits = function() {
         $http.get('/api/2/all/limits').success(function(response, status, headers, config) {
                 $scope.limits = response
@@ -97,7 +71,6 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     $scope.refreshData = function() {
         canceler = $q.defer();
         $http.get('/api/2/all', {timeout: canceler.promise}).success(function(response, status, headers, config) {
-            //alert('success');
 
             function timemillis(array) {
                 var sum = 0.0
@@ -170,10 +143,8 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
                 var limit = $scope.pluginLimits[pluginName][limitName]
 
                 if (value >= limit) {
-                    //console.log("value = " + value + " - limit = " + limit)
                     var pos = limitName.lastIndexOf("_")
                     var className = limitName.substring(pos + 1)
-                    //console.log("className = " + className)
                     if (num == 1) {
                         return className + '_log'
                     }
@@ -222,19 +193,41 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
     });
 
     $scope.onKeyDown = function($event) {
-        console.log($event)
         if ($event.keyCode == keycodes.a) { // a  Sort processes automatically
-            $scope.sort_by()
+            $scope.sorter = {
+                column: "cpu_percent",
+                auto: true
+            };
         } else if ($event.keyCode == keycodes.c) {//c  Sort processes by CPU%
-            $scope.sort_by('cpu_percent')
+            $scope.sorter = {
+                column: "cpu_percent",
+                auto: false
+            };
         } else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%
-            $scope.sort_by('memory_percent')
+            $scope.sorter = {
+                column: "memory_percent",
+                auto: false
+            };
         } else if ($event.keyCode == keycodes.p) {//p  Sort processes by name
-            $scope.sort_by('name')
+            $scope.sorter = {
+                column: "name",
+                auto: false
+            };
         } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
-            $scope.sort_by('io_read')
+            $scope.sorter = {
+                column: ['io_read', 'io_write'],
+                auto: false
+            };
         } else if ($event.keyCode == keycodes.t) {//t  Sort processes by CPU times
-            $scope.sort_by('timemillis')
+            $scope.sorter = {
+                column: "timemillis",
+                auto: false
+            };
+        } else if ($event.keyCode == keycodes.u) {//t  Sort processes by user
+            $scope.sorter = {
+                column: "username",
+                auto: false
+            };
         } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
             $scope.show_hide('diskio')
         } else if ($event.keyCode == keycodes.f) {//f  Show/hide filesystem stats
@@ -279,4 +272,34 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             // not available
         }
     }
-} ]);
+})
+
+.directive("sortableTh", function() {
+    return {
+        restrict: 'A',
+        scope: {
+            sorter: '='
+        },
+        link: function (scope, element, attrs) {
+
+            scope.$watch(function() {
+                return scope.sorter.column;
+            }, function(newValue, oldValue) {
+
+                if (attrs.column === newValue) {
+                    element.addClass('sort');
+                } else {
+                    element.removeClass('sort');
+                }
+
+            });
+
+            element.on('click', function() {
+
+                scope.sorter.column = attrs.column;
+
+                scope.$apply();
+            });
+        }
+    };
+});
