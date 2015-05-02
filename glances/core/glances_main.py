@@ -27,7 +27,7 @@ import tempfile
 
 # Import Glances libs
 from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, is_windows, psutil_version, version
+from glances.core.glances_globals import appname, is_linux, is_windows, psutil_version, version
 from glances.core.glances_logging import logger
 
 
@@ -183,8 +183,9 @@ Start the client browser (browser mode):\n\
         if not is_windows:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
-        parser.add_argument('--tree', action='store_true', default=False,
-                            dest='process_tree', help='display processes as a tree')
+        if is_linux:
+            parser.add_argument('--tree', action='store_true', default=False,
+                                dest='process_tree', help='display processes as a tree')
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help='display network rate in byte per second')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
