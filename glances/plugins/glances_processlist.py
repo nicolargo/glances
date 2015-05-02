@@ -411,7 +411,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>6}'.format('IOW/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = ' {0:8}'.format('Command')
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
         if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(
