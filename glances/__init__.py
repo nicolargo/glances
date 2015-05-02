@@ -28,6 +28,7 @@ __license__ = 'LGPL'
 import platform
 import signal
 import sys
+import locale
 
 # Import psutil
 try:
@@ -40,6 +41,17 @@ except ImportError:
 # Note: others Glances libs will be imported optionally
 from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
+
+# Setup translations
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except locale.Error:
+    # Issue #517
+    # Setting LC_ALL to '' should not generate an error unless LC_ALL is not
+    # defined in the user environment, which can be the case when used via SSH.
+    # So simply skip this error, as python will use the C locale by default.
+    logger.warning("No locale LC_ALL variable found. Use the default C locale.")
+    pass
 
 # Check Python version
 if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
