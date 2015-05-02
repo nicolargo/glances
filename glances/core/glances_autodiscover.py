@@ -22,11 +22,7 @@
 # Import system libs
 import socket
 import sys
-try:
-    import netifaces
-    netifaces_tag = True
-except ImportError:
-    netifaces_tag = False
+
 try:
     from zeroconf import (
         __version__ as __zeroconf_version,
@@ -42,13 +38,13 @@ except ImportError:
 from glances.core.glances_globals import appname
 from glances.core.glances_logging import logger
 
-# Zeroconf 0.16 or higher is needed
+# Zeroconf 0.17 or higher is needed
 if zeroconf_tag:
-    zeroconf_min_version = (0, 16, 0)
+    zeroconf_min_version = (0, 17, 0)
     zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
     logger.debug("Zeroconf version {0} detected.".format(__zeroconf_version))
     if zeroconf_version < zeroconf_min_version:
-        logger.critical("Please install zeroconf 0.16 or higher.")
+        logger.critical("Please install zeroconf 0.17 or higher.")
         sys.exit(1)
 
 # Global var
@@ -197,20 +193,15 @@ class GlancesAutoDiscoverClient(object):
             except socket.error as e:
                 logger.error("Cannot start zeroconf: {0}".format(e))
 
-            if netifaces_tag:
+            try:
                 # -B @ overwrite the dynamic IPv4 choice
                 if zeroconf_bind_address == '0.0.0.0':
                     zeroconf_bind_address = self.find_active_ip_address()
-            else:
-                logger.error("Couldn't find the active IP address: netifaces library not found.")
+            except KeyError:
+                # Issue #528 (no network interface available)
+                pass
 
-            # Correct issue #528 (no network interface available)
-            if zeroconf_bind_address is None:
-                zeroconf_bind_address == '0.0.0.0'
-
-            logger.info("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
             print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
-
             self.info = ServiceInfo(
                 zeroconf_type, '{0}:{1}.{2}'.format(hostname, args.port, zeroconf_type),
                 address=socket.inet_aton(zeroconf_bind_address), port=args.port,
@@ -219,15 +210,14 @@ class GlancesAutoDiscoverClient(object):
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
 
-    def find_active_ip_address(self):
+    @staticmethod
+    def find_active_ip_address():
         """Try to find the active IP addresses."""
-        try:
-            # Interface of the default gateway
-            gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
-            # IP address for the interface
-            return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
-        except Exception:
-            return None
+        import netifaces
+        # Interface of the default gateway
+        gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
+        # IP address for the interface
+        return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
 
     def close(self):
         if zeroconf_tag:

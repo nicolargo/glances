@@ -128,6 +128,7 @@ class _GlancesCurses(object):
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
             self.nice_color = curses.color_pair(9) | A_BOLD
+            self.cpu_time_color = curses.color_pair(9) | A_BOLD
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
@@ -141,6 +142,7 @@ class _GlancesCurses(object):
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.nice_color = A_BOLD
+            self.cpu_time_color = A_BOLD
             self.ifCAREFUL_color = curses.A_UNDERLINE
             self.ifWARNING_color = A_BOLD
             self.ifCRITICAL_color = curses.A_REVERSE
@@ -162,6 +164,7 @@ class _GlancesCurses(object):
             'PROCESS': self.default_color2,
             'STATUS': self.default_color2,
             'NICE': self.nice_color,
+            'CPU_TIME': self.cpu_time_color,
             'CAREFUL': self.ifCAREFUL_color2,
             'WARNING': self.ifWARNING_color2,
             'CRITICAL': self.ifCRITICAL_color2,

@@ -1,70 +1,23 @@
-glancesApp.config([ '$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-    $routeProvider.when('/', {
-        templateUrl : 'stats.html',
-        controller : 'statsController'
-    }).when('/:refresh_time', {
-        templateUrl : 'stats.html',
-        controller : 'statsController'
-    });
-    
-    $locationProvider.html5Mode(true);
-} ]);
+glancesApp.controller('statsController', function($scope, $http, $interval, $q, $routeParams) {
 
-glancesApp.filter('min_size', function() {
-    return function(input) {
-        var max = 8;
-        if (input.length > max) {
-            return "_" + input.substring(input.length - max)
+    $scope.limitSuffix = ['critical', 'careful', 'warning'];
+    $scope.refreshTime = 3;
+    $scope.pluginLimits = [];
+    $scope.sorter = {
+        column: "cpu_percent",
+        auto: true,
+        isReverseColumn: function(column) {
+            return !(column == 'username' || column == 'name');
+        },
+        getColumnLabel: function(column) {
+            if (_.isEqual(column, ['io_read', 'io_write'])) {
+                return 'io_counters';
+            } else {
+                return column;
+            }
         }
-        return input
     };
-});
-glancesApp.filter('exclamation', function() {
-    return function(input) {
-        if (input == undefined || input =='') {
-            return '?'
-        }
-        return input
-    };
-});
-
-
-/** 
- * Fork from https://gist.github.com/thomseddon/3511330 
- * &nbsp; => \u00A0
- * WARNING : kilobyte (kB) != kibibyte (KiB) (more info here : http://en.wikipedia.org/wiki/Byte )
- **/
-glancesApp.filter('bytes', function() {
-    return function (bytes, precision) {
-        if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0){
-            return '0B';
-        }
-        var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'],
-        number = Math.floor(Math.log(bytes) / Math.log(1000));
-        return (bytes / Math.pow(1000, Math.floor(number))).toFixed(precision) + units[number];
-    }
-});
-glancesApp.filter('bits', function() {
-    return function (bits, precision) {
-        if (isNaN(parseFloat(bits)) || !isFinite(bits) || bits == 0){
-            return '0b';
-        }
-        var units = ['b', 'kb', 'Mb', 'Gb', 'Tb', 'Pb'],
-        number = Math.floor(Math.log(bits) / Math.log(1000));
-        return (bits / Math.pow(1000, Math.floor(number))).toFixed(precision) + units[number];
-    }
-});
-
-
-glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q', '$routeParams', function($scope, $http, $interval, $q, $routeParams) {
-
-    $scope.limitSuffix = ['critical', 'careful', 'warning']
-    $scope.refreshTime = 3
-    $scope.pluginLimits = []
-    $scope.sortColumn = ''
-    $scope.sortOrderAsc = false
-    $scope.help_screen = false
-    $scope.lastSortColumn = '#column_' + $scope.sortColumn 
+    $scope.help_screen = false;
     $scope.show = {
         'diskio' : true,
         'network' : true,
@@ -83,7 +36,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         'network_io_cumulative':false,
         'filesystem_freespace':false,
         'network_by_bytes':true
-    }
+    };
 
     $scope.init_refresh_time = function() {
         if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
@@ -93,18 +46,17 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             }
         }
     }
-    
-    
+
     $scope.init_limits = function() {
         $scope.plugins_limits();
     }
-    
+
     $scope.init_help = function() {
         $http.get('/api/2/help').success(function(response, status, headers, config) {
             $scope.help = response
         });
     }
-    
+
     $scope.show_hide = function(bloc) {
         if(bloc == 'help') {
             $scope.help_screen = !$scope.help_screen
@@ -112,33 +64,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             $scope.show[bloc] = !$scope.show[bloc]
         }
     }
-    
-    $scope.sort_by = function(column) {
-        if (column == undefined) {
-            // sort automatically
-            $scope.sortColumn = undefined
-            return
-        }
-        if (column == 'name' && !$scope.show.short_process_name) {
-            column = 'cmdline'
-        }
-        angular.element(document.querySelector($scope.lastSortColumn)).removeClass('sort sort_asc sort_desc')
-        
-        if ($scope.sortColumn == column) {
-            $scope.sortOrderAsc = !$scope.sortOrderAsc
-            if ($scope.sortOrderAsc) {
-                angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_asc')
-            } else {
-                angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_desc')
-            }
-        } else {
-            $scope.sortColumn = column
-            $scope.sortOrderAsc = false
-            $scope.lastSortColumn = '#column_' + $scope.sortColumn 
-            angular.element(document.querySelector($scope.lastSortColumn)).addClass('sort sort_desc')
-        }
-    }
-    
+
     $scope.plugins_limits = function() {
         $http.get('/api/2/all/limits').success(function(response, status, headers, config) {
                 $scope.limits = response
@@ -146,17 +72,16 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             console.log('error : ' + response+ status + headers + config);
         });
     }
-    
+
     var canceler = undefined;
-    
+
     /**
      * Refresh all the data of the view
      */
     $scope.refreshData = function() {
         canceler = $q.defer();
         $http.get('/api/2/all', {timeout: canceler.promise}).success(function(response, status, headers, config) {
-            //alert('success');
-            
+
             function timemillis(array) {
                 var sum = 0.0
                 for (var i = 0; i < array.length; i++) {
@@ -188,7 +113,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
                 var month = leftpad(d.getMonth() + 1) // JANUARY = 0
                 var day = leftpad(d.getDate())
                 return year + "-" + month + "-" + day + " " + datetimeformat(input)
-                
+
             }
             function datetimeformat(input) {
                 var millis = input * 1000.0;
@@ -198,7 +123,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
                 var seconds = leftpad(d.getUTCSeconds())
                 return hour + ":" + minutes + ":" + seconds
             }
-        
+
             for (var i = 0; i < response['processlist'].length; i++) {
                 var process = response['processlist'][i]
                 process.memvirt = process.memory_info[1]
@@ -220,18 +145,16 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             canceler.resolve()
         });
     }
-        
+
     $scope.getClass = function(pluginName, limitNamePrefix, value, num) {
         if ($scope.pluginLimits != undefined && $scope.pluginLimits[pluginName] != undefined) {
             for (var i = 0; i < $scope.limitSuffix.length; i++) {
                 var limitName = limitNamePrefix + $scope.limitSuffix[i]
                 var limit = $scope.pluginLimits[pluginName][limitName]
-                
+
                 if (value >= limit) {
-                    //console.log("value = " + value + " - limit = " + limit)
                     var pos = limitName.lastIndexOf("_")
                     var className = limitName.substring(pos + 1)
-                    //console.log("className = " + className)
                     if (num == 1) {
                         return className + '_log'
                     }
@@ -244,11 +167,11 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
         }
         return "ok";
     }
-    
+
     $scope.init_refresh_time();
     $scope.init_limits();
     $scope.init_help();
-    
+
     var stop;
     $scope.configure_refresh = function () {
         if (!angular.isDefined(stop)) {
@@ -258,7 +181,7 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             }, $scope.refreshTime * 1000); // in milliseconds
         }
     }
-    
+
     $scope.$watch(
             function() { return $scope.refreshTime; },
             function(newValue, oldValue) {
@@ -273,26 +196,34 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             stop = undefined;
         }
     };
-      
+
     $scope.$on('$destroy', function() {
         // Make sure that the interval is destroyed too
         $scope.stop_refresh();
     });
 
     $scope.onKeyDown = function($event) {
-        console.log($event)
-        if ($event.keyCode == keycodes.a) { // a  Sort processes automatically 
-            $scope.sort_by()
+        if ($event.keyCode == keycodes.a) { // a  Sort processes automatically
+            $scope.sorter.column = "cpu_percent";
+            $scope.sorter.auto = true;
         } else if ($event.keyCode == keycodes.c) {//c  Sort processes by CPU%
-            $scope.sort_by('cpu_percent')
-        } else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%  
-            $scope.sort_by('memory_percent')
-        } else if ($event.keyCode == keycodes.p) {//p  Sort processes by name  
-            $scope.sort_by('name')
+            $scope.sorter.column =  "cpu_percent";
+            $scope.sorter.auto = false;
+        } else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%
+            $scope.sorter.column = "memory_percent";
+            $scope.sorter.auto = false;
+        } else if ($event.keyCode == keycodes.p) {//p  Sort processes by name
+            $scope.sorter.column = "name";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
-            $scope.sort_by('io_read')
+            $scope.sorter.column = ['io_read', 'io_write'];
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.t) {//t  Sort processes by CPU times
-            $scope.sort_by('timemillis')
+            $scope.sorter.column = "timemillis";
+            $scope.sorter.auto = false;
+        } else if ($event.keyCode == keycodes.u) {//t  Sort processes by user
+            $scope.sorter.column = "username";
+            $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
             $scope.show_hide('diskio')
         } else if ($event.keyCode == keycodes.f) {//f  Show/hide filesystem stats
@@ -337,4 +268,4 @@ glancesApp.controller('statsController', [ '$scope', '$http', '$interval', '$q',
             // not available
         }
     }
-} ]);
+});
