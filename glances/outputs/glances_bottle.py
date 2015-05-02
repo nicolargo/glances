@@ -160,9 +160,28 @@ class GlancesBottle(object):
     
     def _api_plugins(self):
         """
-        Glances API RESTFul implementation
-        Return the plugin list
-        or 404 error
+        @api {get} /api/2/pluginslist Get plugins list
+        @apiVersion 2.0
+        @apiName pluginslist
+        @apiGroup plugin
+
+        @apiSuccess {String[]} Plugins list.
+
+        @apiSuccessExample Success-Response:
+            HTTP/1.1 200 OK
+            [
+               "load",
+               "help",
+               "ip",
+               "memswap",
+               "processlist",
+               ...
+            ]
+
+         @apiError Cannot get plugin list.
+
+         @apiErrorExample Error-Response:
+            HTTP/1.1 404 Not Found
         """
         response.content_type = 'application/json'
 
