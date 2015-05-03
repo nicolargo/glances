@@ -484,17 +484,17 @@ class GlancesPlugin(object):
     def get_conf_value(self, value, header="", plugin_name=None):
         """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
         if plugin_name is None:
+            # If not default use the current plugin name
             plugin_name = self.plugin_name
-        if header == "":
-            try:
-                return self._limits[plugin_name + '_' + value]
-            except KeyError:
-                return []
-        else:
-            try:
-                return self._limits[plugin_name + '_' + header + '_' + value]
-            except KeyError:
-                return []
+
+        if header != "":
+            # Add the header
+            plugin_name = plugin_name + '_' + header
+
+        try:
+            return self._limits[plugin_name + '_' + value]
+        except KeyError:
+            return []
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""

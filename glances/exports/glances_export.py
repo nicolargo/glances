@@ -78,19 +78,20 @@ class GlancesExport(object):
 
         # Get the stats
         all_stats = stats.getAll()
+        all_limits = stats.getAllLimits()
         plugins = stats.getAllPlugins()
 
         # Loop over available plugins
         for i, plugin in enumerate(plugins):
             if plugin in self.plugins_to_export():
                 if type(all_stats[i]) is list:
-                    for item in all_stats[i]:
+                    for item in (all_stats[i] + all_limits[i]):
                         export_names = list(map(lambda x: item[item['key']] + '.' + x, item.keys()))
                         export_values = list(item.values())
                         self.export(plugin, export_names, export_values)
                 elif type(all_stats[i]) is dict:
-                    export_names = list(all_stats[i].keys())
-                    export_values = list(all_stats[i].values())
+                    export_names = list(all_stats[i].keys()) + list(all_limits[i].keys())
+                    export_values = list(all_stats[i].values()) + list(all_limits[i].values())
                     self.export(plugin, export_names, export_values)
 
         return True
