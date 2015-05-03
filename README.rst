@@ -45,6 +45,7 @@ Optional dependencies:
 - ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
+- ``matplotlib`` (for graphical/chart support)
 
 Installation
 ============
