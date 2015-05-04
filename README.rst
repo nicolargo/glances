@@ -13,7 +13,7 @@ Glances - An eye on your system
 .. image:: https://pypip.in/d/Glances/badge.png
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
-
+        
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 

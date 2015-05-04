@@ -16,19 +16,20 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Web interface class."""
+# Import Glances libs
+# Import mandatory Bottle lib
 
 import json
 import os
 import sys
 
-# Import Glances libs
+from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
 
-# Import mandatory Bottle lib
+
 try:
-    from bottle import Bottle, template, static_file, TEMPLATE_PATH, abort, response, request
+    from bottle import Bottle, static_file, abort, response, request
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -53,9 +54,6 @@ class GlancesBottle(object):
         # Define routes
         self._route()
 
-        # Update the template path (glances/outputs/bottle)
-        TEMPLATE_PATH.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bottle'))
-
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
@@ -63,10 +61,17 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
+        
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
+        self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
+        self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
+        
+        self._app.route('/<filename:re:.*\.png>', method="GET", callback=self._images)
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
+
         # REST API
+        self._app.route('/api/2/help', method="GET", callback=self._api_help)
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
@@ -105,8 +110,13 @@ class GlancesBottle(object):
         self.stats.update()
 
         # Display
-        return self.display(self.stats, refresh_time=refresh_time)
+        return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
 
+    def _html(self, filename):
+        """Bottle callback for *.html files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'html'))
+    
     def _css(self, filename):
         """Bottle callback for *.css files."""
         # Return the static file
@@ -117,11 +127,37 @@ class GlancesBottle(object):
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
 
+    def _js_map(self, filename):
+        """Bottle callback for *.js.map files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
+
+    def _images(self, filename):
+        """Bottle callback for *.png files."""
+        # Return the static file
+        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'images'))
+    
     def _favicon(self):
         """Bottle callback for favicon."""
         # Return the static file
         return static_file('favicon.ico', root=self.STATIC_PATH)
 
+    def _api_help(self):
+        """
+        Glances API RESTFul implementation
+        Return the help data
+        or 404 error
+        """
+        response.content_type = 'application/json'
+
+        # Update the stat
+        view_data = self.stats.get_plugin("help").get_view_data()
+        try:
+            plist = json.dumps(view_data, sort_keys=True)
+        except Exception as e:
+            abort(404, "Cannot get help view data (%s)" % str(e))
+        return plist    
+    
     def _api_plugins(self):
         """
         @api {get} /api/2/pluginslist Get plugins list
@@ -168,15 +204,24 @@ class GlancesBottle(object):
         """
         response.content_type = 'application/json'
 
-        # Update the stat
-        self.stats.update()
-
-        try:
-            # Get the JSON value of the stat value
-            statval = json.dumps(self.stats.getAllAsDict())
-        except Exception as e:
-            abort(404, "Cannot get stats (%s)" % str(e))
-        return statval
+        if not self.args.debug:
+            # Update the stat
+            self.stats.update()
+    
+            try:
+                # Get the JSON value of the stat ID
+                statval = json.dumps(self.stats.getAllAsDict())
+            except Exception as e:
+                abort(404, "Cannot get stats (%s)" % str(e))
+            return statval
+        else:
+            path = "~/glances/"
+            if is_windows:  
+                path = "D:\\glances\\"
+            filepath = path + "debug.json"
+            
+            f = open(filepath)
+            return f.read()
 
     def _api_all_limits(self):
         """
@@ -327,33 +372,6 @@ class GlancesBottle(object):
             abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
         else:
             return pdict
-
-    def display(self, stats, refresh_time=None):
-        """Display stats on the web page.
-
-        stats: Stats database to display
-        """
-
-        stats = {
-            'system': self.stats.get_plugin('system').get_stats_display(args=self.args),
-            'uptime': self.stats.get_plugin('uptime').get_stats_display(args=self.args),
-            'cpu': self.stats.get_plugin('cpu').get_stats_display(args=self.args),
-            'load': self.stats.get_plugin('load').get_stats_display(args=self.args),
-            'mem': self.stats.get_plugin('mem').get_stats_display(args=self.args),
-            'memswap': self.stats.get_plugin('memswap').get_stats_display(args=self.args),
-            'network': self.stats.get_plugin('network').get_stats_display(args=self.args),
-            'diskio': self.stats.get_plugin('diskio').get_stats_display(args=self.args),
-            'fs': self.stats.get_plugin('fs').get_stats_display(args=self.args),
-            'raid': self.stats.get_plugin('raid').get_stats_display(args=self.args),
-            'sensors': self.stats.get_plugin('sensors').get_stats_display(args=self.args),
-            'alert': self.stats.get_plugin('alert').get_stats_display(args=self.args),
-            'processcount': self.stats.get_plugin('processcount').get_stats_display(args=self.args),
-            'monitor': self.stats.get_plugin('monitor').get_stats_display(args=self.args),
-            'processlist': self.stats.get_plugin('processlist').get_stats_display(args=self.args),
-            'docker': self.stats.get_plugin('docker').get_stats_display(args=self.args)
-        }
-
-        return template('base', refresh_time=refresh_time, stats=stats)
 
 
 class EnableCors(object):

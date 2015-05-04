@@ -1,0 +1,24 @@
+<div class="table">
+    <div class="table-row">
+        <div class="table-cell text-left title">LOAD</div>
+        <div class="table-cell">{{result["load"].cpucore}}-core</div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">1 min:</div>
+        <div class="table-cell">
+            {{result["load"].min1}}
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">5 min:</div>
+        <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min5, 0)">
+            {{result["load"].min5}}
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">15 min:</div>
+        <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min15, 1)">
+            {{result["load"].min15}}
+        </div>
+    </div>
+</div>
