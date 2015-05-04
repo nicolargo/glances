@@ -33,13 +33,13 @@ def get_requires():
 
 setup(
     name='Glances',
-    version='2.4beta',
+    version='2.4RC1',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-2.3.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-2.4RC1.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=get_requires(),
