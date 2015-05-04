@@ -9,7 +9,7 @@ Changes:
 
     * Glances doesn't provide a system-wide configuration file by default anymore.
       Just copy it in any of the supported locations. See glances-doc.html for
-      more information.
+      more information. (issue #541)
     * The default key bindings have been changed to:
       - 'u': sort processes by USER
       - 'U': show cumulative network I/O
@@ -17,6 +17,7 @@ Changes:
 
 Enhancements and new features:
 
+    * The Web user interface is now based on AngularJS (issue #473, #508, #468)
     * Implement a 'quick look' plugin (issue #505)
     * Add sort processes by USER (issue #531)
     * Add a new IP information plugin (issue #509)
@@ -34,7 +35,8 @@ Bugs corrected:
     * Duplicated --enable-history in the doc (issue #511)
     * Sensors title is displayed if no sensors are detected (issue #510)
     * Server mode issue when no network interface is available (issue #528)
-    * DEBUG mode activated by default with Python 2.6 (issue #512) 
+    * DEBUG mode activated by default with Python 2.6 (issue #512)
+    * Glances display of time trims the hours showing only minutes and seconds (issue #543)
 
 Version 2.3
 ===========

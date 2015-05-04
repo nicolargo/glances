@@ -6,7 +6,7 @@ This manual describes *Glances* version 2.4.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-April 2015
+May 2015
 
 .. contents:: Table of Contents
 

@@ -8,6 +8,8 @@ include glances/outputs/static/*.ico
 include glances/outputs/static/css/*.css
 include glances/outputs/static/js/*.js
 include glances/outputs/static/js/*.js.map
+include glances/outputs/static/js/vendors/*.js
+include glances/outputs/static/js/vendors/*.js.map
 include man/glances.1
 recursive-include docs images/*.png glances-doc.html
 recursive-include glances *.py
