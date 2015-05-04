@@ -185,6 +185,8 @@ class Plugin(GlancesPlugin):
             # Not available
             pass
 
+        logger.info(self.stats)
+
         return self.stats
 
     def get_docker_cpu_old(self, container_id):
