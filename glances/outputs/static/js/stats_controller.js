@@ -1,4 +1,4 @@
-glancesApp.controller('statsController', function($scope, $http, $interval, $q, $routeParams) {
+glancesApp.controller('statsController', function($scope, $http, $interval, $q, $routeParams, $filter) {
 
     $scope.limitSuffix = ['critical', 'careful', 'warning'];
     $scope.refreshTime = 3;
@@ -130,8 +130,23 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 process.memres  = process.memory_info[0]
                 process.timeformatted = timedelta(process.cpu_times)
                 process.timemillis = timemillis(process.cpu_times)
-                process.io_read  = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update
-                process.io_write = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update
+
+                process.io_read = '?';
+                process.io_write = '?';
+
+                if (process.io_counters) {
+                  process.io_read  = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update;
+
+                  if (process.io_read != 0) {
+                    process.io_read = $filter('bytes')(process.io_read);
+                  }
+
+                  process.io_write = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update;
+
+                  if (process.io_write != 0) {
+                    process.io_write = $filter('bytes')(process.io_write);
+                  }
+                }
             }
             for (var i = 0; i < response['alert'].length; i++) {
                 var alert = response['alert'][i]

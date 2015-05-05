@@ -23,8 +23,8 @@
         <div class="table-cell">{{process.nice | exclamation}}</div>
         <div class="table-cell status">{{process.status}}</div>
         <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.io_read | bytes}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.io_write | bytes}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.io_read}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.io_write}}</div>
         <div class="table-cell text-left" ng-if="show.short_process_name">{{process.name}}</div>
         <div class="table-cell text-left" ng-if="!show.short_process_name">{{process.cmdline}}</div>
     </div>
