@@ -16,29 +16,63 @@ glancesApp.filter('exclamation', function() {
     };
 });
 
-/**
- * Fork from https://gist.github.com/thomseddon/3511330
- * &nbsp; => \u00A0
- * WARNING : kilobyte (kB) != kibibyte (KiB) (more info here : http://en.wikipedia.org/wiki/Byte )
- **/
 glancesApp.filter('bytes', function() {
-    return function (bytes, precision) {
+    return function (bytes, low_precision) {
+        low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0){
-            return '0B';
+            return '0';
         }
-        var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'],
-        number = Math.floor(Math.log(bytes) / Math.log(1000));
-        return (bytes / Math.pow(1000, Math.floor(number))).toFixed(precision) + units[number];
+
+        var symbols = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+        var prefix = {
+          'Y': 1208925819614629174706176,
+          'Z': 1180591620717411303424,
+          'E': 1152921504606846976,
+          'P': 1125899906842624,
+          'T': 1099511627776,
+          'G': 1073741824,
+          'M': 1048576,
+          'K': 1024
+        };
+
+        var reverseSymbols = _(symbols).reverse().value();
+        for (var i = 0; i < reverseSymbols.length; i++) {
+          var symbol = reverseSymbols[i];
+          var value = bytes / prefix[symbol];
+
+          if(value > 1) {
+            var decimal_precision = 0;
+
+            if(value < 10) {
+              decimal_precision = 2;
+            }
+            else if(value < 100) {
+              decimal_precision = 1;
+            }
+
+            if(low_precision) {
+              if(symbol == 'MK') {
+                decimal_precision = 0;
+              }
+              else {
+                decimal_precision = _.min([1, decimal_precision]);
+              }
+            }
+            else if(symbol == 'K') {
+              decimal_precision = 0;
+            }
+
+            return parseFloat(value).toFixed(decimal_precision) + symbol;
+          }
+        }
+
+        return bytes;
     }
 });
 
-glancesApp.filter('bits', function() {
-    return function (bits, precision) {
-        if (isNaN(parseFloat(bits)) || !isFinite(bits) || bits == 0){
-            return '0b';
-        }
-        var units = ['b', 'kb', 'Mb', 'Gb', 'Tb', 'Pb'],
-        number = Math.floor(Math.log(bits) / Math.log(1000));
-        return (bits / Math.pow(1000, Math.floor(number))).toFixed(precision) + units[number];
+glancesApp.filter('bits', function($filter) {
+    return function (bits, low_precision) {
+      bits = Math.round(bits) * 8;
+      return $filter('bytes')(bits, low_precision) + 'b';
     }
 });

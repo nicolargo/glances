@@ -16,8 +16,8 @@
     <div class="table-row" ng-repeat="process in result['processlist'] | orderBy:sorter.column:sorter.isReverseColumn(sorter.column)">
         <div class="table-cell" ng-class="getClass('processlist', 'processlist_cpu_', process.cpu_percent, 0)">{{process.cpu_percent | number:1}}</div>
         <div class="table-cell" ng-class="getClass('processlist', 'processlist_mem_', process.memory_percent, 0)">{{process.memory_percent | number:1}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes:1}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes:1}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes}}</div>
         <div class="table-cell">{{process.pid}}</div>
         <div class="table-cell text-left">{{process.username}}</div>
         <div class="table-cell">{{process.nice | exclamation}}</div>
