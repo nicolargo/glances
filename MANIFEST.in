@@ -4,12 +4,16 @@ include NEWS
 include README.rst
 include conf/glances.conf
 include glances/outputs/bottle/*.tpl
+include glances/outputs/static/html/*.html
+include glances/outputs/static/html/components/*.html
+include glances/outputs/static/html/plugins/*.html
 include glances/outputs/static/*.ico
 include glances/outputs/static/css/*.css
 include glances/outputs/static/js/*.js
 include glances/outputs/static/js/*.js.map
 include glances/outputs/static/js/vendors/*.js
 include glances/outputs/static/js/vendors/*.js.map
+include glances/outputs/static/images/*.png
 include man/glances.1
 recursive-include docs images/*.png glances-doc.html
 recursive-include glances *.py
