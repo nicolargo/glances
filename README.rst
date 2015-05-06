@@ -20,8 +20,6 @@ Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 **Glances** is a cross-platform curses-based system monitoring tool
 written in Python.
 
-It uses the `psutil`_ library to get information from your system.
-
 .. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
 
 Requirements
@@ -46,6 +44,7 @@ Optional dependencies:
 - ``pystache`` (for the action script feature)
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
 - ``matplotlib`` (for graphical/chart support)
+- ``pika`` (for the RabbitMQ/ActiveMQ export module)
 
 Installation
 ============
@@ -79,7 +78,7 @@ To install, simply use ``pip``:
 
 .. code-block:: console
 
-    pip install Glances
+    pip install glances
 
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
@@ -89,20 +88,20 @@ features:
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache pika
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
-    pip install --upgrade Glances
+    pip install --upgrade glances
 
 If you need to install Glances in a specific user location, use:
 
 .. code-block:: console
 
     export PYTHONUSERBASE=~/mylocalpath
-    pip install --user Glances
+    pip install --user glances
 
 GNU/Linux
 ---------
@@ -110,11 +109,11 @@ GNU/Linux
 At the moment, packages exist for the following GNU/Linux distributions:
 
 - Arch Linux
-- Debian (Testing/Sid)
+- Debian
 - Fedora/CentOS/RHEL
 - Gentoo
 - Slackware (SlackBuild)
-- Ubuntu (13.04+)
+- Ubuntu
 - Void Linux
 
 So you should be able to install it using your favorite package manager.
@@ -146,7 +145,7 @@ Homebrew
 .. code-block:: console
 
     $ brew install python
-    $ pip install Glances
+    $ pip install glances
 
 MacPorts
 ````````
@@ -159,9 +158,15 @@ Windows
 -------
 
 - Install Python for Windows: http://www.python.org/getit/
-- Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
+- Install the psutil library (latest binary version): https://pypi.python.org/pypi?:action=display&name=psutil#downloads
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Install Glances: http://nicolargo.github.io/glances/
+- Install Pip: http://pip.readthedocs.org/en/latest/installing.html
+- Install optionnals dependencies (see list bellow)
+- Install Glances using pip
+
+.. code-block:: console
+
+    $ pip install glances
 
 Source
 ------
@@ -233,7 +238,7 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``StatsD`` and ``RabbitMQ`` server.
 
 How to contribute ?
 ===================
