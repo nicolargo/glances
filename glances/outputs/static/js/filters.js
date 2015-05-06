@@ -9,10 +9,10 @@ glancesApp.filter('min_size', function() {
 });
 glancesApp.filter('exclamation', function() {
     return function(input) {
-        if (input == undefined || input =='') {
-            return '?'
+        if (input === undefined || input === '') {
+            return '?';
         }
-        return input
+        return input;
     };
 });
 
