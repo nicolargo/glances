@@ -106,22 +106,13 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 return hour +":" + minutes + ":" + seconds + "." + millisecondsStr
             };
 
-            function dateformat(input) {
-                var millis = input * 1000.0;
-                var d = new Date(millis)
-                var year = d.getFullYear()
-                var month = leftpad(d.getMonth() + 1) // JANUARY = 0
-                var day = leftpad(d.getDate())
-                return year + "-" + month + "-" + day + " " + datetimeformat(input)
+            function durationBetweenTwoDates(startDate, endDate) {
+              var duration = endDate - startDate;
+              var seconds = parseInt((duration/1000)%60)
+                  , minutes = parseInt((duration/(1000*60))%60)
+                  , hours = parseInt((duration/(1000*60*60))%24);
 
-            }
-            function datetimeformat(input) {
-                var millis = input * 1000.0;
-                var d = new Date(millis)
-                var hour = leftpad(d.getUTCHours()) // TODO : multiple days ( * (d.getDay() * 24)))
-                var minutes = leftpad(d.getUTCMinutes())
-                var seconds = leftpad(d.getUTCSeconds())
-                return hour + ":" + minutes + ":" + seconds
+              return _.padLeft(hours,2,'0') + ":" + _.padLeft(minutes,2,'0') + ":" + _.padLeft(seconds,2,'0');
             }
 
             for (var i = 0; i < response['processlist'].length; i++) {
@@ -149,9 +140,14 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 }
             }
             for (var i = 0; i < response['alert'].length; i++) {
-                var alert = response['alert'][i]
-                alert.begin = dateformat(alert[0])
-                alert.end = datetimeformat(alert[1] - alert[0])
+                var alert = response['alert'][i];
+                alert.begin = alert[0] * 1000;
+                alert.end = alert[1] * 1000;
+                alert.ongoing = alert[1] == -1;
+
+                if (!alert.ongoing) {
+                  alert.duration = durationBetweenTwoDates(alert.begin, alert.end);
+                }
             }
             $scope.result = response;
             canceler.resolve()
