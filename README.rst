@@ -157,10 +157,9 @@ MacPorts
 Windows
 -------
 
-- Install Python for Windows: http://www.python.org/getit/
+- Install Python for Windows (Python 2.7.9+ ship with Pip): http://www.python.org/getit/
 - Install the psutil library (latest binary version): https://pypi.python.org/pypi?:action=display&name=psutil#downloads
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Install Pip: http://pip.readthedocs.org/en/latest/installing.html
 - Install optionnals dependencies (see list bellow)
 - Install Glances using pip
 
