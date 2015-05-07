@@ -7,11 +7,11 @@
         <div class="table-cell text-left">inactive:</div>
         <div class="table-cell">{{result["mem"].inactive | bytes}}</div>
     </div>
-    <div class="table-row" ng-if="result['mem'].buffer">
+    <div class="table-row" ng-if="result['mem'].buffer != undefined">
         <div class="table-cell text-left">buffers:</div>
         <div class="table-cell">{{result["mem"].buffers | bytes}}</div>
     </div>
-    <div class="table-row" ng-if="result['mem'].cached">
+    <div class="table-row" ng-if="result['mem'].cached != undefined">
         <div class="table-cell text-left">cached:</div>
         <div class="table-cell">{{result["mem"].cached | bytes}}</div>
     </div>
