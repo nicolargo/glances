@@ -12,7 +12,7 @@
                 <section id="system" class="plugin" ng-include src="'plugins/system.html'"></section>
             </div>
             <div class="pull-left">
-                <section id="ip" class="plugin" ng-include src="'plugins/ip.html'"></section>
+                <section id="ip" class="plugin" ng-if="result['ip'].address != undefined" ng-include src="'plugins/ip.html'"></section>
             </div>
             <div class="pull-right">
                 <section id="uptime" class="plugin" ng-include src="'plugins/uptime.html'"></section>
