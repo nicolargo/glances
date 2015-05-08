@@ -149,12 +149,26 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                   alert.duration = durationBetweenTwoDates(alert.begin, alert.end);
                 }
             }
+
+            $scope.is_bsd = response['system'].os_name === 'FreeBSD';
+            $scope.is_linux = response['system'].os_name === 'Linux';
+            $scope.is_mac = response['system'].os_name === 'Darwin';
+            $scope.is_windows = response['system'].os_name === 'Windows';
+
             $scope.result = response;
             canceler.resolve()
         }).error(function(d, status, headers, config) {
             console.log('error status:' + status + " - headers = " + headers);
             canceler.resolve()
         });
+    }
+
+    $scope.isNice = function(nice) {
+      if(nice !== undefined && (($scope.is_windows && nice != 32) || (!$scope.is_windows && nice != 0))) {
+        return true;
+      }
+
+      return false;
     }
 
     $scope.getClass = function(pluginName, limitNamePrefix, value, num) {

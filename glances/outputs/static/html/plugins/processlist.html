@@ -20,7 +20,7 @@
         <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes}}</div>
         <div class="table-cell">{{process.pid}}</div>
         <div class="table-cell text-left">{{process.username}}</div>
-        <div class="table-cell">{{process.nice | exclamation}}</div>
+        <div class="table-cell" ng-class="{nice: isNice(process.nice)}">{{process.nice | exclamation}}</div>
         <div class="table-cell" ng-class="{status: process.status == 'R'}">{{process.status}}</div>
         <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
         <div class="table-cell hidden-xs hidden-sm">{{process.io_read}}</div>
