@@ -7,7 +7,7 @@
         <div class="table-cell text-left">inactive:</div>
         <div class="table-cell">{{result["mem"].inactive | bytes}}</div>
     </div>
-    <div class="table-row" ng-if="result['mem'].buffer != undefined">
+    <div class="table-row" ng-if="result['mem'].buffers != undefined">
         <div class="table-cell text-left">buffers:</div>
         <div class="table-cell">{{result["mem"].buffers | bytes}}</div>
     </div>
