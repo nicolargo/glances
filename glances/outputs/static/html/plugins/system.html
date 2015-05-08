@@ -1,5 +1,5 @@
 <span class="title">
     {{ result["system"].hostname }}
 </span>
-<span ng-if="result['os_name'] == 'Linux'" class="hidden-xs hidden-sm">({{ result["system"].hr_name }} / {{ result["system"].os_name }} {{ result["system"].os_version }})</span>
-<span ng-if="result['os_name'] != 'Linux'" class="hidden-xs hidden-sm">({{ result["system"].os_name }} {{ result["system"].os_version }} {{ result["system"].platform }})</span>
+<span ng-if="is_linux" class="hidden-xs hidden-sm">({{ result["system"].hr_name }} / {{ result["system"].os_name }} {{ result["system"].os_version }})</span>
+<span ng-if="!is_linux" class="hidden-xs hidden-sm">({{ result["system"].os_name }} {{ result["system"].os_version }} {{ result["system"].platform }})</span>
