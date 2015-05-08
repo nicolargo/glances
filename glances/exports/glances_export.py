@@ -85,7 +85,8 @@ class GlancesExport(object):
         for i, plugin in enumerate(plugins):
             if plugin in self.plugins_to_export():
                 if type(all_stats[i]) is list:
-                    for item in (all_stats[i] + all_limits[i]):
+                    for item in all_stats[i]:
+                        item.update(all_limits[i])
                         export_names = list(map(lambda x: item[item['key']] + '.' + x, item.keys()))
                         export_values = list(item.values())
                         self.export(plugin, export_names, export_values)
