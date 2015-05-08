@@ -76,3 +76,11 @@ glancesApp.filter('bits', function($filter) {
       return $filter('bytes')(bits, low_precision) + 'b';
     }
 });
+
+glancesApp.filter('leftPad', function($filter) {
+    return function (value, length, chars) {
+      length = length || 0;
+      chars = chars || ' ';
+      return _.padLeft(value, length, chars);
+    }
+});

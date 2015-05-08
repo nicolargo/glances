@@ -49,6 +49,10 @@ body {
     font-weight: bold;
     color: white;
 }
+.highlight {
+    font-weight: bold;
+    color: magenta;
+}
 .ok {
     color: green;
 }
