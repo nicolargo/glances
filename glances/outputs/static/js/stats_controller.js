@@ -48,7 +48,11 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
     }
 
     $scope.init_limits = function() {
-        $scope.plugins_limits();
+      $http.get('/api/2/all/limits').success(function(response, status, headers, config) {
+          $scope.pluginLimits = response
+      }).error(function(response, status, headers, config) {
+          console.log('error : ' + response+ status + headers + config);
+      });
     }
 
     $scope.init_help = function() {
@@ -63,14 +67,6 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
         } else {
             $scope.show[bloc] = !$scope.show[bloc]
         }
-    }
-
-    $scope.plugins_limits = function() {
-        $http.get('/api/2/all/limits').success(function(response, status, headers, config) {
-                $scope.limits = response
-        }).error(function(response, status, headers, config) {
-            console.log('error : ' + response+ status + headers + config);
-        });
     }
 
     var canceler = undefined;
