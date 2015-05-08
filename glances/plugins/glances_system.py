@@ -134,7 +134,7 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats['hr_name'] = '{0} {1}'.format(
                     self.stats['os_name'], self.stats['os_version'])
-            self.stats['hr_name'] += ' ({0})'.format(self.stats['platform'])
+            self.stats['hr_name'] += ' {0}'.format(self.stats['platform'])
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
