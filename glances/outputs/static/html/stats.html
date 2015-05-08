@@ -20,22 +20,22 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-3 col-lg-2">
+        <div class="col-sm-3 col-md-2">
             <section id="cpu" class="plugin" ng-include src="'plugins/cpu.html'"></section>
         </div>
-        <div class="col-sm-3 col-lg-2">
-            <section id="cpu_more" class="plugin" ng-show="result['cpu'].nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
+        <div class="hidden-xs hidden-sm col-md-2">
+            <section id="cpu_more" class="plugin" ng-if="result['cpu'].nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
         </div>
-        <div class="col-sm-3 col-lg-2">
-            <section id="load" class="plugin" ng-show="result['load'].cpucore != undefined" ng-include src="'plugins/load.html'"></section>
+        <div class="col-sm-3 col-md-2">
+            <section id="load" class="plugin" ng-if="result['load'].cpucore != undefined" ng-include src="'plugins/load.html'"></section>
         </div>
-        <div class="col-sm-3 col-lg-2">
+        <div class="col-sm-3 col-md-2">
             <section id="mem" class="plugin" ng-include src="'plugins/mem.html'"></section>
         </div>
-        <div class="col-sm-3 col-lg-2">
+        <div class="hidden-xs hidden-sm col-md-2">
             <section id="mem_more" class="plugin" ng-include src="'plugins/mem_more.html'"></section>
         </div>
-        <div class="col-sm-3 col-lg-2">
+        <div class="col-sm-3 col-md-2">
             <section id="memswap" class="plugin" ng-include src="'plugins/memswap.html'"></section>
         </div>
     </div>
