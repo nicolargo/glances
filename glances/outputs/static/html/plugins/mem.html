@@ -9,7 +9,7 @@
     </div>
     <div class="table-row">
         <div class="table-cell text-left">used:</div>
-        <div class="table-cell" ng-class="getClass('mem', 'mem_', result['mem'].percent, 1)">
+        <div class="table-cell" ng-class="getAlertLog('mem', 'mem_', result['mem'].percent)">
             {{result["mem"].used | bytes:2}}
         </div>
     </div>

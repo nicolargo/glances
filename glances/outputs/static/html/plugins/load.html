@@ -11,13 +11,13 @@
     </div>
     <div class="table-row">
         <div class="table-cell text-left">5 min:</div>
-        <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min5, 0)">
+        <div class="table-cell" ng-class="getAlert('load', 'load_', result['load'].min5)">
             {{result["load"].min5 | number : 2}}
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">15 min:</div>
-        <div class="table-cell" ng-class="getClass('load', 'load_', result['load'].min15, 1)">
+        <div class="table-cell" ng-class="getAlertLog('load', 'load_', result['load'].min15)">
             {{result["load"].min15 | number : 2}}
         </div>
     </div>
