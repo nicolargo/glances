@@ -42,6 +42,9 @@ body {
 .text-left {
     text-align: left;
 }
+.sidebar .table-cell:not(.text-left) {
+    padding-left: 10px;
+}
 
 /* Theme */
 
