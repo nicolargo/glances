@@ -5,7 +5,7 @@
 </div>
 <div class="table-row" ng-repeat="fs in result['fs'] | orderBy:  'mnt_point'">
     <div class="table-cell text-left">{{fs.mnt_point}} ({{fs.device_name}})</div>
-    <div class="table-cell" ng-class="getClass('fs', 'fs_', fs.percent, 0)">
+    <div class="table-cell" ng-class="getAlert('fs', 'fs_', fs.percent)">
         {{fs.size - fs.free | bytes}}
     </div>
     <div class="table-cell">{{fs.size | bytes}}</div>

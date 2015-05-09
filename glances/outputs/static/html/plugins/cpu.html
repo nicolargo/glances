@@ -5,13 +5,13 @@
     </div>
     <div class="table-row">
         <div class="table-cell text-left">user:</div>
-        <div class="table-cell" ng-class="getClass('cpu', 'cpu_user_', result['cpu'].user, 1)">
+        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_user_', result['cpu'].user)">
             {{result["cpu"].user}}%
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">system:</div>
-        <div class="table-cell" ng-class="getClass('cpu', 'cpu_system_', result['cpu'].system, 1)">
+        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_system_', result['cpu'].system)">
             {{result["cpu"].system}}%
         </div>
     </div>
@@ -27,13 +27,13 @@
     </div>
     <div class="table-row">
         <div class="table-cell text-left">user:</div>
-        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_user_', percpu.user, 0)">
+        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getAlert('percpu', 'percpu_user_', percpu.user)">
             {{percpu.user}}%
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">system:</div>
-        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getClass('percpu', 'percpu_system_', percpu.system, 0)">
+        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getAlert('percpu', 'percpu_system_', percpu.system)">
             {{percpu.system}}%
         </div>
     </div>
