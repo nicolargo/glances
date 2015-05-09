@@ -74,10 +74,10 @@ body {
     color: white;
 }
 .warning {
-    color: orange;
+    color: magenta;
 }
 .warning_log {
-    background-color: orange;
+    background-color: magenta;
     color: white;
 }
 .critical {
