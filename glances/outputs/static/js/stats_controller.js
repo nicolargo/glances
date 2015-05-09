@@ -162,9 +162,13 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
       return false;
     }
 
-    $scope.getAlert = function(pluginName, limitNamePrefix, value, log) {
+    $scope.getAlert = function(pluginName, limitNamePrefix, current, maximum, log) {
+      current = current || 0;
+      maximum = maximum || 100;
       log = log || false;
       log_str = log ? '_log' : '';
+
+      var value = (current * 100) / maximum;
 
       if ($scope.pluginLimits != undefined && $scope.pluginLimits[pluginName] != undefined) {
           for (var i = 0; i < $scope.limitSuffix.length; i++) {
@@ -183,8 +187,8 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
       return "ok" + log_str;
     }
 
-    $scope.getAlertLog = function(pluginName, limitNamePrefix, value) {
-      return $scope.getAlert(pluginName, limitNamePrefix, value, true);
+    $scope.getAlertLog = function(pluginName, limitNamePrefix, current, maximum) {
+      return $scope.getAlert(pluginName, limitNamePrefix, current, maximum, true);
     }
 
     $scope.init_refresh_time();
