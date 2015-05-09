@@ -162,26 +162,29 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
       return false;
     }
 
-    $scope.getClass = function(pluginName, limitNamePrefix, value, num) {
-        if ($scope.pluginLimits != undefined && $scope.pluginLimits[pluginName] != undefined) {
-            for (var i = 0; i < $scope.limitSuffix.length; i++) {
-                var limitName = limitNamePrefix + $scope.limitSuffix[i]
-                var limit = $scope.pluginLimits[pluginName][limitName]
+    $scope.getAlert = function(pluginName, limitNamePrefix, value, log) {
+      log = log || false;
+      log_str = log ? '_log' : '';
 
-                if (value >= limit) {
-                    var pos = limitName.lastIndexOf("_")
-                    var className = limitName.substring(pos + 1)
-                    if (num == 1) {
-                        return className + '_log'
-                    }
-                    return className
-                }
-            }
-        }
-        if (num == 1) {
-            return "ok_log"
-        }
-        return "ok";
+      if ($scope.pluginLimits != undefined && $scope.pluginLimits[pluginName] != undefined) {
+          for (var i = 0; i < $scope.limitSuffix.length; i++) {
+              var limitName = limitNamePrefix + $scope.limitSuffix[i]
+              var limit = $scope.pluginLimits[pluginName][limitName]
+
+              if (value >= limit) {
+                  var pos = limitName.lastIndexOf("_")
+                  var className = limitName.substring(pos + 1)
+
+                  return className + log_str;
+              }
+          }
+      }
+
+      return "ok" + log_str;
+    }
+
+    $scope.getAlertLog = function(pluginName, limitNamePrefix, value) {
+      return $scope.getAlert(pluginName, limitNamePrefix, value, true);
     }
 
     $scope.init_refresh_time();
