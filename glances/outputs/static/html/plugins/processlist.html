@@ -22,7 +22,9 @@
         <div class="table-cell text-left">{{process.username}}</div>
         <div class="table-cell" ng-class="{nice: isNice(process.nice)}">{{process.nice | exclamation}}</div>
         <div class="table-cell" ng-class="{status: process.status == 'R'}">{{process.status}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.timeformatted}}</div>
+        <div class="table-cell hidden-xs hidden-sm">
+            <span ng-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>{{ process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span ng-show="process.timeplus.hours <= 0">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>
+        </div>
         <div class="table-cell hidden-xs hidden-sm">{{process.io_read}}</div>
         <div class="table-cell hidden-xs hidden-sm">{{process.io_write}}</div>
         <div class="table-cell text-left" ng-if="show.short_process_name">{{process.name}}</div>

@@ -85,21 +85,16 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 }
                 return sum;
             }
-            function leftpad(input) {
-                if (input < 10) {
-                    return "0" + input
-                }
-                return input
-            }
             function timedelta(input) {
                 var sum = timemillis(input);
                 var d = new Date(sum);
-                var hour = leftpad(d.getUTCHours()) // TODO : multiple days ( * (d.getDay() * 24)))
-                var minutes = leftpad(d.getUTCMinutes())
-                var seconds = leftpad(d.getUTCSeconds())
-                var milliseconds = parseInt("" + d.getUTCMilliseconds() / 10)
-                var millisecondsStr = leftpad(milliseconds)
-                return hour +":" + minutes + ":" + seconds + "." + millisecondsStr
+
+                return {
+                  hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24)))
+                  minutes: d.getUTCMinutes(),
+                  seconds: d.getUTCSeconds(),
+                  milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
+                };
             };
 
             function durationBetweenTwoDates(startDate, endDate) {
@@ -115,7 +110,7 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 var process = response['processlist'][i]
                 process.memvirt = process.memory_info[1]
                 process.memres  = process.memory_info[0]
-                process.timeformatted = timedelta(process.cpu_times)
+                process.timeplus = timedelta(process.cpu_times)
                 process.timemillis = timemillis(process.cpu_times)
 
                 process.io_read = '?';
