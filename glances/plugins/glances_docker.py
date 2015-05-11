@@ -24,8 +24,8 @@ import os
 import re
 
 # Import Glances libs
-from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.core.glances_logging import logger
+from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Docker-py library (optional and Linux-only)
@@ -172,7 +172,7 @@ class Plugin(GlancesPlugin):
                 try:
                     # self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
                     all_stats = self.docker_stats[c['Id']].next()
-                except:
+                except Exception:
                     all_stats = {}
 
                 c['cpu'] = self.get_docker_cpu(c['Id'], all_stats)

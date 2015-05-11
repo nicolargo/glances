@@ -103,7 +103,7 @@ class Export(GlancesExport):
                                            password=self.password,
                                            database=self.db)
                 get_all_db = [i['name'] for i in db.get_list_database()]
-            except:
+            except Exception:
                 logger.critical("Can not connect to InfluxDB database '%s' (%s)" % (self.db, e))
                 sys.exit(2)
 

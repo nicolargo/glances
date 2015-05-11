@@ -19,9 +19,9 @@
 
 """Virtual memory plugin."""
 
-import psutil
-
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
                     self.reset()
                 else:
                     for fs in fs_stat:
-                        # The Physical Memory (Windows) or Real Memory (VmWare)
+                        # The Physical Memory (Windows) or Real Memory (VMware)
                         # gives statistics on RAM usage and availability.
                         if fs in ('Physical Memory', 'Real Memory'):
                             self.stats['total'] = int(fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])

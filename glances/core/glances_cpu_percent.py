@@ -19,9 +19,9 @@
 
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
-import psutil
-
 from glances.core.glances_timer import Timer
+
+import psutil
 
 
 class CpuPercent(object):

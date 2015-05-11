@@ -22,13 +22,13 @@ import collections
 import os
 import re
 
-# Import psutil
-import psutil
-
 # Import Glances lib
 from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows
 from glances.core.glances_logging import logger
-from glances.core.glances_timer import getTimeSinceLastUpdate, Timer
+from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
+
+# Import psutil
+import psutil
 
 
 def is_kernel_thread(proc):

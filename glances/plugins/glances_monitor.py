@@ -20,7 +20,6 @@
 """Monitor plugin."""
 
 # Import Glances lib
-from glances.core.glances_logging import logger
 from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 

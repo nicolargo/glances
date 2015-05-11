@@ -24,8 +24,8 @@ import os
 import socket
 
 # Import Glances libs
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_logging import logger
+from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

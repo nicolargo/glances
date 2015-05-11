@@ -19,11 +19,10 @@
 
 """CPU plugin."""
 
-import psutil
-
-from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_cpu_percent import cpu_percent
-# from glances.core.glances_logging import logger
+from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
