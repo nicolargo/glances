@@ -26,7 +26,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' CPU core plugin.
+    """Glances CPU core plugin.
 
     Get stats about CPU core number.
 

@@ -64,7 +64,7 @@ class Plugin(GlancesPlugin):
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'pid'
 
     def reset(self):
@@ -91,7 +91,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_process_tree_curses_data(self, node, args, first_level=True, max_node_count=None):
-        """ Get curses data to display for a process tree. """
+        """Get curses data to display for a process tree."""
         ret = []
         node_count = 0
         if not node.is_root and ((max_node_count is None) or (max_node_count > 0)):
@@ -122,7 +122,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def add_tree_decoration(self, child_data, is_last_child, first_level):
-        """ Add tree curses decoration and indentation to a subtree. """
+        """Add tree curses decoration and indentation to a subtree."""
         # find process command indices in messages
         pos = []
         for i, m in enumerate(child_data):
@@ -170,7 +170,7 @@ class Plugin(GlancesPlugin):
         return child_data
 
     def get_process_curses_data(self, p, first, args):
-        """ Get curses data to display for a process. """
+        """Get curses data to display for a process."""
         ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':

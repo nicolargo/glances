@@ -57,7 +57,7 @@ class Export(GlancesExport):
         self.client = self.init()
 
     def load_conf(self, section="influxdb"):
-        """Load the InfluxDb configuration in the Glances configuration file"""
+        """Load the InfluxDb configuration in the Glances configuration file."""
         if self.config is None:
             return False
         try:
@@ -82,7 +82,7 @@ class Export(GlancesExport):
         return True
 
     def init(self):
-        """Init the connection to the InfluxDB server"""
+        """Init the connection to the InfluxDB server."""
         if not self.export_enable:
             return None
 
@@ -116,7 +116,7 @@ class Export(GlancesExport):
         return db
 
     def export(self, name, columns, points):
-        """Write the points to the InfluxDB server"""
+        """Write the points to the InfluxDB server."""
         # Manage prefix
         if self.prefix is not None:
             name = self.prefix + '.' + name

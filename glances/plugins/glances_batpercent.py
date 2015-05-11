@@ -32,7 +32,7 @@ except ImportError:
 
 class Plugin(GlancesPlugin):
 
-    """Glances' battery capacity plugin.
+    """Glances battery capacity plugin.
 
     stats is a list
     """

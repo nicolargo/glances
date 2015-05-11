@@ -69,7 +69,7 @@ class Plugin(GlancesPlugin):
         self.stats = {}
 
     def _linux_os_release(self):
-        """This function tries to determine the name of a Linux distribution.
+        """Try to determine the name of a Linux distribution.
 
         It checks for the /etc/os-release file. It takes the name from the
         'NAME' field and the version from 'VERSION_ID'.

@@ -29,7 +29,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' alert plugin.
+    """Glances alert plugin.
 
     Only for display.
     """
@@ -123,9 +123,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def approx_equal(self, a, b, tolerance=0.0):
-        """
-        Compare a with b using the tolerance (if numerical)
-        """
+        """Compare a with b using the tolerance (if numerical)."""
         if str(int(a)).isdigit() and str(int(b)).isdigit():
             return abs(a - b) <= max(abs(a), abs(b)) * tolerance
         else:

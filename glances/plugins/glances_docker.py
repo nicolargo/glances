@@ -42,7 +42,7 @@ else:
 
 class Plugin(GlancesPlugin):
 
-    """Glances' Docker plugin.
+    """Glances Docker plugin.
 
     stats is a list
     """
@@ -61,7 +61,7 @@ class Plugin(GlancesPlugin):
         self.docker_client = False
 
     def connect(self, version=None):
-        """Connect to the Docker server"""
+        """Connect to the Docker server."""
         # Init connection to the Docker API
         try:
             if version is None:
@@ -113,8 +113,7 @@ class Plugin(GlancesPlugin):
 
     @GlancesPlugin._log_result_decorator
     def update(self):
-        """Update Docker stats using the input method.
-        """
+        """Update Docker stats using the input method."""
         # Reset stats
         self.reset()
 
@@ -188,9 +187,11 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_docker_cpu_old(self, container_id):
-        """Return the container CPU usage by reading /sys/fs/cgroup/...
+        """Return the container CPU usage by reading /sys/fs/cgroup/.
+
         Input: id is the full container id
-        Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}"""
+        Output: a dict {'total': 1.49, 'user': 0.65, 'system': 0.84}
+        """
         ret = {}
         # Read the stats
         try:
@@ -208,11 +209,12 @@ class Plugin(GlancesPlugin):
         return ret
 
     def get_docker_cpu(self, container_id, all_stats):
-        """Return the container CPU usage
+        """Return the container CPU usage.
+
         Input: id is the full container id
                all_stats is the output of the stats method of the Docker API
-        Output: a dict {'total': 1.49}"""
-
+        Output: a dict {'total': 1.49}
+        """
         cpu_new = {}
         ret = {'total': 0.0}
 
@@ -263,9 +265,11 @@ class Plugin(GlancesPlugin):
         return ret
 
     def get_docker_memory_old(self, container_id):
-        """Return the container MEMORY usage by reading /sys/fs/cgroup/...
+        """Return the container MEMORY usage by reading /sys/fs/cgroup/.
+
         Input: id is the full container id
-        Output: a dict {'rss': 1015808, 'cache': 356352}"""
+        Output: a dict {'rss': 1015808, 'cache': 356352}
+        """
         ret = {}
         # Read the stats
         try:
@@ -281,10 +285,12 @@ class Plugin(GlancesPlugin):
         return ret
 
     def get_docker_memory(self, container_id, all_stats):
-        """Return the container MEMORY
+        """Return the container MEMORY.
+
         Input: id is the full container id
                all_stats is the output of the stats method of the Docker API
-        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}"""
+        Output: a dict {'rss': 1015808, 'cache': 356352,  'usage': ..., 'max_usage': ...}
+        """
         ret = {}
         # Read the stats
         try:
@@ -301,10 +307,11 @@ class Plugin(GlancesPlugin):
         return ret
 
     def get_docker_network(self, container_id, all_stats):
-        """Return the container network usage using the Docker API (v1.0 or higher)
-        Input: id is the full container id
-        Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}"""
+        """Return the container network usage using the Docker API (v1.0 or higher).
 
+        Input: id is the full container id
+        Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
+        """
         # Init the returned dict
         network_new = {}
 
@@ -348,7 +355,7 @@ class Plugin(GlancesPlugin):
         return network_new
 
     def get_user_ticks(self):
-        """return the user ticks by reading the environment variable"""
+        """Return the user ticks by reading the environment variable."""
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
     def msg_curse(self, args=None):
@@ -434,7 +441,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def container_alert(self, status):
-        """Analyse the container status"""
+        """Analyse the container status."""
         if "Paused" in status:
             return 'CAREFUL'
         else:

@@ -27,7 +27,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' monitor plugin."""
+    """Glances monitor plugin."""
 
     def __init__(self, args=None):
         """Init the plugin."""

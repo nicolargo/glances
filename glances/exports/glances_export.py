@@ -32,7 +32,7 @@ from glances.core.glances_logging import logger
 
 class GlancesExport(object):
 
-    """Main class for Glances' export IF."""
+    """Main class for Glances export IF."""
 
     def __init__(self, config=None, args=None):
         """Init the export class."""
@@ -53,7 +53,7 @@ class GlancesExport(object):
         logger.debug("Finalise export interface %s" % self.export_name)
 
     def plugins_to_export(self):
-        """Return the list of plugins to export"""
+        """Return the list of plugins to export."""
         return ['cpu',
                 'percpu',
                 'load',

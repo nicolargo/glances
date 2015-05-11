@@ -32,7 +32,7 @@ from glances.core.glances_timer import getTimeSinceLastUpdate, Timer
 
 
 def is_kernel_thread(proc):
-    """ Return True if proc is a kernel thread, False instead. """
+    """Return True if proc is a kernel thread, False instead."""
     try:
         return os.getpgid(proc.pid) == 0
     # Python >= 3.3 raises ProcessLookupError, which inherits OSError
@@ -43,10 +43,10 @@ def is_kernel_thread(proc):
 
 class ProcessTreeNode(object):
 
-    """
-    Represent a process tree.
+    """Represent a process tree.
 
-    We avoid recursive algorithm to manipulate the tree because function calls are expensive with CPython.
+    We avoid recursive algorithm to manipulate the tree because function
+    calls are expensive with CPython.
     """
 
     def __init__(self, process=None, stats=None, sort_key=None, sort_reverse=True, root=False):
@@ -59,7 +59,7 @@ class ProcessTreeNode(object):
         self.is_root = root
 
     def __str__(self):
-        """ Return the tree as a string for debugging. """
+        """Return the tree as a string for debugging."""
         lines = []
         nodes_to_print = collections.deque([collections.deque([("#", self)])])
         while nodes_to_print:
@@ -85,7 +85,10 @@ class ProcessTreeNode(object):
         return "\n".join(lines)
 
     def set_sorting(self, key, reverse):
-        """ Set sorting key or func for user with __iter__ (affects the whole tree from this node). """
+        """Set sorting key or func for use with __iter__.
+
+        This affects the whole tree from this node.
+        """
         if self.sort_key != key or self.sort_reverse != reverse:
             nodes_to_flag_unsorted = collections.deque([self])
             while nodes_to_flag_unsorted:
@@ -96,7 +99,7 @@ class ProcessTreeNode(object):
                 nodes_to_flag_unsorted.extend(current_node.children)
 
     def get_weight(self):
-        """ Return "weight" of a process and all its children for sorting. """
+        """Return 'weight' of a process and all its children for sorting."""
         if self.sort_key == 'name' or self.sort_key == 'username':
             return self.stats[self.sort_key]
 
@@ -130,7 +133,7 @@ class ProcessTreeNode(object):
         return total
 
     def __iter__(self):
-        """ Iterator returning ProcessTreeNode in sorted order, recursively. """
+        """Iterator returning ProcessTreeNode in sorted order, recursively."""
         if not self.is_root:
             yield self
         if not self.children_sorted:
@@ -144,12 +147,14 @@ class ProcessTreeNode(object):
                 yield n
 
     def iter_children(self, exclude_incomplete_stats=True):
-        """
-        Iterator returning ProcessTreeNode in sorted order (only children of this node, non recursive).
+        """Iterator returning ProcessTreeNode in sorted order.
 
-        If exclude_incomplete_stats is True, exclude processes not having full statistics.
-        It can happen after a resort (change of sort key) because process stats are not grabbed immediately,
-        but only at next full update.
+        Return only children of this node, non recursive.
+
+        If exclude_incomplete_stats is True, exclude processes not
+        having full statistics. It can happen after a resort (change of
+        sort key) because process stats are not grabbed immediately, but
+        only at next full update.
         """
         if not self.children_sorted:
             # optimization to avoid sorting twice (once when limiting the maximum processes to grab stats for,
@@ -162,7 +167,10 @@ class ProcessTreeNode(object):
                 yield child
 
     def find_process(self, process):
-        """ Search in tree for the ProcessTreeNode owning process, return it or None if not found. """
+        """Search in tree for the ProcessTreeNode owning process.
+
+        Return it or None if not found.
+        """
         nodes_to_search = collections.deque([self])
         while nodes_to_search:
             current_node = nodes_to_search.pop()
@@ -172,7 +180,10 @@ class ProcessTreeNode(object):
 
     @staticmethod
     def build_tree(process_dict, sort_key, sort_reverse, hide_kernel_threads):
-        """ Build a process tree using using parent/child relationships, and return the tree root node. """
+        """Build a process tree using using parent/child relationships.
+
+        Return the tree root node.
+        """
         tree_root = ProcessTreeNode(root=True)
         nodes_to_add_last = collections.deque()
 
@@ -326,7 +337,7 @@ class GlancesProcesses(object):
         return self._process_filter_re
 
     def is_filtered(self, value):
-        """Return True if the value should be filtered"""
+        """Return True if the value should be filtered."""
         if self.process_filter is None:
             # No filter => Not filtered
             return False
@@ -335,15 +346,15 @@ class GlancesProcesses(object):
             return self.process_filter_re.match(value) is None
 
     def disable_kernel_threads(self):
-        """ Ignore kernel threads in process list. """
+        """Ignore kernel threads in process list."""
         self.no_kernel_threads = True
 
     def enable_tree(self):
-        """ Enable process tree. """
+        """Enable process tree."""
         self._enable_tree = True
 
     def is_tree_enabled(self):
-        """ Return True if process tree is enabled, False instead. """
+        """Return True if process tree is enabled, False instead."""
         return self._enable_tree
 
     @property
@@ -356,7 +367,8 @@ class GlancesProcesses(object):
 
     def __get_mandatory_stats(self, proc, procstat):
         """
-        Get mandatory_stats: need for the sorting/filter step
+        Get mandatory_stats: need for the sorting/filter step.
+
         => cpu_percent, memory_percent, io_counters, name, cmdline
         """
         procstat['mandatory_stats'] = True
@@ -419,7 +431,8 @@ class GlancesProcesses(object):
 
     def __get_standard_stats(self, proc, procstat):
         """
-        Get standard_stats: for all the displayed processes
+        Get standard_stats: for all the displayed processes.
+
         => username, status, memory_info, cpu_times
         """
         procstat['standard_stats'] = True
@@ -452,7 +465,8 @@ class GlancesProcesses(object):
 
     def __get_extended_stats(self, proc, procstat):
         """
-        Get extended_stats: only for top processes (see issue #403)
+        Get extended_stats: only for top processes (see issue #403).
+
         => connections (UDP/TCP), memory_swap...
         """
         procstat['extended_stats'] = True
@@ -540,10 +554,7 @@ class GlancesProcesses(object):
                             mandatory_stats=True,
                             standard_stats=True,
                             extended_stats=False):
-        """
-        Get process stats of the proc processes (proc is returned psutil.process_iter())
-        """
-
+        """Get stats of running processes."""
         # Process ID (always)
         procstat = proc.as_dict(attrs=['pid'])
 
@@ -559,9 +570,7 @@ class GlancesProcesses(object):
         return procstat
 
     def update(self):
-        """
-        Update the processes stats
-        """
+        """Update the processes stats."""
         # Reset the stats
         self.processlist = []
         self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}

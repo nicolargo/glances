@@ -71,7 +71,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
@@ -82,7 +82,7 @@ class Plugin(GlancesPlugin):
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
 
     def msg_curse(self, args=None, max_width=10):
-        """Return the list to display in the UI"""
+        """Return the list to display in the UI."""
         # Init the return message
         ret = []
 

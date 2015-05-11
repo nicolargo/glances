@@ -39,9 +39,10 @@ else:
     SENSOR_TEMP_UNIT = '°C '
 SENSOR_FAN_UNIT = 'RPM'
 
+
 class Plugin(GlancesPlugin):
 
-    """Glances' sensors plugin.
+    """Glances sensors plugin.
 
     The stats list includes both sensors and hard disks stats, if any.
     The sensors are already grouped by chip type and then sorted by name.
@@ -70,7 +71,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'label'
 
     def reset(self):
@@ -149,7 +150,7 @@ class Plugin(GlancesPlugin):
         return stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 

@@ -43,7 +43,7 @@ items_history_list = [{'name': 'rx', 'color': '#00FF00', 'y_unit': 'bit/s'},
 
 class Plugin(GlancesPlugin):
 
-    """Glances' network Plugin.
+    """Glances network plugin.
 
     stats is a list
     """
@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'interface_name'
 
     def reset(self):
@@ -194,7 +194,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
@@ -209,7 +209,6 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-
         # Init the return message
         ret = []
 

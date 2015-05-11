@@ -25,7 +25,8 @@ import locale
 
 
 class Bar(object):
-    """Manage bar (progression or status)
+
+    r"""Manage bar (progression or status).
 
     import sys
     import time
@@ -35,7 +36,6 @@ class Bar(object):
         print("\r%s" % b),
         time.sleep(0.1)
         sys.stdout.flush()
-
     """
 
     def __init__(self, size,

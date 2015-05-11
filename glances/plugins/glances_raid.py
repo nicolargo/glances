@@ -32,7 +32,7 @@ except ImportError:
 
 class Plugin(GlancesPlugin):
 
-    """Glances' RAID plugin.
+    """Glances RAID plugin.
 
     stats is a dict (see pymdstat documentation)
     """
@@ -139,8 +139,10 @@ class Plugin(GlancesPlugin):
         return ret
 
     def raid_alert(self, status, used, available):
-        """
-        [available/used] means that ideally the array would have _available_ devices however, _used_ devices are in use.
+        """RAID alert messages.
+
+        [available/used] means that ideally the array may have _available_
+        devices however, _used_ devices are in use.
         Obviously when used >= available then things are good.
         """
         if status == 'inactive':

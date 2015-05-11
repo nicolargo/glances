@@ -44,7 +44,7 @@ items_history_list = [{'name': 'min1', 'color': '#0000FF'},
 
 class Plugin(GlancesPlugin):
 
-    """Glances' load plugin.
+    """Glances load plugin.
 
     stats is a dict
     """
@@ -117,7 +117,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 

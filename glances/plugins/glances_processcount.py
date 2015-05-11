@@ -29,7 +29,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' processes plugin.
+    """Glances process count plugin.
 
     stats is a list
     """

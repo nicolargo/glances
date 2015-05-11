@@ -50,7 +50,7 @@ class GlancesSNMPClient(object):
         self.auth = auth
 
     def __buid_result(self, varBinds):
-        """Build the results"""
+        """Build the results."""
         ret = {}
         for name, val in varBinds:
             if str(val) == '':

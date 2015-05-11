@@ -58,7 +58,7 @@ class Export(GlancesExport):
         self.client = self.init()
 
     def load_conf(self, section="rabbitmq"):
-        """Load the rabbitmq configuration in the Glances configuration file"""
+        """Load the rabbitmq configuration in the Glances configuration file."""
         if self.config is None:
             return False
         try:
@@ -78,7 +78,7 @@ class Export(GlancesExport):
         return True
 
     def init(self):
-        """Init the connection to the rabbitmq server"""
+        """Init the connection to the rabbitmq server."""
         if not self.export_enable:
             return None
         try:
@@ -91,7 +91,7 @@ class Export(GlancesExport):
                 return None
 
     def export(self, name, columns, points):
-        """Write the points in RabbitMQ"""
+        """Write the points in RabbitMQ."""
         data = "hostname="+self.hostname+", name="+name+", dateinfo="+datetime.datetime.utcnow().isoformat()
         for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
