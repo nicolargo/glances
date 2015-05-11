@@ -19,11 +19,12 @@
 
 """Manage on alert actions."""
 
+# Import system lib
+from subprocess import Popen
+
 # Import Glances lib
 from glances.core.glances_logging import logger
 
-# Import system lib
-from subprocess import Popen
 try:
     import pystache
 except ImportError:

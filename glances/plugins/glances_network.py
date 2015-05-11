@@ -22,10 +22,10 @@
 import base64
 import operator
 
-import psutil
-
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
@@ -269,20 +269,20 @@ class Plugin(GlancesPlugin):
                 if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx']))
                     tx = self.auto_unit(int(i['cumulative_tx']))
-                    sx = self.auto_unit(int(i['cumulative_tx'])
-                                        + int(i['cumulative_tx']))
+                    sx = self.auto_unit(int(i['cumulative_tx']) +
+                                        int(i['cumulative_tx']))
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update']))
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update']))
-                    sx = self.auto_unit(int(i['rx'] // i['time_since_update'])
-                                        + int(i['tx'] // i['time_since_update']))
+                    sx = self.auto_unit(int(i['rx'] // i['time_since_update']) +
+                                        int(i['tx'] // i['time_since_update']))
             else:
                 # Bits per second (for real network administrator | Default)
                 if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
-                    sx = self.auto_unit(int(i['cumulative_rx'] * 8)
-                                        + int(i['cumulative_tx'] * 8)) + "b"
+                    sx = self.auto_unit(int(i['cumulative_rx'] * 8) +
+                                        int(i['cumulative_tx'] * 8)) + "b"
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"

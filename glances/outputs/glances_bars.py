@@ -20,8 +20,8 @@
 """Manage bars for Glances output."""
 
 # Import system lib
-from math import modf
 import locale
+from math import modf
 
 
 class Bar(object):

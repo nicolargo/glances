@@ -20,7 +20,9 @@
 """JMS interface class."""
 
 # Import sys libs
-import sys, socket, datetime
+import datetime
+import socket
+import sys
 from numbers import Number
 
 # Import Glances lib
@@ -82,7 +84,11 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-                parameters = pika.URLParameters("amqp://"+self.rabbitmq_user+":"+self.rabbitmq_password+"@"+self.rabbitmq_host+":"+self.rabbitmq_port+"/")
+                parameters = pika.URLParameters(
+                    'amqp://' + self.rabbitmq_user +
+                    ':' + self.rabbitmq_password +
+                    '@' + self.rabbitmq_host +
+                    ':' + self.rabbitmq_port + '/')
                 connection = pika.BlockingConnection(parameters)
                 channel = connection.channel()
                 return channel
@@ -92,7 +98,8 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Write the points in RabbitMQ."""
-        data = "hostname="+self.hostname+", name="+name+", dateinfo="+datetime.datetime.utcnow().isoformat()
+        data = ('hostname=' + self.hostname + ', name=' + name +
+                ', dateinfo=' + datetime.datetime.utcnow().isoformat())
         for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
                 continue

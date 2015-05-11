@@ -25,7 +25,7 @@ import re
 import sys
 import threading
 
-from glances.core.glances_globals import plugins_path, exports_path, sys_path
+from glances.core.glances_globals import exports_path, plugins_path, sys_path
 from glances.core.glances_logging import logger
 
 # SNMP OID regexp pattern to short system name dict
@@ -152,7 +152,7 @@ class GlancesStats(object):
         # For standalone and server modes
         # For each plugins, call the update method
         for p in self._plugins:
-            # logger.debug("Update %s stats" % p)
+            # logger.debug("Update %s stats" % p)
             self._plugins[p].update()
 
     def export(self, input_stats=None):

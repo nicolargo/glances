@@ -59,6 +59,7 @@ if psutil_version < psutil_min_version:
     print('PSutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
+
 def __signal_handler(signal, frame):
     """Callback for CTRL-C."""
     end()

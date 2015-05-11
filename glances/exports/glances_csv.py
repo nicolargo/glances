@@ -80,7 +80,7 @@ class Export(GlancesExport):
                         # First line: header
                         if self.first_line:
                             fieldnames = item.keys()
-                            csv_header += map(lambda x: plugin+'_'+item[item['key']]+'_'+x, item)
+                            csv_header += map(lambda x: plugin + '_' + item[item['key']] + '_' + x, item)
                         # Others lines: stats
                         fieldvalues = item.values()
                         csv_data += fieldvalues
@@ -88,7 +88,7 @@ class Export(GlancesExport):
                     # First line: header
                     if self.first_line:
                         fieldnames = all_stats[i].keys()
-                        csv_header += map(lambda x: plugin+'_'+x, fieldnames)
+                        csv_header += map(lambda x: plugin + '_' + x, fieldnames)
                     # Others lines: stats
                     fieldvalues = all_stats[i].values()
                     csv_data += fieldvalues

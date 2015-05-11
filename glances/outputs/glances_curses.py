@@ -20,8 +20,8 @@
 """Curses interface class."""
 
 # Import system lib
-import sys
 import re
+import sys
 
 # Import Glances lib
 from glances.core.glances_globals import is_mac, is_windows
@@ -570,10 +570,9 @@ class _GlancesCurses(object):
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
-        if (not (self.args.disable_network and self.args.disable_diskio
-                 and self.args.disable_fs and self.args.disable_raid
-                 and self.args.disable_sensors)) \
-                and not self.args.disable_left_sidebar:
+        if not (self.args.disable_network and self.args.disable_diskio and
+                self.args.disable_fs and self.args.disable_raid and
+                self.args.disable_sensors) and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
             self.new_line()
@@ -875,11 +874,11 @@ class _GlancesCurses(object):
         try:
             if without_option:
                 # Size without options
-                c = len(max(''.join([(re.sub(r'[^\x00-\x7F]+',' ', i['msg']) if not i['optional'] else "")
+                c = len(max(''.join([(re.sub(r'[^\x00-\x7F]+', ' ', i['msg']) if not i['optional'] else "")
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
-                c = len(max(''.join([re.sub(r'[^\x00-\x7F]+',' ', i['msg'])
+                c = len(max(''.join([re.sub(r'[^\x00-\x7F]+', ' ', i['msg'])
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
         except Exception:
             return 0
@@ -1077,7 +1076,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             return False
 
         # Display the Glances server list
-        #================================
+        # ================================
 
         # Table of table
         # Item description: [stats_id, column name, column size]

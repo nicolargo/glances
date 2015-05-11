@@ -59,12 +59,12 @@ class GlancesBottle(object):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
-        
+
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
         self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
         self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
-        
+
         self._app.route('/<filename:re:.*\.png>', method="GET", callback=self._images)
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
 
@@ -114,7 +114,7 @@ class GlancesBottle(object):
         """Bottle callback for *.html files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'html'))
-    
+
     def _css(self, filename):
         """Bottle callback for *.css files."""
         # Return the static file
@@ -134,7 +134,7 @@ class GlancesBottle(object):
         """Bottle callback for *.png files."""
         # Return the static file
         return static_file(filename, root=os.path.join(self.STATIC_PATH, 'images'))
-    
+
     def _favicon(self):
         """Bottle callback for favicon."""
         # Return the static file
@@ -153,8 +153,8 @@ class GlancesBottle(object):
             plist = json.dumps(view_data, sort_keys=True)
         except Exception as e:
             abort(404, "Cannot get help view data (%s)" % str(e))
-        return plist    
-    
+        return plist
+
     def _api_plugins(self):
         """
         @api {get} /api/2/pluginslist Get plugins list
@@ -204,7 +204,7 @@ class GlancesBottle(object):
         if not self.args.debug:
             # Update the stat
             self.stats.update()
-    
+
             try:
                 # Get the JSON value of the stat ID
                 statval = json.dumps(self.stats.getAllAsDict())
@@ -213,10 +213,10 @@ class GlancesBottle(object):
             return statval
         else:
             path = "~/glances/"
-            if is_windows:  
+            if is_windows:
                 path = "D:\\glances\\"
             filepath = path + "debug.json"
-            
+
             f = open(filepath)
             return f.read()
 

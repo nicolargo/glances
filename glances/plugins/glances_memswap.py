@@ -19,9 +19,9 @@
 
 """Swap memory plugin."""
 
-import psutil
-
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
@@ -95,9 +95,10 @@ class Plugin(GlancesPlugin):
                     self.reset()
                 else:
                     for fs in fs_stat:
-                        # The virtual memory concept is used by the operating system to extend (virtually) the physical
-                        # memory and thus to run more programs by swapping
-                        # unused memory zone (page) to a disk file.
+                        # The virtual memory concept is used by the operating
+                        # system to extend (virtually) the physical memory and
+                        # thus to run more programs by swapping unused memory
+                        # zone (page) to a disk file.
                         if fs == 'Virtual Memory':
                             self.stats['total'] = int(
                                 fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
