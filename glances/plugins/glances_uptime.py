@@ -34,7 +34,7 @@ snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
 
 class Plugin(GlancesPlugin):
 
-    """Glances' uptime plugin.
+    """Glances uptime plugin.
 
     stats is date (string)
     """

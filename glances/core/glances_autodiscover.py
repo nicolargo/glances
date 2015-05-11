@@ -53,7 +53,7 @@ zeroconf_type = "_%s._tcp." % appname
 
 class AutoDiscovered(object):
 
-    """Class to manage the auto discovered servers dict"""
+    """Class to manage the auto discovered servers dict."""
 
     def __init__(self):
         # server_dict is a list of dict (JSON compliant)
@@ -61,15 +61,15 @@ class AutoDiscovered(object):
         self._server_list = []
 
     def get_servers_list(self):
-        """Return the current server list (list of dict)"""
+        """Return the current server list (list of dict)."""
         return self._server_list
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         self._server_list[server_pos][key] = value
 
     def add_server(self, name, ip, port):
-        """Add a new server to the list"""
+        """Add a new server to the list."""
         new_server = {'key': name,  # Zeroconf name with both hostname and port
                       'name': name.split(':')[0],  # Short name
                       'ip': ip,  # IP address seen by the client
@@ -84,7 +84,7 @@ class AutoDiscovered(object):
                      (len(self._server_list), self._server_list))
 
     def remove_server(self, name):
-        """Remove a server from the dict"""
+        """Remove a server from the dict."""
         for i in self._server_list:
             if i['key'] == name:
                 try:
@@ -99,22 +99,23 @@ class AutoDiscovered(object):
 
 class GlancesAutoDiscoverListener(object):
 
-    """Zeroconf listener for Glances server"""
+    """Zeroconf listener for Glances server."""
 
     def __init__(self):
         # Create an instance of the servers list
         self.servers = AutoDiscovered()
 
     def get_servers_list(self):
-        """Return the current server list (list of dict)"""
+        """Return the current server list (list of dict)."""
         return self.servers.get_servers_list()
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         self.servers.set_server(server_pos, key, value)
 
     def add_service(self, zeroconf, srv_type, srv_name):
-        """Method called when a new Zeroconf client is detected
+        """Method called when a new Zeroconf client is detected.
+
         Return True if the zeroconf client is a Glances server
         Note: the return code will never be used
         """
@@ -137,7 +138,7 @@ class GlancesAutoDiscoverListener(object):
         return True
 
     def remove_service(self, zeroconf, srv_type, srv_name):
-        # Remove the server from the list
+        """Remove the server from the list."""
         self.servers.remove_server(srv_name)
         logger.info(
             "Glances server %s removed from the autodetect list" % srv_name)
@@ -145,7 +146,7 @@ class GlancesAutoDiscoverListener(object):
 
 class GlancesAutoDiscoverServer(object):
 
-    """Implementation of the Zeroconf protocol (server side for the Glances client)"""
+    """Implementation of the Zeroconf protocol (server side for the Glances client)."""
 
     def __init__(self, args=None):
         if zeroconf_tag:
@@ -165,14 +166,14 @@ class GlancesAutoDiscoverServer(object):
             self.zeroconf_enable_tag = False
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
+        """Return the current server list (dict of dict)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             return self.listener.get_servers_list()
         else:
             return []
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             self.listener.set_server(server_pos, key, value)
 

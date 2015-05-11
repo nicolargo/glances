@@ -47,9 +47,9 @@ else:
 
 class _GlancesCurses(object):
 
-    """
-    This class manages the curses display (and key pressed).
-    Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser
+    """This class manages the curses display (and key pressed).
+
+    Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
     """
 
     def __init__(self, args=None):
@@ -202,11 +202,12 @@ class _GlancesCurses(object):
                     'Stats history disabled because MatPlotLib is not installed')
 
     def set_cursor(self, value):
-        """Configure the curse cursor apparence
-           0: invisible
-           1: visible
-           2: very visible
-           """
+        """Configure the curse cursor apparence.
+
+        0: invisible
+        1: visible
+        2: very visible
+        """
         if hasattr(curses, 'curs_set'):
             try:
                 curses.curs_set(value)
@@ -369,26 +370,26 @@ class _GlancesCurses(object):
         curses.endwin()
 
     def init_line_column(self):
-        """Init the line and column position for the curses inteface"""
+        """Init the line and column position for the curses inteface."""
         self.init_line()
         self.init_column()
 
     def init_line(self):
-        """Init the line position for the curses inteface"""
+        """Init the line position for the curses inteface."""
         self.line = 0
         self.next_line = 0
 
     def init_column(self):
-        """Init the column position for the curses inteface"""
+        """Init the column position for the curses inteface."""
         self.column = 0
         self.next_column = 0
 
     def new_line(self):
-        """New line in the curses interface"""
+        """New line in the curses interface."""
         self.line = self.next_line
 
     def new_column(self):
-        """New column in the curses interface"""
+        """New column in the curses interface."""
         self.column = self.next_column
 
     def display(self, stats, cs_status=None):
@@ -656,18 +657,20 @@ class _GlancesCurses(object):
                       input_size=30,
                       input_value=None):
         """
+        Display a centered popup.
+
         If is_input is False:
          Display a centered popup with the given message during duration seconds
          If size_x and size_y: set the popup size
          else set it automatically
          Return True if the popup could be displayed
+
         If is_input is True:
          Display a centered popup with the given message and a input field
          If size_x and size_y: set the popup size
          else set it automatically
          Return the input string or None if the field is empty
         """
-
         # Center the popup
         sentence_list = message.split('\n')
         if size_x is None:
@@ -898,21 +901,21 @@ class _GlancesCurses(object):
 
 class GlancesCursesStandalone(_GlancesCurses):
 
-    """Class for the Glances' curse standalone"""
+    """Class for the Glances curse standalone."""
 
     pass
 
 
 class GlancesCursesClient(_GlancesCurses):
 
-    """Class for the Glances' curse client"""
+    """Class for the Glances curse client."""
 
     pass
 
 
 class GlancesCursesBrowser(_GlancesCurses):
 
-    """Class for the Glances' curse client browser"""
+    """Class for the Glances curse client browser."""
 
     def __init__(self, args=None):
         # Init the father class
@@ -961,14 +964,14 @@ class GlancesCursesBrowser(_GlancesCurses):
         self.cursor_position = position
 
     def cursor_up(self, servers_list):
-        """Set the cursor to position N-1 in the list"""
+        """Set the cursor to position N-1 in the list."""
         if self.cursor_position > 0:
             self.cursor_position -= 1
         else:
             self.cursor_position = len(servers_list) - 1
 
     def cursor_down(self, servers_list):
-        """Set the cursor to position N-1 in the list"""
+        """Set the cursor to position N-1 in the list."""
         if self.cursor_position < len(servers_list) - 1:
             self.cursor_position += 1
         else:
@@ -1028,13 +1031,15 @@ class GlancesCursesBrowser(_GlancesCurses):
 
     def flush(self, servers_list):
         """Update the servers' list screen.
+
         servers_list: List of dict with servers stats
         """
         self.erase()
         self.display(servers_list)
 
     def display(self, servers_list):
-        """Display the servers list
+        """Display the servers list.
+
         Return:
             True if the stats have been displayed
             False if the stats have not been displayed (no server available)

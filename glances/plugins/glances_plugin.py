@@ -37,7 +37,7 @@ from glances.core.glances_actions import GlancesActions
 
 class GlancesPlugin(object):
 
-    """Main class for Glances' plugin."""
+    """Main class for Glances plugin."""
 
     def __init__(self, args=None, items_history_list=None):
         """Init the plugin of plugins class."""
@@ -80,18 +80,18 @@ class GlancesPlugin(object):
         return str(self.stats)
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return None
 
     def add_item_history(self, key, value):
-        """Add an new item (key, value) to the current history"""
+        """Add an new item (key, value) to the current history."""
         try:
             self.stats_history[key].append(value)
         except KeyError:
             self.stats_history[key] = [value]
 
     def init_stats_history(self):
-        """Init the stats history (dict of list)"""
+        """Init the stats history (dict of list)."""
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
@@ -101,7 +101,7 @@ class GlancesPlugin(object):
         return ret
 
     def reset_stats_history(self):
-        """Reset the stats history (dict of list)"""
+        """Reset the stats history (dict of list)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {0})".format(
@@ -109,7 +109,7 @@ class GlancesPlugin(object):
             self.stats_history = {}
 
     def update_stats_history(self, item_name=''):
-        """Update stats history"""
+        """Update stats history."""
         if (self.stats and self.args is not None and
                 self.args.enable_history and
                 self.get_items_history_list() is not None):
@@ -128,11 +128,11 @@ class GlancesPlugin(object):
                     self.add_item_history(i['name'], self.stats[i['name']])
 
     def get_stats_history(self):
-        """Return the stats history"""
+        """Return the stats history."""
         return self.stats_history
 
     def get_items_history_list(self):
-        """Return the items history list"""
+        """Return the items history list."""
         return self.items_history_list
 
     @property
@@ -224,12 +224,12 @@ class GlancesPlugin(object):
         return self.stats
 
     def get_stats(self):
-        """Return the stats object in JSON format"""
+        """Return the stats object in JSON format."""
         return json.dumps(self.stats)
 
     def get_stats_item(self, item):
-        """
-        Return the stats object for a specific item (in JSON format)
+        """Return the stats object for a specific item in JSON format.
+
         Stats should be a list of dict (processlist, network...)
         """
         if type(self.stats) is not list:
@@ -250,8 +250,8 @@ class GlancesPlugin(object):
                 return None
 
     def get_stats_value(self, item, value):
-        """
-        Return the stats object for a specific item=value (in JSON format)
+        """Return the stats object for a specific item=value in JSON format.
+
         Stats should be a list of dict (processlist, network...)
         """
         if type(self.stats) is not list:
@@ -267,7 +267,8 @@ class GlancesPlugin(object):
                 return None
 
     def update_views(self):
-        """Default builder fo the stats views
+        """Default builder fo the stats views.
+
         The V of MVC
         A dict of dict with the needed information to display the stats.
         Example for the stat xxx:
@@ -307,12 +308,13 @@ class GlancesPlugin(object):
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
+
         If key is None, return all the view for the current plugin
         else if option is None return the view for the specific key (all option)
         else return the view fo the specific key/option
 
-        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)"""
-
+        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)
+        """
         if item is None:
             item_views = self.views
         else:
@@ -436,7 +438,7 @@ class GlancesPlugin(object):
         return self.get_alert(current, minimum, maximum, header, log=True)
 
     def __get_limit(self, criticity, stat_name=""):
-        """Return the limit value for the alert"""
+        """Return the limit value for the alert."""
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful
         try:
@@ -450,7 +452,7 @@ class GlancesPlugin(object):
         return limit
 
     def __get_limit_action(self, criticity, stat_name=""):
-        """Return the action for the alert"""
+        """Return the action for the alert."""
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
         try:
@@ -464,7 +466,7 @@ class GlancesPlugin(object):
         return ret
 
     def __get_limit_log(self, stat_name, default_action=False):
-        """Return the log tag for the alert"""
+        """Return the log tag for the alert."""
         # Get the log tag for stat + header
         # Exemple: network_wlan0_rx_log
         try:
@@ -482,7 +484,10 @@ class GlancesPlugin(object):
         return log_tag[0].lower() == 'true'
 
     def get_conf_value(self, value, header="", plugin_name=None):
-        """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
+        """Return the configuration (header_) value for the current plugin.
+
+        ...or the one given by the plugin_name var.
+        """
         if plugin_name is None:
             # If not default use the current plugin name
             plugin_name = self.plugin_name
@@ -501,7 +506,7 @@ class GlancesPlugin(object):
         return value in self.get_conf_value('hide', header=header)
 
     def has_alias(self, header):
-        """Return the alias name for the relative header or None if nonexist"""
+        """Return the alias name for the relative header or None if nonexist."""
         try:
             return self._limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
         except (KeyError, IndexError):
@@ -541,7 +546,7 @@ class GlancesPlugin(object):
     def curse_add_line(self, msg, decoration="DEFAULT",
                        optional=False, additional=False,
                        splittable=False):
-        """Return a dict with
+        """Return a dict with.
 
         Where:
             msg: string
@@ -634,7 +639,7 @@ class GlancesPlugin(object):
         return '{0!s}'.format(number)
 
     def _log_result_decorator(fct):
-        """Log (DEBUG) the result of the function fct"""
+        """Log (DEBUG) the result of the function fct."""
         def wrapper(*args, **kw):
             ret = fct(*args, **kw)
             if is_py3:

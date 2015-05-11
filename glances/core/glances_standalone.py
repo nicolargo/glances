@@ -99,9 +99,11 @@ class GlancesStandalone(object):
             self.stats.export(self.stats)
 
     def serve_forever(self):
-        """Wrapper to the serve_forever function
-        this function will restore the terminal to a sane state
-        before re-raising the exception and generating a traceback"""
+        """Wrapper to the serve_forever function.
+
+        This function will restore the terminal to a sane state
+        before re-raising the exception and generating a traceback.
+        """
         try:
             return self.__serve_forever()
         finally:

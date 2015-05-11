@@ -43,7 +43,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'cpu_number'
 
     def reset(self):

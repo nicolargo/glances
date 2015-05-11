@@ -30,7 +30,7 @@ from glances.core.glances_logging import logger
 
 class Plugin(GlancesPlugin):
 
-    """Glances' HDD temperature sensors plugin.
+    """Glances HDD temperature sensors plugin.
 
     stats is a list
     """

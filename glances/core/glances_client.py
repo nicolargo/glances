@@ -38,7 +38,7 @@ from glances.outputs.glances_curses import GlancesCursesClient
 
 class GlancesClientTransport(Transport):
 
-    """This class overwrite the default XML-RPC transport and manage timeout"""
+    """This class overwrite the default XML-RPC transport and manage timeout."""
 
     def set_timeout(self, timeout):
         self.timeout = timeout
@@ -77,7 +77,7 @@ class GlancesClient(object):
             self.log_and_exit("Client couldn't create socket {0}: {1}".format(uri, e))
 
     def log_and_exit(self, msg=''):
-        """Log and (exit)"""
+        """Log and exit."""
         if not self.return_to_browser:
             logger.critical(msg)
             sys.exit(2)
@@ -216,9 +216,7 @@ class GlancesClient(object):
 
     def serve_forever(self):
         """Main client loop."""
-
         exitkey = False
-
         try:
             while True and not exitkey:
                 # Update the stats

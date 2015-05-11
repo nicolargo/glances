@@ -41,7 +41,7 @@ items_history_list = [{'name': 'percent', 'color': '#00FF00', 'y_unit': '%'}]
 
 class Plugin(GlancesPlugin):
 
-    """Glances' swap memory plugin.
+    """Glances swap memory plugin.
 
     stats is a dict
     """
@@ -136,7 +136,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 

@@ -35,11 +35,10 @@ else:
 
 class GlancesActions(object):
 
-    """This class manage action if an alert is reached"""
+    """This class manage action if an alert is reached."""
 
     def __init__(self):
-        """Init GlancesActions class"""
-
+        """Init GlancesActions class."""
         # Dict with the criticity status
         # - key: stat_name
         # - value: criticity
@@ -47,25 +46,26 @@ class GlancesActions(object):
         self.status = {}
 
     def get(self, stat_name):
-        """Get the stat_name criticity"""
+        """Get the stat_name criticity."""
         try:
             return self.status[stat_name]
         except KeyError:
             return None
 
     def set(self, stat_name, criticity):
-        """Set the stat_name to criticity"""
+        """Set the stat_name to criticity."""
         self.status[stat_name] = criticity
 
     def run(self, stat_name, criticity, commands, mustache_dict=None):
-        """Run the commands (in background)
+        """Run the commands (in background).
+
         - stats_name: plugin_name (+ header)
         - criticity: criticity of the trigger
         - commands: a list of command line with optional {{mustache}}
         - mustache_dict: Plugin stats (can be use within {{mustache}})
 
-        Return True if the commands have been ran"""
-
+        Return True if the commands have been ran.
+        """
         if self.get(stat_name) == criticity:
             # Action already executed => Exit
             return False

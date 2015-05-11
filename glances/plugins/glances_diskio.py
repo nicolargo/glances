@@ -36,7 +36,7 @@ items_history_list = [{'name': 'read_bytes', 'color': '#00FF00', 'y_unit': 'B/s'
 
 class Plugin(GlancesPlugin):
 
-    """Glances' disks I/O plugin.
+    """Glances disks I/O plugin.
 
     stats is a list
     """
@@ -53,7 +53,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'disk_name'
 
     def reset(self):
@@ -127,7 +127,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 

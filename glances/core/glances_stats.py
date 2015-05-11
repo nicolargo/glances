@@ -157,7 +157,9 @@ class GlancesStats(object):
 
     def export(self, input_stats=None):
         """Export all the stats.
-        Each export module is ran in a dedicated thread."""
+
+        Each export module is ran in a dedicated thread.
+        """
         # threads = []
         input_stats = input_stats or {}
 
@@ -169,11 +171,11 @@ class GlancesStats(object):
             thread.start()
 
     def getAll(self):
-        """Return all the stats (list)"""
+        """Return all the stats (list)."""
         return [self._plugins[p].get_raw() for p in self._plugins]
 
     def getAllAsDict(self):
-        """Return all the stats (dict)"""
+        """Return all the stats (dict)."""
         # Python > 2.6
         # {p: self._plugins[p].get_raw() for p in self._plugins}
         ret = {}
@@ -186,18 +188,18 @@ class GlancesStats(object):
         return [self._plugins[p].limits for p in self._plugins]
 
     def getAllLimitsAsDict(self):
-        """Return all the stats limits (dict)"""
+        """Return all the stats limits (dict)."""
         ret = {}
         for p in self._plugins:
             ret[p] = self._plugins[p].limits
         return ret
 
     def getAllViews(self):
-        """Return the plugins views"""
+        """Return the plugins views."""
         return [self._plugins[p].get_views() for p in self._plugins]
 
     def getAllViewsAsDict(self):
-        """Return all the stats views (dict)"""
+        """Return all the stats views (dict)."""
         ret = {}
         for p in self._plugins:
             ret[p] = self._plugins[p].get_views()
@@ -215,7 +217,7 @@ class GlancesStats(object):
             return None
 
     def end(self):
-        """End of the Glances stats"""
+        """End of the Glances stats."""
         # Close the export module
         for e in self._exports:
             self._exports[e].exit()
@@ -244,7 +246,7 @@ class GlancesStatsServer(GlancesStats):
         self.all_stats = self._set_stats(input_stats)
 
     def _set_stats(self, input_stats):
-        """Set the stats to the input_stats one"""
+        """Set the stats to the input_stats one."""
         # Build the all_stats with the get_raw() method of the plugins
         ret = collections.defaultdict(dict)
         for p in self._plugins:
@@ -252,11 +254,11 @@ class GlancesStatsServer(GlancesStats):
         return ret
 
     def getAll(self):
-        """Return the stats as a list"""
+        """Return the stats as a list."""
         return self.all_stats
 
     def getAllAsDict(self):
-        """Return the stats as a dict"""
+        """Return the stats as a dict."""
         # Python > 2.6
         # return {p: self.all_stats[p] for p in self._plugins}
         ret = {}
@@ -363,7 +365,7 @@ class GlancesStatsClientSNMP(GlancesStats):
         return ret
 
     def get_system_name(self, oid_system_name):
-        """Get the short os name from the OS name OID string"""
+        """Get the short os name from the OS name OID string."""
         short_system_name = None
 
         if oid_system_name == '':

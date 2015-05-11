@@ -60,7 +60,7 @@ class Export(GlancesExport):
                                   prefix=self.prefix)
 
     def load_conf(self, section="statsd"):
-        """Load the Statsd configuration in the Glances configuration file"""
+        """Load the Statsd configuration in the Glances configuration file."""
         if self.config is None:
             return False
         try:
@@ -82,7 +82,7 @@ class Export(GlancesExport):
         return True
 
     def init(self, prefix='glances'):
-        """Init the connection to the Statsd server"""
+        """Init the connection to the Statsd server."""
         if not self.export_enable:
             return None
         return StatsClient(self.host,
@@ -90,7 +90,7 @@ class Export(GlancesExport):
                            prefix=prefix)
 
     def export(self, name, columns, points):
-        """Export the stats to the Statsd server"""
+        """Export the stats to the Statsd server."""
         for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
                 continue

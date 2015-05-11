@@ -63,7 +63,7 @@ items_history_list = [{'name': 'percent', 'color': '#00FF00'}]
 
 class Plugin(GlancesPlugin):
 
-    """Glances' file system plugin.
+    """Glances file system plugin.
 
     stats is a list
     """
@@ -80,7 +80,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'mnt_point'
 
     def reset(self):
@@ -183,7 +183,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 

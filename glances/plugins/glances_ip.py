@@ -33,7 +33,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' IP Plugin.
+    """Glances IP Plugin.
 
     stats is a dict
     """
@@ -86,7 +86,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
@@ -97,7 +97,6 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
-
         # Init the return message
         ret = []
 
@@ -117,6 +116,8 @@ class Plugin(GlancesPlugin):
 
     @staticmethod
     def ip_to_cidr(ip):
-        # Convert IP address to CIDR
-        # Exemple: '255.255.255.0' will return 24
+        """Convert IP address to CIDR.
+
+        Example: '255.255.255.0' will return 24
+        """
         return sum(map(lambda x: int(x) << 8, ip.split('.'))) // 8128

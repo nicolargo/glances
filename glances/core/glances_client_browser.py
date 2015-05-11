@@ -38,7 +38,7 @@ from glances.outputs.glances_curses import GlancesCursesBrowser
 
 class GlancesClientBrowser(object):
 
-    """This class creates and manages the TCP client browser (servers' list)."""
+    """This class creates and manages the TCP client browser (servers list)."""
 
     def __init__(self, config=None, args=None):
         # Store the arg/config
@@ -58,9 +58,9 @@ class GlancesClientBrowser(object):
         self.screen = GlancesCursesBrowser(args=self.args)
 
     def get_servers_list(self):
-        """
-        Return the current server list (list of dict)
-        Merge of static + autodiscover servers list
+        """Return the current server list (list of dict).
+
+        Merge of static + autodiscover servers list.
         """
         ret = []
 
@@ -72,7 +72,7 @@ class GlancesClientBrowser(object):
         return ret
 
     def __get_uri(self, server):
-        """Return the URI for the given server dict"""
+        """Return the URI for the given server dict."""
         # Select the connection mode (with or without password)
         if server['password'] != "":
             return 'http://{0}:{1}@{2}:{3}'.format(server['username'], server['password'],
@@ -218,9 +218,11 @@ class GlancesClientBrowser(object):
                 self.screen.active_server = None
 
     def serve_forever(self):
-        """Wrapper to the serve_forever function
-        this function will restore the terminal to a sane state
-        before re-raising the exception and generating a traceback"""
+        """Wrapper to the serve_forever function.
+
+        This function will restore the terminal to a sane state
+        before re-raising the exception and generating a traceback.
+        """
         try:
             return self.__serve_forever()
         finally:

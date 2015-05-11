@@ -16,9 +16,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 """Web interface class."""
-# Import Glances libs
-# Import mandatory Bottle lib
 
 import json
 import os
@@ -26,7 +25,6 @@ import sys
 
 from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
-
 
 try:
     from bottle import Bottle, static_file, abort, response, request
@@ -143,10 +141,9 @@ class GlancesBottle(object):
         return static_file('favicon.ico', root=self.STATIC_PATH)
 
     def _api_help(self):
-        """
-        Glances API RESTFul implementation
-        Return the help data
-        or 404 error
+        """Glances API RESTFul implementation.
+
+        Return the help data or 404 error.
         """
         response.content_type = 'application/json'
 
@@ -195,8 +192,8 @@ class GlancesBottle(object):
         return plist
 
     def _api_all(self):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON representation of all the plugins
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -224,8 +221,8 @@ class GlancesBottle(object):
             return f.read()
 
     def _api_all_limits(self):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON representation of all the plugins limits
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -241,8 +238,8 @@ class GlancesBottle(object):
         return limits
 
     def _api_all_views(self):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON representation of all the plugins views
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -258,8 +255,8 @@ class GlancesBottle(object):
         return limits
 
     def _api(self, plugin):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON representation of a given plugin
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -281,8 +278,8 @@ class GlancesBottle(object):
         return statval
 
     def _api_limits(self, plugin):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON limits of a given plugin
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -304,8 +301,8 @@ class GlancesBottle(object):
         return ret
 
     def _api_views(self, plugin):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON views of a given plugin
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -327,8 +324,8 @@ class GlancesBottle(object):
         return ret
 
     def _api_item(self, plugin, item):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the JSON represenation of the couple plugin/item
         HTTP/200 if OK
         HTTP/400 if plugin is not found
@@ -351,8 +348,8 @@ class GlancesBottle(object):
             return plist
 
     def _api_value(self, plugin, item, value):
-        """
-        Glances API RESTFul implementation
+        """Glances API RESTFul implementation.
+
         Return the process stats (dict) for the given item=value
         HTTP/200 if OK
         HTTP/400 if plugin is not found

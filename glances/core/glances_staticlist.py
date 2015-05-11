@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Manage the Glances server static list """
+"""Manage the Glances server static list."""
 
 # System lib
 from socket import gaierror, gethostbyname
@@ -28,7 +28,7 @@ from glances.core.glances_logging import logger
 
 class GlancesStaticServer(object):
 
-    """Manage the static servers list for the client browser"""
+    """Manage the static servers list for the client browser."""
 
     _section = "serverlist"
 
@@ -39,8 +39,7 @@ class GlancesStaticServer(object):
         self._server_list = self.load(config)
 
     def load(self, config):
-        """Load the server list from the configuration file"""
-
+        """Load the server list from the configuration file."""
         server_list = []
 
         if config is None:
@@ -85,9 +84,9 @@ class GlancesStaticServer(object):
         return server_list
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
+        """Return the current server list (dict of dict)."""
         return self._server_list
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         self._server_list[server_pos][key] = value

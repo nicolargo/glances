@@ -100,10 +100,10 @@ class GlancesLogs(object):
             proc_list=None, proc_desc="", peak_time=6):
         """Add a new item to the logs list.
 
-        If 'item' is a 'new one', add the new item at the beginning of the logs
-        list.
+        If 'item' is a 'new one', add the new item at the beginning of
+        the logs list.
         If 'item' is not a 'new one', update the existing item.
-        If event < peak_time the the alert is not setoff
+        If event < peak_time the the alert is not setoff.
         """
         proc_list = proc_list or []
 
@@ -186,8 +186,8 @@ class GlancesLogs(object):
     def clean(self, critical=False):
         """Clean the logs list by deleting finished items.
 
-        By default, only delete WARNING message
-        If critical = True, also delete CRITICAL message
+        By default, only delete WARNING message.
+        If critical = True, also delete CRITICAL message.
         """
         # Create a new clean list
         clean_logs_list = []

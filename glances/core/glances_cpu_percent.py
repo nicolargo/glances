@@ -25,7 +25,8 @@ from glances.core.glances_timer import Timer
 
 
 class CpuPercent(object):
-    """Get and strore the CPU percent"""
+
+    """Get and store the CPU percent."""
 
     def __init__(self, cached_time=1):
         self.cpu_percent = 0
@@ -36,7 +37,7 @@ class CpuPercent(object):
         self.cached_time = cached_time
 
     def get(self):
-        """Update and/or return the CPU using the PSUtil lib"""
+        """Update and/or return the CPU using the psutil library."""
         # Never update more than 1 time per cached_time
         if self.timer.finished():
             self.cpu_percent = psutil.cpu_percent(interval=0.0)
