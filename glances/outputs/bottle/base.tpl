@@ -6,9 +6,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>Glances</title>
         <link rel="icon" type="image/x-icon" href="favicon.ico" />
-        <link rel="stylesheet" type="text/css" href="normalize.css" />
-        <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
-        <link rel="stylesheet" type="text/css" href="style.css" />
+        <link rel="stylesheet" href="normalize.css" />
+        <link rel="stylesheet" href="bootstrap.min.css" />
+        <link rel="stylesheet" href="style.css" />
         <script src="modernizr.custom.js"></script>
     </head>
     <body>
@@ -25,7 +25,7 @@
             </div>
             <div class="row">
                 <div class="col-sm-3">
-                    % include('plugin_table', plugin_name="cpu", stats=stats['cpu'])    
+                    % include('plugin_table', plugin_name="cpu", stats=stats['cpu'])
                 </div>
                 <div class="col-sm-3 col-lg-2 col-lg-offset-1">
                     % include('plugin_table', plugin_name="load", stats=stats['load'])
@@ -50,7 +50,7 @@
                     % include('plugin_table', plugin_name="docker", stats=stats['docker'])
                     <div class="row">
                         <div class="col-sm-9">
-                            % include('plugin_table', plugin_name="monitor", stats=stats['monitor'])        
+                            % include('plugin_table', plugin_name="monitor", stats=stats['monitor'])
                         </div>
                     </div>
                     % include('plugin_table', plugin_name="processlist", stats=stats['processlist'])
