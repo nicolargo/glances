@@ -13,7 +13,6 @@ core/
     glances_limits.py       Manage limits
     glances_logs.py         Manage logs
     glances_main.py         Main script to rule them up...
-    glances_stats.py        Inteface to grab stats
     glances_client.py       Glances client
     glances_server.py       Glances server
     glances_standalone.py   Glances standalone (with curse interface)
