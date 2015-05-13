@@ -76,7 +76,7 @@ class GlancesActions(object):
                                                                           criticity,
                                                                           mustache_dict))
 
-        # Ran all actions in background
+        # Run all actions in background
         for cmd in commands:
             # Replace {{arg}} by the dict one (Thk to {Mustache})
             if pystache_tag:
