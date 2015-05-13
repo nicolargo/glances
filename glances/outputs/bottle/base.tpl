@@ -9,7 +9,6 @@
         <link rel="stylesheet" href="normalize.css" />
         <link rel="stylesheet" href="bootstrap.min.css" />
         <link rel="stylesheet" href="style.css" />
-        <script src="modernizr.custom.js"></script>
     </head>
     <body>
         <div class="container-fluid">
