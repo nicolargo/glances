@@ -6,14 +6,14 @@ Glances - An eye on your system
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=master
         :target: https://scrutinizer-ci.com/g/nicolargo/glances/
-.. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
+.. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
         :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://badge.fury.io/py/Glances.png
+.. image:: https://badge.fury.io/py/Glances.svg
         :target: http://badge.fury.io/py/Glances
-.. image:: https://pypip.in/d/Glances/badge.png
+.. image:: https://pypip.in/d/Glances/badge.svg
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
-        
+
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
@@ -158,7 +158,7 @@ Windows
 -------
 
 - Install Python for Windows (Python 2.7.9+ ship with Pip): http://www.python.org/getit/
-- Install the psutil library (latest binary version): https://pypi.python.org/pypi?:action=display&name=psutil#downloads
+- Install the psutil library (latest binary version): https://pypi.python.org/pypi/psutil
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
 - Install optionnals dependencies (see list bellow)
 - Install Glances using pip
