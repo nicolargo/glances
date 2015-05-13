@@ -98,74 +98,65 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None):
         """Return the list to display in the curse interface."""
-        # Init the return message
-        ret = []
-
-        # Build the string message
-        # Header
-        ret.append(self.curse_add_line(self.view_data['version'], 'TITLE'))
-        ret.append(self.curse_add_line(self.view_data['psutil_version']))
-        ret.append(self.curse_new_line())
-
-        # Configuration file path
-        if 'configuration_file' in self.view_data:
-            ret.append(self.curse_new_line())
-            ret.append(self.curse_add_line(self.view_data['configuration_file']))
-            ret.append(self.curse_new_line())
-
-        # Keys
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_auto']))
-        ret.append(self.curse_add_line(self.view_data['sort_network']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_cpu']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_alert']))
-        ret.append(self.curse_new_line())
-
-        ret.append(self.curse_add_line(self.view_data['sort_mem']))
-        ret.append(self.curse_add_line(self.view_data['delete_warning_alerts']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_user']))
-        ret.append(self.curse_add_line(self.view_data['delete_warning_critical_alerts']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_proc']))
-        ret.append(self.curse_add_line(self.view_data['percpu']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_io']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_ip']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['sort_cpu_times']))
-        ret.append(self.curse_add_line(self.view_data['enable_disable_docker']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_diskio']))
-        ret.append(self.curse_add_line(self.view_data['view_network_io_combination']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_filesystem']))
-        ret.append(self.curse_add_line(self.view_data['view_cumulative_network']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_network']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_filesytem_freespace']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_sensors']))
-        ret.append(self.curse_add_line(self.view_data['generate_graphs']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['show_hide_left_sidebar']))
-        ret.append(self.curse_add_line(self.view_data['reset_history']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_process_stats']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_help']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_quick_look']))
-        ret.append(self.curse_add_line(self.view_data['quit']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_top_extends_stats']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
-        ret.append(self.curse_new_line())
-
-        ret.append(self.curse_new_line())
-
-        ret.append(self.curse_add_line(self.view_data['edit_pattern_filter']))
+        ret = [
+            # Header
+            self.curse_add_line(self.view_data['version'], 'TITLE'),
+            self.curse_add_line(self.view_data['psutil_version']),
+            self.curse_new_line(),
+            # Configuration file
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['configuration_file']),
+            self.curse_new_line(),
+            # Keys
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_auto']),
+            self.curse_add_line(self.view_data['sort_network']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_cpu']),
+            self.curse_add_line(self.view_data['show_hide_alert']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_mem']),
+            self.curse_add_line(self.view_data['delete_warning_alerts']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_user']),
+            self.curse_add_line(self.view_data['delete_warning_critical_alerts']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_proc']),
+            self.curse_add_line(self.view_data['percpu']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_io']),
+            self.curse_add_line(self.view_data['show_hide_ip']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['sort_cpu_times']),
+            self.curse_add_line(self.view_data['enable_disable_docker']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['show_hide_diskio']),
+            self.curse_add_line(self.view_data['view_network_io_combination']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['show_hide_filesystem']),
+            self.curse_add_line(self.view_data['view_cumulative_network']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['show_hide_network']),
+            self.curse_add_line(self.view_data['show_hide_filesytem_freespace']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['show_hide_sensors']),
+            self.curse_add_line(self.view_data['generate_graphs']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['show_hide_left_sidebar']),
+            self.curse_add_line(self.view_data['reset_history']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['enable_disable_process_stats']),
+            self.curse_add_line(self.view_data['show_hide_help']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['enable_disable_quick_look']),
+            self.curse_add_line(self.view_data['quit']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['enable_disable_top_extends_stats']),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['enable_disable_short_processname']),
+            self.curse_new_line(),
+            self.curse_new_line(),
+            self.curse_add_line(self.view_data['edit_pattern_filter'])]
 
         # Return the message with decoration
         return ret
