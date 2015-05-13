@@ -144,46 +144,45 @@ Command-Line Options
 
   -h, --help            show this help message and exit
   -V, --version         show program's version number and exit
-  -d, --debug           Enable debug mode
+  -d, --debug           enable debug mode
   -C CONF_FILE, --config CONF_FILE
                         path to the configuration file
-  --enable-history      enable the history mode
-  --disable-bold        disable bold mode in the terminal
-  --disable-diskio      disable disk I/O module
-  --disable-fs          disable filesystem module
   --disable-network     disable network module
+  --disable-ip          disable IP module
+  --disable-diskio      disable disk I/O module
+  --disable-fs          disable file system module
   --disable-sensors     disable sensors module
-  --disable-hddtemp     disable HDDTemp module
+  --disable-hddtemp     disable hddtemp module
+  --disable-raid        disable RAID module
+  --disable-docker      disable Docker module
   --disable-left-sidebar
-                        disable left sidebar
+                        disable network, disk I/O, file system and
+                        sensors modules (py3sensors needed)
   --disable-process     disable process module
   --disable-log         disable log module
+  --disable-quicklook   disable quick look module
+  --disable-bold        disable bold mode in the terminal
   --enable-process-extended
                         enable extended stats on top process
-  --disable-quicklook   disable the Quicklook module
+  --enable-history      enable the history mode (matplotlib needed)
   --path-history PATH_HISTORY
-                        Set the export path for graph history
-  --export-csv CSV_FILE
+                        set the export path for graph history
+  --export-csv EXPORT_CSV
                         export stats to a CSV file
-  --export-influxdb
-                        export stats to an InfluxDB server
-  --export-statsd
-                        export stats to a Statsd server
-  --export-rabbitmq
-                        export stats to a RabbitMQ server
+  --export-influxdb     export stats to an InfluxDB server (influxdb needed)
+  --export-statsd       export stats to a StatsD server (statsd needed)
+  --export-rabbitmq     export stats to a RabbitMQ server (pika needed)
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
   -s, --server          run Glances in server mode
-  --browser             run the Glances client browser (list of Glances server)
+  --browser             start the client browser (list of Glances servers)
   --disable-autodiscover
                         disable autodiscover feature
   -p PORT, --port PORT  define the client/server TCP port [default: 61209]
   -B BIND_ADDRESS, --bind BIND_ADDRESS
                         bind server to the given IPv4/IPv6 address or hostname
   --password            define a client/server password
-  --disable-autodiscover
-                        Hide Glances server from the auto discover feature
   --snmp-community SNMP_COMMUNITY
                         SNMP community
   --snmp-port SNMP_PORT
@@ -196,17 +195,17 @@ Command-Line Options
                         SNMP authentication key (only for SNMPv3)
   --snmp-force          force SNMP mode
   -t TIME, --time TIME  set refresh time in seconds [default: 3 sec]
-  -w, --webserver       run Glances in web server mode
-  -q, --quiet           run Glances in quiet mode (nothing is displayed)
+  -w, --webserver       run Glances in web server mode (bottle needed)
+  -q, --quiet           do not display the curses interface
   -f PROCESS_FILTER, --process-filter PROCESS_FILTER
-                        set the process filter patern (regular expression)
+                        set the process filter pattern (regular expression)
   --process-short-name  force short name for processes name
   --hide-kernel-threads
                         hide kernel threads in process list
   --tree                display processes as a tree
   -b, --byte            display network rate in byte per second
   -1, --percpu          start Glances in per CPU mode
-  --fs-free-space       display FS free space instead of used
+  --fs-free-space       display file system free space instead of used
   --theme-white         optimize display colors for white background
 
 Interactive Commands
@@ -237,7 +236,7 @@ The following commands (key pressed) are supported while in Glances:
 ``f``
     Show/hide file system stats
 ``F``
-    Switch between FS used and free space
+    Switch between file system used and free space
 ``g``
     Generate graphs for current history
 ``h``
@@ -277,7 +276,7 @@ The following commands (key pressed) are supported while in Glances:
 ``2``
     Enable/disable left sidebar
 ``3``
-    Enable/disable the Quicklook module
+    Enable/disable the quick look module
 ``/``
     Switch between short name / command line (processes name)
 
