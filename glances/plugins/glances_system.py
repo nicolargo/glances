@@ -47,6 +47,34 @@ snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R
                              'Windows Version 5.0': 'Windows 2000'}}
 
 
+def _linux_os_release():
+    """Try to determine the name of a Linux distribution.
+
+    This function checks for the /etc/os-release file.
+    It takes the name from the 'NAME' field and the version from 'VERSION_ID'.
+    An empty string is returned if the above values cannot be determined.
+    """
+    pretty_name = ''
+    ashtray = {}
+    keys = ['NAME', 'VERSION_ID']
+    try:
+        with open(os.path.join('/etc', 'os-release')) as f:
+            for line in f:
+                for key in keys:
+                    if line.startswith(key):
+                        ashtray[key] = line.strip().split('=')[1][1:-1]
+    except (OSError, IOError):
+        return pretty_name
+
+    if ashtray:
+        if 'NAME' in ashtray:
+            pretty_name = ashtray['NAME']
+        if 'VERSION_ID' in ashtray:
+            pretty_name += ' {0}'.format(ashtray['VERSION_ID'])
+
+    return pretty_name
+
+
 class Plugin(GlancesPlugin):
 
     """Glances' host/system plugin.
@@ -68,33 +96,6 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
-    def _linux_os_release(self):
-        """Try to determine the name of a Linux distribution.
-
-        It checks for the /etc/os-release file. It takes the name from the
-        'NAME' field and the version from 'VERSION_ID'.
-        An empty string is returned if the above values cannot be determined.
-        """
-        pretty_name = ''
-        ashtray = {}
-        keys = ['NAME', 'VERSION_ID']
-        try:
-            with open(os.path.join('/etc', 'os-release')) as f:
-                for line in f:
-                    for key in keys:
-                        if line.startswith(key):
-                            ashtray[key] = line.strip().split('=')[1][1:-1]
-        except (OSError, IOError):
-            return pretty_name
-
-        if ashtray:
-            if 'NAME' in ashtray:
-                pretty_name = ashtray['NAME']
-            if 'VERSION_ID' in ashtray:
-                pretty_name += ' {0}'.format(ashtray['VERSION_ID'])
-
-        return pretty_name
-
     def update(self):
         """Update the host/system info using the input method.
 
@@ -111,7 +112,7 @@ class Plugin(GlancesPlugin):
             if self.stats['os_name'] == "Linux":
                 linux_distro = platform.linux_distribution()
                 if linux_distro[0] == '':
-                    self.stats['linux_distro'] = self._linux_os_release()
+                    self.stats['linux_distro'] = _linux_os_release()
                 else:
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
