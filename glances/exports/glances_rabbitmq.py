@@ -84,17 +84,17 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-                parameters = pika.URLParameters(
-                    'amqp://' + self.rabbitmq_user +
-                    ':' + self.rabbitmq_password +
-                    '@' + self.rabbitmq_host +
-                    ':' + self.rabbitmq_port + '/')
-                connection = pika.BlockingConnection(parameters)
-                channel = connection.channel()
-                return channel
+            parameters = pika.URLParameters(
+                'amqp://' + self.rabbitmq_user +
+                ':' + self.rabbitmq_password +
+                '@' + self.rabbitmq_host +
+                ':' + self.rabbitmq_port + '/')
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            return channel
         except Exception as e:
-                logger.critical("Connection to rabbitMQ failed : %s " % e)
-                return None
+            logger.critical("Connection to rabbitMQ failed : %s " % e)
+            return None
 
     def export(self, name, columns, points):
         """Write the points in RabbitMQ."""
