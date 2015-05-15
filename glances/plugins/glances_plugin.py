@@ -643,11 +643,15 @@ class GlancesPlugin(object):
         def wrapper(*args, **kw):
             ret = fct(*args, **kw)
             if is_py3:
-                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
-                             0].__class__.__module__[len('glances_'):], fct.__name__, ret))
+                logger.debug("%s %s %s return %s" % (
+                    args[0].__class__.__name__,
+                    args[0].__class__.__module__[len('glances_'):],
+                    fct.__name__, ret))
             else:
-                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
-                             0].__class__.__module__[len('glances_'):], fct.func_name, ret))
+                logger.debug("%s %s %s return %s" % (
+                    args[0].__class__.__name__,
+                    args[0].__class__.__module__[len('glances_'):],
+                    fct.func_name, ret))
             return ret
         return wrapper
 

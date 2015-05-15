@@ -70,15 +70,15 @@ class AutoDiscovered(object):
 
     def add_server(self, name, ip, port):
         """Add a new server to the list."""
-        new_server = {'key': name,  # Zeroconf name with both hostname and port
-                      'name': name.split(':')[0],  # Short name
-                      'ip': ip,  # IP address seen by the client
-                      'port': port,  # TCP port
-                      'username': 'glances',  # Default username
-                      'password': '',  # Default password
-                      'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
-                      'type': 'DYNAMIC',  # Server type: 'STATIC' or 'DYNAMIC'
-                      }
+        new_server = {
+            'key': name,  # Zeroconf name with both hostname and port
+            'name': name.split(':')[0],  # Short name
+            'ip': ip,  # IP address seen by the client
+            'port': port,  # TCP port
+            'username': 'glances',  # Default username
+            'password': '',  # Default password
+            'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
+            'type': 'DYNAMIC'}  # Server type: 'STATIC' or 'DYNAMIC'
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %
                      (len(self._server_list), self._server_list))
