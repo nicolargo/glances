@@ -702,10 +702,10 @@ another item:
     list_1_command=nginx -v
     list_1_countmin=1
     list_1_countmax=4
-    list_1_description=PHP-FPM
-    list_1_regex=.*php-fpm.*
-    list_1_countmin=1
-    list_1_countmax=20
+    list_2_description=PHP-FPM
+    list_2_regex=.*php-fpm.*
+    list_2_countmin=1
+    list_2_countmax=20
 
 In client/server mode, the list is defined on the server side.
 A new method, called `getAllMonitored`, is available in the APIs and
