@@ -332,7 +332,7 @@ class GlancesPlugin(object):
         """Load limits from the configuration file, if it exists."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            for level, v in config.items(self.plugin_name):
+            for level, _ in config.items(self.plugin_name):
                 # Read limits
                 limit = '_'.join([self.plugin_name, level])
                 try:

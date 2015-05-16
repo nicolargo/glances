@@ -1126,7 +1126,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                 try:
                     if c[0] == 'alias' and v[c[0]] is not None:
                         server_stat['name'] = v[c[0]]
-                except KeyError as e:
+                except KeyError:
                     pass
 
             # Display line for server stats

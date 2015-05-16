@@ -79,7 +79,6 @@ class Export(GlancesExport):
                     for item in all_stats[i]:
                         # First line: header
                         if self.first_line:
-                            fieldnames = item.keys()
                             csv_header += map(lambda x: plugin + '_' + item[item['key']] + '_' + x, item)
                         # Others lines: stats
                         fieldvalues = item.values()
