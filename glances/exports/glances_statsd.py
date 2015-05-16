@@ -77,7 +77,7 @@ class Export(GlancesExport):
         # Prefix is optional
         try:
             self.prefix = self.config.get_value(section, 'prefix')
-        except NoOptionError as e:
+        except NoOptionError:
             pass
         return True
 
