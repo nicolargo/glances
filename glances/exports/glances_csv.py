@@ -75,7 +75,7 @@ class Export(GlancesExport):
         i = 0
         for plugin in plugins:
             if plugin in self.plugins_to_export():
-                if type(all_stats[i]) is list:
+                if isinstance(all_stats[i], list):
                     for item in all_stats[i]:
                         # First line: header
                         if self.first_line:
@@ -83,7 +83,7 @@ class Export(GlancesExport):
                         # Others lines: stats
                         fieldvalues = item.values()
                         csv_data += fieldvalues
-                elif type(all_stats[i]) is dict:
+                elif isinstance(all_stats[i], dict):
                     # First line: header
                     if self.first_line:
                         fieldnames = all_stats[i].keys()

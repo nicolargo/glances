@@ -115,7 +115,7 @@ class GlancesPlugin(object):
                 self.get_items_history_list() is not None):
             self.add_item_history('date', datetime.now())
             for i in self.get_items_history_list():
-                if type(self.stats) is list:
+                if isinstance(self.stats, list):
                     # Stats is a list of data
                     # Iter throught it (for exemple, iter throught network
                     # interface)
@@ -232,15 +232,13 @@ class GlancesPlugin(object):
 
         Stats should be a list of dict (processlist, network...)
         """
-        if type(self.stats) is not list:
-            if type(self.stats) is dict:
-                try:
-                    return json.dumps({item: self.stats[item]})
-                except KeyError as e:
-                    logger.error("Cannot get item {0} ({1})".format(item, e))
-            else:
+        if isinstance(self.stats, dict):
+            try:
+                return json.dumps({item: self.stats[item]})
+            except KeyError as e:
+                logger.error("Cannot get item {0} ({1})".format(item, e))
                 return None
-        else:
+        elif isinstance(self.stats, list):
             try:
                 # Source:
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
@@ -248,13 +246,15 @@ class GlancesPlugin(object):
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item {0} ({1})".format(item, e))
                 return None
+        else:
+            return None
 
     def get_stats_value(self, item, value):
         """Return the stats object for a specific item=value in JSON format.
 
         Stats should be a list of dict (processlist, network...)
         """
-        if type(self.stats) is not list:
+        if not isinstance(self.stats, list):
             return None
         else:
             if value.isdigit():
@@ -279,7 +279,9 @@ class GlancesPlugin(object):
         """
         ret = {}
 
-        if type(self.get_raw()) is list and self.get_raw() is not None and self.get_key() is not None:
+        if (isinstance(self.get_raw(), list) and
+                self.get_raw() is not None and
+                self.get_key() is not None):
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
@@ -289,7 +291,7 @@ class GlancesPlugin(object):
                              'additional': False,
                              'splittable': False}
                     ret[i[self.get_key()]][key] = value
-        elif type(self.get_raw()) is dict and self.get_raw() is not None:
+        elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in self.get_raw().keys():
                 value = {'decoration': 'DEFAULT',
@@ -415,7 +417,7 @@ class GlancesPlugin(object):
         else:
             # A command line is available for the current alert, run it
             # Build the {{mustache}} dictionnary
-            if type(self.stats) is list:
+            if isinstance(self.stats, list):
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
                 mustache_dict = {}
