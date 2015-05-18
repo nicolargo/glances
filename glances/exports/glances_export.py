@@ -87,7 +87,8 @@ class GlancesExport(object):
                 if isinstance(all_stats[i], list):
                     for item in all_stats[i]:
                         item.update(all_limits[i])
-                        export_names = list(map(lambda x: item[item['key']] + '.' + x, item.keys()))
+                        export_names = list('{0}.{1}'.format(item[item['key']], key)
+                                            for key in item.keys())
                         export_values = list(item.values())
                         self.export(plugin, export_names, export_values)
                 elif isinstance(all_stats[i], dict):
