@@ -158,7 +158,7 @@ Windows
 -------
 
 - Install Python for Windows (Python 2.7.9+ ship with Pip): http://www.python.org/getit/
-- Install the psutil library (latest binary version): https://pypi.python.org/pypi/psutil
+- Install the `psutil`_ library (latest binary version): https://pypi.python.org/pypi/psutil
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
 - Install optionnals dependencies (see list bellow)
 - Install Glances using pip

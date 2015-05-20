@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
 <title>Glances</title>
 <style type="text/css">
 
@@ -125,7 +125,7 @@ td.option-group {
 
 <p>This manual describes <em>Glances</em> version 2.4.</p>
 <p>Copyright © 2011-2015 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>April 2015</p>
+<p>May 2015</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -280,29 +280,25 @@ http://&#64;server:61208/10
 <td>show program's version number and exit</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></td>
-<td>Enable debug mode</td></tr>
+<td>enable debug mode</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-C <var>CONF_FILE</var></span>, <span class="option">--config <var>CONF_FILE</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>path to the configuration file</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--enable-history</span></kbd></td>
+<kbd><span class="option">--disable-network</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>enable the history mode</td></tr>
+<tr><td>&nbsp;</td><td>disable network module</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">--disable-bold</span></kbd></td>
-<td>disable bold mode in the terminal</td></tr>
+<kbd><span class="option">--disable-ip</span></kbd></td>
+<td>disable IP module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-diskio</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>disable disk I/O module</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--disable-fs</span></kbd></td>
-<td>disable filesystem module</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--disable-network</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>disable network module</td></tr>
+<td>disable file system module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-sensors</span></kbd></td>
 </tr>
@@ -310,11 +306,19 @@ http://&#64;server:61208/10
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-hddtemp</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>disable HDDTemp module</td></tr>
+<tr><td>&nbsp;</td><td>disable hddtemp module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--disable-raid</span></kbd></td>
+<td>disable RAID module</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-docker</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable Docker module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-left-sidebar</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>disable left sidebar</td></tr>
+<tr><td>&nbsp;</td><td>disable network, disk I/O, file system and
+sensors modules (py3sensors needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-process</span></kbd></td>
 </tr>
@@ -323,33 +327,40 @@ http://&#64;server:61208/10
 <kbd><span class="option">--disable-log</span></kbd></td>
 <td>disable log module</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-quicklook</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable quick look module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--disable-bold</span></kbd></td>
+<td>disable bold mode in the terminal</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">--enable-process-extended</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>enable extended stats on top process</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--disable-quicklook</span></kbd></td>
+<kbd><span class="option">--enable-history</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>disable the Quicklook module</td></tr>
+<tr><td>&nbsp;</td><td>enable the history mode (matplotlib needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--path-history <var>PATH_HISTORY</var></span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Set the export path for graph history</td></tr>
+<tr><td>&nbsp;</td><td>set the export path for graph history</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--export-csv <var>CSV_FILE</var></span></kbd></td>
+<kbd><span class="option">--export-csv <var>EXPORT_CSV</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>export stats to a CSV file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--export-influxdb</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>export stats to an InfluxDB server</td></tr>
+<tr><td>&nbsp;</td><td>export stats to an InfluxDB server (influxdb needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--export-statsd</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>export stats to a Statsd server</td></tr>
+<tr><td>&nbsp;</td><td>export stats to a StatsD server (statsd needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--export-rabbitmq</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>export stats to a RabbitMQ server</td></tr>
+<tr><td>&nbsp;</td><td>export stats to a RabbitMQ server (pika needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-c <var>CLIENT</var></span>, <span class="option">--client <var>CLIENT</var></span></kbd></td>
 </tr>
@@ -360,7 +371,7 @@ hostname</td></tr>
 <td>run Glances in server mode</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--browser</span></kbd></td>
-<td>run the Glances client browser (list of Glances server)</td></tr>
+<td>start the client browser (list of Glances servers)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-autodiscover</span></kbd></td>
 </tr>
@@ -373,18 +384,9 @@ hostname</td></tr>
 <kbd><span class="option">-B <var>BIND_ADDRESS</var></span>, <span class="option">--bind <var>BIND_ADDRESS</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>bind server to the given IPv4/IPv6 address or hostname</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--password-badidea <var>PASSWORD_ARG</var></span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>define password from the command line</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--password</span></kbd></td>
-<td>define a client/server password from the prompt or
-file</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--disable-autodiscover</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Hide Glances server from the auto discover feature</td></tr>
+<td>define a client/server password</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--snmp-community <var>SNMP_COMMUNITY</var></span></kbd></td>
 </tr>
@@ -415,14 +417,14 @@ file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-w</span>, <span class="option">--webserver</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>run Glances in web server mode</td></tr>
+<tr><td>&nbsp;</td><td>run Glances in web server mode (bottle needed)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-q</span>, <span class="option">--quiet</span></kbd></td>
-<td>run Glances in quiet mode (nothing is displayed)</td></tr>
+<td>do not display the curses interface</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-f <var>PROCESS_FILTER</var></span>, <span class="option">--process-filter <var>PROCESS_FILTER</var></span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>set the process filter patern (regular expression)</td></tr>
+<tr><td>&nbsp;</td><td>set the process filter pattern (regular expression)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--process-short-name</span></kbd></td>
 </tr>
@@ -443,7 +445,7 @@ file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--fs-free-space</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>display FS free space instead of used</td></tr>
+<tr><td>&nbsp;</td><td>display file system free space instead of used</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--theme-white</span></kbd></td>
 <td>optimize display colors for white background</td></tr>
@@ -482,7 +484,7 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">f</tt></dt>
 <dd>Show/hide file system stats</dd>
 <dt><tt class="docutils literal">F</tt></dt>
-<dd>Switch between FS used and free space</dd>
+<dd>Switch between file system used and free space</dd>
 <dt><tt class="docutils literal">g</tt></dt>
 <dd>Generate graphs for current history</dd>
 <dt><tt class="docutils literal">h</tt></dt>
@@ -508,6 +510,8 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">T</tt></dt>
 <dd>View network I/O as combination</dd>
 <dt><tt class="docutils literal">u</tt></dt>
+<dd>Sort processes by USER</dd>
+<dt><tt class="docutils literal">U</tt></dt>
 <dd>View cumulative network I/O</dd>
 <dt><tt class="docutils literal">w</tt></dt>
 <dd>Delete finished warning log messages</dd>
@@ -520,7 +524,7 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">2</tt></dt>
 <dd>Enable/disable left sidebar</dd>
 <dt><tt class="docutils literal">3</tt></dt>
-<dd>Enable/disable the Quicklook module</dd>
+<dd>Enable/disable the quick look module</dd>
 <dt><tt class="docutils literal">/</tt></dt>
 <dd>Switch between short name / command line (processes name)</dd>
 </dl>
