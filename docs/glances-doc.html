@@ -123,9 +123,9 @@ td.option-group {
 <div class="document" id="glances">
 <h1 class="title">Glances</h1>
 
-<p>This manual describes <em>Glances</em> version 2.3.</p>
+<p>This manual describes <em>Glances</em> version 2.4.</p>
 <p>Copyright © 2011-2015 Nicolas Hennion &lt;<a class="reference external" href="mailto:nicolas&#64;nicolargo.com">nicolas&#64;nicolargo.com</a>&gt;</p>
-<p>January 2015</p>
+<p>May 2015</p>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first">Table of Contents</p>
 <ul class="simple">
@@ -141,28 +141,39 @@ td.option-group {
 <li><a class="reference internal" href="#interactive-commands" id="id12">Interactive Commands</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#configuration" id="id13">Configuration</a></li>
-<li><a class="reference internal" href="#logs-and-debug-mode" id="id14">Logs and debug mode</a></li>
-<li><a class="reference internal" href="#anatomy-of-the-application" id="id15">Anatomy Of The Application</a><ul>
-<li><a class="reference internal" href="#legend" id="id16">Legend</a></li>
-<li><a class="reference internal" href="#header" id="id17">Header</a></li>
-<li><a class="reference internal" href="#cpu" id="id18">CPU</a></li>
-<li><a class="reference internal" href="#load" id="id19">Load</a></li>
-<li><a class="reference internal" href="#memory" id="id20">Memory</a></li>
-<li><a class="reference internal" href="#network" id="id21">Network</a></li>
-<li><a class="reference internal" href="#disk-i-o" id="id22">Disk I/O</a></li>
-<li><a class="reference internal" href="#file-system" id="id23">File System</a></li>
-<li><a class="reference internal" href="#sensors" id="id24">Sensors</a></li>
-<li><a class="reference internal" href="#processes-list" id="id25">Processes List</a></li>
-<li><a class="reference internal" href="#monitored-processes-list" id="id26">Monitored Processes List</a></li>
-<li><a class="reference internal" href="#logs" id="id27">Logs</a></li>
-<li><a class="reference internal" href="#docker" id="id28">Docker</a></li>
-<li><a class="reference internal" href="#actions" id="id29">Actions</a></li>
+<li><a class="reference internal" href="#configuration" id="id13">Configuration</a><ul>
+<li><a class="reference internal" href="#location" id="id14">Location</a></li>
+<li><a class="reference internal" href="#syntax" id="id15">Syntax</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#gateway-to-others-services" id="id30">Gateway to others services</a></li>
-<li><a class="reference internal" href="#apis-documentations" id="id31">APIs Documentations</a></li>
-<li><a class="reference internal" href="#support" id="id32">Support</a></li>
+<li><a class="reference internal" href="#logs-and-debug-mode" id="id16">Logs and debug mode</a></li>
+<li><a class="reference internal" href="#anatomy-of-the-application" id="id17">Anatomy Of The Application</a><ul>
+<li><a class="reference internal" href="#legend" id="id18">Legend</a></li>
+<li><a class="reference internal" href="#header" id="id19">Header</a></li>
+<li><a class="reference internal" href="#quicklook" id="id20">QuickLook</a></li>
+<li><a class="reference internal" href="#cpu" id="id21">CPU</a></li>
+<li><a class="reference internal" href="#load" id="id22">Load</a></li>
+<li><a class="reference internal" href="#memory" id="id23">Memory</a></li>
+<li><a class="reference internal" href="#network" id="id24">Network</a></li>
+<li><a class="reference internal" href="#disk-i-o" id="id25">Disk I/O</a></li>
+<li><a class="reference internal" href="#file-system" id="id26">File System</a></li>
+<li><a class="reference internal" href="#sensors" id="id27">Sensors</a></li>
+<li><a class="reference internal" href="#processes-list" id="id28">Processes List</a></li>
+<li><a class="reference internal" href="#monitored-processes-list" id="id29">Monitored Processes List</a></li>
+<li><a class="reference internal" href="#logs" id="id30">Logs</a></li>
+<li><a class="reference internal" href="#docker" id="id31">Docker</a></li>
+<li><a class="reference internal" href="#actions" id="id32">Actions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gateway-to-others-services" id="id33">Gateway to others services</a><ul>
+<li><a class="reference internal" href="#csv" id="id34">CSV</a></li>
+<li><a class="reference internal" href="#influxdb" id="id35">InfluxDB</a></li>
+<li><a class="reference internal" href="#statsd" id="id36">Statsd</a></li>
+<li><a class="reference internal" href="#rabbitmq" id="id37">RabbitMQ</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#apis-documentation" id="id38">APIs documentation</a></li>
+<li><a class="reference internal" href="#support" id="id39">Support</a></li>
 </ul>
 </div>
 <div class="section" id="introduction">
@@ -204,7 +215,12 @@ another one, called <tt class="docutils literal">client</tt>, just run on the se
 <span class="generic output">client$ glances -c &#64;server</span>
 </pre>
 <p>where <tt class="docutils literal">&#64;server</tt> is the IP address or hostname of the server.</p>
-<p>Glances can centralize available Glances servers using the <tt class="docutils literal"><span class="pre">--browser</span></tt> option. The server list can be staticaly defined in the Glances configuration file (section [serverlist]). Glances can also detect and display all Glances servers available on you network (auto discover mode is based on the the Zeroconf protocol only available on GNU/Linux and Mac OS X):</p>
+<p>Glances can centralize available Glances servers using the <tt class="docutils literal"><span class="pre">--browser</span></tt>
+option. The server list can be statically defined in the Glances
+configuration file (section <tt class="docutils literal">[serverlist]</tt>).</p>
+<p>Glances can also detect and display all Glances servers available on your
+network (auto-discover mode is based on the the <tt class="docutils literal">zeroconf</tt> protocol,
+which is only available on GNU/Linux and OS X):</p>
 <pre class="code console literal-block">
 <span class="generic output">client$ glances --browser</span>
 </pre>
@@ -223,7 +239,7 @@ client, the latter will try to grab stats using the <tt class="docutils literal"
 <pre class="code console literal-block">
 <span class="generic output">client$ glances -c &#64;snmpserver</span>
 </pre>
-<p>Note: Stats grabbed by SNMP request are limited (operating system dependent).</p>
+<p><em>Note</em>: stats grabbed by SNMP request are limited (OS dependent).</p>
 </div>
 <div class="section" id="web-server-mode">
 <h2><a class="toc-backref" href="#id9">Web Server Mode</a></h2>
@@ -237,7 +253,11 @@ device with a web browser, just run the server with the <tt class="docutils lite
 http://&#64;server:61208
 </pre>
 <p>where <tt class="docutils literal">&#64;server</tt> is the IP address or hostname of the server.</p>
-<p>To change the refresh rate of the page, just add the period in seconds between refreshes at the end of the URL, ie. to refresh every 10s, use <tt class="docutils literal"><span class="pre">http://&#64;server:61208/10</span></tt>.</p>
+<p>To change the refresh rate of the page, just add the period in seconds
+at the end of the URL. For example, to refresh the page every 10s:</p>
+<pre class="literal-block">
+http://&#64;server:61208/10
+</pre>
 <p>The Glances web interface follows responsive web design principles.</p>
 <p>Screenshot from Chrome on Android</p>
 <img alt="images/screenshot-web2.png" src="images/screenshot-web2.png" />
@@ -260,37 +280,45 @@ http://&#64;server:61208
 <td>show program's version number and exit</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></td>
-<td>Enable debug mode</td></tr>
+<td>enable debug mode</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-C <var>CONF_FILE</var></span>, <span class="option">--config <var>CONF_FILE</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>path to the configuration file</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--enable-history</span></kbd></td>
+<kbd><span class="option">--disable-network</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>enable the history mode</td></tr>
+<tr><td>&nbsp;</td><td>disable network module</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">--disable-bold</span></kbd></td>
-<td>disable bold mode in the terminal</td></tr>
+<kbd><span class="option">--disable-ip</span></kbd></td>
+<td>disable IP module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-diskio</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>disable disk I/O module</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--disable-fs</span></kbd></td>
-<td>disable filesystem module</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--disable-network</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>disable network module</td></tr>
+<td>disable file system module</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-sensors</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>disable sensors module</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-hddtemp</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable hddtemp module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--disable-raid</span></kbd></td>
+<td>disable RAID module</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-docker</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable Docker module</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-left-sidebar</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>disable left sidebar</td></tr>
+<tr><td>&nbsp;</td><td>disable network, disk I/O, file system and
+sensors modules (py3sensors needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-process</span></kbd></td>
 </tr>
@@ -299,29 +327,40 @@ http://&#64;server:61208
 <kbd><span class="option">--disable-log</span></kbd></td>
 <td>disable log module</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-quicklook</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable quick look module</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--disable-bold</span></kbd></td>
+<td>disable bold mode in the terminal</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">--enable-process-extended</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>enable extended stats on top process</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--enable-history</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>enable the history mode</td></tr>
+<tr><td>&nbsp;</td><td>enable the history mode (matplotlib needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--path-history <var>PATH_HISTORY</var></span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Set the export path for graph history</td></tr>
+<tr><td>&nbsp;</td><td>set the export path for graph history</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">--export-csv <var>CSV_FILE</var></span></kbd></td>
+<kbd><span class="option">--export-csv <var>EXPORT_CSV</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>export stats to a CSV file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--export-influxdb</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>export stats to an InfluxDB server</td></tr>
+<tr><td>&nbsp;</td><td>export stats to an InfluxDB server (influxdb needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--export-statsd</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>export stats to a Statsd server</td></tr>
+<tr><td>&nbsp;</td><td>export stats to a StatsD server (statsd needed)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--export-rabbitmq</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>export stats to a RabbitMQ server (pika needed)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-c <var>CLIENT</var></span>, <span class="option">--client <var>CLIENT</var></span></kbd></td>
 </tr>
@@ -332,7 +371,7 @@ hostname</td></tr>
 <td>run Glances in server mode</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--browser</span></kbd></td>
-<td>run the Glances client browser (list of Glances server)</td></tr>
+<td>start the client browser (list of Glances servers)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--disable-autodiscover</span></kbd></td>
 </tr>
@@ -345,18 +384,9 @@ hostname</td></tr>
 <kbd><span class="option">-B <var>BIND_ADDRESS</var></span>, <span class="option">--bind <var>BIND_ADDRESS</var></span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>bind server to the given IPv4/IPv6 address or hostname</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--password-badidea <var>PASSWORD_ARG</var></span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>define password from the command line</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--password</span></kbd></td>
-<td>define a client/server password from the prompt or
-file</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--disable-autodiscover</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Hide Glances server from the auto discover feature</td></tr>
+<td>define a client/server password</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--snmp-community <var>SNMP_COMMUNITY</var></span></kbd></td>
 </tr>
@@ -387,11 +417,14 @@ file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-w</span>, <span class="option">--webserver</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>run Glances in web server mode</td></tr>
+<tr><td>&nbsp;</td><td>run Glances in web server mode (bottle needed)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-q</span>, <span class="option">--quiet</span></kbd></td>
+<td>do not display the curses interface</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-f <var>PROCESS_FILTER</var></span>, <span class="option">--process-filter <var>PROCESS_FILTER</var></span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>set the process filter patern (regular expression)</td></tr>
+<tr><td>&nbsp;</td><td>set the process filter pattern (regular expression)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--process-short-name</span></kbd></td>
 </tr>
@@ -412,10 +445,10 @@ file</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--fs-free-space</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>display FS free space instead of used</td></tr>
+<tr><td>&nbsp;</td><td>display file system free space instead of used</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--theme-white</span></kbd></td>
-<td>optimize display for white background</td></tr>
+<td>optimize display colors for white background</td></tr>
 </tbody>
 </table>
 </blockquote>
@@ -451,7 +484,7 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">f</tt></dt>
 <dd>Show/hide file system stats</dd>
 <dt><tt class="docutils literal">F</tt></dt>
-<dd>Switch between FS used and free space</dd>
+<dd>Switch between file system used and free space</dd>
 <dt><tt class="docutils literal">g</tt></dt>
 <dd>Generate graphs for current history</dd>
 <dt><tt class="docutils literal">h</tt></dt>
@@ -477,6 +510,8 @@ Filter is a regular expression pattern:</p>
 <dt><tt class="docutils literal">T</tt></dt>
 <dd>View network I/O as combination</dd>
 <dt><tt class="docutils literal">u</tt></dt>
+<dd>Sort processes by USER</dd>
+<dt><tt class="docutils literal">U</tt></dt>
 <dd>View cumulative network I/O</dd>
 <dt><tt class="docutils literal">w</tt></dt>
 <dd>Delete finished warning log messages</dd>
@@ -488,10 +523,13 @@ Filter is a regular expression pattern:</p>
 <dd>Switch between global CPU and per-CPU stats</dd>
 <dt><tt class="docutils literal">2</tt></dt>
 <dd>Enable/disable left sidebar</dd>
+<dt><tt class="docutils literal">3</tt></dt>
+<dd>Enable/disable the quick look module</dd>
 <dt><tt class="docutils literal">/</tt></dt>
 <dd>Switch between short name / command line (processes name)</dd>
 </dl>
-<p>In the Glances client browser (accessible through the --browser command line argument):</p>
+<p>In the Glances client browser (accessible through the <tt class="docutils literal"><span class="pre">--browser</span></tt>
+command line argument):</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">ENTER</tt></dt>
 <dd>Run Glances client to the selected server</dd>
@@ -507,19 +545,24 @@ Filter is a regular expression pattern:</p>
 <div class="section" id="configuration">
 <h1><a class="toc-backref" href="#id13">Configuration</a></h1>
 <p>No configuration file is mandatory to use Glances.</p>
-<p>Furthermore a configuration file is needed to set up limits, disks or
-network interfaces to hide and/or monitored processes list or to define
-alias.</p>
-<p>By default, the configuration file is under:</p>
+<p>Furthermore a configuration file is needed to modify limit alerts, to
+set up monitored processes list, to hide disks or network interfaces or
+to define alias.</p>
+<div class="section" id="location">
+<h2><a class="toc-backref" href="#id14">Location</a></h2>
+<p>You can put the configuration file <tt class="docutils literal">glances.conf</tt> in the following
+locations:</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Linux:</th><td class="field-body"><tt class="docutils literal">/etc/glances/glances.conf</tt></td>
+<tr class="field"><th class="field-name">Linux:</th><td class="field-body"><tt class="docutils literal"><span class="pre">~/.config/glances,</span> /etc/glances</tt></td>
 </tr>
-<tr class="field"><th class="field-name">*BSD and OS X:</th><td class="field-body"><tt class="docutils literal">/usr/local/etc/glances/glances.conf</tt></td>
+<tr class="field"><th class="field-name">*BSD:</th><td class="field-body"><tt class="docutils literal"><span class="pre">~/.config/glances,</span> /usr/local/etc/glances</tt></td>
 </tr>
-<tr class="field"><th class="field-name">Windows:</th><td class="field-body"><tt class="docutils literal"><span class="pre">%APPDATA%\glances\glances.conf</span></tt></td>
+<tr class="field"><th class="field-name">OS X:</th><td class="field-body"><tt class="docutils literal">~/Library/Application Support/glances, /usr/local/etc/glances</tt></td>
+</tr>
+<tr class="field"><th class="field-name">Windows:</th><td class="field-body"><tt class="docutils literal"><span class="pre">%APPDATA%\glances</span></tt></td>
 </tr>
 </tbody>
 </table>
@@ -530,20 +573,12 @@ C:\Documents and Settings\&lt;User&gt;\Application Data
 <p>Since Windows Vista and newer versions:</p>
 <pre class="literal-block">
 C:\Users\&lt;User&gt;\AppData\Roaming
-or
-%userprofile%\AppData\Roaming
 </pre>
-<p>You can override the default configuration, located in one of the above
-directories on your system, except for Windows.</p>
-<p>Just copy the <tt class="docutils literal">glances.conf</tt> file to your <tt class="docutils literal">$XDG_CONFIG_HOME</tt> directory,
-e.g., on Linux:</p>
-<pre class="code console literal-block">
-<span class="generic output">mkdir -p $XDG_CONFIG_HOME/glances
-cp /usr/share/doc/glances/glances.conf $XDG_CONFIG_HOME/glances/</span>
-</pre>
-<p>On OS X, you should copy the configuration file to
-<tt class="docutils literal">~/Library/Application Support/glances/</tt>.</p>
-<p><em>Configuration file description</em></p>
+<p>User-specific options override system-wide options and options given on
+the command line override either.</p>
+</div>
+<div class="section" id="syntax">
+<h2><a class="toc-backref" href="#id15">Syntax</a></h2>
 <p>Each plugin and export module can have a section.</p>
 <p>Example for the CPU plugin:</p>
 <pre class="code literal-block">
@@ -561,13 +596,15 @@ steal_careful=50
 steal_warning=70
 steal_critical=90
 </pre>
-<p>By default Steal CPU time alerts aren't logged. If you want to enable log/alert, just add:</p>
+<p>By default the <tt class="docutils literal">steal</tt> CPU time alerts aren't logged. If you want to
+enable log/alert, just add:</p>
 <pre class="code literal-block">
 steal_log=True
 </pre>
 </div>
+</div>
 <div class="section" id="logs-and-debug-mode">
-<h1><a class="toc-backref" href="#id14">Logs and debug mode</a></h1>
+<h1><a class="toc-backref" href="#id16">Logs and debug mode</a></h1>
 <p>Glances logs all its internal messages to a log file. By default, only
 INFO &amp; WARNING &amp; ERROR &amp;CRITICAL levels are logged, but DEBUG messages
 can ben logged using the -d option on the command line.</p>
@@ -576,19 +613,20 @@ can ben logged using the -d option on the command line.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name" colspan="2">Linux, *BSD and OS X:</th></tr>
+<tr class="field"><th class="field-name" colspan="2">Linux, *BSD, OS X:</th></tr>
 <tr class="field"><td>&nbsp;</td><td class="field-body"><tt class="docutils literal">/tmp/glances.log</tt></td>
 </tr>
 <tr class="field"><th class="field-name">Windows:</th><td class="field-body"><tt class="docutils literal"><span class="pre">%APPDATA%\Local\temp\glances.log</span></tt></td>
 </tr>
 </tbody>
 </table>
-<p>If glances.log is not writable, a new file will be created and returned to the user console.</p>
+<p>If <tt class="docutils literal">glances.log</tt> is not writable, a new file will be created and
+returned to the user console.</p>
 </div>
 <div class="section" id="anatomy-of-the-application">
-<h1><a class="toc-backref" href="#id15">Anatomy Of The Application</a></h1>
+<h1><a class="toc-backref" href="#id17">Anatomy Of The Application</a></h1>
 <div class="section" id="legend">
-<h2><a class="toc-backref" href="#id16">Legend</a></h2>
+<h2><a class="toc-backref" href="#id18">Legend</a></h2>
 <div class="line-block">
 <div class="line"><tt class="docutils literal">GREEN</tt> stat counter is <tt class="docutils literal">&quot;OK&quot;</tt></div>
 <div class="line"><tt class="docutils literal">BLUE</tt> stat counter is <tt class="docutils literal">&quot;CAREFUL&quot;</tt></div>
@@ -599,7 +637,7 @@ can ben logged using the -d option on the command line.</p>
 view.</p>
 </div>
 <div class="section" id="header">
-<h2><a class="toc-backref" href="#id17">Header</a></h2>
+<h2><a class="toc-backref" href="#id19">Header</a></h2>
 <img alt="images/header.png" src="images/header.png" />
 <p>The header shows the hostname, OS name, release version, platform
 architecture and system uptime (on the upper right corner).
@@ -610,8 +648,16 @@ Additionally, on GNU/Linux, it also shows the kernel version.</p>
 <p>Disconnected:</p>
 <img alt="images/disconnected.png" src="images/disconnected.png" />
 </div>
+<div class="section" id="quicklook">
+<h2><a class="toc-backref" href="#id20">QuickLook</a></h2>
+<p>The <tt class="docutils literal">quicklook</tt> plugin is only displayed on wide screen and propose a
+bar view for CPU and memory (virtual and swap).</p>
+<img alt="images/quicklook.png" src="images/quicklook.png" />
+<p><em>Note</em>: limit values can be overwritten in the configuration file under
+the <tt class="docutils literal">[quicklook]</tt> section.</p>
+</div>
 <div class="section" id="cpu">
-<h2><a class="toc-backref" href="#id18">CPU</a></h2>
+<h2><a class="toc-backref" href="#id21">CPU</a></h2>
 <p>Short view:</p>
 <img alt="images/cpu.png" src="images/cpu.png" />
 <p>If enough horizontal space is available, extended CPU information are
@@ -632,7 +678,7 @@ time. The total CPU usage is displayed on the first line.</p>
 the <tt class="docutils literal">[cpu]</tt> and/or <tt class="docutils literal">[percpu]</tt> sections.</p>
 </div>
 <div class="section" id="load">
-<h2><a class="toc-backref" href="#id19">Load</a></h2>
+<h2><a class="toc-backref" href="#id22">Load</a></h2>
 <img alt="images/load.png" src="images/load.png" />
 <p>On the <em>No Sheep</em> blog, <em>Zachary Tirrell</em> defines the load average <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
 <blockquote>
@@ -652,7 +698,7 @@ The first line also displays the number of CPU core.</p>
 the <tt class="docutils literal">[load]</tt> section.</p>
 </div>
 <div class="section" id="memory">
-<h2><a class="toc-backref" href="#id20">Memory</a></h2>
+<h2><a class="toc-backref" href="#id23">Memory</a></h2>
 <p>Glances uses two columns: one for the <tt class="docutils literal">RAM</tt> and one for the <tt class="docutils literal">SWAP</tt>.</p>
 <img alt="images/mem.png" src="images/mem.png" />
 <p>If enough space is available, Glances displays extended information for
@@ -669,7 +715,7 @@ the <tt class="docutils literal">RAM</tt>:</p>
 the <tt class="docutils literal">[memory]</tt> and/or <tt class="docutils literal">[memswap]</tt> sections.</p>
 </div>
 <div class="section" id="network">
-<h2><a class="toc-backref" href="#id21">Network</a></h2>
+<h2><a class="toc-backref" href="#id24">Network</a></h2>
 <img alt="images/network.png" src="images/network.png" />
 <p>Glances displays the network interface bit rate. The unit is adapted
 dynamically (bits per second, kbits per second, Mbits per second, etc).</p>
@@ -680,7 +726,7 @@ and per-interface limit values in the <tt class="docutils literal">[network]</tt
 configuration file and aliases for interface name.</p>
 </div>
 <div class="section" id="disk-i-o">
-<h2><a class="toc-backref" href="#id22">Disk I/O</a></h2>
+<h2><a class="toc-backref" href="#id25">Disk I/O</a></h2>
 <img alt="images/diskio.png" src="images/diskio.png" />
 <p>Glances displays the disk I/O throughput. The unit is adapted dynamically.</p>
 <p>There is no alert on this information.</p>
@@ -688,7 +734,7 @@ configuration file and aliases for interface name.</p>
 <tt class="docutils literal">[diskio]</tt> section in the configuration file and aliases for disk name.</p>
 </div>
 <div class="section" id="file-system">
-<h2><a class="toc-backref" href="#id23">File System</a></h2>
+<h2><a class="toc-backref" href="#id26">File System</a></h2>
 <img alt="images/fs.png" src="images/fs.png" />
 <p>Glances displays the used and total file system disk space. The unit is
 adapted dynamically.</p>
@@ -703,9 +749,16 @@ adapted dynamically.</p>
 the <tt class="docutils literal">[filesystem]</tt> section.</p>
 <p>If a RAID controller is detected on you system, its status will be displayed:</p>
 <img alt="images/raid.png" src="images/raid.png" />
+<p>By default, the plugin only displays physical devices (hard disks, USB
+keys) and ignore all others. To allow others FS type, you have to use the
+following section in the configuration file:</p>
+<pre class="literal-block">
+[fs]
+allow=zfs,misc
+</pre>
 </div>
 <div class="section" id="sensors">
-<h2><a class="toc-backref" href="#id24">Sensors</a></h2>
+<h2><a class="toc-backref" href="#id27">Sensors</a></h2>
 <p>Glances can displays the sensors information using <cite>lm-sensors</cite>,
 <cite>hddtemp</cite> and <cite>batinfo</cite> <a class="footnote-reference" href="#id4" id="id2">[2]</a>.</p>
 <p>All of the above libraries are available only on Linux.</p>
@@ -713,11 +766,11 @@ the <tt class="docutils literal">[filesystem]</tt> section.</p>
 temperature only.</p>
 <img alt="images/sensors.png" src="images/sensors.png" />
 <p>There is no alert on this information.</p>
-<p><em>Note</em>: limit values and sensors alias names can be defined in the configuration
-file under the <tt class="docutils literal">[sensors]</tt> section.</p>
+<p><em>Note</em>: limit values and sensors alias names can be defined in the
+configuration file under the <tt class="docutils literal">[sensors]</tt> section.</p>
 </div>
 <div class="section" id="processes-list">
-<h2><a class="toc-backref" href="#id25">Processes List</a></h2>
+<h2><a class="toc-backref" href="#id28">Processes List</a></h2>
 <p>Compact view:</p>
 <img alt="images/processlist.png" src="images/processlist.png" />
 <p>Full view:</p>
@@ -786,7 +839,8 @@ User cans switch to the process name by pressing on the <tt class="docutils lite
 <dt><tt class="docutils literal">Z</tt></dt>
 <dd>Zombie</dd>
 </dl>
-<p>In standalone mode, additionals informations are provided for the top process:</p>
+<p>In standalone mode, additional informations are provided for the top
+process:</p>
 <img alt="images/processlist-top.png" src="images/processlist-top.png" />
 <ul class="simple">
 <li>CPU affinity (number of cores used by the process)</li>
@@ -794,12 +848,13 @@ User cans switch to the process name by pressing on the <tt class="docutils lite
 <li>Open threads, files and network sessions (TCP and UDP)</li>
 <li>IO nice level</li>
 </ul>
-<p>The extended stats feature could be enabled using the --enable-process-extended option (command line) or the <tt class="docutils literal">e</tt> key (curses interface).</p>
+<p>The extended stats feature could be enabled using the <tt class="docutils literal"><span class="pre">--enable-process-extended</span></tt>
+option (command line) or the <tt class="docutils literal">e</tt> key (curses interface).</p>
 <p><em>Note</em>: limit values can be overwritten in the configuration file under
 the <tt class="docutils literal">[process]</tt> section.</p>
 </div>
 <div class="section" id="monitored-processes-list">
-<h2><a class="toc-backref" href="#id26">Monitored Processes List</a></h2>
+<h2><a class="toc-backref" href="#id29">Monitored Processes List</a></h2>
 <p>The monitored processes list allows user, through the configuration file,
 to group processes and quickly show if the number of running processes is
 not good.</p>
@@ -835,10 +890,10 @@ list_1_regex=.*nginx.*
 list_1_command=nginx -v
 list_1_countmin=1
 list_1_countmax=4
-list_1_description=PHP-FPM
-list_1_regex=.*php-fpm.*
-list_1_countmin=1
-list_1_countmax=20
+list_2_description=PHP-FPM
+list_2_regex=.*php-fpm.*
+list_2_countmin=1
+list_2_countmax=20
 </pre>
 <p>In client/server mode, the list is defined on the server side.
 A new method, called <cite>getAllMonitored</cite>, is available in the APIs and
@@ -851,7 +906,7 @@ get the JSON representation of the monitored processes list.</p>
 </div>
 </div>
 <div class="section" id="logs">
-<h2><a class="toc-backref" href="#id27">Logs</a></h2>
+<h2><a class="toc-backref" href="#id30">Logs</a></h2>
 <img alt="images/logs.png" src="images/logs.png" />
 <p>A log messages list is displayed in the bottom of the screen if (and
 only if):</p>
@@ -870,31 +925,39 @@ processes list alerts</li>
 </ol>
 </div>
 <div class="section" id="docker">
-<h2><a class="toc-backref" href="#id28">Docker</a></h2>
-<p>If you use Docker, Glances can help you to monitor your container. Glances uses the Docker API through the Docker-Py library.</p>
+<h2><a class="toc-backref" href="#id31">Docker</a></h2>
+<p>If you use <tt class="docutils literal">Docker</tt>, Glances can help you to monitor your container.
+Glances uses the Docker API through the <tt class="docutils literal"><span class="pre">docker-py</span></tt> library.</p>
 <img alt="images/docker.png" src="images/docker.png" />
 </div>
 <div class="section" id="actions">
-<h2><a class="toc-backref" href="#id29">Actions</a></h2>
+<h2><a class="toc-backref" href="#id32">Actions</a></h2>
 <p>Glances can trigger actions on events.</p>
-<p>By action, we mean all shell command line. For example, if you want to execute the foo.py script if the last 5 minutes load are critical then add the action line to the Glances configuration file:</p>
+<p>By <tt class="docutils literal">action</tt>, we mean all shell command line. For example, if you want
+to execute the <tt class="docutils literal">foo.py</tt> script if the last 5 minutes load are critical
+then add the action line to the Glances configuration file:</p>
 <pre class="code literal-block">
 [load]
 critical=5.0
 critical_action=python /path/to/foo.py
 </pre>
-<p>All the stats are available in the command line through the use of the {{mustache}} syntax. Another example to create a log file containing used vs total disk space if a space trigger warning is reached:</p>
+<p>All the stats are available in the command line through the use of the
+<tt class="docutils literal">{{mustache}}</tt> syntax. Another example would be to create a log file
+containing used vs total disk space if a space trigger warning is reached:</p>
 <pre class="code literal-block">
 [fs]
 warning=70
 warning_action=echo {{mnt_point}} {{used}}/{{size}} &gt; /tmp/fs.alert
 </pre>
-<p><em>Note</em>: You can use all the stats for the current plugin (see <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a> for the stats list)</p>
+<p><em>Note</em>: you can use all the stats for the current plugin (see
+<a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a> for
+the stats list)</p>
 </div>
 </div>
 <div class="section" id="gateway-to-others-services">
-<h1><a class="toc-backref" href="#id30">Gateway to others services</a></h1>
-<p><em>CSV</em></p>
+<h1><a class="toc-backref" href="#id33">Gateway to others services</a></h1>
+<div class="section" id="csv">
+<h2><a class="toc-backref" href="#id34">CSV</a></h2>
 <p>It is possible to export statistics to CSV file.</p>
 <pre class="code console literal-block">
 <span class="generic prompt">$</span> glances --export-csv /tmp/glances.csv
@@ -902,8 +965,12 @@ warning_action=echo {{mnt_point}} {{used}}/{{size}} &gt; /tmp/fs.alert
 <p>CSV file description:
 - Stats description (first line)
 - Stats (others lines)</p>
-<p><em>InfluxDB</em></p>
-<p>You can export statistics to an InfluxDB server (time series server). The connection should be defined in the Glances configuration file as following:</p>
+</div>
+<div class="section" id="influxdb">
+<h2><a class="toc-backref" href="#id35">InfluxDB</a></h2>
+<p>You can export statistics to an <tt class="docutils literal">InfluxDB</tt> server (time series server).
+The connection should be defined in the Glances configuration file as
+following:</p>
 <pre class="code literal-block">
 [influxdb]
 host=localhost
@@ -916,15 +983,22 @@ db=glances
 <pre class="code console literal-block">
 <span class="generic prompt">$</span> glances --export-influxdb
 </pre>
-<p><em>Statsd</em></p>
-<p>You can export statistics to a Statsd server (welcome to Graphite !). The connection should be defined in the Glances configuration file as following:</p>
+<p>For Grafana users, Glances provides a dedicated <a class="reference external" href="https://github.com/nicolargo/glances/blob/master/conf/glances-grafana.json">dashboard</a>. Just import
+the file in your <tt class="docutils literal">Grafana</tt> web interface.</p>
+<img alt="images/grafana.png" src="images/grafana.png" />
+</div>
+<div class="section" id="statsd">
+<h2><a class="toc-backref" href="#id36">Statsd</a></h2>
+<p>You can export statistics to a <tt class="docutils literal">Statsd</tt> server (welcome to Graphite!).
+The connection should be defined in the Glances configuration file as
+following:</p>
 <pre class="code literal-block">
 [statsd]
 host=localhost
 port=8125
 prefix=glances
 </pre>
-<p>Note: the prefix option is optionnal ('glances by default')</p>
+<p><em>Note</em>: the prefix option is optional ('glances by default')</p>
 <p>and run Glances with:</p>
 <pre class="code console literal-block">
 <span class="generic prompt">$</span> glances --export-statsd
@@ -938,18 +1012,39 @@ prefix=glances
 ...
 </pre>
 </div>
-<div class="section" id="apis-documentations">
-<h1><a class="toc-backref" href="#id31">APIs Documentations</a></h1>
-<p>Glances includes a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and a <a class="reference external" href="http://jsonapi.org/">RESTFUL-JSON</a> API which and can be used by another client software.</p>
-<p>APIs documentations are available at:</p>
+<div class="section" id="rabbitmq">
+<h2><a class="toc-backref" href="#id37">RabbitMQ</a></h2>
+<p>You can export statistics to an <tt class="docutils literal">RabbitMQ</tt> server (AMQP Broker).
+The connection should be defined in the Glances configuration file as
+following:</p>
+<pre class="code literal-block">
+[rabbitmq]
+host=localhost
+port=5672
+user=glances
+password=glances
+queue=glances_queue
+</pre>
+<p>and run Glances with:</p>
+<pre class="code console literal-block">
+<span class="generic prompt">$</span> glances --export-rabbitmq
+</pre>
+</div>
+</div>
+<div class="section" id="apis-documentation">
+<h1><a class="toc-backref" href="#id38">APIs documentation</a></h1>
+<p>Glances includes a <a class="reference external" href="http://docs.python.org/2/library/simplexmlrpcserver.html">XML-RPC server</a> and a <a class="reference external" href="http://jsonapi.org/">RESTFUL-JSON</a> API which can
+be used by another client software.</p>
+<p>APIs documentation is available at:</p>
 <ul class="simple">
 <li>XML-RPC: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to">https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to</a></li>
 <li>RESTFUL-JSON: <a class="reference external" href="https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API">https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API</a></li>
 </ul>
 </div>
 <div class="section" id="support">
-<h1><a class="toc-backref" href="#id32">Support</a></h1>
-<p>To post a question about Glances use case, please post it to the offical Q&amp;A <a class="reference external" href="https://groups.google.com/forum/?hl=en#!forum/glances-users">forum</a>.</p>
+<h1><a class="toc-backref" href="#id39">Support</a></h1>
+<p>To post a question about Glances use cases, please post it to the
+official Q&amp;A <a class="reference external" href="https://groups.google.com/forum/?hl=en#!forum/glances-users">forum</a>.</p>
 <p>To report a bug or a feature request use the bug tracking system at
 <a class="reference external" href="https://github.com/nicolargo/glances/issues">https://github.com/nicolargo/glances/issues</a>.</p>
 <p>Feel free to contribute !</p>

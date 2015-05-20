@@ -39,12 +39,12 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Set the message position
-        self.set_align('bottom')
+        self.align = 'bottom'
 
     def update(self):
         """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
-        self.stats = datetime.now().strftime(_("%Y-%m-%d %H:%M:%S"))
+        self.stats = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         return self.stats
 

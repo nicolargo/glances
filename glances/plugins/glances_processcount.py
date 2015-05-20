@@ -29,7 +29,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 class Plugin(GlancesPlugin):
 
-    """Glances' processes plugin.
+    """Glances process count plugin.
 
     stats is a list
     """
@@ -52,14 +52,14 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Here, update is call for processcount AND processlist
             glances_processes.update()
 
             # Return the processes count
             self.stats = glances_processes.getcount()
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # !!! TODO
             pass
@@ -73,57 +73,57 @@ class Plugin(GlancesPlugin):
 
         # Only process if stats exist and display plugin enable...
         if args.disable_process:
-            msg = _("PROCESSES DISABLED (press 'z' to display)")
+            msg = "PROCESSES DISABLED (press 'z' to display)"
             ret.append(self.curse_add_line(msg))
             return ret
 
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Display the filter (if it exists)
-        if glances_processes.get_process_filter() is not None:
-            msg = _("Processes filter:")
+        if glances_processes.process_filter is not None:
+            msg = 'Processes filter:'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = _(" {0} ").format(glances_processes.get_process_filter())
+            msg = ' {0} '.format(glances_processes.process_filter)
             ret.append(self.curse_add_line(msg, "FILTER"))
-            msg = _("(press ENTER to edit)")
+            msg = '(press ENTER to edit)'
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_new_line())
 
         # Build the string message
         # Header
-        msg = _("TASKS ")
+        msg = 'TASKS'
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Compute processes
         other = self.stats['total']
-        msg = str(self.stats['total'])
+        msg = '{0:>4}'.format(self.stats['total'])
         ret.append(self.curse_add_line(msg))
 
         if 'thread' in self.stats:
-            msg = _(" ({0} thr),").format(self.stats['thread'])
+            msg = ' ({0} thr),'.format(self.stats['thread'])
             ret.append(self.curse_add_line(msg))
 
         if 'running' in self.stats:
             other -= self.stats['running']
-            msg = _(" {0} run,").format(self.stats['running'])
+            msg = ' {0} run,'.format(self.stats['running'])
             ret.append(self.curse_add_line(msg))
 
         if 'sleeping' in self.stats:
             other -= self.stats['sleeping']
-            msg = _(" {0} slp,").format(self.stats['sleeping'])
+            msg = ' {0} slp,'.format(self.stats['sleeping'])
             ret.append(self.curse_add_line(msg))
 
-        msg = _(" {0} oth ").format(other)
+        msg = ' {0} oth '.format(other)
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
-        if glances_processes.getmanualsortkey() is None:
-            msg = _("sorted automatically")
+        if glances_processes.auto_sort:
+            msg = 'sorted automatically'
             ret.append(self.curse_add_line(msg))
-            msg = _(" by {0}").format(glances_processes.getautosortkey())
+            msg = ' by {0}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         else:
-            msg = _("sorted by {0}").format(glances_processes.getmanualsortkey())
+            msg = 'sorted by {0}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
 

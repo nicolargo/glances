@@ -28,12 +28,11 @@ try:
     from pymdstat import MdStat
 except ImportError:
     logger.debug("pymdstat library not found. Glances cannot grab RAID info.")
-    pass
 
 
 class Plugin(GlancesPlugin):
 
-    """Glances' RAID plugin.
+    """Glances RAID plugin.
 
     stats is a dict (see pymdstat documentation)
     """
@@ -58,7 +57,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 mds = MdStat()
@@ -67,7 +66,7 @@ class Plugin(GlancesPlugin):
                 logger.debug("Can not grab RAID stats (%s)" % e)
                 return self.stats
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
             pass
@@ -88,11 +87,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:11}'.format(_('RAID disks'))
+        msg = '{0:11}'.format('RAID disks')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>6}'.format(_("Used"))
+        msg = '{0:>6}'.format('Used')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format(_("Avail"))
+        msg = '{0:>6}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
         arrays = self.stats.keys()
@@ -103,7 +102,7 @@ class Plugin(GlancesPlugin):
             # Display the current status
             status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
             # Data: RAID type name | disk used | disk available
-            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else _('UNKNOWN')
+            array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
             msg = '{0:<5}{1:>6}'.format(array_type, array)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['status'] == 'active':
@@ -140,8 +139,10 @@ class Plugin(GlancesPlugin):
         return ret
 
     def raid_alert(self, status, used, available):
-        """
-        [available/used] means that ideally the array would have _available_ devices however, _used_ devices are in use.
+        """RAID alert messages.
+
+        [available/used] means that ideally the array may have _available_
+        devices however, _used_ devices are in use.
         Obviously when used >= available then things are good.
         """
         if status == 'inactive':

@@ -20,14 +20,18 @@
 """Statsd interface class."""
 
 # Import sys libs
-from statsd import StatsClient
-from numbers import Number
 import sys
+from numbers import Number
+try:
+    from configparser import NoOptionError, NoSectionError
+except ImportError:  # Python 2
+    from ConfigParser import NoOptionError, NoSectionError
 
 # Import Glances lib
 from glances.core.glances_logging import logger
-from ConfigParser import NoSectionError, NoOptionError
 from glances.exports.glances_export import GlancesExport
+
+from statsd import StatsClient
 
 
 class Export(GlancesExport):
@@ -56,12 +60,12 @@ class Export(GlancesExport):
                                   prefix=self.prefix)
 
     def load_conf(self, section="statsd"):
-        """Load the Statsd configuration in the Glances configuration file"""
+        """Load the Statsd configuration in the Glances configuration file."""
         if self.config is None:
             return False
         try:
-            self.host = self.config.get_raw_option(section, "host")
-            self.port = self.config.get_raw_option(section, "port")
+            self.host = self.config.get_value(section, 'host')
+            self.port = self.config.get_value(section, 'port')
         except NoSectionError:
             logger.critical("No Statsd configuration found")
             return False
@@ -72,13 +76,13 @@ class Export(GlancesExport):
             logger.debug("Load Statsd from the Glances configuration file")
         # Prefix is optional
         try:
-            self.prefix = self.config.get_raw_option(section, "prefix")
-        except NoOptionError as e:
+            self.prefix = self.config.get_value(section, 'prefix')
+        except NoOptionError:
             pass
         return True
 
     def init(self, prefix='glances'):
-        """Init the connection to the Statsd server"""
+        """Init the connection to the Statsd server."""
         if not self.export_enable:
             return None
         return StatsClient(self.host,
@@ -86,7 +90,7 @@ class Export(GlancesExport):
                            prefix=prefix)
 
     def export(self, name, columns, points):
-        """Export the stats to the Statsd server"""
+        """Export the stats to the Statsd server."""
         for i in range(0, len(columns)):
             if not isinstance(points[i], Number):
                 continue

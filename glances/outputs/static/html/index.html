@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html ng-app="glancesApp">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Glances</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="normalize.css" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <script type="text/javascript" src="vendors/angular.min.js"></script>
+    <script type="text/javascript" src="vendors/angular-route.min.js"></script>
+    <script type="text/javascript" src="vendors/lodash.min.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript" src="filters.js"></script>
+    <script type="text/javascript" src="variables.js"></script>
+    <script type="text/javascript" src="directives.js"></script>
+
+    <script type="text/javascript" src="stats_controller.js"></script>
+</head>
+
+<body ng-view="" ng-keydown="onKeyDown($event)">
+
+</body>
+</html>

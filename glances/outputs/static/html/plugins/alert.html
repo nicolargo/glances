@@ -1,0 +1,7 @@
+<div class="table">
+    <div class="table-row" ng-repeat="alert in result['alert']">
+        <div class="table-cell text-left">
+{{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - {{alert[2]}} on <span class="{{ alert[2] | lowercase }}">{{alert[3]}}</span> ({{alert[4]}})
+		</div>
+    </div>
+</div>

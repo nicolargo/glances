@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import glob
-import os
 import sys
 
 from setuptools import setup
 
-is_chroot = os.stat('/').st_ino != 2
+
+if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.6 or 3.3 to run.')
+    sys.exit(1)
 
 
 def get_data_files():
@@ -17,27 +19,6 @@ def get_data_files():
         ('share/man/man1', ['man/glances.1'])
     ]
 
-    if hasattr(sys, 'real_prefix'):  # virtualenv
-        conf_path = os.path.join(sys.prefix, 'etc', 'glances')
-    elif os.name == 'posix' and (os.getuid() == 0 or is_chroot):
-        # Unix-like + root privileges/chroot environment
-        if 'bsd' in sys.platform:
-            conf_path = os.path.join(sys.prefix, 'etc', 'glances')
-        elif 'linux' in sys.platform:
-            conf_path = os.path.join('/etc', 'glances')
-        elif 'darwin' in sys.platform:
-            conf_path = os.path.join('/usr/local', 'etc', 'glances')
-    elif 'win32' in sys.platform:  # windows
-        conf_path = os.path.join(os.environ.get('APPDATA'), 'glances')
-    else:  # Unix-like + per-user install
-        conf_path = os.path.join('etc', 'glances')
-
-    data_files.append((conf_path, ['conf/glances.conf']))
-
-    for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
-        data_files.append(
-            (os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
-
     return data_files
 
 
@@ -45,20 +26,20 @@ def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info < (2, 7):
-        requires += ['argparse']
+    if sys.version_info == (2, 6):
+        requires += ['argparse', 'logutils']
 
     return requires
 
 setup(
     name='Glances',
-    version='2.3',
+    version='2.4',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-2.3.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-2.4.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=get_requires(),
@@ -68,10 +49,11 @@ setup(
         'BATINFO': ['batinfo'],
         'SNMP': ['pysnmp'],
         'CHART': ['matplotlib'],
-        'BROWSER': ['zeroconf>=0.16', 'netifaces'],
+        'BROWSER': ['zeroconf>=0.17'],
+        'IP': ['netifaces'],
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb', 'statsd'],
+        'EXPORT': ['influxdb>=1.0.0', 'statsd', 'pika'],
         'ACTION': ['pystache']
     },
     packages=['glances'],

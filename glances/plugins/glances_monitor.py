@@ -20,14 +20,13 @@
 """Monitor plugin."""
 
 # Import Glances lib
-from glances.core.glances_logging import logger
 from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
 
-    """Glances' monitor plugin."""
+    """Glances monitor plugin."""
 
     def __init__(self, args=None):
         """Init the plugin."""
@@ -41,13 +40,12 @@ class Plugin(GlancesPlugin):
         self.stats = []
 
     def load_limits(self, config):
-        """Load the monitored list from the conf file."""
-        logger.debug("Monitor plugin configuration detected in the configuration file")
+        """Load the monitored list from the config file, if it exists."""
         self.glances_monitors = glancesMonitorList(config)
 
     def update(self):
         """Update the monitored list."""
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Monitor list only available in a full Glances environment
             # Check if the glances_monitor instance is init
             if self.glances_monitors is None:
@@ -98,7 +96,7 @@ class Plugin(GlancesPlugin):
                 msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
             msg = '{0:<3} '.format(m['count'] if m['count'] > 1 else '')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:13} '.format(_("RUNNING") if m['count'] >= 1 else _("NOT RUNNING"))
+            msg = '{0:13} '.format('RUNNING' if m['count'] >= 1 else 'NOT RUNNING')
             ret.append(self.curse_add_line(msg))
             # Decode to UTF8 (only for Python 3)
             try:

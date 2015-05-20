@@ -20,12 +20,11 @@
 """Init the Glances software."""
 
 __appname__ = 'glances'
-__version__ = '2.3'
+__version__ = '2.4'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
 # Import system lib
-import gettext
 import locale
 import platform
 import signal
@@ -40,23 +39,24 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_globals import gettext_domain, locale_dir
 from glances.core.glances_logging import logger
 from glances.core.glances_main import GlancesMain
 
-# Get PSutil version
-psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except locale.Error:
+    print("Warning: Unable to set locale. Expect encoding problems.")
 
-# First log with Glances and PSUtil version
-logger.info('Start Glances {0}'.format(__version__))
-logger.info('{0} {1} and PSutil {2} detected'.format(platform.python_implementation(),
-                                                     platform.python_version(),
-                                                     __psutil_version))
+# Check Python version
+if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.6 or 3.3 to run.')
+    sys.exit(1)
 
 # Check PSutil version
+psutil_min_version = (2, 0, 0)
+psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
 if psutil_version < psutil_min_version:
-    logger.critical('PSutil 2.0 or higher is needed. Glances cannot start.')
+    print('PSutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
 
@@ -94,9 +94,12 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
-    # Setup translations
-    locale.setlocale(locale.LC_ALL, '')
-    gettext.install(gettext_domain, locale_dir)
+    # Log Glances and PSutil version
+    logger.info('Start Glances {0}'.format(__version__))
+    logger.info('{0} {1} and PSutil {2} detected'.format(
+        platform.python_implementation(),
+        platform.python_version(),
+        __psutil_version))
 
     # Share global var
     global core, standalone, client, server, webserver
@@ -164,7 +167,7 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print(_("Glances server is running on {0}:{1}").format(args.bind_address, args.port))
+        print('Glances server is running on {0}:{1}'.format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if args.password != "":

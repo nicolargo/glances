@@ -49,11 +49,12 @@ class MonitorList(object):
     __monitor_list = []
 
     def __init__(self, config):
-        """Init the monitoring list from the configuration file."""
+        """Init the monitoring list from the configuration file, if it exists."""
         self.config = config
 
         if self.config is not None and self.config.has_section('monitor'):
             # Process monitoring list
+            logger.debug("Monitor list configuration detected")
             self.__set_monitor_list('monitor', 'list')
         else:
             self.__monitor_list = []
@@ -67,14 +68,13 @@ class MonitorList(object):
             value = {}
             key = "list_" + str(l) + "_"
             try:
-                description = self.config.get_raw_option(section, key + "description")
-                regex = self.config.get_raw_option(section, key + "regex")
-                command = self.config.get_raw_option(section, key + "command")
-                countmin = self.config.get_raw_option(section, key + "countmin")
-                countmax = self.config.get_raw_option(section, key + "countmax")
+                description = self.config.get_value(section, key + 'description')
+                regex = self.config.get_value(section, key + 'regex')
+                command = self.config.get_value(section, key + 'command')
+                countmin = self.config.get_value(section, key + 'countmin')
+                countmax = self.config.get_value(section, key + 'countmax')
             except Exception as e:
                 logger.error("Cannot read monitored list: {0}".format(e))
-                pass
             else:
                 if description is not None and regex is not None:
                     # Build the new item
@@ -127,26 +127,26 @@ class MonitorList(object):
         # Iter upon the monitored list
         for i in range(0, len(self.get())):
             # Search monitored processes by a regular expression
-            processlist = glances_processes.getlist()
+            processlist = glances_processes.getalllist()
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
-            if self.command(i) is None:
-                # If there is no command specified in the conf file
-                # then display CPU and MEM %
-                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
-                    sum([p['cpu_percent'] for p in monitoredlist]),
-                    sum([p['memory_percent'] for p in monitoredlist]))
-                continue
-            else:
+            if self.command(i) is not None:
                 # Execute the user command line
                 try:
                     self.__monitor_list[i]['result'] = subprocess.check_output(self.command(i),
                                                                                shell=True)
                 except subprocess.CalledProcessError:
-                    self.__monitor_list[i]['result'] = _("Error: ") + self.command(i)
+                    self.__monitor_list[i]['result'] = 'Error: ' + self.command(i)
                 except Exception:
-                    self.__monitor_list[i]['result'] = _("Cannot execute command")
+                    self.__monitor_list[i]['result'] = 'Cannot execute command'
+
+            if self.command(i) is None or self.__monitor_list[i]['result'] == '':
+                # If there is no command specified in the conf file
+                # then display CPU and MEM %
+                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
+                    sum([p['cpu_percent'] for p in monitoredlist]),
+                    sum([p['memory_percent'] for p in monitoredlist]))
 
         return self.__monitor_list
 

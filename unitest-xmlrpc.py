@@ -20,8 +20,6 @@
 
 """Glances unitary tests suite for the XML/RPC API."""
 
-import gettext
-import locale
 import sys
 import time
 import unittest
@@ -55,11 +53,6 @@ if not is_linux:
     sys.exit(2)
 else:
     print('Unitary tests for {0} {1}'.format(appname, version))
-
-# Import local settings
-from glances.core.glances_globals import gettext_domain, locale_dir
-locale.setlocale(locale.LC_ALL, '')
-gettext.install(gettext_domain, locale_dir)
 
 # Init Glances core
 from glances.core.glances_main import GlancesMain

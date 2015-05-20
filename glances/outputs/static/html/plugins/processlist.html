@@ -1,0 +1,33 @@
+<div class="table">
+    <div class="table-row">
+        <div sortable-th sorter="sorter" column="cpu_percent" class="table-cell">CPU%</div>
+        <div sortable-th sorter="sorter" column="memory_percent" class="table-cell">MEM%</div>
+        <div class="table-cell hidden-xs hidden-sm">VIRT</div>
+        <div class="table-cell hidden-xs hidden-sm">RES</div>
+        <div class="table-cell">PID</div>
+        <div sortable-th sorter="sorter" column="username" class="table-cell text-left">USER</div>
+        <div class="table-cell">NI</div>
+        <div class="table-cell">S</div>
+        <div sortable-th sorter="sorter" column="timemillis" class="table-cell hidden-xs hidden-sm">TIME+</div>
+        <div sortable-th sorter="sorter" column="io_read" class="table-cell hidden-xs hidden-sm">IOR/s</div>
+        <div sortable-th sorter="sorter" column="io_write" class="table-cell hidden-xs hidden-sm">IOW/s</div>
+        <div sortable-th sorter="sorter" column="name" class="table-cell text-left">Command</div>
+    </div>
+    <div class="table-row" ng-repeat="process in result['processlist'] | orderBy:sorter.column:sorter.isReverseColumn(sorter.column)">
+        <div class="table-cell" ng-class="getAlert('processlist', 'processlist_cpu_', process.cpu_percent)">{{process.cpu_percent | number:1}}</div>
+        <div class="table-cell" ng-class="getAlert('processlist', 'processlist_mem_', process.memory_percent)">{{process.memory_percent | number:1}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.memres | bytes}}</div>
+        <div class="table-cell">{{process.pid}}</div>
+        <div class="table-cell text-left">{{process.username}}</div>
+        <div class="table-cell" ng-class="{nice: isNice(process.nice)}">{{process.nice | exclamation}}</div>
+        <div class="table-cell" ng-class="{status: process.status == 'R'}">{{process.status}}</div>
+        <div class="table-cell hidden-xs hidden-sm">
+            <span ng-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>{{ process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span ng-show="process.timeplus.hours <= 0">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>
+        </div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.io_read}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.io_write}}</div>
+        <div class="table-cell text-left" ng-if="show.short_process_name">{{process.name}}</div>
+        <div class="table-cell text-left" ng-if="!show.short_process_name">{{process.cmdline}}</div>
+    </div>
+</div>

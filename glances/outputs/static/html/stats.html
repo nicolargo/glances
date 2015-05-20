@@ -1,0 +1,64 @@
+<div ng-show="!result" class="container-fluid" id="loading-page">
+    <div class="glances-logo"></div>
+    <div class="loader">Loading...</div>
+</div>
+
+<div ng-show="help_screen" class="container-fluid" ng-include src="'help.html'"></div>
+
+<div ng-show="result && !help_screen" class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="pull-left">
+                <section id="system" class="plugin" ng-include src="'plugins/system.html'"></section>
+            </div>
+            <div class="pull-left">
+                <section id="ip" class="plugin" ng-if="result['ip'].address != undefined" ng-include src="'plugins/ip.html'"></section>
+            </div>
+            <div class="pull-right">
+                <section id="uptime" class="plugin" ng-include src="'plugins/uptime.html'"></section>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-md-2">
+            <section id="cpu" class="plugin" ng-include src="'plugins/cpu.html'"></section>
+        </div>
+        <div class="hidden-xs hidden-sm col-md-2">
+            <section id="cpu_more" class="plugin" ng-if="result['cpu'].nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
+        </div>
+        <div class="col-sm-3 col-md-2">
+            <section id="load" class="plugin" ng-if="result['load'].cpucore != undefined" ng-include src="'plugins/load.html'"></section>
+        </div>
+        <div class="col-sm-3 col-md-2">
+            <section id="mem" class="plugin" ng-include src="'plugins/mem.html'"></section>
+        </div>
+        <div class="hidden-xs hidden-sm col-md-2">
+            <section id="mem_more" class="plugin" ng-include src="'plugins/mem_more.html'"></section>
+        </div>
+        <div class="col-sm-3 col-md-2">
+            <section id="memswap" class="plugin" ng-include src="'plugins/memswap.html'"></section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 sidebar" ng-show="show.sidebar">
+            <div class="table">
+                <section id="network" class="plugin table-row-group" ng-show="show.network" ng-include src="'plugins/network.html'"></section>
+                <section id="diskio" class="plugin table-row-group" ng-show="show.diskio" ng-include src="'plugins/diskio.html'"></section>
+                <section id="fs" class="plugin table-row-group" ng-show="show.fs" ng-include src="'plugins/fs.html'"></section>
+                <section id="sensors" class="plugin table-row-group" ng-show="show.sensors && result['sensors'].length > 0" ng-include src="'plugins/sensors.html'"></section>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            <section id="containers" class="plugin" ng-if="result['docker']['containers'].length" ng-include src="'plugins/docker.html'"></section>
+            <section id="alerts" ng-show="show.alert" ng-include src="'plugins/alerts.html'"></section>
+            <section id="alert" class="plugin" ng-show="show.alert" ng-include src="'plugins/alert.html'"></section>
+            <section id="processcount" class="plugin" ng-include src="'plugins/processcount.html'"></section>
+            <div class="row">
+                <div class="col-lg-9">
+                    <gl-monitor-list class="plugin" processes="result['monitor']"></gl-monitor-list>
+                </div>
+            </div>
+            <section id="processlist" class="plugin" ng-include src="'plugins/processlist.html'"></section>
+        </div>
+    </div>
+</div>

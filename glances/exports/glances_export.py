@@ -32,7 +32,7 @@ from glances.core.glances_logging import logger
 
 class GlancesExport(object):
 
-    """Main class for Glances' export IF."""
+    """Main class for Glances export IF."""
 
     def __init__(self, config=None, args=None):
         """Init the export class."""
@@ -53,34 +53,47 @@ class GlancesExport(object):
         logger.debug("Finalise export interface %s" % self.export_name)
 
     def plugins_to_export(self):
-        """Return the list of plugins to export"""
-        return ['cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'processcount']
+        """Return the list of plugins to export."""
+        return ['cpu',
+                'percpu',
+                'load',
+                'mem',
+                'memswap',
+                'network',
+                'diskio',
+                'fs',
+                'processcount',
+                'ip',
+                'system',
+                'uptime']
 
     def update(self, stats):
         """Update stats to a server.
-        The method buil two list: names and values
-        and call the export method to export the stats"""
+
+        The method builds two lists: names and values
+        and calls the export method to export the stats.
+        """
         if not self.export_enable:
             return False
 
         # Get the stats
         all_stats = stats.getAll()
+        all_limits = stats.getAllLimits()
         plugins = stats.getAllPlugins()
 
-        # Loop over available plugin
-        i = 0
-        for plugin in plugins:
+        # Loop over available plugins
+        for i, plugin in enumerate(plugins):
             if plugin in self.plugins_to_export():
-                if type(all_stats[i]) is list:
+                if isinstance(all_stats[i], list):
                     for item in all_stats[i]:
-                        export_names = map(
-                            lambda x: item[item['key']] + '.' + x, item.keys())
-                        export_values = item.values()
+                        item.update(all_limits[i])
+                        export_names = list('{0}.{1}'.format(item[item['key']], key)
+                                            for key in item.keys())
+                        export_values = list(item.values())
                         self.export(plugin, export_names, export_values)
-                elif type(all_stats[i]) is dict:
-                    export_names = all_stats[i].keys()
-                    export_values = all_stats[i].values()
+                elif isinstance(all_stats[i], dict):
+                    export_names = list(all_stats[i].keys()) + list(all_limits[i].keys())
+                    export_values = list(all_stats[i].values()) + list(all_limits[i].values())
                     self.export(plugin, export_names, export_values)
-            i += 1
 
         return True

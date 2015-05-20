@@ -1,4 +1,4 @@
-.TH glances 1  "January, 2015" "version 2.3" "USER COMMANDS"
+.TH glances 1  "May, 2015" "version 2.4" "USER COMMANDS"
 .SH NAME
 glances \- A cross-platform curses-based system monitoring tool
 .SH SYNOPSIS
@@ -7,7 +7,7 @@ glances \- A cross-platform curses-based system monitoring tool
 .SH DESCRIPTION
 Glances is a free (LGPL) cross-platform curses-based system monitoring tool which
 aims to present a maximum of information in a minimum of space, ideally to fit in
-a classical 80x24 terminal or higher to have additionnal information. It can adapt
+a classical 80x24 terminal or higher to have additional information. It can adapt
 dynamically the displayed information depending on the terminal size.
 .PP
 Glances can also work in client/server mode. Remote monitoring could be done via
@@ -26,16 +26,16 @@ show this help message and exit
 show program's version number and exit
 .TP
 .B \-d, \-\-debug
-Enable debug mode (log file is /tmp/glances.log)
+enable debug mode (log file is /tmp/glances.log)
 .TP
 .B \-C CONF_FILE, \-\-config CONF_FILE
 path to the configuration file
 .TP
-.B \-b, \-\-byte
-display network rate in byte per second [default: bit per second]
+.B \-\-disable-network
+disable network module
 .TP
-.B \-\-disable-bold
-disable bold mode in the terminal
+.B \-\-disable-ip
+disable IP module
 .TP
 .B \-\-disable-diskio
 disable disk I/O module
@@ -43,14 +43,20 @@ disable disk I/O module
 .B \-\-disable-fs
 disable file system module
 .TP
-.B \-\-disable-network
-disable network module
-.TP
 .B \-\-disable-sensors
 disable sensors module
 .TP
+.B \-\-disable-hddtemp
+disable HDDTemp module
+.TP
+.B \-\-disable-raid
+disable RAID module
+.TP
+.B \-\-disable-docker
+disable Docker module
+.TP
 .B \-\-disable-left-sidebar
-disable network, disk IO, FS and sensors modules
+disable network, disk I/O, file system and sensors modules
 .TP
 .B \-\-disable-process
 disable process module
@@ -58,23 +64,35 @@ disable process module
 .B \-\-disable-log
 disable log module
 .TP
+.B \-\-disable-quicklook
+disable quick look module
+.TP
+.B \-\-disable-bold
+disable bold mode in the terminal
+.TP
 .B \-\-enable-process-extended
 enable extended stats on top process
 .TP
 .B \-\-enable-history
-enable the history mode
+enable the history mode (matplotlib needed)
 .TP
-B \-\-path-history PATH_HISTORY
+.B \-\-path-history PATH_HISTORY
 set the export path for graph history
 .TP
-.B \-\-export-csv CSV_FILE
+.B \-\-export-csv EXPORT_CSV
 export stats to a CSV file
 .TP
 .B \-\-export-influxdb
-export stats to an InfluxDB server
+export stats to an InfluxDB server (influxdb needed)
 .TP
 .B \-\-export-statsd
-export stats to a Statsd server
+export stats to a StatsD server (statsd needed)
+.TP
+.B \-\-export-rabbitmq
+export stats to a RabbitMQ server (pika needed)
+.TP
+.B \-c CLIENT, \-\-client CLIENT
+connect to a Glances server by IPv4/IPv6 address or hostname
 .TP
 .B \-s, \-\-server
 run Glances in server mode
@@ -85,17 +103,14 @@ start the client browser (display list of servers)
 .B \-\-disable-autodiscover
 disable autodiscover feature
 .TP
-.B \-c CLIENT, \-\-client CLIENT
-connect to a Glances server by IPv4/IPv6 address or hostname
-.TP
 .B \-p PORT, \-\-port PORT
 define the client/server TCP port [default: 61209]
 .TP
-.B \-\-password
-define a client/server password from the prompt or file
-.TP
 .B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
 bind server to the given IPv4/IPv6 address or hostname
+.TP
+.B \-\-password
+define a client/server password
 .TP
 .B \-\-snmp-community SNMP_COMMUNITY
 SNMP community
@@ -113,25 +128,40 @@ SNMP username (only for SNMPv3)
 SNMP authentication key (only for SNMPv3)
 .TP
 .B \-\-snmp-force
-Force the SNMP mode (do not try Glances server)
+force the SNMP mode (do not try Glances server)
 .TP
 .B \-t TIME, \-\-time TIME
 set refresh time in seconds [default: 3 sec]
 .TP
 .B \-w, \-\-webserver
-run Glances in Web server mode
+run Glances in web server mode (bottle needed)
+.TP
+.B \-q, \-\-quiet
+run Glances in quiet mode (nothing is displayed)
+.TP
+.B \-f PROCESS_FILTER, \-\-process\-filter PROCESS_FILTER
+set the process filter pattern (regular expression)
+.TP
+.B \-\-process-short-name
+force short name for processes name
+.TP
+.B \-\-hide-kernel-threads
+hide kernel threads in process list
+.TP
+.B \-\-tree
+display processes as a tree
+.TP
+.B \-b, \-\-byte
+display network rate in byte per second [default: bit per second]
 .TP
 .B \-1, \-\-percpu
 start Glances in per CPU mode
 .TP
-.B \-1, \-\-process-short-name
-Force short name for processes name
+.B \-\-fs-free-space
+display file system free space instead of used
 .TP
-.B \-1, \-\-fs-free-space
-Display FS free space instead of used
-.TP
-.B \-1, \-\-theme-white
-Optimize display for white background
+.B \-\-theme-white
+optimize display colors for white background
 .SH INTERACTIVE COMMANDS
 You can use the following keys while in Glances:
 .TP
@@ -155,6 +185,10 @@ Enable/disable top extended stats
 .TP
 .B f
 Show/hide file system stats
+.TP
+.B F
+Switch between file system used and free space
+.TP
 .B g
 Generate graphs for current history
 .TP
@@ -185,13 +219,16 @@ Reset history
 .B s
 Show/hide sensors stats
 .TP
-.B T
+.B t
 Sort process by CPU times (TIME+)
 .TP
-.B t
+.B T
 View network I/O as combination
 .TP
 .B u
+Sort processes by USER
+.TP
+.B U
 View cumulative network I/O
 .TP
 .B w
@@ -208,11 +245,45 @@ Show/hide processes list (for low CPU consumption)
 .TP
 .B 1
 Switch between global CPU and per-CPU stats
+.TP
+.B 2
+Enable/disable left sidebar
+.TP
+.B 3
+Enable/disable the quick look module
+.TP
+.B /
+Switch between short name/command line (processes name)
 .SH EXAMPLES
 .TP
-Refresh information every 5 seconds:
-.B glances
-\-t 5
+Monitor local machine (standalone mode):
+.B $ glances
+.PP
+Monitor local machine with the Web interface (Web UI):
+.B $ glances -w
+.PP
+Glances web server started on http://0.0.0.0:61208/
+.PP
+Monitor local machine and export stats to a CSV file (standalone mode):
+.B $ glances --export-csv
+.PP
+Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
+.B $ glances -t 5 --export-influxdb
+.PP
+Monitor local machine and export stats to a RabbitMQ server with 5s refresh time (standalone mode):
+.B $ glances -t 5 --export-rabbitmq
+.PP
+Start a Glances server (server mode):
+.B $ glances -s
+.PP
+Connect Glances to a Glances server (client mode):
+.B $ glances -c <ip_server>
+.PP
+Connect Glances to a Glances server and export stats to a StatsD server (client mode):
+.B $ glances -c <ip_server> --export-statsd
+.PP
+Start the client browser (browser mode):
+.B $ glances --browser
 .PP
 .SH EXIT STATUS
 Glances returns a zero exit status if it succeeds to print/grab information.
