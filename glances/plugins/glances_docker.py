@@ -165,7 +165,8 @@ class Plugin(GlancesPlugin):
                     try:
                         self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
                         logger.debug("Create Docker stats object for container {}".format(c['Id']))
-                    except (AttributeError, docker.errors.InvalidVersion) as e:
+                    except Exception as e:
+                        # Correct Issue #602
                         logger.error("Can not call Docker stats method {}".format(e))
 
                 # Get the docker stats

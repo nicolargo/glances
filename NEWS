@@ -7,6 +7,13 @@ Version 2.5
 
 ...
 
+Version 2.4.1
+=============
+
+Bugs corrected:
+
+    * Fatal error using Python 3.4 and Docker plugin bug (issue #602)
+
 Version 2.4
 ===========
 
