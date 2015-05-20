@@ -1,0 +1,10 @@
+<div class="table-row">
+    <div class="table-cell text-left title">DISK I/O</div>
+    <div class="table-cell">R/s</div>
+    <div class="table-cell">W/s</div>
+</div>
+<div class="table-row" ng-repeat="disk in result['diskio'] | orderBy: 'disk_name'">
+    <div class="table-cell text-left">{{disk.disk_name | min_size}}</div>
+    <div class="table-cell">{{disk.read_bytes | bytes}}</div>
+    <div class="table-cell">{{disk.write_bytes | bytes}}</div>
+</div>

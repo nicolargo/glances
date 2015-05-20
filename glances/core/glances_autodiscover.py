@@ -22,11 +22,7 @@
 # Import system libs
 import socket
 import sys
-try:
-    import netifaces
-    netifaces_tag = True
-except ImportError:
-    netifaces_tag = False
+
 try:
     from zeroconf import (
         __version__ as __zeroconf_version,
@@ -42,13 +38,13 @@ except ImportError:
 from glances.core.glances_globals import appname
 from glances.core.glances_logging import logger
 
-# Zeroconf 0.16 or higher is needed
+# Zeroconf 0.17 or higher is needed
 if zeroconf_tag:
-    zeroconf_min_version = (0, 16, 0)
+    zeroconf_min_version = (0, 17, 0)
     zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
     logger.debug("Zeroconf version {0} detected.".format(__zeroconf_version))
     if zeroconf_version < zeroconf_min_version:
-        logger.critical("Please install zeroconf 0.16 or higher.")
+        logger.critical("Please install zeroconf 0.17 or higher.")
         sys.exit(1)
 
 # Global var
@@ -57,7 +53,7 @@ zeroconf_type = "_%s._tcp." % appname
 
 class AutoDiscovered(object):
 
-    """Class to manage the auto discovered servers dict"""
+    """Class to manage the auto discovered servers dict."""
 
     def __init__(self):
         # server_dict is a list of dict (JSON compliant)
@@ -65,30 +61,30 @@ class AutoDiscovered(object):
         self._server_list = []
 
     def get_servers_list(self):
-        """Return the current server list (list of dict)"""
+        """Return the current server list (list of dict)."""
         return self._server_list
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         self._server_list[server_pos][key] = value
 
     def add_server(self, name, ip, port):
-        """Add a new server to the list"""
-        new_server = {'key': name,  # Zeroconf name with both hostname and port
-                      'name': name.split(':')[0],  # Short name
-                      'ip': ip,  # IP address seen by the client
-                      'port': port,  # TCP port
-                      'username': 'glances',  # Default username
-                      'password': '',  # Default password
-                      'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
-                      'type': 'DYNAMIC',  # Server type: 'STATIC' or 'DYNAMIC'
-                      }
+        """Add a new server to the list."""
+        new_server = {
+            'key': name,  # Zeroconf name with both hostname and port
+            'name': name.split(':')[0],  # Short name
+            'ip': ip,  # IP address seen by the client
+            'port': port,  # TCP port
+            'username': 'glances',  # Default username
+            'password': '',  # Default password
+            'status': 'UNKNOWN',  # Server status: 'UNKNOWN', 'OFFLINE', 'ONLINE', 'PROTECTED'
+            'type': 'DYNAMIC'}  # Server type: 'STATIC' or 'DYNAMIC'
         self._server_list.append(new_server)
         logger.debug("Updated servers list (%s servers): %s" %
                      (len(self._server_list), self._server_list))
 
     def remove_server(self, name):
-        """Remove a server from the dict"""
+        """Remove a server from the dict."""
         for i in self._server_list:
             if i['key'] == name:
                 try:
@@ -103,22 +99,23 @@ class AutoDiscovered(object):
 
 class GlancesAutoDiscoverListener(object):
 
-    """Zeroconf listener for Glances server"""
+    """Zeroconf listener for Glances server."""
 
     def __init__(self):
         # Create an instance of the servers list
         self.servers = AutoDiscovered()
 
     def get_servers_list(self):
-        """Return the current server list (list of dict)"""
+        """Return the current server list (list of dict)."""
         return self.servers.get_servers_list()
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         self.servers.set_server(server_pos, key, value)
 
     def add_service(self, zeroconf, srv_type, srv_name):
-        """Method called when a new Zeroconf client is detected
+        """Method called when a new Zeroconf client is detected.
+
         Return True if the zeroconf client is a Glances server
         Note: the return code will never be used
         """
@@ -141,7 +138,7 @@ class GlancesAutoDiscoverListener(object):
         return True
 
     def remove_service(self, zeroconf, srv_type, srv_name):
-        # Remove the server from the list
+        """Remove the server from the list."""
         self.servers.remove_server(srv_name)
         logger.info(
             "Glances server %s removed from the autodetect list" % srv_name)
@@ -149,7 +146,7 @@ class GlancesAutoDiscoverListener(object):
 
 class GlancesAutoDiscoverServer(object):
 
-    """Implementation of the Zeroconf protocol (server side for the Glances client)"""
+    """Implementation of the Zeroconf protocol (server side for the Glances client)."""
 
     def __init__(self, args=None):
         if zeroconf_tag:
@@ -169,14 +166,14 @@ class GlancesAutoDiscoverServer(object):
             self.zeroconf_enable_tag = False
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)"""
+        """Return the current server list (dict of dict)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             return self.listener.get_servers_list()
         else:
             return []
 
     def set_server(self, server_pos, key, value):
-        """Set the key to the value for the server_pos (position in the list)"""
+        """Set the key to the value for the server_pos (position in the list)."""
         if zeroconf_tag and self.zeroconf_enable_tag:
             self.listener.set_server(server_pos, key, value)
 
@@ -197,16 +194,15 @@ class GlancesAutoDiscoverClient(object):
             except socket.error as e:
                 logger.error("Cannot start zeroconf: {0}".format(e))
 
-            if netifaces_tag:
+            try:
                 # -B @ overwrite the dynamic IPv4 choice
                 if zeroconf_bind_address == '0.0.0.0':
                     zeroconf_bind_address = self.find_active_ip_address()
-            else:
-                logger.error("Couldn't find the active IP address: netifaces library not found.")
+            except KeyError:
+                # Issue #528 (no network interface available)
+                pass
 
-            logger.info("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
             print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
-
             self.info = ServiceInfo(
                 zeroconf_type, '{0}:{1}.{2}'.format(hostname, args.port, zeroconf_type),
                 address=socket.inet_aton(zeroconf_bind_address), port=args.port,
@@ -215,15 +211,14 @@ class GlancesAutoDiscoverClient(object):
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
 
-    def find_active_ip_address(self):
+    @staticmethod
+    def find_active_ip_address():
         """Try to find the active IP addresses."""
-        try:
-            # Interface of the default gateway
-            gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
-            # IP address for the interface
-            return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
-        except Exception:
-            return None
+        import netifaces
+        # Interface of the default gateway
+        gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
+        # IP address for the interface
+        return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
 
     def close(self):
         if zeroconf_tag:

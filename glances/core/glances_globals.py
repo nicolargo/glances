@@ -51,15 +51,3 @@ exports_path = os.path.realpath(os.path.join(work_path, '..', 'exports'))
 sys_path = sys.path[:]
 sys.path.insert(1, plugins_path)
 sys.path.insert(1, exports_path)
-
-def get_locale_path(paths):
-    for path in paths:
-        if os.path.exists(path):
-            return path
-
-# i18n
-gettext_domain = appname
-i18n_path = os.path.realpath(os.path.join(work_path, '..', '..', 'i18n'))
-user_i18n_path = os.path.join(os.path.expanduser('~/.local'), 'share', 'locale')
-sys_i18n_path = os.path.join(sys_prefix, 'share', 'locale')
-locale_dir = get_locale_path([i18n_path, user_i18n_path, sys_i18n_path])

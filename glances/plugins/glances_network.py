@@ -22,10 +22,10 @@
 import base64
 import operator
 
-import psutil
-
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
@@ -43,7 +43,7 @@ items_history_list = [{'name': 'rx', 'color': '#00FF00', 'y_unit': 'bit/s'},
 
 class Plugin(GlancesPlugin):
 
-    """Glances' network Plugin.
+    """Glances network plugin.
 
     stats is a list
     """
@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'interface_name'
 
     def reset(self):
@@ -75,7 +75,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Grab network interface stat using the PsUtil net_io_counter method
@@ -101,19 +101,21 @@ class Plugin(GlancesPlugin):
                 network_new = netiocounters
                 for net in network_new:
                     try:
-                        # Try necessary to manage dynamic network interface
-                        netstat = {}
-                        netstat['interface_name'] = net
-                        netstat['time_since_update'] = time_since_update
-                        netstat['cumulative_rx'] = network_new[net].bytes_recv
-                        netstat['rx'] = (network_new[net].bytes_recv -
-                                         self.network_old[net].bytes_recv)
-                        netstat['cumulative_tx'] = network_new[net].bytes_sent
-                        netstat['tx'] = (network_new[net].bytes_sent -
-                                         self.network_old[net].bytes_sent)
-                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
-                                                    netstat['cumulative_tx'])
-                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                        cumulative_rx = network_new[net].bytes_recv
+                        cumulative_tx = network_new[net].bytes_sent
+                        cumulative_cx = cumulative_rx + cumulative_tx
+                        rx = cumulative_rx - self.network_old[net].bytes_recv
+                        tx = cumulative_tx - self.network_old[net].bytes_sent
+                        cx = rx + tx
+                        netstat = {
+                            'interface_name': net,
+                            'time_since_update': time_since_update,
+                            'cumulative_rx': cumulative_rx,
+                            'rx': rx,
+                            'cumulative_tx': cumulative_tx,
+                            'tx': tx,
+                            'cumulative_cx': cumulative_cx,
+                            'cx': cx}
                     except KeyError:
                         continue
                     else:
@@ -123,15 +125,15 @@ class Plugin(GlancesPlugin):
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
 
             # SNMP bulk command to get all network interface in one shot
             try:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                     bulk=True)
             except KeyError:
-                netiocounters = self.set_stats_snmp(snmp_oid=snmp_oid['default'],
+                netiocounters = self.get_stats_snmp(snmp_oid=snmp_oid['default'],
                                                     bulk=True)
 
             # Previous network interface stats are stored in the network_old variable
@@ -150,27 +152,30 @@ class Plugin(GlancesPlugin):
 
                 for net in network_new:
                     try:
-                        # Try necessary to manage dynamic network interface
-                        netstat = {}
                         # Windows: a tips is needed to convert HEX to TXT
                         # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
-                        if self.get_short_system_name() == 'windows':
+                        if self.short_system_name == 'windows':
                             try:
-                                netstat['interface_name'] = str(base64.b16decode(net[2:-2].upper()))
+                                interface_name = str(base64.b16decode(net[2:-2].upper()))
                             except TypeError:
-                                netstat['interface_name'] = net
+                                interface_name = net
                         else:
-                            netstat['interface_name'] = net
-                        netstat['time_since_update'] = time_since_update
-                        netstat['cumulative_rx'] = float(network_new[net]['cumulative_rx'])
-                        netstat['rx'] = (float(network_new[net]['cumulative_rx']) -
-                                         float(self.network_old[net]['cumulative_rx']))
-                        netstat['cumulative_tx'] = float(network_new[net]['cumulative_tx'])
-                        netstat['tx'] = (float(network_new[net]['cumulative_tx']) -
-                                         float(self.network_old[net]['cumulative_tx']))
-                        netstat['cumulative_cx'] = (netstat['cumulative_rx'] +
-                                                    netstat['cumulative_tx'])
-                        netstat['cx'] = netstat['rx'] + netstat['tx']
+                            interface_name = net
+                        cumulative_rx = float(network_new[net]['cumulative_rx'])
+                        cumulative_tx = float(network_new[net]['cumulative_tx'])
+                        cumulative_cx = cumulative_rx + cumulative_tx
+                        rx = cumulative_rx - float(self.network_old[net]['cumulative_rx'])
+                        tx = cumulative_tx - float(self.network_old[net]['cumulative_tx'])
+                        cx = rx + tx
+                        netstat = {
+                            'interface_name': interface_name,
+                            'time_since_update': time_since_update,
+                            'cumulative_rx': cumulative_rx,
+                            'rx': rx,
+                            'cumulative_tx': cumulative_tx,
+                            'tx': tx,
+                            'cumulative_cx': cumulative_cx,
+                            'cx': cx}
                     except KeyError:
                         continue
                     else:
@@ -189,7 +194,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
@@ -204,7 +209,6 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
-
         # Init the return message
         ret = []
 
@@ -221,30 +225,30 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:{width}}'.format(_("NETWORK"), width=ifname_max_width)
+        msg = '{0:{width}}'.format('NETWORK', width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx"))
+                msg = '{0:>14}'.format('Rx+Tx')
                 ret.append(self.curse_add_line(msg))
             else:
                 # Rx/Tx stats
-                msg = '{0:>7}'.format(_("Rx"))
+                msg = '{0:>7}'.format('Rx')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx"))
+                msg = '{0:>7}'.format('Tx')
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format(_("Rx+Tx/s"))
+                msg = '{0:>14}'.format('Rx+Tx/s')
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = '{0:>7}'.format(_("Rx/s"))
+                msg = '{0:>7}'.format('Rx/s')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(_("Tx/s"))
+                msg = '{0:>7}'.format('Tx/s')
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
@@ -265,20 +269,20 @@ class Plugin(GlancesPlugin):
                 if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx']))
                     tx = self.auto_unit(int(i['cumulative_tx']))
-                    sx = self.auto_unit(int(i['cumulative_tx'])
-                                        + int(i['cumulative_tx']))
+                    sx = self.auto_unit(int(i['cumulative_tx']) +
+                                        int(i['cumulative_tx']))
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update']))
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update']))
-                    sx = self.auto_unit(int(i['rx'] // i['time_since_update'])
-                                        + int(i['tx'] // i['time_since_update']))
+                    sx = self.auto_unit(int(i['rx'] // i['time_since_update']) +
+                                        int(i['tx'] // i['time_since_update']))
             else:
                 # Bits per second (for real network administrator | Default)
                 if args.network_cumul:
                     rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
                     tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
-                    sx = self.auto_unit(int(i['cumulative_rx'] * 8)
-                                        + int(i['cumulative_tx'] * 8)) + "b"
+                    sx = self.auto_unit(int(i['cumulative_rx'] * 8) +
+                                        int(i['cumulative_tx'] * 8)) + "b"
                 else:
                     rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
                     tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"

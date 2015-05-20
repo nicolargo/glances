@@ -19,6 +19,8 @@
 
 """Manage the Glances standalone session."""
 
+from time import sleep
+
 # Import Glances libs
 from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
@@ -32,15 +34,16 @@ class GlancesStandalone(object):
     """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):
+        # Quiet mode
+        self._quiet = args.quiet
+        self.refresh_time = args.time
+
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
 
-        # Default number of processes to displayed is set to 50
-        glances_processes.set_max_processes(50)
-
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
-            logger.info("Extended stats for top process are disabled (default behavior)")
+            logger.debug("Extended stats for top process are disabled")
             glances_processes.disable_extended()
         else:
             logger.debug("Extended stats for top process are enabled")
@@ -48,37 +51,68 @@ class GlancesStandalone(object):
 
         # Manage optionnal process filter
         if args.process_filter is not None:
-            glances_processes.set_process_filter(args.process_filter)
+            glances_processes.process_filter = args.process_filter
 
         if (not is_windows) and args.no_kernel_threads:
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
-        if args.process_tree:
-            # Enable process tree view
-            glances_processes.enable_tree()
+        try:
+            if args.process_tree:
+                # Enable process tree view
+                glances_processes.enable_tree()
+        except AttributeError:
+            pass
 
         # Initial system informations update
         self.stats.update()
 
-        # Init screen
-        self.screen = GlancesCursesStandalone(args=args)
+        if self.quiet:
+            logger.info("Quiet mode is ON: Nothing will be displayed")
+            # In quiet mode, nothing is displayed
+            glances_processes.max_processes = 0
+        else:
+            # Default number of processes to displayed is set to 50
+            glances_processes.max_processes = 50
 
-    def serve_forever(self):
+            # Init screen
+            self.screen = GlancesCursesStandalone(args=args)
+
+    @property
+    def quiet(self):
+        return self._quiet
+
+    def __serve_forever(self):
         """Main loop for the CLI."""
         while True:
             # Update system informations
             self.stats.update()
 
-            # Update the screen
-            self.screen.update(self.stats)
+            if not self.quiet:
+                # Update the screen
+                self.screen.update(self.stats)
+            else:
+                # Wait...
+                sleep(self.refresh_time)
 
             # Export stats using export modules
             self.stats.export(self.stats)
 
+    def serve_forever(self):
+        """Wrapper to the serve_forever function.
+
+        This function will restore the terminal to a sane state
+        before re-raising the exception and generating a traceback.
+        """
+        try:
+            return self.__serve_forever()
+        finally:
+            self.end()
+
     def end(self):
         """End of the standalone CLI."""
-        self.screen.end()
+        if not self.quiet:
+            self.screen.end()
 
         # Exit from export modules
         self.stats.end()

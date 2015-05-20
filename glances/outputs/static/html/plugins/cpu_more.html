@@ -1,0 +1,26 @@
+<div class="table">
+    <div class="table-row">
+        <div class="table-cell text-left">nice:</div>
+        <div class="table-cell">
+            {{result["cpu"].nice}}%
+        </div>
+    </div>
+    <div class="table-row" ng-if="result['cpu'].irq != undefined">
+        <div class="table-cell text-left">irq:</div>
+        <div class="table-cell">
+            {{result["cpu"].irq}}%
+        </div>
+    </div>
+    <div class="table-row" ng-if="result['cpu'].iowait != undefined">
+        <div class="table-cell text-left">iowait:</div>
+        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_iowait_', result['cpu'].iowait)">
+            {{result["cpu"].iowait}}%
+        </div>
+    </div>
+    <div class="table-row" ng-if="result['cpu'].steal != undefined">
+        <div class="table-cell text-left">steal:</div>
+        <div class="table-cell" ng-class="getAlert('cpu', 'cpu_steal_', result['cpu'].steal)">
+            {{result["cpu"].steal}}%
+        </div>
+    </div>
+</div>

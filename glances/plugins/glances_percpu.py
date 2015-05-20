@@ -19,9 +19,9 @@
 
 """Per-CPU plugin."""
 
-import psutil
-
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 
 class Plugin(GlancesPlugin):
@@ -42,6 +42,10 @@ class Plugin(GlancesPlugin):
         # Init stats
         self.reset()
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'cpu_number'
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
@@ -53,12 +57,15 @@ class Plugin(GlancesPlugin):
 
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             percpu_percent = psutil.cpu_percent(interval=0.0, percpu=True)
             percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
+            cpu_number = 0
             for cputimes in percpu_times_percent:
                 for cpupercent in percpu_percent:
-                    cpu = {'total': cpupercent,
+                    cpu = {'key': self.get_key(),
+                           'cpu_number': str(cpu_number),
+                           'total': cpupercent,
                            'user': cputimes.user,
                            'system': cputimes.system,
                            'idle': cputimes.idle}
@@ -78,6 +85,7 @@ class Plugin(GlancesPlugin):
                     if hasattr(cputimes, 'guest_nice'):
                         cpu['guest_nice'] = cputimes.guest_nice
                 self.stats.append(cpu)
+                cpu_number += 1
         else:
             # Update stats using SNMP
             pass
@@ -91,13 +99,13 @@ class Plugin(GlancesPlugin):
 
         # No per CPU stat ? Exit...
         if not self.stats:
-            msg = _("PER CPU not available")
+            msg = 'PER CPU not available'
             ret.append(self.curse_add_line(msg, "TITLE"))
             return ret
 
         # Build the string message
         # Header
-        msg = '{0:8}'.format(_("PER CPU"))
+        msg = '{0:8}'.format('PER CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Total per-CPU usage
@@ -107,7 +115,7 @@ class Plugin(GlancesPlugin):
 
         # User per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("user:"))
+        msg = '{0:8}'.format('user:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['user'])
@@ -115,7 +123,7 @@ class Plugin(GlancesPlugin):
 
         # System per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("system:"))
+        msg = '{0:8}'.format('system:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['system'])
@@ -123,7 +131,7 @@ class Plugin(GlancesPlugin):
 
         # Idle per-CPU
         ret.append(self.curse_new_line())
-        msg = '{0:8}'.format(_("idle:"))
+        msg = '{0:8}'.format('idle:')
         ret.append(self.curse_add_line(msg))
         for cpu in self.stats:
             msg = '{0:>6}%'.format(cpu['idle'])

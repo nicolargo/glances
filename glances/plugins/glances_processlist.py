@@ -30,6 +30,20 @@ from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
+def convert_timedelta(delta):
+    """Convert timedelta to human-readable time."""
+    # Python 2.7+:
+    # total_seconds = delta.total_seconds()
+    # hours = total_seconds // 3600
+    days, total_seconds = delta.days, delta.seconds
+    hours = days * 24 + total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = str(total_seconds % 60).zfill(2)
+    microseconds = str(delta.microseconds)[:2].zfill(2)
+
+    return hours, minutes, seconds, microseconds
+
+
 class Plugin(GlancesPlugin):
 
     """Glances' processes plugin.
@@ -44,10 +58,13 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Trying to display proc time
+        self.tag_proc_time = True
+
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'pid'
 
     def reset(self):
@@ -59,7 +76,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
@@ -67,23 +84,23 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.gettree()
             else:
                 self.stats = glances_processes.getlist()
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
 
         return self.stats
 
     def get_process_tree_curses_data(self, node, args, first_level=True, max_node_count=None):
-        """ Get curses data to display for a process tree. """
+        """Get curses data to display for a process tree."""
         ret = []
         node_count = 0
-        if (not node.is_root) and ((max_node_count is None) or (max_node_count > 0)):
+        if not node.is_root and ((max_node_count is None) or (max_node_count > 0)):
             node_data = self.get_process_curses_data(node.stats, False, args)
             node_count += 1
             ret.extend(node_data)
         for child in node.iter_children():
             # stop if we have enough nodes to display
-            if (max_node_count is not None) and (node_count >= max_node_count):
+            if max_node_count is not None and node_count >= max_node_count:
                 break
 
             if max_node_count is None:
@@ -105,11 +122,11 @@ class Plugin(GlancesPlugin):
         return ret
 
     def add_tree_decoration(self, child_data, is_last_child, first_level):
-        """ Add tree curses decoration and indentation to a subtree. """
+        """Add tree curses decoration and indentation to a subtree."""
         # find process command indices in messages
         pos = []
         for i, m in enumerate(child_data):
-            if (m["msg"] == "\n") and (m is not child_data[-1]):
+            if m["msg"] == "\n" and m is not child_data[-1]:
                 # new line pos + 12
                 # TODO find a way to get rid of hardcoded 12 value
                 pos.append(i + 12)
@@ -153,9 +170,8 @@ class Plugin(GlancesPlugin):
         return child_data
 
     def get_process_curses_data(self, p, first, args):
-        """ Get curses data to display for a process. """
-        ret = []
-        ret.append(self.curse_new_line())
+        """Get curses data to display for a process."""
+        ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             msg = '{0:>6.1f}'.format(p['cpu_percent'])
@@ -223,18 +239,21 @@ class Plugin(GlancesPlugin):
         # TIME+
         if self.tag_proc_time:
             try:
-                dtime = timedelta(seconds=sum(p['cpu_times']))
-            except Exception:
+                delta = timedelta(seconds=sum(p['cpu_times']))
+            except OverflowError:
                 # Catched on some Amazon EC2 server
                 # See https://github.com/nicolargo/glances/issues/87
                 self.tag_proc_time = False
             else:
-                msg = '{0}:{1}.{2}'.format(str(dtime.seconds // 60 % 60),
-                                           str(dtime.seconds % 60).zfill(2),
-                                           str(dtime.microseconds)[:2].zfill(2))
+                hours, minutes, seconds, microseconds = convert_timedelta(delta)
+                if hours:
+                    msg = '{0:>4}h'.format(hours)
+                    ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
+                    msg = '{0}:{1}'.format(str(minutes).zfill(2), seconds)
+                else:
+                    msg = '{0:>4}:{1}.{2}'.format(minutes, seconds, microseconds)
         else:
-            msg = ' '
-        msg = '{0:>9}'.format(msg)
+            msg = '{0:>10}'.format('?')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in p:
@@ -290,40 +309,40 @@ class Plugin(GlancesPlugin):
             # First line is CPU affinity
             if 'cpu_affinity' in p and p['cpu_affinity'] is not None:
                 ret.append(self.curse_new_line())
-                msg = xpad + _('CPU affinity: ') + str(len(p['cpu_affinity'])) + _(' cores')
+                msg = xpad + 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Second line is memory info
             if 'memory_info_ex' in p and p['memory_info_ex'] is not None:
                 ret.append(self.curse_new_line())
-                msg = xpad + _('Memory info: ')
+                msg = xpad + 'Memory info: '
                 for k, v in p['memory_info_ex']._asdict().items():
                     # Ignore rss and vms (already displayed)
                     if k not in ['rss', 'vms'] and v is not None:
                         msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
                 if 'memory_swap' in p and p['memory_swap'] is not None:
-                    msg += _('swap ') + self.auto_unit(p['memory_swap'], low_precision=False)
+                    msg += 'swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Third line is for open files/network sessions
             msg = ''
             if 'num_threads' in p and p['num_threads'] is not None:
-                msg += _('threads ') + str(p['num_threads']) + ' '
+                msg += 'threads ' + str(p['num_threads']) + ' '
             if 'num_fds' in p and p['num_fds'] is not None:
-                msg += _('files ') + str(p['num_fds']) + ' '
+                msg += 'files ' + str(p['num_fds']) + ' '
             if 'num_handles' in p and p['num_handles'] is not None:
-                msg += _('handles ') + str(p['num_handles']) + ' '
+                msg += 'handles ' + str(p['num_handles']) + ' '
             if 'tcp' in p and p['tcp'] is not None:
-                msg += _('TCP ') + str(p['tcp']) + ' '
+                msg += 'TCP ' + str(p['tcp']) + ' '
             if 'udp' in p and p['udp'] is not None:
-                msg += _('UDP ') + str(p['udp']) + ' '
+                msg += 'UDP ' + str(p['udp']) + ' '
             if msg != '':
                 ret.append(self.curse_new_line())
-                msg = xpad + _('Open: ') + msg
+                msg = xpad + 'Open: ' + msg
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Fouth line is IO nice level (only Linux and Windows OS)
             if 'ionice' in p and p['ionice'] is not None:
                 ret.append(self.curse_new_line())
-                msg = xpad + _('IO nice: ')
-                k = _('Class is ')
+                msg = xpad + 'IO nice: '
+                k = 'Class is '
                 v = p['ionice'].ioclass
                 # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
                 # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
@@ -333,12 +352,12 @@ class Plugin(GlancesPlugin):
                     elif v == 1:
                         msg += k + 'Low'
                     elif v == 2:
-                        msg += _('No specific I/O priority')
+                        msg += 'No specific I/O priority'
                     else:
                         msg += k + str(v)
                 else:
                     if v == 0:
-                        msg += _('No specific I/O priority')
+                        msg += 'No specific I/O priority'
                     elif v == 1:
                         msg += k + 'Real Time'
                     elif v == 2:
@@ -350,7 +369,7 @@ class Plugin(GlancesPlugin):
                 #  value is a number which goes from 0 to 7.
                 # The higher the value, the lower the I/O priority of the process.
                 if hasattr(p['ionice'], 'value') and p['ionice'].value != 0:
-                    msg += _(' (value %s/7)') % str(p['ionice'].value)
+                    msg += ' (value %s/7)' % str(p['ionice'].value)
                 ret.append(self.curse_add_line(msg, splittable=True))
 
         return ret
@@ -365,47 +384,43 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Compute the sort key
-        process_sort_key = glances_processes.getsortkey()
+        process_sort_key = glances_processes.sort_key
         sort_style = 'SORT'
 
         # Header
-        msg = '{0:>6}'.format(_("CPU%"))
+        msg = '{0:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = '{0:>6}'.format(_("MEM%"))
+        msg = '{0:>6}'.format('MEM%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg = '{0:>6}'.format(_("VIRT"))
+        msg = '{0:>6}'.format('VIRT')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{0:>6}'.format(_("RES"))
+        msg = '{0:>6}'.format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{0:>6}'.format(_("PID"))
+        msg = '{0:>6}'.format('PID')
         ret.append(self.curse_add_line(msg))
-        msg = ' {0:10}'.format(_("USER"))
+        msg = ' {0:10}'.format('USER')
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
+        msg = '{0:>4}'.format('NI')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>4}'.format(_("NI"))
+        msg = '{0:>2}'.format('S')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>2}'.format(_("S"))
-        ret.append(self.curse_add_line(msg))
-        msg = '{0:>9}'.format(_("TIME+"))
+        msg = '{0:>10}'.format('TIME+')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
-        msg = '{0:>6}'.format(_("IOR/s"))
+        msg = '{0:>6}'.format('IOR/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = '{0:>6}'.format(_("IOW/s"))
+        msg = '{0:>6}'.format('IOW/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = ' {0:8}'.format(_("Command"))
-        ret.append(self.curse_add_line(msg))
-
-        # Trying to display proc time
-        self.tag_proc_time = True
+        msg = ' {0:8}'.format('Command')
+        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
         if glances_processes.is_tree_enabled():
-            ret.extend(self.get_process_tree_curses_data(self.sortstats(process_sort_key),
-                                                         args,
-                                                         first_level=True,
-                                                         max_node_count=glances_processes.get_max_processes()))
+            ret.extend(self.get_process_tree_curses_data(
+                self.sort_stats(process_sort_key), args, first_level=True,
+                max_node_count=glances_processes.max_processes))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
-            for p in self.sortstats(process_sort_key):
+            for p in self.sort_stats(process_sort_key):
                 ret.extend(self.get_process_curses_data(p, first, args))
                 # End of extended stats
                 first = False
@@ -413,15 +428,11 @@ class Plugin(GlancesPlugin):
         # Return the message with decoration
         return ret
 
-    def sortstats(self, sortedby=None):
+    def sort_stats(self, sortedby=None):
         """Return the stats sorted by sortedby variable."""
         if sortedby is None:
             # No need to sort...
             return self.stats
-
-        sortedreverse = True
-        if sortedby == 'name':
-            sortedreverse = False
 
         tree = glances_processes.is_tree_enabled()
 
@@ -433,18 +444,18 @@ class Plugin(GlancesPlugin):
                 self.stats.sort(key=lambda process: process[sortedby][0] -
                                 process[sortedby][2] + process[sortedby][1] -
                                 process[sortedby][3],
-                                reverse=sortedreverse)
+                                reverse=glances_processes.sort_reverse)
             except Exception:
                 self.stats.sort(key=operator.itemgetter('cpu_percent'),
-                                reverse=sortedreverse)
+                                reverse=glances_processes.sort_reverse)
         else:
             # Others sorts
             if tree:
-                self.stats.set_sorting(sortedby, sortedreverse)
+                self.stats.set_sorting(sortedby, glances_processes.sort_reverse)
             else:
                 try:
                     self.stats.sort(key=operator.itemgetter(sortedby),
-                                    reverse=sortedreverse)
+                                    reverse=glances_processes.sort_reverse)
                 except (KeyError, TypeError):
                     self.stats.sort(key=operator.itemgetter('name'),
                                     reverse=False)

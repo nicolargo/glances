@@ -1,6 +1,7 @@
-You are in the main Glances's source folder. This page is **ONLY** for developpers purposes.
+You are in the main Glances source folder. This page is **ONLY** for developers.
 
-If you are looking for the user manual, please follow this link: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+If you are looking for the user manual, please follow this link:
+https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 
 ===
 
@@ -9,11 +10,10 @@ __main__.py                 Entry point for Glances module
 core/
     => Glances core folder
     glances_config.py       Manage configuration file
-    glances_globals.py      Share variables uppon modules
+    glances_globals.py      Share variables upon modules
     glances_limits.py       Manage limits
     glances_logs.py         Manage logs
     glances_main.py         Main script to rule them up...
-    glances_stats.py        Inteface to grab stats
     glances_client.py       Glances client
     glances_server.py       Glances server
     glances_standalone.py   Glances standalone (with curse interface)

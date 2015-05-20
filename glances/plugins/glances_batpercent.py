@@ -28,12 +28,11 @@ try:
     import batinfo
 except ImportError:
     logger.debug("Batinfo library not found. Glances cannot grab battery info.")
-    pass
 
 
 class Plugin(GlancesPlugin):
 
-    """Glances' battery capacity plugin.
+    """Glances battery capacity plugin.
 
     stats is a list
     """
@@ -62,12 +61,12 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats
             self.glancesgrabbat.update()
             self.stats = self.glancesgrabbat.get()
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not avalaible
             pass
@@ -94,7 +93,10 @@ class GlancesGrabBat(object):
         """Update the stats."""
         if self.initok:
             self.bat.update()
-            self.bat_list = [{'label': _("Battery (%)"), 'value': self.getcapacitypercent()}]
+            self.bat_list = [{
+                'label': 'Battery',
+                'value': self.battery_percent,
+                'unit': '%'}]
         else:
             self.bat_list = []
 
@@ -102,7 +104,8 @@ class GlancesGrabBat(object):
         """Get the stats."""
         return self.bat_list
 
-    def getcapacitypercent(self):
+    @property
+    def battery_percent(self):
         """Get batteries capacity percent."""
         if not self.initok or not self.bat.stat:
             return []
@@ -112,7 +115,7 @@ class GlancesGrabBat(object):
         bsum = 0
         for b in self.bat.stat:
             try:
-                bsum = bsum + int(b.capacity)
+                bsum += int(b.capacity)
             except ValueError:
                 return []
 

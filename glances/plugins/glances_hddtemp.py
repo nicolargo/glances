@@ -24,12 +24,13 @@ import os
 import socket
 
 # Import Glances libs
+from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
 
-    """Glances' HDD temperature sensors plugin.
+    """Glances HDD temperature sensors plugin.
 
     stats is a list
     """
@@ -39,7 +40,7 @@ class Plugin(GlancesPlugin):
         GlancesPlugin.__init__(self, args=args)
 
         # Init the sensor class
-        self.glancesgrabhddtemp = GlancesGrabHDDTemp()
+        self.glancesgrabhddtemp = GlancesGrabHDDTemp(args=args)
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
@@ -57,7 +58,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             self.stats = self.glancesgrabhddtemp.get()
 
@@ -73,8 +74,9 @@ class GlancesGrabHDDTemp(object):
 
     """Get hddtemp stats using a socket connection."""
 
-    def __init__(self, host='127.0.0.1', port=7634):
+    def __init__(self, host='127.0.0.1', port=7634, args=None):
         """Init hddtemp stats."""
+        self.args = args
         self.host = host
         self.port = port
         self.cache = ""
@@ -88,6 +90,10 @@ class GlancesGrabHDDTemp(object):
         """Update the stats."""
         # Reset the list
         self.reset()
+
+        # Only update if --disable-hddtemp is not set
+        if self.args is None or self.args.disable_hddtemp:
+            return
 
         # Fetch the data
         data = self.fetch()
@@ -125,7 +131,10 @@ class GlancesGrabHDDTemp(object):
             sck.connect((self.host, self.port))
             data = sck.recv(4096)
             sck.close()
-        except socket.error:
+        except socket.error as e:
+            logger.warning("Can not connect to an HDDtemp server ({0}:{1} => {2})".format(self.host, self.port, e))
+            logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
+            self.args.disable_hddtemp = True
             data = ""
 
         return data

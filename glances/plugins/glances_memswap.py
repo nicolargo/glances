@@ -19,9 +19,9 @@
 
 """Swap memory plugin."""
 
-import psutil
-
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
 
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
@@ -41,7 +41,7 @@ items_history_list = [{'name': 'percent', 'color': '#00FF00', 'y_unit': '%'}]
 
 class Plugin(GlancesPlugin):
 
-    """Glances' swap memory plugin.
+    """Glances swap memory plugin.
 
     stats is a dict
     """
@@ -67,7 +67,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab SWAP using the PSUtil swap_memory method
             sm_stats = psutil.swap_memory()
@@ -84,20 +84,21 @@ class Plugin(GlancesPlugin):
                          'sin', 'sout']:
                 if hasattr(sm_stats, swap):
                     self.stats[swap] = getattr(sm_stats, swap)
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            if self.get_short_system_name() == 'windows':
+            if self.short_system_name == 'windows':
                 # Mem stats for Windows OS are stored in the FS table
                 try:
-                    fs_stat = self.set_stats_snmp(snmp_oid=snmp_oid[self.get_short_system_name()],
+                    fs_stat = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
                                                   bulk=True)
                 except KeyError:
                     self.reset()
                 else:
                     for fs in fs_stat:
-                        # The virtual memory concept is used by the operating system to extend (virtually) the physical
-                        # memory and thus to run more programs by swapping
-                        # unused memory zone (page) to a disk file.
+                        # The virtual memory concept is used by the operating
+                        # system to extend (virtually) the physical memory and
+                        # thus to run more programs by swapping unused memory
+                        # zone (page) to a disk file.
                         if fs == 'Virtual Memory':
                             self.stats['total'] = int(
                                 fs_stat[fs]['size']) * int(fs_stat[fs]['alloc_unit'])
@@ -109,7 +110,7 @@ class Plugin(GlancesPlugin):
                                 'total'] - self.stats['used']
                             break
             else:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
 
                 if self.stats['total'] == '':
                     self.reset()
@@ -136,13 +137,13 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
         # Add specifics informations
         # Alert and log
-        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], max=self.stats['total'])
+        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -150,12 +151,12 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message
         # Header
-        msg = '{0:7} '.format(_("SWAP"))
+        msg = '{0:7} '.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Percent memory usage
         msg = '{0:>6.1%}'.format(self.stats['percent'] / 100)
@@ -163,14 +164,14 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = '{0:8}'.format(_("total:"))
+        msg = '{0:8}'.format('total:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['total']))
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = '{0:8}'.format(_("used:"))
+        msg = '{0:8}'.format('used:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['used']))
         ret.append(self.curse_add_line(
@@ -178,7 +179,7 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = '{0:8}'.format(_("free:"))
+        msg = '{0:8}'.format('free:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format(self.auto_unit(self.stats['free']))
         ret.append(self.curse_add_line(msg))

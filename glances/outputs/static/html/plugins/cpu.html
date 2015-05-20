@@ -1,0 +1,44 @@
+<div class="table" ng-show="!show.per_cpu">
+    <div class="table-row">
+        <div class="table-cell text-left title">CPU</div>
+        <div class="table-cell">{{result["cpu"].total}}%</div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">user:</div>
+        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_user_', result['cpu'].user)">
+            {{result["cpu"].user}}%
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">system:</div>
+        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_system_', result['cpu'].system)">
+            {{result["cpu"].system}}%
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">idle:</div>
+        <div class="table-cell">{{result["cpu"].idle}}%</div>
+    </div>
+</div>
+<div class="table" ng-show="show.per_cpu">
+    <div class="table-row">
+        <div class="table-cell text-left title">PER CPU</div>
+        <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.total}}%</div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">user:</div>
+        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getAlert('percpu', 'percpu_user_', percpu.user)">
+            {{percpu.user}}%
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">system:</div>
+        <div class="table-cell" ng-repeat="percpu in result.percpu" ng-class="getAlert('percpu', 'percpu_system_', percpu.system)">
+            {{percpu.system}}%
+        </div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell text-left">idle:</div>
+        <div class="table-cell" ng-repeat="percpu in result.percpu">{{percpu.idle}}%</div>
+    </div>
+</div>

@@ -33,10 +33,16 @@ from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
+if is_py3:
+    SENSOR_TEMP_UNIT = '°C'
+else:
+    SENSOR_TEMP_UNIT = '°C '
+SENSOR_FAN_UNIT = 'RPM'
+
 
 class Plugin(GlancesPlugin):
 
-    """Glances' sensors plugin.
+    """Glances sensors plugin.
 
     The stats list includes both sensors and hard disks stats, if any.
     The sensors are already grouped by chip type and then sorted by name.
@@ -65,7 +71,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'label'
 
     def reset(self):
@@ -78,13 +84,27 @@ class Plugin(GlancesPlugin):
         # Reset the stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the dedicated lib
+            self.stats = []
+            # Get the temperature
             try:
-                self.stats = self.__set_type(self.glancesgrabsensors.get(),
-                                             'temperature_core')
+                temperature = self.__set_type(self.glancesgrabsensors.get('temperature_core'),
+                                              'temperature_core')
             except Exception as e:
                 logger.error("Cannot grab sensors temperatures (%s)" % e)
+            else:
+                # Append temperature
+                self.stats.extend(temperature)
+            # Get the FAN speed
+            try:
+                fan_speed = self.__set_type(self.glancesgrabsensors.get('fan_speed'),
+                                            'fan_speed')
+            except Exception as e:
+                logger.error("Cannot grab FAN speed (%s)" % e)
+            else:
+                # Append FAN speed
+                self.stats.extend(fan_speed)
             # Update HDDtemp stats
             try:
                 hddtemp = self.__set_type(self.hddtemp_plugin.update(),
@@ -104,7 +124,7 @@ class Plugin(GlancesPlugin):
                 # Append Batteries %
                 self.stats.extend(batpercent)
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard:
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
@@ -119,24 +139,25 @@ class Plugin(GlancesPlugin):
     def __set_type(self, stats, sensor_type):
         """Set the plugin type.
 
-        3 types of stats is possible in the sensors plugin:
-        - Core temperature
-        - HDD temperature
-        - Battery capacity
+        4 types of stats is possible in the sensors plugin:
+        - Core temperature: 'temperature_core'
+        - Fan speed: 'fan_speed'
+        - HDD temperature: 'temperature_hdd'
+        - Battery capacity: 'battery'
         """
         for i in stats:
             i.update({'type': sensor_type})
         return stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
         # Add specifics informations
         # Alert
         for i in self.stats:
-            if i['value'] == []:
+            if not i['value']:
                 continue
             if i['type'] == 'battery':
                 self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
@@ -154,26 +175,23 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:18}'.format(_("SENSORS"))
+        msg = '{0:18}'.format('SENSORS')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        if is_py3:
-            msg = '{0:>5}'.format(_("°C"))
-        else:
-            msg = '{0:>6}'.format(_("°C"))
-        ret.append(self.curse_add_line(msg))
 
         for i in self.stats:
-            if i['value'] is not None and i['value'] != []:
+            if i['value']:
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
                 label = self.has_alias(i['label'].lower())
                 if label is None:
                     label = i['label']
-                label = label[:18]
-                msg = '{0:18}'.format(label)
+                try:
+                    msg = "{0:12} {1:3}".format(label[:11], i['unit'])
+                except (KeyError, UnicodeEncodeError):
+                    msg = "{0:16}".format(label[:15])
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>5}'.format(i['value'])
+                msg = '{0:>7}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
                                         key='value',
@@ -207,22 +225,35 @@ class GlancesGrabSensors(object):
         # Reset the list
         self.reset()
 
-        # grab only temperature stats
         if self.initok:
             for chip in sensors.iter_detected_chips():
                 for feature in chip:
                     sensors_current = {}
                     if feature.name.startswith(b'temp'):
+                        # Temperature sensor
+                        sensors_current['unit'] = SENSOR_TEMP_UNIT
+                    elif feature.name.startswith(b'fan'):
+                        # Fan speed sensor
+                        sensors_current['unit'] = SENSOR_FAN_UNIT
+                    if sensors_current:
                         sensors_current['label'] = feature.label
                         sensors_current['value'] = int(feature.get_value())
                         self.sensors_list.append(sensors_current)
 
         return self.sensors_list
 
-    def get(self):
+    def get(self, sensor_type='temperature_core'):
         """Get sensors list."""
         self.__update__()
-        return self.sensors_list
+        if sensor_type == 'temperature_core':
+            ret = [s for s in self.sensors_list if s['unit'] == SENSOR_TEMP_UNIT]
+        elif sensor_type == 'fan_speed':
+            ret = [s for s in self.sensors_list if s['unit'] == SENSOR_FAN_UNIT]
+        else:
+            # Unknown type
+            logger.debug("Unknown sensor type %s" % sensor_type)
+            ret = []
+        return ret
 
     def quit(self):
         """End of connection."""

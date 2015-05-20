@@ -6,11 +6,11 @@ Glances - An eye on your system
         :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=master
         :target: https://scrutinizer-ci.com/g/nicolargo/glances/
-.. image:: https://travis-ci.org/nicolargo/glances.png?branch=master
+.. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
         :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://badge.fury.io/py/Glances.png
+.. image:: https://badge.fury.io/py/Glances.svg
         :target: http://badge.fury.io/py/Glances
-.. image:: https://pypip.in/d/Glances/badge.png
+.. image:: https://pypip.in/d/Glances/badge.svg
         :target: https://pypi.python.org/pypi/Glances/
         :alt: Downloads
 
@@ -20,18 +20,16 @@ Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 **Glances** is a cross-platform curses-based system monitoring tool
 written in Python.
 
-It uses the `psutil`_ library to get information from your system.
-
 .. image:: https://raw.github.com/nicolargo/glances/master/docs/images/screenshot-wide.png
 
 Requirements
 ============
 
-- ``python >= 2.6`` (tested with version 2.6, 2.7, 3.3, 3.4)
+- ``python >= 2.6`` or ``>= 3.3`` (tested with version 2.6, 2.7, 3.3, 3.4)
 - ``psutil >= 2.0.0``
 - ``setuptools``
 
-Optionals dependencies:
+Optional dependencies:
 
 - ``bottle`` (for Web server mode)
 - ``py3sensors`` (for hardware monitoring support) [Linux-only]
@@ -39,11 +37,14 @@ Optionals dependencies:
 - ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
-- ``zeroconf`` and ``netifaces`` (for the auto discoverer mode)
+- ``zeroconf`` (for the autodiscover mode)
+- ``netifaces`` (for the IP plugin)
 - ``influxdb`` (for the InfluxDB export module)
 - ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
+- ``matplotlib`` (for graphical/chart support)
+- ``pika`` (for the RabbitMQ/ActiveMQ export module)
 
 Installation
 ============
@@ -51,7 +52,8 @@ Installation
 Glances Auto Install script
 ---------------------------
 
-To install both dependencies and latest Glances production ready version (aka *master* branch), just enter the following command line:
+To install both dependencies and latest Glances production ready version
+(aka *master* branch), just enter the following command line:
 
 .. code-block:: console
 
@@ -76,29 +78,30 @@ To install, simply use ``pip``:
 
 .. code-block:: console
 
-    pip install Glances
+    pip install glances
 
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
-*Note 2*: You can also install the following libs in order to use optionnal features:
+You can also install the following libraries in order to use optional
+features:
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache pika
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
-    pip install --upgrade Glances
+    pip install --upgrade glances
 
 If you need to install Glances in a specific user location, use:
 
 .. code-block:: console
 
     export PYTHONUSERBASE=~/mylocalpath
-    pip install --user Glances
+    pip install --user glances
 
 GNU/Linux
 ---------
@@ -106,11 +109,11 @@ GNU/Linux
 At the moment, packages exist for the following GNU/Linux distributions:
 
 - Arch Linux
-- Debian (Testing/Sid)
+- Debian
 - Fedora/CentOS/RHEL
 - Gentoo
 - Slackware (SlackBuild)
-- Ubuntu (13.04+)
+- Ubuntu
 - Void Linux
 
 So you should be able to install it using your favorite package manager.
@@ -142,7 +145,7 @@ Homebrew
 .. code-block:: console
 
     $ brew install python
-    $ pip install Glances
+    $ pip install glances
 
 MacPorts
 ````````
@@ -154,10 +157,15 @@ MacPorts
 Windows
 -------
 
-- Install Python for Windows: http://www.python.org/getit/
-- Install the psutil library: https://pypi.python.org/pypi?:action=display&name=psutil#downloads
+- Install Python for Windows (Python 2.7.9+ ship with Pip): http://www.python.org/getit/
+- Install the `psutil`_ library (latest binary version): https://pypi.python.org/pypi/psutil
 - Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Install Glances Download Glances from here: http://nicolargo.github.io/glances/
+- Install optionnals dependencies (see list bellow)
+- Install Glances using pip
+
+.. code-block:: console
+
+    $ pip install glances
 
 Source
 ------
@@ -229,14 +237,14 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB`` and ``StatsD`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``StatsD`` and ``RabbitMQ`` server.
 
 How to contribute ?
 ===================
 
 If you want to contribute to the Glances project, read this `Wiki`_ page.
 
-There is also a chat dedicated to the Glances' developpers:
+There is also a chat dedicated to the Glances developers:
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

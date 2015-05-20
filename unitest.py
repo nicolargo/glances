@@ -20,8 +20,6 @@
 
 """Glances unitary tests suite."""
 
-import gettext
-import locale
 import sys
 import time
 import unittest
@@ -41,11 +39,6 @@ if not is_linux:
     sys.exit(2)
 else:
     print('Unitary tests for {0} {1}'.format(appname, version))
-
-# Import local settings
-from glances.core.glances_globals import gettext_domain, locale_dir
-locale.setlocale(locale.LC_ALL, '')
-gettext.install(gettext_domain, locale_dir)
 
 # Init Glances core
 from glances.core.glances_main import GlancesMain
@@ -78,14 +71,14 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_000] Test the stats update function')
         try:
             stats.update()
-        except:
-            print('ERROR: Stats update failed')
+        except Exception as e:
+            print('ERROR: Stats update failed ({})'.format(e))
             self.assertTrue(False)
         time.sleep(1)
         try:
             stats.update()
-        except:
-            print('ERROR: Stats update failed')
+        except Exception as e:
+            print('ERROR: Stats update failed ({})'.format(e))
             self.assertTrue(False)
 
         self.assertTrue(True)

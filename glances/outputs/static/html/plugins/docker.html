@@ -1,0 +1,20 @@
+<span class="title">CONTAINERS</span> {{ result['docker']['containers'].length }} (served by Docker {{ result['docker']['version']['Version'] }})
+
+<div class="table">
+    <div class="table-row">
+        <div class="table-cell">Id</div>
+        <div class="table-cell text-left">Name</div>
+        <div class="table-cell">Status</div>
+        <div class="table-cell">CPU%</div>
+        <div class="table-cell">MEM</div>
+        <div class="table-cell text-left">Command</div>
+    </div>
+    <div class="table-row" ng-repeat="container in result['docker']['containers']">
+        <div class="table-cell">{{ container.Id | limitTo:12 }}</div>
+        <div class="table-cell text-left">{{ container.Names[0] }}</div>
+        <div class="table-cell" ng-class="container.Status == 'Paused' ? 'careful' : 'ok'">{{ container.Status }}</div>
+        <div class="table-cell">{{ container.cpu.total | number:1 }}</div>
+        <div class="table-cell">{{ container.memory.usage | bytes }}</div>
+        <div class="table-cell text-left">{{ container.Command }}</div>
+    </div>
+</div>

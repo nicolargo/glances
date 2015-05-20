@@ -21,11 +21,12 @@
 
 import operator
 
-import psutil
-
 # Import Glances libs
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+
+import psutil
+
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
@@ -36,7 +37,7 @@ items_history_list = [{'name': 'read_bytes', 'color': '#00FF00', 'y_unit': 'B/s'
 
 class Plugin(GlancesPlugin):
 
-    """Glances' disks I/O plugin.
+    """Glances disks I/O plugin.
 
     stats is a list
     """
@@ -53,7 +54,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return 'disk_name'
 
     def reset(self):
@@ -66,7 +67,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab the stat using the PsUtil disk_io_counters method
             # read_count: number of reads
@@ -96,16 +97,15 @@ class Plugin(GlancesPlugin):
                 diskio_new = diskiocounters
                 for disk in diskio_new:
                     try:
-                        # Try necessary to manage dynamic disk creation/del
-                        diskstat = {}
-                        diskstat['time_since_update'] = time_since_update
-                        diskstat['disk_name'] = disk
-                        diskstat['read_bytes'] = (
-                            diskio_new[disk].read_bytes -
-                            self.diskio_old[disk].read_bytes)
-                        diskstat['write_bytes'] = (
-                            diskio_new[disk].write_bytes -
-                            self.diskio_old[disk].write_bytes)
+                        read_bytes = (diskio_new[disk].read_bytes -
+                                      self.diskio_old[disk].read_bytes)
+                        write_bytes = (diskio_new[disk].write_bytes -
+                                       self.diskio_old[disk].write_bytes)
+                        diskstat = {
+                            'time_since_update': time_since_update,
+                            'disk_name': disk,
+                            'read_bytes': read_bytes,
+                            'write_bytes': write_bytes}
                     except KeyError:
                         continue
                     else:
@@ -114,7 +114,7 @@ class Plugin(GlancesPlugin):
 
                 # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...
             pass
@@ -128,7 +128,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
@@ -152,11 +152,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:9}'.format(_("DISK I/O"))
+        msg = '{0:9}'.format('DISK I/O')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>7}'.format(_("R/s"))
+        msg = '{0:>7}'.format('R/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format(_("W/s"))
+        msg = '{0:>7}'.format('W/s')
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):

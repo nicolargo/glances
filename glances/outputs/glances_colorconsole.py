@@ -80,10 +80,10 @@ class Screen(object):
     def subwin(self, x, y):
         return self
 
-    def keypad(self, id):
+    def keypad(self, screen_id):
         return None
 
-    def nodelay(self, id):
+    def nodelay(self, screen_id):
         return None
 
     def getch(self):
@@ -170,8 +170,8 @@ class WCurseLight(object):
     def napms(self, t):
         time.sleep(t / 1000 if t > 1000 else 1)
 
-    def init_pair(self, id, fg, bk):
-        self.colors[id] = [max(fg, 0), max(bk, 0)]
+    def init_pair(self, color_id, fg, bk):
+        self.colors[color_id] = [max(fg, 0), max(bk, 0)]
 
-    def color_pair(self, id):
-        return id
+    def color_pair(self, color_id):
+        return color_id

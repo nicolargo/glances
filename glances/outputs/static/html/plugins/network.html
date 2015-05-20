@@ -1,0 +1,12 @@
+<div class="table-row">
+    <div class="table-cell text-left title">NETWORK</div>
+    <div class="table-cell">Rx/s</div>
+    <div class="table-cell">Tx/s</div>
+</div>
+<div class="table-row" ng-repeat="network in result['network'] | orderBy: 'interface_name'">
+    <div class="table-cell text-left">{{network.interface_name | min_size}}</div>
+    <div class="table-cell" ng-if="show.network_by_bytes">{{network.rx | bytes}}</div>
+    <div class="table-cell" ng-if="show.network_by_bytes">{{network.tx | bytes}}</div>
+    <div class="table-cell" ng-if="!show.network_by_bytes">{{network.rx | bits}}</div>
+    <div class="table-cell" ng-if="!show.network_by_bytes">{{network.tx | bits}}</div>
+</div>

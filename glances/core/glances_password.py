@@ -110,11 +110,11 @@ class GlancesPassword(object):
 
             # password_plain is the plain SHA-256 password
             # password_hashed is the salt + SHA-256 password
-            password_sha = hashlib.sha256(getpass.getpass(_("Password: ")).encode('utf-8')).hexdigest()
+            password_sha = hashlib.sha256(getpass.getpass('Password: ').encode('utf-8')).hexdigest()
             password_hashed = self.hash_password(password_sha)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = hashlib.sha256(getpass.getpass(_("Password (confirm): ")).encode('utf-8')).hexdigest()
+                password_confirm = hashlib.sha256(getpass.getpass('Password (confirm): ').encode('utf-8')).hexdigest()
 
                 if not self.check_password(password_hashed, password_confirm):
                     logger.critical("Sorry, passwords do not match. Exit.")
@@ -128,8 +128,8 @@ class GlancesPassword(object):
 
             # Save the hashed password to the password file
             if not clear:
-                save_input = input(_("Do you want to save the password? [Yes/No]: "))
-                if len(save_input) > 0 and save_input[0].upper() == _('Y'):
+                save_input = input('Do you want to save the password? [Yes/No]: ')
+                if len(save_input) > 0 and save_input[0].upper() == 'Y':
                     self.save_password(password_hashed)
 
         return password

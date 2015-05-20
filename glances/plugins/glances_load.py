@@ -44,7 +44,7 @@ items_history_list = [{'name': 'min1', 'color': '#0000FF'},
 
 class Plugin(GlancesPlugin):
 
-    """Glances' load plugin.
+    """Glances load plugin.
 
     stats is a dict
     """
@@ -76,7 +76,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
@@ -89,9 +89,9 @@ class Plugin(GlancesPlugin):
                               'min5': load[1],
                               'min15': load[2],
                               'cpucore': self.nb_log_core}
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
-            self.stats = self.set_stats_snmp(snmp_oid=snmp_oid)
+            self.stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
             if self.stats['min1'] == '':
                 self.reset()
@@ -117,16 +117,16 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_views(self):
-        """Update stats views"""
+        """Update stats views."""
         # Call the father's method
         GlancesPlugin.update_views(self)
 
         # Add specifics informations
         try:
             # Alert and log
-            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], max=100 * self.stats['cpucore'])
+            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], maximum=100 * self.stats['cpucore'])
             # Alert only
-            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], max=100 * self.stats['cpucore'])
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], maximum=100 * self.stats['cpucore'])
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass
@@ -137,28 +137,28 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if self.stats == {}:
+        if not self.stats:
             return ret
 
         # Build the string message
         # Header
-        msg = '{0:8}'.format(_("LOAD"))
+        msg = '{0:8}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if self.stats['cpucore'] > 0:
-            msg = _("{0:d}-core").format(int(self.stats['cpucore']), '>1')
+            msg = '{0}-core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 1min load
-        msg = '{0:8}'.format(_("1 min:"))
+        msg = '{0:8}'.format('1 min:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6.2f}'.format(self.stats['min1'])
         ret.append(self.curse_add_line(msg))
         # New line
         ret.append(self.curse_new_line())
         # 5min load
-        msg = '{0:8}'.format(_("5 min:"))
+        msg = '{0:8}'.format('5 min:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6.2f}'.format(self.stats['min5'])
         ret.append(self.curse_add_line(
@@ -166,7 +166,7 @@ class Plugin(GlancesPlugin):
         # New line
         ret.append(self.curse_new_line())
         # 15min load
-        msg = '{0:8}'.format(_("15 min:"))
+        msg = '{0:8}'.format('15 min:')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6.2f}'.format(self.stats['min15'])
         ret.append(self.curse_add_line(

@@ -47,6 +47,34 @@ snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R
                              'Windows Version 5.0': 'Windows 2000'}}
 
 
+def _linux_os_release():
+    """Try to determine the name of a Linux distribution.
+
+    This function checks for the /etc/os-release file.
+    It takes the name from the 'NAME' field and the version from 'VERSION_ID'.
+    An empty string is returned if the above values cannot be determined.
+    """
+    pretty_name = ''
+    ashtray = {}
+    keys = ['NAME', 'VERSION_ID']
+    try:
+        with open(os.path.join('/etc', 'os-release')) as f:
+            for line in f:
+                for key in keys:
+                    if line.startswith(key):
+                        ashtray[key] = line.strip().split('=')[1][1:-1]
+    except (OSError, IOError):
+        return pretty_name
+
+    if ashtray:
+        if 'NAME' in ashtray:
+            pretty_name = ashtray['NAME']
+        if 'VERSION_ID' in ashtray:
+            pretty_name += ' {0}'.format(ashtray['VERSION_ID'])
+
+    return pretty_name
+
+
 class Plugin(GlancesPlugin):
 
     """Glances' host/system plugin.
@@ -68,33 +96,6 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
-    def _linux_os_release(self):
-        """This function tries to determine the name of a Linux distribution.
-
-        It checks for the /etc/os-release file. It takes the name from the
-        'NAME' field and the version from 'VERSION_ID'.
-        An empty string is returned if the above values cannot be determined.
-        """
-        pretty_name = ''
-        ashtray = {}
-        keys = ['NAME', 'VERSION_ID']
-        try:
-            with open(os.path.join('/etc', 'os-release')) as f:
-                for line in f:
-                    for key in keys:
-                        if line.startswith(key):
-                            ashtray[key] = line.strip().split('=')[1][1:-1]
-        except (OSError, IOError):
-            return pretty_name
-
-        if ashtray:
-            if 'NAME' in ashtray:
-                pretty_name = ashtray['NAME']
-            if 'VERSION_ID' in ashtray:
-                pretty_name += ' {0}'.format(ashtray['VERSION_ID'])
-
-        return pretty_name
-
     def update(self):
         """Update the host/system info using the input method.
 
@@ -103,7 +104,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.get_input() == 'local':
+        if self.input_method == 'local':
             # Update stats using the standard system lib
             self.stats['os_name'] = platform.system()
             self.stats['hostname'] = platform.node()
@@ -111,7 +112,7 @@ class Plugin(GlancesPlugin):
             if self.stats['os_name'] == "Linux":
                 linux_distro = platform.linux_distribution()
                 if linux_distro[0] == '':
-                    self.stats['linux_distro'] = self._linux_os_release()
+                    self.stats['linux_distro'] = _linux_os_release()
                 else:
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
@@ -124,9 +125,8 @@ class Plugin(GlancesPlugin):
                 self.stats['os_version'] = ' '.join(os_version[::2])
                 # if the python version is 32 bit perhaps the windows operating
                 # system is 64bit
-                if self.stats['platform'] == '32bit':
-                    if 'PROCESSOR_ARCHITEW6432' in os.environ:
-                        self.stats['platform'] = '64bit'
+                if self.stats['platform'] == '32bit' and 'PROCESSOR_ARCHITEW6432' in os.environ:
+                    self.stats['platform'] = '64bit'
             else:
                 self.stats['os_version'] = ""
             # Add human readable name
@@ -135,19 +135,19 @@ class Plugin(GlancesPlugin):
             else:
                 self.stats['hr_name'] = '{0} {1}'.format(
                     self.stats['os_name'], self.stats['os_version'])
-            self.stats['hr_name'] += ' ({0})'.format(self.stats['platform'])
+            self.stats['hr_name'] += ' {0}'.format(self.stats['platform'])
 
-        elif self.get_input() == 'snmp':
+        elif self.input_method == 'snmp':
             # Update stats using SNMP
             try:
-                self.stats = self.set_stats_snmp(
-                    snmp_oid=snmp_oid[self.get_short_system_name()])
+                self.stats = self.get_stats_snmp(
+                    snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
-                self.stats = self.set_stats_snmp(snmp_oid=snmp_oid['default'])
+                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavor: display all the information
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
-            if self.get_short_system_name() == 'windows':
+            if self.short_system_name == 'windows':
                 try:
                     iteritems = snmp_to_human['windows'].iteritems()
                 except AttributeError:
@@ -170,13 +170,13 @@ class Plugin(GlancesPlugin):
         if args.client:
             # Client mode
             if args.cs_status.lower() == "connected":
-                msg = _("Connected to ")
+                msg = 'Connected to '
                 ret.append(self.curse_add_line(msg, 'OK'))
             elif args.cs_status.lower() == "snmp":
-                msg = _("SNMP from ")
+                msg = 'SNMP from '
                 ret.append(self.curse_add_line(msg, 'OK'))
             elif args.cs_status.lower() == "disconnected":
-                msg = _("Disconnected from ")
+                msg = 'Disconnected from '
                 ret.append(self.curse_add_line(msg, 'CRITICAL'))
 
         # Hostname is mandatory

@@ -29,15 +29,15 @@ from datetime import datetime
 from operator import itemgetter
 
 # Import Glances lib
+from glances.core.glances_actions import GlancesActions
 from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
 from glances.core.glances_logs import glances_logs
-from glances.core.glances_actions import GlancesActions
 
 
 class GlancesPlugin(object):
 
-    """Main class for Glances' plugin."""
+    """Main class for Glances plugin."""
 
     def __init__(self, args=None, items_history_list=None):
         """Init the plugin of plugins class."""
@@ -49,11 +49,11 @@ class GlancesPlugin(object):
         self.args = args
 
         # Init the default alignement (for curses)
-        self.set_align('left')
+        self._align = 'left'
 
         # Init the input method
-        self.input_method = 'local'
-        self.short_system_name = None
+        self._input_method = 'local'
+        self._short_system_name = None
 
         # Init the stats list
         self.stats = None
@@ -63,7 +63,7 @@ class GlancesPlugin(object):
         self.stats_history = self.init_stats_history()
 
         # Init the limits dictionnary
-        self.limits = dict()
+        self._limits = dict()
 
         # Init the actions
         self.actions = GlancesActions()
@@ -80,18 +80,18 @@ class GlancesPlugin(object):
         return str(self.stats)
 
     def get_key(self):
-        """Return the key of the list"""
+        """Return the key of the list."""
         return None
 
     def add_item_history(self, key, value):
-        """Add an new item (key, value) to the current history"""
+        """Add an new item (key, value) to the current history."""
         try:
             self.stats_history[key].append(value)
         except KeyError:
             self.stats_history[key] = [value]
 
     def init_stats_history(self):
-        """Init the stats history (dict of list)"""
+        """Init the stats history (dict of list)."""
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
@@ -101,20 +101,21 @@ class GlancesPlugin(object):
         return ret
 
     def reset_stats_history(self):
-        """Reset the stats history (dict of list)"""
+        """Reset the stats history (dict of list)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {0})".format(
                 self.plugin_name, reset_list))
             self.stats_history = {}
-        return self.stats_history
 
     def update_stats_history(self, item_name=''):
-        """Update stats history"""
-        if self.stats != [] and self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+        """Update stats history."""
+        if (self.stats and self.args is not None and
+                self.args.enable_history and
+                self.get_items_history_list() is not None):
             self.add_item_history('date', datetime.now())
             for i in self.get_items_history_list():
-                if type(self.stats) is list:
+                if isinstance(self.stats, list):
                     # Stats is a list of data
                     # Iter throught it (for exemple, iter throught network
                     # interface)
@@ -125,47 +126,51 @@ class GlancesPlugin(object):
                     # Stats is not a list
                     # Add the item to the history directly
                     self.add_item_history(i['name'], self.stats[i['name']])
-        return self.stats_history
 
     def get_stats_history(self):
-        """Return the stats history"""
+        """Return the stats history."""
         return self.stats_history
 
     def get_items_history_list(self):
-        """Return the items history list"""
+        """Return the items history list."""
         return self.items_history_list
 
-    def set_input(self, input_method, short_system_name=None):
+    @property
+    def input_method(self):
+        """Get the input method."""
+        return self._input_method
+
+    @input_method.setter
+    def input_method(self, input_method):
         """Set the input method.
 
         * local: system local grab (psutil or direct access)
         * snmp: Client server mode via SNMP
         * glances: Client server mode via Glances API
-
-        For SNMP, short_system_name is detected short OS name
         """
-        self.input_method = input_method
-        self.short_system_name = short_system_name
-        return self.input_method
+        self._input_method = input_method
 
-    def get_input(self):
-        """Get the input method."""
-        return self.input_method
+    @property
+    def short_system_name(self):
+        """Get the short detected OS name (SNMP)."""
+        return self._short_system_name
 
-    def get_short_system_name(self):
-        """Get the short detected OS name"""
-        return self.short_system_name
+    @short_system_name.setter
+    def short_system_name(self, short_name):
+        """Set the short detected OS name (SNMP)."""
+        self._short_system_name = short_name
 
     def set_stats(self, input_stats):
         """Set the stats to input_stats."""
         self.stats = input_stats
-        return self.stats
 
-    def set_stats_snmp(self, bulk=False, snmp_oid={}):
+    def get_stats_snmp(self, bulk=False, snmp_oid=None):
         """Update stats using SNMP.
 
         If bulk=True, use a bulk request instead of a get request.
         """
+        snmp_oid = snmp_oid or {}
+
         from glances.core.glances_snmp import GlancesSNMPClient
 
         # Init the SNMP request
@@ -201,7 +206,7 @@ class GlancesPlugin(object):
                                 item_key = item[oid]
                             else:
                                 item_stats[key] = item[oid]
-                    if item_stats != {}:
+                    if item_stats:
                         ret[item_key] = item_stats
                     index += 1
         else:
@@ -219,23 +224,21 @@ class GlancesPlugin(object):
         return self.stats
 
     def get_stats(self):
-        """Return the stats object in JSON format"""
+        """Return the stats object in JSON format."""
         return json.dumps(self.stats)
 
     def get_stats_item(self, item):
-        """
-        Return the stats object for a specific item (in JSON format)
+        """Return the stats object for a specific item in JSON format.
+
         Stats should be a list of dict (processlist, network...)
         """
-        if type(self.stats) is not list:
-            if type(self.stats) is dict:
-                try:
-                    return json.dumps({item: self.stats[item]})
-                except KeyError as e:
-                    logger.error("Cannot get item {0} ({1})".format(item, e))
-            else:
+        if isinstance(self.stats, dict):
+            try:
+                return json.dumps({item: self.stats[item]})
+            except KeyError as e:
+                logger.error("Cannot get item {0} ({1})".format(item, e))
                 return None
-        else:
+        elif isinstance(self.stats, list):
             try:
                 # Source:
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
@@ -243,13 +246,15 @@ class GlancesPlugin(object):
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item {0} ({1})".format(item, e))
                 return None
+        else:
+            return None
 
     def get_stats_value(self, item, value):
-        """
-        Return the stats object for a specific item=value (in JSON format)
+        """Return the stats object for a specific item=value in JSON format.
+
         Stats should be a list of dict (processlist, network...)
         """
-        if type(self.stats) is not list:
+        if not isinstance(self.stats, list):
             return None
         else:
             if value.isdigit():
@@ -262,7 +267,8 @@ class GlancesPlugin(object):
                 return None
 
     def update_views(self):
-        """Default builder fo the stats views
+        """Default builder fo the stats views.
+
         The V of MVC
         A dict of dict with the needed information to display the stats.
         Example for the stat xxx:
@@ -273,7 +279,9 @@ class GlancesPlugin(object):
         """
         ret = {}
 
-        if type(self.get_raw()) is list and self.get_raw() is not None and self.get_key() is not None:
+        if (isinstance(self.get_raw(), list) and
+                self.get_raw() is not None and
+                self.get_key() is not None):
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
@@ -283,7 +291,7 @@ class GlancesPlugin(object):
                              'additional': False,
                              'splittable': False}
                     ret[i[self.get_key()]][key] = value
-        elif type(self.get_raw()) is dict and self.get_raw() is not None:
+        elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in self.get_raw().keys():
                 value = {'decoration': 'DEFAULT',
@@ -299,16 +307,16 @@ class GlancesPlugin(object):
     def set_views(self, input_views):
         """Set the views to input_views."""
         self.views = input_views
-        return self.views
 
     def get_views(self, item=None, key=None, option=None):
         """Return the views object.
+
         If key is None, return all the view for the current plugin
         else if option is None return the view for the specific key (all option)
         else return the view fo the specific key/option
 
-        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)"""
-
+        Specify item if the stats are stored in a dict of dict (ex: NETWORK, FS...)
+        """
         if item is None:
             item_views = self.views
         else:
@@ -323,30 +331,29 @@ class GlancesPlugin(object):
                 return item_views[key][option]
 
     def load_limits(self, config):
-        """Load the limits from the configuration file."""
+        """Load limits from the configuration file, if it exists."""
         if (hasattr(config, 'has_section') and
                 config.has_section(self.plugin_name)):
-            for s, v in config.items(self.plugin_name):
+            for level, _ in config.items(self.plugin_name):
                 # Read limits
+                limit = '_'.join([self.plugin_name, level])
                 try:
-                    self.limits[
-                        self.plugin_name + '_' + s] = config.get_option(self.plugin_name, s)
+                    self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
-                    self.limits[
-                        self.plugin_name + '_' + s] = config.get_raw_option(self.plugin_name, s).split(",")
-                logger.debug("Load limit: {0} = {1}".format(self.plugin_name + '_' + s,
-                                                            self.limits[self.plugin_name + '_' + s]))
+                    self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
+                logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
 
-    def set_limits(self, input_limits):
-        """Set the limits to input_limits."""
-        self.limits = input_limits
-        return self.limits
-
-    def get_limits(self):
+    @property
+    def limits(self):
         """Return the limits object."""
-        return self.limits
+        return self._limits
 
-    def get_alert(self, current=0, min=0, max=100, header="", log=False):
+    @limits.setter
+    def limits(self, input_limits):
+        """Set the limits to input_limits."""
+        self._limits = input_limits
+
+    def get_alert(self, current=0, minimum=0, maximum=100, header="", log=False):
         """Return the alert status relative to a current value.
 
         Use this function for minor stats.
@@ -365,7 +372,7 @@ class GlancesPlugin(object):
         """
         # Compute the %
         try:
-            value = (current * 100) / max
+            value = (current * 100) / maximum
         except ZeroDivisionError:
             return 'DEFAULT'
         except TypeError:
@@ -386,7 +393,7 @@ class GlancesPlugin(object):
                 ret = 'WARNING'
             elif value > self.__get_limit('careful', stat_name=stat_name):
                 ret = 'CAREFUL'
-            elif current < min:
+            elif current < minimum:
                 ret = 'CAREFUL'
         except KeyError:
             return 'DEFAULT'
@@ -410,7 +417,7 @@ class GlancesPlugin(object):
         else:
             # A command line is available for the current alert, run it
             # Build the {{mustache}} dictionnary
-            if type(self.stats) is list:
+            if isinstance(self.stats, list):
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
                 mustache_dict = {}
@@ -428,49 +435,49 @@ class GlancesPlugin(object):
         # Default is ok
         return ret + log_str
 
-    def get_alert_log(self, current=0, min=0, max=100, header=""):
+    def get_alert_log(self, current=0, minimum=0, maximum=100, header=""):
         """Get the alert log."""
-        return self.get_alert(current, min, max, header, log=True)
+        return self.get_alert(current, minimum, maximum, header, log=True)
 
     def __get_limit(self, criticity, stat_name=""):
-        """Return the limit value for the alert"""
+        """Return the limit value for the alert."""
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful
         try:
-            limit = self.limits[stat_name + '_' + criticity]
+            limit = self._limits[stat_name + '_' + criticity]
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful
-            limit = self.limits[self.plugin_name + '_' + criticity]
+            limit = self._limits[self.plugin_name + '_' + criticity]
 
         # Return the limit
         return limit
 
     def __get_limit_action(self, criticity, stat_name=""):
-        """Return the action for the alert"""
+        """Return the action for the alert."""
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
         try:
-            ret = self.limits[stat_name + '_' + criticity + '_action']
+            ret = self._limits[stat_name + '_' + criticity + '_action']
         except KeyError:
             # Try fallback to plugin default limit
             # Exemple: network_careful_action
-            ret = self.limits[self.plugin_name + '_' + criticity + '_action']
+            ret = self._limits[self.plugin_name + '_' + criticity + '_action']
 
         # Return the action list
         return ret
 
     def __get_limit_log(self, stat_name, default_action=False):
-        """Return the log tag for the alert"""
+        """Return the log tag for the alert."""
         # Get the log tag for stat + header
         # Exemple: network_wlan0_rx_log
         try:
-            log_tag = self.limits[stat_name + '_log']
+            log_tag = self._limits[stat_name + '_log']
         except KeyError:
             # Try fallback to plugin default log
             # Exemple: network_log
             try:
-                log_tag = self.limits[self.plugin_name + '_log']
+                log_tag = self._limits[self.plugin_name + '_log']
             except KeyError:
                 # By defaukt, log are disabled
                 return default_action
@@ -479,28 +486,31 @@ class GlancesPlugin(object):
         return log_tag[0].lower() == 'true'
 
     def get_conf_value(self, value, header="", plugin_name=None):
-        """Return the configuration (header_) value for the current plugin (or the one given by the plugin_name var)"""
+        """Return the configuration (header_) value for the current plugin.
+
+        ...or the one given by the plugin_name var.
+        """
         if plugin_name is None:
+            # If not default use the current plugin name
             plugin_name = self.plugin_name
-        if header == "":
-            try:
-                return self.limits[plugin_name + '_' + value]
-            except KeyError:
-                return []
-        else:
-            try:
-                return self.limits[plugin_name + '_' + header + '_' + value]
-            except KeyError:
-                return []
+
+        if header != "":
+            # Add the header
+            plugin_name = plugin_name + '_' + header
+
+        try:
+            return self._limits[plugin_name + '_' + value]
+        except KeyError:
+            return []
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""
         return value in self.get_conf_value('hide', header=header)
 
     def has_alias(self, header):
-        """Return the alias name for the relative header or None if nonexist"""
+        """Return the alias name for the relative header or None if nonexist."""
         try:
-            return self.limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
+            return self._limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
         except (KeyError, IndexError):
             return None
 
@@ -522,7 +532,7 @@ class GlancesPlugin(object):
         if hasattr(self, 'display_curse'):
             display_curse = self.display_curse
         if hasattr(self, 'align'):
-            align_curse = self.align
+            align_curse = self._align
 
         if max_width is not None:
             ret = {'display': display_curse,
@@ -538,7 +548,7 @@ class GlancesPlugin(object):
     def curse_add_line(self, msg, decoration="DEFAULT",
                        optional=False, additional=False,
                        splittable=False):
-        """Return a dict with
+        """Return a dict with.
 
         Where:
             msg: string
@@ -550,6 +560,7 @@ class GlancesPlugin(object):
                 PROCESS: for process name
                 STATUS: for process status
                 NICE: for process niceness
+                CPU_TIME: for process cpu time
                 OK: Value is OK and non logged
                 OK_LOG: Value is OK and logged
                 CAREFUL: Value is CAREFUL and non logged
@@ -568,16 +579,18 @@ class GlancesPlugin(object):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
-    def set_align(self, align='left'):
-        """Set the Curse align"""
-        if align in ('left', 'right', 'bottom'):
-            self.align = align
-        else:
-            self.align = 'left'
+    @property
+    def align(self):
+        """Get the curse align."""
+        return self._align
 
-    def get_align(self):
-        """Get the Curse align"""
-        return self.align
+    @align.setter
+    def align(self, value):
+        """Set the curse align.
+
+        value: left, right, bottom.
+        """
+        self._align = value
 
     def auto_unit(self, number, low_precision=False):
         """Make a nice human-readable string out of number.
@@ -628,15 +641,19 @@ class GlancesPlugin(object):
         return '{0!s}'.format(number)
 
     def _log_result_decorator(fct):
-        """Log (DEBUG) the result of the function fct"""
+        """Log (DEBUG) the result of the function fct."""
         def wrapper(*args, **kw):
             ret = fct(*args, **kw)
             if is_py3:
-                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
-                             0].__class__.__module__[len('glances_'):], fct.__name__, ret))
+                logger.debug("%s %s %s return %s" % (
+                    args[0].__class__.__name__,
+                    args[0].__class__.__module__[len('glances_'):],
+                    fct.__name__, ret))
             else:
-                logger.debug("%s %s %s return %s" % (args[0].__class__.__name__, args[
-                             0].__class__.__module__[len('glances_'):], fct.func_name, ret))
+                logger.debug("%s %s %s return %s" % (
+                    args[0].__class__.__name__,
+                    args[0].__class__.__module__[len('glances_'):],
+                    fct.func_name, ret))
             return ret
         return wrapper
 

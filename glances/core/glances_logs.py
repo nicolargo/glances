@@ -87,29 +87,26 @@ class GlancesLogs(object):
         else:
             # Default sort is...
             process_auto_by = 'cpu_percent'
-        glances_processes.setautosortkey(process_auto_by)
-
-        return process_auto_by
+        glances_processes.auto_sort = True
+        glances_processes.sort_key = process_auto_by
 
     def reset_process_sort(self):
-        """Reset the process_auto_by variable."""
+        """Reset the process auto sort key."""
         # Default sort is...
-        process_auto_by = 'cpu_percent'
-        glances_processes.setautosortkey(process_auto_by)
-        glances_processes.setmanualsortkey(None)
-
-        return process_auto_by
+        glances_processes.auto_sort = True
+        glances_processes.sort_key = 'cpu_percent'
 
     def add(self, item_state, item_type, item_value,
-            proc_list=[], proc_desc="",
-            peak_time=3):
+            proc_list=None, proc_desc="", peak_time=6):
         """Add a new item to the logs list.
 
-        If 'item' is a 'new one', add the new item at the beginning of the logs
-        list.
+        If 'item' is a 'new one', add the new item at the beginning of
+        the logs list.
         If 'item' is not a 'new one', update the existing item.
-        If event < peak_time the the alert is not setoff
+        If event < peak_time the the alert is not setoff.
         """
+        proc_list = proc_list or []
+
         # Add or update the log
         item_index = self.__itemexist__(item_type)
         if item_index < 0:
@@ -121,24 +118,23 @@ class GlancesLogs(object):
                 # Create the new log item
                 # Time is stored in Epoch format
                 # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-                item = []
-                # START DATE
-                item.append(time.mktime(datetime.now().timetuple()))
-                item.append(-1)               # END DATE
-                item.append(item_state)       # STATE: WARNING|CRITICAL
-                item.append(item_type)        # TYPE: CPU, LOAD, MEM...
-                item.append(item_value)       # MAX
-                item.append(item_value)       # AVG
-                item.append(item_value)       # MIN
-                item.append(item_value)       # SUM
-                item.append(1)                # COUNT
-                # Process list is sorted automaticaly
-                # Overwrite the user choise
-                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                #                     reverse=True)
-                # item.append(topprocess[0:3])  # TOP 3 PROCESS LIST
-                item.append([])               # TOP 3 PROCESS LIST
-                item.append(proc_desc)        # MONITORED PROCESSES DESC
+                item = [
+                    time.mktime(datetime.now().timetuple()),  # START DATE
+                    -1,  # END DATE
+                    item_state,  # STATE: WARNING|CRITICAL
+                    item_type,  # TYPE: CPU, LOAD, MEM...
+                    item_value,  # MAX
+                    item_value,  # AVG
+                    item_value,  # MIN
+                    item_value,  # SUM
+                    1,  # COUNT
+                    # Process list is sorted automatically
+                    # Overwrite the user choice
+                    # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                    #                     reverse=True)
+                    # topprocess[0:3],  # TOP 3 PROCESS LIST
+                    [],  # TOP 3 PROCESS LIST
+                    proc_desc]  # MONITORED PROCESSES DESC
 
                 # Add the item to the list
                 self.logs_list.insert(0, item)
@@ -190,12 +186,12 @@ class GlancesLogs(object):
     def clean(self, critical=False):
         """Clean the logs list by deleting finished items.
 
-        By default, only delete WARNING message
-        If critical = True, also delete CRITICAL message
+        By default, only delete WARNING message.
+        If critical = True, also delete CRITICAL message.
         """
         # Create a new clean list
         clean_logs_list = []
-        while (self.len() > 0):
+        while self.len() > 0:
             item = self.logs_list.pop()
             if item[1] < 0 or (not critical and item[2].startswith("CRITICAL")):
                 clean_logs_list.insert(0, item)
