@@ -37,6 +37,7 @@ Bugs corrected:
     * Server mode issue when no network interface is available (issue #528)
     * DEBUG mode activated by default with Python 2.6 (issue #512)
     * Glances display of time trims the hours showing only minutes and seconds (issue #543)
+    * Process list header not decorating when sorting by command (issue #551)
 
 Version 2.3
 ===========
