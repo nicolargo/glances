@@ -1,20 +1,20 @@
 <div class="table">
     <div class="table-row">
         <div class="table-cell text-left title">MEM</div>
-        <div class="table-cell">{{result["mem"].percent}}%</div>
+        <div class="table-cell">{{ statsMem.percent }}%</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">total:</div>
-        <div class="table-cell">{{result["mem"].total | bytes}}</div>
+        <div class="table-cell">{{ statsMem.total | bytes }}</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">used:</div>
-        <div class="table-cell" ng-class="getAlertLog('mem', 'mem_', result['mem'].percent)">
-            {{result["mem"].used | bytes:2}}
+        <div class="table-cell" ng-class="statsMem.getDecoration('used')">
+            {{ statsMem.used | bytes:2 }}
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">free:</div>
-        <div class="table-cell">{{result["mem"].free | bytes}}</div>
+        <div class="table-cell">{{ statsMem.free | bytes }}</div>
     </div>
 </div>

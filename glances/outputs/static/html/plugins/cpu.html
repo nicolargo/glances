@@ -1,22 +1,22 @@
 <div class="table">
     <div class="table-row">
         <div class="table-cell text-left title">CPU</div>
-        <div class="table-cell">{{result["cpu"].total}}%</div>
+        <div class="table-cell">{{ statsCpu.total }}%</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">user:</div>
-        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_user_', result['cpu'].user)">
-            {{result["cpu"].user}}%
+        <div class="table-cell" ng-class="statsCpu.getDecoration('user')">
+            {{ statsCpu.user }}%
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">system:</div>
-        <div class="table-cell" ng-class="getAlertLog('cpu', 'cpu_system_', result['cpu'].system)">
-            {{result["cpu"].system}}%
+        <div class="table-cell" ng-class="statsCpu.getDecoration('system')">
+            {{ statsCpu.system }}%
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">idle:</div>
-        <div class="table-cell">{{result["cpu"].idle}}%</div>
+        <div class="table-cell">{{ statsCpu.idle }}%</div>
     </div>
 </div>
