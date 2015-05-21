@@ -1,13 +1,9 @@
 <div class="table-row">
     <div class="table-cell text-left title">SENSORS</div>
 </div>
-<div class="table-row" ng-repeat="sensor in result['sensors']">
+
+<div class="table-row" ng-repeat="sensor in statsSensors.sensors">
     <div class="table-cell text-left">{{ sensor.label }}</div>
     <div class="table-cell">{{ sensor.unit }}</div>
-    <div class="table-cell" ng-if="sensor.type != 'battery'" ng-class="getAlert('sensors', 'sensors_' + sensor.type + '_', sensor.value)">
-        {{ sensor.value }}
-    </div>
-    <div class="table-cell" ng-if="sensor.type == 'battery'" ng-class="getAlert('sensors', 'sensors_' + sensor.type + '_', 100 - sensor.value)">
-        {{ sensor.value }}
-    </div>
+    <div class="table-cell" ng-class="statsSensors.getAlert(sensor)">{{ sensor.value }}</div>
 </div>
