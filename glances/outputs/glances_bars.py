@@ -19,9 +19,11 @@
 
 """Manage bars for Glances output."""
 
-# Import system lib
-import locale
+from __future__ import division
+
 from math import modf
+
+curses_bars = [' ', ' ', ' ', ' ', '|', '|', '|', '|', '|']
 
 
 class Bar(object):
@@ -38,11 +40,7 @@ class Bar(object):
         sys.stdout.flush()
     """
 
-    def __init__(self, size,
-                 pre_char='[',
-                 post_char=']',
-                 empty_char='_',
-                 with_text=True):
+    def __init__(self, size, pre_char='[', post_char=']', empty_char=' ', with_text=True):
         # Bar size
         self.__size = size
         # Bar current percent
@@ -52,15 +50,6 @@ class Bar(object):
         self.__post_char = post_char
         self.__empty_char = empty_char
         self.__with_text = with_text
-        # Char used for the bar
-        self.curses_bars = self.__get_curses_bars()
-
-    def __get_curses_bars(self):
-        # Return the chars used to display the bar
-        if locale.getdefaultlocale()[1] == 'UTF-8':
-            return [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
-        else:
-            return [" ", " ", " ", " ", "|", "|", "|", "|", "|"]
 
     @property
     def size(self, with_decoration=False):
@@ -84,14 +73,22 @@ class Bar(object):
         assert value <= 100
         self.__percent = value
 
+    @property
+    def pre_char(self):
+        return self.__pre_char
+
+    @property
+    def post_char(self):
+        return self.__post_char
+
     def __str__(self):
         """Return the bars."""
         frac, whole = modf(self.size * self.percent / 100.0)
-        ret = self.curses_bars[8] * int(whole)
+        ret = curses_bars[8] * int(whole)
         if frac > 0:
-            ret += self.curses_bars[int(frac * 8)]
+            ret += curses_bars[int(frac * 8)]
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
         if self.__with_text:
             ret = '{0}{1:>5}%'.format(ret, self.percent)
-        return self.__pre_char + ret + self.__post_char
+        return ret

@@ -90,17 +90,16 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Define the bar
-        bar = Bar(max_width, pre_char='|', post_char='|', empty_char=' ')
+        bar = Bar(max_width)
 
         # Build the string message
         for key in ['cpu', 'mem', 'swap']:
             bar.percent = self.stats[key]
-            msg = '{0:>4} '.format(key.upper())
+            msg = '{0:4} '.format(key.upper())
             ret.append(self.curse_add_line(msg))
-            msg = '{0}'.format(bar)
-            ret.append(self.curse_add_line(msg,
-                                           self.get_views(key=key,
-                                                          option='decoration')))
+            ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
+            ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
+            ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
             ret.append(self.curse_new_line())
 
         # Return the message with decoration
