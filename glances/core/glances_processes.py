@@ -374,9 +374,13 @@ class GlancesProcesses(object):
         procstat['mandatory_stats'] = True
 
         # Process CPU, MEM percent and name
-        procstat.update(proc.as_dict(
-            attrs=['username', 'cpu_percent', 'memory_percent',
-                   'name', 'cpu_times'], ad_value=''))
+        try:
+            procstat.update(proc.as_dict(
+                attrs=['username', 'cpu_percent', 'memory_percent',
+                       'name', 'cpu_times'], ad_value=''))
+        except psutil.NoSuchProcess:
+            # Try/catch for issue #432
+            return None
         if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
