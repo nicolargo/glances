@@ -463,8 +463,11 @@ class _GlancesCurses(object):
         max_processes_displayed = screen_y - 11 - \
             self.get_stats_display_height(stats_alert) - \
             self.get_stats_display_height(stats_docker)
-        if self.args.enable_process_extended and not self.args.process_tree:
-            max_processes_displayed -= 4
+        try:
+            if self.args.enable_process_extended and not self.args.process_tree:
+                max_processes_displayed -= 4
+        except AttributeError:
+            pass
         if max_processes_displayed < 0:
             max_processes_displayed = 0
         if (glances_processes.max_processes is None or
