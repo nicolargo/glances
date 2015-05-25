@@ -20,11 +20,14 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-3 col-md-2">
+        <div class="col-sm-3 col-md-2" ng-show="!show.per_cpu">
             <section id="cpu" class="plugin" ng-include src="'plugins/cpu.html'"></section>
         </div>
-        <div class="hidden-xs hidden-sm col-md-2">
+        <div class="hidden-xs hidden-sm col-md-2" ng-show="!show.per_cpu">
             <section id="cpu_more" class="plugin" ng-if="result['cpu'].nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
+        </div>
+        <div class="col-sm-6 col-md-4" ng-show="show.per_cpu">
+            <section id="per_cpu" class="plugin" ng-include src="'plugins/per_cpu.html'"></section>
         </div>
         <div class="col-sm-3 col-md-2">
             <section id="load" class="plugin" ng-if="result['load'].cpucore != undefined" ng-include src="'plugins/load.html'"></section>
