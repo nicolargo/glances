@@ -2,10 +2,16 @@
 Glances Version 2.x
 ==============================================================================
 
-Version 2.4
-===========
+Version 2.4.2
+=============
 
-...
+Bugs corrected:
+
+    * Crash when "top extended stats" is enabled on OS X (issue #612)
+    * Graphical percentage bar displays "?" (issue #608)
+    * Quick look doesn't work (issue #605)
+    * [Web UI] Display empty Battery sensors enhancement (issue #601)
+    * [Web UI] Per CPU plugin has to be improved (issue #566)
 
 Version 2.4.1
 =============
