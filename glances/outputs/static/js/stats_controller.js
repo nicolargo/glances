@@ -141,6 +141,10 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
                 }
             }
 
+            _.remove(response['sensors'], function(sensor) {
+              return sensor.type == "battery" && _.isArray(sensor.value) && _.isEmpty(sensor.value);
+            });
+
             $scope.is_bsd = response['system'].os_name === 'FreeBSD';
             $scope.is_linux = response['system'].os_name === 'Linux';
             $scope.is_mac = response['system'].os_name === 'Darwin';
