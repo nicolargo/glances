@@ -58,32 +58,30 @@ class Plugin(GlancesPlugin):
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
-            percpu_percent = psutil.cpu_percent(interval=0.0, percpu=True)
             percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
             cpu_number = 0
             for cputimes in percpu_times_percent:
-                for cpupercent in percpu_percent:
-                    cpu = {'key': self.get_key(),
-                           'cpu_number': str(cpu_number),
-                           'total': cpupercent,
-                           'user': cputimes.user,
-                           'system': cputimes.system,
-                           'idle': cputimes.idle}
-                    # The following stats are for API purposes only
-                    if hasattr(cputimes, 'nice'):
-                        cpu['nice'] = cputimes.nice
-                    if hasattr(cputimes, 'iowait'):
-                        cpu['iowait'] = cputimes.iowait
-                    if hasattr(cputimes, 'irq'):
-                        cpu['irq'] = cputimes.irq
-                    if hasattr(cputimes, 'softirq'):
-                        cpu['softirq'] = cputimes.softirq
-                    if hasattr(cputimes, 'steal'):
-                        cpu['steal'] = cputimes.steal
-                    if hasattr(cputimes, 'guest'):
-                        cpu['guest'] = cputimes.guest
-                    if hasattr(cputimes, 'guest_nice'):
-                        cpu['guest_nice'] = cputimes.guest_nice
+                cpu = {'key': self.get_key(),
+                       'cpu_number': str(cpu_number),
+                       'total': 100 - cputimes.idle,
+                       'user': cputimes.user,
+                       'system': cputimes.system,
+                       'idle': cputimes.idle}
+                # The following stats are for API purposes only
+                if hasattr(cputimes, 'nice'):
+                    cpu['nice'] = cputimes.nice
+                if hasattr(cputimes, 'iowait'):
+                    cpu['iowait'] = cputimes.iowait
+                if hasattr(cputimes, 'irq'):
+                    cpu['irq'] = cputimes.irq
+                if hasattr(cputimes, 'softirq'):
+                    cpu['softirq'] = cputimes.softirq
+                if hasattr(cputimes, 'steal'):
+                    cpu['steal'] = cputimes.steal
+                if hasattr(cputimes, 'guest'):
+                    cpu['guest'] = cputimes.guest
+                if hasattr(cputimes, 'guest_nice'):
+                    cpu['guest_nice'] = cputimes.guest_nice
                 self.stats.append(cpu)
                 cpu_number += 1
         else:
