@@ -63,7 +63,7 @@ class Plugin(GlancesPlugin):
             for cputimes in percpu_times_percent:
                 cpu = {'key': self.get_key(),
                        'cpu_number': str(cpu_number),
-                       'total': 100 - cputimes.idle,
+                       'total': round(100 - cputimes.idle, 1),
                        'user': cputimes.user,
                        'system': cputimes.system,
                        'idle': cputimes.idle}
