@@ -59,10 +59,9 @@ class Plugin(GlancesPlugin):
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
             percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
-            cpu_number = 0
-            for cputimes in percpu_times_percent:
+            for cpu_number, cputimes in enumerate(percpu_times_percent):
                 cpu = {'key': self.get_key(),
-                       'cpu_number': str(cpu_number),
+                       'cpu_number': cpu_number,
                        'total': round(100 - cputimes.idle, 1),
                        'user': cputimes.user,
                        'system': cputimes.system,
@@ -83,7 +82,6 @@ class Plugin(GlancesPlugin):
                 if hasattr(cputimes, 'guest_nice'):
                     cpu['guest_nice'] = cputimes.guest_nice
                 self.stats.append(cpu)
-                cpu_number += 1
         else:
             # Update stats using SNMP
             pass
