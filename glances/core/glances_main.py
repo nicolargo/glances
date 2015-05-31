@@ -251,6 +251,12 @@ Start the client browser (browser mode):\n\
         # Control parameter and exit if it is not OK
         self.args = args
 
+        # Export is only available in standalone or client mode (issue #614)
+        export_tag = args.export_csv or args.export_statsd or args.export_influxdb or args.export_rabbitmq
+        if not (self.is_standalone() or self.is_client()) and export_tag:
+            logger.critical("Export is only available in standalone or client mode")
+            sys.exit(2)
+
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
             logger.critical("Process filter is only available in standalone mode")

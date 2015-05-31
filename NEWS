@@ -7,7 +7,8 @@ Version 2.5
 
 Enhancements and new features:
 
-     * Server password configuration for the browser mode (issue #500) 
+    * Server password configuration for the browser mode (issue #500)
+    * Display an error if export is not used in the standalone/client mode (issue #614)  
 
 Version 2.4.2
 =============
