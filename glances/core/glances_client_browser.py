@@ -191,8 +191,9 @@ class GlancesClientBrowser(object):
                         clear_password = self.screen.display_popup(
                             'Password needed for {0}: '.format(v['name']), is_input=True)
                     # Store the password for the selected server
-                    self.set_in_selected('password',
-                                         self._encode_password(clear_password))
+                    if clear_password is not None:
+                        self.set_in_selected('password',
+                                             self._encode_password(clear_password))
 
                 # Display the Glance client on the selected server
                 logger.info("Connect Glances client to the {0} server".format(
