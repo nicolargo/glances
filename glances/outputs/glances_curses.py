@@ -171,7 +171,8 @@ class _GlancesCurses(object):
             'OK_LOG': self.default_color,
             'CAREFUL_LOG': self.ifCAREFUL_color,
             'WARNING_LOG': self.ifWARNING_color,
-            'CRITICAL_LOG': self.ifCRITICAL_color
+            'CRITICAL_LOG': self.ifCRITICAL_color,
+            'PASSWORD': curses.A_PROTECT
         }
 
         # Init main window
@@ -184,7 +185,7 @@ class _GlancesCurses(object):
         self.edit_filter = False
 
         # Catch key pressed with non blocking mode
-        self.term_window.keypad(1)
+        self.no_flash_cursor()
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
@@ -200,6 +201,12 @@ class _GlancesCurses(object):
                 args.enable_history = False
                 logger.error(
                     'Stats history disabled because MatPlotLib is not installed')
+
+    def flash_cursor(self):
+        self.term_window.keypad(1)
+
+    def no_flash_cursor(self):
+        self.term_window.keypad(0)
 
     def set_cursor(self, value):
         """Configure the curse cursor apparence.
@@ -712,15 +719,17 @@ class _GlancesCurses(object):
             subpop.refresh()
             # Create the textbox inside the subwindows
             self.set_cursor(2)
+            self.flash_cursor()
             textbox = GlancesTextbox(subpop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
+            self.no_flash_cursor()
             if textbox.gather() != '':
                 logger.debug(
-                    "User enters the following process filter patern: %s" % textbox.gather())
+                    "User enters the following string: %s" % textbox.gather())
                 return textbox.gather()[:-1]
             else:
-                logger.debug("User clears the process filter patern")
+                logger.debug("User centers an empty string")
                 return None
         else:
             # Display the popup
@@ -1167,6 +1176,6 @@ if not is_windows:
         def do_command(self, ch):
             if ch == 10:  # Enter
                 return 0
-            if ch == 127:  # Enter
+            if ch == 127:  # Back
                 return 8
             return Textbox.do_command(self, ch)
