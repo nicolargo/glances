@@ -27,12 +27,14 @@ try:
 except ImportError:
     # Python 2
     from xmlrpclib import ServerProxy, Fault, ProtocolError
+from hashlib import sha256
 
 # Import Glances libs
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClient, GlancesClientTransport
 from glances.core.glances_logging import logger
 from glances.core.glances_staticlist import GlancesStaticServer
+from glances.core.glances_passwordlist import GlancesPassword
 from glances.outputs.glances_curses import GlancesCursesBrowser
 
 
@@ -44,9 +46,11 @@ class GlancesClientBrowser(object):
         # Store the arg/config
         self.args = args
         self.config = config
+        self.static_server = None
+        self.password = None
 
-        # Init the static server list (if defined)
-        self.static_server = GlancesStaticServer(config=self.config)
+        # Load the configuration file
+        self.load()
 
         # Start the autodiscover mode (Zeroconf listener)
         if not self.args.disable_autodiscover:
@@ -56,6 +60,14 @@ class GlancesClientBrowser(object):
 
         # Init screen
         self.screen = GlancesCursesBrowser(args=self.args)
+
+    def load(self):
+        """Load server and password list from the confiuration file"""
+        # Init the static server list (if defined)
+        self.static_server = GlancesStaticServer(config=self.config)
+
+        # Init the password list (if defined)
+        self.password = GlancesPassword(config=self.config)
 
     def get_servers_list(self):
         """Return the current server list (list of dict).
@@ -75,6 +87,11 @@ class GlancesClientBrowser(object):
         """Return the URI for the given server dict."""
         # Select the connection mode (with or without password)
         if server['password'] != "":
+            if server['status'] == 'PROTECTED':
+                # Try with the preconfigure password (only if status is PROTECTED)
+                clear_password = self.password.get_password(server['name'])
+                if clear_password is not None:
+                    server['password'] = self._encode_password(clear_password)
             return 'http://{0}:{1}@{2}:{3}'.format(server['username'], server['password'],
                                                    server['ip'], server['port'])
         else:
@@ -165,14 +182,17 @@ class GlancesClientBrowser(object):
 
                 # A password is needed to access to the server's stats
                 if self.get_servers_list()[self.screen.active_server]['password'] is None:
-                    from hashlib import sha256
-                    # Display a popup to enter password
-                    clear_password = self.screen.display_popup(
-                        'Password needed for {0}: '.format(v['name']), is_input=True)
-                    # Hash with SHA256
-                    encoded_password = sha256(clear_password.encode('utf-8')).hexdigest()
+                    # First of all, check if a password is available in the [passwords] section
+                    clear_password = self.password.get_password(v['name'])
+                    if clear_password is None \
+                       or self.get_servers_list()[self.screen.active_server]['status'] == 'PROTECTED':
+                        # Else, the password should be enter by the user
+                        # Display a popup to enter password
+                        clear_password = self.screen.display_popup(
+                            'Password needed for {0}: '.format(v['name']), is_input=True)
                     # Store the password for the selected server
-                    self.set_in_selected('password', encoded_password)
+                    self.set_in_selected('password',
+                                         self._encode_password(clear_password))
 
                 # Display the Glance client on the selected server
                 logger.info("Connect Glances client to the {0} server".format(
@@ -237,6 +257,11 @@ class GlancesClientBrowser(object):
                 key, value)
         else:
             self.static_server.set_server(self.screen.active_server, key, value)
+
+    def _encode_password(self, clear_password):
+        """Encode clear password using SHA256"""
+        # Hash with SHA256
+        return sha256(clear_password.encode('utf-8')).hexdigest()
 
     def end(self):
         """End of the client browser session."""

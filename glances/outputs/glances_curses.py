@@ -1089,7 +1089,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             ['load_min5', 'LOAD', 6],
             ['cpu_percent', 'CPU%', 5],
             ['mem_percent', 'MEM%', 5],
-            ['status', 'STATUS', 8],
+            ['status', 'STATUS', 9],
             ['ip', 'IP', 15],
             # ['port', 'PORT', 5],
             ['hr_name', 'OS', 16],
