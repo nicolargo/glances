@@ -59,6 +59,7 @@ class GlancesStaticServer(object):
                     if new_server['port'] is None:
                         new_server['port'] = 61209
                     new_server['username'] = 'glances'
+                    # By default, try empty (aka no) password
                     new_server['password'] = ''
                     try:
                         new_server['ip'] = gethostbyname(new_server['name'])
