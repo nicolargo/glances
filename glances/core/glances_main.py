@@ -235,7 +235,7 @@ Start the client browser (browser mode):\n\
                     confirm=True)
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the password for the Glances web server',
+                    description='Define the password for the Glances web server\nUser name: glances',
                     confirm=True)
             elif args.client:
                 args.password = self.__get_password(
