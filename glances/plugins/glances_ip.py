@@ -120,4 +120,4 @@ class Plugin(GlancesPlugin):
 
         Example: '255.255.255.0' will return 24
         """
-        return sum(map(lambda x: int(x) << 8, ip.split('.'))) // 8128
+        return sum([int(x) << 8 for x in ip.split('.')]) // 8128
