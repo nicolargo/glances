@@ -280,13 +280,15 @@ class Plugin(GlancesPlugin):
         # If no command line for the process is available, fallback to
         # the bare process name instead
         cmdline = p['cmdline']
-        if cmdline == "" or args.process_short_name:
-            msg = ' {0}'.format(p['name'])
-            ret.append(self.curse_add_line(msg, splittable=True))
-        else:
-            try:
+        argument = ' '.join(cmdline.split()[1:])
+        try:
+            if cmdline == "" or args.process_short_name:
+                msg = ' {0}'.format(p['name'])
+                ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
+                msg = ' {0}'.format(argument)
+                ret.append(self.curse_add_line(msg, splittable=True))
+            else:
                 cmd = cmdline.split()[0]
-                argument = ' '.join(cmdline.split()[1:])
                 path, basename = os.path.split(cmd)
                 if os.path.isdir(path):
                     msg = ' {0}'.format(path) + os.sep
@@ -295,10 +297,10 @@ class Plugin(GlancesPlugin):
                 else:
                     msg = ' {0}'.format(basename)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                msg = " {0}".format(argument)
+                msg = ' {0}'.format(argument)
                 ret.append(self.curse_add_line(msg, splittable=True))
-            except UnicodeEncodeError:
-                ret.append(self.curse_add_line("", splittable=True))
+        except UnicodeEncodeError:
+            ret.append(self.curse_add_line("", splittable=True))
 
         # Add extended stats but only for the top processes
         # !!! CPU consumption ???
