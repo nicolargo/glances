@@ -25,7 +25,6 @@ import sys
 
 from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
-from hashlib import sha256
 
 try:
     from bottle import Bottle, static_file, abort, response, request, auth_basic
@@ -51,7 +50,7 @@ class GlancesBottle(object):
         # Enable CORS (issue #479)
         self._app.install(EnableCors())
         # Password
-        if args.password != "":
+        if args.password != '':
             self._app.install(auth_basic(self.check_auth));
         # Define routes
         self._route()
@@ -59,20 +58,14 @@ class GlancesBottle(object):
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
-    def check_auth(self, username, clear_password):
+    def check_auth(self, username, password):
+        """Check if a username/password combination is valid."""
         if username == self.args.username:
             from glances.core.glances_password import GlancesPassword
-
             pwd = GlancesPassword()
-
-            return pwd.check_password(self.args.password, self._encode_password(clear_password))
+            return pwd.check_password(self.args.password, pwd.sha256_hash(password))
         else:
             return False
-
-    def _encode_password(self, clear_password):
-        """Encode clear password using SHA256"""
-        # Hash with SHA256
-        return sha256(clear_password.encode('utf-8')).hexdigest()
 
     def _route(self):
         """Define route."""
