@@ -280,14 +280,6 @@ Start the client browser (browser mode):\n\
 
         return args
 
-    def __hash_password(self, plain_password):
-        """Hash a plain password and return the hashed one."""
-        from glances.core.glances_password import GlancesPassword
-
-        password = GlancesPassword()
-
-        return password.hash_password(plain_password)
-
     def __get_password(self, description='', confirm=False, clear=False):
         """Read a password from the command line.
 

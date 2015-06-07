@@ -67,6 +67,10 @@ class GlancesPassword(object):
 
         return app_path
 
+    def sha256_hash(self, plain_password):
+        """Return the SHA-256 of the given password."""
+        return hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+
     def get_hash(self, salt, plain_password):
         """Return the hashed password, salt + SHA-256."""
         return hashlib.sha256(salt.encode() + plain_password.encode()).hexdigest()
@@ -108,21 +112,21 @@ class GlancesPassword(object):
             if description != '':
                 print(description)
 
-            # password_plain is the plain SHA-256 password
+            # password_sha256 is the plain SHA-256 password
             # password_hashed is the salt + SHA-256 password
-            password_sha = hashlib.sha256(getpass.getpass('Password: ').encode('utf-8')).hexdigest()
-            password_hashed = self.hash_password(password_sha)
+            password_sha256 = self.sha256_hash(getpass.getpass('Password: '))
+            password_hashed = self.hash_password(password_sha256)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
-                password_confirm = hashlib.sha256(getpass.getpass('Password (confirm): ').encode('utf-8')).hexdigest()
+                password_confirm = self.sha256_hash(getpass.getpass('Password (confirm): '))
 
                 if not self.check_password(password_hashed, password_confirm):
                     logger.critical("Sorry, passwords do not match. Exit.")
                     sys.exit(1)
 
-            # Return the plain or hashed password
+            # Return the plain SHA-256 or the salted password
             if clear:
-                password = password_sha
+                password = password_sha256
             else:
                 password = password_hashed
 
