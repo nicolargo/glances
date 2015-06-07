@@ -282,7 +282,10 @@ class Plugin(GlancesPlugin):
         cmdline = p['cmdline']
         argument = ' '.join(cmdline.split()[1:])
         try:
-            if cmdline == "" or args.process_short_name:
+            if cmdline == '':
+                msg = ' {0}'.format(p['name'])
+                ret.append(self.curse_add_line(msg, splittable=True))
+            elif args.process_short_name:
                 msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                 msg = ' {0}'.format(argument)
@@ -300,7 +303,7 @@ class Plugin(GlancesPlugin):
                 msg = ' {0}'.format(argument)
                 ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
-            ret.append(self.curse_add_line("", splittable=True))
+            ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
         # !!! CPU consumption ???
