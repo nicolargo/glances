@@ -194,8 +194,15 @@ class Plugin(GlancesPlugin):
                     msg = "{0:12} {1:3}".format(label[:11], i['unit'])
                 except (KeyError, UnicodeEncodeError):
                     msg = "{0:16}".format(label[:15])
+                if args.fahrenheit:
+                    msg = msg.replace('°C', '°F')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format(i['value'])
+                if args.fahrenheit:
+                    # Convert Celsius to Fahrenheit
+                    # T(°F) = T(°C) × 1.8 + 32
+                    msg = '{0:>7}'.format(i['value'] * 1.8 + 32)
+                else:
+                    msg = '{0:>7}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
                                         key='value',

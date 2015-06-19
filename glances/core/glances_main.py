@@ -188,6 +188,8 @@ Start the client browser (browser mode):\n\
                                 dest='process_tree', help='display processes as a tree')
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help='display network rate in byte per second')
+        parser.add_argument('--fahrenheit', action='store_true', default=False,
+                            dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help='start Glances in per CPU mode')
         parser.add_argument('--fs-free-space', action='store_false', default=False,
