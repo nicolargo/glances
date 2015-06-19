@@ -223,6 +223,10 @@ class GlancesPlugin(object):
         """Return the stats object."""
         return self.stats
 
+    def get_export(self):
+        """Return the stats object to export."""
+        return self.get_raw()
+
     def get_stats(self):
         """Return the stats object in JSON format."""
         return json.dumps(self.stats)

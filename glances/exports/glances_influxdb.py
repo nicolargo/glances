@@ -129,3 +129,4 @@ class Export(GlancesExport):
             self.client.write_points(data)
         except Exception as e:
             logger.error("Can not export stats to InfluxDB (%s)" % e)
+        logger.debug("Export {} stats to InfluxDB".format(name))

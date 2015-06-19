@@ -68,7 +68,7 @@ class Export(GlancesExport):
         csv_data = []
 
         # Get the stats
-        all_stats = stats.getAll()
+        all_stats = stats.getAllExports()
         plugins = stats.getAllPlugins()
 
         # Loop over available plugin
@@ -79,7 +79,7 @@ class Export(GlancesExport):
                         # First line: header
                         if self.first_line:
                             csv_header += ('{0}_{1}_{2}'.format(
-                                plugin, stat[stat['key']], item) for item in stat)
+                                plugin, self.get_item_key(stat), item) for item in stat)
                         # Others lines: stats
                         fieldvalues = stat.values()
                         csv_data += fieldvalues

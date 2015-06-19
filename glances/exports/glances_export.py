@@ -65,35 +65,84 @@ class GlancesExport(object):
                 'processcount',
                 'ip',
                 'system',
-                'uptime']
+                'uptime',
+                'sensors',
+                'docker']
+
+    def get_item_key(self, item):
+        """Return the value of the item 'key'"""
+        try:
+            ret = item[item['key']]
+        except KeyError:
+            logger.error("No 'key' available in {}".format(item))
+        if isinstance(ret, list):
+            return ret[0]
+        else:
+            return ret
 
     def update(self, stats):
         """Update stats to a server.
 
         The method builds two lists: names and values
         and calls the export method to export the stats.
+
+        Be aware that CSV export overwrite this class and use a specific one.
         """
         if not self.export_enable:
             return False
 
-        # Get the stats
-        all_stats = stats.getAll()
+        # Get all the stats & limits
+        all_stats = stats.getAllExports()
         all_limits = stats.getAllLimits()
+        # Get the plugins list
         plugins = stats.getAllPlugins()
 
         # Loop over available plugins
         for i, plugin in enumerate(plugins):
             if plugin in self.plugins_to_export():
-                if isinstance(all_stats[i], list):
-                    for item in all_stats[i]:
-                        item.update(all_limits[i])
-                        export_names = list('{0}.{1}'.format(item[item['key']], key)
-                                            for key in item.keys())
-                        export_values = list(item.values())
-                        self.export(plugin, export_names, export_values)
-                elif isinstance(all_stats[i], dict):
-                    export_names = list(all_stats[i].keys()) + list(all_limits[i].keys())
-                    export_values = list(all_stats[i].values()) + list(all_limits[i].values())
-                    self.export(plugin, export_names, export_values)
+                if isinstance(all_stats[i], dict):
+                    all_stats[i].update(all_limits[i])
+                elif isinstance(all_stats[i], list):
+                    all_stats[i] += all_limits[i]
+                else:
+                    continue
+                export_names, export_values = self.__build_export(all_stats[i])
+                self.export(plugin, export_names, export_values)
 
         return True
+
+    def __build_export(self, stats):
+        """Build the export lists"""
+        export_names = []
+        export_values = []
+
+        if isinstance(stats, dict):
+            # Stats is a dict
+            # Is there a key ?
+            if 'key' in list(stats.keys()):
+                pre_key = '{}.'.format(stats[stats['key']])
+            else:
+                pre_key = ''
+            # Walk through the dict
+            for key, value in stats.iteritems():
+                if isinstance(value, list):
+                    try:
+                        value = value[0]
+                    except IndexError:
+                        value = ''
+                if isinstance(value, dict):
+                    item_names, item_values = self.__build_export(value)
+                    item_names = [pre_key + key.lower() + str(i) for i in item_names]
+                    export_names += item_names
+                    export_values += item_values
+                else:
+                    export_names.append(pre_key + key.lower())
+                    export_values.append(value)
+        elif isinstance(stats, list):
+            # Stats is a list (of dict)
+            # Recursive loop through the list
+            for item in stats:
+                item_names, item_values = self.__build_export(item)
+                export_names += item_names
+                export_values += item_values
+        return export_names, export_values

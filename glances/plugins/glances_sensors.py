@@ -146,7 +146,11 @@ class Plugin(GlancesPlugin):
         - Battery capacity: 'battery'
         """
         for i in stats:
+            # Set the sensors type
             i.update({'type': sensor_type})
+            # also add the key name
+            i.update({'key': self.get_key()})
+
         return stats
 
     def update_views(self):
