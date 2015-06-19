@@ -51,7 +51,7 @@ class GlancesBottle(object):
         self._app.install(EnableCors())
         # Password
         if args.password != '':
-            self._app.install(auth_basic(self.check_auth));
+            self._app.install(auth_basic(self.check_auth))
         # Define routes
         self._route()
 

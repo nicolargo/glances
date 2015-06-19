@@ -7,6 +7,7 @@ Version 2.5
 
 Enhancements and new features:
 
+    * Allow export of Docker and sensors plugins stats to InfluxDB, StatsD... (issue #600)
     * Server password configuration for the browser mode (issue #500)
     * Display an error if export is not used in the standalone/client mode (issue #614)  
 

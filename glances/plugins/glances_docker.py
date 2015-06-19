@@ -60,6 +60,22 @@ class Plugin(GlancesPlugin):
         # Init the Docker API
         self.docker_client = False
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'name'
+
+    def get_export(self):
+        """Overwrite the default export method
+        - Only exports containers
+        - The key is the first container name
+        """
+        ret = []
+        try:
+            ret = self.stats['containers']
+        except KeyError as e:
+            logger.debug("Docker export error {}".format(e))
+        return ret
+
     def connect(self, version=None):
         """Connect to the Docker server."""
         # Init connection to the Docker API
@@ -179,6 +195,12 @@ class Plugin(GlancesPlugin):
                 c['cpu'] = self.get_docker_cpu(c['Id'], all_stats)
                 c['memory'] = self.get_docker_memory(c['Id'], all_stats)
                 # c['network'] = self.get_docker_network(c['Id'], all_stats)
+
+                # Export name (first name in the list, without the /)
+                c['name'] = c['Names'][0][1:]
+
+                # The key is the container name and not the Id
+                c['key'] = self.get_key()
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP

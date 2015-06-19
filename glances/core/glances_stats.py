@@ -129,14 +129,14 @@ class GlancesStats(object):
                 # generate self._exports_list["xxx"] = ...
                 self._exports[export_name] = export_module.Export(args=args, config=self.config)
         # Log plugins list
-        logger.debug("Available exports modules list: {0}".format(self.getAllExports()))
+        logger.debug("Available exports modules list: {0}".format(self.getExportList()))
         return True
 
     def getAllPlugins(self):
         """Return the plugins list."""
         return [p for p in self._plugins]
 
-    def getAllExports(self):
+    def getExportList(self):
         """Return the exports modules list."""
         return [p for p in self._exports]
 
@@ -173,6 +173,13 @@ class GlancesStats(object):
     def getAll(self):
         """Return all the stats (list)."""
         return [self._plugins[p].get_raw() for p in self._plugins]
+
+    def getAllExports(self):
+        """
+        Return all the stats to be exported (list).
+        Default behavor is to export all the stat
+        """
+        return [self._plugins[p].get_export() for p in self._plugins]
 
     def getAllAsDict(self):
         """Return all the stats (dict)."""
