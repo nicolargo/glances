@@ -35,6 +35,9 @@ from influxdb.client import InfluxDBClientError
 from influxdb.influxdb08 import InfluxDBClient as InfluxDBClient08
 from influxdb.influxdb08.client import InfluxDBClientError as InfluxDBClientError08
 
+# Constants for tracking behavior
+INFLUXDB_09 = '0.9'
+INFLUXDB_08 = '0.8'
 
 class Export(GlancesExport):
 
@@ -76,12 +79,32 @@ class Export(GlancesExport):
             return False
         else:
             logger.debug("Load InfluxDB from the Glances configuration file")
+
         # Prefix is optional
         try:
             self.prefix = self.config.get_value(section, 'prefix')
         except NoOptionError:
             pass
+
+        # Tags are optional, comma separated key:value pairs.
+        try:
+            self.tags = self.config.get_value(section, 'tags')
+        except NoOptionError:
+            self.tags = ''
+
         return True
+
+    def parse_tags(self):
+        """ Parses some tags into a dict"""
+        if self.tags:
+            try:
+                self.tags = dict([x.split(':') for x in self.tags.split(',')])
+            except ValueError:
+                # one of the keyvalue pairs was missing
+                logger.info('invalid tags passed: %s', self.tags)
+                self.tags = {}
+        else:
+            self.tags = {}
 
     def init(self):
         """Init the connection to the InfluxDB server."""
@@ -95,6 +118,7 @@ class Export(GlancesExport):
                                 password=self.password,
                                 database=self.db)
             get_all_db = [i['name'] for i in db.get_list_database()]
+            self.version = INFLUXDB_09
         except InfluxDBClientError:
             # https://github.com/influxdb/influxdb-python/issues/138
             logger.info("Trying fallback to InfluxDB v0.8")
@@ -104,6 +128,7 @@ class Export(GlancesExport):
                                   password=self.password,
                                   database=self.db)
             get_all_db = [i['name'] for i in db.get_list_database()]
+            self.version = INFLUXDB_08
         except InfluxDBClientError08 as e:
             logger.critical("Cannot connect to InfluxDB database '%s' (%s)" % (self.db, e))
             sys.exit(2)
@@ -114,6 +139,9 @@ class Export(GlancesExport):
         else:
             logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
             sys.exit(2)
+
+        self.parse_tags()
+
         return db
 
     def export(self, name, columns, points):
@@ -123,7 +151,12 @@ class Export(GlancesExport):
             name = self.prefix + '.' + name
         # logger.info(self.prefix)
         # Create DB input
-        data = [{'name': name, 'columns': columns, 'points': [points]}]
+        if self.version == INFLUXDB_09:
+            data = [{'measurement': name,
+                     'tags': self.tags,
+                     'fields': dict(zip(columns, points))}]
+        else:
+            data = [{'name': name, 'columns': columns, 'points': [points]}]
         # Write input to the InfluxDB database
         try:
             self.client.write_points(data)
