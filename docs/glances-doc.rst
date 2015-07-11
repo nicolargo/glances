@@ -812,6 +812,20 @@ and run Glances with:
 
     $ glances --export-influxdb
 
+InfluxDB 0.9.x also supports an optional tags configuration parameter 
+specified as comma separated, key:value pairs. For example:
+
+.. code-block::
+
+    [influxdb]
+    host=localhost
+    port=8086
+    user=root
+    password=root
+    db=glances
+    tags=foo:bar,spam:eggs
+
+
 For Grafana users, Glances provides a dedicated `dashboard`_. Just import
 the file in your ``Grafana`` web interface.
 
