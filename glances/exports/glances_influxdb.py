@@ -146,6 +146,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Write the points to the InfluxDB server."""
+        logger.debug("Export {} stats to InfluxDB".format(name))
         # Manage prefix
         if self.prefix is not None:
             name = self.prefix + '.' + name
@@ -161,5 +162,4 @@ class Export(GlancesExport):
         try:
             self.client.write_points(data)
         except Exception as e:
-            logger.error("Can not export stats to InfluxDB (%s)" % e)
-        logger.debug("Export {} stats to InfluxDB".format(name))
+            logger.error("Can not export {} stats to InfluxDB ({})".format(name, e))
