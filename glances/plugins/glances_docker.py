@@ -427,7 +427,7 @@ class Plugin(GlancesPlugin):
             # Name
             name = container['Names'][0]
             if len(name) > 20:
-                name = '_' + name[:-19]
+                name = '_' + name[-19:]
             else:
                 name = name[:20]
             msg = ' {0:20}'.format(name)
