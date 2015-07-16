@@ -22,6 +22,7 @@
 # Import system lib
 import re
 import sys
+import locale
 
 # Import Glances lib
 from glances.core.glances_globals import is_mac, is_windows
@@ -765,6 +766,7 @@ class _GlancesCurses(object):
         x = display_x
         x_max = x
         y = display_y
+        term_encoding = locale.getpreferredencoding()
         for m in plugin_stats['msgdict']:
             # New line
             if m['msg'].startswith('\n'):
@@ -790,7 +792,7 @@ class _GlancesCurses(object):
             # !!! Crach if not try/except... Why ???
             try:
                 self.term_window.addnstr(y, x,
-                                         m['msg'],
+                                         m['msg'].decode('utf-8').encode(term_encoding),
                                          # Do not disply outside the screen
                                          screen_x - x,
                                          self.colors_list[m['decoration']])
