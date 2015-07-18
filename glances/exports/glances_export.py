@@ -70,11 +70,11 @@ class GlancesExport(object):
                 'docker']
 
     def get_item_key(self, item):
-        """Return the value of the item 'key'"""
+        """Return the value of the item 'key'."""
         try:
             ret = item[item['key']]
         except KeyError:
-            logger.error("No 'key' available in {}".format(item))
+            logger.error("No 'key' available in {0}".format(item))
         if isinstance(ret, list):
             return ret[0]
         else:
@@ -112,7 +112,7 @@ class GlancesExport(object):
         return True
 
     def __build_export(self, stats):
-        """Build the export lists"""
+        """Build the export lists."""
         export_names = []
         export_values = []
 
@@ -120,7 +120,7 @@ class GlancesExport(object):
             # Stats is a dict
             # Is there a key ?
             if 'key' in list(stats.keys()):
-                pre_key = '{}.'.format(stats[stats['key']])
+                pre_key = '{0}.'.format(stats[stats['key']])
             else:
                 pre_key = ''
             # Walk through the dict

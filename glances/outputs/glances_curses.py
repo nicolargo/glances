@@ -1020,7 +1020,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         servers_list: Dict of dict with servers stats
         """
         # Flush display
-        logger.debug("Servers list: {}".format(servers_list))
+        logger.debug('Servers list: {0}'.format(servers_list))
         self.flush(servers_list)
 
         # Wait

@@ -100,4 +100,4 @@ class Export(GlancesExport):
                 self.client.gauge(stat_name, stat_value)
             except Exception as e:
                 logger.error("Can not export stats to Statsd (%s)" % e)
-        logger.debug("Export {} stats to Statsd".format(name))
+        logger.debug("Export {0} stats to Statsd".format(name))
