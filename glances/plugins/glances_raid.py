@@ -112,7 +112,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg, status))
             elif self.stats[array]['status'] == 'inactive':
                 ret.append(self.curse_new_line())
-                msg = '└─ Status {}'.format(self.stats[array]['status'])
+                msg = '└─ Status {0}'.format(self.stats[array]['status'])
                 ret.append(self.curse_add_line(msg, status))
                 components = self.stats[array]['components'].keys()
                 components.sort()

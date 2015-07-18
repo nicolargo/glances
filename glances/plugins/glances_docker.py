@@ -65,7 +65,8 @@ class Plugin(GlancesPlugin):
         return 'name'
 
     def get_export(self):
-        """Overwrite the default export method
+        """Overwrite the default export method.
+
         - Only exports containers
         - The key is the first container name
         """
@@ -73,7 +74,7 @@ class Plugin(GlancesPlugin):
         try:
             ret = self.stats['containers']
         except KeyError as e:
-            logger.debug("Docker export error {}".format(e))
+            logger.debug("Docker export error {0}".format(e))
         return ret
 
     def connect(self, version=None):
@@ -180,10 +181,10 @@ class Plugin(GlancesPlugin):
                     # Create the stats instance for the current container
                     try:
                         self.docker_stats[c['Id']] = self.docker_client.stats(c['Id'], decode=True)
-                        logger.debug("Create Docker stats object for container {}".format(c['Id']))
+                        logger.debug("Create Docker stats object for container {0}".format(c['Id']))
                     except Exception as e:
                         # Correct Issue #602
-                        logger.error("Can not call Docker stats method {}".format(e))
+                        logger.error("Cannot call Docker stats method {0}".format(e))
 
                 # Get the docker stats
                 try:
@@ -365,7 +366,7 @@ class Plugin(GlancesPlugin):
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
-            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{}'.format(container_id))
+            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{0}'.format(container_id))
             network_new['rx'] = netiocounters["rx_bytes"] - self.netiocounters_old[container_id]["rx_bytes"]
             network_new['tx'] = netiocounters["tx_bytes"] - self.netiocounters_old[container_id]["tx_bytes"]
             network_new['cumulative_rx'] = netiocounters["rx_bytes"]
