@@ -180,6 +180,8 @@ Start the client browser (browser mode):\n\
                             dest='process_filter', help='set the process filter pattern (regular expression)')
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
+        parser.add_argument('--disable-irix', action='store_true', default=False,
+                            dest='disable_irix', help='Task\'s cpu usage will be divided by the total number of CPUs')
         if not is_windows:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')

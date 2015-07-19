@@ -88,6 +88,7 @@ class Plugin(GlancesPlugin):
         self.view_data['quit'] = msg_col2.format('q', 'Quit (Esc and Ctrl-C also work)')
         self.view_data['enable_disable_top_extends_stats'] = msg_col.format('e', 'Enable/disable top extended stats')
         self.view_data['enable_disable_short_processname'] = msg_col.format('/', 'Enable/disable short processes name')
+        self.view_data['enable_disable_irix'] = msg_col.format('0', 'Enable/disable Irix process CPU')
         self.view_data['enable_disable_docker'] = msg_col2.format('D', 'Enable/disable Docker stats')
         self.view_data['enable_disable_quick_look'] = msg_col.format('3', 'Enable/disable quick look plugin')
         self.view_data['show_hide_ip'] = msg_col2.format('I', 'Show/hide IP module')
@@ -161,6 +162,8 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['enable_disable_top_extends_stats']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line(self.view_data['enable_disable_irix']))
         ret.append(self.curse_new_line())
 
         ret.append(self.curse_new_line())

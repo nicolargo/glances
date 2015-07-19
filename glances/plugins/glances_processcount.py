@@ -126,6 +126,8 @@ class Plugin(GlancesPlugin):
             msg = 'sorted by {0}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
+        # if args.disable_irix:
+        #     ret[-1]["msg"] += " - IRIX off"
 
         # Return the message with decoration
         return ret
