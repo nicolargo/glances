@@ -163,8 +163,8 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        # Only process if stats exist...
-        if not self.stats:
+        # Only process if stats exist and plugin not disable
+        if not self.stats or args.disable_cpu:
             return ret
 
         # Build the string message
