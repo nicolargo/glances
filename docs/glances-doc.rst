@@ -200,6 +200,7 @@ Command-Line Options
   -f PROCESS_FILTER, --process-filter PROCESS_FILTER
                         set the process filter pattern (regular expression)
   --process-short-name  force short name for processes name
+  --disable-irix        Task's cpu usage will be divided by the total number of CPUs
   --hide-kernel-threads
                         hide kernel threads in process list
   --tree                display processes as a tree
@@ -271,6 +272,8 @@ The following commands (key pressed) are supported while in Glances:
     Delete finished warning and critical log messages
 ``z``
     Show/hide processes stats
+``0``
+    Task's cpu usage will be divided by the total number of CPUs
 ``1``
     Switch between global CPU and per-CPU stats
 ``2``
@@ -604,6 +607,7 @@ The number of processes in the list is adapted to the screen size.
 
 ``CPU%``
     % of CPU used by the process
+    If IRIX mode is off (aka Solaris mode), the value is divided by logical core number
 ``MEM%``
     % of MEM used by the process
 ``VIRT``

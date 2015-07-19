@@ -25,6 +25,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
+from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.core.glances_globals import is_windows
 from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -60,6 +61,12 @@ class Plugin(GlancesPlugin):
 
         # Trying to display proc time
         self.tag_proc_time = True
+
+        # Call CorePlugin to get the core number (needed when not in IRIX mode / Solaris mode)
+        try:
+            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
+        except Exception:
+            self.nb_log_core = 0
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
@@ -174,7 +181,10 @@ class Plugin(GlancesPlugin):
         ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
-            msg = '{0:>6.1f}'.format(p['cpu_percent'])
+            if args.disable_irix and self.nb_log_core != 0:
+                msg = '{0:>6.1f}'.format(p['cpu_percent'] / float(self.nb_log_core))
+            else:
+                msg = '{0:>6.1f}'.format(p['cpu_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['cpu_percent'], header="cpu")))
         else:
@@ -393,7 +403,12 @@ class Plugin(GlancesPlugin):
         sort_style = 'SORT'
 
         # Header
-        msg = '{0:>6}'.format('CPU%')
+        if args.disable_irix and 0 < self.nb_log_core < 10:
+            msg = '{0:>6}'.format('CPU%/' + str(self.nb_log_core))
+        elif args.disable_irix and self.nb_log_core != 0:
+            msg = '{0:>6}'.format('CPU%/C')
+        else:
+            msg = '{0:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
         msg = '{0:>6}'.format('MEM%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))

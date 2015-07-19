@@ -252,6 +252,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == 10:
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
+        elif self.pressedkey == ord('0'):
+            # '0' > Switch between IRIX and Solaris mode
+            self.args.disable_irix = not self.args.disable_irix
         elif self.pressedkey == ord('1'):
             # '1' > Switch between CPU and PerCPU information
             self.args.percpu = not self.args.percpu
