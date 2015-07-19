@@ -439,12 +439,12 @@ class _GlancesCurses(object):
             'system').get_stats_display(args=self.args)
         stats_uptime = stats.get_plugin('uptime').get_stats_display()
         if self.args.percpu:
-            stats_percpu = stats.get_plugin('percpu').get_stats_display()
+            stats_percpu = stats.get_plugin('percpu').get_stats_display(args=self.args)
         else:
-            stats_cpu = stats.get_plugin('cpu').get_stats_display()
-        stats_load = stats.get_plugin('load').get_stats_display()
-        stats_mem = stats.get_plugin('mem').get_stats_display()
-        stats_memswap = stats.get_plugin('memswap').get_stats_display()
+            stats_cpu = stats.get_plugin('cpu').get_stats_display(args=self.args)
+        stats_load = stats.get_plugin('load').get_stats_display(args=self.args)
+        stats_mem = stats.get_plugin('mem').get_stats_display(args=self.args)
+        stats_memswap = stats.get_plugin('memswap').get_stats_display(args=self.args)
         stats_network = stats.get_plugin('network').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         try:
