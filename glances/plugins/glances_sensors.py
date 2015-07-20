@@ -32,11 +32,14 @@ from glances.core.glances_logging import logger
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
+import locale
 
 if is_py3:
     SENSOR_TEMP_UNIT = '°C'
 else:
-    SENSOR_TEMP_UNIT = '°C '
+    # ensure UTF-8 characters are in a charset the terminal can understand
+    SENSOR_TEMP_UNIT = '°C '.decode('utf-8').encode(locale.getpreferredencoding())
+
 SENSOR_FAN_UNIT = 'RPM'
 
 
