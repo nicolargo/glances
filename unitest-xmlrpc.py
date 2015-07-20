@@ -86,7 +86,7 @@ class TestGlances(unittest.TestCase):
 
         global pid
 
-        cmdline = "/usr/bin/python -m glances -s -p %s" % SERVER_PORT
+        cmdline = "/usr/bin/env python -m glances -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
