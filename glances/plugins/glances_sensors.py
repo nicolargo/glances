@@ -37,10 +37,9 @@ import locale
 if is_py3:
     SENSOR_TEMP_UNIT = '°C'
 else:
-    SENSOR_TEMP_UNIT = '°C '.decode('utf-8')
+    # ensure UTF-8 characters are in a charset the terminal can understand
+    SENSOR_TEMP_UNIT = '°C '.decode('utf-8').encode(locale.getpreferredencoding())
 
-# ensure UTF-8 characters are in a charset the terminal can understand
-SENSOR_TEMP_UNIT = SENSOR_TEMP_UNIT.encode(locale.getpreferredencoding())
 SENSOR_FAN_UNIT = 'RPM'
 
 
