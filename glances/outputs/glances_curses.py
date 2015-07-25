@@ -521,58 +521,95 @@ class _GlancesCurses(object):
         # ========================================================
         self.init_column()
         self.new_line()
+
         # Init quicklook
         stats_quicklook = {'msgdict': []}
-        # Start with the mandatory stats:
-        # CPU | PERCPU
-        if self.args.percpu:
+        quicklook_width = 0
+
+        # Get stats for CPU, MEM, SWAP and LOAD (if needed)
+        if self.args.disable_cpu:
+            cpu_width = 0
+        elif self.args.percpu:
             cpu_width = self.get_stats_display_width(stats_percpu)
-            quicklook_adapt = 114
         else:
-            cpu_width = self.get_stats_display_width(
-                stats_cpu, without_option=(screen_x < 80))
-            quicklook_adapt = 108
-        l = cpu_width
-        # MEM & SWAP & LOAD
-        l += self.get_stats_display_width(stats_mem,
-                                          without_option=(screen_x < 100))
-        l += self.get_stats_display_width(stats_memswap)
-        l += self.get_stats_display_width(stats_load)
-        # Quicklook plugin size is dynamic
-        l_ql = 0
-        if screen_x > 126 and not self.args.disable_quicklook:
-            # Limit the size to be align with the process
-            quicklook_width = min(screen_x - quicklook_adapt, 87)
+            cpu_width = self.get_stats_display_width(stats_cpu)
+        if self.args.disable_mem:
+            mem_width = 0
+        else:
+            mem_width = self.get_stats_display_width(stats_mem)
+        if self.args.disable_swap:
+            swap_width = 0
+        else:
+            swap_width = self.get_stats_display_width(stats_memswap)
+        if self.args.disable_load:
+            load_width = 0
+        else:
+            load_width = self.get_stats_display_width(stats_load)
+
+        # Size of plugins but quicklook
+        stats_width = cpu_width + mem_width + swap_width + load_width
+
+        # Number of plugin but quicklook
+        stats_number = int(not self.args.disable_cpu and stats_cpu['msgdict'] != []) \
+                       + int(not self.args.disable_mem and stats_mem['msgdict'] != []) \
+                       + int(not self.args.disable_swap and stats_memswap['msgdict'] != []) \
+                       + int(not self.args.disable_load and stats_load['msgdict'] != [])
+
+        if not self.args.disable_quicklook:
+            # Quick look is in the place !
+            quicklook_width = screen_x - (stats_width + 8 + stats_number * self.space_between_column)
+            logger.info("Quicklook plugin size: %s" % quicklook_width)
             try:
                 stats_quicklook = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
             except AttributeError as e:
                 logger.debug("Quicklook plugin not available (%s)" % e)
             else:
-                l_ql = self.get_stats_display_width(stats_quicklook)
-        # Display Quicklook
-        self.display_plugin(stats_quicklook)
-        self.new_column()
-        # Compute space between column
-        space_number = int(stats_quicklook['msgdict'] != [])
-        space_number += int(stats_mem['msgdict'] != [])
-        space_number += int(stats_memswap['msgdict'] != [])
-        space_number += int(stats_load['msgdict'] != [])
-        if space_number < 1:
-            space_number = 1
-        if screen_x > (space_number * self.space_between_column + l):
-            self.space_between_column = int((screen_x - l_ql - l) / space_number)
-        # Display others stats
+                quicklook_width = self.get_stats_display_width(stats_quicklook)
+                stats_width += quicklook_width + 1
+            self.space_between_column = 1
+            self.display_plugin(stats_quicklook)
+            self.new_column()
+
+        # Compute spaces between plugins
+        # Note: Only one space between Quicklook and others
+        display_optional_cpu = True
+        display_optional_mem = True
+        if stats_number > 1:
+            self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
+            # No space ? Remove optionnal MEM stats
+            if self.space_between_column < 3:
+                display_optional_mem = False
+                if self.args.disable_mem:
+                    mem_width = 0
+                else:
+                    mem_width = self.get_stats_display_width(stats_mem, without_option=True)
+                stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
+                self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
+            # No space again ? Remove optionnal CPU stats
+            if self.space_between_column < 3:
+                display_optional_cpu = False
+                if self.args.disable_cpu:
+                    cpu_width = 0
+                else:
+                    cpu_width = self.get_stats_display_width(stats_cpu, without_option=True)
+                stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
+                self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
+        else:
+            self.space_between_column = 0
+
+        # Display CPU, MEM, SWAP and LOAD
         if self.args.percpu:
             self.display_plugin(stats_percpu)
         else:
-            self.display_plugin(stats_cpu, display_optional=(screen_x >= 80))
+            self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
         self.new_column()
-        self.display_plugin(stats_mem, display_optional=(screen_x >= 100))
+        self.display_plugin(stats_mem, display_optional=display_optional_mem)
         self.new_column()
         self.display_plugin(stats_memswap)
         self.new_column()
         self.display_plugin(stats_load)
+
         # Space between column
         self.space_between_column = 3
 

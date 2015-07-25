@@ -11,6 +11,7 @@ Enhancements and new features:
     * Server password configuration for the browser mode (issue #500)
     * Support Fahrenheit unit in the sensor plugin using the --fahrenheit command line option (issue #620) 
     * Display an error if export is not used in the standalone/client mode (issue #614)  
+    * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
 
 Version 2.4.2
 =============
