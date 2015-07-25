@@ -93,6 +93,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if plugin not disable
+        if args.disable_cpu:
+            return ret
+
         # No per CPU stat ? Exit...
         if not self.stats:
             msg = 'PER CPU not available'

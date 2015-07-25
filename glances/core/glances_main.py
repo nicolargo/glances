@@ -100,6 +100,14 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
         # Enable or disable option on startup
+        parser.add_argument('--disable-cpu', action='store_true', default=False,
+                            dest='disable_cpu', help='disable CPU module')
+        parser.add_argument('--disable-mem', action='store_true', default=False,
+                            dest='disable_mem', help='disable memory module')
+        parser.add_argument('--disable-swap', action='store_true', default=False,
+                            dest='disable_swap', help='disable swap module')
+        parser.add_argument('--disable-load', action='store_true', default=False,
+                            dest='disable_load', help='disable load module')
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help='disable network module')
         parser.add_argument('--disable-ip', action='store_true', default=False,
