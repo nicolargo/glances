@@ -26,6 +26,9 @@ try:
 except ImportError:
     pass
 
+# Import system libs
+import locale
+
 # Import Glances lib
 from glances.core.glances_globals import is_py3
 from glances.core.glances_logging import logger
@@ -36,7 +39,9 @@ from glances.plugins.glances_plugin import GlancesPlugin
 if is_py3:
     SENSOR_TEMP_UNIT = '°C'
 else:
-    SENSOR_TEMP_UNIT = '°C '
+    # ensure UTF-8 characters are in a charset the terminal can understand
+    SENSOR_TEMP_UNIT = u'°C '.encode(locale.getpreferredencoding(), 'ignore')
+
 SENSOR_FAN_UNIT = 'RPM'
 
 
