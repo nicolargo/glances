@@ -129,7 +129,7 @@ class Plugin(GlancesPlugin):
                     'mnt_point': fs.mountpoint,
                     'size': fs_usage.total,
                     'used': fs_usage.used,
-                    'free': fs_usage.total - fs_usage.used,
+                    'free': fs_usage.free,
                     'percent': fs_usage.percent,
                     'key': self.get_key()}
                 self.stats.append(fs_current)
