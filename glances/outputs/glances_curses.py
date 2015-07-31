@@ -439,7 +439,7 @@ class _GlancesCurses(object):
             'system').get_stats_display(args=self.args)
         stats_uptime = stats.get_plugin('uptime').get_stats_display()
         if self.args.percpu:
-            stats_percpu = stats.get_plugin('percpu').get_stats_display(args=self.args)
+            stats_cpu = stats.get_plugin('percpu').get_stats_display(args=self.args)
         else:
             stats_cpu = stats.get_plugin('cpu').get_stats_display(args=self.args)
         stats_load = stats.get_plugin('load').get_stats_display(args=self.args)
@@ -529,8 +529,6 @@ class _GlancesCurses(object):
         # Get stats for CPU, MEM, SWAP and LOAD (if needed)
         if self.args.disable_cpu:
             cpu_width = 0
-        elif self.args.percpu:
-            cpu_width = self.get_stats_display_width(stats_percpu)
         else:
             cpu_width = self.get_stats_display_width(stats_cpu)
         if self.args.disable_mem:
@@ -550,10 +548,11 @@ class _GlancesCurses(object):
         stats_width = cpu_width + mem_width + swap_width + load_width
 
         # Number of plugin but quicklook
-        stats_number = int(not self.args.disable_cpu and stats_cpu['msgdict'] != []) \
-                       + int(not self.args.disable_mem and stats_mem['msgdict'] != []) \
-                       + int(not self.args.disable_swap and stats_memswap['msgdict'] != []) \
-                       + int(not self.args.disable_load and stats_load['msgdict'] != [])
+        stats_number = (
+            int(not self.args.disable_cpu and stats_cpu['msgdict'] != []) +
+            int(not self.args.disable_mem and stats_mem['msgdict'] != []) +
+            int(not self.args.disable_swap and stats_memswap['msgdict'] != []) +
+            int(not self.args.disable_load and stats_load['msgdict'] != []))
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
@@ -598,10 +597,7 @@ class _GlancesCurses(object):
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        if self.args.percpu:
-            self.display_plugin(stats_percpu)
-        else:
-            self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
+        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
         self.new_column()
         self.display_plugin(stats_mem, display_optional=display_optional_mem)
         self.new_column()
