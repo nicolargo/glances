@@ -19,7 +19,10 @@
 
 """Per-CPU plugin."""
 
+from glances.core.glances_cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.core.glances_logging import logger
+
 
 import psutil
 
@@ -58,30 +61,7 @@ class Plugin(GlancesPlugin):
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
-            percpu_times_percent = psutil.cpu_times_percent(interval=0.0, percpu=True)
-            for cpu_number, cputimes in enumerate(percpu_times_percent):
-                cpu = {'key': self.get_key(),
-                       'cpu_number': cpu_number,
-                       'total': round(100 - cputimes.idle, 1),
-                       'user': cputimes.user,
-                       'system': cputimes.system,
-                       'idle': cputimes.idle}
-                # The following stats are for API purposes only
-                if hasattr(cputimes, 'nice'):
-                    cpu['nice'] = cputimes.nice
-                if hasattr(cputimes, 'iowait'):
-                    cpu['iowait'] = cputimes.iowait
-                if hasattr(cputimes, 'irq'):
-                    cpu['irq'] = cputimes.irq
-                if hasattr(cputimes, 'softirq'):
-                    cpu['softirq'] = cputimes.softirq
-                if hasattr(cputimes, 'steal'):
-                    cpu['steal'] = cputimes.steal
-                if hasattr(cputimes, 'guest'):
-                    cpu['guest'] = cputimes.guest
-                if hasattr(cputimes, 'guest_nice'):
-                    cpu['guest_nice'] = cputimes.guest_nice
-                self.stats.append(cpu)
+            self.stats = cpu_percent.get(percpu=True)
         else:
             # Update stats using SNMP
             pass
