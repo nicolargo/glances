@@ -124,14 +124,14 @@ Start the client browser (browser mode):\n\
                             dest='disable_raid', help='disable RAID module')
         parser.add_argument('--disable-docker', action='store_true', default=False,
                             dest='disable_docker', help='disable Docker module')
-        parser.add_argument('--disable-left-sidebar', action='store_true',
+        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
                             default=False, dest='disable_left_sidebar',
                             help='disable network, disk I/O, FS and sensors modules (py3sensors needed)')
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help='disable process module')
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help='disable log module')
-        parser.add_argument('--disable-quicklook', action='store_true', default=False,
+        parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
                             dest='disable_quicklook', help='disable quick look module')
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help='disable bold mode in the terminal')
@@ -188,7 +188,7 @@ Start the client browser (browser mode):\n\
                             dest='process_filter', help='set the process filter pattern (regular expression)')
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
-        parser.add_argument('--disable-irix', action='store_true', default=False,
+        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
                             dest='disable_irix', help='Task\'s cpu usage will be divided by the total number of CPUs')
         if not is_windows:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,

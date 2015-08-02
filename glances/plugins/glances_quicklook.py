@@ -22,6 +22,7 @@
 from glances.core.glances_cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.core.glances_logging import logger
 
 import psutil
 
@@ -57,6 +58,7 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Get the latest CPU percent value
             self.stats['cpu'] = cpu_percent.get()
+            self.stats['percpu'] = cpu_percent.get(percpu=True)
             # Use the PsUtil lib for the memory (virtual and swap)
             self.stats['mem'] = psutil.virtual_memory().percent
             self.stats['swap'] = psutil.swap_memory().percent
@@ -94,13 +96,26 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for key in ['cpu', 'mem', 'swap']:
-            bar.percent = self.stats[key]
-            msg = '{0:4} '.format(key.upper())
-            ret.append(self.curse_add_line(msg))
-            ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
-            ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
-            ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
-            ret.append(self.curse_new_line())
+            if key == 'cpu' and args.percpu:
+                for cpu in self.stats['percpu']:
+                    bar.percent = cpu['total']
+                    if cpu[cpu['key']] < 10:
+                        msg = '{0:3}{1} '.format(key.upper(), cpu['cpu_number'])
+                    else:
+                        msg = '{0:4} '.format(cpu['cpu_number'])
+                    ret.append(self.curse_add_line(msg))
+                    ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
+                    ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
+                    ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
+                    ret.append(self.curse_new_line())
+            else:
+                bar.percent = self.stats[key]
+                msg = '{0:4} '.format(key.upper())
+                ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
+                ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
+                ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
+                ret.append(self.curse_new_line())
 
         # Return the message with decoration
         return ret
