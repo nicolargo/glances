@@ -100,6 +100,10 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
         # Enable or disable option on startup
+        parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
+                            dest='disable_quicklook', help='disable quick look module')
+        parser.add_argument('-4', '--full-quicklook', action='store_true', default=False,
+                            dest='full_quicklook', help='disable all but quick look and load')
         parser.add_argument('--disable-cpu', action='store_true', default=False,
                             dest='disable_cpu', help='disable CPU module')
         parser.add_argument('--disable-mem', action='store_true', default=False,
@@ -131,8 +135,6 @@ Start the client browser (browser mode):\n\
                             dest='disable_process', help='disable process module')
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help='disable log module')
-        parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
-                            dest='disable_quicklook', help='disable quick look module')
         parser.add_argument('--disable-bold', action='store_false', default=True,
                             dest='disable_bold', help='disable bold mode in the terminal')
         parser.add_argument('--enable-process-extended', action='store_true', default=False,

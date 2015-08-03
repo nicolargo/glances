@@ -264,6 +264,21 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('3'):
             # '3' > Enable/disable quicklook
             self.args.disable_quicklook = not self.args.disable_quicklook
+        elif self.pressedkey == ord('4'):
+            # '4' > Enable/disable all but quick look and load
+            self.args.full_quicklook = not self.args.full_quicklook
+            if self.args.full_quicklook:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = True
+                self.args.disable_mem = True
+                self.args.disable_swap = True
+                self.args.disable_load = False
+            else:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = False
+                self.args.disable_mem = False
+                self.args.disable_swap = False
+                self.args.disable_load = False
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name

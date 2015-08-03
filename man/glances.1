@@ -31,6 +31,24 @@ enable debug mode (log file is /tmp/glances.log)
 .B \-C CONF_FILE, \-\-config CONF_FILE
 path to the configuration file
 .TP
+.B \-\-disable-quicklook
+disable quick look module
+.TP
+.B \-\-full-quicklook
+disable all but quick look and load modules
+.TP
+.B \-\-disable-cpu
+disable CPU module
+.TP
+.B \-\-disable-mem
+disable MEM module
+.TP
+.B \-\-disable-swap
+disable SWAP module
+.TP
+.B \-\-disable-load
+disable LOAD module
+.TP
 .B \-\-disable-network
 disable network module
 .TP
@@ -63,9 +81,6 @@ disable process module
 .TP
 .B \-\-disable-log
 disable log module
-.TP
-.B \-\-disable-quicklook
-disable quick look module
 .TP
 .B \-\-disable-bold
 disable bold mode in the terminal
@@ -260,6 +275,9 @@ Enable/disable left sidebar
 .TP
 .B 3
 Enable/disable the quick look module
+.TP
+.B 4
+Enable/disable all but quick look and load module
 .TP
 .B /
 Switch between short name/command line (processes name)
