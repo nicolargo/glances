@@ -147,6 +147,12 @@ Command-Line Options
   -d, --debug           enable debug mode
   -C CONF_FILE, --config CONF_FILE
                         path to the configuration file
+  --disable-quicklook   disable quick look module
+  --full-quicklook      enable all but quick look and load
+  --disable-cpu         disable CPU module
+  --disable-mem         disable MEM module
+  --disable-swap        disable SWAP module
+  --disable-load        disable LOAD module
   --disable-network     disable network module
   --disable-ip          disable IP module
   --disable-diskio      disable disk I/O module
@@ -160,7 +166,6 @@ Command-Line Options
                         sensors modules (py3sensors needed)
   --disable-process     disable process module
   --disable-log         disable log module
-  --disable-quicklook   disable quick look module
   --disable-bold        disable bold mode in the terminal
   --enable-process-extended
                         enable extended stats on top process
@@ -280,6 +285,8 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable left sidebar
 ``3``
     Enable/disable the quick look module
+``4``
+    Enable/disable all but quick look and load module
 ``/``
     Switch between short name / command line (processes name)
 
