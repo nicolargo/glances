@@ -148,6 +148,8 @@ Start the client browser (browser mode):\n\
                             dest='export_csv', help='export stats to a CSV file')
         parser.add_argument('--export-influxdb', action='store_true', default=False,
                             dest='export_influxdb', help='export stats to an InfluxDB server (influxdb needed)')
+        parser.add_argument('--export-opentsdb', action='store_true', default=False,
+                            dest='export_opentsdb', help='export stats to an OpenTSDB server (potsdb needed)')
         parser.add_argument('--export-statsd', action='store_true', default=False,
                             dest='export_statsd', help='export stats to a StatsD server (statsd needed)')
         parser.add_argument('--export-rabbitmq', action='store_true', default=False,
@@ -270,7 +272,7 @@ Start the client browser (browser mode):\n\
         self.args = args
 
         # Export is only available in standalone or client mode (issue #614)
-        export_tag = args.export_csv or args.export_statsd or args.export_influxdb or args.export_rabbitmq
+        export_tag = args.export_csv or args.export_statsd or args.export_influxdb or args.export_opentsdb or args.export_rabbitmq
         if not (self.is_standalone() or self.is_client()) and export_tag:
             logger.critical("Export is only available in standalone or client mode")
             sys.exit(2)
