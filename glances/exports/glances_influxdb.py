@@ -94,18 +94,6 @@ class Export(GlancesExport):
 
         return True
 
-    def parse_tags(self):
-        """ Parses some tags into a dict"""
-        if self.tags:
-            try:
-                self.tags = dict([x.split(':') for x in self.tags.split(',')])
-            except ValueError:
-                # one of the keyvalue pairs was missing
-                logger.info('invalid tags passed: %s', self.tags)
-                self.tags = {}
-        else:
-            self.tags = {}
-
     def init(self):
         """Init the connection to the InfluxDB server."""
         if not self.export_enable:
@@ -140,6 +128,7 @@ class Export(GlancesExport):
             logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
             sys.exit(2)
 
+        # Read tags
         self.parse_tags()
 
         return db

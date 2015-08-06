@@ -80,6 +80,18 @@ class GlancesExport(object):
         else:
             return ret
 
+    def parse_tags(self):
+        """ Parses some tags into a dict"""
+        if self.tags:
+            try:
+                self.tags = dict([x.split(':') for x in self.tags.split(',')])
+            except ValueError:
+                # one of the keyvalue pairs was missing
+                logger.info('invalid tags passed: %s', self.tags)
+                self.tags = {}
+        else:
+            self.tags = {}
+
     def update(self, stats):
         """Update stats to a server.
 

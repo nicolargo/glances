@@ -175,6 +175,7 @@ Command-Line Options
   --export-csv EXPORT_CSV
                         export stats to a CSV file
   --export-influxdb     export stats to an InfluxDB server (influxdb needed)
+  --export-opentsdb     export stats to an OpenTSDB server (potsdb needed)
   --export-statsd       export stats to a StatsD server (statsd needed)
   --export-rabbitmq     export stats to a RabbitMQ server (pika needed)
   -c CLIENT, --client CLIENT
@@ -841,6 +842,27 @@ For Grafana users, Glances provides a dedicated `dashboard`_. Just import
 the file in your ``Grafana`` web interface.
 
 .. image:: images/grafana.png
+
+OpenTSDB
+--------
+
+You can export statistics to an ``OpenTSDB`` server (time series server).
+The connection should be defined in the Glances configuration file as
+following:
+
+.. code-block::
+
+    [opentsdb]
+    host=localhost
+    port=4242
+    prefix=glances
+    tags=foo:bar,spam:eggs
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-opentsdb
 
 Statsd
 ------
