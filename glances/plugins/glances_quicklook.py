@@ -98,7 +98,11 @@ class Plugin(GlancesPlugin):
         for key in ['cpu', 'mem', 'swap']:
             if key == 'cpu' and args.percpu:
                 for cpu in self.stats['percpu']:
-                    bar.percent = cpu['total']
+                    try:
+                        bar.percent = cpu['total']
+                    except AssertionError:
+                        logger.error("Quicklook: {} percent error 0 < {} > 100".format(key, cpu['total']))
+                        continue
                     if cpu[cpu['key']] < 10:
                         msg = '{0:3}{1} '.format(key.upper(), cpu['cpu_number'])
                     else:
@@ -109,7 +113,11 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
                     ret.append(self.curse_new_line())
             else:
-                bar.percent = self.stats[key]
+                try:
+                    bar.percent = self.stats[key]
+                except AssertionError:
+                    logger.error("Quicklook: {} percent error 0 < {} > 100".format(key, self.stats[key]))
+                    continue
                 msg = '{0:4} '.format(key.upper())
                 ret.append(self.curse_add_line(msg))
                 ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
