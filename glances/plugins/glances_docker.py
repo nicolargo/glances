@@ -157,7 +157,11 @@ class Plugin(GlancesPlugin):
             #     "Os": "linux",
             #     "GoVersion": "go1.3.3"
             # }
-            self.stats['version'] = self.docker_client.version()
+            try:
+                self.stats['version'] = self.docker_client.version()
+            except Exception as e:
+                # Correct issue#649
+                logger.error("Plugin can not get Docker version ({})".format(e))
             # Example: [{u'Status': u'Up 36 seconds',
             #            u'Created': 1420378904,
             #            u'Image': u'nginx:1',
