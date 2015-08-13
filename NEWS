@@ -9,10 +9,14 @@ Enhancements and new features:
 
     * Allow export of Docker and sensors plugins stats to InfluxDB, StatsD... (issue #600)
     * Server password configuration for the browser mode (issue #500)
-    * Add support for OpenTSDB export (issue #638) 
-    * Support Fahrenheit unit in the sensor plugin using the --fahrenheit command line option (issue #620) 
-    * Display an error if export is not used in the standalone/client mode (issue #614)  
+    * Add support for OpenTSDB export (issue #638)
+    * Support Fahrenheit unit in the sensor plugin using the --fahrenheit command line option (issue #620)
+    * Display an error if export is not used in the standalone/client mode (issue #614)
     * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
+
+Bugs corrected:
+
+    *  Crach with Docker plugin (issue #649)
 
 Version 2.4.2
 =============
@@ -57,7 +61,7 @@ Enhancements and new features:
     * Grab FAN speed in the Glances sensors plugin (issue #501)
     * Allow logical mounts points in the FS plugin (issue #448)
     * Add a --disable-hddtemp to disable HDD temperature module at startup (issue #515)
-    * Increase alert minimal delay to 6 seconds (issue #522) 
+    * Increase alert minimal delay to 6 seconds (issue #522)
     * If the Curses application raises an exception, restore the terminal correctly (issue #537)
 
 Bugs corrected:
@@ -75,7 +79,7 @@ Version 2.3
 
 Enhancements and new features:
 
-    * Add the Docker plugin (issue #440) with per container CPU and memory monitoring (issue #490) 
+    * Add the Docker plugin (issue #440) with per container CPU and memory monitoring (issue #490)
     * Add the RAID plugin (issue #447)
     * Add actions on alerts (issue #132). It is now possible to run action (command line) by triggers. Action could contain {{tag}} (Mustache) with stat value.
     * Add InfluxDB export module (--export-influxdb) (issue #455)
@@ -89,10 +93,10 @@ Enhancements and new features:
 
 Bugs corrected:
 
-    *  R/W error with the glances.log file (issue #474) 
+    *  R/W error with the glances.log file (issue #474)
 
 Other enhancement:
-    
+
     * Alert < 3 seconds are no longer displayed
 
 Version 2.2.1
@@ -100,7 +104,7 @@ Version 2.2.1
 
     * Fix incorrect kernel thread detection with --hide-kernel-threads (issue #457)
     * Handle IOError exception if no /etc/os-release to use Glances on Synology DSM (issue #458)
-    * Check issue error in client/server mode (issue #459) 
+    * Check issue error in client/server mode (issue #459)
 
 Version 2.2
 ===========
@@ -157,11 +161,11 @@ Version 2.1
       or by pressing the ENTER key in the curse interface.
       For the moment, process filter feature is only available in standalone mode.
     * Add extended processes informations for top process
-      Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), open threads/files and TCP/UDP network sessions, IO nice level 
+      Top process stats availables: CPU affinity, extended memory information (shared, text, lib, datat, dirty, swap), open threads/files and TCP/UDP network sessions, IO nice level
       For the moment, extended processes stats are only available in standalone mode.
     * Add --process-short-name tag and '/' key to switch between short/command line
     * Create a max_processes key in the configuration file
-      The goal is to reduce the number of displayed processes in the curses UI and 
+      The goal is to reduce the number of displayed processes in the curses UI and
       so limit the CPU footprint of the Glances standalone mode.
       The API always return all the processes, the key is only active in the curses UI.
       If the key is not define, all the processes will be displayed.
@@ -188,7 +192,7 @@ Bugs corrected:
     * Quitting glances leaves a column layout to the current terminal (issue #392)
     * Glances crashes with malformed UTF-8 sequences in process command lines (issue #391)
     * SNMP fallback mode is not Python 3 compliant (issue #386)
-    * Trouble using batinfo, hddtemp, pysensors w/ Python (issue #324) 
+    * Trouble using batinfo, hddtemp, pysensors w/ Python (issue #324)
 
 
 Version 2.0.1
@@ -204,7 +208,7 @@ Bugs corrected:
     * The sda2 partition is not seen by glances (#376)
     * Client crash if server is ended during XML request (#375)
     * Error with the Sensors module on Debian/Ubuntu (#373)
-    * Windows don't view all processes (#319) 
+    * Windows don't view all processes (#319)
 
 Version 2.0
 ===========
