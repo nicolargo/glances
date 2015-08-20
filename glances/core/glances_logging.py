@@ -43,6 +43,9 @@ LOGGING_CFG = {
         },
         'short': {
             'format': '%(levelname)s: %(message)s'
+        },
+        'free': {
+            'format': '%(message)s'
         }
     },
     'handlers': {
@@ -56,7 +59,7 @@ LOGGING_CFG = {
         'console': {
             'level': 'CRITICAL',
             'class': 'logging.StreamHandler',
-            'formatter': 'short'
+            'formatter': 'free'
         }
     },
     'loggers': {
