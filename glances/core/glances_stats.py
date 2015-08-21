@@ -225,9 +225,12 @@ class GlancesStats(object):
 
     def end(self):
         """End of the Glances stats."""
-        # Close the export module
+        # Close export modules
         for e in self._exports:
             self._exports[e].exit()
+        # Close plugins
+        for p in self._plugins:
+            self._plugins[p].exit()
 
 
 class GlancesStatsServer(GlancesStats):
