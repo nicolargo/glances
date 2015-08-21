@@ -571,7 +571,7 @@ class _GlancesCurses(object):
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
-            quicklook_width = screen_x - (stats_width + 8 + stats_number * self.space_between_column)
+            quicklook_width = min(screen_x - (stats_width + 8 + stats_number * self.space_between_column), 79)
             try:
                 stats_quicklook = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
