@@ -150,10 +150,13 @@ glancesApp.controller('statsController', function($scope, $http, $interval, $q, 
             $scope.is_mac = response['system'].os_name === 'Darwin';
             $scope.is_windows = response['system'].os_name === 'Windows';
 
+            $scope.is_disconnected = false;
+
             $scope.result = response;
             canceler.resolve()
         }).error(function(d, status, headers, config) {
-            console.log('error status:' + status + " - headers = " + headers);
+            $scope.is_disconnected = true;
+
             canceler.resolve()
         });
     }
