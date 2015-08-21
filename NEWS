@@ -8,15 +8,18 @@ Version 2.5
 Enhancements and new features:
 
     * Allow export of Docker and sensors plugins stats to InfluxDB, StatsD... (issue #600)
+    * Docker plugin shows network interface bitrate (issue #520)
     * Server password configuration for the browser mode (issue #500)
     * Add support for OpenTSDB export (issue #638)
     * Support Fahrenheit unit in the sensor plugin using the --fahrenheit command line option (issue #620)
+    * WebUI display a message if server is not available (issue #564)
     * Display an error if export is not used in the standalone/client mode (issue #614)
     * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
 
 Bugs corrected:
 
-    *  Crach with Docker plugin (issue #649)
+    * Crach with Docker plugin (issue #649)
+
 
 Version 2.4.2
 =============
