@@ -433,7 +433,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, splittable=True))
 
         return ret
 
