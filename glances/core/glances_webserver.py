@@ -51,3 +51,4 @@ class GlancesWebServer(object):
     def end(self):
         """End of the Web server."""
         self.web.end()
+        self.stats.end()
