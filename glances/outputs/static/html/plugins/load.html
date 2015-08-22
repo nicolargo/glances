@@ -1,24 +1,24 @@
 <div class="table">
     <div class="table-row">
         <div class="table-cell text-left title">LOAD</div>
-        <div class="table-cell">{{result["load"].cpucore}}-core</div>
+        <div class="table-cell">{{ statsLoad.cpucore }}-core</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">1 min:</div>
         <div class="table-cell">
-            {{result["load"].min1 | number : 2}}
+            {{ statsLoad.min1 | number : 2}}
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">5 min:</div>
-        <div class="table-cell" ng-class="getAlert('load', 'load_', result['load'].min5, 100 * result['load'].cpucore)">
-            {{result["load"].min5 | number : 2}}
+        <div class="table-cell" ng-class="statsLoad.getDecoration('min5')">
+            {{ statsLoad.min5 | number : 2}}
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">15 min:</div>
-        <div class="table-cell" ng-class="getAlertLog('load', 'load_', result['load'].min15, 100 * result['load'].cpucore)">
-            {{result["load"].min15 | number : 2}}
+        <div class="table-cell" ng-class="statsLoad.getDecoration('min15')">
+            {{ statsLoad.min15 | number : 2}}
         </div>
     </div>
 </div>

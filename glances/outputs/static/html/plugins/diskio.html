@@ -3,8 +3,8 @@
     <div class="table-cell">R/s</div>
     <div class="table-cell">W/s</div>
 </div>
-<div class="table-row" ng-repeat="disk in result['diskio'] | orderBy: 'disk_name'">
-    <div class="table-cell text-left">{{disk.disk_name | min_size}}</div>
-    <div class="table-cell">{{disk.read_bytes | bytes}}</div>
-    <div class="table-cell">{{disk.write_bytes | bytes}}</div>
+<div class="table-row" ng-repeat="disk in statsDiskio.disks | orderBy: 'name'">
+    <div class="table-cell text-left">{{disk.name | min_size}}</div>
+    <div class="table-cell">{{disk.readBytes | bytes}}</div>
+    <div class="table-cell">{{disk.writeBytes | bytes}}</div>
 </div>

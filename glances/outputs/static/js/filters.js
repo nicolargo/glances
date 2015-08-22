@@ -20,7 +20,7 @@ glancesApp.filter('bytes', function() {
     return function (bytes, low_precision) {
         low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0){
-            return '0';
+            return bytes;
         }
 
         var symbols = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
@@ -82,5 +82,29 @@ glancesApp.filter('leftPad', function($filter) {
       length = length || 0;
       chars = chars || ' ';
       return _.padLeft(value, length, chars);
+    }
+});
+
+glancesApp.filter('timemillis', function() {
+    return function (array) {
+      var sum = 0.0;
+      for (var i = 0; i < array.length; i++) {
+          sum += array[i] * 1000.0;
+      }
+      return sum;
+    }
+});
+
+glancesApp.filter('timedelta', function($filter) {
+    return function (value) {
+      var sum = $filter('timemillis')(value);
+      var d = new Date(sum);
+
+      return {
+        hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24)))
+        minutes: d.getUTCMinutes(),
+        seconds: d.getUTCSeconds(),
+        milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
+      };
     }
 });
