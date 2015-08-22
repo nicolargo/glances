@@ -1,6 +1,6 @@
 <span class="title">TASKS</span>
-<span>{{result["processcount"].total}} ({{result["processcount"].thread}} thr),</span>
-<span>{{result["processcount"].running}} run,</span>
-<span>{{result["processcount"].sleeping}} slp,</span>
-<span>{{result["processcount"].stopped}} oth</span>
+<span>{{ statsProcessCount.total }} ({{ statsProcessCount.thread }} thr),</span>
+<span>{{ statsProcessCount.running }} run,</span>
+<span>{{ statsProcessCount.sleeping }} slp,</span>
+<span>{{ statsProcessCount.stopped }} oth</span>
 <span> sorted {{ sorter.auto ? 'automatically' : '' }} by {{ sorter.getColumnLabel(sorter.column) }}, flat view</span>

@@ -1,20 +1,20 @@
 <div class="table">
     <div class="table-row">
         <div class="table-cell text-left title">SWAP</div>
-        <div class="table-cell">{{result["memswap"].percent}}%</div>
+        <div class="table-cell">{{ statsMemSwap.percent }}%</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">total:</div>
-        <div class="table-cell">{{result["memswap"].total | bytes}}</div>
+        <div class="table-cell">{{ statsMemSwap.total | bytes }}</div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">used:</div>
-        <div class="table-cell" ng-class="getAlertLog('memswap', 'memswap_', result['memswap'].percent)">
-            {{result["memswap"].used | bytes}}
+        <div class="table-cell" ng-class="statsMemSwap.getDecoration('used')">
+            {{ statsMemSwap.used | bytes }}
         </div>
     </div>
     <div class="table-row">
         <div class="table-cell text-left">free:</div>
-        <div class="table-cell">{{result["memswap"].free | bytes}}</div>
+        <div class="table-cell">{{ statsMemSwap.free | bytes }}</div>
     </div>
 </div>

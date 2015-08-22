@@ -1,2 +1,2 @@
-<span class="title" ng-show="!result['alert'].length">No warning or critical alert detected</span>
-<span class="title" ng-show="result['alert'].length">Warning or critical alerts (lasts {{result['alert'].length}} entries)</span>
+<span class="title" ng-show="!statsAlert.hasAlerts()">No warning or critical alert detected</span>
+<span class="title" ng-show="statsAlert.hasAlerts()">Warning or critical alerts (lasts {{statsAlert.count()}} entries)</span>
