@@ -28,7 +28,6 @@ import time
 from glances.core.glances_logging import logger
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.core.glances_timer import Timer
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
@@ -202,7 +201,7 @@ class Plugin(GlancesPlugin):
                     # Thread did not exist in the internal dict
                     # Create it and add it to the internal dict
                     logger.debug("{} plugin - Create thread for container {}".format(self.plugin_name, container['Id'][:12]))
-                    t = ThreadDockerGrabber(self.docker_client, container['Id'], self.args.time)
+                    t = ThreadDockerGrabber(self.docker_client, container['Id'])
                     self.thread_list[container['Id']] = t
                     t.start()
 
@@ -452,14 +451,12 @@ class ThreadDockerGrabber(threading.Thread):
     stats is a dict
     """
 
-    def __init__(self, docker_client, container_id, refresh_time=3):
+    def __init__(self, docker_client, container_id):
         """Init the class:
         docker_client: instance of Docker-py client
         container_id: Id of the container"""
         logger.debug("docker plugin - Create thread for container {}".format(container_id[:12]))
         super(ThreadDockerGrabber, self).__init__()
-        # Refresh time for sub thread
-        self._refresh_time = refresh_time
         # Event needed to stop properly the thread
         self._stop = threading.Event()
         # The docker-py return stats as a stream
@@ -474,12 +471,6 @@ class ThreadDockerGrabber(threading.Thread):
 
         for i in self._stats_stream:
             self._stats = i
-            # countdown = Timer(self._refresh_time)
-            # while not countdown.finished() and not is_stopped:
-            #     is_stopped = self.stopped()
-            #     time.sleep(0.1)
-            # if is_stopped:
-            #     break
             time.sleep(0.1)
             if self.stopped():
                 break
