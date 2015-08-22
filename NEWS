@@ -15,6 +15,7 @@ Enhancements and new features:
     * WebUI display a message if server is not available (issue #564)
     * Display an error if export is not used in the standalone/client mode (issue #614)
     * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
+    * Complete refactoring of the WebUI thanks to the Floran pull (issue #656)
 
 Bugs corrected:
 
