@@ -22,6 +22,7 @@
 import json
 import os
 import sys
+import tempfile
 
 from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
@@ -213,24 +214,22 @@ class GlancesBottle(object):
         """
         response.content_type = 'application/json'
 
-        if not self.args.debug:
-            # Update the stat
-            self.stats.update()
+        if self.args.debug:
+            path = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
+            if os.path.isfile(path):
+                f = open(path)
+                return f.read()
 
-            try:
-                # Get the JSON value of the stat ID
-                statval = json.dumps(self.stats.getAllAsDict())
-            except Exception as e:
-                abort(404, "Cannot get stats (%s)" % str(e))
-            return statval
-        else:
-            path = "~/glances/"
-            if is_windows:
-                path = "D:\\glances\\"
-            filepath = path + "debug.json"
+        # Update the stat
+        self.stats.update()
 
-            f = open(filepath)
-            return f.read()
+        try:
+            # Get the JSON value of the stat ID
+            statval = json.dumps(self.stats.getAllAsDict())
+        except Exception as e:
+            abort(404, "Cannot get stats (%s)" % str(e))
+        return statval
+
 
     def _api_all_limits(self):
         """Glances API RESTFul implementation.
