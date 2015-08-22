@@ -20,6 +20,7 @@ Enhancements and new features:
 Bugs corrected:
 
     * Crach with Docker plugin (issue #649)
+    * The WebUI displays bad sensors stats (issue #632)
 
 
 Version 2.4.2
