@@ -11,7 +11,11 @@ glancesApp.service('GlancesPluginNetwork', function() {
             var network = {
                 'interfaceName': networkData['interface_name'],
                 'rx': networkData['rx'],
-                'tx': networkData['tx']
+                'tx': networkData['tx'],
+                'cx': networkData['cx'],
+                'cumulativeRx': networkData['cumulative_rx'],
+                'cumulativeTx': networkData['cumulative_tx'],
+                'cumulativeCx': networkData['cumulative_cx']
             };
 
             this.networks.push(network);
