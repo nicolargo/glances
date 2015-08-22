@@ -4,11 +4,13 @@ glancesApp.service('GlancesPluginSensors', function(GlancesPlugin) {
     this.sensors = [];
 
     this.setData = function(data, views) {
-        _.remove(data[_pluginName], function(sensor) {
-            return sensor.type == "battery" && _.isArray(sensor.value) && _.isEmpty(sensor.value);
+        data = data[_pluginName];
+
+        _.remove(data, function(sensor) {
+            return (_.isArray(sensor.value) && _.isEmpty(sensor.value)) || sensor.value === 0;
         });
 
-        this.sensors = data[_pluginName];
+        this.sensors = data;
     };
 
     this.getAlert = function(sensor) {
