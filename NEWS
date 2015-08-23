@@ -16,6 +16,7 @@ Enhancements and new features:
     * Display an error if export is not used in the standalone/client mode (issue #614)
     * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
     * Complete refactoring of the WebUI thanks to the Floran pull (issue #656)
+    * Network cumulative /combination feature available in the WebUI (issue #552)
 
 Bugs corrected:
 
