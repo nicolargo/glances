@@ -32,7 +32,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
         'network_io_combination': false,
         'network_io_cumulative': false,
         'filesystem_freespace': false,
-        'network_by_bytes': true
+        'network_by_bytes': false
     };
 
     $scope.init_refresh_time = function () {
@@ -132,10 +132,10 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
         } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
             $scope.sorter.column = ['io_read', 'io_write'];
             $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.t) {//t  Sort processes by CPU times
+        } else if ($event.keyCode == keycodes.t && !$event.shiftKey) {//t  Sort processes by CPU times
             $scope.sorter.column = "timemillis";
             $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.u) {//t  Sort processes by user
+        } else if ($event.keyCode == keycodes.u && !$event.shiftKey) {//t  Sort processes by user
             $scope.sorter.column = "username";
             $scope.sorter.auto = false;
         } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
@@ -170,7 +170,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
             $scope.show_hide('help')
         } else if ($event.keyCode == keycodes.T && $event.shiftKey) {//T  View network I/O as combination
             $scope.show_hide('network_io_combination')
-        } else if ($event.keyCode == keycodes.u) {//u  View cumulative network I/O
+        } else if ($event.keyCode == keycodes.u && $event.shiftKey) {//U  View cumulative network I/O
             $scope.show_hide('network_io_cumulative')
         } else if ($event.keyCode == keycodes.F && $event.shiftKey) {//F  Show filesystem free space
             $scope.show_hide('filesystem_freespace')
