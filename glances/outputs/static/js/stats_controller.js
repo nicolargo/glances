@@ -117,69 +117,99 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
     });
 
     $scope.onKeyDown = function ($event) {
-        if ($event.keyCode == keycodes.a) { // a  Sort processes automatically
-            $scope.sorter.column = "cpu_percent";
-            $scope.sorter.auto = true;
-        } else if ($event.keyCode == keycodes.c) {//c  Sort processes by CPU%
-            $scope.sorter.column = "cpu_percent";
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.m) {//m  Sort processes by MEM%
-            $scope.sorter.column = "memory_percent";
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.p) {//p  Sort processes by name
-            $scope.sorter.column = "name";
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.i) {//i  Sort processes by I/O rate
-            $scope.sorter.column = ['io_read', 'io_write'];
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.t && !$event.shiftKey) {//t  Sort processes by CPU times
-            $scope.sorter.column = "timemillis";
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.u && !$event.shiftKey) {//t  Sort processes by user
-            $scope.sorter.column = "username";
-            $scope.sorter.auto = false;
-        } else if ($event.keyCode == keycodes.d) {//d  Show/hide disk I/O stats
-            $scope.show_hide('diskio')
-        } else if ($event.keyCode == keycodes.f) {//f  Show/hide filesystem stats
-            $scope.show_hide('fs')
-        } else if ($event.keyCode == keycodes.n) {//n sort_by Show/hide network stats
-            $scope.show_hide('network')
-        } else if ($event.keyCode == keycodes.s) {//s  Show/hide sensors stats
-            $scope.show_hide('sensors')
-        } else if ($event.keyCode == keycodes.TWO && $event.shiftKey) {//2  Show/hide left sidebar
-            $scope.show_hide('sidebar')
-        } else if ($event.keyCode == keycodes.z) {//z  Enable/disable processes stats
-            $scope.show_hide('process_stats')
-        } else if ($event.keyCode == keycodes.e) {//e  Enable/disable top extended stats
-            $scope.show_hide('top_extended_stats')
-        } else if ($event.keyCode == keycodes.SLASH) {// SLASH  Enable/disable short processes name
-            $scope.show_hide('short_process_name')
-        } else if ($event.keyCode == keycodes.D && $event.shiftKey) {//D  Enable/disable Docker stats
-            $scope.show_hide('docker_stats')
-        } else if ($event.keyCode == keycodes.b) {//b  Bytes or bits for network I/O
-            $scope.show_hide('network_by_bytes')
-        } else if ($event.keyCode == keycodes.l) {//l  Show/hide alert logs
-            $scope.show_hide('alert')
-        } else if ($event.keyCode == keycodes.w) {//w  Delete warning alerts
-            $scope.show_hide('warning_alerts')
-        } else if ($event.keyCode == keycodes.x) {//x  Delete warning and critical alerts
-            $scope.show_hide('warning_critical_alerts')
-        } else if ($event.keyCode == keycodes.ONE && $event.shiftKey) {//1  Global CPU or per-CPU stats
-            $scope.show_hide('per_cpu')
-        } else if ($event.keyCode == keycodes.h) {//h  Show/hide this help screen
-            $scope.show_hide('help')
-        } else if ($event.keyCode == keycodes.T && $event.shiftKey) {//T  View network I/O as combination
-            $scope.show_hide('network_io_combination')
-        } else if ($event.keyCode == keycodes.u && $event.shiftKey) {//U  View cumulative network I/O
-            $scope.show_hide('network_io_cumulative')
-        } else if ($event.keyCode == keycodes.F && $event.shiftKey) {//F  Show filesystem free space
-            $scope.show_hide('filesystem_freespace')
-        } else if ($event.keyCode == keycodes.g) {//g  Generate graphs for current history
-            // not available
-        } else if ($event.keyCode == keycodes.r) {//r  Reset history
-            // not available
-        } else if ($event.keyCode == keycodes.q) {//q  Quit (Esc and Ctrl-C also work)
-            // not available
+
+        switch (true) {
+            case $event.keyCode == keycodes.a:
+                // a => Sort processes automatically
+                $scope.sorter.column = "cpu_percent";
+                $scope.sorter.auto = true;
+                break;
+            case $event.keyCode == keycodes.c:
+                // c => Sort processes by CPU%
+                $scope.sorter.column = "cpu_percent";
+                $scope.sorter.auto = false;
+                break;
+            case $event.keyCode == keycodes.m:
+                // m => Sort processes by MEM%
+                $scope.sorter.column = "memory_percent";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.u:
+                // u => Sort processes by user
+                $scope.sorter.column = "username";
+                $scope.sorter.auto = false;
+                break;
+            case $event.keyCode == keycodes.p:
+                // p => Sort processes by name
+                $scope.sorter.column = "name";
+                $scope.sorter.auto = false;
+                break;
+            case $event.keyCode == keycodes.i:
+                // i => Sort processes by I/O rate
+                $scope.sorter.column = ['io_read', 'io_write'];
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.t:
+                // t => Sort processes by time
+                $scope.sorter.column = "timemillis";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.d:
+                // d => Show/hide disk I/O stats
+                $scope.show_hide('diskio');
+                break;
+            case $event.keyCode == keycodes.f:
+                // f => Show/hide filesystem stats
+                $scope.show_hide('fs');
+                break;
+            case $event.keyCode == keycodes.n:
+                // n => Show/hide network stats
+                $scope.show_hide('network');
+                break;
+            case $event.keyCode == keycodes.s:
+                // s => Show/hide sensors stats
+                $scope.show_hide('sensors');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.TWO:
+                // 2 => Show/hide left sidebar
+                $scope.show_hide('sidebar');
+                break;
+            case $event.keyCode == keycodes.z:
+                // z => Enable/disable processes stats
+                $scope.show_hide('process_stats');
+                break;
+            case $event.keyCode == keycodes.SLASH:
+                // SLASH => Enable/disable short processes name
+                $scope.show_hide('short_process_name');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.D:
+                // D => Enable/disable Docker stats
+                $scope.show_hide('docker_stats');
+                break;
+            case $event.keyCode == keycodes.b:
+                // b => Bytes or bits for network I/O
+               $scope.show_hide('network_by_bytes');
+               break;
+            case $event.keyCode == keycodes.l:
+                // l => Show/hide alert logs
+               $scope.show_hide('alert');
+               break;
+            case $event.shiftKey && $event.keyCode == keycodes.ONE:
+               // 1 => Global CPU or per-CPU stats
+               $scope.show_hide('per_cpu');
+               break;
+            case $event.keyCode == keycodes.h:
+                // h => Show/hide this help screen
+                $scope.show_hide('help');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.T:
+                // T => View network I/O as combination
+                $scope.show_hide('network_io_combination');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.u:
+                // U => View cumulative network I/O
+                $scope.show_hide('network_io_cumulative');
+                break;
         }
     };
 });
