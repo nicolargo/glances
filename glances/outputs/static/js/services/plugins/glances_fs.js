@@ -16,6 +16,7 @@ glancesApp.service('GlancesPluginFs', function() {
                 'mountPoint': fsData['mnt_point'],
                 'percent': fsData['percent'],
                 'size': fsData['size'],
+                'used': fsData['used'],
                 'free': fsData['free']
             };
 
