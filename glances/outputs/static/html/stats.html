@@ -30,9 +30,6 @@
             <section id="per_cpu" class="plugin" ng-include src="'plugins/per_cpu.html'"></section>
         </div>
         <div class="col-sm-3 col-md-2">
-            <section id="load" class="plugin" ng-if="statsLoad.cpucore != undefined" ng-include src="'plugins/load.html'"></section>
-        </div>
-        <div class="col-sm-3 col-md-2">
             <section id="mem" class="plugin" ng-include src="'plugins/mem.html'"></section>
         </div>
         <div class="hidden-xs hidden-sm col-md-2">
@@ -40,6 +37,9 @@
         </div>
         <div class="col-sm-3 col-md-2">
             <section id="memswap" class="plugin" ng-include src="'plugins/memswap.html'"></section>
+        </div>
+        <div class="col-sm-3 col-md-2">
+            <section id="load" class="plugin" ng-if="statsLoad.cpucore != undefined" ng-include src="'plugins/load.html'"></section>
         </div>
     </div>
     <div class="row">
