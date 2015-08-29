@@ -6,7 +6,7 @@
 <div class="table-row" ng-repeat="fs in statsFs.fileSystems | orderBy:  'mnt_point'">
     <div class="table-cell text-left">{{ fs.mountPoint }} ({{ fs.name }})</div>
     <div class="table-cell" ng-class="statsFs.getDecoration(fs.mountPoint, 'used')">
-        {{ fs.size - fs.free | bytes }}
+        {{ fs.used | bytes }}
     </div>
     <div class="table-cell">{{ fs.size | bytes }}</div>
 </div>
