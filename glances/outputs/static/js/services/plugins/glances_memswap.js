@@ -1,5 +1,5 @@
 glancesApp.service('GlancesPluginMemSwap', function() {
-    var _pluginName = "mem";
+    var _pluginName = "memswap";
     var _view = {};
 
     this.percent = null;
