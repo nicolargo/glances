@@ -13,6 +13,7 @@ glancesApp.service('GlancesPluginNetwork', function() {
                 'rx': networkData['rx'],
                 'tx': networkData['tx'],
                 'cx': networkData['cx'],
+                'time_since_update': networkData['time_since_update'],
                 'cumulativeRx': networkData['cumulative_rx'],
                 'cumulativeTx': networkData['cumulative_tx'],
                 'cumulativeCx': networkData['cumulative_cx']
