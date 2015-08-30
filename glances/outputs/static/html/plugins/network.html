@@ -14,15 +14,15 @@
 </div>
 <div class="table-row" ng-repeat="network in statsNetwork.networks | orderBy: 'interfaceName'">
     <div class="table-cell text-left">{{ network.interfaceName | min_size }}</div>
-    <div class="table-cell" ng-show="!show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.rx|bytes) : (network.rx|bits) }}</div>
-    <div class="table-cell" ng-show="!show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.tx|bytes) : (network.tx|bits) }}</div>
+    <div class="table-cell" ng-show="!show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}</div>
+    <div class="table-cell" ng-show="!show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.tx / network.time_since_update | bytes) : (network.tx / network.time_since_update | bits) }}</div>
 
     <div class="table-cell" ng-show="!show.network_io_cumulative && show.network_io_combination"></div>
-    <div class="table-cell" ng-show="!show.network_io_cumulative && show.network_io_combination">{{ show.network_by_bytes ? (network.cx|bytes) : (network.cx|bits) }}</div>
+    <div class="table-cell" ng-show="!show.network_io_cumulative && show.network_io_combination">{{ show.network_by_bytes ? (network.cx / network.time_since_update | bytes) : (network.cx / network.time_since_update | bits) }}</div>
 
-    <div class="table-cell" ng-show="show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeRx|bytes) : (network.cumulativeRx|bits) }}</div>
-    <div class="table-cell" ng-show="show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeTx|bytes) : (network.cumulativeTx|bits) }}</div>
+    <div class="table-cell" ng-show="show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeRx | bytes) : (network.cumulativeRx | bits) }}</div>
+    <div class="table-cell" ng-show="show.network_io_cumulative && !show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeTx | bytes) : (network.cumulativeTx | bits) }}</div>
 
     <div class="table-cell" ng-show="show.network_io_cumulative && show.network_io_combination"></div>
-    <div class="table-cell" ng-show="show.network_io_cumulative && show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeCx|bytes) : (network.cumulativeCx|bits) }}</div>
+    <div class="table-cell" ng-show="show.network_io_cumulative && show.network_io_combination">{{ show.network_by_bytes ? (network.cumulativeCx | bytes) : (network.cumulativeCx | bits) }}</div>
 </div>
