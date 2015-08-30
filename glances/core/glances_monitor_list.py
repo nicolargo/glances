@@ -140,6 +140,8 @@ class MonitorList(object):
                     self.__monitor_list[i]['result'] = 'Error: ' + self.command(i)
                 except Exception:
                     self.__monitor_list[i]['result'] = 'Cannot execute command'
+                # Only save the first line
+                self.__monitor_list[i]['result'] = self.__monitor_list[i]['result'].split('\n')[0]
 
             if self.command(i) is None or self.__monitor_list[i]['result'] == '':
                 # If there is no command specified in the conf file

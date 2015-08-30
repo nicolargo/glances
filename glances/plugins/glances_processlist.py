@@ -25,6 +25,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
+from glances.core.glances_logging import logger
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.core.glances_globals import is_windows
 from glances.core.glances_processes import glances_processes
@@ -250,9 +251,12 @@ class Plugin(GlancesPlugin):
         if self.tag_proc_time:
             try:
                 delta = timedelta(seconds=sum(p['cpu_times']))
-            except OverflowError:
-                # Catched on some Amazon EC2 server
+            except (OverflowError, TypeError) as e:
+                # Catch OverflowError on some Amazon EC2 server
                 # See https://github.com/nicolargo/glances/issues/87
+                # Also catch TypeError on Mac OS X
+                # See: https://github.com/nicolargo/glances/issues/622
+                logger.debug("Can not get TIME+ ({})".format(e))
                 self.tag_proc_time = False
             else:
                 hours, minutes, seconds, microseconds = convert_timedelta(delta)
