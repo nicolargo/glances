@@ -70,6 +70,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
             $scope.statsPerCpu = GlancesStats.getPlugin('percpu');
             $scope.statsProcessCount = GlancesStats.getPlugin('processcount');
             $scope.statsProcessList = GlancesStats.getPlugin('processlist');
+            $scope.statsQuicklook = GlancesStats.getPlugin('quicklook');
             $scope.statsSensors = GlancesStats.getPlugin('sensors');
             $scope.statsSystem = GlancesStats.getPlugin('system');
             $scope.statsUptime = GlancesStats.getPlugin('uptime');
