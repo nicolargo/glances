@@ -54,47 +54,43 @@ body {
 }
 .highlight {
     font-weight: bold;
-    color: magenta;
+    color: #5D4062;
 }
-.ok {
-    color: green;
-}
-.filter {
-    color: cyan;
+.ok, .status, .process {
+    color: #3E7B04;
+    font-weight: bold;
 }
 .ok_log {
-    background-color: green;
+    background-color: #3E7B04;
     color: white;
+    font-weight: bold;
 }
 .careful {
-    color: blueviolet;
+    color: #295183;
+    font-weight: bold;
 }
 .careful_log {
-    background-color: blueviolet;
+    background-color: #295183;
     color: white;
+    font-weight: bold;
 }
-.warning {
-    color: magenta;
+.warning, .nice {
+    color: #5D4062;
+    font-weight: bold;
 }
 .warning_log {
-    background-color: magenta;
+    background-color: #5D4062;
     color: white;
+    font-weight: bold;
 }
 .critical {
-    color: red;
+    color: #A30000;
+    font-weight: bold;
 }
 .critical_log {
-    background-color: red;
+    background-color: #A30000;
     color: white;
-}
-.nice {
-    color: magenta;
-}
-.status {
-    color: green;
-}
-.process {
-    color: green;
+    font-weight: bold;
 }
 
 /* Plugins */
@@ -108,6 +104,7 @@ gl-monitor-list {
 gl-monitor-list .table-cell {
     text-align: left;
 }
+
 /* Loading page */
 
 #loading-page .glances-logo {
