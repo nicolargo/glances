@@ -16,6 +16,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'percpu': 'GlancesPluginPerCpu',
         'processcount': 'GlancesPluginProcessCount',
         'processlist': 'GlancesPluginProcessList',
+        'quicklook': 'GlancesPluginQuicklook',
         'sensors': 'GlancesPluginSensors',
         'system': 'GlancesPluginSystem',
         'uptime': 'GlancesPluginUptime'
