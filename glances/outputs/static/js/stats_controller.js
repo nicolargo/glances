@@ -27,6 +27,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
         'warning_alerts': true,
         'warning_critical_alerts': true,
         'process_stats': true,
+        'quick_look': true,
         'top_extended_stats': true,
         'docker_stats': true,
         'network_io_combination': false,
@@ -215,6 +216,10 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
             case $event.shiftKey && $event.keyCode == keycodes.f:
                 // F => Show filesystem free space
                 $scope.show_hide('filesystem_free_space');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.THREE:
+                // 3 => Enable/disable quick look plugin
+                $scope.show_hide('quick_look');
                 break;
         }
     };

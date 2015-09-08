@@ -20,7 +20,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="hidden-xs hidden-sm hidden-md col-lg-6">
+        <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-show="show.quick_look">
             <section id="quicklook" class="plugin" ng-include src="'plugins/quicklook.html'"></section>
         </div>
         <div class="col-sm-6 col-md-4 col-lg-3" ng-show="!show.per_cpu">
@@ -67,6 +67,7 @@
                 </div>
                 <section id="processlist" class="plugin" ng-include src="'plugins/processlist.html'"></section>
             </div>
+            <div ng-show="!show.process_stats">PROCESSES DISABLED (press 'z' to display)</div>
         </div>
     </div>
 </div>
