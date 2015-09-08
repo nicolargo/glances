@@ -342,8 +342,11 @@ class GlancesProcesses(object):
             # No filter => Not filtered
             return False
         else:
-            # logger.debug(self.process_filter + " <> " + value + " => " + str(self.process_filter_re.match(value) is None))
-            return self.process_filter_re.match(value) is None
+            try:
+                return self.process_filter_re.match(value) is None
+            except AttributeError:
+                #  Filter processes crashs with a bad regular expression pattern (issue #665)
+                return False
 
     def disable_kernel_threads(self):
         """Ignore kernel threads in process list."""
