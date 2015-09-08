@@ -268,6 +268,20 @@ Start the client browser (browser mode):\n\
         args.network_sum = False
         args.network_cumul = False
 
+        # Manage full quicklook option
+        if args.full_quicklook:
+            args.disable_quicklook = False
+            args.disable_cpu = True
+            args.disable_mem = True
+            args.disable_swap = True
+            args.disable_load = False
+        else:
+            args.disable_quicklook = False
+            args.disable_cpu = False
+            args.disable_mem = False
+            args.disable_swap = False
+            args.disable_load = False
+
         # Control parameter and exit if it is not OK
         self.args = args
 
