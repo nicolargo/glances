@@ -32,7 +32,8 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
         'network_io_combination': false,
         'network_io_cumulative': false,
         'filesystem_freespace': false,
-        'network_by_bytes': false
+        'network_by_bytes': false,
+        'filesystem_free_space': false
     };
 
     $scope.init_refresh_time = function () {
@@ -120,17 +121,17 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
     $scope.onKeyDown = function ($event) {
 
         switch (true) {
-            case $event.keyCode == keycodes.a:
+            case !$event.shiftKey && $event.keyCode == keycodes.a:
                 // a => Sort processes automatically
                 $scope.sorter.column = "cpu_percent";
                 $scope.sorter.auto = true;
                 break;
-            case $event.keyCode == keycodes.c:
+            case !$event.shiftKey && $event.keyCode == keycodes.c:
                 // c => Sort processes by CPU%
                 $scope.sorter.column = "cpu_percent";
                 $scope.sorter.auto = false;
                 break;
-            case $event.keyCode == keycodes.m:
+            case !$event.shiftKey && $event.keyCode == keycodes.m:
                 // m => Sort processes by MEM%
                 $scope.sorter.column = "memory_percent";
                 $scope.sorter.auto = false;
@@ -140,12 +141,12 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
                 $scope.sorter.column = "username";
                 $scope.sorter.auto = false;
                 break;
-            case $event.keyCode == keycodes.p:
+            case !$event.shiftKey && $event.keyCode == keycodes.p:
                 // p => Sort processes by name
                 $scope.sorter.column = "name";
                 $scope.sorter.auto = false;
                 break;
-            case $event.keyCode == keycodes.i:
+            case !$event.shiftKey && $event.keyCode == keycodes.i:
                 // i => Sort processes by I/O rate
                 $scope.sorter.column = ['io_read', 'io_write'];
                 $scope.sorter.auto = false;
@@ -159,15 +160,15 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
                 // d => Show/hide disk I/O stats
                 $scope.show_hide('diskio');
                 break;
-            case $event.keyCode == keycodes.f:
+            case !$event.shiftKey && $event.keyCode == keycodes.f:
                 // f => Show/hide filesystem stats
                 $scope.show_hide('fs');
                 break;
-            case $event.keyCode == keycodes.n:
+            case !$event.shiftKey && $event.keyCode == keycodes.n:
                 // n => Show/hide network stats
                 $scope.show_hide('network');
                 break;
-            case $event.keyCode == keycodes.s:
+            case !$event.shiftKey && $event.keyCode == keycodes.s:
                 // s => Show/hide sensors stats
                 $scope.show_hide('sensors');
                 break;
@@ -175,7 +176,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
                 // 2 => Show/hide left sidebar
                 $scope.show_hide('sidebar');
                 break;
-            case $event.keyCode == keycodes.z:
+            case !$event.shiftKey && $event.keyCode == keycodes.z:
                 // z => Enable/disable processes stats
                 $scope.show_hide('process_stats');
                 break;
@@ -187,11 +188,11 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
                 // D => Enable/disable Docker stats
                 $scope.show_hide('docker_stats');
                 break;
-            case $event.keyCode == keycodes.b:
+            case !$event.shiftKey && $event.keyCode == keycodes.b:
                 // b => Bytes or bits for network I/O
                $scope.show_hide('network_by_bytes');
                break;
-            case $event.keyCode == keycodes.l:
+            case !$event.shiftKey && $event.keyCode == keycodes.l:
                 // l => Show/hide alert logs
                $scope.show_hide('alert');
                break;
@@ -199,7 +200,7 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
                // 1 => Global CPU or per-CPU stats
                $scope.show_hide('per_cpu');
                break;
-            case $event.keyCode == keycodes.h:
+            case !$event.shiftKey && $event.keyCode == keycodes.h:
                 // h => Show/hide this help screen
                 $scope.show_hide('help');
                 break;
@@ -210,6 +211,10 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
             case $event.shiftKey && $event.keyCode == keycodes.u:
                 // U => View cumulative network I/O
                 $scope.show_hide('network_io_cumulative');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.f:
+                // F => Show filesystem free space
+                $scope.show_hide('filesystem_free_space');
                 break;
         }
     };
