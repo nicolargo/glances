@@ -111,6 +111,7 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
                     ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
                     ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
+                    ret.append(self.curse_add_line('  '))
                     ret.append(self.curse_new_line())
             else:
                 try:
@@ -123,6 +124,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
                 ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
                 ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
+                ret.append(self.curse_add_line('  '))
                 ret.append(self.curse_new_line())
 
         # Return the message with decoration
