@@ -26,7 +26,7 @@
             <span ng-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>{{ process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span ng-show="process.timeplus.hours <= 0">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>
         </div>
         <div class="table-cell hidden-xs hidden-sm">{{process.ioRead}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.iowrite}}</div>
+        <div class="table-cell hidden-xs hidden-sm">{{process.ioWrite}}</div>
         <div class="table-cell text-left" ng-show="show.short_process_name">{{process.name}}</div>
         <div class="table-cell text-left" ng-show="!show.short_process_name">{{process.cmdline}}</div>
     </div>
