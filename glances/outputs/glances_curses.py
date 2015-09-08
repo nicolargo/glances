@@ -272,13 +272,11 @@ class _GlancesCurses(object):
                 self.args.disable_cpu = True
                 self.args.disable_mem = True
                 self.args.disable_swap = True
-                self.args.disable_load = False
             else:
                 self.args.disable_quicklook = False
                 self.args.disable_cpu = False
                 self.args.disable_mem = False
                 self.args.disable_swap = False
-                self.args.disable_load = False
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
@@ -571,7 +569,10 @@ class _GlancesCurses(object):
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
-            quicklook_width = min(screen_x - (stats_width + 8 + stats_number * self.space_between_column), 79)
+            if self.args.full_quicklook:
+                quicklook_width = screen_x - (stats_width + 8 + stats_number * self.space_between_column)
+            else:
+                quicklook_width = min(screen_x - (stats_width + 8 + stats_number * self.space_between_column), 79)
             try:
                 stats_quicklook = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
