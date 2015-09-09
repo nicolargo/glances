@@ -225,6 +225,7 @@ class Plugin(GlancesPlugin):
                 container['cpu'] = self.get_docker_cpu(container['Id'], self.thread_list[container['Id']].stats)
                 container['memory'] = self.get_docker_memory(container['Id'], self.thread_list[container['Id']].stats)
                 container['network'] = self.get_docker_network(container['Id'], self.thread_list[container['Id']].stats)
+                container['io'] = self.get_docker_io(container['Id'], self.thread_list[container['Id']].stats)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -308,13 +309,17 @@ class Plugin(GlancesPlugin):
 
         Input: id is the full container id
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
+        with:
+            time_since_update: number of seconds elapsed between the latest grab
+            rx: Number of byte received
+            tx: Number of byte transmited
         """
         # Init the returned dict
         network_new = {}
 
         # Read the rx/tx stats (in bytes)
         try:
-            netiocounters = all_stats["network"]
+            netcounters = all_stats["network"]
         except KeyError as e:
             # all_stats do not have NETWORK information
             logger.debug("Can not grab NET usage for container {0} ({1})".format(container_id, e))
@@ -322,17 +327,17 @@ class Plugin(GlancesPlugin):
             return network_new
 
         # Previous network interface stats are stored in the network_old variable
-        if not hasattr(self, 'netiocounters_old'):
+        if not hasattr(self, 'inetcounters_old'):
             # First call, we init the network_old var
-            self.netiocounters_old = {}
+            self.netcounters_old = {}
             try:
-                self.netiocounters_old[container_id] = netiocounters
+                self.netcounters_old[container_id] = netcounters
             except (IOError, UnboundLocalError):
                 pass
 
-        if container_id not in self.netiocounters_old:
+        if container_id not in self.netcounters_old:
             try:
-                self.netiocounters_old[container_id] = netiocounters
+                self.netcounters_old[container_id] = netcounters
             except (IOError, UnboundLocalError):
                 pass
         else:
@@ -340,16 +345,78 @@ class Plugin(GlancesPlugin):
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
             network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{0}'.format(container_id))
-            network_new['rx'] = netiocounters["rx_bytes"] - self.netiocounters_old[container_id]["rx_bytes"]
-            network_new['tx'] = netiocounters["tx_bytes"] - self.netiocounters_old[container_id]["tx_bytes"]
-            network_new['cumulative_rx'] = netiocounters["rx_bytes"]
-            network_new['cumulative_tx'] = netiocounters["tx_bytes"]
+            network_new['rx'] = netcounters["rx_bytes"] - self.netcounters_old[container_id]["rx_bytes"]
+            network_new['tx'] = netcounters["tx_bytes"] - self.netcounters_old[container_id]["tx_bytes"]
+            network_new['cumulative_rx'] = netcounters["rx_bytes"]
+            network_new['cumulative_tx'] = netcounters["tx_bytes"]
 
             # Save stats to compute next bitrate
-            self.netiocounters_old[container_id] = netiocounters
+            self.netcounters_old[container_id] = netcounters
 
         # Return the stats
         return network_new
+
+    def get_docker_io(self, container_id, all_stats):
+        """Return the container IO usage using the Docker API (v1.0 or higher).
+
+        Input: id is the full container id
+        Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
+        with:
+            time_since_update: number of seconds elapsed between the latest grab
+            ior: Number of byte readed
+            iow: Number of byte written
+        """
+        # Init the returned dict
+        io_new = {}
+
+        # Read the ior/iow stats (in bytes)
+        try:
+            iocounters = all_stats["blkio_stats"]
+        except KeyError as e:
+            # all_stats do not have io information
+            logger.debug("Can not grab block IO usage for container {0} ({1})".format(container_id, e))
+            # No fallback available...
+            return io_new
+
+        # Previous io interface stats are stored in the io_old variable
+        if not hasattr(self, 'iocounters_old'):
+            # First call, we init the io_old var
+            self.iocounters_old = {}
+            try:
+                self.iocounters_old[container_id] = iocounters
+            except (IOError, UnboundLocalError):
+                pass
+
+        if container_id not in self.iocounters_old:
+            try:
+                self.iocounters_old[container_id] = iocounters
+            except (IOError, UnboundLocalError):
+                pass
+        else:
+            # By storing time data we enable IoR/s and IoW/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            try:
+                # Read IOR and IOW value in the structure list of dict
+                ior = [i for i in iocounters['io_service_bytes_recursive'] if i['op'] == 'Read'][0]['value']
+                iow = [i for i in iocounters['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
+                ior_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Read'][0]['value']
+                iow_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
+            except (IndexError, KeyError) as e:
+                # all_stats do not have io information
+                logger.debug("Can not grab block IO usage for container {0} ({1})".format(container_id, e))
+            else:
+                io_new['time_since_update'] = getTimeSinceLastUpdate('docker_io_{0}'.format(container_id))
+                io_new['ior'] = ior - ior_old
+                io_new['iow'] = iow - iow_old
+                io_new['cumulative_ior'] = ior
+                io_new['cumulative_iow'] = iow
+
+                # Save stats to compute next bitrate
+                self.iocounters_old[container_id] = iocounters
+
+        # Return the stats
+        return io_new
 
     def get_user_ticks(self):
         """Return the user ticks by reading the environment variable."""
@@ -376,15 +443,21 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
-        msg = '{0:>14}'.format('Id')
-        ret.append(self.curse_add_line(msg))
-        msg = ' {0:20}'.format('Name')
+        # msg = '{0:>14}'.format('Id')
+        # ret.append(self.curse_add_line(msg))
+        # Get the maximum containers name (cutted to 20 char max)
+        name_max_width = min(20, len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']))
+        msg = ' {0:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg))
         msg = '{0:>26}'.format('Status')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format('MEM')
+        ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format('IOR/s')
+        ret.append(self.curse_add_line(msg))
+        msg = '{0:>6}'.format('IOW/s')
         ret.append(self.curse_add_line(msg))
         msg = '{0:>6}'.format('Rx/s')
         ret.append(self.curse_add_line(msg))
@@ -396,15 +469,15 @@ class Plugin(GlancesPlugin):
         for container in self.stats['containers']:
             ret.append(self.curse_new_line())
             # Id
-            msg = '{0:>14}'.format(container['Id'][0:12])
-            ret.append(self.curse_add_line(msg))
+            # msg = '{0:>14}'.format(container['Id'][0:12])
+            # ret.append(self.curse_add_line(msg))
             # Name
-            name = container['Names'][0]
-            if len(name) > 20:
-                name = '_' + name[-19:]
+            name = container['name']
+            if len(name) > name_max_width:
+                name = '_' + name[-name_max_width + 1:]
             else:
-                name = name[:20]
-            msg = ' {0:20}'.format(name)
+                name = name[:name_max_width]
+            msg = ' {0:{width}}'.format(name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             # Status
             status = self.container_alert(container['Status'])
@@ -423,6 +496,14 @@ class Plugin(GlancesPlugin):
             except KeyError:
                 msg = '{0:>7}'.format('?')
             ret.append(self.curse_add_line(msg))
+            # IO R/W
+            for r in ['ior', 'iow']:
+                try:
+                    value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'] * 8)) + "b"
+                    msg = '{0:>6}'.format(value)
+                except KeyError:
+                    msg = '{0:>6}'.format('?')
+                ret.append(self.curse_add_line(msg))
             # NET RX/TX
             for r in ['rx', 'tx']:
                 try:
