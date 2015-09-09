@@ -222,6 +222,7 @@ The following commands (key pressed) are supported while in Glances:
 
 ``ENTER``
     Set the process filter
+    Note: On Mac OS, please use CTRL-H to delete filter
     Filter is a regular expression pattern:
 
     - gnome: all processes starting with the gnome string
@@ -824,7 +825,7 @@ and run Glances with:
 
     $ glances --export-influxdb
 
-InfluxDB 0.9.x also supports an optional tags configuration parameter 
+InfluxDB 0.9.x also supports an optional tags configuration parameter
 specified as comma separated, key:value pairs. For example:
 
 .. code-block::
