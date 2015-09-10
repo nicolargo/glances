@@ -214,11 +214,14 @@ class GlancesAutoDiscoverClient(object):
     @staticmethod
     def find_active_ip_address():
         """Try to find the active IP addresses."""
-        import netifaces
-        # Interface of the default gateway
-        gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
-        # IP address for the interface
-        return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
+        if not 'freebsd' in sys.platform:
+            import netifaces
+            # Interface of the default gateway
+            gateway_itf = netifaces.gateways()['default'][netifaces.AF_INET][1]
+            # IP address for the interface
+            return netifaces.ifaddresses(gateway_itf)[netifaces.AF_INET][0]['addr']
+        else:
+            raise KeyError, 'On FreeBSD, this would segfault'
 
     def close(self):
         if zeroconf_tag:
