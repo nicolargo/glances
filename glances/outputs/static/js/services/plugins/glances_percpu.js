@@ -13,7 +13,9 @@ glancesApp.service('GlancesPluginPerCpu', function($filter, GlancesPlugin) {
                 'total': cpuData.total,
                 'user': cpuData.user,
                 'system': cpuData.system,
-                'idle': cpuData.idle
+                'idle': cpuData.idle,
+                'iowait': cpuData.iowait,
+                'steal': cpuData.steal
             });
         }
     };
