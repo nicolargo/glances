@@ -21,9 +21,12 @@ glancesApp.service('GlancesPluginDocker', function(GlancesPlugin) {
                 'status': containerData.Status,
                 'cpu': containerData.cpu.total,
                 'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
+                'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
+                'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
+                'io_time_since_update': containerData.io.time_since_update,
                 'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
                 'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
-                'time_since_update': containerData.network.time_since_update,
+                'net_time_since_update': containerData.network.time_since_update,
                 'command': containerData.Command,
                 'image': containerData.Image
             };
