@@ -94,8 +94,12 @@ body {
 }
 
 /* Plugins */
-#processlist .table-cell, #containers .table-cell {
+#processlist .table-cell {
     padding: 0px 5px 0px 5px;
+    white-space: nowrap;
+}
+#containers .table-cell {
+    padding: 0px 10px 0px 10px;
     white-space: nowrap;
 }
 gl-monitor-list {
