@@ -2,7 +2,7 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.4.2.
+This manual describes *Glances* version 2.5.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
