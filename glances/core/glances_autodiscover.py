@@ -35,7 +35,7 @@ except ImportError:
     zeroconf_tag = False
 
 # Import Glances libs
-from glances.core.glances_globals import appname
+from glances.core.glances_globals import appname, is_freebsd
 from glances.core.glances_logging import logger
 
 # Zeroconf 0.17 or higher is needed
@@ -194,13 +194,16 @@ class GlancesAutoDiscoverClient(object):
             except socket.error as e:
                 logger.error("Cannot start zeroconf: {0}".format(e))
 
-            try:
-                # -B @ overwrite the dynamic IPv4 choice
-                if zeroconf_bind_address == '0.0.0.0':
-                    zeroconf_bind_address = self.find_active_ip_address()
-            except KeyError:
-                # Issue #528 (no network interface available)
-                pass
+            # XXX FreeBSD: Segmentation fault (core dumped)
+            # -- https://bitbucket.org/al45tair/netifaces/issues/15
+            if not is_freebsd:
+                try:
+                    # -B @ overwrite the dynamic IPv4 choice
+                    if zeroconf_bind_address == '0.0.0.0':
+                        zeroconf_bind_address = self.find_active_ip_address()
+                except KeyError:
+                    # Issue #528 (no network interface available)
+                    pass
 
             print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
             self.info = ServiceInfo(

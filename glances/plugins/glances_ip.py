@@ -19,16 +19,21 @@
 
 """IP plugin."""
 
-# Import system libs
-try:
-    import netifaces
-    netifaces_tag = True
-except ImportError:
-    netifaces_tag = False
-
 # Import Glances libs
+from glances.core.glances_globals import is_freebsd
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
+
+# XXX FreeBSD: Segmentation fault (core dumped)
+# -- https://bitbucket.org/al45tair/netifaces/issues/15
+if not is_freebsd:
+    try:
+        import netifaces
+        netifaces_tag = True
+    except ImportError:
+        netifaces_tag = False
+else:
+    netifaces_tag = False
 
 
 class Plugin(GlancesPlugin):

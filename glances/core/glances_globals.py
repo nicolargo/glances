@@ -33,6 +33,7 @@ is_py3 = sys.version_info >= (3, 3)
 # Operating system flag
 # Note: Somes libs depends of OS
 is_bsd = sys.platform.find('bsd') != -1
+is_freebsd = sys.platform.startswith('freebsd')
 is_linux = sys.platform.startswith('linux')
 is_mac = sys.platform.startswith('darwin')
 is_windows = sys.platform.startswith('win')
