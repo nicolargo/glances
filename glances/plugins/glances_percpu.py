@@ -95,6 +95,9 @@ class Plugin(GlancesPlugin):
 
         # Stats per-CPU
         for stat in ['user', 'system', 'idle', 'iowait', 'steal']:
+            if not stat in self.stats[0]:
+                continue
+
             ret.append(self.curse_new_line())
             msg = '{0:8}'.format(stat + ':')
             ret.append(self.curse_add_line(msg))
