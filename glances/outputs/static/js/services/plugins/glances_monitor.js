@@ -6,7 +6,7 @@ glancesApp.service('GlancesPluginMonitor', function() {
         this.processes = data[_pluginName];
     };
 
-    this.getDesciptionDecoration = function(process) {
+    this.getDescriptionDecoration = function(process) {
         var count = process.count;
         var countMin = process.countmin;
         var countMax = process.countmax;
