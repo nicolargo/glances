@@ -30,6 +30,10 @@ glancesApp.service('GlancesPluginRaid', function () {
         }, this);
     };
 
+    this.hasDisks = function() {
+        return this.disks.length > 0;
+    }
+
     this.getAlert = function(disk) {
         if (disk.inactive) {
             return 'critical';
