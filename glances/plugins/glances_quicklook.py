@@ -25,6 +25,12 @@ from glances.plugins.glances_plugin import GlancesPlugin
 from glances.core.glances_logging import logger
 
 import psutil
+try:
+    from cpuinfo import cpuinfo
+except ImportError:
+    cpuinfo_tag = False
+else:
+    cpuinfo_tag = True
 
 
 class Plugin(GlancesPlugin):
@@ -66,6 +72,14 @@ class Plugin(GlancesPlugin):
             # Not available
             pass
 
+        # Optionnaly, get the CPU name/frequency
+        # thanks to the cpuinfo lib: https://github.com/workhorsy/py-cpuinfo
+        if cpuinfo_tag:
+            cpu_info = cpuinfo.get_cpu_info()
+            self.stats['cpu_name'] = cpu_info['brand']
+            self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
+            self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+
         # Update the view
         self.update_views()
 
@@ -95,6 +109,13 @@ class Plugin(GlancesPlugin):
         bar = Bar(max_width)
 
         # Build the string message
+        if 'cpu_name' in self.stats:
+            msg = '{0} - {1:.2f}/{2:.2f}GHz'.format(self.stats['cpu_name'],
+                                                    self._hz_to_ghz(self.stats['cpu_hz_current']),
+                                                    self._hz_to_ghz(self.stats['cpu_hz']))
+            if len(msg) - 6 <= max_width:
+                ret.append(self.curse_add_line(msg))
+                ret.append(self.curse_new_line())
         for key in ['cpu', 'mem', 'swap']:
             if key == 'cpu' and args.percpu:
                 for cpu in self.stats['percpu']:
@@ -129,3 +150,7 @@ class Plugin(GlancesPlugin):
 
         # Return the message with decoration
         return ret
+
+    def _hz_to_ghz(self, hz):
+        """Convert Hz to Ghz"""
+        return hz / 1000000000.0
