@@ -54,7 +54,8 @@ setup(
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
         'EXPORT': ['influxdb>=1.0.0', 'statsd', 'pika'],
-        'ACTION': ['pystache']
+        'ACTION': ['pystache'],
+        'CPUINFO': ['py-cpuinfo']
     },
     packages=['glances'],
     include_package_data=True,
