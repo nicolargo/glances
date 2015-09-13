@@ -102,12 +102,6 @@ body {
     padding: 0px 10px 0px 10px;
     white-space: nowrap;
 }
-gl-monitor-list {
-    display: block;
-}
-gl-monitor-list .table-cell {
-    text-align: left;
-}
 
 #quicklook .progress {
     margin-bottom: 0px;
@@ -128,6 +122,13 @@ gl-monitor-list .table-cell {
 }
 #quicklook .progress-bar-critical {
     background-color: #A30000;
+}
+#monitor .process-result {
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 10px;
+    text-overflow: ellipsis;
 }
 
 /* Loading page */
