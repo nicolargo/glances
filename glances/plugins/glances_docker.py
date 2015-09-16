@@ -190,7 +190,7 @@ class Plugin(GlancesPlugin):
 
             # Update current containers list
             try:
-                self.stats['containers'] = self.docker_client.containers()
+                self.stats['containers'] = self.docker_client.containers() or []
             except Exception as e:
                 logger.error("{} plugin - Can not get containers list ({})".format(self.plugin_name, e))
                 return self.stats
