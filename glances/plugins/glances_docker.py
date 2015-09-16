@@ -149,7 +149,7 @@ class Plugin(GlancesPlugin):
             #            u'Command': u"nginx -g 'daemon off;'",
             #            u'Names': [u'/webstack_nginx_1'],
             #            u'Id': u'b0da859e84eb4019cf1d965b15e9323006e510352c402d2f442ea632d61faaa5'}]
-            self.stats['containers'] = self.docker_client.containers()
+            self.stats['containers'] = self.docker_client.containers() or []
             # Get stats for all containers
             for c in self.stats['containers']:
                 if not hasattr(self, 'docker_stats'):
