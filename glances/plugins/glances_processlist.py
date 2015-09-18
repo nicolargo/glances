@@ -421,7 +421,7 @@ class Plugin(GlancesPlugin):
                 # End of extended stats
                 first = False
             if glances_processes.process_filter is not None:
-                self.__msg_curse_sum(ret, args)
+                self.__msg_curse_sum(ret, args=args)
 
         # Return the message with decoration
         return ret
@@ -462,27 +462,27 @@ class Plugin(GlancesPlugin):
         msg = ' {0:8}'.format('Command')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
-    def __msg_curse_sum(self, ret, args=None):
+    def __msg_curse_sum(self, ret, sep_char='_', args=None):
         """
         Build the sum message (only when filter is on) and add it to the ret dict
         """
         ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line("-" * 70))
+        ret.append(self.curse_add_line(sep_char * 70))
         ret.append(self.curse_new_line())
         # CPU percent sum
         msg = '{0:>6.1f}'.format(self.__sum_stats('cpu_percent'))
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, decoration='FILTER'))
         # MEM percent sum
         msg = '{0:>6.1f}'.format(self.__sum_stats('memory_percent'))
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg, decoration='FILTER'))
         # VIRT and RES memory sum
         if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
             # VMS
             msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 1), low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True))
             # RSS
             msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 0), low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
+            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True))
         else:
             msg = '{0:>6}'.format('')
             ret.append(self.curse_add_line(msg))
@@ -510,14 +510,14 @@ class Plugin(GlancesPlugin):
                 msg = '{0:>6}'.format('0')
             else:
                 msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True, additional=True))
             # IO write
             io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', 3)) / self.stats[0]['time_since_update'])
             if io_ws == 0:
                 msg = '{0:>6}'.format('0')
             else:
                 msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True, additional=True))
         else:
             msg = '{0:>6}'.format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
