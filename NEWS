@@ -13,17 +13,35 @@ Enhancements and new features:
     * Add support for OpenTSDB export (issue #638)
     * Add additional stats (iowait, steal) to the perCPU plugin (issue #672)
     * Support Fahrenheit unit in the sensor plugin using the --fahrenheit command line option (issue #620)
+    * When a process filter is set, display sum of CPU, MEM... (issue #681)
     * Improve the QuickLookplugin by adding hardware CPU info (issue #673)
     * WebUI display a message if server is not available (issue #564)
     * Display an error if export is not used in the standalone/client mode (issue #614)
     * New --disable-quicklook, --disable-cpu, --disable-mem, --disable-swap, --disable-load tags (issue #631)
     * Complete refactoring of the WebUI thanks to the (awesome) Floran pull (issue #656)
     * Network cumulative /combination feature available in the WebUI (issue #552)
+    * IRIX mode off implementation (issue#628)
+    * Short process name displays arguments (issue #609)
+    * Server password configuration for the browser mode (issue #500)
+    * Display an error if export is not used in the standalone/client mode (issue #614)
 
 Bugs corrected:
 
-    * Crach with Docker plugin (issue #649)
     * The WebUI displays bad sensors stats (issue #632)
+    * Filter processes crashs with a bad regular expression pattern (issue #665)
+    * Error with IP plugin (issue #651)
+    * Crach with Docker plugin (issue #649)
+    * Docker plugin crashs with webserver mode (issue #654)
+    * Infrequently crashing due to assert (issue #623)
+    * Value for free disk space is counterintuative on ext file systems (issue #644)
+    * Try/catch for unexpected psutil.NoSuchProcess: process no longer exists (issue #432)
+    * Fatal error using Python 3.4 and Docker plugin bug (issue #602)
+    * Add missing new line before g man option (issue #595)
+    * Remove unnecessary type="text/css" for link (HTML5) (issue #595)
+    * Correct server mode issue when no network interface is available (issue #528)
+    * Avoid crach on olds kernels (issue #554)
+    * Avoid crashing if LC_ALL is not defined by user (issue #517)
+    * Add a disable HDD temperature option on the command line (issue #515)
 
 
 Version 2.4.2
