@@ -404,9 +404,34 @@ class Plugin(GlancesPlugin):
 
         # Compute the sort key
         process_sort_key = glances_processes.sort_key
-        sort_style = 'SORT'
 
         # Header
+        self.__msg_curse_header(ret, process_sort_key, args)
+
+        # Process list
+        if glances_processes.is_tree_enabled():
+            ret.extend(self.get_process_tree_curses_data(
+                self.sort_stats(process_sort_key), args, first_level=True,
+                max_node_count=glances_processes.max_processes))
+        else:
+            # Loop over processes (sorted by the sort key previously compute)
+            first = True
+            for p in self.sort_stats(process_sort_key):
+                ret.extend(self.get_process_curses_data(p, first, args))
+                # End of extended stats
+                first = False
+            if glances_processes.process_filter is not None:
+                self.__msg_curse_sum(ret, args)
+
+        # Return the message with decoration
+        return ret
+
+    def __msg_curse_header(self, ret, process_sort_key, args=None):
+        """
+        Build the header and add it to the ret dict
+        """
+        sort_style = 'SORT'
+
         if args.disable_irix and 0 < self.nb_log_core < 10:
             msg = '{0:>6}'.format('CPU%/' + str(self.nb_log_core))
         elif args.disable_irix and self.nb_log_core != 0:
@@ -437,19 +462,78 @@ class Plugin(GlancesPlugin):
         msg = ' {0:8}'.format('Command')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
-        if glances_processes.is_tree_enabled():
-            ret.extend(self.get_process_tree_curses_data(
-                self.sort_stats(process_sort_key), args, first_level=True,
-                max_node_count=glances_processes.max_processes))
+    def __msg_curse_sum(self, ret, args=None):
+        """
+        Build the sum message (only when filter is on) and add it to the ret dict
+        """
+        ret.append(self.curse_new_line())
+        ret.append(self.curse_add_line("-" * 70))
+        ret.append(self.curse_new_line())
+        # CPU percent sum
+        msg = '{0:>6.1f}'.format(self.__sum_stats('cpu_percent'))
+        ret.append(self.curse_add_line(msg))
+        # MEM percent sum
+        msg = '{0:>6.1f}'.format(self.__sum_stats('memory_percent'))
+        ret.append(self.curse_add_line(msg))
+        # VIRT and RES memory sum
+        if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
+            # VMS
+            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 1), low_precision=False))
+            ret.append(self.curse_add_line(msg, optional=True))
+            # RSS
+            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 0), low_precision=False))
+            ret.append(self.curse_add_line(msg, optional=True))
         else:
-            # Loop over processes (sorted by the sort key previously compute)
-            first = True
-            for p in self.sort_stats(process_sort_key):
-                ret.extend(self.get_process_curses_data(p, first, args))
-                # End of extended stats
-                first = False
+            msg = '{0:>6}'.format('')
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg))
+        # PID
+        msg = '{0:>6}'.format('')
+        ret.append(self.curse_add_line(msg))
+        # USER
+        msg = ' {0:9}'.format('')
+        ret.append(self.curse_add_line(msg))
+        # NICE
+        msg = '{0:>5}'.format('')
+        ret.append(self.curse_add_line(msg))
+        # STATUS
+        msg = '{0:>2}'.format('')
+        ret.append(self.curse_add_line(msg))
+        # TIME+
+        msg = '{0:>10}'.format('')
+        ret.append(self.curse_add_line(msg, optional=True))
+        # IO read/write
+        if 'io_counters' in self.stats[0]:
+            # IO read
+            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', 2)) / self.stats[0]['time_since_update'])
+            if io_rs == 0:
+                msg = '{0:>6}'.format('0')
+            else:
+                msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
+            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            # IO write
+            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', 3)) / self.stats[0]['time_since_update'])
+            if io_ws == 0:
+                msg = '{0:>6}'.format('0')
+            else:
+                msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
+            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+        else:
+            msg = '{0:>6}'.format('')
+            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            ret.append(self.curse_add_line(msg, optional=True, additional=True))
 
-        # Return the message with decoration
+    def __sum_stats(self, key, indice=None):
+        """
+        Return the sum of the stats value for the given key
+        If indice is given, get the p[key][indice]
+        """
+        ret = 0
+        for p in self.stats:
+            if indice is None:
+                ret += p[key]
+            else:
+                ret += p[key][indice]
         return ret
 
     def sort_stats(self, sortedby=None):
