@@ -6,7 +6,7 @@ This manual describes *Glances* version 2.5.
 
 Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
 
-May 2015
+September 2015
 
 .. contents:: Table of Contents
 
@@ -147,8 +147,10 @@ Command-Line Options
   -d, --debug           enable debug mode
   -C CONF_FILE, --config CONF_FILE
                         path to the configuration file
-  --disable-quicklook   disable quick look module
-  --full-quicklook      enable all but quick look and load
+  -3, --disable-quicklook
+                        disable quick look module
+  -4, --full-quicklook
+                        enable all but quick look and load
   --disable-cpu         disable CPU module
   --disable-mem         disable MEM module
   --disable-swap        disable SWAP module
@@ -161,7 +163,7 @@ Command-Line Options
   --disable-hddtemp     disable hddtemp module
   --disable-raid        disable RAID module
   --disable-docker      disable Docker module
-  --disable-left-sidebar
+  -2, --disable-left-sidebar
                         disable network, disk I/O, file system and
                         sensors modules (py3sensors needed)
   --disable-process     disable process module
@@ -211,6 +213,7 @@ Command-Line Options
                         hide kernel threads in process list
   --tree                display processes as a tree
   -b, --byte            display network rate in byte per second
+  --fahrenheit          display temperature in Fahrenheit (default is Celsius)
   -1, --percpu          start Glances in per CPU mode
   --fs-free-space       display file system free space instead of used
   --theme-white         optimize display colors for white background
@@ -425,6 +428,10 @@ bar view for CPU and memory (virtual and swap).
 
 .. image:: images/quicklook.png
 
+If the per CPU mode is on (click '1'):
+
+.. image:: images/quicklook-percpu.png
+
 *Note*: limit values can be overwritten in the configuration file under
 the ``[quicklook]`` section.
 
@@ -588,6 +595,10 @@ Compact view:
 Full view:
 
 .. image:: images/processlist-wide.png
+
+Filtered view:
+
+.. image:: images/processlist-filter.png
 
 Three views are available for processes:
 
@@ -825,8 +836,9 @@ and run Glances with:
 
     $ glances --export-influxdb
 
-InfluxDB 0.9.x also supports an optional tags configuration parameter
-specified as comma separated, key:value pairs. For example:
+InfluxDB 0.9.x or higher also supports an optional tags
+configuration parameter specified as comma separated, key:value pairs.
+For example:
 
 .. code-block::
 
