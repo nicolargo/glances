@@ -539,7 +539,7 @@ class ThreadDockerGrabber(threading.Thread):
         logger.debug("docker plugin - Create thread for container {}".format(container_id[:12]))
         super(ThreadDockerGrabber, self).__init__()
         # Event needed to stop properly the thread
-        self._stop = threading.Event()
+        self._stopper = threading.Event()
         # The docker-py return stats as a stream
         self._container_id = container_id
         self._stats_stream = docker_client.stats(container_id, decode=True)
@@ -566,8 +566,7 @@ class ThreadDockerGrabber(threading.Thread):
 
     def stop(self, timeout=None):
         logger.debug("docker plugin - Close thread for container {}".format(self._container_id[:12]))
-        self._stop.set()
-        super(ThreadDockerGrabber, self).join(timeout)
+        self._stopper.set()
 
     def stopped(self):
-        return self._stop.isSet()
+        return self._stopper.isSet()
