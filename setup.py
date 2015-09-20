@@ -53,7 +53,7 @@ setup(
         'IP': ['netifaces'],
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb>=1.0.0', 'statsd', 'pika'],
+        'EXPORT': ['influxdb>=1.0.0', 'potsdb' 'statsd', 'pika'],
         'ACTION': ['pystache'],
         'CPUINFO': ['py-cpuinfo']
     },
