@@ -136,7 +136,11 @@ class GlancesExport(object):
             else:
                 pre_key = ''
             # Walk through the dict
-            for key, value in stats.iteritems():
+            try:
+                iteritems = stats.iteritems()
+            except AttributeError:
+                iteritems = stats.items()
+            for key, value in iteritems:
                 if isinstance(value, list):
                     try:
                         value = value[0]
