@@ -69,8 +69,9 @@ class Bar(object):
 
     @percent.setter
     def percent(self, value):
-        assert value >= 0
-        assert value <= 100
+        if value < 0 or value > 100:
+            raise AssertionError('The percent must be between 0 and 100.')
+
         self.__percent = value
 
     @property

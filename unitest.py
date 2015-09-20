@@ -24,6 +24,7 @@ import sys
 import time
 import unittest
 
+from glances.outputs.glances_bars import Bar
 from glances.core.glances_globals import (
     appname,
     is_linux,
@@ -185,6 +186,17 @@ class TestGlances(unittest.TestCase):
         print('INFO: PROCESS list stats: %s items in the list' % len(stats_grab))
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
+
+    def test_011_output_bars_must_be_between_0_and_100_percent(self):
+        bar = Bar(size=1)
+        with self.assertRaises(AssertionError):
+            bar.percent = -1
+            bar.percent = 101
+
+        # 0 - 100 is an inclusive range, so these should not error.
+        bar.percent = 0
+        bar.percent = 100
+
 
 if __name__ == '__main__':
     unittest.main()
