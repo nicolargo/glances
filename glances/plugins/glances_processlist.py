@@ -256,7 +256,7 @@ class Plugin(GlancesPlugin):
                 # See https://github.com/nicolargo/glances/issues/87
                 # Also catch TypeError on Mac OS X
                 # See: https://github.com/nicolargo/glances/issues/622
-                logger.debug("Can not get TIME+ ({})".format(e))
+                logger.debug("Cannot get TIME+ ({0})".format(e))
                 self.tag_proc_time = False
             else:
                 hours, minutes, seconds, microseconds = convert_timedelta(delta)

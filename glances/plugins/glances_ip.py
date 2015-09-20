@@ -71,7 +71,7 @@ class Plugin(GlancesPlugin):
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
             except (KeyError, AttributeError) as e:
-                logger.debug("Can not grab the default gateway ({})".format(e))
+                logger.debug("Cannot grab the default gateway ({0})".format(e))
             else:
                 try:
                     self.stats['address'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']

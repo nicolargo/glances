@@ -73,7 +73,7 @@ class GlancesPlugin(object):
 
     def exit(self):
         """Method to be called when Glances exit"""
-        logger.debug("Stop the {} plugin".format(self.plugin_name))
+        logger.debug("Stop the {0} plugin".format(self.plugin_name))
 
     def __repr__(self):
         """Return the raw stats."""

@@ -175,7 +175,7 @@ class Plugin(GlancesPlugin):
                 self.stats['version'] = self.docker_client.version()
             except Exception as e:
                 # Correct issue#649
-                logger.error("{} plugin - Can not get Docker version ({})".format(self.plugin_name, e))
+                logger.error("{0} plugin - Cannot get Docker version ({1})".format(self.plugin_name, e))
                 return self.stats
 
             # Container globals information
@@ -192,7 +192,7 @@ class Plugin(GlancesPlugin):
             try:
                 self.stats['containers'] = self.docker_client.containers() or []
             except Exception as e:
-                logger.error("{} plugin - Can not get containers list ({})".format(self.plugin_name, e))
+                logger.error("{0} plugin - Cannot get containers list ({1})".format(self.plugin_name, e))
                 return self.stats
 
             # Start new thread for new container
@@ -200,7 +200,7 @@ class Plugin(GlancesPlugin):
                 if container['Id'] not in self.thread_list:
                     # Thread did not exist in the internal dict
                     # Create it and add it to the internal dict
-                    logger.debug("{} plugin - Create thread for container {}".format(self.plugin_name, container['Id'][:12]))
+                    logger.debug("{0} plugin - Create thread for container {1}".format(self.plugin_name, container['Id'][:12]))
                     t = ThreadDockerGrabber(self.docker_client, container['Id'])
                     self.thread_list[container['Id']] = t
                     t.start()
@@ -209,7 +209,7 @@ class Plugin(GlancesPlugin):
             nonexisting_containers = list(set(self.thread_list.keys()) - set([c['Id'] for c in self.stats['containers']]))
             for container_id in nonexisting_containers:
                 # Stop the thread
-                logger.debug("{} plugin - Stop thread for old container {}".format(self.plugin_name, container_id[:12]))
+                logger.debug("{0} plugin - Stop thread for old container {1}".format(self.plugin_name, container_id[:12]))
                 self.thread_list[container_id].stop()
                 # Delete the item from the dict
                 del(self.thread_list[container_id])
@@ -536,7 +536,7 @@ class ThreadDockerGrabber(threading.Thread):
         """Init the class:
         docker_client: instance of Docker-py client
         container_id: Id of the container"""
-        logger.debug("docker plugin - Create thread for container {}".format(container_id[:12]))
+        logger.debug("docker plugin - Create thread for container {0}".format(container_id[:12]))
         super(ThreadDockerGrabber, self).__init__()
         # Event needed to stop properly the thread
         self._stopper = threading.Event()
@@ -565,7 +565,7 @@ class ThreadDockerGrabber(threading.Thread):
         self._stats = value
 
     def stop(self, timeout=None):
-        logger.debug("docker plugin - Close thread for container {}".format(self._container_id[:12]))
+        logger.debug("docker plugin - Close thread for container {0}".format(self._container_id[:12]))
         self._stopper.set()
 
     def stopped(self):

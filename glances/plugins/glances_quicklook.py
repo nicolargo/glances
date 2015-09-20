@@ -122,7 +122,7 @@ class Plugin(GlancesPlugin):
                     try:
                         bar.percent = cpu['total']
                     except AssertionError:
-                        logger.error("Quicklook: {} percent error 0 < {} > 100".format(key, cpu['total']))
+                        logger.error("Quicklook: {0} percent error 0 < {1} > 100".format(key, cpu['total']))
                         continue
                     if cpu[cpu['key']] < 10:
                         msg = '{0:3}{1} '.format(key.upper(), cpu['cpu_number'])
@@ -138,7 +138,7 @@ class Plugin(GlancesPlugin):
                 try:
                     bar.percent = self.stats[key]
                 except AssertionError:
-                    logger.error("Quicklook: {} percent error 0 < {} > 100".format(key, self.stats[key]))
+                    logger.error("Quicklook: {0} percent error 0 < {1} > 100".format(key, self.stats[key]))
                     continue
                 msg = '{0:4} '.format(key.upper())
                 ret.append(self.curse_add_line(msg))
