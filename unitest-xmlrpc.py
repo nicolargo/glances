@@ -26,7 +26,6 @@ import unittest
 import shlex
 import subprocess
 import json
-import types
 try:
     from xmlrpc.client import ServerProxy
 except ImportError:
@@ -103,7 +102,7 @@ class TestGlances(unittest.TestCase):
         print("XML/RPC request: %s" % method)
         req = json.loads(client.getAll())
 
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
     def test_002_pluginslist(self):
         """Plugins list"""
@@ -113,7 +112,7 @@ class TestGlances(unittest.TestCase):
         print("XML/RPC request: %s" % method)
         req = json.loads(client.getAllPlugins())
 
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
     def test_003_system(self):
         """System"""
@@ -122,7 +121,7 @@ class TestGlances(unittest.TestCase):
 
         req = json.loads(client.getSystem())
 
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
     def test_004_cpu(self):
         """CPU"""
@@ -130,16 +129,16 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_004] Method: %s' % method)
 
         req = json.loads(client.getCpu())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
         req = json.loads(client.getPerCpu())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
         req = json.loads(client.getLoad())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
         req = json.loads(client.getCore())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
     def test_005_mem(self):
         """MEM"""
@@ -147,10 +146,10 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_005] Method: %s' % method)
 
         req = json.loads(client.getMem())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
         req = json.loads(client.getMemSwap())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
     def test_006_net(self):
         """NETWORK"""
@@ -158,7 +157,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_006] Method: %s' % method)
 
         req = json.loads(client.getNetwork())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
     def test_007_disk(self):
         """DISK"""
@@ -166,10 +165,10 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_007] Method: %s' % method)
 
         req = json.loads(client.getFs())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
         req = json.loads(client.getDiskIO())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
     def test_008_sensors(self):
         """SENSORS"""
@@ -177,7 +176,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_008] Method: %s' % method)
 
         req = json.loads(client.getSensors())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
     def test_009_process(self):
         """PROCESS"""
@@ -185,10 +184,10 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_009] Method: %s' % method)
 
         req = json.loads(client.getProcessCount())
-        self.assertIsInstance(req, types.DictType)
+        self.assertIsInstance(req, dict)
 
         req = json.loads(client.getProcessList())
-        self.assertIsInstance(req, types.ListType)
+        self.assertIsInstance(req, list)
 
     def test_010_all_limits(self):
         """All limits"""
@@ -196,8 +195,8 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_010] Method: %s' % method)
 
         req = json.loads(client.getAllLimits())
-        self.assertIsInstance(req, types.DictType)
-        self.assertIsInstance(req['cpu'], types.DictType)
+        self.assertIsInstance(req, dict)
+        self.assertIsInstance(req['cpu'], dict)
 
     def test_011_all_views(self):
         """All views"""
@@ -205,8 +204,8 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_011] Method: %s' % method)
 
         req = json.loads(client.getAllViews())
-        self.assertIsInstance(req, types.DictType)
-        self.assertIsInstance(req['cpu'], types.DictType)
+        self.assertIsInstance(req, dict)
+        self.assertIsInstance(req['cpu'], dict)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server"""
