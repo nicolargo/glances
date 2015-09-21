@@ -24,22 +24,8 @@ import sys
 import time
 import unittest
 
-from glances.outputs.glances_bars import Bar
-from glances.core.glances_globals import (
-    appname,
-    is_linux,
-    version
-)
-
 # Global variables
 # =================
-
-# Unitary test is only available from a GNU/Linus machine
-if not is_linux:
-    print('ERROR: Unitaries tests should be ran on GNU/Linux operating system')
-    sys.exit(2)
-else:
-    print('Unitary tests for {0} {1}'.format(appname, version))
 
 # Init Glances core
 from glances.core.glances_main import GlancesMain
@@ -52,9 +38,13 @@ if not core.is_standalone():
 from glances.core.glances_stats import GlancesStats
 stats = GlancesStats()
 
+from glances.core.glances_globals import is_windows, version
+from glances.outputs.glances_bars import Bar
 
 # Unitest class
 # ==============
+print('Unitary tests for Glances %s' % version)
+
 
 class TestGlances(unittest.TestCase):
 
@@ -115,6 +105,7 @@ class TestGlances(unittest.TestCase):
             self.assertLessEqual(stats_grab[stat], 100)
         print('INFO: CPU stats: %s' % stats_grab)
 
+    @unittest.skipIf(is_windows, "Load average not available on Windows")
     def test_004_load(self):
         """Check LOAD plugin."""
         stats_to_check = ['cpucore', 'min1', 'min5', 'min15']
