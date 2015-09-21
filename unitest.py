@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -63,13 +63,13 @@ class TestGlances(unittest.TestCase):
         try:
             stats.update()
         except Exception as e:
-            print('ERROR: Stats update failed ({})'.format(e))
+            print('ERROR: Stats update failed: %s' % e)
             self.assertTrue(False)
         time.sleep(1)
         try:
             stats.update()
         except Exception as e:
-            print('ERROR: Stats update failed ({})'.format(e))
+            print('ERROR: Stats update failed: %s' % e)
             self.assertTrue(False)
 
         self.assertTrue(True)
@@ -179,6 +179,8 @@ class TestGlances(unittest.TestCase):
         # self.assertEqual(total, len(stats_grab))
 
     def test_011_output_bars_must_be_between_0_and_100_percent(self):
+        """Test quick look plugin."""
+        print('INFO: [TEST_011] Test progress bar')
         bar = Bar(size=1)
         with self.assertRaises(AssertionError):
             bar.percent = -1
