@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2014 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,46 +18,32 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Glances unitary tests suite for the XML/RPC API."""
+"""Glances unitary tests suite for the XML-RPC API."""
 
-import sys
-import time
-import unittest
+import json
 import shlex
 import subprocess
-import json
+import time
+import unittest
 try:
     from xmlrpc.client import ServerProxy
 except ImportError:
     # Python 2
     from xmlrpclib import ServerProxy
 
+from glances.core.glances_globals import version
+
 SERVER_PORT = 61234
 URL = "http://localhost:%s" % SERVER_PORT
 pid = None
 
-# Global variables
-# =================
-
-# Init Glances core
-from glances.core.glances_main import GlancesMain
-core = GlancesMain()
-if not core.is_standalone():
-    print('ERROR: Glances core should be ran in standalone mode')
-    sys.exit(1)
-
-# Init Glances stats
-from glances.core.glances_stats import GlancesStats
-stats = GlancesStats()
-
-from glances.core.glances_globals import version
-
-# Init the XML/RCP client
+# Init the XML-RPC client
 client = ServerProxy(URL)
 
 # Unitest class
 # ==============
 print('XML-RPC API unitary tests for Glances %s' % version)
+
 
 class TestGlances(unittest.TestCase):
 
@@ -68,11 +54,10 @@ class TestGlances(unittest.TestCase):
         print('\n' + '=' * 78)
 
     def test_000_start_server(self):
-        """Start the Glances Web Server"""
-        print('INFO: [TEST_000] Start the Glances Web Server')
-
+        """Start the Glances Web Server."""
         global pid
 
+        print('INFO: [TEST_000] Start the Glances Web Server')
         cmdline = "python -m glances -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
@@ -83,36 +68,33 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(pid is not None)
 
     def test_001_all(self):
-        """All"""
+        """All."""
         method = "getAll()"
         print('INFO: [TEST_001] Connection test')
-
-        print("XML/RPC request: %s" % method)
+        print("XML-RPC request: %s" % method)
         req = json.loads(client.getAll())
 
         self.assertIsInstance(req, dict)
 
     def test_002_pluginslist(self):
-        """Plugins list"""
+        """Plugins list."""
         method = "getAllPlugins()"
         print('INFO: [TEST_002] Get plugins list')
-
-        print("XML/RPC request: %s" % method)
+        print("XML-RPC request: %s" % method)
         req = json.loads(client.getAllPlugins())
 
         self.assertIsInstance(req, list)
 
     def test_003_system(self):
-        """System"""
+        """System."""
         method = "getSystem()"
         print('INFO: [TEST_003] Method: %s' % method)
-
         req = json.loads(client.getSystem())
 
         self.assertIsInstance(req, dict)
 
     def test_004_cpu(self):
-        """CPU"""
+        """CPU."""
         method = "getCpu(), getPerCpu(), getLoad() and getCore()"
         print('INFO: [TEST_004] Method: %s' % method)
 
@@ -129,7 +111,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, dict)
 
     def test_005_mem(self):
-        """MEM"""
+        """MEM."""
         method = "getMem() and getMemSwap()"
         print('INFO: [TEST_005] Method: %s' % method)
 
@@ -140,7 +122,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, dict)
 
     def test_006_net(self):
-        """NETWORK"""
+        """NETWORK."""
         method = "getNetwork()"
         print('INFO: [TEST_006] Method: %s' % method)
 
@@ -148,7 +130,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, list)
 
     def test_007_disk(self):
-        """DISK"""
+        """DISK."""
         method = "getFs() and getDiskIO()"
         print('INFO: [TEST_007] Method: %s' % method)
 
@@ -159,7 +141,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, list)
 
     def test_008_sensors(self):
-        """SENSORS"""
+        """SENSORS."""
         method = "getSensors()"
         print('INFO: [TEST_008] Method: %s' % method)
 
@@ -167,7 +149,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, list)
 
     def test_009_process(self):
-        """PROCESS"""
+        """PROCESS."""
         method = "getProcessCount() and getProcessList()"
         print('INFO: [TEST_009] Method: %s' % method)
 
@@ -178,7 +160,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, list)
 
     def test_010_all_limits(self):
-        """All limits"""
+        """All limits."""
         method = "getAllLimits()"
         print('INFO: [TEST_010] Method: %s' % method)
 
@@ -187,7 +169,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req['cpu'], dict)
 
     def test_011_all_views(self):
-        """All views"""
+        """All views."""
         method = "getAllViews()"
         print('INFO: [TEST_011] Method: %s' % method)
 
@@ -196,12 +178,11 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req['cpu'], dict)
 
     def test_999_stop_server(self):
-        """Stop the Glances Web Server"""
+        """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Server')
 
         print("Stop the Glances Server")
         pid.terminate()
-        print("Please wait...")
         time.sleep(1)
 
         self.assertTrue(True)
