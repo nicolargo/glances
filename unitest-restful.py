@@ -27,7 +27,6 @@ import shlex
 import subprocess
 import requests
 import json
-import types
 
 from glances.core.glances_globals import (
     appname,
@@ -107,7 +106,7 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json(), types.ListType)
+        self.assertIsInstance(req.json(), list)
         self.assertIn('cpu', req.json())
 
     def test_003_plugins(self):
@@ -122,13 +121,13 @@ class TestGlances(unittest.TestCase):
             req = requests.get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
-                self.assertIsInstance(req.json(), types.UnicodeType)
+                self.assertIsInstance(req.json(), str)
             elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist', 'diskio', 'hddtemp', 'batpercent', 'network'):
-                self.assertIsInstance(req.json(), types.ListType)
+                self.assertIsInstance(req.json(), list)
             elif p in ('psutilversion', 'help'):
                 pass
             else:
-                self.assertIsInstance(req.json(), types.DictType)
+                self.assertIsInstance(req.json(), dict)
 
     def test_004_items(self):
         """Items"""
@@ -141,8 +140,8 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTFul request: %s/%s/%s" % (URL, method, i))
             req = requests.get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
-            self.assertIsInstance(req.json(), types.DictType)
-            self.assertIsInstance(req.json()[i], types.FloatType)
+            self.assertIsInstance(req.json(), dict)
+            self.assertIsInstance(req.json()[i], float)
 
     def test_005_values(self):
         """Valuess"""
@@ -153,7 +152,7 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s/pid/0" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json(), types.DictType)
+        self.assertIsInstance(req.json(), dict)
 
     def test_006_all_limits(self):
         """All"""
@@ -164,7 +163,7 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json(), types.DictType)
+        self.assertIsInstance(req.json(), dict)
 
     def test_007_all_views(self):
         """All"""
@@ -175,7 +174,7 @@ class TestGlances(unittest.TestCase):
         req = requests.get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
-        self.assertIsInstance(req.json(), types.DictType)
+        self.assertIsInstance(req.json(), dict)
 
     def test_008_plugins_limits(self):
         """Plugins limits"""
@@ -188,7 +187,7 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTFul request: %s/%s/limits" % (URL, p))
             req = requests.get("%s/%s/limits" % (URL, p))
             self.assertTrue(req.ok)
-            self.assertIsInstance(req.json(), types.DictType)
+            self.assertIsInstance(req.json(), dict)
 
     def test_009_plugins_views(self):
         """Plugins views"""
@@ -201,7 +200,7 @@ class TestGlances(unittest.TestCase):
             print("HTTP RESTFul request: %s/%s/views" % (URL, p))
             req = requests.get("%s/%s/views" % (URL, p))
             self.assertTrue(req.ok)
-            self.assertIsInstance(req.json(), types.DictType)
+            self.assertIsInstance(req.json(), dict)
 
     def test_999_stop_server(self):
         """Stop the Glances Web Server"""
