@@ -28,11 +28,7 @@ import subprocess
 import requests
 import json
 
-from glances.core.glances_globals import (
-    appname,
-    is_linux,
-    version
-)
+from glances.core.glances_globals import version
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s/api/2" % SERVER_PORT
@@ -40,14 +36,6 @@ pid = None
 
 # Global variables
 # =================
-
-# Unitary test is only available from a GNU/Linus machine
-if not is_linux:
-    print(
-        'ERROR: RESTFul API unitaries tests should be ran on GNU/Linux operating system')
-    sys.exit(2)
-else:
-    print('Unitary tests for {0} {1}'.format(appname, version))
 
 # Init Glances core
 from glances.core.glances_main import GlancesMain
@@ -63,6 +51,8 @@ stats = GlancesStats()
 
 # Unitest class
 # ==============
+print('RESTful API unitary tests for Glances %s' % version)
+
 
 class TestGlances(unittest.TestCase):
 
@@ -78,7 +68,7 @@ class TestGlances(unittest.TestCase):
 
         global pid
 
-        cmdline = "/usr/bin/env python -m glances -w -p %s" % SERVER_PORT
+        cmdline = "python -m glances -w -p %s" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
