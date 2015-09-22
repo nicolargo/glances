@@ -24,7 +24,6 @@ import os
 import sys
 import tempfile
 
-from glances.core.glances_globals import is_windows
 from glances.core.glances_logging import logger
 
 try:
@@ -215,9 +214,8 @@ class GlancesBottle(object):
         response.content_type = 'application/json'
 
         if self.args.debug:
-            path = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
-            if os.path.isfile(path):
-                f = open(path)
+            fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
+            with open(fname) as f:
                 return f.read()
 
         # Update the stat
