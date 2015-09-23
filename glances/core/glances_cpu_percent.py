@@ -20,7 +20,6 @@
 """CPU percent stats shared between CPU and Quicklook plugins."""
 
 from glances.core.glances_timer import Timer
-from glances.core.glances_logging import logger
 
 import psutil
 
