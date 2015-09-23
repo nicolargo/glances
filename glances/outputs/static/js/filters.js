@@ -66,7 +66,7 @@ glancesApp.filter('bytes', function() {
           }
         }
 
-        return bytes;
+        return bytes.toFixed(0);
     }
 });
 
