@@ -91,7 +91,7 @@ class TestGlances(unittest.TestCase):
             req = requests.get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
-                self.assertIsInstance(req.json(), str)
+                self.assertIsInstance(req.json(), unicode)
             elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist',
                        'diskio', 'hddtemp', 'batpercent', 'network'):
                 self.assertIsInstance(req.json(), list)
