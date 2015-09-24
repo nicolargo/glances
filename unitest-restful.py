@@ -29,6 +29,11 @@ from glances.core.glances_globals import version
 
 import requests
 
+try:
+    text_type = str
+except NameError:
+    text_type = unicode
+
 SERVER_PORT = 61234
 URL = "http://localhost:%s/api/2" % SERVER_PORT
 pid = None
@@ -91,7 +96,7 @@ class TestGlances(unittest.TestCase):
             req = requests.get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
-                self.assertIsInstance(req.json(), unicode)
+                self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist',
                        'diskio', 'hddtemp', 'batpercent', 'network'):
                 self.assertIsInstance(req.json(), list)
