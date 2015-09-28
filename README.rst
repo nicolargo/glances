@@ -45,6 +45,7 @@ Optional dependencies:
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``py-cpuinfo`` (for the Quicklook CPU Info module)
 
 Installation
 ============
@@ -84,11 +85,18 @@ To install, simply use ``pip``:
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
 You can also install the following libraries in order to use optional
-features:
+features (like the Web Interface):
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb statsd pystache pika
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo
+
+# Install or ugrade Glances from the Git develop repository
+
+.. code-block:: console
+
+    git clone -b develop https://github.com/nicolargo/glances.git    
+
 
 To upgrade Glances to the latest version:
 
@@ -237,7 +245,7 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``StatsD`` and ``RabbitMQ`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``, ``StatsD`` and ``RabbitMQ`` server.
 
 How to contribute ?
 ===================
