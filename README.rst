@@ -2,18 +2,16 @@
 Glances - An eye on your system
 ===============================
 
-.. image:: https://api.flattr.com/button/flattr-badge-large.png
-        :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
-.. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=master
-        :target: https://scrutinizer-ci.com/g/nicolargo/glances/
 .. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
         :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://badge.fury.io/py/Glances.svg
-        :target: http://badge.fury.io/py/Glances
-.. image:: https://pypip.in/d/Glances/badge.svg
-        :target: https://pypi.python.org/pypi/Glances/
-        :alt: Downloads
-
+.. image:: https://img.shields.io/pypi/v/glances.svg
+        :target: https://pypi.python.org/pypi/Glances
+.. image:: https://img.shields.io/pypi/dm/glances.svg
+        :target: https://pypi.python.org/pypi/Glances
+.. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
+        :target: https://scrutinizer-ci.com/g/nicolargo/glances/
+.. image:: https://api.flattr.com/button/flattr-badge-large.png
+        :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
@@ -45,7 +43,7 @@ Optional dependencies:
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
-- ``py-cpuinfo`` (for the Quicklook CPU Info module)
+- ``py-cpuinfo`` (for the Quicklook CPU info module)
 
 Installation
 ============
@@ -85,17 +83,17 @@ To install, simply use ``pip``:
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
 You can also install the following libraries in order to use optional
-features (like the Web Interface):
+features (like the Web interface):
 
 .. code-block:: console
 
     pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo
 
-# Install or ugrade Glances from the Git develop repository
+Install or upgrade Glances from the Git ``develop`` repository:
 
 .. code-block:: console
 
-    git clone -b develop https://github.com/nicolargo/glances.git    
+    git clone -b develop https://github.com/nicolargo/glances.git
 
 
 To upgrade Glances to the latest version:
@@ -165,11 +163,8 @@ MacPorts
 Windows
 -------
 
-- Install Python for Windows (Python 2.7.9+ ship with Pip): http://www.python.org/getit/
-- Install the `psutil`_ library (latest binary version): https://pypi.python.org/pypi/psutil
-- Install the colorconsole library: https://pypi.python.org/pypi/colorconsole
-- Install optionnals dependencies (see list bellow)
-- Install Glances using pip
+Install `Python`_ for Windows (Python 2.7.9+ and 3.4+ ship with pip) and
+then just:
 
 .. code-block:: console
 
@@ -182,8 +177,7 @@ To install Glances from source:
 
 .. code-block:: console
 
-    $ curl -L https://github.com/nicolargo/glances/archive/vX.Y.tar.gz -o glances-X.Y.tar.gz
-    $ tar -zxvf glances-*.tar.gz
+    $ wget https://github.com/nicolargo/glances/archive/vX.Y.tar.gz -O - | tar xz
     $ cd glances-*
     # python setup.py install
 
@@ -245,12 +239,13 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``, ``StatsD`` and ``RabbitMQ`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``,
+``StatsD`` and ``RabbitMQ`` server.
 
 How to contribute ?
 ===================
 
-If you want to contribute to the Glances project, read this `Wiki`_ page.
+If you want to contribute to the Glances project, read this `wiki`_ page.
 
 There is also a chat dedicated to the Glances developers:
 
@@ -271,6 +266,7 @@ LGPL. See ``COPYING`` for more details.
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
+.. _Python: https://www.python.org/getit/
 .. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
-.. _Wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
+.. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
