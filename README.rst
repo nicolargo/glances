@@ -2,11 +2,16 @@
 Glances - An eye on your system
 ===============================
 
+
+.. image:: https://img.shields.io/pypi/dm/glances.svg
+    :target: https://pypi.python.org/pypi/glances#downloads
+    :alt: Downloads this month
+.. image:: https://img.shields.io/github/stars/nicolargo/glances.svg
+    :target: https://github.com/nicolargo/glances/
+    :alt: Github stars
 .. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
         :target: https://travis-ci.org/nicolargo/glances
 .. image:: https://img.shields.io/pypi/v/glances.svg
-        :target: https://pypi.python.org/pypi/Glances
-.. image:: https://img.shields.io/pypi/dm/glances.svg
         :target: https://pypi.python.org/pypi/Glances
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
         :target: https://scrutinizer-ci.com/g/nicolargo/glances/
