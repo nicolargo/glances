@@ -1,0 +1,32 @@
+{
+    "name": "glances",
+    "dependencies": {
+        "bootstrap": "~3.3.5",
+        "slick-carousel": "~1.5.8",
+        "font-awesome": "~4.4.0",
+        "jquery-smooth-scroll": "~1.5.6"
+    },
+    "overrides": {
+        "bootstrap": {
+            "main": [
+                "dist/js/bootstrap.js"
+            ]
+        },
+        "font-awesome": {
+            "main": [
+                "less/font-awesome.less",
+                "fonts/fontawesome-webfont.eot",
+                "fonts/fontawesome-webfont.svg",
+                "fonts/fontawesome-webfont.ttf",
+                "fonts/fontawesome-webfont.woff",
+                "fonts/fontawesome-webfont.woff2"
+            ]
+        },
+        "slick-carousel": {
+            "main": [
+                "slick/slick.js",
+                "slick/slick.css"
+            ]
+        }
+    }
+}
