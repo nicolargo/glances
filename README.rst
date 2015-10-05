@@ -84,7 +84,7 @@ To install, simply use ``pip``:
 
     pip install glances
 
-*Note*: Python headers are required to install psutil. For example,
+*Note*: Python headers are required to install `psutil`_. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
 You can also install the following libraries in order to use optional
