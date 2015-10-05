@@ -1,67 +1,226 @@
-<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Glances is a cross-platform curses-based system monitoring tool written in Python.">
+    <meta name="keywords" content="monitoring, psutil, open-source">
+    <meta name="author" content="Nicolas Hennion, Alessio Sergi, and Glances contributors">
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <title>Glances - An Eye on your system</title>
 
-    <title>Glances by nicolargo</title>
-  </head>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
-  <body>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link rel="stylesheet" type="text/css" href="public/styles/vendors.css">
+    <link rel="stylesheet" type="text/css" href="public/styles/main.css">
+
+    <script type="text/javascript" src="public/js/vendors.js"></script>
+    <script type="text/javascript" src="public/js/scripts.js"></script>
+</head>
+<body data-spy="scroll" data-target="#navbar" data-offset="70">
+    <nav class="navbar navbar-fixed-top" data-spy="affix" data-offset-top="20">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="#"><img class="logo" src="public/images/glances.png" height="70"/></a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#get-started">Get started</a></li>
+                    <li><a href="#community">Community</a></li>
+                    <li><a href="#documentation">Documentation</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <header>
-      <div class="inner">
-        <h1>Glances</h1>
-        <h2>Glances an Eye on your system</h2>
-        <a href="https://github.com/nicolargo/glances" class="button"><small>View project on</small>GitHub</a>
-      </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p class="ad">An Eye on your system</p>
+                    <br>
+                    <p>Glances is a cross-platform curses-based system monitoring tool written in Python.</p>
+                    <br>
+                    <a class="btn btn-github" href="https://github.com/nicolargo/glances">View on GitHub <span class="fa fa-github"></span></a>
+                </div>
+            </div>
+        </div>
     </header>
-
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <p><img src="https://raw.githubusercontent.com/nicolargo/glances/develop/docs/images/glances-responsive-webdesign.png" alt="Glances screenshot"></p>
-
-<p><a href="http://glances.readthedocs.org/en/latest/glances-doc.html">Click here</a> to see the official documentation.</p>
-
-<p>Glances has been created by Nicolargo (<a href="http://blog.nicolargo.com/tag/glances">see related posts</a> on the Nicolargo's blog).</p>
+    <div class="content">
+        <section id="features">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2>Features</h2>
+                    </div>
+                    <div class="col-sm-9 col-sm-push-3">
+                        <div class="slider">
+                            <img class="screenshot img-responsive" src="public/images/screenshot-wide.png" alt="">
+                            <img class="screenshot img-responsive" src="public/images/screenshot-wide.png" alt="">
+                            <img class="screenshot img-responsive" src="public/images/screenshot-wide.png" alt="">
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-sm-pull-9">
+                        <ul class="plugin-list list-unstyled">
+                            <li>System info</li>
+                            <li>Uptime</li>
+                            <li>Quicklook</li>
+                            <li>CPU</li>
+                            <li>Memory</li>
+                            <li>Load</li>
+                            <li>Network</li>
+                            <li>Disk I/O</li>
+                            <li>Raid</li>
+                            <li>Sensors</li>
+                            <li>Filesystem</li>
+                            <li>Docker</li>
+                            <li>Process count</li>
+                            <li>Monitor</li>
+                            <li>Process list</li>
+                            <li>Alert</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <ul class="list-unstyled">
+                        <li class="feature col-sm-6 col-lg-3">
+                            <div class="feature-text">
+                                <h3><span class="fa fa-cube" aria-hidden="true"></span>&nbsp;Cross-platform</h3>
+                                <p>
+                                    Written in Python, Glances will run on almost any plaftorm : GNU/Linux, FreeBSD, OS X and Windows.
+                                </p>
+                            </div>
+                        </li>
+                        <li class="feature col-sm-6 col-lg-3">
+                            <div class="feature-text">
+                                <h3><span class="fa fa-cogs" aria-hidden="true"></span>&nbsp;API</h3>
+                                <p>
+                                    Glances includes a XML-RPC server and a RESTFUL-JSON API which can be used by another client software.
+                                </p>
+                            </div>
+                        </li>
+                        <li class="feature col-sm-6 col-lg-3">
+                            <div class="feature-text">
+                                <h3><span class="fa fa-globe" aria-hidden="true"></span>&nbsp;Web UI</h3>
+                                <p>
+                                    No terminal at hand ? Use the built-in Web UI and monitor your system from any device.
+                                </p>
+                            </div>
+                        </li>
+                        <li class="feature col-sm-6 col-lg-3">
+                            <div class="feature-text">
+                                <h3><span class="fa fa-upload" aria-hidden="true"></span>&nbsp;Export</h3>
+                                <p>
+                                    Export all system statistics to csv, StatsD, InfluxDB or even RabbitMQ. Glances also provides a dedicated Grafana dashboard.
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </section>
+        <section id="get-started">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2>Get started</h2>
 
-        <aside id="sidebar">
-          <a href="https://github.com/nicolargo/glances/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/nicolargo/glances/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+                        <h3>Glances Auto Install script</h3>
 
-          <p class="repo-owner"><a href="https://github.com/nicolargo/glances"></a> is maintained by <a href="https://github.com/nicolargo">nicolargo</a>.</p>
+                        <p>To install the latest Glances production ready version, just enter the following command line:</p>
 
-          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
+                        <pre>$ curl -L http://bit.ly/glances | /bin/bash</pre>
+
+                        <p>or</p>
+
+                        <pre>$ wget -O- http://bit.ly/glances | /bin/bash</pre>
+                        <p>Note: Only supported on some GNU/Linux distributions.</p>
+
+                        <h3>PyPI: The simple way</h3>
+
+                        <p>Glances is on PyPI. By using PyPI, you are sure to have the latest stable version.</p>
+
+                        <p>To install, simply use pip:</p>
+
+                        <pre>$ pip install glances</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="community">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2>Community</h2>
+                        <p class="head">
+                            Get help from others users or from the Glances developers and stay in touch with us. But never forget : always RTFM!
+                        </p>
+                        <ul class="row list-inline text-center">
+                            <li class="col-xs-6 col-sm-4">
+                                <a class="link-round" href="https://gitter.im/nicolargo/glances">
+                                    <span class="fa fa-comments round" aria-hidden="true"></span>
+                                    <h3>Chat</h3>
+                                </a>
+                            </li>
+                            <li class="col-xs-6 col-sm-4">
+                                <a class="link-round" href="https://groups.google.com/forum/?hl=en#!forum/glances-users">
+                                    <span class="fa fa-envelope round" aria-hidden="true"></span>
+                                    <h3>Mailing list</h3>
+                                </a>
+                            </li>
+                            <li class="col-xs-12 col-sm-4">
+                                <a class="link-round" href="https://twitter.com/glances_system">
+                                    <span class="fa fa-twitter round" aria-hidden="true"></span>
+                                    <h3>Twitter</h3>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="documentation">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h2>Documentation</h2>
+                        <p class="head">
+                            You want more informations or contribute to the Glances project ? Look at our user manual and the development wiki.
+                        </p>
+                        <ul class="row list-inline text-center">
+                            <li class="col-xs-6">
+                                <a class="link-round" href="http://glances.readthedocs.org/en/latest/glances-doc.html">
+                                    <span class="fa fa-book" aria-hidden="true"></span>
+                                    <h3>Read the doc</h3>
+                                </a>
+                            </li>
+                            <li class="col-xs-6">
+                                <a class="link-round" href="https://github.com/nicolargo/glances/wiki">
+                                    <span class="fa fa-file-text-o round" aria-hidden="true"></span>
+                                    <h3>Wiki</h3>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
-
-            <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA–115490–11");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
-
-  </body>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-offset-3 col-sm-6">
+                    <p>© Copyright 2015 Nicolargo</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
 </html>
