@@ -86,6 +86,7 @@ To install, simply use ``pip``:
 
 *Note*: Python headers are required to install `psutil`_. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
+For Fedora/CentOS/RHEL install first *python-devel* package.
 
 You can also install the following libraries in order to use optional
 features (like the Web interface):
