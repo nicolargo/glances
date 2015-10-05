@@ -3,7 +3,6 @@
     "assetsmanager-brunch": "^1.8.1",
     "clean-css-brunch": "^1.7.2",
     "css-brunch": "^1.7.0",
-    "imageoptmizer-brunch": "0.0.6",
     "javascript-brunch": "^1.7.1",
     "less-brunch": "^1.8.1",
     "uglify-js-brunch": "^1.7.8"
