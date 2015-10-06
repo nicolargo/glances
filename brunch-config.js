@@ -23,11 +23,10 @@ exports.config = {
     }
   },
   plugins: {
-      assetsmanager: {
-        copyTo: {
-          'images': ['/app/images/*'],
-          'fonts' : ['bower_components/font-awesome/fonts/*']
-        }
+    assetsmanager: {
+      copyTo: {
+        'fonts' : ['bower_components/font-awesome/fonts/*']
       }
+    }
   }
 };
