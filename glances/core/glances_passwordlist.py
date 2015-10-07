@@ -21,15 +21,17 @@
 
 # Import Glances libs
 from glances.core.glances_logging import logger
+from glances.core.glances_password import GlancesPassword
 
 
-class GlancesPassword(object):
+class GlancesPasswordList(GlancesPassword):
 
     """Manage the Glances passwords list for the client|browser/server."""
 
     _section = "passwords"
 
     def __init__(self, config=None, args=None):
+        super(GlancesPassword, self).__init__()
         # password_dict is a dict (JSON compliant)
         # {'host': 'password', ... }
         # Load the configuration file

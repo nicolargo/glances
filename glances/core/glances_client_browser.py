@@ -32,8 +32,8 @@ except ImportError:
 from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
 from glances.core.glances_client import GlancesClient, GlancesClientTransport
 from glances.core.glances_logging import logger
+from glances.core.glances_passwordlist import GlancesPasswordList as GlancesPassword
 from glances.core.glances_staticlist import GlancesStaticServer
-from glances.core.glances_passwordlist import GlancesPassword
 from glances.outputs.glances_curses import GlancesCursesBrowser
 
 
