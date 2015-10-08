@@ -129,6 +129,7 @@ class WCurseLight(object):
     COLOR_BLACK = colorconsole.terminal.colors["BLACK"]
     A_UNDERLINE = 0
     A_BOLD = 0
+    A_PROTECT = 0
     COLOR_PAIRS = 9
     colors = {}
 
