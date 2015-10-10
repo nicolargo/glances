@@ -70,23 +70,76 @@ class _GlancesCurses(object):
             logger.critical("Cannot init the curses library.\n")
             sys.exit(1)
 
-        # Set curses options
-        if hasattr(curses, 'start_color'):
-            curses.start_color()
-        if hasattr(curses, 'use_default_colors'):
-            curses.use_default_colors()
+        # Init cursor
+        self._init_cursor()
+
+        # Init the colors
+        self._init_colors()
+
+        # Init main window
+        self.term_window = self.screen.subwin(0, 0)
+
+        # Init refresh time
+        self.__refresh_time = args.time
+
+        # Init edit filter tag
+        self.edit_filter = False
+
+        # Catch key pressed with non blocking mode
+        self.no_flash_cursor()
+        self.term_window.nodelay(1)
+        self.pressedkey = -1
+
+        # History tag
+        self._init_history()
+
+    def _init_history(self):
+        '''Init the history option'''
+
+        self.reset_history_tag = False
+        self.history_tag = False
+        if self.args.enable_history:
+            logger.info('Stats history enabled with output path %s' %
+                        self.args.path_history)
+            from glances.exports.glances_history import GlancesHistory
+            self.glances_history = GlancesHistory(self.args.path_history)
+            if not self.glances_history.graph_enabled():
+                self.args.enable_history = False
+                logger.error(
+                    'Stats history disabled because MatPlotLib is not installed')
+
+    def _init_cursor(self):
+        '''Init cursors'''
+
         if hasattr(curses, 'noecho'):
             curses.noecho()
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
         self.set_cursor(0)
 
+    def _init_colors(self):
+        '''Init the Curses color layout'''
+
+        # Set curses options
+        if hasattr(curses, 'start_color'):
+            curses.start_color()
+        if hasattr(curses, 'use_default_colors'):
+            curses.use_default_colors()
+
         # Init colors
-        self.hascolors = False
-        if curses.has_colors() and curses.COLOR_PAIRS > 8:
-            self.hascolors = True
-            # FG color, BG color
-            if args.theme_white:
+        if self.args.disable_bold:
+            A_BOLD = curses.A_BOLD
+        else:
+            A_BOLD = 0
+
+        self.title_color = A_BOLD
+        self.title_underline_color = A_BOLD | curses.A_UNDERLINE
+        self.help_color = A_BOLD
+
+        if curses.has_colors():
+            # The screen is compatible with a colored design
+            if self.args.theme_white:
+                # White theme: black ==> white
                 curses.init_pair(1, curses.COLOR_BLACK, -1)
             else:
                 curses.init_pair(1, curses.COLOR_WHITE, -1)
@@ -97,34 +150,28 @@ class _GlancesCurses(object):
             curses.init_pair(6, curses.COLOR_RED, -1)
             curses.init_pair(7, curses.COLOR_GREEN, -1)
             curses.init_pair(8, curses.COLOR_BLUE, -1)
-            try:
-                curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-            except Exception:
-                if args.theme_white:
-                    curses.init_pair(9, curses.COLOR_BLACK, -1)
-                else:
-                    curses.init_pair(9, curses.COLOR_WHITE, -1)
-            try:
-                curses.init_pair(10, curses.COLOR_CYAN, -1)
-            except Exception:
-                if args.theme_white:
-                    curses.init_pair(10, curses.COLOR_BLACK, -1)
-                else:
-                    curses.init_pair(10, curses.COLOR_WHITE, -1)
 
-        else:
-            self.hascolors = False
-
-        if args.disable_bold:
-            A_BOLD = curses.A_BOLD
-        else:
-            A_BOLD = 0
-
-        self.title_color = A_BOLD
-        self.title_underline_color = A_BOLD | curses.A_UNDERLINE
-        self.help_color = A_BOLD
-        if self.hascolors:
             # Colors text styles
+            if curses.COLOR_PAIRS > 8:
+                try:
+                    curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+                except Exception:
+                    if self.args.theme_white:
+                        curses.init_pair(9, curses.COLOR_BLACK, -1)
+                    else:
+                        curses.init_pair(9, curses.COLOR_WHITE, -1)
+                try:
+                    curses.init_pair(10, curses.COLOR_CYAN, -1)
+                except Exception:
+                    if self.args.theme_white:
+                        curses.init_pair(10, curses.COLOR_BLACK, -1)
+                    else:
+                        curses.init_pair(10, curses.COLOR_WHITE, -1)
+
+                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
+                self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+                self.filter_color = curses.color_pair(10) | A_BOLD
+
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
             self.nice_color = curses.color_pair(9) | A_BOLD
@@ -134,11 +181,10 @@ class _GlancesCurses(object):
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7) | A_BOLD
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
-            self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
-            self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-            self.filter_color = curses.color_pair(10) | A_BOLD
+
         else:
-            # B&W text styles
+            # The screen is NOT compatible with a colored design
+            # switch to B&W text styles
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.nice_color = A_BOLD
@@ -174,33 +220,6 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT
         }
-
-        # Init main window
-        self.term_window = self.screen.subwin(0, 0)
-
-        # Init refresh time
-        self.__refresh_time = args.time
-
-        # Init edit filter tag
-        self.edit_filter = False
-
-        # Catch key pressed with non blocking mode
-        self.no_flash_cursor()
-        self.term_window.nodelay(1)
-        self.pressedkey = -1
-
-        # History tag
-        self.reset_history_tag = False
-        self.history_tag = False
-        if args.enable_history:
-            logger.info('Stats history enabled with output path %s' %
-                        args.path_history)
-            from glances.exports.glances_history import GlancesHistory
-            self.glances_history = GlancesHistory(args.path_history)
-            if not self.glances_history.graph_enabled():
-                args.enable_history = False
-                logger.error(
-                    'Stats history disabled because MatPlotLib is not installed')
 
     def flash_cursor(self):
         self.term_window.keypad(1)
