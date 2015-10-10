@@ -2,11 +2,14 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.X
-===========
+Version 2.5.1
+=============
 
-    ...
+Bugs corrected:
 
+    * Unable to unlock password protected servers in browser mode bug (issue #694)
+    * Correct issue when Glances is started in console on Windows OS
+    * [WebUI] when alert is ongoing hide level enhancement (issue #692)
 
 Version 2.5
 ===========
