@@ -118,9 +118,9 @@ class GlancesGrabHDDTemp(object):
             hddtemp_current = {}
             device = fields[offset + 1].decode('utf-8')
             device = os.path.basename(device)
-            temperature = fields[offset + 3]
+            temperature = float(fields[offset + 3].decode('utf-8'))
             hddtemp_current['label'] = device
-            hddtemp_current['value'] = temperature.decode('utf-8')
+            hddtemp_current['value'] = temperature
             self.hddtemp_list.append(hddtemp_current)
 
     def fetch(self):

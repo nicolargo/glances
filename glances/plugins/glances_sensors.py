@@ -45,6 +45,11 @@ else:
 SENSOR_FAN_UNIT = 'RPM'
 
 
+def to_fahrenheit(celsius):
+    """Convert Celsius to Fahrenheit."""
+    return celsius * 1.8 + 32
+
+
 class Plugin(GlancesPlugin):
 
     """Glances sensors plugin.
@@ -202,12 +207,11 @@ class Plugin(GlancesPlugin):
                 if args.fahrenheit:
                     msg = msg.replace('°C', '°F')
                 ret.append(self.curse_add_line(msg))
-                if args.fahrenheit:
-                    # Convert Celsius to Fahrenheit
-                    # T(°F) = T(°C) × 1.8 + 32
-                    msg = '{0:>7}'.format(i['value'] * 1.8 + 32)
+                if args.fahrenheit and i['type'] != 'battery':
+                    value = to_fahrenheit(i['value'])
                 else:
-                    msg = '{0:>7}'.format(i['value'])
+                    value = i['value']
+                msg = '{0:>7.0f}'.format(value)
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
                                         key='value',
