@@ -1,9 +1,11 @@
 glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) {
     var _pluginName = "processlist";
+    var _ioReadWritePresent = false;
     this.processes = [];
 
     this.setData = function(data, views) {
         this.processes = [];
+        this.ioReadWritePresent = false;
 
         for (var i = 0; i < data[_pluginName].length; i++) {
             var process = data[_pluginName][i];
@@ -13,10 +15,12 @@ glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) 
             process.timeplus = $filter('timedelta')(process.cpu_times);
             process.timemillis = $filter('timemillis')(process.cpu_times);
 
-            process.ioRead = '?';
-            process.ioWrite = '?';
+            process.ioRead = null;
+            process.ioWrite = null;
 
             if (process.io_counters) {
+                this.ioReadWritePresent = true;
+
                 process.ioRead  = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update;
 
                 if (process.ioRead != 0) {
