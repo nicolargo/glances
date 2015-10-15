@@ -23,6 +23,7 @@ import os
 import re
 
 # Import Glances lib
+from glances.core.compat import iteritems, itervalues
 from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows
 from glances.core.glances_logging import logger
 from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
@@ -188,7 +189,7 @@ class ProcessTreeNode(object):
         nodes_to_add_last = collections.deque()
 
         # first pass: add nodes whose parent are in the tree
-        for process, stats in process_dict.items():
+        for process, stats in iteritems(process_dict):
             new_node = ProcessTreeNode(process, stats, sort_key, sort_reverse)
             try:
                 parent_process = process.parent()
@@ -661,21 +662,21 @@ class GlancesProcesses(object):
                 # Sort the internal dict and cut the top N (Return a list of tuple)
                 # tuple=key (proc), dict (returned by __get_process_stats)
                 try:
-                    processiter = sorted(processdict.items(),
+                    processiter = sorted(iteritems(processdict),
                                          key=lambda x: x[1][self.sort_key],
                                          reverse=self.sort_reverse)
                 except (KeyError, TypeError) as e:
                     logger.error("Cannot sort process list by {0}: {1}".format(self.sort_key, e))
-                    logger.error("%s" % str(processdict.items()[0]))
+                    logger.error("%s" % str(iteritems(processdict)[0]))
                     # Fallback to all process (issue #423)
-                    processloop = processdict.items()
+                    processloop = iteritems(processdict)
                     first = False
                 else:
                     processloop = processiter[0:self.max_processes]
                     first = True
             else:
                 # Get all processes stats
-                processloop = processdict.items()
+                processloop = iteritems(processdict)
                 first = False
 
             for i in processloop:
@@ -699,7 +700,7 @@ class GlancesProcesses(object):
                 first = False
 
         # Build the all processes list used by the monitored list
-        self.allprocesslist = processdict.values()
+        self.allprocesslist = itervalues(processdict)
 
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():

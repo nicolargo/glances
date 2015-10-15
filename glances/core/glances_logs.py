@@ -24,6 +24,7 @@ import time
 from datetime import datetime
 
 # Import Glances libs
+from glances.core.compat import range
 from glances.core.glances_processes import glances_processes
 
 

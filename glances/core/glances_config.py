@@ -22,20 +22,15 @@
 # Import system libs
 import os
 import sys
-try:
-    from configparser import ConfigParser
-    from configparser import NoOptionError
-except ImportError:  # Python 2
-    from ConfigParser import SafeConfigParser as ConfigParser
-    from ConfigParser import NoOptionError
+from io import open
 
 # Import Glances lib
+from glances.core.compat import ConfigParser, NoOptionError
 from glances.core.glances_globals import (
     appname,
     is_bsd,
     is_linux,
     is_mac,
-    is_py3,
     is_windows,
     sys_prefix
 )
@@ -107,10 +102,9 @@ class Config(object):
         for config_file in self.config_file_paths():
             if os.path.exists(config_file):
                 try:
-                    if is_py3:
-                        self.parser.read(config_file, encoding='utf-8')
-                    else:
-                        self.parser.read(config_file)
+                    with open(config_file, encoding='utf-8') as f:
+                        self.parser.read_file(f)
+                        self.parser.read(f)
                     logger.info("Read configuration file '{0}'".format(config_file))
                 except UnicodeDecodeError as err:
                     logger.error("Cannot decode configuration file '{0}': {1}".format(config_file, err))

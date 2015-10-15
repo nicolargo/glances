@@ -24,6 +24,7 @@ import os
 import socket
 
 # Import Glances libs
+from glances.core.compat import nativestr, range
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -116,10 +117,9 @@ class GlancesGrabHDDTemp(object):
         for item in range(devices):
             offset = item * 5
             hddtemp_current = {}
-            device = fields[offset + 1].decode('utf-8')
-            device = os.path.basename(device)
-            temperature = float(fields[offset + 3].decode('utf-8'))
-            unit = fields[offset + 4].decode('utf-8')
+            device = os.path.basename(nativestr(fields[offset + 1]))
+            temperature = float(fields[offset + 3])
+            unit = nativestr(fields[offset + 4])
             hddtemp_current['label'] = device
             hddtemp_current['value'] = temperature
             hddtemp_current['unit'] = unit

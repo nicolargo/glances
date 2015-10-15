@@ -27,6 +27,7 @@ I am your father...
 # None...
 
 # Import Glances lib
+from glances.core.compat import iteritems, iterkeys
 from glances.core.glances_logging import logger
 
 
@@ -131,16 +132,12 @@ class GlancesExport(object):
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if 'key' in list(stats.keys()):
+            if 'key' in iterkeys(stats):
                 pre_key = '{0}.'.format(stats[stats['key']])
             else:
                 pre_key = ''
             # Walk through the dict
-            try:
-                iteritems = stats.iteritems()
-            except AttributeError:
-                iteritems = stats.items()
-            for key, value in iteritems:
+            for key, value in iteritems(stats):
                 if isinstance(value, list):
                     try:
                         value = value[0]

@@ -20,6 +20,7 @@
 """IP plugin."""
 
 # Import Glances libs
+from glances.core.compat import iterkeys
 from glances.core.glances_globals import is_freebsd
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -97,7 +98,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Optional
-        for key in self.stats.keys():
+        for key in iterkeys(self.stats):
             self.views[key]['optional'] = True
 
     def msg_curse(self, args=None):

@@ -26,11 +26,8 @@ import sys
 from numbers import Number
 
 # Import Glances lib
+from glances.core.compat import NoOptionError, NoSectionError, range
 from glances.core.glances_logging import logger
-try:
-    from configparser import NoOptionError, NoSectionError
-except ImportError:  # Python 2
-    from ConfigParser import NoOptionError, NoSectionError
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ
@@ -100,7 +97,7 @@ class Export(GlancesExport):
         """Write the points in RabbitMQ."""
         data = ('hostname=' + self.hostname + ', name=' + name +
                 ', dateinfo=' + datetime.datetime.utcnow().isoformat())
-        for i in range(0, len(columns)):
+        for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
             else:

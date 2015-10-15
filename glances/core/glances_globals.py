@@ -27,9 +27,6 @@ appname = 'glances'
 version = __import__('glances').__version__
 psutil_version = __import__('glances').__psutil_version
 
-# PY3?
-is_py3 = sys.version_info >= (3, 3)
-
 # Operating system flag
 # Note: Somes libs depends of OS
 is_bsd = sys.platform.find('bsd') != -1

@@ -23,6 +23,7 @@
 import os
 
 # Import Glances lib
+from glances.core.compat import iterkeys
 from glances.core.glances_logging import logger
 
 # Import specific lib
@@ -108,7 +109,7 @@ class GlancesHistory(object):
             handles = []
             labels = []
             for i in stats.get_plugin(p).get_items_history_list():
-                if i['name'] in h.keys():
+                if i['name'] in iterkeys(h):
                     # The key exist
                     # Add the curves in the current chart
                     logger.debug("Generate graph: %s %s" % (p, i['name']))
@@ -132,7 +133,7 @@ class GlancesHistory(object):
                     # Find if anothers key ends with the key
                     # Ex: key='tx' => 'ethernet_tx'
                     # Add one curve per chart
-                    stats_history_filtered = [key for key in h.keys() if key.endswith('_' + i['name'])]
+                    stats_history_filtered = [key for key in iterkeys(h) if key.endswith('_' + i['name'])]
                     stats_history_filtered.sort()
                     logger.debug("Generate graphs: %s %s" %
                                  (p, stats_history_filtered))

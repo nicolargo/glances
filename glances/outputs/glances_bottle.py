@@ -23,6 +23,7 @@ import json
 import os
 import sys
 import tempfile
+from io import open
 
 from glances.core.glances_logging import logger
 

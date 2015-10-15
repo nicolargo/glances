@@ -23,8 +23,10 @@
 import os
 import platform
 import re
+from io import open
 
 # Import Glances libs
+from glances.core.compat import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
@@ -148,11 +150,7 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
             if self.short_system_name == 'windows':
-                try:
-                    iteritems = snmp_to_human['windows'].iteritems()
-                except AttributeError:
-                    iteritems = snmp_to_human['windows'].items()
-                for r, v in iteritems:
+                for r, v in iteritems(snmp_to_human['windows']):
                     if re.search(r, self.stats['system_name']):
                         self.stats['os_name'] = v
                         break

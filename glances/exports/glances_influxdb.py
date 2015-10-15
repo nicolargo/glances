@@ -21,12 +21,9 @@
 
 # Import sys libs
 import sys
-try:
-    from configparser import NoOptionError, NoSectionError
-except ImportError:  # Python 2
-    from ConfigParser import NoOptionError, NoSectionError
 
 # Import Glances lib
+from glances.core.compat import NoOptionError, NoSectionError
 from glances.core.glances_logging import logger
 from glances.exports.glances_export import GlancesExport
 
