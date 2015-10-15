@@ -25,12 +25,8 @@ import shlex
 import subprocess
 import time
 import unittest
-try:
-    from xmlrpc.client import ServerProxy
-except ImportError:
-    # Python 2
-    from xmlrpclib import ServerProxy
 
+from glances.core.compat import ServerProxy
 from glances.core.glances_globals import version
 
 SERVER_PORT = 61234

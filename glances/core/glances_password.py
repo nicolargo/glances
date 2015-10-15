@@ -25,16 +25,12 @@ import hashlib
 import os
 import sys
 import uuid
+from io import open
 
 # Import Glances lib
+from glances.core.compat import b, input
 from glances.core.glances_globals import appname, is_bsd, is_linux, is_mac, is_windows
 from glances.core.glances_logging import logger
-
-# Trick: bind raw_input to input in Python 2
-try:
-    input = raw_input
-except NameError:
-    pass
 
 
 class GlancesPassword(object):
@@ -69,7 +65,7 @@ class GlancesPassword(object):
 
     def sha256_hash(self, plain_password):
         """Return the SHA-256 of the given password."""
-        return hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+        return hashlib.sha256(b(plain_password)).hexdigest()
 
     def get_hash(self, salt, plain_password):
         """Return the hashed password, salt + SHA-256."""

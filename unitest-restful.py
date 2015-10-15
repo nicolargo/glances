@@ -25,14 +25,10 @@ import subprocess
 import time
 import unittest
 
+from glances.core.compat import text_type
 from glances.core.glances_globals import version
 
 import requests
-
-try:
-    text_type = str
-except NameError:
-    text_type = unicode
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s/api/2" % SERVER_PORT

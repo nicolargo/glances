@@ -25,6 +25,7 @@ import threading
 import time
 
 # Import Glances libs
+from glances.core.compat import iterkeys, itervalues
 from glances.core.glances_logging import logger
 from glances.core.glances_timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -69,7 +70,7 @@ class Plugin(GlancesPlugin):
     def exit(self):
         """Overwrite the exit method to close threads"""
         logger.debug("Stop the Docker plugin")
-        for t in self.thread_list.values():
+        for t in itervalues(self.thread_list):
             t.stop()
 
     def get_key(self):
@@ -206,7 +207,7 @@ class Plugin(GlancesPlugin):
                     t.start()
 
             # Stop threads for non-existing containers
-            nonexisting_containers = list(set(self.thread_list.keys()) - set([c['Id'] for c in self.stats['containers']]))
+            nonexisting_containers = set(iterkeys(self.thread_list)) - set([c['Id'] for c in self.stats['containers']])
             for container_id in nonexisting_containers:
                 # Stop the thread
                 logger.debug("{0} plugin - Stop thread for old container {1}".format(self.plugin_name, container_id[:12]))

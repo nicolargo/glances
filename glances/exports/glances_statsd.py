@@ -22,12 +22,9 @@
 # Import sys libs
 import sys
 from numbers import Number
-try:
-    from configparser import NoOptionError, NoSectionError
-except ImportError:  # Python 2
-    from ConfigParser import NoOptionError, NoSectionError
 
 # Import Glances lib
+from glances.core.compat import NoOptionError, NoSectionError, range
 from glances.core.glances_logging import logger
 from glances.exports.glances_export import GlancesExport
 
@@ -91,7 +88,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        for i in range(0, len(columns)):
+        for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
             stat_name = '{0}.{1}'.format(name, columns[i])

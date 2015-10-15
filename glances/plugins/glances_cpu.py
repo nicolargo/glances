@@ -19,6 +19,7 @@
 
 """CPU plugin."""
 
+from glances.core.compat import iterkeys
 from glances.core.glances_cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -127,7 +128,7 @@ class Plugin(GlancesPlugin):
                     return self.stats
 
                 # Convert SNMP stats to float
-                for key in list(self.stats.keys()):
+                for key in iterkeys(self.stats):
                     self.stats[key] = float(self.stats[key])
                 self.stats['total'] = 100 - self.stats['idle']
 

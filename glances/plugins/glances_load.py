@@ -23,6 +23,7 @@
 import os
 
 # Import Glances libs
+from glances.core.compat import iteritems
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -99,11 +100,7 @@ class Plugin(GlancesPlugin):
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
-            try:
-                iteritems = self.stats.iteritems()
-            except AttributeError:
-                iteritems = self.stats.items()
-            for k, v in iteritems:
+            for k, v in iteritems(self.stats):
                 self.stats[k] = float(v)
 
             self.stats['cpucore'] = self.nb_log_core

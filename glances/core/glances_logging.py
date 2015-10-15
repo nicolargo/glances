@@ -20,14 +20,10 @@
 """Custom logging class."""
 
 import logging
-try:
-    # Python 2.6
-    from logutils.dictconfig import dictConfig
-except ImportError:
-    # Python >= 2.7
-    from logging.config import dictConfig
 import os
 import tempfile
+
+from glances.core.compat import dictConfig
 
 # Define the logging configuration
 LOGGING_CFG = {

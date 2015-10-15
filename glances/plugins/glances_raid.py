@@ -20,6 +20,7 @@
 """RAID plugin."""
 
 # Import Glances libs
+from glances.core.compat import iterkeys
 from glances.core.glances_logging import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -94,7 +95,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>6}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
-        arrays = self.stats.keys()
+        arrays = iterkeys(self.stats)
         arrays.sort()
         for array in arrays:
             # New line
@@ -114,7 +115,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_new_line())
                 msg = '└─ Status {0}'.format(self.stats[array]['status'])
                 ret.append(self.curse_add_line(msg, status))
-                components = self.stats[array]['components'].keys()
+                components = iterkeys(self.stats[array]['components'])
                 components.sort()
                 for i, component in enumerate(components):
                     if i == len(components) - 1:

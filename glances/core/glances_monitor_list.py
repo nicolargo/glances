@@ -24,6 +24,7 @@ import re
 import subprocess
 
 # Import Glances lib
+from glances.core.compat import range, u
 from glances.core.glances_logging import logger
 from glances.core.glances_processes import glances_processes
 
@@ -125,7 +126,7 @@ class MonitorList(object):
             return self.__monitor_list
 
         # Iter upon the monitored list
-        for i in range(0, len(self.get())):
+        for i in range(len(self.get())):
             # Search monitored processes by a regular expression
             processlist = glances_processes.getalllist()
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
@@ -141,7 +142,7 @@ class MonitorList(object):
                 except Exception:
                     self.__monitor_list[i]['result'] = 'Cannot execute command'
                 # Only save the first line
-                self.__monitor_list[i]['result'] = self.__monitor_list[i]['result'].decode('utf-8').split('\n')[0]
+                self.__monitor_list[i]['result'] = u(self.__monitor_list[i]['result']).split('\n')[0]
 
             if self.command(i) is None or self.__monitor_list[i]['result'] == '':
                 # If there is no command specified in the conf file

@@ -25,6 +25,7 @@ import os
 from datetime import timedelta
 
 # Import Glances libs
+from glances.core.compat import iteritems
 from glances.core.glances_logging import logger
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.core.glances_globals import is_windows
@@ -34,9 +35,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 def convert_timedelta(delta):
     """Convert timedelta to human-readable time."""
-    # Python 2.7+:
-    # total_seconds = delta.total_seconds()
-    # hours = total_seconds // 3600
     days, total_seconds = delta.days, delta.seconds
     hours = days * 24 + total_seconds // 3600
     minutes = (total_seconds % 3600) // 60
@@ -334,7 +332,7 @@ class Plugin(GlancesPlugin):
             if 'memory_info_ex' in p and p['memory_info_ex'] is not None:
                 ret.append(self.curse_new_line())
                 msg = xpad + 'Memory info: '
-                for k, v in p['memory_info_ex']._asdict().items():
+                for k, v in iteritems(p['memory_info_ex']._asdict()):
                     # Ignore rss and vms (already displayed)
                     if k not in ['rss', 'vms'] and v is not None:
                         msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '

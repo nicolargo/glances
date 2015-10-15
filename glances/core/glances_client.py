@@ -23,13 +23,9 @@
 import json
 import socket
 import sys
-try:
-    from xmlrpc.client import Transport, ServerProxy, ProtocolError, Fault
-except ImportError:
-    # Python 2
-    from xmlrpclib import Transport, ServerProxy, ProtocolError, Fault
 
 # Import Glances libs
+from glances.core.compat import Fault, ProtocolError, ServerProxy, Transport
 from glances.core.glances_globals import version
 from glances.core.glances_logging import logger
 from glances.core.glances_stats import GlancesStatsClient

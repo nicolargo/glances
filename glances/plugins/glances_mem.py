@@ -19,6 +19,7 @@
 
 """Virtual memory plugin."""
 
+from glances.core.compat import iterkeys
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -139,7 +140,7 @@ class Plugin(GlancesPlugin):
                     self.reset()
                     return self.stats
 
-                for key in list(self.stats.keys()):
+                for key in iterkeys(self.stats):
                     if self.stats[key] != '':
                         self.stats[key] = float(self.stats[key]) * 1024
 

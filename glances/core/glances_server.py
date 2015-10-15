@@ -24,14 +24,9 @@ import json
 import socket
 import sys
 from base64 import b64decode
-try:
-    from xmlrpc.server import SimpleXMLRPCRequestHandler
-    from xmlrpc.server import SimpleXMLRPCServer
-except ImportError:  # Python 2
-    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 # Import Glances libs
+from glances.core.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.core.glances_autodiscover import GlancesAutoDiscoverClient
 from glances.core.glances_globals import version
 from glances.core.glances_logging import logger

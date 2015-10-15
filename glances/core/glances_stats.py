@@ -25,6 +25,7 @@ import re
 import sys
 import threading
 
+from glances.core.compat import iteritems
 from glances.core.glances_globals import exports_path, plugins_path, sys_path
 from glances.core.glances_logging import logger
 
@@ -377,12 +378,7 @@ class GlancesStatsClientSNMP(GlancesStats):
             return short_system_name
 
         # Find the short name in the oid_to_short_os_name dict
-        try:
-            iteritems = oid_to_short_system_name.iteritems()
-        except AttributeError:
-            # Correct issue #386
-            iteritems = oid_to_short_system_name.items()
-        for r, v in iteritems:
+        for r, v in iteritems(oid_to_short_system_name):
             if re.search(r, oid_system_name):
                 short_system_name = v
                 break

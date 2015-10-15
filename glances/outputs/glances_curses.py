@@ -24,6 +24,7 @@ import re
 import sys
 
 # Import Glances lib
+from glances.core.compat import u
 from glances.core.glances_globals import is_mac, is_windows
 from glances.core.glances_logging import logger
 from glances.core.glances_logs import glances_logs
@@ -883,14 +884,11 @@ class _GlancesCurses(object):
                 pass
             else:
                 # New column
-                try:
-                    # Python 2: we need to decode to get real screen size because utf-8 special tree chars
-                    # occupy several bytes
-                    offset = len(m['msg'].decode("utf-8", "replace"))
-                except AttributeError:
-                    # Python 3: strings are strings and bytes are bytes, all is
-                    # good
-                    offset = len(m['msg'])
+                # Python 2: we need to decode to get real screen size because
+                # UTF-8 special tree chars occupy several bytes.
+                # Python 3: strings are strings and bytes are bytes, all is
+                # good.
+                offset = len(u(m['msg']))
                 x += offset
                 if x > x_max:
                     x_max = x
