@@ -49,15 +49,8 @@ class GlancesStats(object):
         # Set the config instance
         self.config = config
 
-        # Init the plugin list dict
-        self._plugins = collections.defaultdict(dict)
-        # Load the plugins
-        self.load_plugins(args=args)
-
-        # Init the export modules list dict
-        self._exports = collections.defaultdict(dict)
-        # Load the plugins
-        self.load_exports(args=args)
+        # Load plugins and export modules
+        self.load_plugins_and_exports(self.args)
 
         # Load the limits
         self.load_limits(config)
@@ -84,6 +77,21 @@ class GlancesStats(object):
             # Default behavior
             raise AttributeError(item)
 
+    def load_plugins_and_exports(self, args):
+        """Wrapper to load both plugins and export modules."""
+        # Init the plugins dict
+        self._plugins = collections.defaultdict(dict)
+        # Load the plugins
+        self.load_plugins(args=args)
+
+        # Init the export modules dict
+        self._exports = collections.defaultdict(dict)
+        # Load the export modules
+        self.load_exports(args=args)
+
+        # Restoring system path
+        sys.path = sys_path
+
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
         header = "glances_"
@@ -106,7 +114,7 @@ class GlancesStats(object):
         logger.debug("Available plugins list: {0}".format(self.getAllPlugins()))
 
     def load_exports(self, args=None):
-        """Load all exports module in the 'exports' folder."""
+        """Load all export modules in the 'exports' folder."""
         if args is None:
             return False
         header = "glances_"
@@ -283,19 +291,14 @@ class GlancesStatsClient(GlancesStats):
 
     def __init__(self, config=None, args=None):
         """Init the GlancesStatsClient class."""
-        # Init the plugin list dict
-        self._plugins = collections.defaultdict(dict)
-
         # Init the configuration
         self.config = config
 
         # Init the arguments
         self.args = args
 
-        # Init the export modules list dict
-        self._exports = collections.defaultdict(dict)
-        # Load the plugins
-        self.load_exports(args=args)
+        # Load plugins and exports
+        self.load_plugins_and_exports(self.args)
 
     def set_plugins(self, input_plugins):
         """Set the plugin list according to the Glances server."""
@@ -327,9 +330,6 @@ class GlancesStatsClientSNMP(GlancesStats):
     """This class stores, updates and gives stats for the SNMP client."""
 
     def __init__(self, config=None, args=None):
-        # Init the plugin list dict
-        self._plugins = collections.defaultdict(dict)
-
         # Init the configuration
         self.config = config
 
@@ -339,13 +339,8 @@ class GlancesStatsClientSNMP(GlancesStats):
         # OS name is used because OID is differents between system
         self.os_name = None
 
-        # Load plugins
-        self.load_plugins(args=self.args)
-
-        # Init the export modules list dict
-        self._exports = collections.defaultdict(dict)
-        # Load the plugins
-        self.load_exports(args=args)
+        # Load plugins and export modules
+        self.load_plugins_and_exports(self.args)
 
     def check_snmp(self):
         """Chek if SNMP is available on the server."""
