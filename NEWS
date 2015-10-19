@@ -5,7 +5,9 @@ Glances Version 2
 Version 2.x
 =============
 
-    * ...
+Enhancements and new features:
+
+    *  [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
 
 Version 2.5.1
 =============
