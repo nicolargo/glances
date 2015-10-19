@@ -36,6 +36,9 @@ body {
     font-weight: bold;
     color: white;
 }
+.sortable {
+    cursor: pointer;
+}
 .text-right {
     text-align: right;
 }
