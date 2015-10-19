@@ -6,6 +6,8 @@ glancesApp.directive("sortableTh", function() {
         },
         link: function (scope, element, attrs) {
 
+            element.addClass('sortable');
+
             scope.$watch(function() {
                 return scope.sorter.column;
             }, function(newValue, oldValue) {
