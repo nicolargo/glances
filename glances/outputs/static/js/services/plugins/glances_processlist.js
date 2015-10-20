@@ -34,7 +34,7 @@ glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) 
                 }
             }
 
-            process.isNice = process.nice !== undefined && ((data['system'].os_name === 'Windows' && nice != 32) || (!data['system'].os_name === 'Windows' && process.nice != 0));
+            process.isNice = process.nice !== undefined && ((data['system'].os_name === 'Windows' && nice != 32) || (data['system'].os_name !== 'Windows' && process.nice != 0));
 
             this.processes.push(process);
         }
