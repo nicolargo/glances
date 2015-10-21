@@ -10,10 +10,10 @@ glancesApp.service('GlancesPluginProcessCount', function() {
     this.setData = function(data, views) {
         data = data[_pluginName];
 
-        this.total = data['total'];
-        this.running = data['running'];
-        this.sleeping = data['sleeping'];
-        this.stopped = data['stopped'];
-        this.thread = data['thread'];
+        this.total = data['total'] || 0;
+        this.running = data['running'] || 0;
+        this.sleeping = data['sleeping'] || 0;
+        this.stopped = data['stopped'] || 0;
+        this.thread = data['thread'] || 0;
     };
 });
