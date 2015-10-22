@@ -421,6 +421,9 @@ class Plugin(GlancesPlugin):
                 # End of extended stats
                 first = False
             if glances_processes.process_filter is not None:
+                if args.reset_minmax_tag:
+                    args.reset_minmax_tag = not args.reset_minmax_tag
+                    self.__mmm_reset()
                 self.__msg_curse_sum(ret, args=args)
                 self.__msg_curse_sum(ret, mmm='min', args=args)
                 self.__msg_curse_sum(ret, mmm='max', args=args)
@@ -540,10 +543,12 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         if mmm is None:
-            msg = ' < {0:8}'.format('current')
+            msg = ' < {0}'.format('current')
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = ' < {0:8}'.format(mmm)
+            msg = ' < {0}'.format(mmm)
+            ret.append(self.curse_add_line(msg, optional=True))
+            msg = ' (\'M\' to reset)'
             ret.append(self.curse_add_line(msg, optional=True))
 
     def __mmm_deco(self, mmm):
@@ -554,6 +559,13 @@ class Plugin(GlancesPlugin):
             return 'DEFAULT'
         else:
             return 'FILTER'
+
+    def __mmm_reset(self):
+        """
+        Reset the MMM stats
+        """
+        self.mmm_min = {}
+        self.mmm_max = {}
 
     def __sum_stats(self, key, indice=None, mmm=None):
         """
