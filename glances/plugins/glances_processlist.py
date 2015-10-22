@@ -422,6 +422,8 @@ class Plugin(GlancesPlugin):
                 first = False
             if glances_processes.process_filter is not None:
                 self.__msg_curse_sum(ret, args=args)
+                self.__msg_curse_sum(ret, mmm='min', args=args)
+                self.__msg_curse_sum(ret, mmm='max', args=args)
 
         # Return the message with decoration
         return ret
@@ -462,27 +464,38 @@ class Plugin(GlancesPlugin):
         msg = ' {0:8}'.format('Command')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
-    def __msg_curse_sum(self, ret, sep_char='_', args=None):
+    def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
         """
         Build the sum message (only when filter is on) and add it to the ret dict
+        * ret: list of string where the message is added
+        * sep_char: define the line separation char
+        * mmm: display min, max, mean or current (if mmm=None)
+        * args: Glances args
         """
         ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(sep_char * 70))
-        ret.append(self.curse_new_line())
+        if mmm is None:
+            ret.append(self.curse_add_line(sep_char * 69))
+            ret.append(self.curse_new_line())
         # CPU percent sum
-        msg = '{0:>6.1f}'.format(self.__sum_stats('cpu_percent'))
-        ret.append(self.curse_add_line(msg, decoration='FILTER'))
+        msg = '{0:>6.1f}'.format(self.__sum_stats('cpu_percent', mmm=mmm))
+        ret.append(self.curse_add_line(msg,
+                                       decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
-        msg = '{0:>6.1f}'.format(self.__sum_stats('memory_percent'))
-        ret.append(self.curse_add_line(msg, decoration='FILTER'))
+        msg = '{0:>6.1f}'.format(self.__sum_stats('memory_percent', mmm=mmm))
+        ret.append(self.curse_add_line(msg,
+                                       decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
         if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
             # VMS
-            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 1), low_precision=False))
-            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True))
+            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.__mmm_deco(mmm),
+                                           optional=True))
             # RSS
-            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', 0), low_precision=False))
-            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True))
+            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.__mmm_deco(mmm),
+                                           optional=True))
         else:
             msg = '{0:>6}'.format('')
             ret.append(self.curse_add_line(msg))
@@ -503,37 +516,88 @@ class Plugin(GlancesPlugin):
         msg = '{0:>10}'.format('')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
-        if 'io_counters' in self.stats[0]:
+        if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
-            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', 2)) / self.stats[0]['time_since_update'])
+            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_rs == 0:
                 msg = '{0:>6}'.format('0')
             else:
                 msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
-            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True, additional=True))
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.__mmm_deco(mmm),
+                                           optional=True, additional=True))
             # IO write
-            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', 3)) / self.stats[0]['time_since_update'])
+            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_ws == 0:
                 msg = '{0:>6}'.format('0')
             else:
                 msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
-            ret.append(self.curse_add_line(msg, decoration='FILTER', optional=True, additional=True))
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.__mmm_deco(mmm),
+                                           optional=True, additional=True))
         else:
             msg = '{0:>6}'.format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
+        if mmm is None:
+            msg = ' < {0:8}'.format('current')
+            ret.append(self.curse_add_line(msg, optional=True))
+        else:
+            msg = ' < {0:8}'.format(mmm)
+            ret.append(self.curse_add_line(msg, optional=True))
 
-    def __sum_stats(self, key, indice=None):
+    def __mmm_deco(self, mmm):
+        """
+        Return the decoration string for the current mmm status
+        """
+        if mmm is not None:
+            return 'DEFAULT'
+        else:
+            return 'FILTER'
+
+    def __sum_stats(self, key, indice=None, mmm=None):
         """
         Return the sum of the stats value for the given key
-        If indice is given, get the p[key][indice]
+        * indice: If indice is set, get the p[key][indice]
+        * mmm: display min, max, mean or current (if mmm=None)
         """
+        # Compute stats summary
         ret = 0
         for p in self.stats:
             if indice is None:
                 ret += p[key]
             else:
                 ret += p[key][indice]
+
+        # Manage Min/Max/Mean
+        mmm_key = self.__mmm_key(key, indice)
+        if mmm == 'min':
+            try:
+                if self.mmm_min[mmm_key] > ret:
+                    self.mmm_min[mmm_key] = ret
+            except AttributeError:
+                self.mmm_min = {}
+                return 0
+            except KeyError:
+                self.mmm_min[mmm_key] = ret
+            ret = self.mmm_min[mmm_key]
+        elif mmm == 'max':
+            try:
+                if self.mmm_max[mmm_key] < ret:
+                    self.mmm_max[mmm_key] = ret
+            except AttributeError:
+                self.mmm_max = {}
+                return 0
+            except KeyError:
+                self.mmm_max[mmm_key] = ret
+            ret = self.mmm_max[mmm_key]
+
+        return ret
+
+    def __mmm_key(self, key, indice):
+        ret = key
+        if indice is not None:
+            ret += str(indice)
         return ret
 
     def sort_stats(self, sortedby=None):
