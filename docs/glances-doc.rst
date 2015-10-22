@@ -258,6 +258,8 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide log messages
 ``m``
     Sort processes by MEM usage
+``M``
+    Reset processes summary min/max
 ``n``
     Show/hide network stats
 ``p``
@@ -266,6 +268,8 @@ The following commands (key pressed) are supported while in Glances:
     Quit the current Glances session
 ``r``
     Reset history
+``R``
+    Show/Hide RAID plugins
 ``s``
     Show/hide sensors stats
 ``t``

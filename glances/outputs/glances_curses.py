@@ -85,6 +85,9 @@ class _GlancesCurses(object):
         # Init edit filter tag
         self.edit_filter = False
 
+        # Init the process min/max reset
+        self.args.reset_minmax_tag = False
+
         # Catch key pressed with non blocking mode
         self.no_flash_cursor()
         self.term_window.nodelay(1)
@@ -350,6 +353,9 @@ class _GlancesCurses(object):
             # 'm' > Sort processes by MEM usage
             glances_processes.auto_sort = False
             glances_processes.sort_key = 'memory_percent'
+        elif self.pressedkey == ord('M'):
+            # 'M' > Reset processes summary min/max
+            self.args.reset_minmax_tag = not self.args.reset_minmax_tag
         elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
             self.args.disable_network = not self.args.disable_network
