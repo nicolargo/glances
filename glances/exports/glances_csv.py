@@ -22,6 +22,7 @@
 # Import sys libs
 import csv
 import sys
+import time
 
 # Import Glances lib
 from glances.core.glances_globals import is_py3
@@ -64,12 +65,13 @@ class Export(GlancesExport):
 
     def update(self, stats):
         """Update stats in the CSV output file."""
-        csv_header = []
-        csv_data = []
-
         # Get the stats
         all_stats = stats.getAllExports()
         plugins = stats.getAllPlugins()
+
+        # Init data with timestamp (issue#708)
+        csv_header = ['timestamp']
+        csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
         # Loop over available plugin
         for i, plugin in enumerate(plugins):
