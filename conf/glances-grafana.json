@@ -30,7 +30,7 @@
               "function": "mean",
               "column": "cpucore",
               "series": "load",
-              "query": "select mean(cpucore) from \"load\" where $timeFilter group by time($interval) order asc"
+              "query": "select mean(cpucore) from \"load\" where $timeFilter group by time($interval) order by asc"
             }
           ],
           "cacheTimeout": null,
@@ -128,7 +128,7 @@
               "function": "mean",
               "column": "min1",
               "series": "load",
-              "query": "select mean(min1) from \"load\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(min1) from \"load\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "1min",
               "fill": "null"
             },
@@ -137,7 +137,7 @@
               "function": "mean",
               "column": "min5",
               "series": "load",
-              "query": "select mean(min5) from \"load\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(min5) from \"load\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "5mins",
               "fill": "null"
             },
@@ -146,7 +146,7 @@
               "function": "mean",
               "column": "min15",
               "series": "load",
-              "query": "select mean(min15) from \"load\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(min15) from \"load\" where $timeFilter group by time($interval) fill(null) order by asc",
               "fill": "null",
               "alias": "15mins"
             }
@@ -177,7 +177,7 @@
               "function": "mean",
               "column": "total",
               "series": "processcount",
-              "query": "select mean(total) from \"processcount\" where $timeFilter group by time($interval) order asc"
+              "query": "select mean(total) from \"processcount\" where $timeFilter group by time($interval) order by asc"
             }
           ],
           "cacheTimeout": null,
@@ -274,7 +274,7 @@
               "function": "mean",
               "column": "user",
               "series": "cpu",
-              "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "User",
               "fill": "null"
             },
@@ -283,7 +283,7 @@
               "function": "mean",
               "column": "system",
               "series": "cpu",
-              "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "System",
               "fill": "null"
             },
@@ -292,7 +292,7 @@
               "function": "mean",
               "column": "iowait",
               "series": "cpu",
-              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "IoWait",
               "fill": "null"
             }
@@ -354,7 +354,7 @@
               "function": "mean",
               "column": "used",
               "series": "mem",
-              "query": "select mean(used) from \"mem\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(used) from \"mem\" where $timeFilter group by time($interval) order by asc",
               "alias": "Used"
             },
             {
@@ -362,7 +362,7 @@
               "function": "mean",
               "column": "total",
               "series": "mem",
-              "query": "select mean(total) from \"mem\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(total) from \"mem\" where $timeFilter group by time($interval) order by asc",
               "alias": "Max"
             }
           ],
@@ -431,7 +431,7 @@
               "function": "mean",
               "column": "enp0s25.rx",
               "series": "network",
-              "query": "select mean(enp0s25.rx) from \"network\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(enp0s25.rx) from \"network\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Rx",
               "interval": "",
               "fill": "null"
@@ -441,7 +441,7 @@
               "function": "mean",
               "column": "enp0s25.tx*-1",
               "series": "network",
-              "query": "select mean(enp0s25.tx*-1) from \"network\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(enp0s25.tx*-1) from \"network\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Tx",
               "fill": "null"
             }
@@ -503,7 +503,7 @@
               "function": "mean",
               "column": "used",
               "series": "memswap",
-              "query": "select mean(used) from \"memswap\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(used) from \"memswap\" where $timeFilter group by time($interval) order by asc",
               "alias": "Used"
             },
             {
@@ -511,7 +511,7 @@
               "function": "mean",
               "column": "total",
               "series": "memswap",
-              "query": "select mean(total) from \"memswap\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(total) from \"memswap\" where $timeFilter group by time($interval) order by asc",
               "alias": "Max"
             }
           ],
@@ -580,7 +580,7 @@
               "function": "mean",
               "column": "sda2.read_bytes",
               "series": "diskio",
-              "query": "select mean(sda2.read_bytes) from \"diskio\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(sda2.read_bytes) from \"diskio\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Read",
               "fill": "null"
             },
@@ -589,7 +589,7 @@
               "function": "mean",
               "column": "sda2.write_bytes",
               "series": "diskio",
-              "query": "select mean(sda2.write_bytes) from \"diskio\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(sda2.write_bytes) from \"diskio\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Write",
               "fill": "null"
             }
@@ -651,7 +651,7 @@
               "function": "mean",
               "column": "\"/.used\"",
               "series": "fs",
-              "query": "select mean(\"/.used\") from \"fs\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(\"/.used\") from \"fs\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Used",
               "fill": "null"
             },
@@ -660,7 +660,7 @@
               "function": "mean",
               "column": "\"/.size\"",
               "series": "fs",
-              "query": "select mean(\"/.size\") from \"fs\" where $timeFilter group by time($interval) fill(null) order asc",
+              "query": "select mean(\"/.size\") from \"fs\" where $timeFilter group by time($interval) fill(null) order by asc",
               "alias": "Max",
               "fill": "null"
             }
@@ -684,7 +684,7 @@
               "function": "mean",
               "column": "\"/.percent\"",
               "series": "fs",
-              "query": "select mean(\"/.percent\") from \"fs\" where $timeFilter group by time($interval) order asc"
+              "query": "select mean(\"/.percent\") from \"fs\" where $timeFilter group by time($interval) order by asc"
             }
           ],
           "cacheTimeout": null,
@@ -734,7 +734,7 @@
               "function": "mean",
               "column": "\"/home.percent\"",
               "series": "fs",
-              "query": "select mean(\"/home.percent\") from \"fs\" where $timeFilter group by time($interval) order asc"
+              "query": "select mean(\"/home.percent\") from \"fs\" where $timeFilter group by time($interval) order by asc"
             }
           ],
           "cacheTimeout": null,
@@ -850,7 +850,7 @@
               "function": "mean",
               "column": "user",
               "series": "cpu",
-              "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(user) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "mean"
             },
@@ -859,7 +859,7 @@
               "function": "min",
               "column": "user",
               "series": "cpu",
-              "query": "select min(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select min(user) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "min"
             },
@@ -868,7 +868,7 @@
               "function": "max",
               "column": "user",
               "series": "cpu",
-              "query": "select max(user) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select max(user) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "max"
             }
@@ -947,7 +947,7 @@
               "function": "mean",
               "column": "system",
               "series": "cpu",
-              "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(system) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "mean"
             },
@@ -956,7 +956,7 @@
               "function": "min",
               "column": "system",
               "series": "cpu",
-              "query": "select min(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select min(system) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "min"
             },
@@ -965,7 +965,7 @@
               "function": "max",
               "column": "system",
               "series": "cpu",
-              "query": "select max(system) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select max(system) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "max"
             }
@@ -1044,7 +1044,7 @@
               "function": "mean",
               "column": "iowait",
               "series": "cpu",
-              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select mean(iowait) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "mean"
             },
@@ -1053,7 +1053,7 @@
               "function": "min",
               "column": "iowait",
               "series": "cpu",
-              "query": "select min(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select min(iowait) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "min"
             },
@@ -1062,7 +1062,7 @@
               "function": "max",
               "column": "iowait",
               "series": "cpu",
-              "query": "select max(iowait) from \"cpu\" where $timeFilter group by time($interval) order asc",
+              "query": "select max(iowait) from \"cpu\" where $timeFilter group by time($interval) order by asc",
               "interval": "60s",
               "alias": "max"
             }
