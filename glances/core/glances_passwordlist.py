@@ -31,7 +31,7 @@ class GlancesPasswordList(GlancesPassword):
     _section = "passwords"
 
     def __init__(self, config=None, args=None):
-        super(GlancesPassword, self).__init__()
+        super(GlancesPasswordList, self).__init__()
         # password_dict is a dict (JSON compliant)
         # {'host': 'password', ... }
         # Load the configuration file
