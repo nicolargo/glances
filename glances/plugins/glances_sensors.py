@@ -52,7 +52,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # Init the sensor class
         self.glancesgrabsensors = GlancesGrabSensors()
@@ -157,7 +157,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert

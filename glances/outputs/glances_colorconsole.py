@@ -37,7 +37,7 @@ except ImportError:
 class ListenGetch(threading.Thread):
 
     def __init__(self, nom=''):
-        threading.Thread.__init__(self)
+        super(ListenGetch, self).__init__()
         self.Terminated = False
         self.q = queue.Queue()
 

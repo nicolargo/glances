@@ -1004,7 +1004,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
     def __init__(self, args=None):
         # Init the father class
-        _GlancesCurses.__init__(self, args=args)
+        super(GlancesCursesBrowser, self).__init__(args=args)
 
         _colors_list = {
             'UNKNOWN': self.no_color,
@@ -1244,12 +1244,12 @@ class GlancesCursesBrowser(_GlancesCurses):
 if not is_windows:
     class GlancesTextbox(Textbox):
 
-        def __init__(*args, **kwargs):
-            Textbox.__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            super(GlancesTextbox, self).__init__(*args, **kwargs)
 
         def do_command(self, ch):
             if ch == 10:  # Enter
                 return 0
             if ch == 127:  # Back
                 return 8
-            return Textbox.do_command(self, ch)
+            return super(GlancesTextbox, self).do_command(ch)

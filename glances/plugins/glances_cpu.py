@@ -57,8 +57,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the CPU plugin."""
-        GlancesPlugin.__init__(
-            self, args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -143,7 +142,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert and log

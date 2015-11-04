@@ -44,7 +44,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
         # Hack to add a specific header
         # Thk to: https://gist.github.com/rca/4063325
         self.send_my_headers()
-        SimpleXMLRPCRequestHandler.end_headers(self)
+        super(GlancesXMLRPCHandler, self).end_headers()
 
     def send_my_headers(self):
         # Specific header is here (solved the issue #227)
@@ -113,8 +113,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer):
             logger.error("Couldn't open socket: {0}".format(e))
             sys.exit(1)
 
-        SimpleXMLRPCServer.__init__(self, (bind_address, bind_port),
-                                    requestHandler)
+        super(GlancesXMLRPCServer, self).__init__((bind_address, bind_port), requestHandler)
 
 
 class GlancesInstance(object):
