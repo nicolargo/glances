@@ -37,7 +37,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the Statsd export IF."""
-        GlancesExport.__init__(self, config=config, args=args)
+        super(Export, self).__init__(config=config, args=args)
 
         # Load the InfluxDB configuration file
         self.host = None
