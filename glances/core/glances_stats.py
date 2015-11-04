@@ -248,7 +248,7 @@ class GlancesStatsServer(GlancesStats):
 
     def __init__(self, config=None):
         # Init the stats
-        GlancesStats.__init__(self, config)
+        super(GlancesStatsServer, self).__init__(config)
 
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server
@@ -259,7 +259,7 @@ class GlancesStatsServer(GlancesStats):
         input_stats = input_stats or {}
 
         # Force update of all the stats
-        GlancesStats.update(self)
+        super(GlancesStatsServer, self).update()
 
         # Build all_stats variable (concatenation of all the stats)
         self.all_stats = self._set_stats(input_stats)
@@ -292,6 +292,8 @@ class GlancesStatsClient(GlancesStats):
 
     def __init__(self, config=None, args=None):
         """Init the GlancesStatsClient class."""
+        super(GlancesStatsClient, self).__init__()
+
         # Init the configuration
         self.config = config
 
@@ -331,6 +333,8 @@ class GlancesStatsClientSNMP(GlancesStats):
     """This class stores, updates and gives stats for the SNMP client."""
 
     def __init__(self, config=None, args=None):
+        super(GlancesStatsClientSNMP, self).__init__()
+
         # Init the configuration
         self.config = config
 
