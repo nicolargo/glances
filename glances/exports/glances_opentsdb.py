@@ -42,6 +42,7 @@ class Export(GlancesExport):
         self.host = None
         self.port = None
         self.prefix = None
+        self.tags = None
         self.export_enable = self.load_conf()
         if not self.export_enable:
             sys.exit(2)
@@ -79,7 +80,7 @@ class Export(GlancesExport):
         try:
             self.tags = self.config.get_value(section, 'tags')
         except NoOptionError:
-            self.tags = ''
+            pass
 
         return True
 
@@ -96,9 +97,6 @@ class Export(GlancesExport):
             logger.critical("Cannot connect to OpenTSDB server %s:%s (%s)" % (self.host, self.port, e))
             sys.exit(2)
 
-        # Read tags
-        self.parse_tags()
-
         return db
 
     def export(self, name, columns, points):
@@ -108,8 +106,9 @@ class Export(GlancesExport):
                 continue
             stat_name = '{0}.{1}.{2}'.format(self.prefix, name, columns[i])
             stat_value = points[i]
+            tags = self.parse_tags(self.tags)
             try:
-                self.client.send(stat_name, stat_value, **self.tags)
+                self.client.send(stat_name, stat_value, **tags)
             except Exception as e:
                 logger.error("Can not export stats %s to OpenTSDB (%s)" % (name, e))
         logger.debug("Export {0} stats to OpenTSDB".format(name))
