@@ -86,7 +86,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, "TITLE"))
             msg = ' {0} '.format(glances_processes.process_filter)
             ret.append(self.curse_add_line(msg, "FILTER"))
-            msg = '(press ENTER to edit)'
+            msg = '(\'ENTER\' to edit, \'E\' to reset)'
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_new_line())
 

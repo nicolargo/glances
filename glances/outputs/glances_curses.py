@@ -328,6 +328,10 @@ class _GlancesCurses(object):
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+        elif self.pressedkey == ord('E'):
+            # 'E' > Erase the process filter
+            logger.info("Erase process filter")
+            glances_processes.process_filter = None
         elif self.pressedkey == ord('F'):
             # 'F' > Switch between FS available and free space
             self.args.fs_free_space = not self.args.fs_free_space
@@ -1240,16 +1244,16 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         return True
 
-
 if not is_windows:
+
     class GlancesTextbox(Textbox):
 
-        def __init__(self, *args, **kwargs):
-            super(GlancesTextbox, self).__init__(*args, **kwargs)
+        def __init__(*args, **kwargs):
+            Textbox.__init__(*args, **kwargs)
 
         def do_command(self, ch):
             if ch == 10:  # Enter
                 return 0
             if ch == 127:  # Back
                 return 8
-            return super(GlancesTextbox, self).do_command(ch)
+            return Textbox.do_command(self, ch)
