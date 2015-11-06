@@ -244,6 +244,8 @@ The following commands (key pressed) are supported while in Glances:
     Show/hide disk I/O stats
 ``e``
     Enable/disable top extended stats
+``E``
+    Erase current process filter
 ``f``
     Show/hide file system stats
 ``F``

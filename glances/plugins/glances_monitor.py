@@ -100,7 +100,11 @@ class Plugin(GlancesPlugin):
             msg = '{0:13} '.format('RUNNING' if m['count'] >= 1 else 'NOT RUNNING')
             ret.append(self.curse_add_line(msg))
             # Decode to UTF-8 (for Python 2)
-            msg = u(m['result']) if m['count'] >= 1 else ''
+            try:
+                msg = u(m['result']) if m['count'] >= 1 else ''
+            except UnicodeEncodeError:
+                # Hack if return message contain accent letter (non UTF-8 compliant)
+                msg = ''
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 
