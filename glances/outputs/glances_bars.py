@@ -45,6 +45,9 @@ class Bar(object):
         self.__size = size
         # Bar current percent
         self.__percent = 0
+        # Min and max value
+        self.min_value = 0
+        self.max_value = 100
         # Char used for the decoration
         self.__pre_char = pre_char
         self.__post_char = post_char
@@ -69,9 +72,10 @@ class Bar(object):
 
     @percent.setter
     def percent(self, value):
-        if value < 0 or value > 100:
-            raise AssertionError('The percent must be between 0 and 100.')
-
+        if value <= self.min_value:
+            value = self.min_value
+        if value >= self.max_value:
+            value = self.max_value
         self.__percent = value
 
     @property

@@ -179,17 +179,25 @@ class TestGlances(unittest.TestCase):
         # self.assertEqual(total, len(stats_grab))
 
     def test_011_output_bars_must_be_between_0_and_100_percent(self):
-        """Test quick look plugin."""
+        """Test quick look plugin.
+
+        > bar.min_value
+        0
+        > bar.max_value
+        100
+        > bar.percent = -1
+        > bar.percent
+        0
+        > bar.percent = 101
+        > bar.percent
+        100
+        """
         print('INFO: [TEST_011] Test progress bar')
         bar = Bar(size=1)
-        with self.assertRaises(AssertionError):
-            bar.percent = -1
-            bar.percent = 101
-
-        # 0 - 100 is an inclusive range, so these should not error.
-        bar.percent = 0
-        bar.percent = 100
-
+        bar.percent = -1
+        self.assertLessEqual(bar.percent, bar.min_value)
+        bar.percent = 101
+        self.assertGreaterEqual(bar.percent, bar.max_value)
 
 if __name__ == '__main__':
     unittest.main()
