@@ -51,6 +51,7 @@ class Export(GlancesExport):
         self.password = None
         self.db = None
         self.prefix = None
+        self.tags = None
         self.export_enable = self.load_conf()
         if not self.export_enable:
             sys.exit(2)
@@ -87,7 +88,7 @@ class Export(GlancesExport):
         try:
             self.tags = self.config.get_value(section, 'tags')
         except NoOptionError:
-            self.tags = ''
+            pass
 
         return True
 
@@ -125,9 +126,6 @@ class Export(GlancesExport):
             logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
             sys.exit(2)
 
-        # Read tags
-        self.parse_tags()
-
         return db
 
     def export(self, name, columns, points):
@@ -140,7 +138,7 @@ class Export(GlancesExport):
         # Create DB input
         if self.version == INFLUXDB_09:
             data = [{'measurement': name,
-                     'tags': self.tags,
+                     'tags': self.parse_tags(self.tags),
                      'fields': dict(zip(columns, points))}]
         else:
             data = [{'name': name, 'columns': columns, 'points': [points]}]
