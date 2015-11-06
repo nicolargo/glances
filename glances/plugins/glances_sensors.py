@@ -248,9 +248,13 @@ class GlancesGrabSensors(object):
                         # Fan speed sensor
                         sensors_current['unit'] = SENSOR_FAN_UNIT
                     if sensors_current:
-                        sensors_current['label'] = feature.label
-                        sensors_current['value'] = int(feature.get_value())
-                        self.sensors_list.append(sensors_current)
+                        try:
+                            sensors_current['label'] = feature.label
+                            sensors_current['value'] = int(feature.get_value())
+                        except Exception as e:
+                            logger.debug("Cannot grab sensor stat(%s)" % e)
+                        else:
+                            self.sensors_list.append(sensors_current)
 
         return self.sensors_list
 
