@@ -99,8 +99,7 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {0})".format(
-                self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
             ret = {}
         return ret
 
@@ -108,8 +107,7 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {0})".format(
-                self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
             self.stats_history = {}
 
     def update_stats_history(self, item_name=''):

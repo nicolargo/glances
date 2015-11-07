@@ -80,8 +80,7 @@ class Plugin(GlancesPlugin):
                     self.stats['mask_cidr'] = self.ip_to_cidr(self.stats['mask'])
                     self.stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
                 except (KeyError, AttributeError) as e:
-                    logger.debug("Can not grab IP information (%s)".format(e))
-
+                    logger.debug("Cannot grab IP information: {0}".format(e))
         elif self.input_method == 'snmp':
             # Not implemented yet
             pass
