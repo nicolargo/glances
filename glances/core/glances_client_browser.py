@@ -136,15 +136,14 @@ class GlancesClientBrowser(object):
                                 "Error while grabbing stats form {0}: {1}".format(uri, e))
                             v['status'] = 'OFFLINE'
                         except ProtocolError as e:
-                            if str(e).find(" 401 ") > 0:
+                            if e.errcode == 401:
                                 # Error 401 (Authentication failed)
                                 # Password is not the good one...
                                 v['password'] = None
                                 v['status'] = 'PROTECTED'
                             else:
                                 v['status'] = 'OFFLINE'
-                            logger.debug(
-                                "Cannot grab stats from {0}: {1}".format(uri, e))
+                            logger.debug("Cannot grab stats from {0} ({1} {2})".format(uri, e.errcode, e.errmsg))
                         else:
                             # Status
                             v['status'] = 'ONLINE'
