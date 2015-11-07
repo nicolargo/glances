@@ -106,18 +106,19 @@ class GlancesClient(object):
             except socket.error as err:
                 # Fallback to SNMP
                 self.client_mode = 'snmp'
-                logger.error("Connection to Glances server failed: {0}".format(err))
+                logger.error("Connection to Glances server failed ({0} {1})".format(err.errno, err.strerror))
                 fallbackmsg = 'No Glances server found. Trying fallback to SNMP...'
                 if not self.return_to_browser:
                     print(fallbackmsg)
                 else:
                     logger.info(fallbackmsg)
             except ProtocolError as err:
-                # Others errors
-                if str(err).find(" 401 ") > 0:
-                    msg = "Connection to server failed (bad password)"
+                # Other errors
+                msg = "Connection to server failed"
+                if err.errcode == 401:
+                    msg += " (Bad password)"
                 else:
-                    msg = "Connection to server failed ({0})".format(err)
+                    msg += " ({0} {1})".format(err.errcode, err.errmsg)
                 self.log_and_exit(msg)
                 return False
 
