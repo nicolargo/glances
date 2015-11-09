@@ -34,7 +34,7 @@ from glances.core.glances_stats import GlancesStatsServer
 from glances.core.glances_timer import Timer
 
 
-class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
+class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
 
     """Main XML-RPC handler."""
 
@@ -100,7 +100,7 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler):
         pass
 
 
-class GlancesXMLRPCServer(SimpleXMLRPCServer):
+class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
