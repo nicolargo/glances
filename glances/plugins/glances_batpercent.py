@@ -19,8 +19,7 @@
 
 """Battery plugin."""
 
-# Import Glances libs
-from glances.core.glances_logging import logger
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Batinfo library (optional; Linux-only)

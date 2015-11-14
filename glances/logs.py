@@ -19,13 +19,11 @@
 
 """Manage logs."""
 
-# Import system libs
 import time
 from datetime import datetime
 
-# Import Glances libs
-from glances.core.compat import range
-from glances.core.glances_processes import glances_processes
+from glances.compat import range
+from glances.processes import glances_processes
 
 
 class GlancesLogs(object):

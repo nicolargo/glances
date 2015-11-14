@@ -19,8 +19,7 @@
 
 import sys
 
-# Import Glances libs
-from glances.core.glances_logging import logger
+from glances.logger import logger
 
 # Import mandatory PySNMP lib
 try:

@@ -19,9 +19,8 @@
 
 """Manage the Glances passwords list."""
 
-# Import Glances libs
-from glances.core.glances_logging import logger
-from glances.core.glances_password import GlancesPassword
+from glances.logger import logger
+from glances.password import GlancesPassword
 
 
 class GlancesPasswordList(GlancesPassword):

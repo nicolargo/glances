@@ -19,13 +19,10 @@
 
 """Uptime plugin."""
 
-# Import system libs
 from datetime import datetime, timedelta
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# Import psutil
 import psutil
 
 # SNMP OID

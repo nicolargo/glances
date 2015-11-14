@@ -19,9 +19,11 @@
 
 """Manage autodiscover Glances server (thk to the ZeroConf protocol)."""
 
-# Import system libs
 import socket
 import sys
+
+from glances.globals import appname, is_freebsd
+from glances.logger import logger
 
 try:
     from zeroconf import (
@@ -33,10 +35,6 @@ try:
     zeroconf_tag = True
 except ImportError:
     zeroconf_tag = False
-
-# Import Glances libs
-from glances.core.glances_globals import appname, is_freebsd
-from glances.core.glances_logging import logger
 
 # Zeroconf 0.17 or higher is needed
 if zeroconf_tag:

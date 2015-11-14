@@ -19,19 +19,17 @@
 
 """Manage the Glances server."""
 
-# Import system libs
 import json
 import socket
 import sys
 from base64 import b64decode
 
-# Import Glances libs
-from glances.core.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-from glances.core.glances_autodiscover import GlancesAutoDiscoverClient
-from glances.core.glances_globals import version
-from glances.core.glances_logging import logger
-from glances.core.glances_stats import GlancesStatsServer
-from glances.core.glances_timer import Timer
+from glances.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+from glances.autodiscover import GlancesAutoDiscoverClient
+from glances.globals import version
+from glances.logger import logger
+from glances.stats import GlancesStatsServer
+from glances.timer import Timer
 
 
 class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
@@ -77,10 +75,8 @@ class GlancesXMLRPCHandler(SimpleXMLRPCRequestHandler, object):
     def check_user(self, username, password):
         # Check username and password in the dictionary
         if username in self.server.user_dict:
-            from glances.core.glances_password import GlancesPassword
-
+            from glances.password import GlancesPassword
             pwd = GlancesPassword()
-
             return pwd.check_password(self.server.user_dict[username], password)
         else:
             return False

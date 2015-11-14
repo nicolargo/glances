@@ -25,8 +25,8 @@ import subprocess
 import time
 import unittest
 
-from glances.core.compat import text_type
-from glances.core.glances_globals import version
+from glances.compat import text_type
+from glances.globals import version
 
 import requests
 
@@ -40,7 +40,6 @@ print('RESTful API unitary tests for Glances %s' % version)
 
 
 class TestGlances(unittest.TestCase):
-
     """Test Glances class."""
 
     def setUp(self):

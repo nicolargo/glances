@@ -24,7 +24,6 @@ __version__ = '2.6beta'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
-# Import system lib
 import locale
 import platform
 import signal
@@ -39,8 +38,8 @@ except ImportError:
 
 # Import Glances libs
 # Note: others Glances libs will be imported optionally
-from glances.core.glances_logging import logger
-from glances.core.glances_main import GlancesMain
+from glances.logger import logger
+from glances.main import GlancesMain
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -115,7 +114,7 @@ def main():
         logger.info("Start standalone mode")
 
         # Import the Glances standalone module
-        from glances.core.glances_standalone import GlancesStandalone
+        from glances.standalone import GlancesStandalone
 
         # Init the standalone mode
         standalone = GlancesStandalone(config=core.get_config(),
@@ -129,7 +128,7 @@ def main():
             logger.info("Start client mode (browser)")
 
             # Import the Glances client browser module
-            from glances.core.glances_client_browser import GlancesClientBrowser
+            from glances.client_browser import GlancesClientBrowser
 
             # Init the client
             client = GlancesClientBrowser(config=core.get_config(),
@@ -139,7 +138,7 @@ def main():
             logger.info("Start client mode")
 
             # Import the Glances client module
-            from glances.core.glances_client import GlancesClient
+            from glances.client import GlancesClient
 
             # Init the client
             client = GlancesClient(config=core.get_config(),
@@ -160,7 +159,7 @@ def main():
         logger.info("Start server mode")
 
         # Import the Glances server module
-        from glances.core.glances_server import GlancesServer
+        from glances.server import GlancesServer
 
         args = core.get_args()
 
@@ -183,7 +182,7 @@ def main():
         logger.info("Start web server mode")
 
         # Import the Glances web server module
-        from glances.core.glances_webserver import GlancesWebServer
+        from glances.webserver import GlancesWebServer
 
         # Init the web server mode
         webserver = GlancesWebServer(config=core.get_config(),

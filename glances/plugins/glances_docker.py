@@ -24,10 +24,9 @@ import re
 import threading
 import time
 
-# Import Glances libs
-from glances.core.compat import iterkeys, itervalues
-from glances.core.glances_logging import logger
-from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.compat import iterkeys, itervalues
+from glances.logger import logger
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Docker-py library (optional and Linux-only)

@@ -19,15 +19,13 @@
 
 """JMS interface class."""
 
-# Import sys libs
 import datetime
 import socket
 import sys
 from numbers import Number
 
-# Import Glances lib
-from glances.core.compat import NoOptionError, NoSectionError, range
-from glances.core.glances_logging import logger
+from glances.compat import NoOptionError, NoSectionError, range
+from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ

@@ -23,16 +23,14 @@ I am your father...
 ...for all Glances plugins.
 """
 
-# Import system libs
 import json
 from datetime import datetime
 from operator import itemgetter
 
-# Import Glances lib
-from glances.core.compat import iterkeys, itervalues, map
-from glances.core.glances_actions import GlancesActions
-from glances.core.glances_logging import logger
-from glances.core.glances_logs import glances_logs
+from glances.compat import iterkeys, itervalues, map
+from glances.actions import GlancesActions
+from glances.logger import logger
+from glances.logs import glances_logs
 
 
 class GlancesPlugin(object):
@@ -173,7 +171,7 @@ class GlancesPlugin(object):
         """
         snmp_oid = snmp_oid or {}
 
-        from glances.core.glances_snmp import GlancesSNMPClient
+        from glances.snmp import GlancesSNMPClient
 
         # Init the SNMP request
         clientsnmp = GlancesSNMPClient(host=self.args.client,

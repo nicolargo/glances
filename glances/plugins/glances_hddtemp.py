@@ -19,13 +19,11 @@
 
 """HDD temperature plugin."""
 
-# Import system libs
 import os
 import socket
 
-# Import Glances libs
-from glances.core.compat import nativestr, range
-from glances.core.glances_logging import logger
+from glances.compat import nativestr, range
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

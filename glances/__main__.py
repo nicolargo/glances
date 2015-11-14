@@ -32,7 +32,7 @@ if __package__ is None and not hasattr(sys, "frozen"):
     path = os.path.realpath(os.path.abspath(__file__))
     sys.path.append(os.path.dirname(os.path.dirname(path)))
 
-import glances
+import glances  # noqa
 
 if __name__ == '__main__':
     glances.main()

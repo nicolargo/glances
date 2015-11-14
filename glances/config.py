@@ -19,22 +19,13 @@
 
 """Manage the configuration file."""
 
-# Import system libs
 import os
 import sys
 from io import open
 
-# Import Glances lib
-from glances.core.compat import ConfigParser, NoOptionError
-from glances.core.glances_globals import (
-    appname,
-    is_bsd,
-    is_linux,
-    is_mac,
-    is_windows,
-    sys_prefix
-)
-from glances.core.glances_logging import logger
+from glances.compat import ConfigParser, NoOptionError
+from glances.globals import appname, is_bsd, is_linux, is_mac, is_windows, sys_prefix
+from glances.logger import logger
 
 
 class Config(object):

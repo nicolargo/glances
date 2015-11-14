@@ -19,12 +19,10 @@
 
 """InfluxDB interface class."""
 
-# Import sys libs
 import sys
 
-# Import Glances lib
-from glances.core.compat import NoOptionError, NoSectionError
-from glances.core.glances_logging import logger
+from glances.compat import NoOptionError, NoSectionError
+from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 from influxdb import InfluxDBClient
@@ -35,6 +33,7 @@ from influxdb.influxdb08.client import InfluxDBClientError as InfluxDBClientErro
 # Constants for tracking behavior
 INFLUXDB_09 = '0.9'
 INFLUXDB_08 = '0.8'
+
 
 class Export(GlancesExport):
 

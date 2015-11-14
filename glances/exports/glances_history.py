@@ -19,14 +19,11 @@
 
 """History class."""
 
-# Import system lib
 import os
 
-# Import Glances lib
-from glances.core.compat import iterkeys
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.logger import logger
 
-# Import specific lib
 try:
     from matplotlib import __version__ as matplotlib_version
     import matplotlib.pyplot as plt
