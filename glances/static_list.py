@@ -19,12 +19,10 @@
 
 """Manage the Glances server static list."""
 
-# System lib
 from socket import gaierror, gethostbyname
 
-# Import Glances libs
-from glances.core.compat import range
-from glances.core.glances_logging import logger
+from glances.compat import range
+from glances.logger import logger
 
 
 class GlancesStaticServer(object):

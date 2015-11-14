@@ -19,9 +19,8 @@
 
 """RAID plugin."""
 
-# Import Glances libs
-from glances.core.compat import iterkeys
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # pymdstat only available on GNU/Linux OS

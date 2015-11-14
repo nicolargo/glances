@@ -26,8 +26,7 @@ try:
 except ImportError:
     pass
 
-# Import Glances lib
-from glances.core.glances_logging import logger
+from glances.logger import logger
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin

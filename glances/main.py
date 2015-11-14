@@ -19,16 +19,14 @@
 
 """Glances main class."""
 
-# Import system libs
 import argparse
 import os
 import sys
 import tempfile
 
-# Import Glances libs
-from glances.core.glances_config import Config
-from glances.core.glances_globals import appname, is_linux, is_windows, psutil_version, version
-from glances.core.glances_logging import logger
+from glances.config import Config
+from glances.globals import appname, is_linux, is_windows, psutil_version, version
+from glances.logger import logger
 
 
 class GlancesMain(object):
@@ -316,10 +314,8 @@ Start the client browser (browser mode):\n\
         - if confirm = True, with confirmation
         - if clear = True, plain (clear password)
         """
-        from glances.core.glances_password import GlancesPassword
-
+        from glances.password import GlancesPassword
         password = GlancesPassword()
-
         return password.get_password(description, confirm, clear)
 
     def is_standalone(self):

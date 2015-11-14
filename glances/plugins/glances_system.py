@@ -19,14 +19,12 @@
 
 """System plugin."""
 
-# Import system libs
 import os
 import platform
 import re
 from io import open
 
-# Import Glances libs
-from glances.core.compat import iteritems
+from glances.compat import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID

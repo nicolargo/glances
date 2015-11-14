@@ -21,11 +21,10 @@
 
 from time import sleep
 
-# Import Glances libs
-from glances.core.glances_globals import is_windows
-from glances.core.glances_logging import logger
-from glances.core.glances_processes import glances_processes
-from glances.core.glances_stats import GlancesStats
+from glances.globals import is_windows
+from glances.logger import logger
+from glances.processes import glances_processes
+from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 
 

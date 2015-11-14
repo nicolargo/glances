@@ -17,18 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import Python lib
 import collections
 import os
 import re
 
-# Import Glances lib
-from glances.core.compat import iteritems, itervalues
-from glances.core.glances_globals import is_bsd, is_linux, is_mac, is_windows
-from glances.core.glances_logging import logger
-from glances.core.glances_timer import Timer, getTimeSinceLastUpdate
+from glances.compat import iteritems, itervalues
+from glances.globals import is_bsd, is_linux, is_mac, is_windows
+from glances.logger import logger
+from glances.timer import Timer, getTimeSinceLastUpdate
 
-# Import psutil
 import psutil
 
 

@@ -19,7 +19,6 @@
 
 """Manage password."""
 
-# Import system libs
 import getpass
 import hashlib
 import os
@@ -27,10 +26,9 @@ import sys
 import uuid
 from io import open
 
-# Import Glances lib
-from glances.core.compat import b, input
-from glances.core.glances_globals import appname, is_bsd, is_linux, is_mac, is_windows
-from glances.core.glances_logging import logger
+from glances.compat import b, input
+from glances.globals import appname, is_bsd, is_linux, is_mac, is_windows
+from glances.logger import logger
 
 
 class GlancesPassword(object):

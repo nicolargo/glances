@@ -19,14 +19,12 @@
 
 """Manage the monitor list."""
 
-# Import system lib
 import re
 import subprocess
 
-# Import Glances lib
-from glances.core.compat import range, u
-from glances.core.glances_logging import logger
-from glances.core.glances_processes import glances_processes
+from glances.compat import range, u
+from glances.logger import logger
+from glances.processes import glances_processes
 
 
 class MonitorList(object):

@@ -19,10 +19,9 @@
 
 """Glances Web Interface (Bottle based)."""
 
-# Import Glances libs
-from glances.core.glances_globals import is_windows
-from glances.core.glances_processes import glances_processes
-from glances.core.glances_stats import GlancesStats
+from glances.globals import is_windows
+from glances.processes import glances_processes
+from glances.stats import GlancesStats
 from glances.outputs.glances_bottle import GlancesBottle
 
 

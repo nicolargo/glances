@@ -23,8 +23,8 @@ import time
 
 import msvcrt
 
-from glances.core.compat import queue
-from glances.core.glances_logging import logger
+from glances.compat import queue
+from glances.logger import logger
 
 try:
     import colorconsole

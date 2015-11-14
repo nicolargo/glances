@@ -19,11 +19,9 @@
 
 """Load plugin."""
 
-# Import system libs
 import os
 
-# Import Glances libs
-from glances.core.compat import iteritems
+from glances.compat import iteritems
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 

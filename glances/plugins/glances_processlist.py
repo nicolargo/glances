@@ -19,17 +19,15 @@
 
 """Process list plugin."""
 
-# Import sys libs
 import operator
 import os
 from datetime import timedelta
 
-# Import Glances libs
-from glances.core.compat import iteritems
-from glances.core.glances_logging import logger
+from glances.compat import iteritems
+from glances.globals import is_windows
+from glances.logger import logger
+from glances.processes import glances_processes
 from glances.plugins.glances_core import Plugin as CorePlugin
-from glances.core.glances_globals import is_windows
-from glances.core.glances_processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -67,7 +65,7 @@ class Plugin(GlancesPlugin):
         except Exception:
             self.nb_log_core = 0
 
-        # Note: 'glances_processes' is already init in the glances_processes.py script
+        # Note: 'glances_processes' is already init in the processes.py script
 
     def get_key(self):
         """Return the key of the list."""

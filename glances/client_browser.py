@@ -19,17 +19,15 @@
 
 """Manage the Glances client browser (list of Glances server)."""
 
-# Import system libs
 import json
 import socket
 
-# Import Glances libs
-from glances.core.compat import Fault, ProtocolError, ServerProxy
-from glances.core.glances_autodiscover import GlancesAutoDiscoverServer
-from glances.core.glances_client import GlancesClient, GlancesClientTransport
-from glances.core.glances_logging import logger
-from glances.core.glances_passwordlist import GlancesPasswordList as GlancesPassword
-from glances.core.glances_staticlist import GlancesStaticServer
+from glances.compat import Fault, ProtocolError, ServerProxy
+from glances.autodiscover import GlancesAutoDiscoverServer
+from glances.client import GlancesClient, GlancesClientTransport
+from glances.logger import logger
+from glances.password_list import GlancesPasswordList as GlancesPassword
+from glances.static_list import GlancesStaticServer
 from glances.outputs.glances_curses import GlancesCursesBrowser
 
 
@@ -96,8 +94,8 @@ class GlancesClientBrowser(object):
         """Main client loop."""
         while True:
             # No need to update the server list
-            # It's done by the GlancesAutoDiscoverListener class (glances_autodiscover.py)
-            # Or define staticaly in the configuration file (module glances_staticlist.py)
+            # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
+            # Or define staticaly in the configuration file (module static_list.py)
             # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
             # logger.debug(self.get_servers_list())
             try:

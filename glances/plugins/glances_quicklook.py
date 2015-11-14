@@ -19,11 +19,12 @@
 
 """Quicklook plugin."""
 
-from glances.core.glances_cpu_percent import cpu_percent
+from glances.cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
+
 try:
     from cpuinfo import cpuinfo
 except ImportError:

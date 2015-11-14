@@ -19,10 +19,9 @@
 
 """IP plugin."""
 
-# Import Glances libs
-from glances.core.compat import iterkeys
-from glances.core.glances_globals import is_freebsd
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.globals import is_freebsd
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # XXX FreeBSD: Segmentation fault (core dumped)

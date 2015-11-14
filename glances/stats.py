@@ -25,9 +25,9 @@ import re
 import sys
 import threading
 
-from glances.core.compat import iteritems
-from glances.core.glances_globals import exports_path, plugins_path, sys_path
-from glances.core.glances_logging import logger
+from glances.compat import iteritems
+from glances.globals import exports_path, plugins_path, sys_path
+from glances.logger import logger
 
 # SNMP OID regexp pattern to short system name dict
 oid_to_short_system_name = {'.*Linux.*': 'linux',
@@ -350,7 +350,7 @@ class GlancesStatsClientSNMP(GlancesStats):
     def check_snmp(self):
         """Chek if SNMP is available on the server."""
         # Import the SNMP client class
-        from glances.core.glances_snmp import GlancesSNMPClient
+        from glances.snmp import GlancesSNMPClient
 
         # Create an instance of the SNMP client
         clientsnmp = GlancesSNMPClient(host=self.args.client,

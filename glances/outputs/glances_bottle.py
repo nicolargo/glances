@@ -25,7 +25,7 @@ import sys
 import tempfile
 from io import open
 
-from glances.core.glances_logging import logger
+from glances.logger import logger
 
 try:
     from bottle import Bottle, static_file, abort, response, request, auth_basic
@@ -62,7 +62,7 @@ class GlancesBottle(object):
     def check_auth(self, username, password):
         """Check if a username/password combination is valid."""
         if username == self.args.username:
-            from glances.core.glances_password import GlancesPassword
+            from glances.password import GlancesPassword
             pwd = GlancesPassword()
             return pwd.check_password(self.args.password, pwd.sha256_hash(password))
         else:

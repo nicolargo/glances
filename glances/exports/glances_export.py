@@ -23,12 +23,8 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-# Import system libs
-# None...
-
-# Import Glances lib
-from glances.core.compat import iteritems, iterkeys
-from glances.core.glances_logging import logger
+from glances.compat import iteritems, iterkeys
+from glances.logger import logger
 
 
 class GlancesExport(object):

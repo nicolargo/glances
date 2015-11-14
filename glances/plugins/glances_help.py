@@ -23,8 +23,7 @@ Help plugin.
 Just a stupid plugin to display the help screen.
 """
 
-# Import Glances libs
-from glances.core.glances_globals import appname, psutil_version, version
+from glances.globals import appname, psutil_version, version
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

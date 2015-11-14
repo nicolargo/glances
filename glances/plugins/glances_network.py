@@ -22,7 +22,7 @@
 import base64
 import operator
 
-from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil

@@ -17,10 +17,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Import system libs
 from datetime import datetime
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

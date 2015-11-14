@@ -41,8 +41,8 @@ appname_path = os.path.split(sys.argv[0])[0]
 sys_prefix = os.path.realpath(os.path.dirname(appname_path))
 
 # Set the plugins and export modules path
-plugins_path = os.path.realpath(os.path.join(work_path, '..', 'plugins'))
-exports_path = os.path.realpath(os.path.join(work_path, '..', 'exports'))
+plugins_path = os.path.realpath(os.path.join(work_path, 'plugins'))
+exports_path = os.path.realpath(os.path.join(work_path, 'exports'))
 sys_path = sys.path[:]
-sys.path.insert(0, exports_path)
-sys.path.insert(0, plugins_path)
+sys.path.insert(1, exports_path)
+sys.path.insert(1, plugins_path)
