@@ -116,10 +116,10 @@ class GlancesGrabHDDTemp(object):
             offset = item * 5
             hddtemp_current = {}
             device = os.path.basename(nativestr(fields[offset + 1]))
-            temperature = float(fields[offset + 3])
+            temperature = fields[offset + 3]
             unit = nativestr(fields[offset + 4])
             hddtemp_current['label'] = device
-            hddtemp_current['value'] = temperature
+            hddtemp_current['value'] = float(temperature) if temperature != b'ERR' else temperature
             hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)
 
