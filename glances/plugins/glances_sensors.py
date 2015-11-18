@@ -183,7 +183,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
-            if i['value']:
+            if i['value'] != b'ERR':
                 # New line
                 ret.append(self.curse_new_line())
                 # Alias for the lable name ?
@@ -250,7 +250,7 @@ class GlancesGrabSensors(object):
                         try:
                             sensors_current['label'] = feature.label
                             sensors_current['value'] = int(feature.get_value())
-                        except Exception as e:
+                        except SensorsError as e:
                             logger.debug("Cannot grab sensor stat(%s)" % e)
                         else:
                             self.sensors_list.append(sensors_current)
