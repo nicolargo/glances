@@ -497,7 +497,7 @@ class _GlancesCurses(object):
             'diskio').get_stats_display(args=self.args)
         stats_fs = stats.get_plugin('fs').get_stats_display(
             args=self.args, max_width=plugin_max_width)
-        stats_folder = stats.get_plugin('folder').get_stats_display(
+        stats_folders = stats.get_plugin('folders').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_raid = stats.get_plugin('raid').get_stats_display(
             args=self.args)
@@ -675,7 +675,7 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_fs)
             self.new_line()
-            self.display_plugin(stats_folder)
+            self.display_plugin(stats_folders)
             self.new_line()
             self.display_plugin(stats_raid)
             self.new_line()
