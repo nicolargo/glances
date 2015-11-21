@@ -118,6 +118,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_diskio', help='disable disk I/O module')
         parser.add_argument('--disable-fs', action='store_true', default=False,
                             dest='disable_fs', help='disable filesystem module')
+        parser.add_argument('--disable-folder', action='store_true', default=False,
+                            dest='disable_folder', help='disable folder module')
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help='disable sensors module')
         parser.add_argument('--disable-hddtemp', action='store_true', default=False,

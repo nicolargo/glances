@@ -49,6 +49,7 @@ Optional dependencies:
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
+- ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 
 Installation
 ============
@@ -93,7 +94,7 @@ features (like the Web interface):
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo scandir
 
 Install or upgrade Glances from the Git ``develop`` repository:
 
