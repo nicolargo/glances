@@ -35,7 +35,7 @@ except ImportError:
     # For others...
     try:
         from scandir import scandir
-    except Exception, e:
+    except Exception as e:
         scandir_tag = False
 
 
