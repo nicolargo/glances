@@ -7,6 +7,7 @@ Version 2.x
 
 Enhancements and new features:
 
+    * New folders' monitoring plugins (issue #721)
     * Add process summary min/max stats (issue #703)
     * Add timestamp to the CSV export module (issue #708)
     * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)

@@ -55,7 +55,8 @@ setup(
         'DOCKER': ['docker-py'],
         'EXPORT': ['influxdb>=1.0.0', 'potsdb' 'statsd', 'pika'],
         'ACTION': ['pystache'],
-        'CPUINFO': ['py-cpuinfo']
+        'CPUINFO': ['py-cpuinfo'],
+        'FOLDERS': ['scandir']
     },
     packages=['glances'],
     include_package_data=True,

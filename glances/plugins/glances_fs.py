@@ -221,7 +221,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>7}'.format('Total')
         ret.append(self.curse_add_line(msg))
 
-        # Disk list (sorted by name)
+        # Filesystem list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # New line
             ret.append(self.curse_new_line())

@@ -159,6 +159,7 @@ Command-Line Options
   --disable-ip          disable IP module
   --disable-diskio      disable disk I/O module
   --disable-fs          disable file system module
+  --disable-folder      disable folders monitoring module
   --disable-sensors     disable sensors module
   --disable-hddtemp     disable hddtemp module
   --disable-raid        disable RAID module
@@ -247,7 +248,7 @@ The following commands (key pressed) are supported while in Glances:
 ``E``
     Erase current process filter
 ``f``
-    Show/hide file system stats
+    Show/hide file system and folder monitoring stats
 ``F``
     Switch between file system used and free space
 ``g``
@@ -572,6 +573,39 @@ following section in the configuration file:
 
     [fs]
     allow=zfs,misc
+
+Folders
+-------
+
+The folders plugin allows user, through the configuration file, to monitor size
+of a predefined folders' list.
+
+.. image:: images/folders.png
+
+Each item is defined by:
+
+* ``path``: absolute path to monitor.
+* ``warning``: optional careful threshold (in MB).
+* ``warning``: optional warning threshold (in MB)
+* ``critical``: optional critical threshold (in MB)
+
+Up to 10 items can be defined.
+
+For example, if you want to monitor the /tmp folder, the following definition
+should do the job (threshold careful if size is > 2.5 GB, warning if > 3 Gb and
+critical if > 3.5 GB):
+
+::
+
+    [folders]
+    folder_1_path=/tmp
+    folder_1_careful=2500
+    folder_1_warning=3000
+    folder_1_critical=3500
+
+In client/server mode, the list is defined on the server side.
+
+Note: do *NOT* define folder containing lot of files and subfolders.
 
 Sensors
 -------

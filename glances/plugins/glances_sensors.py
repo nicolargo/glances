@@ -202,11 +202,14 @@ class Plugin(GlancesPlugin):
                 else:
                     value = i['value']
                     unit = i['unit']
-                msg = '{0:>7.0f}{1}'.format(value, unit)
-                ret.append(self.curse_add_line(
-                    msg, self.get_views(item=i[self.get_key()],
-                                        key='value',
-                                        option='decoration')))
+                try:
+                    msg = '{0:>7.0f}{1}'.format(value, unit)
+                    ret.append(self.curse_add_line(
+                        msg, self.get_views(item=i[self.get_key()],
+                                            key='value',
+                                            option='decoration')))
+                except ValueError:
+                    pass
 
         return ret
 

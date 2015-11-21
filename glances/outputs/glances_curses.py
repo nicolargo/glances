@@ -334,8 +334,9 @@ class _GlancesCurses(object):
             # 'F' > Switch between FS available and free space
             self.args.fs_free_space = not self.args.fs_free_space
         elif self.pressedkey == ord('f'):
-            # 'f' > Show/hide fs stats
+            # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
+            self.args.disable_folder = not self.args.disable_folder
         elif self.pressedkey == ord('g'):
             # 'g' > History
             self.history_tag = not self.history_tag
@@ -495,6 +496,8 @@ class _GlancesCurses(object):
         stats_diskio = stats.get_plugin(
             'diskio').get_stats_display(args=self.args)
         stats_fs = stats.get_plugin('fs').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        stats_folder = stats.get_plugin('folder').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_raid = stats.get_plugin('raid').get_stats_display(
             args=self.args)
@@ -659,8 +662,11 @@ class _GlancesCurses(object):
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
-        if not (self.args.disable_network and self.args.disable_diskio and
-                self.args.disable_fs and self.args.disable_raid and
+        if not (self.args.disable_network and
+                self.args.disable_diskio and
+                self.args.disable_fs and
+                self.args.disable_folder and
+                self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
@@ -668,6 +674,8 @@ class _GlancesCurses(object):
             self.display_plugin(stats_diskio)
             self.new_line()
             self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_folder)
             self.new_line()
             self.display_plugin(stats_raid)
             self.new_line()
