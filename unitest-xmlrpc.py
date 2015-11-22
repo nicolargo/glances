@@ -126,10 +126,13 @@ class TestGlances(unittest.TestCase):
 
     def test_007_disk(self):
         """DISK."""
-        method = "getFs() and getDiskIO()"
+        method = "getFs(), getFolders() and getDiskIO()"
         print('INFO: [TEST_007] Method: %s' % method)
 
         req = json.loads(client.getFs())
+        self.assertIsInstance(req, list)
+
+        req = json.loads(client.getFolders())
         self.assertIsInstance(req, list)
 
         req = json.loads(client.getDiskIO())
