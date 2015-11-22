@@ -1,0 +1,8 @@
+<div class="table-row">
+    <div class="table-cell text-left title">FOLDERS</div>
+    <div class="table-cell">Size</div>
+</div>
+<div class="table-row" ng-repeat="f in statsFolders.folders">
+    <div class="table-cell text-left">{{ f.path }}</div>
+    <div class="table-cell">{{ f.size | bytes }}</div>
+</div>
