@@ -229,7 +229,6 @@ class GlancesBottle(object):
             abort(404, "Cannot get stats (%s)" % str(e))
         return statval
 
-
     def _api_all_limits(self):
         """Glances API RESTFul implementation.
 

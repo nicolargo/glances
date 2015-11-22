@@ -525,6 +525,7 @@ class Plugin(GlancesPlugin):
         else:
             return 'OK'
 
+
 class ThreadDockerGrabber(threading.Thread):
     """
     Specific thread to grab docker stats.
