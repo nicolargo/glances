@@ -38,6 +38,14 @@ class Plugin(GlancesPlugin):
 
         # Init stats
         self.glances_folders = None
+        self.reset()
+
+    def get_key(self):
+        """Return the key of the list."""
+        return 'path'
+
+    def reset(self):
+        """Reset/init the stats."""
         self.stats = []
 
     def load_limits(self, config):
@@ -46,6 +54,9 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """Update the foldered list."""
+        # Reset the list
+        self.reset()
+
         if self.input_method == 'local':
             # Folder list only available in a full Glances environment
             # Check if the glances_folder instance is init
