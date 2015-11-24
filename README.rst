@@ -191,6 +191,11 @@ To install Glances from source:
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
+Chef
+----
+
+A awesome ``Chef`` cookbook is available to monitor your infrastructure: https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
+
 Puppet
 ------
 
