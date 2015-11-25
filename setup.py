@@ -3,13 +3,29 @@
 import glob
 import sys
 
-from setuptools import setup
-
+from setuptools import setup, Command
 
 if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
     print('Glances requires at least Python 2.6 or 3.3 to run.')
     sys.exit(1)
 
+class tests(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import subprocess
+        import sys
+        for t in glob.glob('unitest*.py'):
+            ret = subprocess.call([sys.executable, t]) != 0
+            if ret != 0:
+                raise SystemExit(ret)
+        raise SystemExit(0)
 
 def get_data_files():
     data_files = [
@@ -20,7 +36,6 @@ def get_data_files():
     ]
 
     return data_files
-
 
 def get_requires():
     requires = ['psutil>=2.0.0']
@@ -61,6 +76,7 @@ setup(
     packages=['glances'],
     include_package_data=True,
     data_files=get_data_files(),
+    cmdclass={'test': tests},
     test_suite="unitest.py",
     entry_points={"console_scripts": ["glances=glances:main"]},
     classifiers=[
