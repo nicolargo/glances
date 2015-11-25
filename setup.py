@@ -21,7 +21,7 @@ class tests(Command):
     def run(self):
         import subprocess
         import sys
-        for t in glob.glob('unitest.py'):
+        for t in glob.glob('unitest*.py'):
             ret = subprocess.call([sys.executable, t]) != 0
             if ret != 0:
                 raise SystemExit(ret)
@@ -59,7 +59,7 @@ setup(
     keywords="cli curses monitoring system",
     install_requires=get_requires(),
     extras_require={
-        'WEB': ['bottle'],
+        'WEB': ['bottle', 'requests'],
         'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo'],
         'SNMP': ['pysnmp'],
