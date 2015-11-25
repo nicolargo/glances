@@ -10,4 +10,7 @@ var glancesApp = angular.module('glancesApp', ['ngRoute'])
     });
 
     $locationProvider.html5Mode(true);
+})
+.run(function($rootScope) {
+      $rootScope.title = "Glances";
 });
