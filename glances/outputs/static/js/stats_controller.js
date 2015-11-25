@@ -1,4 +1,4 @@
-glancesApp.controller('statsController', function ($scope, $interval, $routeParams, GlancesStats) {
+glancesApp.controller('statsController', function ($scope, $rootScope, $interval, $routeParams, GlancesStats) {
     $scope.refreshTime = 3;
     $scope.sorter = {
         column: "cpu_percent",
@@ -77,6 +77,8 @@ glancesApp.controller('statsController', function ($scope, $interval, $routePara
             $scope.statsSensors = GlancesStats.getPlugin('sensors');
             $scope.statsSystem = GlancesStats.getPlugin('system');
             $scope.statsUptime = GlancesStats.getPlugin('uptime');
+
+            $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
 
             $scope.is_disconnected = false;
             $scope.dataLoaded = true;
