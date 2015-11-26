@@ -3,6 +3,8 @@ Glances - An eye on your system
 ===============================
 
 
+.. image:: https://img.shields.io/pypi/v/glances.svg
+    :target: https://pypi.python.org/pypi/Glances
 .. image:: https://img.shields.io/pypi/dm/glances.svg
     :target: https://pypi.python.org/pypi/glances#downloads
     :alt: Downloads this month
@@ -10,13 +12,13 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 .. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
-        :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://img.shields.io/pypi/v/glances.svg
-        :target: https://pypi.python.org/pypi/Glances
+    :target: https://travis-ci.org/nicolargo/glances
+.. image:: https://circleci.com/gh/nicolargo/glances/tree/develop.svg?style=svg
+    :target: https://circleci.com/gh/nicolargo/glances/tree/develop
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
-        :target: https://scrutinizer-ci.com/g/nicolargo/glances/
+    :target: https://scrutinizer-ci.com/g/nicolargo/glances/
 .. image:: https://api.flattr.com/button/flattr-badge-large.png
-        :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
+    :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
