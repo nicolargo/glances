@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
                 else:
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
-            elif self.stats['os_name'] in ('FreeBSD', 'OpenBSD'):
+            elif self.stats['os_name'].endswith('BSD'):
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'] == "Darwin":
                 self.stats['os_version'] = platform.mac_ver()[0]
