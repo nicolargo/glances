@@ -64,7 +64,7 @@ class GlancesPlugin(object):
         self._limits = dict()
 
         # Init the actions
-        self.actions = GlancesActions()
+        self.actions = GlancesActions(args=args)
 
         # Init the views
         self.views = dict()

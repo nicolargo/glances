@@ -22,6 +22,7 @@
 from subprocess import Popen
 
 from glances.logger import logger
+from glances.timer import Timer
 
 try:
     import pystache
@@ -36,13 +37,20 @@ class GlancesActions(object):
 
     """This class manage action if an alert is reached."""
 
-    def __init__(self):
+    def __init__(self, args=None):
         """Init GlancesActions class."""
         # Dict with the criticity status
         # - key: stat_name
         # - value: criticity
         # Goal: avoid to execute the same command twice
         self.status = {}
+
+        # Add a timer to avoid any trigger when Glances is started (issue#732)
+        # Action can be triggered after refresh * 2 seconds
+        if hasattr(args, 'time'):
+            self.start_timer = Timer(args.time * 2)
+        else:
+            self.start_timer = Timer(3)
 
     def get(self, stat_name):
         """Get the stat_name criticity."""
@@ -65,7 +73,7 @@ class GlancesActions(object):
 
         Return True if the commands have been ran.
         """
-        if self.get(stat_name) == criticity:
+        if self.get(stat_name) == criticity or not self.start_timer.finished():
             # Action already executed => Exit
             return False
 
