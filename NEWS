@@ -2,19 +2,26 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.x
-=============
+Version 2.6
+===========
 
 Enhancements and new features:
 
     * New folders' monitoring plugins (issue #721)
     * Add process summary min/max stats (issue #703)
     * Add timestamp to the CSV export module (issue #708)
-    * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
     * Add a shortcut 'E' to delete process filter (issue #699)
+    * When Glances is starting the notifications should be delayed (issue #732)
+    * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
+    * [WebUI] Make web page title configurable (issue #724)
 
 Bugs corrected:
     * Can't read sensors on a Thinkpad (issue #711)
+    * InfluxDB/OpenTSDB: tag parsing broken (issue #713)
+    * Grafana Dashboard outdated for InfluxDB 0.9.x (issue #648)
+
+Others:
+    * A new Glances docker container to monitor your Docker infrastructure is available here (issue #728): https://hub.docker.com/r/nicolargo/glances/
 
 Version 2.5.1
 =============
