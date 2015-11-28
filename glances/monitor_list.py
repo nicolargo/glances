@@ -130,6 +130,11 @@ class MonitorList(object):
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
+            # Always get processes CPU and MEM
+            self.__monitor_list[i]['default_result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
+                sum([p['cpu_percent'] for p in monitoredlist]),
+                sum([p['memory_percent'] for p in monitoredlist]))
+
             if self.command(i) is not None:
                 # Execute the user command line
                 try:
@@ -148,9 +153,7 @@ class MonitorList(object):
             if self.command(i) is None or self.__monitor_list[i]['result'] == '':
                 # If there is no command specified in the conf file
                 # then display CPU and MEM %
-                self.__monitor_list[i]['result'] = 'CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
-                    sum([p['cpu_percent'] for p in monitoredlist]),
-                    sum([p['memory_percent'] for p in monitoredlist]))
+                self.__monitor_list[i]['result'] = self.__monitor_list[i]['default_result']
 
         return self.__monitor_list
 

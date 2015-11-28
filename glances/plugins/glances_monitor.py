@@ -102,8 +102,8 @@ class Plugin(GlancesPlugin):
             try:
                 msg = u(m['result']) if m['count'] >= 1 else ''
             except UnicodeEncodeError:
-                # Hack if return message contain accent letter (non UTF-8 compliant)
-                msg = ''
+                # Hack if return message contains non UTF-8 compliant char
+                msg = u(m['default_result']) if m['count'] >= 1 else ''
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 
