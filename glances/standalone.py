@@ -21,7 +21,7 @@
 
 from time import sleep
 
-from glances.globals import is_windows
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
@@ -52,7 +52,7 @@ class GlancesStandalone(object):
         if args.process_filter is not None:
             glances_processes.process_filter = args.process_filter
 
-        if (not is_windows) and args.no_kernel_threads:
+        if (not WINDOWS) and args.no_kernel_threads:
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 

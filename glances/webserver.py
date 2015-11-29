@@ -19,7 +19,7 @@
 
 """Glances Web Interface (Bottle based)."""
 
-from glances.globals import is_windows
+from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_bottle import GlancesBottle
@@ -33,7 +33,7 @@ class GlancesWebServer(object):
         # Init stats
         self.stats = GlancesStats(config)
 
-        if not is_windows and args.no_kernel_threads:
+        if not WINDOWS and args.no_kernel_threads:
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 

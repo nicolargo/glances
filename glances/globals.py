@@ -29,11 +29,10 @@ psutil_version = __import__('glances').__psutil_version
 
 # Operating system flag
 # Note: Somes libs depends of OS
-is_bsd = sys.platform.find('bsd') != -1
-is_freebsd = sys.platform.startswith('freebsd')
-is_linux = sys.platform.startswith('linux')
-is_mac = sys.platform.startswith('darwin')
-is_windows = sys.platform.startswith('win')
+BSD = sys.platform.find('bsd') != -1
+LINUX = sys.platform.startswith('linux')
+OSX = sys.platform.startswith('darwin')
+WINDOWS = sys.platform.startswith('win')
 
 # Path definitions
 work_path = os.path.realpath(os.path.dirname(__file__))

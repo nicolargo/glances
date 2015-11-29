@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 from glances.compat import iteritems
-from glances.globals import is_windows
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes
 from glances.plugins.glances_core import Plugin as CorePlugin
@@ -224,8 +224,8 @@ class Plugin(GlancesPlugin):
             if nice is None:
                 nice = '?'
             msg = '{0:>5}'.format(nice)
-            if isinstance(nice, int) and ((is_windows and nice != 32) or
-                                          (not is_windows and nice != 0)):
+            if isinstance(nice, int) and ((WINDOWS and nice != 32) or
+                                          (not WINDOWS and nice != 0)):
                 ret.append(self.curse_add_line(msg, decoration='NICE'))
             else:
                 ret.append(self.curse_add_line(msg))
@@ -361,7 +361,7 @@ class Plugin(GlancesPlugin):
                 v = p['ionice'].ioclass
                 # Linux: The scheduling class. 0 for none, 1 for real time, 2 for best-effort, 3 for idle.
                 # Windows: On Windows only ioclass is used and it can be set to 2 (normal), 1 (low) or 0 (very low).
-                if is_windows:
+                if WINDOWS:
                     if v == 0:
                         msg += k + 'Very Low'
                     elif v == 1:

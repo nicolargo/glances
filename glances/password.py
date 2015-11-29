@@ -27,7 +27,7 @@ import uuid
 from io import open
 
 from glances.compat import b, input
-from glances.globals import appname, is_bsd, is_linux, is_mac, is_windows
+from glances.globals import appname, BSD, LINUX, OSX, WINDOWS
 from glances.logger import logger
 
 
@@ -47,11 +47,11 @@ class GlancesPassword(object):
         * OS X: ~/Library/glances
         * Windows: %APPDATA%\glances
         """
-        if is_linux or is_bsd:
+        if LINUX or BSD:
             app_path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
-        elif is_mac:
+        elif OSX:
             app_path = os.path.join(os.environ.get('HOME'), 'Library')
-        elif is_windows:
+        elif WINDOWS:
             app_path = os.environ.get('APPDATA')
         else:
             app_path = '.'
