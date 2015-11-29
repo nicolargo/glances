@@ -38,7 +38,7 @@ if not core.is_standalone():
 from glances.stats import GlancesStats
 stats = GlancesStats()
 
-from glances.globals import is_windows, version
+from glances.globals import WINDOWS, version
 from glances.outputs.glances_bars import Bar
 
 # Unitest class
@@ -104,7 +104,7 @@ class TestGlances(unittest.TestCase):
             self.assertLessEqual(stats_grab[stat], 100)
         print('INFO: CPU stats: %s' % stats_grab)
 
-    @unittest.skipIf(is_windows, "Load average not available on Windows")
+    @unittest.skipIf(WINDOWS, "Load average not available on Windows")
     def test_004_load(self):
         """Check LOAD plugin."""
         stats_to_check = ['cpucore', 'min1', 'min5', 'min15']
