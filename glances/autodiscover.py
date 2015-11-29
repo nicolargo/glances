@@ -22,7 +22,7 @@
 import socket
 import sys
 
-from glances.globals import appname, is_freebsd
+from glances.globals import appname, is_bsd
 from glances.logger import logger
 
 try:
@@ -192,9 +192,9 @@ class GlancesAutoDiscoverClient(object):
             except socket.error as e:
                 logger.error("Cannot start zeroconf: {0}".format(e))
 
-            # XXX FreeBSD: Segmentation fault (core dumped)
+            # XXX *BSDs: Segmentation fault (core dumped)
             # -- https://bitbucket.org/al45tair/netifaces/issues/15
-            if not is_freebsd:
+            if not is_bsd:
                 try:
                     # -B @ overwrite the dynamic IPv4 choice
                     if zeroconf_bind_address == '0.0.0.0':

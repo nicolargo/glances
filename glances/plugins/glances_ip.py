@@ -20,13 +20,13 @@
 """IP plugin."""
 
 from glances.compat import iterkeys
-from glances.globals import is_freebsd
+from glances.globals import is_bsd
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# XXX FreeBSD: Segmentation fault (core dumped)
+# XXX *BSDs: Segmentation fault (core dumped)
 # -- https://bitbucket.org/al45tair/netifaces/issues/15
-if not is_freebsd:
+if not is_bsd:
     try:
         import netifaces
         netifaces_tag = True
