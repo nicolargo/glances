@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 from glances.config import Config
-from glances.globals import appname, is_linux, is_windows, psutil_version, version
+from glances.globals import appname, LINUX, WINDOWS, psutil_version, version
 from glances.logger import logger
 
 
@@ -194,10 +194,10 @@ Start the client browser (browser mode):\n\
                             dest='process_short_name', help='force short name for processes name')
         parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
                             dest='disable_irix', help='Task\'s cpu usage will be divided by the total number of CPUs')
-        if not is_windows:
+        if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
-        if is_linux:
+        if LINUX:
             parser.add_argument('--tree', action='store_true', default=False,
                                 dest='process_tree', help='display processes as a tree')
         parser.add_argument('-b', '--byte', action='store_true', default=False,

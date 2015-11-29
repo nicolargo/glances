@@ -24,7 +24,7 @@ import sys
 from io import open
 
 from glances.compat import ConfigParser, NoOptionError
-from glances.globals import appname, is_bsd, is_linux, is_mac, is_windows, sys_prefix
+from glances.globals import appname, BSD, LINUX, OSX, WINDOWS, sys_prefix
 from glances.logger import logger
 
 
@@ -65,24 +65,24 @@ class Config(object):
         if self.config_dir:
             paths.append(self.config_dir)
 
-        if is_linux or is_bsd:
+        if LINUX or BSD:
             paths.append(
                 os.path.join(os.environ.get('XDG_CONFIG_HOME') or
                              os.path.expanduser('~/.config'),
                              appname, self.config_filename))
-            if is_bsd:
+            if BSD:
                 paths.append(
                     os.path.join(sys.prefix, 'etc', appname, self.config_filename))
             else:
                 paths.append(
                     os.path.join('/etc', appname, self.config_filename))
-        elif is_mac:
+        elif OSX:
             paths.append(
                 os.path.join(os.path.expanduser('~/Library/Application Support/'),
                              appname, self.config_filename))
             paths.append(
                 os.path.join(sys_prefix, 'etc', appname, self.config_filename))
-        elif is_windows:
+        elif WINDOWS:
             paths.append(
                 os.path.join(os.environ.get('APPDATA'), appname, self.config_filename))
 

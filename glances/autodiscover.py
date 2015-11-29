@@ -22,7 +22,7 @@
 import socket
 import sys
 
-from glances.globals import appname, is_bsd
+from glances.globals import appname, BSD
 from glances.logger import logger
 
 try:
@@ -194,7 +194,7 @@ class GlancesAutoDiscoverClient(object):
 
             # XXX *BSDs: Segmentation fault (core dumped)
             # -- https://bitbucket.org/al45tair/netifaces/issues/15
-            if not is_bsd:
+            if not BSD:
                 try:
                     # -B @ overwrite the dynamic IPv4 choice
                     if zeroconf_bind_address == '0.0.0.0':

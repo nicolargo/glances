@@ -22,7 +22,7 @@ import os
 import re
 
 from glances.compat import iteritems, itervalues
-from glances.globals import is_bsd, is_linux, is_mac, is_windows
+from glances.globals import BSD, LINUX, OSX, WINDOWS
 from glances.logger import logger
 from glances.timer import Timer, getTimeSinceLastUpdate
 
@@ -405,7 +405,7 @@ class GlancesProcesses(object):
         # If io_tag = 0 > Access denied (display "?")
         # If io_tag = 1 > No access denied (display the IO rate)
         # Note Disk IO stat not available on Mac OS
-        if not is_mac:
+        if not OSX:
             try:
                 # Get the process IO counters
                 proc_io = proc.io_counters()
@@ -513,7 +513,7 @@ class GlancesProcesses(object):
             procstat['num_threads'] = None
 
         # Number of handles (Windows only)
-        if is_windows:
+        if WINDOWS:
             try:
                 procstat.update(proc.as_dict(attrs=['num_handles']))
             except psutil.NoSuchProcess:
@@ -523,7 +523,7 @@ class GlancesProcesses(object):
 
         # SWAP memory (Only on Linux based OS)
         # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-        if is_linux:
+        if LINUX:
             try:
                 procstat['memory_swap'] = sum(
                     [v.swap for v in proc.memory_maps()])
@@ -545,7 +545,7 @@ class GlancesProcesses(object):
 
         # IO Nice
         # http://pythonhosted.org/psutil/#psutil.Process.ionice
-        if is_linux or is_windows:
+        if LINUX or WINDOWS:
             try:
                 procstat.update(proc.as_dict(attrs=['ionice']))
             except psutil.NoSuchProcess:
@@ -591,7 +591,7 @@ class GlancesProcesses(object):
         processdict = {}
         for proc in psutil.process_iter():
             # Ignore kernel threads if needed
-            if self.no_kernel_threads and not is_windows and is_kernel_thread(proc):
+            if self.no_kernel_threads and not WINDOWS and is_kernel_thread(proc):
                 continue
 
             # If self.max_processes is None: Only retreive mandatory stats
@@ -607,9 +607,9 @@ class GlancesProcesses(object):
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
-            if (is_bsd and processdict[proc]['name'] == 'idle' or
-                    is_windows and processdict[proc]['name'] == 'System Idle Process' or
-                    is_mac and processdict[proc]['name'] == 'kernel_task'):
+            if (BSD and processdict[proc]['name'] == 'idle' or
+                    WINDOWS and processdict[proc]['name'] == 'System Idle Process' or
+                    OSX and processdict[proc]['name'] == 'kernel_task'):
                 continue
             # Update processcount (global statistics)
             try:

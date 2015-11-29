@@ -23,14 +23,14 @@ import re
 import sys
 
 from glances.compat import u
-from glances.globals import is_mac, is_windows
+from glances.globals import OSX, WINDOWS
 from glances.logger import logger
 from glances.logs import glances_logs
 from glances.processes import glances_processes
 from glances.timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
-if not is_windows:
+if not WINDOWS:
     try:
         import curses
         import curses.panel
@@ -705,7 +705,7 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
-                                display_additional=(not is_mac),
+                                display_additional=(not OSX),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.new_line()
             self.display_plugin(stats_alert)
@@ -794,7 +794,7 @@ class _GlancesCurses(object):
         for y, m in enumerate(message.split('\n')):
             popup.addnstr(2 + y, 2, m, len(m))
 
-        if is_input and not is_windows:
+        if is_input and not WINDOWS:
             # Create a subwindow for the text field
             subpop = popup.derwin(1, input_size, 2, 2 + len(m))
             subpop.attron(self.colors_list['FILTER'])
@@ -1250,7 +1250,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         return True
 
-if not is_windows:
+if not WINDOWS:
     class GlancesTextbox(Textbox, object):
 
         def __init__(self, *args, **kwargs):
