@@ -168,6 +168,7 @@ Command-Line Options
                         sensors modules (py3sensors needed)
   --disable-process     disable process module
   --disable-log         disable log module
+  --disable-bg          disable background colors in the terminal
   --disable-bold        disable bold mode in the terminal
   --enable-process-extended
                         enable extended stats on top process
