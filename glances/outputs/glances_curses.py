@@ -145,7 +145,7 @@ class _GlancesCurses(object):
                 curses.init_pair(1, curses.COLOR_BLACK, -1)
             else:
                 curses.init_pair(1, curses.COLOR_WHITE, -1)
-            if args.disable_bg:
+            if self.args.disable_bg:
                 curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
                 curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
                 curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)

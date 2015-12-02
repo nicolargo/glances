@@ -12,6 +12,7 @@ Enhancements and new features:
     * Add timestamp to the CSV export module (issue #708)
     * Add a shortcut 'E' to delete process filter (issue #699)
     * When Glances is starting the notifications should be delayed (issue #732)
+    * Add option (--disable-bg) to disable ANSI background colours (issue #738 from okdana)
     * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
     * [WebUI] Make web page title configurable (issue #724)
 
