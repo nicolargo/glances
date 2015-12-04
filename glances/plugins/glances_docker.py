@@ -113,7 +113,7 @@ class Plugin(GlancesPlugin):
                 # API error (Version mismatch ?)
                 logger.debug("Docker API error (%s)" % e)
                 # Try the connection with the server version
-                version = re.search('server\:\ (.*)\)\".*\)', str(e))
+                version = re.search('(?:server API version|server)\:\ (.*)\)\".*\)', str(e))
                 if version:
                     logger.debug("Try connection with Docker API version %s" % version.group(1))
                     ret = self.connect(version=version.group(1))
