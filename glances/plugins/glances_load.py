@@ -139,7 +139,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:8}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        if self.stats['cpucore'] > 0:
+        if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
             msg = '{0}-core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
         # New line
