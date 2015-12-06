@@ -115,6 +115,9 @@ class Plugin(GlancesPlugin):
 
             # Loop over fs
             for fs in fs_stat:
+                # Do not display hidden file system
+                if self.is_hide(fs.mountpoint):
+                    continue
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
