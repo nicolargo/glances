@@ -215,6 +215,7 @@ Command-Line Options
                         hide kernel threads in process list
   --tree                display processes as a tree
   -b, --byte            display network rate in byte per second
+  --diskio-show-ramfs   show RAM Fs in the disk IO plugin
   --fahrenheit          display temperature in Fahrenheit (default is Celsius)
   -1, --percpu          start Glances in per CPU mode
   --fs-free-space       display file system free space instead of used

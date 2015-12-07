@@ -204,6 +204,8 @@ Start the client browser (browser mode):\n\
                                 dest='process_tree', help='display processes as a tree')
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help='display network rate in byte per second')
+        parser.add_argument('--diskio-show-ramfs', action='store_true', default=False,
+                            dest='diskio_show_ramfs', help='show RAM Fs in the DiskIO plugin')
         parser.add_argument('--fahrenheit', action='store_true', default=False,
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
