@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
                 diskio_new = diskiocounters
                 for disk in diskio_new:
                     # By default, RamFS is not displayed (issue #714)
-                    if not self.args.diskio_show_ramfs and disk.startswith('ram'):
+                    if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
                         continue
                     # Compute bitrate
                     try:
