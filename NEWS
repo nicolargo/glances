@@ -12,6 +12,7 @@ Enhancements and new features:
     * Add process summary min/max stats (issue #703)
     * Add timestamp to the CSV export module (issue #708)
     * Add a shortcut 'E' to delete process filter (issue #699)
+    * By default, hide disk I/O ram1-** (issue #714)
     * When Glances is starting the notifications should be delayed (issue #732)
     * Add option (--disable-bg) to disable ANSI background colours (issue #738 from okdana)
     * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
