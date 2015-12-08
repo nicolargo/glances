@@ -358,7 +358,7 @@ Each plugin and export module can have a section.
 
 Example for the CPU plugin:
 
-.. code-block::
+.. code-block:: ini
 
     [cpu]
     user_careful=50
@@ -377,7 +377,7 @@ Example for the CPU plugin:
 By default the ``steal`` CPU time alerts aren't logged. If you want to
 enable log/alert, just add:
 
-.. code-block::
+.. code-block:: ini
 
     steal_log=True
 
@@ -820,7 +820,7 @@ By ``action``, we mean all shell command line. For example, if you want
 to execute the ``foo.py`` script if the last 5 minutes load are critical
 then add the action line to the Glances configuration file:
 
-.. code-block::
+.. code-block:: ini
 
     [load]
     critical=5.0
@@ -830,7 +830,7 @@ All the stats are available in the command line through the use of the
 ``{{mustache}}`` syntax. Another example would be to create a log file
 containing used vs total disk space if a space trigger warning is reached:
 
-.. code-block::
+.. code-block:: ini
 
     [fs]
     warning=70
@@ -863,7 +863,7 @@ You can export statistics to an ``InfluxDB`` server (time series server).
 The connection should be defined in the Glances configuration file as
 following:
 
-.. code-block::
+.. code-block:: ini
 
     [influxdb]
     host=localhost
@@ -882,7 +882,7 @@ InfluxDB 0.9.x or higher also supports an optional tags
 configuration parameter specified as comma separated, key:value pairs.
 For example:
 
-.. code-block::
+.. code-block:: ini
 
     [influxdb]
     host=localhost
@@ -905,7 +905,7 @@ You can export statistics to an ``OpenTSDB`` server (time series server).
 The connection should be defined in the Glances configuration file as
 following:
 
-.. code-block::
+.. code-block:: ini
 
     [opentsdb]
     host=localhost
@@ -926,7 +926,7 @@ You can export statistics to a ``Statsd`` server (welcome to Graphite!).
 The connection should be defined in the Glances configuration file as
 following:
 
-.. code-block::
+.. code-block:: ini
 
     [statsd]
     host=localhost
@@ -943,7 +943,7 @@ and run Glances with:
 
 Glances will generate stats as:
 
-.. code-block::
+.. code-block:: text
 
     'glances.cpu.user': 12.5,
     'glances.cpu.total': 14.9,
@@ -958,7 +958,7 @@ You can export statistics to an ``RabbitMQ`` server (AMQP Broker).
 The connection should be defined in the Glances configuration file as
 following:
 
-.. code-block::
+.. code-block:: ini
 
     [rabbitmq]
     host=localhost
