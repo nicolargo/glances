@@ -904,8 +904,11 @@ class _GlancesCurses(object):
                 # UTF-8 special tree chars occupy several bytes.
                 # Python 3: strings are strings and bytes are bytes, all is
                 # good.
-                offset = len(u(m['msg']))
-                x += offset
+                try:
+                    x += len(u(m['msg']))
+                except UnicodeDecodeError:
+                    # Quick and dirty hack for issue #745
+                    pass
                 if x > x_max:
                     x_max = x
 
