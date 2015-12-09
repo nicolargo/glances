@@ -135,9 +135,9 @@ Start the client browser (browser mode):\n\
                             dest='disable_process', help='disable process module')
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help='disable log module')
-        parser.add_argument('--disable-bold', action='store_false', default=True,
+        parser.add_argument('--disable-bold', action='store_true', default=False,
                             dest='disable_bold', help='disable bold mode in the terminal')
-        parser.add_argument('--disable-bg', action='store_false', default=True,
+        parser.add_argument('--disable-bg', action='store_true', default=False,
                             dest='disable_bg', help='disable background colors in the terminal')
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
