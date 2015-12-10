@@ -131,6 +131,7 @@ class _GlancesCurses(object):
         # Init colors
         if self.args.disable_bold:
             A_BOLD = 0
+            self.args.disable_bg = True
         else:
             A_BOLD = curses.A_BOLD
 
