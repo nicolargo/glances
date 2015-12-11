@@ -19,10 +19,8 @@
 
 """Folder plugin."""
 
-from glances.compat import u
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.logger import logger
 
 
 class Plugin(GlancesPlugin):
@@ -116,7 +114,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             try:
                 msg = '{0:>6}'.format(self.auto_unit(i['size']))
-            except:
+            except TypeError:
                 msg = '{0:>6}'.format('?')
             ret.append(self.curse_add_line(msg, self.get_alert(i)))
 

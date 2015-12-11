@@ -21,12 +21,11 @@
 
 import os
 
-from glances.compat import range, u
+from glances.compat import range
 from glances.logger import logger
 
 # Use the built-in version of scandir/walk if possible, otherwise
 # use the scandir module version
-
 scandir_tag = True
 try:
     # For Python 3.5 or higher
@@ -35,7 +34,7 @@ except ImportError:
     # For others...
     try:
         from scandir import scandir
-    except Exception as e:
+    except ImportError:
         scandir_tag = False
 
 
