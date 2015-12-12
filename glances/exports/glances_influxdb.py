@@ -133,9 +133,15 @@ class Export(GlancesExport):
         # Manage prefix
         if self.prefix is not None:
             name = self.prefix + '.' + name
-        # logger.info(self.prefix)
         # Create DB input
         if self.version == INFLUXDB_09:
+            # Convert all int to float (mandatory for InfluxDB>0.9.2)
+            # Correct issue#750 and issue#749
+            for i, v in enumerate(points):
+                try:
+                    points[i] = float(points[i])
+                except ValueError:
+                    pass
             data = [{'measurement': name,
                      'tags': self.parse_tags(self.tags),
                      'fields': dict(zip(columns, points))}]
