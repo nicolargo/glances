@@ -1,5 +1,5 @@
 {
-  "id": null,
+  "id": 2,
   "title": "Glances",
   "originalTitle": "Glances",
   "tags": [],
@@ -47,24 +47,24 @@
           "targets": [
             {
               "column": "cpucore",
-              "function": "mean",
-              "query": "SELECT mean(\"cpucore\") AS \"cpucore\" FROM \"load\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "load",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "cpucore",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "cpucore"
                 }
               ],
-              "measurement": "load"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.load",
+              "query": "SELECT mean(\"cpucore\") AS \"cpucore\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "load",
+              "tags": []
             }
           ],
           "thresholds": "",
@@ -108,14 +108,14 @@
           "interactive": true,
           "legend": {
             "alignAsTable": false,
-            "avg": true,
+            "avg": false,
             "current": false,
-            "max": true,
-            "min": true,
+            "max": false,
+            "min": false,
             "rightSide": false,
             "show": true,
             "total": false,
-            "values": true
+            "values": false
           },
           "legend_counts": true,
           "lines": true,
@@ -138,74 +138,74 @@
             {
               "alias": "1min",
               "column": "min1",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"min1\") AS \"min1\" FROM \"load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "A",
-              "series": "load",
-              "target": "randomWalk('random walk')",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "min1",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "min1"
                 }
               ],
-              "measurement": "load"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.load",
+              "query": "SELECT mean(\"min1\") AS \"min1\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "A",
+              "series": "load",
+              "tags": [],
+              "target": "randomWalk('random walk')"
             },
             {
               "alias": "5mins",
               "column": "min5",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"min5\") AS \"min5\" FROM \"load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "B",
-              "series": "load",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "min5",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "min5"
                 }
               ],
-              "measurement": "load"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.load",
+              "query": "SELECT mean(\"min5\") AS \"min5\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "B",
+              "series": "load",
+              "tags": [],
+              "target": ""
             },
             {
               "alias": "15mins",
               "column": "min15",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"min15\") AS \"min15\" FROM \"load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "C",
-              "series": "load",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "min15",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "min15"
                 }
               ],
-              "measurement": "load"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.load",
+              "query": "SELECT mean(\"min15\") AS \"min15\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "C",
+              "series": "load",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -258,24 +258,24 @@
           "targets": [
             {
               "column": "total",
-              "function": "mean",
-              "query": "SELECT mean(\"total\") AS \"total\" FROM \"processcount\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "processcount",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "total",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "total"
                 }
               ],
-              "measurement": "processcount"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.processcount",
+              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.processcount\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "processcount",
+              "tags": []
             }
           ],
           "thresholds": "",
@@ -345,73 +345,73 @@
             {
               "alias": "User",
               "column": "user",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"user\") AS \"user\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "A",
-              "series": "cpu",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "user",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "user"
                 }
               ],
-              "measurement": "cpu"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "A",
+              "series": "cpu",
+              "tags": []
             },
             {
               "alias": "System",
               "column": "system",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"system\") AS \"system\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "B",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "system",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "system"
                 }
               ],
-              "measurement": "cpu"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "B",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             },
             {
               "alias": "IoWait",
               "column": "iowait",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "C",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "iowait",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "iowait"
                 }
               ],
-              "measurement": "cpu"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "C",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -474,47 +474,47 @@
             {
               "alias": "Used",
               "column": "used",
-              "function": "mean",
-              "query": "SELECT mean(\"used\") AS \"used\" FROM \"mem\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "mem",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "used",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "used"
                 }
               ],
-              "measurement": "mem"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.mem",
+              "query": "SELECT mean(\"used\") AS \"used\" FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "mem",
+              "tags": []
             },
             {
               "alias": "Max",
               "column": "total",
-              "function": "mean",
-              "query": "SELECT mean(\"free\") AS \"free\" FROM \"memswap\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "B",
-              "series": "mem",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "free",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "total"
                 }
               ],
-              "measurement": "memswap"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.mem",
+              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "B",
+              "series": "mem",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -561,13 +561,13 @@
           },
           "id": 9,
           "legend": {
-            "avg": false,
+            "avg": true,
             "current": false,
-            "max": false,
-            "min": false,
+            "max": true,
+            "min": true,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -585,50 +585,50 @@
             {
               "alias": "Rx",
               "column": "enp0s25.rx",
-              "fill": "null",
-              "function": "mean",
-              "interval": "",
-              "query": "SELECT mean(\"wlan0.rx\") AS \"wlan0.rx\" FROM \"network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "A",
-              "series": "network",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "wlan0.rx",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "wlan0.rx"
                 }
               ],
-              "measurement": "network"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "",
+              "measurement": "localhost.network",
+              "query": "SELECT mean(\"wlan0.rx\") AS \"wlan0.rx\" FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "A",
+              "series": "network",
+              "tags": []
             },
             {
               "alias": "Tx",
               "column": "enp0s25.tx*-1",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"wlan0.tx\") AS \"wlan0.tx\" FROM \"network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "B",
-              "series": "network",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "wlan0.tx",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "wlan0.tx"
                 }
               ],
-              "measurement": "network"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.network",
+              "query": "SELECT mean(\"wlan0.tx\") AS \"wlan0.tx\" FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "B",
+              "series": "network",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -638,6 +638,7 @@
             "shared": false,
             "value_type": "cumulative"
           },
+          "transparent": false,
           "type": "graph",
           "x-axis": true,
           "y-axis": true,
@@ -691,47 +692,47 @@
             {
               "alias": "Used",
               "column": "used",
-              "function": "mean",
-              "query": "SELECT mean(\"used\") AS \"used\" FROM \"memswap\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "memswap",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "used",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "used"
                 }
               ],
-              "measurement": "memswap"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.memswap",
+              "query": "SELECT mean(\"used\") AS \"used\" FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "memswap",
+              "tags": []
             },
             {
               "alias": "Max",
               "column": "total",
-              "function": "mean",
-              "query": "SELECT mean(\"total\") AS \"total\" FROM \"memswap\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "B",
-              "series": "memswap",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "total",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "total"
                 }
               ],
-              "measurement": "memswap"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.memswap",
+              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "B",
+              "series": "memswap",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -778,13 +779,13 @@
           },
           "id": 10,
           "legend": {
-            "avg": false,
+            "avg": true,
             "current": false,
-            "max": false,
-            "min": false,
+            "max": true,
+            "min": true,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -802,49 +803,49 @@
             {
               "alias": "Read",
               "column": "sda2.read_bytes",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"sda2.read_bytes\") AS \"sda2.read_bytes\" FROM \"diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "A",
-              "series": "diskio",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "sda2.read_bytes",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "sda2.read_bytes"
                 }
               ],
-              "measurement": "diskio"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.diskio",
+              "query": "SELECT mean(\"sda2.read_bytes\") AS \"sda2.read_bytes\" FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "A",
+              "series": "diskio",
+              "tags": []
             },
             {
               "alias": "Write",
               "column": "sda2.write_bytes",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"sda2.write_bytes\") AS \"sda2.write_bytes\" FROM \"diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "B",
-              "series": "diskio",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "sda2.write_bytes",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "sda2.write_bytes"
                 }
               ],
-              "measurement": "diskio"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.diskio",
+              "query": "SELECT mean(\"sda2.write_bytes\") AS \"sda2.write_bytes\" FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "B",
+              "series": "diskio",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -907,49 +908,49 @@
             {
               "alias": "Used",
               "column": "\"/.used\"",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"/.used\") AS \"/.used\" FROM \"fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "A",
-              "series": "fs",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "/.used",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "/.used"
                 }
               ],
-              "measurement": "fs"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.fs",
+              "query": "SELECT mean(\"/.used\") AS \"/.used\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "A",
+              "series": "fs",
+              "tags": []
             },
             {
               "alias": "Max",
               "column": "\"/.size\"",
-              "fill": "null",
-              "function": "mean",
-              "query": "SELECT mean(\"/.size\") AS \"/.size\" FROM \"fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
-              "refId": "B",
-              "series": "fs",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "/.size",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "/.size"
                 }
               ],
-              "measurement": "fs"
+              "fill": "null",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.fs",
+              "query": "SELECT mean(\"/.size\") AS \"/.size\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "refId": "B",
+              "series": "fs",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -1000,24 +1001,24 @@
           "targets": [
             {
               "column": "\"/.percent\"",
-              "function": "mean",
-              "query": "SELECT mean(\"/.percent\") AS \"/.percent\" FROM \"fs\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "fs",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "/.percent",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "/.percent"
                 }
               ],
-              "measurement": "fs"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.fs",
+              "query": "SELECT mean(\"/.percent\") AS \"/.percent\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "fs",
+              "tags": []
             }
           ],
           "thresholds": "0,70,90",
@@ -1066,24 +1067,24 @@
           "targets": [
             {
               "column": "\"/home.percent\"",
-              "function": "mean",
-              "query": "SELECT mean(\"/boot/efi.percent\") AS \"/boot/efi.percent\" FROM \"fs\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "fs",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "/boot/efi.percent",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "/boot/efi.percent"
                 }
               ],
-              "measurement": "fs"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "measurement": "localhost.fs",
+              "query": "SELECT mean(\"/boot/efi.percent\") AS \"/boot/efi.percent\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "fs",
+              "tags": []
             }
           ],
           "thresholds": "0,70,90",
@@ -1125,7 +1126,7 @@
     {
       "collapse": false,
       "editable": true,
-      "height": "250px",
+      "height": "150px",
       "panels": [
         {
           "aliasColors": {
@@ -1154,7 +1155,7 @@
             "current": false,
             "max": false,
             "min": false,
-            "show": true,
+            "show": false,
             "total": false,
             "values": false
           },
@@ -1189,73 +1190,73 @@
             {
               "alias": "mean",
               "column": "user",
-              "function": "mean",
-              "interval": "60s",
-              "query": "SELECT mean(\"user\") AS \"user\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "cpu",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "user",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "user"
                 }
               ],
-              "measurement": "cpu"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "cpu",
+              "tags": []
             },
             {
               "alias": "min",
               "column": "user",
-              "function": "min",
-              "interval": "60s",
-              "query": "SELECT min(\"user\") AS \"user\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "B",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "user",
-                  "func": "min"
+                  "func": "min",
+                  "name": "user"
                 }
               ],
-              "measurement": "cpu"
+              "function": "min",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT min(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "B",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             },
             {
               "alias": "max",
               "column": "user",
-              "function": "max",
-              "interval": "60s",
-              "query": "SELECT max(\"user\") AS \"user\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "C",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "user",
-                  "func": "max"
+                  "func": "max",
+                  "name": "user"
                 }
               ],
-              "measurement": "cpu"
+              "function": "max",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT max(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "C",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -1265,11 +1266,12 @@
             "shared": false,
             "value_type": "cumulative"
           },
+          "transparent": true,
           "type": "graph",
           "x-axis": true,
           "y-axis": true,
           "y_formats": [
-            "short",
+            "percent",
             "short"
           ]
         },
@@ -1300,7 +1302,7 @@
             "current": false,
             "max": false,
             "min": false,
-            "show": true,
+            "show": false,
             "total": false,
             "values": false
           },
@@ -1335,73 +1337,73 @@
             {
               "alias": "mean",
               "column": "system",
-              "function": "mean",
-              "interval": "60s",
-              "query": "SELECT mean(\"system\") AS \"system\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "cpu",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "system",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "system"
                 }
               ],
-              "measurement": "cpu"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "cpu",
+              "tags": []
             },
             {
               "alias": "min",
               "column": "system",
-              "function": "min",
-              "interval": "60s",
-              "query": "SELECT min(\"system\") AS \"system\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "B",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "system",
-                  "func": "min"
+                  "func": "min",
+                  "name": "system"
                 }
               ],
-              "measurement": "cpu"
+              "function": "min",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT min(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "B",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             },
             {
               "alias": "max",
               "column": "system",
-              "function": "max",
-              "interval": "60s",
-              "query": "SELECT max(\"system\") AS \"system\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "C",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "system",
-                  "func": "max"
+                  "func": "max",
+                  "name": "system"
                 }
               ],
-              "measurement": "cpu"
+              "function": "max",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT max(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "C",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -1411,11 +1413,12 @@
             "shared": false,
             "value_type": "cumulative"
           },
+          "transparent": true,
           "type": "graph",
           "x-axis": true,
           "y-axis": true,
           "y_formats": [
-            "short",
+            "percent",
             "short"
           ]
         },
@@ -1442,11 +1445,13 @@
           },
           "id": 15,
           "legend": {
+            "alignAsTable": false,
             "avg": false,
             "current": false,
+            "hideEmpty": false,
             "max": false,
             "min": false,
-            "show": true,
+            "show": false,
             "total": false,
             "values": false
           },
@@ -1481,73 +1486,73 @@
             {
               "alias": "mean",
               "column": "iowait",
-              "function": "mean",
-              "interval": "60s",
-              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "A",
-              "series": "cpu",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "iowait",
-                  "func": "mean"
+                  "func": "mean",
+                  "name": "iowait"
                 }
               ],
-              "measurement": "cpu"
+              "function": "mean",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "series": "cpu",
+              "tags": []
             },
             {
               "alias": "min",
               "column": "iowait",
-              "function": "min",
-              "interval": "60s",
-              "query": "SELECT min(\"iowait\") AS \"iowait\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "B",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "iowait",
-                  "func": "min"
+                  "func": "min",
+                  "name": "iowait"
                 }
               ],
-              "measurement": "cpu"
+              "function": "min",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT min(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "B",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             },
             {
               "alias": "max",
               "column": "iowait",
-              "function": "max",
-              "interval": "60s",
-              "query": "SELECT max(\"iowait\") AS \"iowait\" FROM \"cpu\" WHERE $timeFilter GROUP BY time($interval)",
-              "refId": "C",
-              "series": "cpu",
-              "target": "",
-              "tags": [],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "interval": "auto"
-                }
-              ],
               "fields": [
                 {
-                  "name": "iowait",
-                  "func": "max"
+                  "func": "max",
+                  "name": "iowait"
                 }
               ],
-              "measurement": "cpu"
+              "function": "max",
+              "groupBy": [
+                {
+                  "interval": "auto",
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT max(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "C",
+              "series": "cpu",
+              "tags": [],
+              "target": ""
             }
           ],
           "timeFrom": null,
@@ -1557,11 +1562,12 @@
             "shared": false,
             "value_type": "cumulative"
           },
+          "transparent": true,
           "type": "graph",
           "x-axis": true,
           "y-axis": true,
           "y_formats": [
-            "short",
+            "percent",
             "short"
           ]
         }
@@ -1612,6 +1618,6 @@
   },
   "refresh": false,
   "schemaVersion": 7,
-  "version": 5,
+  "version": 9,
   "links": []
 }
