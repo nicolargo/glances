@@ -46,7 +46,11 @@ Example:
 
 > Short and descriptive example bug report title
 >
-> A summary of the issue and the browser/OS environment in which it occurs. If
+> Glances and PsUtil version used (glances -v)
+>
+> Operating system description (name and version).
+>
+> A summary of the issue and the OS environment in which it occurs. If
 > suitable, include the steps required to reproduce the bug.
 >
 > 1. This is the first step
