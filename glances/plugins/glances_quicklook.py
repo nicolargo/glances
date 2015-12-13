@@ -25,10 +25,13 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
+cpuinfo_tag = False
 try:
     from cpuinfo import cpuinfo
-except ImportError:
-    cpuinfo_tag = False
+except:
+    # Correct issue #754
+    # Waiting for a correction on the upstream Cpuinfo lib
+    pass
 else:
     cpuinfo_tag = True
 
