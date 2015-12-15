@@ -3,10 +3,15 @@ glancesApp.service('GlancesPluginAlert', function () {
     var _alerts = [];
 
     this.setData = function (data, views) {
+        data = data[_pluginName];
         _alerts = [];
 
-        for (var i = 0; i < data[_pluginName].length; i++) {
-            var alertData = data[_pluginName][i];
+        if(!_.isArray(data)) {
+          data = [];
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            var alertData = data[i];
             var alert = {};
 
             alert.name = alertData[3];
