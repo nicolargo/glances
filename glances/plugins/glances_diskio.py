@@ -97,6 +97,11 @@ class Plugin(GlancesPlugin):
                     # By default, RamFS is not displayed (issue #714)
                     if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
                         continue
+
+                    # Do not display hidden interfaces
+                    if self.is_hide(disk):
+                        continue
+
                     # Compute bitrate
                     try:
                         read_bytes = (diskio_new[disk].read_bytes -
@@ -162,9 +167,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
-            # Do not display hidden interfaces
-            if self.is_hide(i['disk_name']):
-                continue
             # Is there an alias for the disk name ?
             disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])
