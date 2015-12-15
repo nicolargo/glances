@@ -31,7 +31,7 @@ class GlancesWebServer(object):
 
     def __init__(self, config=None, args=None):
         # Init stats
-        self.stats = GlancesStats(config)
+        self.stats = GlancesStats(config, args)
 
         if not WINDOWS and args.no_kernel_threads:
             # Ignore kernel threads in process list
