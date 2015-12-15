@@ -1,5 +1,5 @@
 {
-  "id": 2,
+  "id": 1,
   "title": "Glances",
   "originalTitle": "Glances",
   "tags": [],
@@ -47,6 +47,7 @@
           "targets": [
             {
               "column": "cpucore",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -57,12 +58,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.load",
-              "query": "SELECT mean(\"cpucore\") AS \"cpucore\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"cpucore\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "cpucore"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "load",
               "tags": []
             }
@@ -138,6 +157,7 @@
             {
               "alias": "1min",
               "column": "min1",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -149,12 +169,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.load",
-              "query": "SELECT mean(\"min1\") AS \"min1\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"min1\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "min1"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "load",
               "tags": [],
               "target": "randomWalk('random walk')"
@@ -162,6 +200,7 @@
             {
               "alias": "5mins",
               "column": "min5",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -173,12 +212,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.load",
-              "query": "SELECT mean(\"min5\") AS \"min5\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"min5\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "min5"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "load",
               "tags": [],
               "target": ""
@@ -186,6 +243,7 @@
             {
               "alias": "15mins",
               "column": "min15",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -197,12 +255,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.load",
-              "query": "SELECT mean(\"min15\") AS \"min15\" FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"min15\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "min15"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "load",
               "tags": [],
               "target": ""
@@ -234,7 +310,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "format": "none",
@@ -258,6 +334,7 @@
           "targets": [
             {
               "column": "total",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -268,12 +345,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.processcount",
-              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.processcount\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"total\") FROM \"localhost.processcount\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "total"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "processcount",
               "tags": []
             }
@@ -345,6 +440,7 @@
             {
               "alias": "User",
               "column": "user",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -356,18 +452,37 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": []
             },
             {
               "alias": "System",
               "column": "system",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -379,12 +494,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -392,6 +525,7 @@
             {
               "alias": "IoWait",
               "column": "iowait",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -403,12 +537,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "iowait"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -474,6 +626,7 @@
             {
               "alias": "Used",
               "column": "used",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -484,18 +637,37 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.mem",
-              "query": "SELECT mean(\"used\") AS \"used\" FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"used\") FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "used"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "mem",
               "tags": []
             },
             {
               "alias": "Max",
               "column": "total",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -506,12 +678,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.mem",
-              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"total\") FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "total"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "mem",
               "tags": [],
               "target": ""
@@ -585,6 +775,7 @@
             {
               "alias": "Rx",
               "column": "enp0s25.rx",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -596,19 +787,38 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "",
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"wlan0.rx\") AS \"wlan0.rx\" FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"enp0s25.rx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "enp0s25.rx"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "network",
               "tags": []
             },
             {
               "alias": "Tx",
               "column": "enp0s25.tx*-1",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -620,12 +830,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"wlan0.tx\") AS \"wlan0.tx\" FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"enp0s25.tx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "enp0s25.tx"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "network",
               "tags": [],
               "target": ""
@@ -692,6 +920,7 @@
             {
               "alias": "Used",
               "column": "used",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -702,18 +931,37 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.memswap",
-              "query": "SELECT mean(\"used\") AS \"used\" FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"used\") FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "used"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "memswap",
               "tags": []
             },
             {
               "alias": "Max",
               "column": "total",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -724,12 +972,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.memswap",
-              "query": "SELECT mean(\"total\") AS \"total\" FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"total\") FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "total"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "memswap",
               "tags": [],
               "target": ""
@@ -803,6 +1069,7 @@
             {
               "alias": "Read",
               "column": "sda2.read_bytes",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -814,18 +1081,37 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.diskio",
-              "query": "SELECT mean(\"sda2.read_bytes\") AS \"sda2.read_bytes\" FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"sda2.read_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "sda2.read_bytes"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "diskio",
               "tags": []
             },
             {
               "alias": "Write",
               "column": "sda2.write_bytes",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -837,12 +1123,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.diskio",
-              "query": "SELECT mean(\"sda2.write_bytes\") AS \"sda2.write_bytes\" FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"sda2.write_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "sda2.write_bytes"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "diskio",
               "tags": [],
               "target": ""
@@ -908,6 +1212,7 @@
             {
               "alias": "Used",
               "column": "\"/.used\"",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -919,18 +1224,37 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.fs",
-              "query": "SELECT mean(\"/.used\") AS \"/.used\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"/.used\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "/.used"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "fs",
               "tags": []
             },
             {
               "alias": "Max",
               "column": "\"/.size\"",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -942,12 +1266,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.fs",
-              "query": "SELECT mean(\"/.size\") AS \"/.size\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"/.size\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "/.size"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "fs",
               "tags": [],
               "target": ""
@@ -977,7 +1319,7 @@
             "rgba(245, 150, 40, 0.73)",
             "rgba(225, 40, 40, 0.59)"
           ],
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "format": "percent",
@@ -1001,6 +1343,7 @@
           "targets": [
             {
               "column": "\"/.percent\"",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -1011,12 +1354,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.fs",
-              "query": "SELECT mean(\"/.percent\") AS \"/.percent\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"/.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "/.percent"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "fs",
               "tags": []
             }
@@ -1043,7 +1404,7 @@
             "rgba(245, 150, 40, 0.73)",
             "rgba(225, 40, 40, 0.59)"
           ],
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "format": "percent",
@@ -1067,6 +1428,7 @@
           "targets": [
             {
               "column": "\"/home.percent\"",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -1077,12 +1439,30 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "measurement": "localhost.fs",
-              "query": "SELECT mean(\"/boot/efi.percent\") AS \"/boot/efi.percent\" FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"/boot.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "/boot.percent"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "fs",
               "tags": []
             }
@@ -1133,7 +1513,7 @@
             "max": "#890F02"
           },
           "bars": false,
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "fill": 0,
@@ -1190,6 +1570,7 @@
             {
               "alias": "mean",
               "column": "user",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -1200,19 +1581,38 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": []
             },
             {
               "alias": "min",
               "column": "user",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "min",
@@ -1223,13 +1623,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT min(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT min(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "min"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1237,6 +1655,7 @@
             {
               "alias": "max",
               "column": "user",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "max",
@@ -1247,13 +1666,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT max(\"user\") AS \"user\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT max(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "max"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1280,7 +1717,7 @@
             "max": "#890F02"
           },
           "bars": false,
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "fill": 0,
@@ -1337,6 +1774,7 @@
             {
               "alias": "mean",
               "column": "system",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -1347,19 +1785,38 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": []
             },
             {
               "alias": "min",
               "column": "system",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "min",
@@ -1370,13 +1827,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT min(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "min"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1384,6 +1859,7 @@
             {
               "alias": "max",
               "column": "system",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "max",
@@ -1394,13 +1870,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT max(\"system\") AS \"system\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "max"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1427,7 +1921,7 @@
             "max": "#890F02"
           },
           "bars": false,
-          "datasource": null,
+          "datasource": "glances",
           "editable": true,
           "error": false,
           "fill": 0,
@@ -1486,6 +1980,7 @@
             {
               "alias": "mean",
               "column": "iowait",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
@@ -1496,19 +1991,38 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT mean(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "iowait"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": []
             },
             {
               "alias": "min",
               "column": "iowait",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "min",
@@ -1519,13 +2033,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT min(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT min(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "iowait"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "min"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1533,6 +2065,7 @@
             {
               "alias": "max",
               "column": "iowait",
+              "dsType": "influxdb",
               "fields": [
                 {
                   "func": "max",
@@ -1543,13 +2076,31 @@
               "groupBy": [
                 {
                   "interval": "auto",
+                  "params": [
+                    "auto"
+                  ],
                   "type": "time"
                 }
               ],
               "interval": "60s",
               "measurement": "localhost.cpu",
-              "query": "SELECT max(\"iowait\") AS \"iowait\" FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT max(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "iowait"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "max"
+                  }
+                ]
+              ],
               "series": "cpu",
               "tags": [],
               "target": ""
@@ -1576,7 +2127,7 @@
     }
   ],
   "time": {
-    "from": "now-30m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -1617,7 +2168,7 @@
     "list": []
   },
   "refresh": false,
-  "schemaVersion": 7,
-  "version": 9,
+  "schemaVersion": 8,
+  "version": 0,
   "links": []
 }
