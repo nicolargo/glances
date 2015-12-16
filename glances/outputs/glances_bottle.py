@@ -216,8 +216,11 @@ class GlancesBottle(object):
 
         if self.args.debug:
             fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
-            with open(fname) as f:
-                return f.read()
+            try:
+                with open(fname) as f:
+                    return f.read()
+            except IOError:
+                logger.debug("Debug file (%s) not found" % fname)
 
         # Update the stat
         self.stats.update()
