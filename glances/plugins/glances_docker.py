@@ -212,7 +212,7 @@ class Plugin(GlancesPlugin):
                 logger.debug("{0} plugin - Stop thread for old container {1}".format(self.plugin_name, container_id[:12]))
                 self.thread_list[container_id].stop()
                 # Delete the item from the dict
-                del(self.thread_list[container_id])
+                del self.thread_list[container_id]
 
             # Get stats for all containers
             for container in self.stats['containers']:
