@@ -137,7 +137,7 @@ class Export(GlancesExport):
         if self.version == INFLUXDB_09:
             # Convert all int to float (mandatory for InfluxDB>0.9.2)
             # Correct issue#750 and issue#749
-            for i, v in enumerate(points):
+            for i, _ in enumerate(points):
                 try:
                     points[i] = float(points[i])
                 except ValueError:
