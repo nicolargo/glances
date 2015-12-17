@@ -21,6 +21,7 @@
 # pylint: skip-file
 """Python 2/3 compatibility shims."""
 
+import operator
 import sys
 
 PY3 = sys.version_info[0] == 3
@@ -37,6 +38,10 @@ if PY3:
 
     text_type = str
     binary_type = bytes
+
+    viewkeys = operator.methodcaller('keys')
+    viewvalues = operator.methodcaller('values')
+    viewitems = operator.methodcaller('items')
 
     def iteritems(d):
         return iter(d.items())
@@ -72,6 +77,10 @@ else:
 
     text_type = unicode
     binary_type = str
+
+    viewkeys = operator.methodcaller('viewkeys')
+    viewvalues = operator.methodcaller('viewvalues')
+    viewitems = operator.methodcaller('viewitems')
 
     def iteritems(d):
         return d.iteritems()

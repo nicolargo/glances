@@ -27,7 +27,7 @@ import json
 from datetime import datetime
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, map
+from glances.compat import iterkeys, itervalues, map, viewkeys
 from glances.actions import GlancesActions
 from glances.logger import logger
 from glances.logs import glances_logs
@@ -289,7 +289,7 @@ class GlancesPlugin(object):
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
-                for key, _ in i.items():
+                for key in viewkeys(i):
                     value = {'decoration': 'DEFAULT',
                              'optional': False,
                              'additional': False,
@@ -297,7 +297,7 @@ class GlancesPlugin(object):
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
-            for key, _ in self.get_raw().items():
+            for key in viewkeys(self.get_raw()):
                 value = {'decoration': 'DEFAULT',
                          'optional': False,
                          'additional': False,
