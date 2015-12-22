@@ -8,6 +8,7 @@ Version 2.6
 Enhancements and new features:
 
     * New folders' monitoring plugins (issue #721)
+    * Add IOps in the DiskIO plugin (issue #763)
     * Add hide configuration key for FS Plugin (issue #736)
     * Add process summary min/max stats (issue #703)
     * Add timestamp to the CSV export module (issue #708)
