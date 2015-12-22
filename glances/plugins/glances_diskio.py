@@ -102,8 +102,12 @@ class Plugin(GlancesPlugin):
                     if self.is_hide(disk):
                         continue
 
-                    # Compute bitrate
+                    # Compute count and bit rate
                     try:
+                        read_count = (diskio_new[disk].read_count -
+                                      self.diskio_old[disk].read_count)
+                        write_count = (diskio_new[disk].write_count -
+                                       self.diskio_old[disk].write_count)
                         read_bytes = (diskio_new[disk].read_bytes -
                                       self.diskio_old[disk].read_bytes)
                         write_bytes = (diskio_new[disk].write_bytes -
@@ -111,6 +115,8 @@ class Plugin(GlancesPlugin):
                         diskstat = {
                             'time_since_update': time_since_update,
                             'disk_name': disk,
+                            'read_count': read_count,
+                            'write_count': write_count,
                             'read_bytes': read_bytes,
                             'write_bytes': write_bytes}
                     except KeyError:
@@ -161,10 +167,16 @@ class Plugin(GlancesPlugin):
         # Header
         msg = '{0:9}'.format('DISK I/O')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{0:>7}'.format('R/s')
-        ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format('W/s')
-        ret.append(self.curse_add_line(msg))
+        if args.diskio_iops:
+            msg = '{0:>7}'.format('IOR/s')
+            ret.append(self.curse_add_line(msg))
+            msg = '{0:>7}'.format('IOW/s')
+            ret.append(self.curse_add_line(msg))
+        else:
+            msg = '{0:>7}'.format('R/s')
+            ret.append(self.curse_add_line(msg))
+            msg = '{0:>7}'.format('W/s')
+            ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Is there an alias for the disk name ?
@@ -179,19 +191,37 @@ class Plugin(GlancesPlugin):
                 disk_name = '_' + disk_name[-8:]
             msg = '{0:9}'.format(disk_name)
             ret.append(self.curse_add_line(msg))
-            txps = self.auto_unit(
-                int(i['read_bytes'] // i['time_since_update']))
-            rxps = self.auto_unit(
-                int(i['write_bytes'] // i['time_since_update']))
-            msg = '{0:>7}'.format(txps)
-            ret.append(self.curse_add_line(msg,
-                                           self.get_views(item=i[self.get_key()],
-                                                          key='read_bytes',
-                                                          option='decoration')))
-            msg = '{0:>7}'.format(rxps)
-            ret.append(self.curse_add_line(msg,
-                                           self.get_views(item=i[self.get_key()],
-                                                          key='write_bytes',
-                                                          option='decoration')))
+            if args.diskio_iops:
+                # count
+                txps = self.auto_unit(
+                    int(i['read_count'] // i['time_since_update']))
+                rxps = self.auto_unit(
+                    int(i['write_count'] // i['time_since_update']))
+                msg = '{0:>7}'.format(txps)
+                ret.append(self.curse_add_line(msg,
+                                               self.get_views(item=i[self.get_key()],
+                                                              key='read_count',
+                                                              option='decoration')))
+                msg = '{0:>7}'.format(rxps)
+                ret.append(self.curse_add_line(msg,
+                                               self.get_views(item=i[self.get_key()],
+                                                              key='write_count',
+                                                              option='decoration')))
+            else:
+                # Bitrate
+                txps = self.auto_unit(
+                    int(i['read_bytes'] // i['time_since_update']))
+                rxps = self.auto_unit(
+                    int(i['write_bytes'] // i['time_since_update']))
+                msg = '{0:>7}'.format(txps)
+                ret.append(self.curse_add_line(msg,
+                                               self.get_views(item=i[self.get_key()],
+                                                              key='read_bytes',
+                                                              option='decoration')))
+                msg = '{0:>7}'.format(rxps)
+                ret.append(self.curse_add_line(msg,
+                                               self.get_views(item=i[self.get_key()],
+                                                              key='write_bytes',
+                                                              option='decoration')))
 
         return ret

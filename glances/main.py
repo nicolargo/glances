@@ -206,6 +206,8 @@ Start the client browser (browser mode):\n\
                             dest='byte', help='display network rate in byte per second')
         parser.add_argument('--diskio-show-ramfs', action='store_true', default=False,
                             dest='diskio_show_ramfs', help='show RAM Fs in the DiskIO plugin')
+        parser.add_argument('--diskio-iops', action='store_true', default=False,
+                            dest='diskio_iops', help='show IO per second in the DiskIO plugin')
         parser.add_argument('--fahrenheit', action='store_true', default=False,
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
