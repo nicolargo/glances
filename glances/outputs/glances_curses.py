@@ -314,8 +314,10 @@ class _GlancesCurses(object):
             glances_processes.sort_key = 'cpu_percent'
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
-            # self.net_byteps_tag = not self.net_byteps_tag
             self.args.byte = not self.args.byte
+        elif self.pressedkey == ord('B'):
+            # 'B' > Switch between bit/s and IO/s for Disk IO
+            self.args.diskio_iops = not self.args.diskio_iops
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             glances_processes.auto_sort = False
