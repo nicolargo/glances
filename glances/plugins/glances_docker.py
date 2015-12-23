@@ -559,15 +559,19 @@ class ThreadDockerGrabber(threading.Thread):
 
     @property
     def stats(self):
+        """Stats getter"""
         return self._stats
 
     @stats.setter
     def stats(self, value):
+        """Stats setter"""
         self._stats = value
 
     def stop(self, timeout=None):
+        """Stop the thread"""
         logger.debug("docker plugin - Close thread for container {0}".format(self._container_id[:12]))
         self._stopper.set()
 
     def stopped(self):
+        """Return True is the thread is stopped"""
         return self._stopper.isSet()
