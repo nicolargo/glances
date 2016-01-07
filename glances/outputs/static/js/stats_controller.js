@@ -34,7 +34,8 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
         'network_io_cumulative': false,
         'filesystem_freespace': false,
         'network_by_bytes': false,
-        'filesystem_free_space': false
+        'filesystem_free_space': false,
+        'diskio_iops': false
     };
 
     $scope.init_refresh_time = function () {
@@ -195,6 +196,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             case !$event.shiftKey && $event.keyCode == keycodes.b:
                 // b => Bytes or bits for network I/O
                $scope.show_hide('network_by_bytes');
+               break;
+            case $event.shiftKey && $event.keyCode == keycodes.b:
+               // 'B' => Switch between bit/s and IO/s for Disk IO
+               $scope.show_hide('diskio_iops');
                break;
             case !$event.shiftKey && $event.keyCode == keycodes.l:
                 // l => Show/hide alert logs
