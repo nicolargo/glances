@@ -1,9 +1,10 @@
-glancesApp.service('GlancesPluginDiskio', function() {
+glancesApp.service('GlancesPluginDiskio', function($filter) {
     var _pluginName = "diskio";
     this.disks = [];
 
     this.setData = function(data, views) {
         data = data[_pluginName];
+        data = $filter('orderBy')(data,'disk_name');
         this.disks = [];
 
         for (var i = 0; i < data.length; i++) {
@@ -13,12 +14,12 @@ glancesApp.service('GlancesPluginDiskio', function() {
             var diskio = {
                 'name': diskioData['disk_name'],
                 'bitrate': {
-                  'txps': diskioData['read_bytes'] / timeSinceUpdate,
-                  'rxps': diskioData['write_bytes'] / timeSinceUpdate
+                  'txps': $filter('bytes')(diskioData['read_bytes'] / timeSinceUpdate),
+                  'rxps': $filter('bytes')(diskioData['write_bytes'] / timeSinceUpdate)
                 },
                 'count': {
-                  'txps': diskioData['read_count'] / timeSinceUpdate,
-                  'rxps': diskioData['write_count'] / timeSinceUpdate
+                  'txps': $filter('bytes')(diskioData['read_count'] / timeSinceUpdate),
+                  'rxps': $filter('bytes')(diskioData['write_count'] / timeSinceUpdate)
                 }
             };
 
