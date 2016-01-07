@@ -118,7 +118,9 @@ included in the project:
    git checkout -b <topic-branch-name>
    ```
 
-4. Commit your changes in logical chunks. Please adhere to these [git commit
+4. It's coding time !
+   Please respect the following coding convention: [Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)
+   Commit your changes in logical chunks. Please adhere to these [git commit
    message guidelines](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
    or your code is unlikely be merged into the main project. Use Git's
    [interactive rebase](https://help.github.com/articles/interactive-rebase)
