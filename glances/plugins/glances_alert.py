@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, "TITLE"))
             logs_len = glances_logs.len()
             if logs_len > 1:
-                msg = ' (lasts {0} entries)'.format(logs_len)
+                msg = ' (last {0} entries)'.format(logs_len)
             else:
                 msg = ' (one entry)'
             ret.append(self.curse_add_line(msg, "TITLE"))

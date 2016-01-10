@@ -33,11 +33,14 @@ enable debug mode (log file is /tmp/glances.log)
 .B \-C CONF_FILE, \-\-config CONF_FILE
 path to the configuration file
 .TP
-.B \-\-disable-quicklook
+.B \3, \-\-disable-quicklook
 disable quick look module
 .TP
 .B \-\-full-quicklook
 disable all but quick look and load modules
+.TP
+.B \4, \-\-disable-top
+disable top menu (QuickLook, CPU, MEM and LOAD)
 .TP
 .B \-\-disable-cpu
 disable CPU module
@@ -78,7 +81,7 @@ disable RAID module
 .B \-\-disable-docker
 disable Docker module
 .TP
-.B \-\-disable-left-sidebar
+.B \2, \-\-disable-left-sidebar
 disable network, disk I/O, file system and sensors modules
 .TP
 .B \-\-disable-process
@@ -183,7 +186,7 @@ display processes as a tree
 .B \-b, \-\-byte
 display network rate in byte per second [default: bit per second]
 .TP
-.B \-\-diskio\-show\-ramfs   
+.B \-\-diskio\-show\-ramfs
 show RAM Fs in the disk IO plugin
 .TP
 .B \-\-fahrenheit
@@ -301,6 +304,9 @@ Enable/disable the quick look module
 .TP
 .B 4
 Enable/disable all but quick look and load module
+.TP
+.B 5
+Enable/disable the top menu (QuickLook, CPU, MEM and LOAD)
 .TP
 .B /
 Switch between short name/command line (processes name)
