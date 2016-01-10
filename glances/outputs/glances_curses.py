@@ -306,7 +306,6 @@ class _GlancesCurses(object):
                 self.args.disable_mem = False
                 self.args.disable_swap = False
         elif self.pressedkey == ord('5'):
-            logger.info("press 5")
             # '5' > Enable/disable top menu
             logger.info(self.args.disable_top )
             self.args.disable_top = not self.args.disable_top
