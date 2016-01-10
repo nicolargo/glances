@@ -14,12 +14,18 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             }
         }
     };
+
     $scope.help_screen = false;
     $scope.show = {
         'diskio': true,
         'network': true,
         'fs': true,
+        'cpu': true,
+        'mem': true,
+        'swap': true,
+        'load': true,
         'sensors': true,
+        'top_menu': false,
         'sidebar': true,
         'alert': true,
         'short_process_name': true,
@@ -228,6 +234,14 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             case $event.shiftKey && $event.keyCode == keycodes.THREE:
                 // 3 => Enable/disable quick look plugin
                 $scope.show_hide('quick_look');
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.FIVE:
+                // 5 => Show/hide top menu (QL, CPU, MEM, SWAP and LOAD)
+                $scope.show_hide('quick_look');
+                $scope.show_hide('cpu');
+                $scope.show_hide('mem');
+                $scope.show_hide('swap');
+                $scope.show_hide('load');
                 break;
         }
     };
