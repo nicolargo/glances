@@ -128,9 +128,12 @@ Start the client browser (browser mode):\n\
                             dest='disable_raid', help='disable RAID module')
         parser.add_argument('--disable-docker', action='store_true', default=False,
                             dest='disable_docker', help='disable Docker module')
+        parser.add_argument('-5', '--disable-top', action='store_true',
+                            default=False, dest='disable_top',
+                            help='disable top menu (QL, CPU, MEM, SWAP and LOAD)')
         parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
                             default=False, dest='disable_left_sidebar',
-                            help='disable network, disk I/O, FS and sensors modules (py3sensors needed)')
+                            help='disable network, disk I/O, FS and sensors modules')
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help='disable process module')
         parser.add_argument('--disable-log', action='store_true', default=False,
@@ -276,17 +279,21 @@ Start the client browser (browser mode):\n\
 
         # Manage full quicklook option
         if args.full_quicklook:
+            logger.info("Disable QuickLook menu")
             args.disable_quicklook = False
             args.disable_cpu = True
             args.disable_mem = True
             args.disable_swap = True
             args.disable_load = False
-        else:
-            args.disable_quicklook = False
-            args.disable_cpu = False
-            args.disable_mem = False
-            args.disable_swap = False
-            args.disable_load = False
+
+        # Manage disable_top option
+        if args.disable_top:
+            logger.info("Disable top menu")
+            args.disable_quicklook = True
+            args.disable_cpu = True
+            args.disable_mem = True
+            args.disable_swap = True
+            args.disable_load = True
 
         # Control parameter and exit if it is not OK
         self.args = args
