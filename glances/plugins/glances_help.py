@@ -92,6 +92,7 @@ class Plugin(GlancesPlugin):
         self.view_data['enable_disable_quick_look'] = msg_col.format('3', 'Enable/disable quick look plugin')
         self.view_data['show_hide_ip'] = msg_col2.format('I', 'Show/hide IP module')
         self.view_data['diskio_iops'] = msg_col2.format('B', 'Count/rate for Disk I/O')
+        self.view_data['show_hide_top_menu'] = msg_col2.format('5', 'Show/hide top menu (QL, CPU, MEM, SWAP and LOAD)')
         self.view_data['edit_pattern_filter'] = 'ENTER: Edit the process filter pattern'
 
     def get_view_data(self, args=None):
@@ -160,6 +161,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['diskio_iops']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_top_extends_stats']))
+        ret.append(self.curse_add_line(self.view_data['show_hide_top_menu']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
         ret.append(self.curse_new_line())
