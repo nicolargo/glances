@@ -151,6 +151,8 @@ Command-Line Options
                         disable quick look module
   -4, --full-quicklook
                         enable all but quick look and load
+  -5, --disable-top
+                        Enable/disable the top menu (QuickLook, CPU, MEM and LOAD)
   --disable-cpu         disable CPU module
   --disable-mem         disable MEM module
   --disable-swap        disable SWAP module
