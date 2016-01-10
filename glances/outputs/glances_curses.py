@@ -306,20 +306,22 @@ class _GlancesCurses(object):
                 self.args.disable_mem = False
                 self.args.disable_swap = False
         elif self.pressedkey == ord('5'):
+            logger.info("press 5")
             # '5' > Enable/disable top menu
+            logger.info(self.args.disable_top )
             self.args.disable_top = not self.args.disable_top
             if self.args.disable_top:
-                self.args.disable_quicklook = False
-                self.args.disable_cpu = False
-                self.args.disable_mem = False
-                self.args.disable_swap = False
-                self.args.disable_load = False
-            else:
                 self.args.disable_quicklook = True
                 self.args.disable_cpu = True
                 self.args.disable_mem = True
                 self.args.disable_swap = True
                 self.args.disable_load = True
+            else:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = False
+                self.args.disable_mem = False
+                self.args.disable_swap = False
+                self.args.disable_load = False
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
