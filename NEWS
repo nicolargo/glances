@@ -19,6 +19,7 @@ Enhancements and new features:
     * Add option (--disable-bg) to disable ANSI background colours (issue #738 from okdana)
     * [WebUI] add "pointer" cursor for sortable columns (issue #704 from @notFloran)
     * [WebUI] Make web page title configurable (issue #724)
+    * Do not show interface in down state (issue #765)
 
 Bugs corrected:
     * Can't read sensors on a Thinkpad (issue #711)

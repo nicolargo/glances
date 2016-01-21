@@ -84,6 +84,13 @@ class Plugin(GlancesPlugin):
             except UnicodeDecodeError:
                 return self.stats
 
+            # New in PsUtil 3.0: optionaly import the interface's status (issue #765)
+            netstatus = {}
+            try:
+                netstatus = psutil.net_if_stats()
+            except AttributeError:
+                pass
+
             # Previous network interface stats are stored in the network_old variable
             if not hasattr(self, 'network_old'):
                 # First call, we init the network_old var
@@ -119,6 +126,12 @@ class Plugin(GlancesPlugin):
                     except KeyError:
                         continue
                     else:
+                        # Optional stats (only compliant with PsUtil 3.0+)
+                        try:
+                            netstat['is_up'] = netstatus[net].isup
+                        except (KeyError, AttributeError):
+                            pass
+                        # Set the key
                         netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
@@ -254,6 +267,9 @@ class Plugin(GlancesPlugin):
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hidden interfaces
             if self.is_hide(i['interface_name']):
+                continue
+            # Do not display interface in down state (issue #765)
+            if ('is_up' in i) and (i['is_up'] is False):
                 continue
             # Format stats
             # Is there an alias for the interface name ?
