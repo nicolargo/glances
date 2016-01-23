@@ -177,7 +177,7 @@ class ProcessTreeNode(object):
             nodes_to_search.extend(current_node.children)
 
     @staticmethod
-    def build_tree(process_dict, sort_key, sort_reverse, hide_kernel_threads):
+    def build_tree(process_dict, sort_key, sort_reverse, hide_kernel_threads, excluded_processes):
         """Build a process tree using using parent/child relationships.
 
         Return the tree root node.
@@ -193,8 +193,8 @@ class ProcessTreeNode(object):
             except psutil.NoSuchProcess:
                 # parent is dead, consider no parent
                 parent_process = None
-            if parent_process is None:
-                # no parent, add this node at the top level
+            if (parent_process is None) or (parent_process in excluded_processes):
+                # no parent, or excluded parent, add this node at the top level
                 tree_root.children.append(new_node)
             else:
                 parent_node = tree_root.find_process(parent_process)
@@ -217,9 +217,8 @@ class ProcessTreeNode(object):
                 # level
                 tree_root.children.append(node_to_add)
             else:
-                if parent_process is None:
-                    # parent is None now, but was not at previous pass (can occur on Windows only)
-                    # consider no parent, add this node at the top level
+                if (parent_process is None) or (parent_process in excluded_processes):
+                    # no parent, or excluded parent, add this node at the top level
                     tree_root.children.append(node_to_add)
                 else:
                     parent_node = tree_root.find_process(parent_process)
@@ -589,6 +588,7 @@ class GlancesProcesses(object):
 
         # Build an internal dict with only mandatories stats (sort keys)
         processdict = {}
+        excluded_processes = set()
         for proc in psutil.process_iter():
             # Ignore kernel threads if needed
             if self.no_kernel_threads and not WINDOWS and is_kernel_thread(proc):
@@ -601,6 +601,7 @@ class GlancesProcesses(object):
                                          standard_stats=self.max_processes is None)
             # Continue to the next process if it has to be filtered
             if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
+                excluded_processes.add(proc)
                 continue
             # Ok add the process to the list
             processdict[proc] = s
@@ -634,7 +635,8 @@ class GlancesProcesses(object):
             self.process_tree = ProcessTreeNode.build_tree(processdict,
                                                            self.sort_key,
                                                            self.sort_reverse,
-                                                           self.no_kernel_threads)
+                                                           self.no_kernel_threads,
+                                                           excluded_processes)
 
             for i, node in enumerate(self.process_tree):
                 # Only retreive stats for visible processes (max_processes)

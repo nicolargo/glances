@@ -215,7 +215,7 @@ Start the client browser (browser mode):\n\
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
                             dest='percpu', help='start Glances in per CPU mode')
-        parser.add_argument('--fs-free-space', action='store_false', default=False,
+        parser.add_argument('--fs-free-space', action='store_true', default=False,
                             dest='fs_free_space', help='display FS free space instead of used')
         parser.add_argument('--theme-white', action='store_true', default=False,
                             dest='theme_white', help='optimize display colors for white background')
