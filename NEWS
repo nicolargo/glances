@@ -25,6 +25,7 @@ Bugs corrected:
     * Can't read sensors on a Thinkpad (issue #711)
     * InfluxDB/OpenTSDB: tag parsing broken (issue #713)
     * Grafana Dashboard outdated for InfluxDB 0.9.x (issue #648)
+    *  '--tree' breaks process filter on Debian 8 (issue #768)
 
 Others:
     * A new Glances docker container to monitor your Docker infrastructure is available here (issue #728): https://hub.docker.com/r/nicolargo/glances/
