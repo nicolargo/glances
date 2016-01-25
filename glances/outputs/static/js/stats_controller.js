@@ -101,6 +101,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
 
     var stop;
     $scope.configure_refresh = function () {
+        $scope.refreshData();
         if (!angular.isDefined(stop)) {
             stop = $interval(function () {
                 $scope.refreshData();
