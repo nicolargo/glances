@@ -48,12 +48,12 @@ def split_process_cmdline(process):
     basename = process['name']
     arguments = None
     if process['exe'] and process['cmdline'].startswith(process['exe']):
-      dn, bn = os.path.split(process['exe'])
-      dirname = dn or None
-      basename = bn or process['name']
-      arguments = process['cmdline'][len(process['exe']):].lstrip()
+        dn, bn = os.path.split(process['exe'])
+        dirname = dn or None
+        basename = bn or process['name']
+        arguments = process['cmdline'][len(process['exe']):].lstrip()
     elif process['cmdline'].startswith(process['name']):
-      arguments = process['cmdline'][len(process['name']):].lstrip()
+        arguments = process['cmdline'][len(process['name']):].lstrip()
     return dirname, basename, arguments
 
 
