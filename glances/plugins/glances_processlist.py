@@ -42,21 +42,6 @@ def convert_timedelta(delta):
     return hours, minutes, seconds, microseconds
 
 
-def split_process_cmdline(process):
-    """Return dirname, basename, arguments for a process, with unknown parts set to None. """
-    dirname = None
-    basename = process['name']
-    arguments = None
-    if process['exe'] and process['cmdline'].startswith(process['exe']):
-        dn, bn = os.path.split(process['exe'])
-        dirname = dn or None
-        basename = bn or process['name']
-        arguments = process['cmdline'][len(process['exe']):].lstrip()
-    elif process['cmdline'].startswith(process['name']):
-        arguments = process['cmdline'][len(process['name']):].lstrip()
-    return dirname, basename, arguments
-
-
 class Plugin(GlancesPlugin):
 
     """Glances' processes plugin.
@@ -302,27 +287,31 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
 
         # Command line
-        dirname, name, arguments = split_process_cmdline(p)
+        # If no command line for the process is available, fallback to
+        # the bare process name instead
+        cmdline = p['cmdline']
+        argument = ' '.join(cmdline.split()[1:])
         try:
-            if (dirname is None) and (arguments is None):
-                msg = ' {0}'.format(name)
+            if cmdline == '':
+                msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
             elif args.process_short_name:
-                msg = ' {0}'.format(name)
+                msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                msg = ' {0}'.format(arguments)
+                msg = ' {0}'.format(argument)
                 ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                if dirname is not None:
-                    msg = ' {0}'.format(dirname) + os.sep
+                cmd = cmdline.split()[0]
+                path, basename = os.path.split(cmd)
+                if os.path.isdir(path):
+                    msg = ' {0}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    msg = name
+                    ret.append(self.curse_add_line(basename, decoration='PROCESS', splittable=True))
                 else:
-                    msg = ' {0}'.format(name)
-                ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                if arguments is not None:
-                    msg = ' {0}'.format(arguments)
-                    ret.append(self.curse_add_line(msg, splittable=True))
+                    msg = ' {0}'.format(basename)
+                    ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
+                msg = ' {0}'.format(argument)
+                ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
             ret.append(self.curse_add_line('', splittable=True))
 
