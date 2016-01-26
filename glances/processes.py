@@ -377,7 +377,7 @@ class GlancesProcesses(object):
         try:
             procstat.update(proc.as_dict(
                 attrs=['username', 'cpu_percent', 'memory_percent',
-                       'name', 'exe', 'cpu_times'], ad_value=''))
+                       'name', 'cpu_times'], ad_value=''))
         except psutil.NoSuchProcess:
             # Try/catch for issue #432
             return None
