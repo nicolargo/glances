@@ -295,15 +295,10 @@ class Plugin(GlancesPlugin):
             if cmdline == '':
                 msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
-            elif args.process_short_name:
-                msg = ' {0}'.format(p['name'])
-                ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                msg = ' {0}'.format(argument)
-                ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 cmd = cmdline.split()[0]
                 path, basename = os.path.split(cmd)
-                if os.path.isdir(path):
+                if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {0}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
                     ret.append(self.curse_add_line(basename, decoration='PROCESS', splittable=True))
