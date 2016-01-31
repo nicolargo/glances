@@ -123,10 +123,11 @@ class MonitorList(object):
         if len(self.__monitor_list) == 0:
             return self.__monitor_list
 
+        # Search monitored processes by a regular expression
+        processlist = [p for p in glances_processes.getalllist()]
+
         # Iter upon the monitored list
         for i in range(len(self.get())):
-            # Search monitored processes by a regular expression
-            processlist = glances_processes.getalllist()
             monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
@@ -144,6 +145,7 @@ class MonitorList(object):
                     self.__monitor_list[i]['result'] = 'Error: ' + self.command(i)
                 except Exception:
                     self.__monitor_list[i]['result'] = 'Cannot execute command'
+
                 # Only save the first line
                 try:
                     self.__monitor_list[i]['result'] = u(self.__monitor_list[i]['result']).split('\n')[0]
