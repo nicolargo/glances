@@ -82,6 +82,8 @@ class GlancesBottle(object):
         self._app.route('/favicon.ico', method="GET", callback=self._favicon)
 
         # REST API
+        self._app.route('/api/2/args', method="GET", callback=self._api_args)
+        self._app.route('/api/2/args/:item', method="GET", callback=self._api_args_item)
         self._app.route('/api/2/help', method="GET", callback=self._api_help)
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
@@ -381,6 +383,46 @@ class GlancesBottle(object):
             abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
         else:
             return pdict
+
+    def _api_args(self):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of the Glances command line arguments
+        HTTP/200 if OK
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the args' dict
+            # Use vars to convert namespace to dict
+            # Source: https://docs.python.org/2/library/functions.html#vars
+            args_json = json.dumps(vars(self.args))
+        except Exception as e:
+            abort(404, "Cannot get args (%s)" % str(e))
+        return args_json
+
+    def _api_args_item(self, item):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of the Glances command line arguments item
+        HTTP/200 if OK
+        HTTP/400 if item is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if item not in self.args:
+            abort(400, "Unknown item %s" % item)
+
+        try:
+            # Get the JSON value of the args' dict
+            # Use vars to convert namespace to dict
+            # Source: https://docs.python.org/2/library/functions.html#vars
+            args_json = json.dumps(vars(self.args)[item])
+        except Exception as e:
+            abort(404, "Cannot get args item (%s)" % str(e))
+        return args_json
 
 
 class EnableCors(object):
