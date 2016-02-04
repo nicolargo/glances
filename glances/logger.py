@@ -70,7 +70,15 @@ LOGGING_CFG = {
         'standard': {
             'handlers': ['file'],
             'level': 'INFO'
-        }
+        },
+        'elasticsearch': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
+        },
+        'elasticsearch.trace': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
+        },
     }
 }
 

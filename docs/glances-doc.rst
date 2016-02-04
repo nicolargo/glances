@@ -180,10 +180,12 @@ Command-Line Options
                         set the export path for graph history
   --export-csv EXPORT_CSV
                         export stats to a CSV file
-  --export-influxdb     export stats to an InfluxDB server (influxdb needed)
-  --export-opentsdb     export stats to an OpenTSDB server (potsdb needed)
-  --export-statsd       export stats to a StatsD server (statsd needed)
-  --export-rabbitmq     export stats to a RabbitMQ server (pika needed)
+  --export-influxdb     export stats to an InfluxDB server (influxdb lib  needed)
+  --export-opentsdb     export stats to an OpenTSDB server (potsdb lib needed)
+  --export-statsd       export stats to a StatsD server (statsd lib needed)
+  --export-elasticsearch
+                        export stats to an Elasticsearch server (elasticsearch lib needed)
+  --export-rabbitmq     export stats to a RabbitMQ server (pika lib needed)
   -c CLIENT, --client CLIENT
                         connect to a Glances server by IPv4/IPv6 address or
                         hostname
@@ -952,6 +954,33 @@ Glances will generate stats as:
     'glances.load.cpucore': 4,
     'glances.load.min1': 0.19,
     ...
+
+ElasticSearch
+-------------
+
+You can export statistics to an ``ElasticSearch`` server.
+The connection should be defined in the Glances configuration file as
+following:
+
+.. code-block:: ini
+
+    [elasticsearch]
+    host=localhost
+    port=9200
+    index=glances
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export-elasticsearch
+
+The stats are available through the ElasticSearch API: URL/glances/cpu/system (example for the system CPU).
+
+.. code-block:: console
+
+    $ curl  http://172.17.0.2:9200/glances/cpu/system
+    {"_index":"glances","_type":"cpu","_id":"system","_version":28,"found":true,"_source":{"timestamp": "2016-02-04T14:11:02.362232", "value": "2.2"}}
 
 RabbitMQ
 --------
