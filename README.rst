@@ -56,8 +56,10 @@ Optional dependencies:
 Installation
 ============
 
-Glances Auto Install script
----------------------------
+Several method to test/install Glances on your system. Choose your weapon !
+
+Glances Auto Install script: the total way
+------------------------------------------
 
 To install both dependencies and latest Glances production ready version
 (aka *master* branch), just enter the following command line:
@@ -117,6 +119,24 @@ If you need to install Glances in a specific user location, use:
 
     export PYTHONUSERBASE=~/mylocalpath
     pip install --user glances
+
+Docker: the funny way
+---------------------
+
+A Glances container is available. It will include the latest development HEAD version. You can use it to monitor your server and all your others containers !
+
+Get the Glances container:
+
+.. code-block:: console
+
+    docker pull nicolargo/glances
+
+Run the container in console mode:
+
+.. code-block:: console
+
+    docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+
 
 GNU/Linux
 ---------
