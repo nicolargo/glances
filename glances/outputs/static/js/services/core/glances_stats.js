@@ -65,6 +65,12 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         });
     };
 
+    this.getArguments = function() {
+        return $http.get('/api/2/args').then(function (response) {
+            return response.data;
+        });
+    };
+
     this.getPlugin = function(name) {
         var plugin = _plugins[name];
 
