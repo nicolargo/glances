@@ -1,5 +1,7 @@
-glancesApp.controller('statsController', function ($scope, $rootScope, $interval, $routeParams, GlancesStats) {
-    $scope.refreshTime = 3;
+glancesApp.controller('statsController', function ($scope, $rootScope, $interval, GlancesStats, help, arguments) {
+    $scope.help = help;
+    $scope.arguments = arguments;
+
     $scope.sorter = {
         column: "cpu_percent",
         auto: true,
@@ -12,52 +14,6 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             } else {
                 return column;
             }
-        }
-    };
-
-    $scope.help_screen = false;
-    $scope.show = {
-        'diskio': true,
-        'network': true,
-        'fs': true,
-        'cpu': true,
-        'mem': true,
-        'swap': true,
-        'load': true,
-        'sensors': true,
-        'top_menu': false,
-        'sidebar': true,
-        'alert': true,
-        'short_process_name': true,
-        'per_cpu': false,
-        'warning_alerts': true,
-        'warning_critical_alerts': true,
-        'process_stats': true,
-        'quick_look': true,
-        'top_extended_stats': true,
-        'docker_stats': true,
-        'network_io_combination': false,
-        'network_io_cumulative': false,
-        'filesystem_freespace': false,
-        'network_by_bytes': false,
-        'filesystem_free_space': false,
-        'diskio_iops': false
-    };
-
-    $scope.init_refresh_time = function () {
-        if ($routeParams != undefined && $routeParams.refresh_time != undefined) {
-            var new_refresh_time = parseInt($routeParams.refresh_time);
-            if (new_refresh_time >= 1) {
-                $scope.refreshTime = new_refresh_time
-            }
-        }
-    };
-
-    $scope.show_hide = function (bloc) {
-        if (bloc == 'help') {
-            $scope.help_screen = !$scope.help_screen
-        } else {
-            $scope.show[bloc] = !$scope.show[bloc]
         }
     };
 
@@ -94,41 +50,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
         });
     };
 
-    $scope.init_refresh_time();
-    GlancesStats.getHelp().then(function (help) {
-        $scope.help = help;
-    });
-
-    var stop;
-    $scope.configure_refresh = function () {
+    $scope.refreshData();
+    $interval(function () {
         $scope.refreshData();
-        if (!angular.isDefined(stop)) {
-            stop = $interval(function () {
-                $scope.refreshData();
-            }, $scope.refreshTime * 1000); // in milliseconds
-        }
-    };
-
-    $scope.$watch(
-        function () {
-            return $scope.refreshTime;
-        },
-        function (newValue, oldValue) {
-            $scope.stop_refresh();
-            $scope.configure_refresh();
-        }
-    );
-
-    $scope.stop_refresh = function () {
-        if (angular.isDefined(stop)) {
-            $interval.cancel(stop);
-            stop = undefined;
-        }
-    };
-
-    $scope.$on('$destroy', function () {
-        $scope.stop_refresh();
-    });
+    }, arguments.time * 1000); // in milliseconds
 
     $scope.onKeyDown = function ($event) {
 
@@ -170,79 +95,78 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.d:
                 // d => Show/hide disk I/O stats
-                $scope.show_hide('diskio');
+                $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:
                 // f => Show/hide filesystem stats
-                $scope.show_hide('fs');
+                $scope.arguments.disable_fs = !$scope.arguments.disable_fs;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.n:
                 // n => Show/hide network stats
-                $scope.show_hide('network');
+                $scope.arguments.disable_network = !$scope.arguments.disable_network;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.s:
                 // s => Show/hide sensors stats
-                $scope.show_hide('sensors');
+                $scope.arguments.disable_sensors = !$scope.arguments.disable_sensors;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.TWO:
                 // 2 => Show/hide left sidebar
-                $scope.show_hide('sidebar');
+                $scope.arguments.disable_left_sidebar = !$scope.arguments.disable_left_sidebar;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.z:
                 // z => Enable/disable processes stats
-                $scope.show_hide('process_stats');
+                $scope.arguments.disable_process = !$scope.arguments.disable_process;
                 break;
             case $event.keyCode == keycodes.SLASH:
                 // SLASH => Enable/disable short processes name
-                $scope.show_hide('short_process_name');
+                $scope.arguments.process_short_name = !$scope.arguments.process_short_name;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.D:
                 // D => Enable/disable Docker stats
-                $scope.show_hide('docker_stats');
+                $scope.arguments.disable_docker = !$scope.arguments.disable_docker;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.b:
                 // b => Bytes or bits for network I/O
-               $scope.show_hide('network_by_bytes');
+                $scope.arguments.byte = !$scope.arguments.byte;
                break;
             case $event.shiftKey && $event.keyCode == keycodes.b:
                // 'B' => Switch between bit/s and IO/s for Disk IO
-               $scope.show_hide('diskio_iops');
+                $scope.arguments.diskio_iops = !$scope.arguments.diskio_iops;
                break;
             case !$event.shiftKey && $event.keyCode == keycodes.l:
                 // l => Show/hide alert logs
-               $scope.show_hide('alert');
+                $scope.arguments.disable_log = !$scope.arguments.disable_log;
                break;
             case $event.shiftKey && $event.keyCode == keycodes.ONE:
                // 1 => Global CPU or per-CPU stats
-               $scope.show_hide('per_cpu');
+               $scope.arguments.percpu = !$scope.arguments.percpu;
                break;
             case !$event.shiftKey && $event.keyCode == keycodes.h:
                 // h => Show/hide this help screen
-                $scope.show_hide('help');
+                $scope.arguments.help_tag = !$scope.arguments.help_tag;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.T:
                 // T => View network I/O as combination
-                $scope.show_hide('network_io_combination');
+                $scope.arguments.network_sum = !$scope.arguments.network_sum;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.u:
                 // U => View cumulative network I/O
-                $scope.show_hide('network_io_cumulative');
+                $scope.arguments.network_cumul = !$scope.arguments.network_cumul;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.f:
                 // F => Show filesystem free space
-                $scope.show_hide('filesystem_free_space');
+                $scope.arguments.fs_free_space = !$scope.arguments.fs_free_space;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.THREE:
                 // 3 => Enable/disable quick look plugin
-                $scope.show_hide('quick_look');
+                $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.FIVE:
-                // 5 => Show/hide top menu (QL, CPU, MEM, SWAP and LOAD)
-                $scope.show_hide('quick_look');
-                $scope.show_hide('cpu');
-                $scope.show_hide('mem');
-                $scope.show_hide('swap');
-                $scope.show_hide('load');
+                $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
+                $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;
+                $scope.arguments.disable_mem = !$scope.arguments.disable_mem;
+                $scope.arguments.disable_swap = !$scope.arguments.disable_swap;
+                $scope.arguments.disable_load = !$scope.arguments.disable_load;
                 break;
         }
     };

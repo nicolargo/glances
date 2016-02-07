@@ -27,7 +27,7 @@
         </div>
         <div class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">{{process.ioRead}}</div>
         <div class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">{{process.ioWrite}}</div>
-        <div class="table-cell text-left" ng-show="show.short_process_name">{{process.name}}</div>
-        <div class="table-cell text-left" ng-show="!show.short_process_name">{{process.cmdline}}</div>
+        <div class="table-cell text-left" ng-show="arguments.process_short_name">{{process.name}}</div>
+        <div class="table-cell text-left" ng-show="!arguments.process_short_name">{{process.cmdline}}</div>
     </div>
 </div>

@@ -71,7 +71,7 @@ class GlancesBottle(object):
     def _route(self):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
-        self._app.route('/<refresh_time:int>', method=["GET", "POST"], callback=self._index)
+        self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
 
         self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
         self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
@@ -115,10 +115,6 @@ class GlancesBottle(object):
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
-        # Manage parameter
-        if refresh_time is None:
-            refresh_time = self.args.time
-
         # Update the stat
         self.stats.update()
 
