@@ -30,9 +30,9 @@ from influxdb.client import InfluxDBClientError
 from influxdb.influxdb08 import InfluxDBClient as InfluxDBClient08
 from influxdb.influxdb08.client import InfluxDBClientError as InfluxDBClientError08
 
-# Constants for tracking behavior
-INFLUXDB_09 = '0.9'
+# Constants for tracking specific behavior
 INFLUXDB_08 = '0.8'
+INFLUXDB_09PLUS = '0.9+'
 
 
 class Export(GlancesExport):
@@ -103,7 +103,7 @@ class Export(GlancesExport):
                                 password=self.password,
                                 database=self.db)
             get_all_db = [i['name'] for i in db.get_list_database()]
-            self.version = INFLUXDB_09
+            self.version = INFLUXDB_09PLUS
         except InfluxDBClientError:
             # https://github.com/influxdb/influxdb-python/issues/138
             logger.info("Trying fallback to InfluxDB v0.8")
@@ -134,19 +134,20 @@ class Export(GlancesExport):
         if self.prefix is not None:
             name = self.prefix + '.' + name
         # Create DB input
-        if self.version == INFLUXDB_09:
+        if self.version == INFLUXDB_08:
+            data = [{'name': name, 'columns': columns, 'points': [points]}]
+        else:
             # Convert all int to float (mandatory for InfluxDB>0.9.2)
             # Correct issue#750 and issue#749
             for i, _ in enumerate(points):
                 try:
                     points[i] = float(points[i])
-                except ValueError:
-                    pass
+                except (TypeError, ValueError) as e:
+                    logger.debug("InfluxDB error diring stat convertion %s=%s (%s)" % (columns[i], points[i], e))
+
             data = [{'measurement': name,
                      'tags': self.parse_tags(self.tags),
                      'fields': dict(zip(columns, points))}]
-        else:
-            data = [{'name': name, 'columns': columns, 'points': [points]}]
         # Write input to the InfluxDB database
         try:
             self.client.write_points(data)

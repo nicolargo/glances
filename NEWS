@@ -9,6 +9,7 @@ Enhancements and new features:
 
     * Add a connector to ElasticSearch (welcome to Kibana dashboard) (issue #311)
     * New folders' monitoring plugins (issue #721)
+    * Command line arguments are now take into account in the WebUI (#789 from @notFloran)
     * Add an option to disable top menu (issue #766)
     * Add IOps in the DiskIO plugin (issue #763)
     * Add hide configuration key for FS Plugin (issue #736)
