@@ -247,9 +247,8 @@ Start the client browser (browser mode):\n\
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
 
-        # In web server mode, defaul refresh time: 5 sec
+        # In web server mode
         if args.webserver:
-            args.time = 5
             args.process_short_name = True
 
         # Server or client login/password
