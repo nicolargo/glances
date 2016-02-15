@@ -252,7 +252,7 @@ class Plugin(GlancesPlugin):
         try:
             cpu_new['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
             cpu_new['system'] = all_stats['cpu_stats']['system_cpu_usage']
-            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'])
+            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
             # all_stats do not have CPU information
             logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
