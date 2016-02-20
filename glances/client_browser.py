@@ -160,7 +160,7 @@ class GlancesClientBrowser(object):
                     "Server list dictionnary change inside the loop (wait next update)")
 
             # Update the screen (list or Glances client)
-            if self.screen.active_server is None:
+            if not self.screen.active_server:
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:
