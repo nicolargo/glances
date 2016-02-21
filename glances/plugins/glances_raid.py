@@ -94,8 +94,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>6}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
-        arrays = iterkeys(self.stats)
-        arrays.sort()
+        arrays = sorted(iterkeys(self.stats))
         for array in arrays:
             # New line
             ret.append(self.curse_new_line())
@@ -114,8 +113,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_new_line())
                 msg = '└─ Status {0}'.format(self.stats[array]['status'])
                 ret.append(self.curse_add_line(msg, status))
-                components = iterkeys(self.stats[array]['components'])
-                components.sort()
+                components = sorted(iterkeys(self.stats[array]['components']))
                 for i, component in enumerate(components):
                     if i == len(components) - 1:
                         tree_char = '└─'
