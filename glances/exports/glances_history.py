@@ -130,8 +130,7 @@ class GlancesHistory(object):
                     # Find if anothers key ends with the key
                     # Ex: key='tx' => 'ethernet_tx'
                     # Add one curve per chart
-                    stats_history_filtered = [key for key in iterkeys(h) if key.endswith('_' + i['name'])]
-                    stats_history_filtered.sort()
+                    stats_history_filtered = sorted([key for key in iterkeys(h) if key.endswith('_' + i['name'])])
                     logger.debug("Generate graphs: %s %s" %
                                  (p, stats_history_filtered))
                     if len(stats_history_filtered) > 0:
