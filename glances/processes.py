@@ -21,7 +21,7 @@ import collections
 import os
 import re
 
-from glances.compat import iteritems, itervalues
+from glances.compat import iteritems, itervalues, listitems
 from glances.globals import BSD, LINUX, OSX, WINDOWS
 from glances.logger import logger
 from glances.timer import Timer, getTimeSinceLastUpdate
@@ -666,7 +666,7 @@ class GlancesProcesses(object):
                                          reverse=self.sort_reverse)
                 except (KeyError, TypeError) as e:
                     logger.error("Cannot sort process list by {0}: {1}".format(self.sort_key, e))
-                    logger.error("%s" % str(iteritems(processdict)[0]))
+                    logger.error('{0}'.format(listitems(processdict)[0]))
                     # Fallback to all process (issue #423)
                     processloop = iteritems(processdict)
                     first = False
