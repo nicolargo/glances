@@ -13,7 +13,7 @@ patches and features.
 
 ## Using the issue tracker
 
-The [issue tracker](https://github.com/nicolargos/glances/issues) is
+The [issue tracker](https://github.com/nicolargo/glances/issues) is
 the preferred channel for [bug reports](#bug-reports), [features requests](#feature-requests)
 and [submitting pull requests](#pull-requests), but please respect the following
 restrictions:
@@ -46,7 +46,7 @@ Example:
 
 > Short and descriptive example bug report title
 >
-> Glances and PsUtil version used (glances -v)
+> Glances and PsUtil version used (glances -V)
 >
 > Operating system description (name and version).
 >
