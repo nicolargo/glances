@@ -66,13 +66,13 @@ To install both dependencies and latest Glances production ready version
 
 .. code-block:: console
 
-    curl -L http://bit.ly/glances | /bin/bash
+    curl -L https://bit.ly/glances | /bin/bash
 
 or
 
 .. code-block:: console
 
-    wget -O- http://bit.ly/glances | /bin/bash
+    wget -O- https://bit.ly/glances | /bin/bash
 
 *Note*: Only supported on some GNU/Linux distributions. If you want to
 support other distributions, please contribute to `glancesautoinstall`_.
