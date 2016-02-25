@@ -23,6 +23,7 @@ I am your father...
 ...for all Glances plugins.
 """
 
+import re
 import json
 from datetime import datetime
 from operator import itemgetter
@@ -509,7 +510,13 @@ class GlancesPlugin(object):
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list."""
-        return value in self.get_conf_value('hide', header=header)
+        # return value in self.get_conf_value('hide', header=header)
+        logger.info("="*80)
+        logger.info("value={}".format(value))
+        logger.info("hide={}".format(self.get_conf_value('hide', header=header)))
+        logger.info("match={}".format([re.match(value, i) for i in self.get_conf_value('hide', header=header)]))
+        logger.info("result={}".format(not all(j is None for j in [re.match(value, i) for i in self.get_conf_value('hide', header=header)])))
+        return not all(j is None for j in [re.match(value, i) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist."""
