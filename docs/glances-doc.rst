@@ -2,11 +2,11 @@
 Glances
 =======
 
-This manual describes *Glances* version 2.5.1.
+This manual describes *Glances* version 2.6.
 
-Copyright © 2011-2015 Nicolas Hennion <nicolas@nicolargo.com>
+Copyright © 2011-2016 Nicolas Hennion <nicolas@nicolargo.com>
 
-October, 2015
+March, 2016
 
 .. contents:: Table of Contents
 
@@ -537,6 +537,13 @@ Alerts are only set if the maximum speed per network interface is available
 and per-interface limit values in the ``[network]`` section of the
 configuration file and aliases for interface name.
 
+For example, if you want to hide the loopback interface (lo) and all the virtual docker interface (docker0, docker1...):
+
+::
+
+    [network]    
+    hide=lo,docker.*
+
 Disk I/O
 --------
 
@@ -548,6 +555,13 @@ There is no alert on this information.
 
 *Note*: it is possible to define a list of disks to hide under the
 ``[diskio]`` section in the configuration file and aliases for disk name.
+
+For example, if you want to hide the loopback disks (loop0, loop1..) and the specific sda5 disk:
+
+::
+
+    [diskio]
+    hide=sda5,loop.*
 
 File System
 -----------
@@ -575,10 +589,13 @@ By default, the plugin only displays physical devices (hard disks, USB
 keys) and ignore all others. To allow others FS type, you have to use the
 following section in the configuration file:
 
+For example, if you want to allow the zfs and misc filesystems and hide boot mount points:
+
 ::
 
     [fs]
     allow=zfs,misc
+    hide=/boot.*    
 
 Folders
 -------
