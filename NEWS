@@ -9,6 +9,7 @@ Enhancements and new features:
 
     * Add a connector to ElasticSearch (welcome to Kibana dashboard) (issue #311)
     * New folders' monitoring plugins (issue #721)
+    * Use wildcard (regexp) to the hide configuration option for network, diskio and fs sections (issue #799 )
     * Command line arguments are now take into account in the WebUI (#789 from @notFloran)
     * Add an option to disable top menu (issue #766)
     * Add IOps in the DiskIO plugin (issue #763)

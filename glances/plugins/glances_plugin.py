@@ -509,13 +509,14 @@ class GlancesPlugin(object):
             return []
 
     def is_hide(self, value, header=""):
-        """Return True if the value is in the hide configuration list."""
-        # return value in self.get_conf_value('hide', header=header)
-        logger.info("="*80)
-        logger.info("value={}".format(value))
-        logger.info("hide={}".format(self.get_conf_value('hide', header=header)))
-        logger.info("match={}".format([re.match(value, i) for i in self.get_conf_value('hide', header=header)]))
-        logger.info("result={}".format(not all(j is None for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])))
+        """
+        Return True if the value is in the hide configuration list.
+        The hide configuration list is defined in the glances.conf file.
+        It is a comma separed list of regexp.
+        Example for diskio:
+        hide=sda2,sda5,loop.*
+        """
+        # TODO: possible optimisation: create a re.compile list
         return not all(j is None for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
