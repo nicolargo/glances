@@ -266,7 +266,7 @@ and RTFM, always.
 Documentation
 =============
 
-For complete documentation see `glances-doc`_.
+For complete documentation have a look at the readthedocs_ website.
 
 If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
 
@@ -301,6 +301,6 @@ LGPL. See ``COPYING`` for more details.
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _Python: https://www.python.org/getit/
-.. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+.. _readthedocs: https://glances.readthedocs.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
