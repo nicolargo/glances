@@ -30,8 +30,7 @@ class tests(Command):
 def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                               'conf/glances.conf', 'docs/glances-doc.html']),
-        ('share/doc/glances/images', glob.glob('docs/images/*.png')),
+                               'conf/glances.conf']),
         ('share/man/man1', ['man/glances.1'])
     ]
 
