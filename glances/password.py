@@ -35,9 +35,10 @@ class GlancesPassword(object):
 
     """This class contains all the methods relating to password."""
 
-    def __init__(self):
+    def __init__(self, username='glances'):
+        self.username = username
         self.password_path = self.get_password_path()
-        self.password_filename = 'glances.pwd'
+        self.password_filename = self.username + '.pwd'
         self.password_filepath = os.path.join(self.password_path, self.password_filename)
 
     def get_password_path(self):
@@ -102,13 +103,9 @@ class GlancesPassword(object):
             logger.info("Read password from file {0}".format(self.password_filepath))
             password = self.load_password()
         else:
-            # Else enter the password from the command line
-            if description != '':
-                print(description)
-
             # password_sha256 is the plain SHA-256 password
             # password_hashed is the salt + SHA-256 password
-            password_sha256 = self.sha256_hash(getpass.getpass('Password: '))
+            password_sha256 = self.sha256_hash(getpass.getpass(description))
             password_hashed = self.hash_password(password_sha256)
             if confirm:
                 # password_confirm is the clear password (only used to compare)
@@ -144,7 +141,7 @@ class GlancesPassword(object):
                 return
 
         # Create/overwrite the password file
-        with open(self.password_filepath, 'w') as file_pwd:
+        with open(self.password_filepath, 'wb') as file_pwd:
             file_pwd.write(hashed_password)
 
     def load_password(self):

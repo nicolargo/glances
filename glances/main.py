@@ -24,6 +24,7 @@ import os
 import sys
 import tempfile
 
+from glances.compat import input
 from glances.config import Config
 from glances.globals import appname, LINUX, WINDOWS, psutil_version, version
 from glances.logger import logger
@@ -174,6 +175,8 @@ Start the client browser (browser mode):\n\
                             help='define the client/server TCP port [default: {0}]'.format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
                             help='bind server to the given IPv4/IPv6 address or hostname')
+        parser.add_argument('--username', action='store_true', default=False, dest='username_prompt',
+                            help='define a client/server username')
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help='define a client/server password')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
@@ -252,21 +255,37 @@ Start the client browser (browser mode):\n\
             args.process_short_name = True
 
         # Server or client login/password
-        args.username = self.username
+        if args.username_prompt:
+            # Every username needs a password
+            args.password_prompt = True
+            # Prompt username
+            if args.server:
+                args.username = self.__get_username(description='Define the Glances server username: ')
+            elif args.webserver:
+                args.username = self.__get_username(description='Define the Glances webserver username: ')
+            elif args.client:
+                args.username = self.__get_username(description='Enter the Glances server username: ')
+        else:
+            # Default user name is 'glances'
+            args.username = self.username
+
         if args.password_prompt:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the password for the Glances server',
-                    confirm=True)
+                    description='Define the Glances server password ({} username): '.format(args.username),
+                    confirm=True,
+                    username=args.username)
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the password for the Glances web server\nUser name: glances',
-                    confirm=True)
+                    description='Define the Glances webserver password ({} username): '.format(args.username),
+                    confirm=True,
+                    username=args.username)
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password',
-                    clear=True)
+                    description='Enter the Glances server password({} username): '.format(args.username),
+                    clear=True,
+                    username=args.username)
         else:
             # Default is no password
             args.password = self.password
@@ -324,14 +343,19 @@ Start the client browser (browser mode):\n\
 
         return args
 
-    def __get_password(self, description='', confirm=False, clear=False):
+    def __get_username(self, description=''):
+        """Read a username from the command line.
+        """
+        return input(description)
+
+    def __get_password(self, description='', confirm=False, clear=False, username='glances'):
         """Read a password from the command line.
 
         - if confirm = True, with confirmation
         - if clear = True, plain (clear password)
         """
         from glances.password import GlancesPassword
-        password = GlancesPassword()
+        password = GlancesPassword(username=username)
         return password.get_password(description, confirm, clear)
 
     def is_standalone(self):

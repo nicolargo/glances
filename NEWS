@@ -11,6 +11,7 @@ Enhancements and new features:
     * New folders' monitoring plugins (issue #721)
     * Use wildcard (regexp) to the hide configuration option for network, diskio and fs sections (issue #799 )
     * Command line arguments are now take into account in the WebUI (#789 from @notFloran)
+    * Change username for server and web server authentication (issue #693)
     * Add an option to disable top menu (issue #766)
     * Add IOps in the DiskIO plugin (issue #763)
     * Add hide configuration key for FS Plugin (issue #736)
