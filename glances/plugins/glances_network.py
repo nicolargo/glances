@@ -107,6 +107,9 @@ class Plugin(GlancesPlugin):
                 # Loop over interfaces
                 network_new = netiocounters
                 for net in network_new:
+                    # Do not take hidden interface into account
+                    if self.is_hide(net):
+                        continue
                     try:
                         cumulative_rx = network_new[net].bytes_recv
                         cumulative_tx = network_new[net].bytes_sent
@@ -164,6 +167,10 @@ class Plugin(GlancesPlugin):
                 network_new = netiocounters
 
                 for net in network_new:
+                    # Do not take hidden interface into account
+                    if self.is_hide(net):
+                        continue
+
                     try:
                         # Windows: a tips is needed to convert HEX to TXT
                         # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
@@ -174,6 +181,7 @@ class Plugin(GlancesPlugin):
                                 interface_name = net
                         else:
                             interface_name = net
+
                         cumulative_rx = float(network_new[net]['cumulative_rx'])
                         cumulative_tx = float(network_new[net]['cumulative_tx'])
                         cumulative_cx = cumulative_rx + cumulative_tx
@@ -265,9 +273,6 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
-            # Do not display hidden interfaces
-            if self.is_hide(i['interface_name']):
-                continue
             # Do not display interface in down state (issue #765)
             if ('is_up' in i) and (i['is_up'] is False):
                 continue

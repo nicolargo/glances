@@ -98,7 +98,7 @@ class Plugin(GlancesPlugin):
                     if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
                         continue
 
-                    # Do not display hidden interfaces
+                    # Do not take hide disk into account
                     if self.is_hide(disk):
                         continue
 
