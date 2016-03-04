@@ -86,7 +86,10 @@ TCP port ``-p PORT``.
 
 In client mode, you can set the TCP port of the server ``-p PORT``.
 
-You can set a password to access to the server ``--password``.
+You can set a password to access to the server ``--password``. By default,
+the username is ``glances`` but you can change it with ``--username``.
+
+If you ask it, the SHA password will be stored in ``username.pwd`` file.
 
 Default binding address is ``0.0.0.0`` (Glances will listen on all the
 available network interfaces) and TCP port is ``61209``.
@@ -196,6 +199,7 @@ Command-Line Options
   -p PORT, --port PORT  define the client/server TCP port [default: 61209]
   -B BIND_ADDRESS, --bind BIND_ADDRESS
                         bind server to the given IPv4/IPv6 address or hostname
+  --username            define a client/server username
   --password            define a client/server password
   --snmp-community SNMP_COMMUNITY
                         SNMP community
@@ -541,7 +545,7 @@ For example, if you want to hide the loopback interface (lo) and all the virtual
 
 ::
 
-    [network]    
+    [network]
     hide=lo,docker.*
 
 Disk I/O
@@ -595,7 +599,7 @@ For example, if you want to allow the zfs and misc filesystems and hide boot mou
 
     [fs]
     allow=zfs,misc
-    hide=/boot.*    
+    hide=/boot.*
 
 Folders
 -------
