@@ -114,7 +114,7 @@ class GlancesClient(object):
                 # Other errors
                 msg = "Connection to server failed"
                 if err.errcode == 401:
-                    msg += " (Bad password)"
+                    msg += " (Bad username/password)"
                 else:
                     msg += " ({0} {1})".format(err.errcode, err.errmsg)
                 self.log_and_exit(msg)
