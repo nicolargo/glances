@@ -31,7 +31,7 @@ def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
                                'conf/glances.conf']),
-        ('share/man/man1', ['man/glances.1'])
+        ('share/man/man1', ['docs/man/glances.1'])
     ]
 
     return data_files
