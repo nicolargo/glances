@@ -14,6 +14,5 @@ include glances/outputs/static/js/services/plugins/*.js
 include glances/outputs/static/js/vendors/*.js
 include glances/outputs/static/js/vendors/*.js.map
 include glances/outputs/static/images/*.png
-include man/glances.1
 recursive-include docs *
 recursive-include glances *.py

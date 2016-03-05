@@ -266,8 +266,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'glances', 'Glances Documentation',
-     [author], 1)
+    ('glances', 'glances', 'An eye on your system',
+     '', 1)
 ]
 
 # If true, show URL addresses after external links.
