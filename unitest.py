@@ -187,15 +187,9 @@ class TestGlances(unittest.TestCase):
 
     def test_012_ip(self):
         """Check IP plugin."""
-        stats_to_check = ['address', 'mask']
         print('INFO: [TEST_012] Check IP stats')
         stats_grab = stats.get_plugin('ip').get_raw()
         self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
-        for stat in stats_to_check:
-            # Check that the key exist
-            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
-            # Check that % is > 0
-            self.assertGreaterEqual(stats_grab[stat], 0)
         print('INFO: IP stats: %s' % stats_grab)
 
     def test_099_output_bars_must_be_between_0_and_100_percent(self):
