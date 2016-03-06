@@ -3,16 +3,6 @@ include COPYING
 include NEWS
 include README.rst
 include conf/glances.conf
-include glances/outputs/static/html/*.html
-include glances/outputs/static/html/plugins/*.html
-include glances/outputs/static/*.ico
-include glances/outputs/static/css/*.css
-include glances/outputs/static/js/*.js
-include glances/outputs/static/js/*.js.map
-include glances/outputs/static/js/services/core/*.js
-include glances/outputs/static/js/services/plugins/*.js
-include glances/outputs/static/js/vendors/*.js
-include glances/outputs/static/js/vendors/*.js.map
-include glances/outputs/static/images/*.png
 recursive-include docs *
 recursive-include glances *.py
+recursive-include glances/outputs/static *
