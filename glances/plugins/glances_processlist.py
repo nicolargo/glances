@@ -290,22 +290,22 @@ class Plugin(GlancesPlugin):
         # If no command line for the process is available, fallback to
         # the bare process name instead
         cmdline = p['cmdline']
-        argument = ' '.join(cmdline.split()[1:])
         try:
-            if cmdline == '':
-                msg = ' {0}'.format(p['name'])
-                ret.append(self.curse_add_line(msg, splittable=True))
-            else:
-                cmd = cmdline.split()[0]
-                path, basename = os.path.split(cmd)
+            # XXX: remove `cmdline != ['']` when we'll drop support for psutil<4.0.0
+            if cmdline and cmdline != ['']:
+                path, cmd = os.path.split(cmdline[0])
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {0}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    ret.append(self.curse_add_line(basename, decoration='PROCESS', splittable=True))
+                    ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
                 else:
-                    msg = ' {0}'.format(basename)
+                    msg = ' {0}'.format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                msg = ' {0}'.format(argument)
+                arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
+                msg = ' {0}'.format(arguments)
+                ret.append(self.curse_add_line(msg, splittable=True))
+            else:
+                msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
             ret.append(self.curse_add_line('', splittable=True))
