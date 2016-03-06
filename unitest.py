@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -150,7 +150,7 @@ class TestGlances(unittest.TestCase):
 
     def test_008_diskio(self):
         """Check DISKIO plugin."""
-        print('INFO: [TEST_008] Check DiskIO stats')
+        print('INFO: [TEST_008] Check DISKIO stats')
         stats_grab = stats.get_plugin('diskio').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='DiskIO stats is not a list')
         print('INFO: diskio stats: %s' % stats_grab)
@@ -177,7 +177,28 @@ class TestGlances(unittest.TestCase):
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
 
-    def test_011_output_bars_must_be_between_0_and_100_percent(self):
+    def test_011_folders(self):
+        """Check File System plugin."""
+        # stats_to_check = [ ]
+        print('INFO: [TEST_011] Check FOLDER stats')
+        stats_grab = stats.get_plugin('folders').get_raw()
+        self.assertTrue(type(stats_grab) is list, msg='Folders stats is not a list')
+        print('INFO: Folders stats: %s' % stats_grab)
+
+    def test_012_ip(self):
+        """Check IP plugin."""
+        stats_to_check = ['address', 'mask']
+        print('INFO: [TEST_012] Check IP stats')
+        stats_grab = stats.get_plugin('ip').get_raw()
+        self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
+        for stat in stats_to_check:
+            # Check that the key exist
+            self.assertTrue(stat in stats_grab, msg='Cannot find key: %s' % stat)
+            # Check that % is > 0
+            self.assertGreaterEqual(stats_grab[stat], 0)
+        print('INFO: IP stats: %s' % stats_grab)
+
+    def test_099_output_bars_must_be_between_0_and_100_percent(self):
         """Test quick look plugin.
 
         > bar.min_value
