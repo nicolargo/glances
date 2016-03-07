@@ -128,7 +128,7 @@ class MonitorList(object):
 
         # Iter upon the monitored list
         for i in range(len(self.get())):
-            monitoredlist = [p for p in processlist if re.search(self.regex(i), p['cmdline']) is not None]
+            monitoredlist = [p for p in processlist for c in p['cmdline'] if re.search(self.regex(i), c) is not None]
             self.__monitor_list[i]['count'] = len(monitoredlist)
 
             # Always get processes CPU and MEM
