@@ -168,6 +168,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.arguments.disable_swap = !$scope.arguments.disable_swap;
                 $scope.arguments.disable_load = !$scope.arguments.disable_load;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.i:
+                // I => Show/hide IP module
+                $scope.arguments.disable_ip = !$scope.arguments.disable_ip;
+                break;
         }
     };
 });
