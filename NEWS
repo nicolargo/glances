@@ -5,6 +5,13 @@ Glances Version 2
 Version 2.6
 ===========
 
+Deprecations:
+
+    * Add deprecation warning for Python 2.6.
+      Python 2.6 support will be dropped in future releases.
+      Please switch to at least Python 2.7 or 3.3+ as soon as possible.
+      See http://www.snarky.ca/stop-using-python-2-6 for more information.
+
 Enhancements and new features:
 
     * Add a connector to ElasticSearch (welcome to Kibana dashboard) (issue #311)

@@ -53,6 +53,13 @@ if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
     print('Glances requires at least Python 2.6 or 3.3 to run.')
     sys.exit(1)
 
+if sys.version_info[:2] == (2, 6):
+    import warnings
+    warnings.warn('Python 2.6 support will be dropped. Please switch '
+                  'to at least Python 2.7 or 3.3+ as soon as possible. '
+                  'See http://www.snarky.ca/stop-using-python-2-6 '
+                  'for more information.')
+
 # Check PSutil version
 psutil_min_version = (2, 0, 0)
 psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
