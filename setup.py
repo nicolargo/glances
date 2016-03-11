@@ -40,7 +40,7 @@ def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info == (2, 6):
+    if sys.version_info[:2] == (2, 6):
         requires += ['argparse', 'logutils']
 
     return requires
