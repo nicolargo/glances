@@ -340,7 +340,7 @@ class GlancesProcesses(object):
             return False
         else:
             try:
-                return self.process_filter_re.match(value) is None
+                return self.process_filter_re.match(' '.join(value)) is None
             except AttributeError:
                 #  Filter processes crashs with a bad regular expression pattern (issue #665)
                 return False
