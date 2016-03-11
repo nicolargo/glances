@@ -273,17 +273,17 @@ Start the client browser (browser mode):\n\
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the Glances server password ({} username): '.format(args.username),
+                    description='Define the Glances server password ({0} username): '.format(args.username),
                     confirm=True,
                     username=args.username)
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the Glances webserver password ({} username): '.format(args.username),
+                    description='Define the Glances webserver password ({0} username): '.format(args.username),
                     confirm=True,
                     username=args.username)
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password({} username): '.format(args.username),
+                    description='Enter the Glances server password ({0} username): '.format(args.username),
                     clear=True,
                     username=args.username)
         else:
