@@ -22,7 +22,7 @@ from datetime import datetime
 #sys.path.insert(0, os.path.abspath('.'))
 
 # Insert Glances' path into the system.
-sys.path.append(os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('..'))
 
 from glances import __version__
 
