@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -D version=2.6 -D release=2.6_RC1
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
@@ -158,7 +158,7 @@ man:
 	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
 	rm -f man/*
 	cp $(BUILDDIR)/man/* man/
-	@echo "The manual page have been copied in ./man."
+	@echo "The manual pages have been copied in ./man."
 
 .PHONY: texinfo
 texinfo:

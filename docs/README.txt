@@ -7,15 +7,11 @@ First install Sphinx:
 
 or update it if already installed:
 
-    pip install --upgrade shpinx
+    pip install --upgrade sphinx
 
 Go to the docs folder:
 
     cd docs
-
-Edit the Makefile (line 5):
-
-    SPHINXOPTS    = -D version=2.6 -D release=2.6_RC1
 
 Then build the HTML documentation:
 
