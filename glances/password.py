@@ -142,7 +142,7 @@ class GlancesPassword(object):
 
         # Create/overwrite the password file
         with open(self.password_filepath, 'wb') as file_pwd:
-            file_pwd.write(hashed_password)
+            file_pwd.write(b(hashed_password))
 
     def load_password(self):
         """Load the hashed password from the Glances folder."""
