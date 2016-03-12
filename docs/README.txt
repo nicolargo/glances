@@ -19,4 +19,4 @@ Then build the HTML documentation:
 
 and the man page:
 
-    make man
+    LC_ALL=C make man
