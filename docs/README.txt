@@ -5,15 +5,22 @@ First install Sphinx:
 
     pip install sphinx
 
-Then build:
+or update it if already installed:
 
-    cd docs && make html
+    pip install --upgrade shpinx
 
-To build the man page:
+Go to the docs folder:
+
+    cd docs
+
+Edit the Makefile (line 5):
+
+    SPHINXOPTS    = -D version=2.6 -D release=2.6_RC1
+
+Then build the HTML documentation:
+
+    make html
+
+and the man page:
 
     make man
-
-Then:
-
-    rm man/glances.1
-    cp _build/man/glances.1 man/glances.1
