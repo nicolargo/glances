@@ -106,7 +106,7 @@ class Export(GlancesExport):
                 "_source": {
                     "value": str(p),
                     "timestamp": datetime.now()
-                    }
+                }
             }
             actions.append(action)
 

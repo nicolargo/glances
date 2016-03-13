@@ -307,7 +307,7 @@ class _GlancesCurses(object):
                 self.args.disable_swap = False
         elif self.pressedkey == ord('5'):
             # '5' > Enable/disable top menu
-            logger.info(self.args.disable_top )
+            logger.info(self.args.disable_top)
             self.args.disable_top = not self.args.disable_top
             if self.args.disable_top:
                 self.args.disable_quicklook = True
