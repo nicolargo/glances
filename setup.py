@@ -9,6 +9,7 @@ if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
     print('Glances requires at least Python 2.6 or 3.3 to run.')
     sys.exit(1)
 
+
 class tests(Command):
     user_options = []
 
@@ -27,6 +28,7 @@ class tests(Command):
                 raise SystemExit(ret)
         raise SystemExit(0)
 
+
 def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
@@ -35,6 +37,7 @@ def get_data_files():
     ]
 
     return data_files
+
 
 def get_requires():
     requires = ['psutil>=2.0.0']
