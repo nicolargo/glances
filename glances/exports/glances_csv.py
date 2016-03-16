@@ -19,13 +19,12 @@
 
 """CSV interface class."""
 
-# Import sys libs
 import csv
 import sys
+import time
 
-# Import Glances lib
-from glances.core.glances_globals import is_py3
-from glances.core.glances_logging import logger
+from glances.compat import PY3, iterkeys, itervalues
+from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 
@@ -35,14 +34,14 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the CSV export IF."""
-        GlancesExport.__init__(self, config=config, args=args)
+        super(Export, self).__init__(config=config, args=args)
 
         # CSV file name
         self.csv_filename = args.export_csv
 
         # Set the CSV output file
         try:
-            if is_py3:
+            if PY3:
                 self.csv_file = open(self.csv_filename, 'w', newline='')
             else:
                 self.csv_file = open(self.csv_filename, 'wb')
@@ -64,12 +63,13 @@ class Export(GlancesExport):
 
     def update(self, stats):
         """Update stats in the CSV output file."""
-        csv_header = []
-        csv_data = []
-
         # Get the stats
         all_stats = stats.getAllExports()
         plugins = stats.getAllPlugins()
+
+        # Init data with timestamp (issue#708)
+        csv_header = ['timestamp']
+        csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
         # Loop over available plugin
         for i, plugin in enumerate(plugins):
@@ -81,17 +81,15 @@ class Export(GlancesExport):
                             csv_header += ('{0}_{1}_{2}'.format(
                                 plugin, self.get_item_key(stat), item) for item in stat)
                         # Others lines: stats
-                        fieldvalues = stat.values()
-                        csv_data += fieldvalues
+                        csv_data += itervalues(stat)
                 elif isinstance(all_stats[i], dict):
                     # First line: header
                     if self.first_line:
-                        fieldnames = all_stats[i].keys()
+                        fieldnames = iterkeys(all_stats[i])
                         csv_header += ('{0}_{1}'.format(plugin, fieldname)
                                        for fieldname in fieldnames)
                     # Others lines: stats
-                    fieldvalues = all_stats[i].values()
-                    csv_data += fieldvalues
+                    csv_data += itervalues(all_stats[i])
 
         # Export to CSV
         if self.first_line:

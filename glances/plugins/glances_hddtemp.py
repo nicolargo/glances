@@ -19,12 +19,11 @@
 
 """HDD temperature plugin."""
 
-# Import system libs
 import os
 import socket
 
-# Import Glances libs
-from glances.core.glances_logging import logger
+from glances.compat import nativestr, range
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -37,7 +36,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # Init the sensor class
         self.glancesgrabhddtemp = GlancesGrabHDDTemp(args=args)
@@ -116,11 +115,12 @@ class GlancesGrabHDDTemp(object):
         for item in range(devices):
             offset = item * 5
             hddtemp_current = {}
-            device = fields[offset + 1].decode('utf-8')
-            device = os.path.basename(device)
+            device = os.path.basename(nativestr(fields[offset + 1]))
             temperature = fields[offset + 3]
+            unit = nativestr(fields[offset + 4])
             hddtemp_current['label'] = device
-            hddtemp_current['value'] = temperature.decode('utf-8')
+            hddtemp_current['value'] = float(temperature) if temperature != b'ERR' else temperature
+            hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)
 
     def fetch(self):
@@ -130,12 +130,13 @@ class GlancesGrabHDDTemp(object):
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sck.connect((self.host, self.port))
             data = sck.recv(4096)
-            sck.close()
         except socket.error as e:
             logger.warning("Can not connect to an HDDtemp server ({0}:{1} => {2})".format(self.host, self.port, e))
             logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
             self.args.disable_hddtemp = True
             data = ""
+        finally:
+            sck.close()
 
         return data
 

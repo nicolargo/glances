@@ -19,8 +19,8 @@
 
 """RAID plugin."""
 
-# Import Glances libs
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # pymdstat only available on GNU/Linux OS
@@ -39,7 +39,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -94,8 +94,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>6}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
-        arrays = self.stats.keys()
-        arrays.sort()
+        arrays = sorted(iterkeys(self.stats))
         for array in arrays:
             # New line
             ret.append(self.curse_new_line())
@@ -114,8 +113,7 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_new_line())
                 msg = '└─ Status {0}'.format(self.stats[array]['status'])
                 ret.append(self.curse_add_line(msg, status))
-                components = self.stats[array]['components'].keys()
-                components.sort()
+                components = sorted(iterkeys(self.stats[array]['components']))
                 for i, component in enumerate(components):
                     if i == len(components) - 1:
                         tree_char = '└─'

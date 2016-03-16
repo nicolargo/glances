@@ -8,7 +8,7 @@ https://twitter.com/nicolargo
 https://github.com/nicolargo
 nicolashennion@gmail.com
 PGP Fingerprint: 835F C447 3BCD 60E9 9200  2778 ABA4 D1AB 9731 6A3C
-PGP Public key:  gpg --keyserver pgp.mit.edu --recv-keys 0xaba4d1ab97316a3c 
+PGP Public key:  gpg --keyserver pgp.mit.edu --recv-keys 0xaba4d1ab97316a3c
 
 Alessio Sergi (aka) Al3hex
 https://twitter.com/al3hex
@@ -37,8 +37,8 @@ https://github.com/notFloran
 Packagers
 =========
 
-Rémi Verchère for the Debian package
-https://github.com/rverchere/debian-glances
+Daniel Echeverry and Sebastien Badia for the Debian package
+https://mentors.debian.net/package/glances
 
 Philip Lacroix for the Slackware (SlackBuild) package
 

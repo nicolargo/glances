@@ -3,6 +3,8 @@ Glances - An eye on your system
 ===============================
 
 
+.. image:: https://img.shields.io/pypi/v/glances.svg
+    :target: https://pypi.python.org/pypi/Glances
 .. image:: https://img.shields.io/pypi/dm/glances.svg
     :target: https://pypi.python.org/pypi/glances#downloads
     :alt: Downloads this month
@@ -10,13 +12,13 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 .. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
-        :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://img.shields.io/pypi/v/glances.svg
-        :target: https://pypi.python.org/pypi/Glances
+    :target: https://travis-ci.org/nicolargo/glances
+.. image:: https://circleci.com/gh/nicolargo/glances/tree/develop.svg?style=svg
+    :target: https://circleci.com/gh/nicolargo/glances/tree/develop
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
-        :target: https://scrutinizer-ci.com/g/nicolargo/glances/
+    :target: https://scrutinizer-ci.com/g/nicolargo/glances/
 .. image:: https://api.flattr.com/button/flattr-badge-large.png
-        :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
+    :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
@@ -28,7 +30,7 @@ written in Python.
 Requirements
 ============
 
-- ``python >= 2.6`` or ``>= 3.3`` (tested with version 2.6, 2.7, 3.3, 3.4)
+- ``python >= 2.6`` or ``>= 3.3`` (tested with version 2.6, 2.7, 3.3, 3.4, 3.5)
 - ``psutil >= 2.0.0``
 - ``setuptools``
 
@@ -49,12 +51,15 @@ Optional dependencies:
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
+- ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 
 Installation
 ============
 
-Glances Auto Install script
----------------------------
+Several method to test/install Glances on your system. Choose your weapon !
+
+Glances Auto Install script: the total way
+------------------------------------------
 
 To install both dependencies and latest Glances production ready version
 (aka *master* branch), just enter the following command line:
@@ -93,7 +98,7 @@ features (like the Web interface):
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo
+    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo scandir
 
 Install or upgrade Glances from the Git ``develop`` repository:
 
@@ -114,6 +119,24 @@ If you need to install Glances in a specific user location, use:
 
     export PYTHONUSERBASE=~/mylocalpath
     pip install --user glances
+
+Docker: the funny way
+---------------------
+
+A Glances container is available. It will include the latest development HEAD version. You can use it to monitor your server and all your others containers !
+
+Get the Glances container:
+
+.. code-block:: console
+
+    docker pull nicolargo/glances
+
+Run the container in console mode:
+
+.. code-block:: console
+
+    docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+
 
 GNU/Linux
 ---------
@@ -190,6 +213,11 @@ To install Glances from source:
 *Note*: Python headers are required to install psutil. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 
+Chef
+----
+
+An awesome ``Chef`` cookbook is available to monitor your infrastructure: https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
+
 Puppet
 ------
 
@@ -238,7 +266,7 @@ and RTFM, always.
 Documentation
 =============
 
-For complete documentation see `glances-doc`_.
+For complete documentation have a look at the readthedocs_ website.
 
 If you have any question (after RTFM!), please post it on the official Q&A `forum`_.
 
@@ -273,6 +301,6 @@ LGPL. See ``COPYING`` for more details.
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _Python: https://www.python.org/getit/
-.. _glances-doc: https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+.. _readthedocs: https://glances.readthedocs.org/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F

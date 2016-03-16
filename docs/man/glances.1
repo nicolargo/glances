@@ -1,0 +1,588 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "GLANCES" "1" "March 16, 2016" "2.6" "Glances"
+.SH NAME
+glances \- An eye on your system
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+\fBglances\fP [OPTIONS]
+.SH DESCRIPTION
+.sp
+\fBglances\fP is a cross\-platform curses\-based monitoring tool which aims
+to present a maximum of information in a minimum of space, ideally to
+fit in a classical 80x24 terminal or higher to have additional
+information. It can adapt dynamically the displayed information
+depending on the terminal size. It can also work in client/server mode.
+Remote monitoring could be done via terminal or web interface.
+.sp
+\fBglances\fP is written in Python and uses the \fIpsutil\fP library to get
+information from your system.
+.SH OPTIONS
+.SH COMMAND-LINE OPTIONS
+.INDENT 0.0
+.TP
+.B \-h, \-\-help
+show this help message and exit
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-V, \-\-version
+show program\(aqs version number and exit
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-d, \-\-debug
+enable debug mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-C CONF_FILE, \-\-config CONF_FILE
+path to the configuration file
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-3, \-\-disable\-quicklook
+disable quick look module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-4, \-\-full\-quicklook
+disable all but quick look and load
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-cpu
+disable CPU module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-mem
+disable memory module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-swap
+disable swap module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-load
+disable load module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-network
+disable network module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-ip
+disable IP module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-diskio
+disable disk I/O module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-fs
+disable filesystem module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-folder
+disable folder module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-sensors
+disable sensors module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-hddtemp
+disable HD temperature module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-raid
+disable RAID module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-docker
+disable Docker module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-5, \-\-disable\-top
+disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-2, \-\-disable\-left\-sidebar
+disable network, disk I/O, FS and sensors modules (py3sensors lib
+needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-process
+disable process module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-log
+disable log module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-bold
+disable bold mode in the terminal
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-bg
+disable background colors in the terminal
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-process\-extended
+enable extended stats on top process
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-history
+enable the history mode (matplotlib lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-path\-history PATH_HISTORY
+set the export path for graph history
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-csv EXPORT_CSV
+export stats to a CSV file
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-influxdb
+export stats to an InfluxDB server (influxdb lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-opentsdb
+export stats to an OpenTSDB server (potsdb lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-statsd
+export stats to a StatsD server (statsd lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-rabbitmq
+export stats to RabbitMQ broker (pika lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-elasticsearch
+export stats to an Elasticsearch server (elasticsearch lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-c CLIENT, \-\-client CLIENT
+connect to a Glances server by IPv4/IPv6 address or hostname
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s, \-\-server
+run Glances in server mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-browser
+start the client browser (list of servers)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-autodiscover
+disable autodiscover feature
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-p PORT, \-\-port PORT
+define the client/server TCP port [default: 61209]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-B BIND_ADDRESS, \-\-bind BIND_ADDRESS
+bind server to the given IPv4/IPv6 address or hostname
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-username
+define a client/server username
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-password
+define a client/server password
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-community SNMP_COMMUNITY
+SNMP community
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-port SNMP_PORT
+SNMP port
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-version SNMP_VERSION
+SNMP version (1, 2c or 3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-user SNMP_USER
+SNMP username (only for SNMPv3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-auth SNMP_AUTH
+SNMP authentication key (only for SNMPv3)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-snmp\-force
+force SNMP mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-t TIME, \-\-time TIME
+set refresh time in seconds [default: 3 sec]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w, \-\-webserver
+run Glances in web server mode (bottle lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-q, \-\-quiet
+do not display the curses interface
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-f PROCESS_FILTER, \-\-process\-filter PROCESS_FILTER
+set the process filter pattern (regular expression)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-process\-short\-name
+force short name for processes name
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-0, \-\-disable\-irix
+task\(aqs CPU usage will be divided by the total number of CPUs
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-hide\-kernel\-threads
+hide kernel threads in process list
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-tree
+display processes as a tree
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-b, \-\-byte
+display network rate in byte per second
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-diskio\-show\-ramfs
+show RAM FS in the DiskIO plugin
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-diskio\-iops
+show I/O per second in the DiskIO plugin
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-fahrenheit
+display temperature in Fahrenheit (default is Celsius)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-1, \-\-percpu
+start Glances in per CPU mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-fs\-free\-space
+display FS free space instead of used
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-theme\-white
+optimize display colors for white background
+.UNINDENT
+.SH INTERACTIVE COMMANDS
+.sp
+The following commands (key pressed) are supported while in Glances:
+.INDENT 0.0
+.TP
+.B \fBENTER\fP
+Set the process filter
+.sp
+\fBNote\fP: on OS X, please use \fBCTRL\-H\fP to delete
+filter.
+.sp
+Filter is a regular expression pattern:
+.INDENT 7.0
+.IP \(bu 2
+\fBgnome\fP: matches all processes starting with the \fBgnome\fP
+string
+.IP \(bu 2
+\fB\&.*gnome.*\fP: matches all processes containing the \fBgnome\fP
+string
+.UNINDENT
+.TP
+.B \fBa\fP
+Sort process list automatically
+.INDENT 7.0
+.IP \(bu 2
+If CPU \fB>70%\fP, sort processes by CPU usage
+.IP \(bu 2
+If MEM \fB>70%\fP, sort processes by MEM usage
+.IP \(bu 2
+If CPU iowait \fB>60%\fP, sort processes by I/O read and write
+.UNINDENT
+.TP
+.B \fBb\fP
+Switch between bit/s or Byte/s for network I/O
+.TP
+.B \fBB\fP
+View disk I/O counters per second
+.TP
+.B \fBc\fP
+Sort processes by CPU usage
+.TP
+.B \fBd\fP
+Show/hide disk I/O stats
+.TP
+.B \fBD\fP
+Enable/disable Docker stats
+.TP
+.B \fBe\fP
+Enable/disable top extended stats
+.TP
+.B \fBE\fP
+Erase current process filter
+.TP
+.B \fBf\fP
+Show/hide file system and folder monitoring stats
+.TP
+.B \fBF\fP
+Switch between file system used and free space
+.TP
+.B \fBg\fP
+Generate graphs for current history
+.TP
+.B \fBh\fP
+Show/hide the help screen
+.TP
+.B \fBi\fP
+Sort processes by I/O rate
+.TP
+.B \fBI\fP
+Show/hide IP module
+.TP
+.B \fBl\fP
+Show/hide log messages
+.TP
+.B \fBm\fP
+Sort processes by MEM usage
+.TP
+.B \fBM\fP
+Reset processes summary min/max
+.TP
+.B \fBn\fP
+Show/hide network stats
+.TP
+.B \fBp\fP
+Sort processes by name
+.TP
+.B \fBq|ESC\fP
+Quit the current Glances session
+.TP
+.B \fBr\fP
+Reset history
+.TP
+.B \fBR\fP
+Show/hide RAID plugin
+.TP
+.B \fBs\fP
+Show/hide sensors stats
+.TP
+.B \fBt\fP
+Sort process by CPU times (TIME+)
+.TP
+.B \fBT\fP
+View network I/O as combination
+.TP
+.B \fBu\fP
+Sort processes by USER
+.TP
+.B \fBU\fP
+View cumulative network I/O
+.TP
+.B \fBw\fP
+Delete finished warning log messages
+.TP
+.B \fBx\fP
+Delete finished warning and critical log messages
+.TP
+.B \fBz\fP
+Show/hide processes stats
+.TP
+.B \fB0\fP
+Enable/disable Irix/Solaris mode
+.sp
+Task\(aqs CPU usage will be divided by the total number of CPUs
+.TP
+.B \fB1\fP
+Switch between global CPU and per\-CPU stats
+.TP
+.B \fB2\fP
+Enable/disable left sidebar
+.TP
+.B \fB3\fP
+Enable/disable the quick look module
+.TP
+.B \fB4\fP
+Enable/disable all but quick look and load module
+.TP
+.B \fB5\fP
+Enable/disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+.TP
+.B \fB/\fP
+Switch between process command line or command name
+.UNINDENT
+.sp
+In the Glances client browser (accessible through the \fB\-\-browser\fP
+command line argument):
+.INDENT 0.0
+.TP
+.B \fBENTER\fP
+Run the selected server
+.TP
+.B \fBUP\fP
+Up in the servers list
+.TP
+.B \fBDOWN\fP
+Down in the servers list
+.TP
+.B \fBq|ESC\fP
+Quit Glances
+.UNINDENT
+.SH EXAMPLES
+.sp
+Monitor local machine (standalone mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances
+.UNINDENT
+.UNINDENT
+.sp
+Monitor local machine with the web interface (Web UI):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-w
+.UNINDENT
+.UNINDENT
+.sp
+Monitor local machine and export stats to a CSV file:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-\-export\-csv
+.UNINDENT
+.UNINDENT
+.sp
+Monitor local machine and export stats to a InfluxDB server with 5s
+refresh time:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-t 5 \-\-export\-influxdb
+.UNINDENT
+.UNINDENT
+.sp
+Start a Glances server (server mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-s
+.UNINDENT
+.UNINDENT
+.sp
+Connect Glances to a Glances server (client mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-c <ip_server>
+.UNINDENT
+.UNINDENT
+.sp
+Connect to a Glances server and export stats to a StatsD server:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-c <ip_server> \-\-export\-statsd
+.UNINDENT
+.UNINDENT
+.sp
+Start the client browser (browser mode):
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-\-browser
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+.sp
+Nicolas Hennion aka Nicolargo <\fI\%contact@nicolargo.com\fP>
+.SH COPYRIGHT
+2016, Nicolas Hennion
+.\" Generated by docutils manpage writer.
+.

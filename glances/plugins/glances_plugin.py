@@ -23,16 +23,15 @@ I am your father...
 ...for all Glances plugins.
 """
 
-# Import system libs
+import re
 import json
 from datetime import datetime
 from operator import itemgetter
 
-# Import Glances lib
-from glances.core.glances_actions import GlancesActions
-from glances.core.glances_globals import is_py3
-from glances.core.glances_logging import logger
-from glances.core.glances_logs import glances_logs
+from glances.compat import iterkeys, itervalues, listkeys, map
+from glances.actions import GlancesActions
+from glances.logger import logger
+from glances.logs import glances_logs
 
 
 class GlancesPlugin(object):
@@ -66,7 +65,7 @@ class GlancesPlugin(object):
         self._limits = dict()
 
         # Init the actions
-        self.actions = GlancesActions()
+        self.actions = GlancesActions(args=args)
 
         # Init the views
         self.views = dict()
@@ -99,8 +98,7 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {0})".format(
-                self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
             ret = {}
         return ret
 
@@ -108,8 +106,7 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {0})".format(
-                self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
             self.stats_history = {}
 
     def update_stats_history(self, item_name=''):
@@ -175,7 +172,7 @@ class GlancesPlugin(object):
         """
         snmp_oid = snmp_oid or {}
 
-        from glances.core.glances_snmp import GlancesSNMPClient
+        from glances.snmp import GlancesSNMPClient
 
         # Init the SNMP request
         clientsnmp = GlancesSNMPClient(host=self.args.client,
@@ -187,15 +184,15 @@ class GlancesPlugin(object):
         ret = {}
         if bulk:
             # Bulk request
-            snmpresult = clientsnmp.getbulk_by_oid(0, 10, *snmp_oid.values())
+            snmpresult = clientsnmp.getbulk_by_oid(0, 10, itervalues(*snmp_oid))
 
             if len(snmp_oid) == 1:
                 # Bulk command for only one OID
                 # Note: key is the item indexed but the OID result
                 for item in snmpresult:
-                    if item.keys()[0].startswith(snmp_oid.values()[0]):
-                        ret[snmp_oid.keys()[0] + item.keys()
-                            [0].split(snmp_oid.values()[0])[1]] = item.values()[0]
+                    if iterkeys(item)[0].startswith(itervalues(snmp_oid)[0]):
+                        ret[iterkeys(snmp_oid)[0] + iterkeys(item)
+                            [0].split(itervalues(snmp_oid)[0])[1]] = itervalues(item)[0]
             else:
                 # Build the internal dict with the SNMP result
                 # Note: key is the first item in the snmp_oid
@@ -203,7 +200,7 @@ class GlancesPlugin(object):
                 for item in snmpresult:
                     item_stats = {}
                     item_key = None
-                    for key in list(snmp_oid.keys()):
+                    for key in iterkeys(snmp_oid):
                         oid = snmp_oid[key] + '.' + str(index)
                         if oid in item:
                             if item_key is None:
@@ -215,10 +212,10 @@ class GlancesPlugin(object):
                     index += 1
         else:
             # Simple get request
-            snmpresult = clientsnmp.get_by_oid(*snmp_oid.values())
+            snmpresult = clientsnmp.get_by_oid(itervalues(*snmp_oid))
 
             # Build the internal dict with the SNMP result
-            for key in list(snmp_oid.keys()):
+            for key in iterkeys(snmp_oid):
                 ret[key] = snmpresult[snmp_oid[key]]
 
         return ret
@@ -293,7 +290,7 @@ class GlancesPlugin(object):
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
-                for key in i.keys():
+                for key in listkeys(i):
                     value = {'decoration': 'DEFAULT',
                              'optional': False,
                              'additional': False,
@@ -301,7 +298,7 @@ class GlancesPlugin(object):
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
-            for key in self.get_raw().keys():
+            for key in listkeys(self.get_raw()):
                 value = {'decoration': 'DEFAULT',
                          'optional': False,
                          'additional': False,
@@ -512,8 +509,15 @@ class GlancesPlugin(object):
             return []
 
     def is_hide(self, value, header=""):
-        """Return True if the value is in the hide configuration list."""
-        return value in self.get_conf_value('hide', header=header)
+        """
+        Return True if the value is in the hide configuration list.
+        The hide configuration list is defined in the glances.conf file.
+        It is a comma separed list of regexp.
+        Example for diskio:
+        hide=sda2,sda5,loop.*
+        """
+        # TODO: possible optimisation: create a re.compile list
+        return not all(j is None for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist."""
@@ -652,16 +656,10 @@ class GlancesPlugin(object):
         """Log (DEBUG) the result of the function fct."""
         def wrapper(*args, **kw):
             ret = fct(*args, **kw)
-            if is_py3:
-                logger.debug("%s %s %s return %s" % (
-                    args[0].__class__.__name__,
-                    args[0].__class__.__module__[len('glances_'):],
-                    fct.__name__, ret))
-            else:
-                logger.debug("%s %s %s return %s" % (
-                    args[0].__class__.__name__,
-                    args[0].__class__.__module__[len('glances_'):],
-                    fct.func_name, ret))
+            logger.debug("%s %s %s return %s" % (
+                args[0].__class__.__name__,
+                args[0].__class__.__module__[len('glances_'):],
+                fct.__name__, ret))
             return ret
         return wrapper
 

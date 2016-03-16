@@ -19,13 +19,11 @@
 
 """History class."""
 
-# Import system lib
 import os
 
-# Import Glances lib
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.logger import logger
 
-# Import specific lib
 try:
     from matplotlib import __version__ as matplotlib_version
     import matplotlib.pyplot as plt
@@ -108,7 +106,7 @@ class GlancesHistory(object):
             handles = []
             labels = []
             for i in stats.get_plugin(p).get_items_history_list():
-                if i['name'] in h.keys():
+                if i['name'] in iterkeys(h):
                     # The key exist
                     # Add the curves in the current chart
                     logger.debug("Generate graph: %s %s" % (p, i['name']))
@@ -132,8 +130,7 @@ class GlancesHistory(object):
                     # Find if anothers key ends with the key
                     # Ex: key='tx' => 'ethernet_tx'
                     # Add one curve per chart
-                    stats_history_filtered = [key for key in h.keys() if key.endswith('_' + i['name'])]
-                    stats_history_filtered.sort()
+                    stats_history_filtered = sorted([key for key in iterkeys(h) if key.endswith('_' + i['name'])])
                     logger.debug("Generate graphs: %s %s" %
                                  (p, stats_history_filtered))
                     if len(stats_history_filtered) > 0:

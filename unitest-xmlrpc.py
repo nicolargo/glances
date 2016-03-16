@@ -25,13 +25,9 @@ import shlex
 import subprocess
 import time
 import unittest
-try:
-    from xmlrpc.client import ServerProxy
-except ImportError:
-    # Python 2
-    from xmlrpclib import ServerProxy
 
-from glances.core.glances_globals import version
+from glances.compat import ServerProxy
+from glances.globals import version
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s" % SERVER_PORT
@@ -46,7 +42,6 @@ print('XML-RPC API unitary tests for Glances %s' % version)
 
 
 class TestGlances(unittest.TestCase):
-
     """Test Glances class."""
 
     def setUp(self):
@@ -131,10 +126,13 @@ class TestGlances(unittest.TestCase):
 
     def test_007_disk(self):
         """DISK."""
-        method = "getFs() and getDiskIO()"
+        method = "getFs(), getFolders() and getDiskIO()"
         print('INFO: [TEST_007] Method: %s' % method)
 
         req = json.loads(client.getFs())
+        self.assertIsInstance(req, list)
+
+        req = json.loads(client.getFolders())
         self.assertIsInstance(req, list)
 
         req = json.loads(client.getDiskIO())

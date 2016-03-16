@@ -19,7 +19,8 @@
 
 """CPU plugin."""
 
-from glances.core.glances_cpu_percent import cpu_percent
+from glances.compat import iterkeys
+from glances.cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -56,8 +57,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the CPU plugin."""
-        GlancesPlugin.__init__(
-            self, args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -127,7 +127,7 @@ class Plugin(GlancesPlugin):
                     return self.stats
 
                 # Convert SNMP stats to float
-                for key in list(self.stats.keys()):
+                for key in iterkeys(self.stats):
                     self.stats[key] = float(self.stats[key])
                 self.stats['total'] = 100 - self.stats['idle']
 
@@ -142,7 +142,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert and log

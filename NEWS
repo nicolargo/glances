@@ -2,6 +2,61 @@
 Glances Version 2
 ==============================================================================
 
+Version 2.6
+===========
+
+Deprecations:
+
+    * Add deprecation warning for Python 2.6.
+      Python 2.6 support will be dropped in future releases.
+      Please switch to at least Python 2.7 or 3.3+ as soon as possible.
+      See http://www.snarky.ca/stop-using-python-2-6 for more information.
+
+Enhancements and new features:
+
+    * Add a connector to ElasticSearch (welcome to Kibana dashboard) (issue #311)
+    * New folders' monitoring plugins (issue #721)
+    * Use wildcard (regexp) to the hide configuration option for network, diskio and fs sections (issue #799 )
+    * Command line arguments are now take into account in the WebUI (#789 by  @notFloran)
+    * Change username for server and web server authentication (issue #693)
+    * Add an option to disable top menu (issue #766)
+    * Add IOps in the DiskIO plugin (issue #763)
+    * Add hide configuration key for FS Plugin (issue #736)
+    * Add process summary min/max stats (issue #703)
+    * Add timestamp to the CSV export module (issue #708)
+    * Add a shortcut 'E' to delete process filter (issue #699)
+    * By default, hide disk I/O ram1-** (issue #714)
+    * When Glances is starting the notifications should be delayed (issue #732)
+    * Add option (--disable-bg) to disable ANSI background colours (issue #738 by okdana)
+    * [WebUI] add "pointer" cursor for sortable columns (issue #704 by @notFloran)
+    * [WebUI] Make web page title configurable (issue #724)
+    * Do not show interface in down state (issue #765)
+    * InfluxDB > 0.9.3 needs float and not int for numerical value (issue#749 and issue#750 by nicolargo)
+
+Bugs corrected:
+    * Can't read sensors on a Thinkpad (issue #711)
+    * InfluxDB/OpenTSDB: tag parsing broken (issue #713)
+    * Grafana Dashboard outdated for InfluxDB 0.9.x (issue #648)
+    * '--tree' breaks process filter on Debian 8 (issue #768)
+    * Fix highlighting of process when it contains whitespaces (issue #546 by Alessio Sergi)
+    * Fix RAID support in Python 3 (issue #793 by Alessio Sergi)
+    * Use dict view objects to avoid issue (issue #758 by Alessio Sergi)
+    * System exit if Cpu not supported by the Cpuinfo lib (issue #754 by nicolargo)
+    * KeyError: 'cpucore' when exporting data to InfluxDB (issue #729) by nicolargo)
+
+Others:
+    * A new Glances docker container to monitor your Docker infrastructure is available here (issue #728): https://hub.docker.com/r/nicolargo/glances/
+    * Documentation is now generated automatically thanks to Sphinx and the Alessio Sergi patch (http://glances.readthedocs.org/en/latest/)
+
+Contributors summary:
+    * Nicolas Hennion: 112 commits
+    * Alessio Sergi: 55 commits
+    * Floran Brutel: 19 commits
+    * Nicolas Hart: 8 commits
+    * @desbma: 4 commits
+    * @dana: 2 commits
+    * Damien Martin, Raju Kadam, @georgewhewell: 1 commit
+
 Version 2.5.1
 =============
 

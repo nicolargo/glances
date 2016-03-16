@@ -19,13 +19,10 @@
 
 """Uptime plugin."""
 
-# Import system libs
 from datetime import datetime, timedelta
 
-# Import Glances libs
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# Import psutil
 import psutil
 
 # SNMP OID
@@ -41,7 +38,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

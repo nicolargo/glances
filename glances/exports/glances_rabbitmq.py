@@ -19,18 +19,13 @@
 
 """JMS interface class."""
 
-# Import sys libs
 import datetime
 import socket
 import sys
 from numbers import Number
 
-# Import Glances lib
-from glances.core.glances_logging import logger
-try:
-    from configparser import NoOptionError, NoSectionError
-except ImportError:  # Python 2
-    from ConfigParser import NoOptionError, NoSectionError
+from glances.compat import NoOptionError, NoSectionError, range
+from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 # Import pika for RabbitMQ
@@ -43,7 +38,7 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the RabbitMQ export IF."""
-        GlancesExport.__init__(self, config=config, args=args)
+        super(Export, self).__init__(config=config, args=args)
 
         # Load the rabbitMQ configuration file
         self.rabbitmq_host = None
@@ -100,7 +95,7 @@ class Export(GlancesExport):
         """Write the points in RabbitMQ."""
         data = ('hostname=' + self.hostname + ', name=' + name +
                 ', dateinfo=' + datetime.datetime.utcnow().isoformat())
-        for i in range(0, len(columns)):
+        for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
             else:

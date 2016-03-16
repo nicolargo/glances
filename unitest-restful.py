@@ -25,14 +25,10 @@ import subprocess
 import time
 import unittest
 
-from glances.core.glances_globals import version
+from glances.compat import text_type
+from glances.globals import version
 
 import requests
-
-try:
-    text_type = str
-except NameError:
-    text_type = unicode
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s/api/2" % SERVER_PORT
@@ -44,7 +40,6 @@ print('RESTful API unitary tests for Glances %s' % version)
 
 
 class TestGlances(unittest.TestCase):
-
     """Test Glances class."""
 
     def setUp(self):
@@ -98,7 +93,7 @@ class TestGlances(unittest.TestCase):
             if p in ('uptime', 'now'):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist',
-                       'diskio', 'hddtemp', 'batpercent', 'network'):
+                       'diskio', 'hddtemp', 'batpercent', 'network', 'folders'):
                 self.assertIsInstance(req.json(), list)
             elif p in ('psutilversion', 'help'):
                 pass

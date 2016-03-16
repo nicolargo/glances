@@ -19,8 +19,7 @@
 
 """Battery plugin."""
 
-# Import Glances libs
-from glances.core.glances_logging import logger
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Batinfo library (optional; Linux-only)
@@ -39,7 +38,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # Init the sensor class
         self.glancesgrabbat = GlancesGrabBat()

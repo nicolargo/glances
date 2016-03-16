@@ -19,11 +19,9 @@
 
 """Alert plugin."""
 
-# Import system lib
 from datetime import datetime
 
-# Import Glances libs
-from glances.core.glances_logs import glances_logs
+from glances.logs import glances_logs
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -36,7 +34,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -76,7 +74,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, "TITLE"))
             logs_len = glances_logs.len()
             if logs_len > 1:
-                msg = ' (lasts {0} entries)'.format(logs_len)
+                msg = ' (last {0} entries)'.format(logs_len)
             else:
                 msg = ' (one entry)'
             ret.append(self.curse_add_line(msg, "TITLE"))

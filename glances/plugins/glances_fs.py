@@ -71,8 +71,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(
-            self, args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -116,6 +115,9 @@ class Plugin(GlancesPlugin):
 
             # Loop over fs
             for fs in fs_stat:
+                # Do not take hidden file system into account
+                if self.is_hide(fs.mountpoint):
+                    continue
                 # Grab the disk usage
                 try:
                     fs_usage = psutil.disk_usage(fs.mountpoint)
@@ -186,7 +188,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert
@@ -222,7 +224,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:>7}'.format('Total')
         ret.append(self.curse_add_line(msg))
 
-        # Disk list (sorted by name)
+        # Filesystem list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # New line
             ret.append(self.curse_new_line())
