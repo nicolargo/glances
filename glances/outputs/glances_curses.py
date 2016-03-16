@@ -19,19 +19,18 @@
 
 """Curses interface class."""
 
-# Import system lib
 import re
 import sys
 
-# Import Glances lib
-from glances.core.glances_globals import is_mac, is_windows
-from glances.core.glances_logging import logger
-from glances.core.glances_logs import glances_logs
-from glances.core.glances_processes import glances_processes
-from glances.core.glances_timer import Timer
+from glances.compat import u
+from glances.globals import OSX, WINDOWS
+from glances.logger import logger
+from glances.logs import glances_logs
+from glances.processes import glances_processes
+from glances.timer import Timer
 
 # Import curses lib for "normal" operating system and consolelog for Windows
-if not is_windows:
+if not WINDOWS:
     try:
         import curses
         import curses.panel
@@ -70,61 +69,118 @@ class _GlancesCurses(object):
             logger.critical("Cannot init the curses library.\n")
             sys.exit(1)
 
-        # Set curses options
-        if hasattr(curses, 'start_color'):
-            curses.start_color()
-        if hasattr(curses, 'use_default_colors'):
-            curses.use_default_colors()
+        # Init cursor
+        self._init_cursor()
+
+        # Init the colors
+        self._init_colors()
+
+        # Init main window
+        self.term_window = self.screen.subwin(0, 0)
+
+        # Init refresh time
+        self.__refresh_time = args.time
+
+        # Init edit filter tag
+        self.edit_filter = False
+
+        # Init the process min/max reset
+        self.args.reset_minmax_tag = False
+
+        # Catch key pressed with non blocking mode
+        self.no_flash_cursor()
+        self.term_window.nodelay(1)
+        self.pressedkey = -1
+
+        # History tag
+        self._init_history()
+
+    def _init_history(self):
+        '''Init the history option'''
+
+        self.reset_history_tag = False
+        self.history_tag = False
+        if self.args.enable_history:
+            logger.info('Stats history enabled with output path %s' %
+                        self.args.path_history)
+            from glances.exports.glances_history import GlancesHistory
+            self.glances_history = GlancesHistory(self.args.path_history)
+            if not self.glances_history.graph_enabled():
+                self.args.enable_history = False
+                logger.error(
+                    'Stats history disabled because MatPlotLib is not installed')
+
+    def _init_cursor(self):
+        '''Init cursors'''
+
         if hasattr(curses, 'noecho'):
             curses.noecho()
         if hasattr(curses, 'cbreak'):
             curses.cbreak()
         self.set_cursor(0)
 
+    def _init_colors(self):
+        '''Init the Curses color layout'''
+
+        # Set curses options
+        if hasattr(curses, 'start_color'):
+            curses.start_color()
+        if hasattr(curses, 'use_default_colors'):
+            curses.use_default_colors()
+
         # Init colors
-        self.hascolors = False
-        if curses.has_colors() and curses.COLOR_PAIRS > 8:
-            self.hascolors = True
-            # FG color, BG color
-            if args.theme_white:
-                curses.init_pair(1, curses.COLOR_BLACK, -1)
-            else:
-                curses.init_pair(1, curses.COLOR_WHITE, -1)
-            curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
-            curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
-            curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
-            curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
-            curses.init_pair(6, curses.COLOR_RED, -1)
-            curses.init_pair(7, curses.COLOR_GREEN, -1)
-            curses.init_pair(8, curses.COLOR_BLUE, -1)
-            try:
-                curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-            except Exception:
-                if args.theme_white:
-                    curses.init_pair(9, curses.COLOR_BLACK, -1)
-                else:
-                    curses.init_pair(9, curses.COLOR_WHITE, -1)
-            try:
-                curses.init_pair(10, curses.COLOR_CYAN, -1)
-            except Exception:
-                if args.theme_white:
-                    curses.init_pair(10, curses.COLOR_BLACK, -1)
-                else:
-                    curses.init_pair(10, curses.COLOR_WHITE, -1)
-
-        else:
-            self.hascolors = False
-
-        if args.disable_bold:
-            A_BOLD = curses.A_BOLD
-        else:
+        if self.args.disable_bold:
             A_BOLD = 0
+            self.args.disable_bg = True
+        else:
+            A_BOLD = curses.A_BOLD
 
         self.title_color = A_BOLD
         self.title_underline_color = A_BOLD | curses.A_UNDERLINE
         self.help_color = A_BOLD
-        if self.hascolors:
+
+        if curses.has_colors():
+            # The screen is compatible with a colored design
+            if self.args.theme_white:
+                # White theme: black ==> white
+                curses.init_pair(1, curses.COLOR_BLACK, -1)
+            else:
+                curses.init_pair(1, curses.COLOR_WHITE, -1)
+            if self.args.disable_bg:
+                curses.init_pair(2, curses.COLOR_RED, -1)
+                curses.init_pair(3, curses.COLOR_GREEN, -1)
+                curses.init_pair(4, curses.COLOR_BLUE, -1)
+                curses.init_pair(5, curses.COLOR_MAGENTA, -1)
+            else:
+                curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_RED)
+                curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_GREEN)
+                curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLUE)
+                curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+            curses.init_pair(6, curses.COLOR_RED, -1)
+            curses.init_pair(7, curses.COLOR_GREEN, -1)
+            curses.init_pair(8, curses.COLOR_BLUE, -1)
+
             # Colors text styles
+            if curses.COLOR_PAIRS > 8:
+                try:
+                    curses.init_pair(9, curses.COLOR_MAGENTA, -1)
+                except Exception:
+                    if self.args.theme_white:
+                        curses.init_pair(9, curses.COLOR_BLACK, -1)
+                    else:
+                        curses.init_pair(9, curses.COLOR_WHITE, -1)
+                try:
+                    curses.init_pair(10, curses.COLOR_CYAN, -1)
+                except Exception:
+                    if self.args.theme_white:
+                        curses.init_pair(10, curses.COLOR_BLACK, -1)
+                    else:
+                        curses.init_pair(10, curses.COLOR_WHITE, -1)
+
+                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
+                self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+                self.filter_color = curses.color_pair(10) | A_BOLD
+
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
             self.nice_color = curses.color_pair(9) | A_BOLD
@@ -134,11 +190,10 @@ class _GlancesCurses(object):
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7) | A_BOLD
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
-            self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
-            self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-            self.filter_color = curses.color_pair(10) | A_BOLD
+
         else:
-            # B&W text styles
+            # The screen is NOT compatible with a colored design
+            # switch to B&W text styles
             self.no_color = curses.A_NORMAL
             self.default_color = curses.A_NORMAL
             self.nice_color = A_BOLD
@@ -174,33 +229,6 @@ class _GlancesCurses(object):
             'CRITICAL_LOG': self.ifCRITICAL_color,
             'PASSWORD': curses.A_PROTECT
         }
-
-        # Init main window
-        self.term_window = self.screen.subwin(0, 0)
-
-        # Init refresh time
-        self.__refresh_time = args.time
-
-        # Init edit filter tag
-        self.edit_filter = False
-
-        # Catch key pressed with non blocking mode
-        self.no_flash_cursor()
-        self.term_window.nodelay(1)
-        self.pressedkey = -1
-
-        # History tag
-        self.reset_history_tag = False
-        self.history_tag = False
-        if args.enable_history:
-            logger.info('Stats history enabled with output path %s' %
-                        args.path_history)
-            from glances.exports.glances_history import GlancesHistory
-            self.glances_history = GlancesHistory(args.path_history)
-            if not self.glances_history.graph_enabled():
-                args.enable_history = False
-                logger.error(
-                    'Stats history disabled because MatPlotLib is not installed')
 
     def flash_cursor(self):
         self.term_window.keypad(1)
@@ -277,6 +305,22 @@ class _GlancesCurses(object):
                 self.args.disable_cpu = False
                 self.args.disable_mem = False
                 self.args.disable_swap = False
+        elif self.pressedkey == ord('5'):
+            # '5' > Enable/disable top menu
+            logger.info(self.args.disable_top)
+            self.args.disable_top = not self.args.disable_top
+            if self.args.disable_top:
+                self.args.disable_quicklook = True
+                self.args.disable_cpu = True
+                self.args.disable_mem = True
+                self.args.disable_swap = True
+                self.args.disable_load = True
+            else:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = False
+                self.args.disable_mem = False
+                self.args.disable_swap = False
+                self.args.disable_load = False
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
             self.args.process_short_name = not self.args.process_short_name
@@ -286,8 +330,10 @@ class _GlancesCurses(object):
             glances_processes.sort_key = 'cpu_percent'
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
-            # self.net_byteps_tag = not self.net_byteps_tag
             self.args.byte = not self.args.byte
+        elif self.pressedkey == ord('B'):
+            # 'B' > Switch between bit/s and IO/s for Disk IO
+            self.args.diskio_iops = not self.args.diskio_iops
         elif self.pressedkey == ord('c'):
             # 'c' > Sort processes by CPU usage
             glances_processes.auto_sort = False
@@ -305,12 +351,17 @@ class _GlancesCurses(object):
                 glances_processes.disable_extended()
             else:
                 glances_processes.enable_extended()
+        elif self.pressedkey == ord('E'):
+            # 'E' > Erase the process filter
+            logger.info("Erase process filter")
+            glances_processes.process_filter = None
         elif self.pressedkey == ord('F'):
             # 'F' > Switch between FS available and free space
             self.args.fs_free_space = not self.args.fs_free_space
         elif self.pressedkey == ord('f'):
-            # 'f' > Show/hide fs stats
+            # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
+            self.args.disable_folder = not self.args.disable_folder
         elif self.pressedkey == ord('g'):
             # 'g' > History
             self.history_tag = not self.history_tag
@@ -331,6 +382,9 @@ class _GlancesCurses(object):
             # 'm' > Sort processes by MEM usage
             glances_processes.auto_sort = False
             glances_processes.sort_key = 'memory_percent'
+        elif self.pressedkey == ord('M'):
+            # 'M' > Reset processes summary min/max
+            self.args.reset_minmax_tag = not self.args.reset_minmax_tag
         elif self.pressedkey == ord('n'):
             # 'n' > Show/hide network stats
             self.args.disable_network = not self.args.disable_network
@@ -467,6 +521,8 @@ class _GlancesCurses(object):
         stats_diskio = stats.get_plugin(
             'diskio').get_stats_display(args=self.args)
         stats_fs = stats.get_plugin('fs').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        stats_folders = stats.get_plugin('folders').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_raid = stats.get_plugin('raid').get_stats_display(
             args=self.args)
@@ -631,8 +687,11 @@ class _GlancesCurses(object):
         # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
-        if not (self.args.disable_network and self.args.disable_diskio and
-                self.args.disable_fs and self.args.disable_raid and
+        if not (self.args.disable_network and
+                self.args.disable_diskio and
+                self.args.disable_fs and
+                self.args.disable_folder and
+                self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
@@ -640,6 +699,8 @@ class _GlancesCurses(object):
             self.display_plugin(stats_diskio)
             self.new_line()
             self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_folders)
             self.new_line()
             self.display_plugin(stats_raid)
             self.new_line()
@@ -669,7 +730,7 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
-                                display_additional=(not is_mac),
+                                display_additional=(not OSX),
                                 max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
             self.new_line()
             self.display_plugin(stats_alert)
@@ -758,7 +819,7 @@ class _GlancesCurses(object):
         for y, m in enumerate(message.split('\n')):
             popup.addnstr(2 + y, 2, m, len(m))
 
-        if is_input and not is_windows:
+        if is_input and not WINDOWS:
             # Create a subwindow for the text field
             subpop = popup.derwin(1, input_size, 2, 2 + len(m))
             subpop.attron(self.colors_list['FILTER'])
@@ -858,15 +919,15 @@ class _GlancesCurses(object):
                 pass
             else:
                 # New column
+                # Python 2: we need to decode to get real screen size because
+                # UTF-8 special tree chars occupy several bytes.
+                # Python 3: strings are strings and bytes are bytes, all is
+                # good.
                 try:
-                    # Python 2: we need to decode to get real screen size because utf-8 special tree chars
-                    # occupy several bytes
-                    offset = len(m['msg'].decode("utf-8", "replace"))
-                except AttributeError:
-                    # Python 3: strings are strings and bytes are bytes, all is
-                    # good
-                    offset = len(m['msg'])
-                x += offset
+                    x += len(u(m['msg']))
+                except UnicodeDecodeError:
+                    # Quick and dirty hack for issue #745
+                    pass
                 if x > x_max:
                     x_max = x
 
@@ -981,7 +1042,7 @@ class GlancesCursesBrowser(_GlancesCurses):
 
     def __init__(self, args=None):
         # Init the father class
-        _GlancesCurses.__init__(self, args=args)
+        super(GlancesCursesBrowser, self).__init__(args=args)
 
         _colors_list = {
             'UNKNOWN': self.no_color,
@@ -1217,16 +1278,15 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         return True
 
+if not WINDOWS:
+    class GlancesTextbox(Textbox, object):
 
-if not is_windows:
-    class GlancesTextbox(Textbox):
-
-        def __init__(*args, **kwargs):
-            Textbox.__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            super(GlancesTextbox, self).__init__(*args, **kwargs)
 
         def do_command(self, ch):
             if ch == 10:  # Enter
                 return 0
             if ch == 127:  # Back
                 return 8
-            return Textbox.do_command(self, ch)
+            return super(GlancesTextbox, self).do_command(ch)

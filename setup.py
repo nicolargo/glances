@@ -3,20 +3,37 @@
 import glob
 import sys
 
-from setuptools import setup
-
+from setuptools import setup, Command
 
 if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
     print('Glances requires at least Python 2.6 or 3.3 to run.')
     sys.exit(1)
 
 
+class tests(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import subprocess
+        import sys
+        for t in glob.glob('unitest.py'):
+            ret = subprocess.call([sys.executable, t]) != 0
+            if ret != 0:
+                raise SystemExit(ret)
+        raise SystemExit(0)
+
+
 def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                               'conf/glances.conf', 'docs/glances-doc.html']),
-        ('share/doc/glances/images', glob.glob('docs/images/*.png')),
-        ('share/man/man1', ['man/glances.1'])
+                               'conf/glances.conf']),
+        ('share/man/man1', ['docs/man/glances.1'])
     ]
 
     return data_files
@@ -26,25 +43,25 @@ def get_requires():
     requires = ['psutil>=2.0.0']
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info == (2, 6):
+    if sys.version_info[:2] == (2, 6):
         requires += ['argparse', 'logutils']
 
     return requires
 
 setup(
     name='Glances',
-    version='2.5.1',
+    version='2.6',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    # download_url='https://s3.amazonaws.com/glances/glances-2.5.1.tar.gz',
+    # download_url='https://s3.amazonaws.com/glances/glances-2.6.tar.gz',
     license="LGPL",
     keywords="cli curses monitoring system",
     install_requires=get_requires(),
     extras_require={
-        'WEB': ['bottle'],
+        'WEB': ['bottle', 'requests'],
         'SENSORS': ['py3sensors'],
         'BATINFO': ['batinfo'],
         'SNMP': ['pysnmp'],
@@ -55,11 +72,13 @@ setup(
         'DOCKER': ['docker-py'],
         'EXPORT': ['influxdb>=1.0.0', 'potsdb' 'statsd', 'pika'],
         'ACTION': ['pystache'],
-        'CPUINFO': ['py-cpuinfo']
+        'CPUINFO': ['py-cpuinfo'],
+        'FOLDERS': ['scandir']
     },
     packages=['glances'],
     include_package_data=True,
     data_files=get_data_files(),
+    cmdclass={'test': tests},
     test_suite="unitest.py",
     entry_points={"console_scripts": ["glances=glances:main"]},
     classifiers=[
@@ -75,6 +94,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5'
     ]
 )

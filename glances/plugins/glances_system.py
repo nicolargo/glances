@@ -19,12 +19,12 @@
 
 """System plugin."""
 
-# Import system libs
 import os
 import platform
 import re
+from io import open
 
-# Import Glances libs
+from glances.compat import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID
@@ -84,7 +84,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
                 else:
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
-            elif self.stats['os_name'] == "FreeBSD":
+            elif self.stats['os_name'].endswith('BSD'):
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'] == "Darwin":
                 self.stats['os_version'] = platform.mac_ver()[0]
@@ -148,11 +148,7 @@ class Plugin(GlancesPlugin):
             self.stats['os_name'] = self.stats['system_name']
             # Windows OS tips
             if self.short_system_name == 'windows':
-                try:
-                    iteritems = snmp_to_human['windows'].iteritems()
-                except AttributeError:
-                    iteritems = snmp_to_human['windows'].items()
-                for r, v in iteritems:
+                for r, v in iteritems(snmp_to_human['windows']):
                     if re.search(r, self.stats['system_name']):
                         self.stats['os_name'] = v
                         break

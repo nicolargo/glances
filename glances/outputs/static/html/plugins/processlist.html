@@ -9,8 +9,8 @@
         <div class="table-cell">NI</div>
         <div class="table-cell">S</div>
         <div sortable-th sorter="sorter" column="timemillis" class="table-cell hidden-xs hidden-sm">TIME+</div>
-        <div sortable-th sorter="sorter" column="io_read" class="table-cell hidden-xs hidden-sm">IOR/s</div>
-        <div sortable-th sorter="sorter" column="io_write" class="table-cell hidden-xs hidden-sm">IOW/s</div>
+        <div sortable-th sorter="sorter" column="io_read" class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">IOR/s</div>
+        <div sortable-th sorter="sorter" column="io_write" class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">IOW/s</div>
         <div sortable-th sorter="sorter" column="name" class="table-cell text-left">Command</div>
     </div>
     <div class="table-row" ng-repeat="process in statsProcessList.processes | orderBy:sorter.column:sorter.isReverseColumn(sorter.column)">
@@ -25,9 +25,9 @@
         <div class="table-cell hidden-xs hidden-sm">
             <span ng-show="process.timeplus.hours > 0" class="highlight">{{ process.timeplus.hours }}h</span>{{ process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span ng-show="process.timeplus.hours <= 0">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>
         </div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.ioRead}}</div>
-        <div class="table-cell hidden-xs hidden-sm">{{process.ioWrite}}</div>
-        <div class="table-cell text-left" ng-show="show.short_process_name">{{process.name}}</div>
-        <div class="table-cell text-left" ng-show="!show.short_process_name">{{process.cmdline}}</div>
+        <div class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">{{process.ioRead}}</div>
+        <div class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">{{process.ioWrite}}</div>
+        <div class="table-cell text-left" ng-show="arguments.process_short_name">{{process.name}}</div>
+        <div class="table-cell text-left" ng-show="!arguments.process_short_name">{{process.cmdline}}</div>
     </div>
 </div>

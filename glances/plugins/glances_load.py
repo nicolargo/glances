@@ -19,10 +19,9 @@
 
 """Load plugin."""
 
-# Import system libs
 import os
 
-# Import Glances libs
+from glances.compat import iteritems
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -51,8 +50,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(
-            self, args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -99,11 +97,7 @@ class Plugin(GlancesPlugin):
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
-            try:
-                iteritems = self.stats.iteritems()
-            except AttributeError:
-                iteritems = self.stats.items()
-            for k, v in iteritems:
+            for k, v in iteritems(self.stats):
                 self.stats[k] = float(v)
 
             self.stats['cpucore'] = self.nb_log_core
@@ -119,7 +113,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         try:
@@ -145,7 +139,7 @@ class Plugin(GlancesPlugin):
         msg = '{0:8}'.format('LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
-        if self.stats['cpucore'] > 0:
+        if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
             msg = '{0}-core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
         # New line

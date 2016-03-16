@@ -19,14 +19,14 @@
 
 """IP plugin."""
 
-# Import Glances libs
-from glances.core.glances_globals import is_freebsd
-from glances.core.glances_logging import logger
+from glances.compat import iterkeys
+from glances.globals import BSD
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# XXX FreeBSD: Segmentation fault (core dumped)
+# XXX *BSDs: Segmentation fault (core dumped)
 # -- https://bitbucket.org/al45tair/netifaces/issues/15
-if not is_freebsd:
+if not BSD:
     try:
         import netifaces
         netifaces_tag = True
@@ -45,7 +45,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -79,8 +79,7 @@ class Plugin(GlancesPlugin):
                     self.stats['mask_cidr'] = self.ip_to_cidr(self.stats['mask'])
                     self.stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
                 except (KeyError, AttributeError) as e:
-                    logger.debug("Can not grab IP information (%s)".format(e))
-
+                    logger.debug("Cannot grab IP information: {0}".format(e))
         elif self.input_method == 'snmp':
             # Not implemented yet
             pass
@@ -93,11 +92,11 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Optional
-        for key in self.stats.keys():
+        for key in iterkeys(self.stats):
             self.views[key]['optional'] = True
 
     def msg_curse(self, args=None):

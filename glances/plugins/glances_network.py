@@ -22,7 +22,7 @@
 import base64
 import operator
 
-from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -50,7 +50,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -84,6 +84,13 @@ class Plugin(GlancesPlugin):
             except UnicodeDecodeError:
                 return self.stats
 
+            # New in PsUtil 3.0: optionaly import the interface's status (issue #765)
+            netstatus = {}
+            try:
+                netstatus = psutil.net_if_stats()
+            except AttributeError:
+                pass
+
             # Previous network interface stats are stored in the network_old variable
             if not hasattr(self, 'network_old'):
                 # First call, we init the network_old var
@@ -100,6 +107,9 @@ class Plugin(GlancesPlugin):
                 # Loop over interfaces
                 network_new = netiocounters
                 for net in network_new:
+                    # Do not take hidden interface into account
+                    if self.is_hide(net):
+                        continue
                     try:
                         cumulative_rx = network_new[net].bytes_recv
                         cumulative_tx = network_new[net].bytes_sent
@@ -119,6 +129,12 @@ class Plugin(GlancesPlugin):
                     except KeyError:
                         continue
                     else:
+                        # Optional stats (only compliant with PsUtil 3.0+)
+                        try:
+                            netstat['is_up'] = netstatus[net].isup
+                        except (KeyError, AttributeError):
+                            pass
+                        # Set the key
                         netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
@@ -151,6 +167,10 @@ class Plugin(GlancesPlugin):
                 network_new = netiocounters
 
                 for net in network_new:
+                    # Do not take hidden interface into account
+                    if self.is_hide(net):
+                        continue
+
                     try:
                         # Windows: a tips is needed to convert HEX to TXT
                         # http://blogs.technet.com/b/networking/archive/2009/12/18/how-to-query-the-list-of-network-interfaces-using-snmp-via-the-ifdescr-counter.aspx
@@ -161,6 +181,7 @@ class Plugin(GlancesPlugin):
                                 interface_name = net
                         else:
                             interface_name = net
+
                         cumulative_rx = float(network_new[net]['cumulative_rx'])
                         cumulative_tx = float(network_new[net]['cumulative_tx'])
                         cumulative_cx = cumulative_rx + cumulative_tx
@@ -196,7 +217,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert
@@ -252,8 +273,8 @@ class Plugin(GlancesPlugin):
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
-            # Do not display hidden interfaces
-            if self.is_hide(i['interface_name']):
+            # Do not display interface in down state (issue #765)
+            if ('is_up' in i) and (i['is_up'] is False):
                 continue
             # Format stats
             # Is there an alias for the interface name ?

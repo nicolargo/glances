@@ -19,15 +19,20 @@
 
 """Quicklook plugin."""
 
-from glances.core.glances_cpu_percent import cpu_percent
+from glances.cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.logger import logger
 
 import psutil
+
+cpuinfo_tag = False
 try:
     from cpuinfo import cpuinfo
-except ImportError:
-    cpuinfo_tag = False
+except:
+    # Correct issue #754
+    # Waiting for a correction on the upstream Cpuinfo lib
+    pass
 else:
     cpuinfo_tag = True
 
@@ -41,7 +46,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the quicklook plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -87,7 +92,7 @@ class Plugin(GlancesPlugin):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        GlancesPlugin.update_views(self)
+        super(Plugin, self).update_views()
 
         # Add specifics informations
         # Alert only

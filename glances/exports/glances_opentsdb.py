@@ -19,19 +19,15 @@
 
 """OpenTSDB interface class."""
 
-# Import sys libs
 import sys
 from numbers import Number
-try:
-    from configparser import NoOptionError, NoSectionError
-except ImportError:  # Python 2
-    from ConfigParser import NoOptionError, NoSectionError
 
-# Import Glances lib
-from glances.core.glances_logging import logger
+from glances.compat import NoOptionError, NoSectionError, range
+from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 import potsdb
+
 
 class Export(GlancesExport):
 
@@ -39,12 +35,13 @@ class Export(GlancesExport):
 
     def __init__(self, config=None, args=None):
         """Init the OpenTSDB export IF."""
-        GlancesExport.__init__(self, config=config, args=args)
+        super(Export, self).__init__(config=config, args=args)
 
         # Load the InfluxDB configuration file
         self.host = None
         self.port = None
         self.prefix = None
+        self.tags = None
         self.export_enable = self.load_conf()
         if not self.export_enable:
             sys.exit(2)
@@ -82,7 +79,7 @@ class Export(GlancesExport):
         try:
             self.tags = self.config.get_value(section, 'tags')
         except NoOptionError:
-            self.tags = ''
+            pass
 
         return True
 
@@ -99,20 +96,18 @@ class Export(GlancesExport):
             logger.critical("Cannot connect to OpenTSDB server %s:%s (%s)" % (self.host, self.port, e))
             sys.exit(2)
 
-        # Read tags
-        self.parse_tags()
-
         return db
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        for i in range(0, len(columns)):
+        for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
             stat_name = '{0}.{1}.{2}'.format(self.prefix, name, columns[i])
             stat_value = points[i]
+            tags = self.parse_tags(self.tags)
             try:
-                self.client.send(stat_name, stat_value, **self.tags)
+                self.client.send(stat_name, stat_value, **tags)
             except Exception as e:
                 logger.error("Can not export stats %s to OpenTSDB (%s)" % (name, e))
         logger.debug("Export {0} stats to OpenTSDB".format(name))
@@ -122,4 +117,4 @@ class Export(GlancesExport):
         # Waits for all outstanding metrics to be sent and background thread closes
         self.client.wait()
         # Call the father method
-        GlancesExport.exit(self)
+        super(Export, self).exit()

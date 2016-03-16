@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -28,17 +28,17 @@ import unittest
 # =================
 
 # Init Glances core
-from glances.core.glances_main import GlancesMain
+from glances.main import GlancesMain
 core = GlancesMain()
 if not core.is_standalone():
     print('ERROR: Glances core should be ran in standalone mode')
     sys.exit(1)
 
 # Init Glances stats
-from glances.core.glances_stats import GlancesStats
+from glances.stats import GlancesStats
 stats = GlancesStats()
 
-from glances.core.glances_globals import is_windows, version
+from glances.globals import WINDOWS, version
 from glances.outputs.glances_bars import Bar
 
 # Unitest class
@@ -47,7 +47,6 @@ print('Unitary tests for Glances %s' % version)
 
 
 class TestGlances(unittest.TestCase):
-
     """Test Glances class."""
 
     def setUp(self):
@@ -105,7 +104,7 @@ class TestGlances(unittest.TestCase):
             self.assertLessEqual(stats_grab[stat], 100)
         print('INFO: CPU stats: %s' % stats_grab)
 
-    @unittest.skipIf(is_windows, "Load average not available on Windows")
+    @unittest.skipIf(WINDOWS, "Load average not available on Windows")
     def test_004_load(self):
         """Check LOAD plugin."""
         stats_to_check = ['cpucore', 'min1', 'min5', 'min15']
@@ -151,7 +150,7 @@ class TestGlances(unittest.TestCase):
 
     def test_008_diskio(self):
         """Check DISKIO plugin."""
-        print('INFO: [TEST_008] Check DiskIO stats')
+        print('INFO: [TEST_008] Check DISKIO stats')
         stats_grab = stats.get_plugin('diskio').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='DiskIO stats is not a list')
         print('INFO: diskio stats: %s' % stats_grab)
@@ -178,18 +177,41 @@ class TestGlances(unittest.TestCase):
         # Check if number of processes in the list equal counter
         # self.assertEqual(total, len(stats_grab))
 
-    def test_011_output_bars_must_be_between_0_and_100_percent(self):
-        """Test quick look plugin."""
+    def test_011_folders(self):
+        """Check File System plugin."""
+        # stats_to_check = [ ]
+        print('INFO: [TEST_011] Check FOLDER stats')
+        stats_grab = stats.get_plugin('folders').get_raw()
+        self.assertTrue(type(stats_grab) is list, msg='Folders stats is not a list')
+        print('INFO: Folders stats: %s' % stats_grab)
+
+    def test_012_ip(self):
+        """Check IP plugin."""
+        print('INFO: [TEST_012] Check IP stats')
+        stats_grab = stats.get_plugin('ip').get_raw()
+        self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
+        print('INFO: IP stats: %s' % stats_grab)
+
+    def test_099_output_bars_must_be_between_0_and_100_percent(self):
+        """Test quick look plugin.
+
+        > bar.min_value
+        0
+        > bar.max_value
+        100
+        > bar.percent = -1
+        > bar.percent
+        0
+        > bar.percent = 101
+        > bar.percent
+        100
+        """
         print('INFO: [TEST_011] Test progress bar')
         bar = Bar(size=1)
-        with self.assertRaises(AssertionError):
-            bar.percent = -1
-            bar.percent = 101
-
-        # 0 - 100 is an inclusive range, so these should not error.
-        bar.percent = 0
-        bar.percent = 100
-
+        bar.percent = -1
+        self.assertLessEqual(bar.percent, bar.min_value)
+        bar.percent = 101
+        self.assertGreaterEqual(bar.percent, bar.max_value)
 
 if __name__ == '__main__':
     unittest.main()

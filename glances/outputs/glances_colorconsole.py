@@ -23,7 +23,8 @@ import time
 
 import msvcrt
 
-from glances.core.glances_logging import logger
+from glances.compat import queue
+from glances.logger import logger
 
 try:
     import colorconsole
@@ -32,16 +33,11 @@ except ImportError:
     logger.critical("Colorconsole module not found. Glances cannot start in standalone mode.")
     sys.exit(1)
 
-try:
-    import queue
-except ImportError:  # Python 2
-    import Queue as queue
-
 
 class ListenGetch(threading.Thread):
 
     def __init__(self, nom=''):
-        threading.Thread.__init__(self)
+        super(ListenGetch, self).__init__()
         self.Terminated = False
         self.q = queue.Queue()
 

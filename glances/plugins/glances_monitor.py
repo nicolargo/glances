@@ -19,10 +19,8 @@
 
 """Monitor plugin."""
 
-from __future__ import unicode_literals
-
-# Import Glances lib
-from glances.core.glances_monitor_list import MonitorList as glancesMonitorList
+from glances.compat import u
+from glances.monitor_list import MonitorList as glancesMonitorList
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -32,7 +30,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -100,14 +98,12 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = '{0:13} '.format('RUNNING' if m['count'] >= 1 else 'NOT RUNNING')
             ret.append(self.curse_add_line(msg))
-            # Decode to UTF8 (only for Python 3)
+            # Decode to UTF-8 (for Python 2)
             try:
-                msg = m['result'].decode('utf-8') if m['count'] >= 1 else ''
-            except (UnicodeError, AttributeError):
-                try:
-                    msg = m['result'] if m['count'] >= 1 else ''
-                except UnicodeError:
-                    msg = m['result'].encode('utf-8') if m['count'] >= 1 else ''
+                msg = u(m['result']) if m['count'] >= 1 else ''
+            except UnicodeEncodeError:
+                # Hack if return message contains non UTF-8 compliant char
+                msg = u(m['default_result']) if m['count'] >= 1 else ''
             ret.append(self.curse_add_line(msg, optional=True, splittable=True))
             ret.append(self.curse_new_line())
 

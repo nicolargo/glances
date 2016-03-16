@@ -24,9 +24,9 @@ import re
 import threading
 import time
 
-# Import Glances libs
-from glances.core.glances_logging import logger
-from glances.core.glances_timer import getTimeSinceLastUpdate
+from glances.compat import iterkeys, itervalues
+from glances.logger import logger
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Docker-py library (optional and Linux-only)
@@ -50,7 +50,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        GlancesPlugin.__init__(self, args=args)
+        super(Plugin, self).__init__(args=args)
 
         # The plgin can be disable using: args.disable_docker
         self.args = args
@@ -69,7 +69,7 @@ class Plugin(GlancesPlugin):
     def exit(self):
         """Overwrite the exit method to close threads"""
         logger.debug("Stop the Docker plugin")
-        for t in self.thread_list.values():
+        for t in itervalues(self.thread_list):
             t.stop()
 
     def get_key(self):
@@ -113,7 +113,7 @@ class Plugin(GlancesPlugin):
                 # API error (Version mismatch ?)
                 logger.debug("Docker API error (%s)" % e)
                 # Try the connection with the server version
-                version = re.search('server\:\ (.*)\)\".*\)', str(e))
+                version = re.search('(?:server API version|server)\:\ (.*)\)\".*\)', str(e))
                 if version:
                     logger.debug("Try connection with Docker API version %s" % version.group(1))
                     ret = self.connect(version=version.group(1))
@@ -206,13 +206,13 @@ class Plugin(GlancesPlugin):
                     t.start()
 
             # Stop threads for non-existing containers
-            nonexisting_containers = list(set(self.thread_list.keys()) - set([c['Id'] for c in self.stats['containers']]))
+            nonexisting_containers = set(iterkeys(self.thread_list)) - set([c['Id'] for c in self.stats['containers']])
             for container_id in nonexisting_containers:
                 # Stop the thread
                 logger.debug("{0} plugin - Stop thread for old container {1}".format(self.plugin_name, container_id[:12]))
                 self.thread_list[container_id].stop()
                 # Delete the item from the dict
-                del(self.thread_list[container_id])
+                del self.thread_list[container_id]
 
             # Get stats for all containers
             for container in self.stats['containers']:
@@ -252,7 +252,7 @@ class Plugin(GlancesPlugin):
         try:
             cpu_new['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
             cpu_new['system'] = all_stats['cpu_stats']['system_cpu_usage']
-            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'])
+            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
             # all_stats do not have CPU information
             logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
@@ -525,6 +525,7 @@ class Plugin(GlancesPlugin):
         else:
             return 'OK'
 
+
 class ThreadDockerGrabber(threading.Thread):
     """
     Specific thread to grab docker stats.
@@ -558,15 +559,19 @@ class ThreadDockerGrabber(threading.Thread):
 
     @property
     def stats(self):
+        """Stats getter"""
         return self._stats
 
     @stats.setter
     def stats(self, value):
+        """Stats setter"""
         self._stats = value
 
     def stop(self, timeout=None):
+        """Stop the thread"""
         logger.debug("docker plugin - Close thread for container {0}".format(self._container_id[:12]))
         self._stopper.set()
 
     def stopped(self):
+        """Return True is the thread is stopped"""
         return self._stopper.isSet()
