@@ -48,3 +48,6 @@ Frederic Aoustin (https://github.com/fraoustin) and Nicolas Bourges (installer) 
 
 Aljaž Srebrnič for the MacPorts package
 http://www.macports.org/ports.php?by=name&substr=glances
+
+John Kirkham for the conda package (at conda-forge)
+https://github.com/conda-forge/glances-feedstock
