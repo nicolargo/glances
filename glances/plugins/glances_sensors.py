@@ -208,7 +208,7 @@ class Plugin(GlancesPlugin):
                         msg, self.get_views(item=i[self.get_key()],
                                             key='value',
                                             option='decoration')))
-                except ValueError:
+                except (TypeError, ValueError):
                     pass
 
         return ret
