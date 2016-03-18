@@ -274,7 +274,7 @@ Gateway to other services
 =========================
 
 Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``,
-``StatsD`` and ``RabbitMQ`` server.
+``StatsD``, ``ElasticSearch`` and ``RabbitMQ`` server.
 
 How to contribute ?
 ===================
