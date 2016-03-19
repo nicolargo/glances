@@ -1104,6 +1104,9 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Catch the browser pressed key
         self.pressedkey = self.get_key(self.term_window)
 
+        if self.pressedkey != -1:
+            logger.debug("Key pressed. Code=%s" % self.pressedkey)
+
         # Actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
@@ -1114,10 +1117,10 @@ class GlancesCursesBrowser(_GlancesCurses):
             # 'ENTER' > Run Glances on the selected server
             logger.debug("Server number {0} selected".format(self.cursor + 1))
             self.active_server = self.cursor
-        elif self.pressedkey == 259:
+        elif self.pressedkey == 65:
             # 'UP' > Up in the server list
             self.cursor_up(servers_list)
-        elif self.pressedkey == 258:
+        elif self.pressedkey == 66:
             # 'DOWN' > Down in the server list
             self.cursor_down(servers_list)
 
