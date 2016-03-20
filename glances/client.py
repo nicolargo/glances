@@ -26,7 +26,7 @@ import sys
 from glances.compat import Fault, ProtocolError, ServerProxy, Transport
 from glances.globals import version
 from glances.logger import logger
-from glances.stats import GlancesStatsClient
+from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
 
 
@@ -139,7 +139,7 @@ class GlancesClient(object):
         if self.client_mode == 'snmp':
             logger.info("Trying to grab stats by SNMP...")
 
-            from glances.stats import GlancesStatsClientSNMP
+            from glances.stats_client_snmp import GlancesStatsClientSNMP
 
             # Init stats
             self.stats = GlancesStatsClientSNMP(config=self.config, args=self.args)
