@@ -28,7 +28,7 @@ from glances.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 from glances.autodiscover import GlancesAutoDiscoverClient
 from glances.globals import version
 from glances.logger import logger
-from glances.stats import GlancesStatsServer
+from glances.stats_server import GlancesStatsServer
 from glances.timer import Timer
 
 
