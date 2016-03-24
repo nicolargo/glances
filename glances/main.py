@@ -162,6 +162,8 @@ Start the client browser (browser mode):\n\
                             dest='export_elasticsearch', help='export stats to an ElasticSearch server (elasticsearch lib needed)')
         parser.add_argument('--export-rabbitmq', action='store_true', default=False,
                             dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
+        parser.add_argument('--export-riemann', action='store_true', default=False,
+                            dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')

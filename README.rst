@@ -50,6 +50,7 @@ Optional dependencies:
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``bernhard`` (for the Riemann export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 
@@ -274,7 +275,7 @@ Gateway to other services
 =========================
 
 Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``,
-``StatsD`` and ``RabbitMQ`` server.
+``StatsD``, ``RabbitMQ`` and  ``Riemann`` server.
 
 How to contribute ?
 ===================
