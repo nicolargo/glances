@@ -22,7 +22,8 @@
 import socket
 import sys
 
-from glances.globals import appname, BSD
+from glances import __appname__
+from glances.globals import BSD
 from glances.logger import logger
 
 try:
@@ -46,7 +47,7 @@ if zeroconf_tag:
         sys.exit(1)
 
 # Global var
-zeroconf_type = "_%s._tcp." % appname
+zeroconf_type = "_%s._tcp." % __appname__
 
 
 class AutoDiscovered(object):
