@@ -26,8 +26,9 @@ import sys
 import uuid
 from io import open
 
+from glances import __appname__
 from glances.compat import b, input
-from glances.globals import appname, BSD, LINUX, OSX, WINDOWS
+from glances.globals import BSD, LINUX, OSX, WINDOWS
 from glances.logger import logger
 
 
@@ -58,7 +59,7 @@ class GlancesPassword(object):
             app_path = '.'
 
         # Append the Glances folder
-        app_path = os.path.join(app_path, appname)
+        app_path = os.path.join(app_path, __appname__)
 
         return app_path
 
