@@ -26,8 +26,8 @@ import subprocess
 import time
 import unittest
 
+from glances import __version__
 from glances.compat import ServerProxy
-from glances.globals import version
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s" % SERVER_PORT
@@ -38,7 +38,7 @@ client = ServerProxy(URL)
 
 # Unitest class
 # ==============
-print('XML-RPC API unitary tests for Glances %s' % version)
+print('XML-RPC API unitary tests for Glances %s' % __version__)
 
 
 class TestGlances(unittest.TestCase):
