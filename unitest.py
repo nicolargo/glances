@@ -38,12 +38,13 @@ if not core.is_standalone():
 from glances.stats import GlancesStats
 stats = GlancesStats()
 
-from glances.globals import WINDOWS, version
+from glances import __version__
+from glances.globals import WINDOWS
 from glances.outputs.glances_bars import Bar
 
 # Unitest class
 # ==============
-print('Unitary tests for Glances %s' % version)
+print('Unitary tests for Glances %s' % __version__)
 
 
 class TestGlances(unittest.TestCase):

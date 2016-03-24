@@ -25,8 +25,8 @@ import subprocess
 import time
 import unittest
 
+from glances import __version__
 from glances.compat import text_type
-from glances.globals import version
 
 import requests
 
@@ -36,7 +36,7 @@ pid = None
 
 # Unitest class
 # ==============
-print('RESTful API unitary tests for Glances %s' % version)
+print('RESTful API unitary tests for Glances %s' % __version__)
 
 
 class TestGlances(unittest.TestCase):
