@@ -9,7 +9,7 @@ following:
 
 .. code-block:: ini
 
-    [rabbitmq]
+    [riemann]
     host=localhost
     port=5555
 
