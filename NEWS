@@ -2,9 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.7
-===========
+Version 2.6.1
+=============
 
+Enhancements and new features:
+
+    * Add a connector to Riemann (issue #822 by Greogo Nagy)
 
 Version 2.6
 ===========
