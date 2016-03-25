@@ -139,6 +139,10 @@ Command-Line Options
 
     export stats to RabbitMQ broker (pika lib needed)
 
+.. option:: --export-riemann
+
+    export stats to Riemann server (bernhard lib needed)
+
 .. option:: --export-elasticsearch
 
     export stats to an Elasticsearch server (elasticsearch lib needed)
