@@ -56,7 +56,7 @@ class GlancesStaticServer(object):
                 if new_server['name'] is not None:
                     # Manage optionnal information
                     if new_server['port'] is None:
-                        new_server['port'] = 61209
+                        new_server['port'] = '61209'
                     new_server['username'] = 'glances'
                     # By default, try empty (aka no) password
                     new_server['password'] = ''

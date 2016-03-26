@@ -22,11 +22,6 @@
 import os
 import sys
 
-# Global information
-appname = 'glances'
-version = __import__('glances').__version__
-psutil_version = __import__('glances').__psutil_version
-
 # Operating system flag
 # Note: Somes libs depends of OS
 BSD = sys.platform.find('bsd') != -1

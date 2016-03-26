@@ -24,9 +24,10 @@ import os
 import sys
 import tempfile
 
+from glances import __appname__, __version__, psutil_version
 from glances.compat import input
 from glances.config import Config
-from glances.globals import appname, LINUX, WINDOWS, psutil_version, version
+from glances.globals import LINUX, WINDOWS
 from glances.logger import logger
 
 
@@ -86,14 +87,14 @@ Start the client browser (browser mode):\n\
 
     def init_args(self):
         """Init all the command line arguments."""
-        _version = "Glances v" + version + " with psutil v" + psutil_version
+        version = "Glances v" + __version__ + " with psutil v" + psutil_version
         parser = argparse.ArgumentParser(
-            prog=appname,
+            prog=__appname__,
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use)
         parser.add_argument(
-            '-V', '--version', action='version', version=_version)
+            '-V', '--version', action='version', version=version)
         parser.add_argument('-d', '--debug', action='store_true', default=False,
                             dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file',
@@ -162,6 +163,8 @@ Start the client browser (browser mode):\n\
                             dest='export_elasticsearch', help='export stats to an ElasticSearch server (elasticsearch lib needed)')
         parser.add_argument('--export-rabbitmq', action='store_true', default=False,
                             dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
+        parser.add_argument('--export-riemann', action='store_true', default=False,
+                            dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')

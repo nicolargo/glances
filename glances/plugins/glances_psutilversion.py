@@ -17,13 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from glances import psutil_version_info
 from glances.plugins.glances_plugin import GlancesPlugin
-
-from psutil import __version__ as __psutil_version
 
 
 class Plugin(GlancesPlugin):
-
     """Get the psutil version for client/server purposes.
 
     stats is a tuple
@@ -48,7 +46,7 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # PsUtil version only available in local
             try:
-                self.stats = tuple([int(num) for num in __psutil_version.split('.')])
+                self.stats = psutil_version_info
             except NameError:
                 pass
         else:

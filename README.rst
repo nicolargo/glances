@@ -50,6 +50,7 @@ Optional dependencies:
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
 - ``matplotlib`` (for graphical/chart support)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``bernhard`` (for the Riemann export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 
@@ -223,6 +224,26 @@ Puppet
 
 You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-glances
 
+Known issue on RHEL/CentOS/Fedora installation
+==============================================
+
+For Python 2.6 RedHat-based distros there might be an issue with starting Glances:
+
+    Traceback (most recent call last):
+    File "/usr/bin/glances", line 5, in <module>
+    from pkg_resources import load_entry_point
+    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 2655, in <module>
+    workingset.require(_requires)
+    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 648, in require
+    needed = self.resolve(parse_requirements(requirements))
+    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 546, in resolve
+    raise DistributionNotFound(req)
+    pkg_resources.DistributionNotFound: argparse
+
+Try upgrading setuptools, has been proven to solve the problem:
+
+    sudo pip install -U setuptools
+
 Usage
 =====
 
@@ -274,7 +295,7 @@ Gateway to other services
 =========================
 
 Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``,
-``StatsD`` and ``RabbitMQ`` server.
+``StatsD``, ``RabbitMQ`` and  ``Riemann`` server.
 
 How to contribute ?
 ===================

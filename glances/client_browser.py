@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@ from glances.client import GlancesClient, GlancesClientTransport
 from glances.logger import logger
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
-from glances.outputs.glances_curses import GlancesCursesBrowser
+from glances.outputs.glances_curses_browser import GlancesCursesBrowser
 
 
 class GlancesClientBrowser(object):
@@ -160,7 +160,7 @@ class GlancesClientBrowser(object):
                     "Server list dictionnary change inside the loop (wait next update)")
 
             # Update the screen (list or Glances client)
-            if not self.screen.active_server:
+            if self.screen.active_server is None:
                 #  Display the Glances browser
                 self.screen.update(self.get_servers_list())
             else:

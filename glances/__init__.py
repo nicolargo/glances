@@ -27,13 +27,13 @@ import sys
 
 # Global name
 __appname__ = 'glances'
-__version__ = '2.6'
+__version__ = '2.6.1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
 # Import psutil
 try:
-    from psutil import __version__ as __psutil_version
+    from psutil import __version__ as psutil_version
 except ImportError:
     print('PSutil library not found. Glances cannot start.')
     sys.exit(1)
@@ -62,8 +62,8 @@ if sys.version_info[:2] == (2, 6):
 
 # Check PSutil version
 psutil_min_version = (2, 0, 0)
-psutil_version = tuple([int(num) for num in __psutil_version.split('.')])
-if psutil_version < psutil_min_version:
+psutil_version_info = tuple([int(num) for num in psutil_version.split('.')])
+if psutil_version_info < psutil_min_version:
     print('PSutil 2.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
@@ -107,7 +107,7 @@ def main():
     logger.info('{0} {1} and PSutil {2} detected'.format(
         platform.python_implementation(),
         platform.python_version(),
-        __psutil_version))
+        psutil_version))
 
     # Share global var
     global core, standalone, client, server, webserver
