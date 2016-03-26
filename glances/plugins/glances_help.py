@@ -23,7 +23,7 @@ Help plugin.
 Just a stupid plugin to display the help screen.
 """
 
-from glances.globals import appname, psutil_version, version
+from glances import __appname__, __version__, psutil_version
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -50,7 +50,7 @@ class Plugin(GlancesPlugin):
         pass
 
     def generate_view_data(self):
-        self.view_data['version'] = '{0} {1}'.format(appname.title(), version)
+        self.view_data['version'] = '{0} {1}'.format(__appname__.title(), __version__)
         self.view_data['psutil_version'] = ' with PSutil {0}'.format(psutil_version)
 
         try:

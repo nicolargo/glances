@@ -23,10 +23,10 @@ import json
 import socket
 import sys
 
+from glances import __version__
 from glances.compat import Fault, ProtocolError, ServerProxy, Transport
-from glances.globals import version
 from glances.logger import logger
-from glances.stats import GlancesStatsClient
+from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
 
 
@@ -122,11 +122,11 @@ class GlancesClient(object):
 
             if self.client_mode == 'glances':
                 # Check that both client and server are in the same major version
-                if version.split('.')[0] == client_version.split('.')[0]:
+                if __version__.split('.')[0] == client_version.split('.')[0]:
                     # Init stats
                     self.stats = GlancesStatsClient(config=self.config, args=self.args)
                     self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-                    logger.debug("Client version: {0} / Server version: {1}".format(version, client_version))
+                    logger.debug("Client version: {0} / Server version: {1}".format(__version__, client_version))
                 else:
                     self.log_and_exit("Client and server not compatible: \
                                       Client version: {0} / Server version: {1}".format(version, client_version))
@@ -139,7 +139,7 @@ class GlancesClient(object):
         if self.client_mode == 'snmp':
             logger.info("Trying to grab stats by SNMP...")
 
-            from glances.stats import GlancesStatsClientSNMP
+            from glances.stats_client_snmp import GlancesStatsClientSNMP
 
             # Init stats
             self.stats = GlancesStatsClientSNMP(config=self.config, args=self.args)

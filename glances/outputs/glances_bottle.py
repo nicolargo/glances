@@ -333,6 +333,29 @@ class GlancesBottle(object):
             abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
+    def _api_itemvalue(self, plugin, item, value=None):
+        """ Father method for _api_item and _api_value"""
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        self.stats.update()
+
+        if value is None:
+            ret = self.stats.get_plugin(plugin).get_stats_item(item)
+
+            if ret is None:
+                abort(404, "Cannot get item %s in plugin %s" % (item, plugin))
+        else:
+            ret = self.stats.get_plugin(plugin).get_stats_value(item, value)
+
+            if ret is None:
+                abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
+
+        return ret
+
     def _api_item(self, plugin, item):
         """Glances API RESTFul implementation.
 
@@ -342,20 +365,7 @@ class GlancesBottle(object):
         HTTP/404 if others error
 
         """
-        response.content_type = 'application/json'
-
-        if plugin not in self.plugins_list:
-            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
-
-        # Update the stat
-        self.stats.update()
-
-        plist = self.stats.get_plugin(plugin).get_stats_item(item)
-
-        if plist is None:
-            abort(404, "Cannot get item %s in plugin %s" % (item, plugin))
-        else:
-            return plist
+        return self._api_itemvalue(plugin, item)
 
     def _api_value(self, plugin, item, value):
         """Glances API RESTFul implementation.
@@ -365,20 +375,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
-
-        if plugin not in self.plugins_list:
-            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
-
-        # Update the stat
-        self.stats.update()
-
-        pdict = self.stats.get_plugin(plugin).get_stats_value(item, value)
-
-        if pdict is None:
-            abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
-        else:
-            return pdict
+        return self._api_itemvalue(plugin, item, value)
 
     def _api_args(self):
         """Glances API RESTFul implementation.
