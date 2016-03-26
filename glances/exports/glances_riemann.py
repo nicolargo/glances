@@ -84,10 +84,9 @@ class Export(GlancesExport):
             if not isinstance(points[i], Number):
                 continue
             else:
-                data = { 'host': self.hostname, 'service': name + " " + columns[i], 'metric': points[i] }
+                data = {'host': self.hostname, 'service': name + " " + columns[i], 'metric': points[i]}
                 logger.debug(data)
                 try:
                     self.client.send(data)
                 except Exception as e:
                     logger.error("Can not export stats to Riemann (%s)" % e)
-

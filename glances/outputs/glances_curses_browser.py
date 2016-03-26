@@ -271,4 +271,3 @@ class GlancesCursesBrowser(_GlancesCurses):
             line += 1
 
         return True
-

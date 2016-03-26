@@ -9,6 +9,12 @@ Enhancements and new features:
 
     * Add a connector to Riemann (issue #822 by Greogo Nagy)
 
+Bugs corrected:
+
+    * Browsing for servers which are in the [serverlist] is broken (issue #819)
+    * [WebUI] Glances will not get past loading screen (issue #815) opened 9 days ago
+    * Python error after upgrading from 2.5.1 to 2.6 bug (issue #813)
+
 Version 2.6
 ===========
 
@@ -41,6 +47,7 @@ Enhancements and new features:
     * InfluxDB > 0.9.3 needs float and not int for numerical value (issue#749 and issue#750 by nicolargo)
 
 Bugs corrected:
+
     * Can't read sensors on a Thinkpad (issue #711)
     * InfluxDB/OpenTSDB: tag parsing broken (issue #713)
     * Grafana Dashboard outdated for InfluxDB 0.9.x (issue #648)
