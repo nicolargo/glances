@@ -4,6 +4,9 @@ glancesApp.service('GlancesPluginQuicklook', function() {
 
     this.mem = null;
     this.cpu = null;
+    this.cpu_name = null;
+    this.cpu_hz_current = null;
+    this.cpu_hz = null;
     this.swap = null;
     this.percpus = [];
 
@@ -13,6 +16,9 @@ glancesApp.service('GlancesPluginQuicklook', function() {
 
         this.mem = data.mem;
         this.cpu = data.cpu;
+        this.cpu_name = data.cpu_name;
+        this.cpu_hz_current = data.cpu_hz_current;
+        this.cpu_hz = data.cpu_hz;
         this.swap = data.swap;
         this.percpus = [];
 

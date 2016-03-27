@@ -7,6 +7,7 @@ body {
 .table {
     display: table;
     width: 100%;
+    max-width:100%;
 }
 .table-row-group {
     display: table-row-group
@@ -51,7 +52,7 @@ body {
 
 /* Theme */
 
-.title{
+.title {
     font-weight: bold;
     color: white;
 }
@@ -125,6 +126,12 @@ body {
 }
 #quicklook .progress-bar-critical {
     background-color: #A30000;
+}
+#quicklook .cpu-name {
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
 }
 #monitor .process-result {
     max-width: 300px;
