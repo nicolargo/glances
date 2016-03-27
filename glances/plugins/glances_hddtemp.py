@@ -21,6 +21,7 @@
 
 import os
 import socket
+import numbers
 
 from glances.compat import nativestr, range
 from glances.logger import logger
@@ -119,7 +120,8 @@ class GlancesGrabHDDTemp(object):
             temperature = fields[offset + 3]
             unit = nativestr(fields[offset + 4])
             hddtemp_current['label'] = device
-            hddtemp_current['value'] = float(temperature) if temperature != b'ERR' else temperature
+            # Temperature could be 'ERR' or 'SLP' (see issue#824)
+            hddtemp_current['value'] = float(temperature) if isinstance(temperature, numbers.Number) else temperature
             hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)
 

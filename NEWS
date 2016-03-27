@@ -5,7 +5,9 @@ Glances Version 2
 Version 2.7
 ===========
 
-    * ...
+Bugs corrected:
+
+    *  Crash on launch when viewing temperature of laptop HDD in sleep mode (issue #824)
 
 Version 2.6.1
 =============
