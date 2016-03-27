@@ -290,11 +290,17 @@ class GlancesProcesses(object):
             procstat['cpu_affinity'] = None
         # Memory extended
         try:
-            procstat.update(proc.as_dict(attrs=['memory_info_ex']))
+            procstat.update(proc.as_dict(attrs=['memory_full_info']))
         except psutil.NoSuchProcess:
             pass
         except AttributeError:
-            procstat['memory_info_ex'] = None
+            # Fallback to standard memory_info stats
+            try:
+                procstat.update(proc.as_dict(attrs=['memory_info']))
+            except psutil.NoSuchProcess:
+                pass
+            except AttributeError:
+                procstat['memory_info'] = None
         # Number of context switch
         try:
             procstat.update(proc.as_dict(attrs=['num_ctx_switches']))

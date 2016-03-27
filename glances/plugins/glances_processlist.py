@@ -322,10 +322,10 @@ class Plugin(GlancesPlugin):
                 msg = xpad + 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Second line is memory info
-            if 'memory_info_ex' in p and p['memory_info_ex'] is not None:
+            if 'memory_info' in p and p['memory_info'] is not None:
                 ret.append(self.curse_new_line())
                 msg = xpad + 'Memory info: '
-                for k, v in iteritems(p['memory_info_ex']._asdict()):
+                for k, v in iteritems(p['memory_info']._asdict()):
                     # Ignore rss and vms (already displayed)
                     if k not in ['rss', 'vms'] and v is not None:
                         msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
