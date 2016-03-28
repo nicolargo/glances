@@ -1,17 +1,17 @@
-### Resume
+Before filling this issue, please read the manual (http://glances.readthedocs.org/en/latest/) and search if the bug do not already exists in the database (https://github.com/nicolargo/glances/issues).
 
-| Q             | A
-| ------------- | ---
-| Bug?          | yes/no
-| New feature?  | yes/no
+#### Description
 
-### Description
+For a bug: Describe the bug and list the steps you used when the issue occurred.
 
+For an enhancement or new feature: Describe your needs.
 
-### Versions
+#### Versions
 
-<!-- You can use `glances -V` to retrieve Glances and PSutil versions -->
+* Glances (glances -V):
+* PSutil (glances -V):
+* Operating System (lsb_release -a):
 
-* Glances:
-* PSutil:
-* OS:
+#### Logs
+
+You can also pastebin the Glances logs file (http://glances.readthedocs.org/en/latest/config.html#logging)
