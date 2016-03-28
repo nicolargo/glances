@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,6 +18,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Folder plugin."""
+
+import numbers
 
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -74,7 +76,7 @@ class Plugin(GlancesPlugin):
     def get_alert(self, stat):
         """Manage limits of the folder list"""
 
-        if stat['size'] is None:
+        if not isinstance(stat['size'], numbers.Number):
             return 'DEFAULT'
         else:
             ret = 'OK'
@@ -114,8 +116,8 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             try:
                 msg = '{0:>6}'.format(self.auto_unit(i['size']))
-            except TypeError:
-                msg = '{0:>6}'.format('?')
+            except (TypeError, ValueError):
+                msg = '{0:>6}'.format(i['size'])
             ret.append(self.curse_add_line(msg, self.get_alert(i)))
 
         return ret

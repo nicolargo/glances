@@ -154,8 +154,12 @@ class FolderList(object):
             try:
                 self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
             except Exception as e:
-                self.__folder_list[i]['size'] = None
                 logger.debug('Can get folder size ({0}). Error: {1}'.format(self.path(i), e))
+                if e.errno == 13:
+                    # Permission denied
+                    self.__folder_list[i]['size'] = '!'
+                else:
+                    self.__folder_list[i]['size'] = '?'
 
         return self.__folder_list
 
