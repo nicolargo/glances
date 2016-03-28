@@ -8,6 +8,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'docker': 'GlancesPluginDocker',
         'ip': 'GlancesPluginIp',
         'fs': 'GlancesPluginFs',
+        'folders': 'GlancesPluginFolders',
         'load': 'GlancesPluginLoad',
         'mem': 'GlancesPluginMem',
         'memswap': 'GlancesPluginMemSwap',
