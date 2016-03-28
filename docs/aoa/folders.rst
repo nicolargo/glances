@@ -8,6 +8,8 @@ monitor size of a predefined folders list.
 
 .. image:: ../_static/folders.png
 
+If the size can not be computed (non existing folder, read right error), a '?' is displayed.
+
 Each item is defined by:
 
 - ``path``: absolute path to monitor (mandatory)
