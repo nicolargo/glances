@@ -96,6 +96,7 @@ class GlancesGrabHDDTemp(object):
             return
 
         # Fetch the data
+        # data = "|/dev/sda|WDC WD2500JS-75MHB0|44|C||/dev/sdb|WDC WD2500JS-75MHB0|35|C||/dev/sdc|WDC WD3200AAKS-75B3A0|45|C||/dev/sdd|WDC WD3200AAKS-75B3A0|45|C||/dev/sde|WDC WD3200AAKS-75B3A0|43|C||/dev/sdf|SAMSUNG HM321HI|39|C||/dev/sdg|HGST HTS541010A9E680|SLP|*|"
         data = self.fetch()
 
         # Exit if no data
@@ -120,8 +121,11 @@ class GlancesGrabHDDTemp(object):
             temperature = fields[offset + 3]
             unit = nativestr(fields[offset + 4])
             hddtemp_current['label'] = device
-            # Temperature could be 'ERR' or 'SLP' (see issue#824)
-            hddtemp_current['value'] = float(temperature) if isinstance(temperature, numbers.Number) else temperature
+            try:
+                hddtemp_current['value'] = float(temperature)
+            except ValueError:
+                # Temperature could be 'ERR' or 'SLP' (see issue#824)
+                hddtemp_current['value'] = temperature
             hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)
 
