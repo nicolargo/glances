@@ -21,7 +21,6 @@
 
 import os
 import socket
-import numbers
 
 from glances.compat import nativestr, range
 from glances.logger import logger
