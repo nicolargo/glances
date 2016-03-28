@@ -1,10 +1,8 @@
 glancesApp.service('GlancesPluginFolders', function() {
     var _pluginName = "folders";
-    var _view = {};
     this.folders = [];
 
     this.setData = function(data, views) {
-        _view = views[_pluginName];
         data = data[_pluginName];
         this.folders = [];
 
@@ -13,18 +11,26 @@ glancesApp.service('GlancesPluginFolders', function() {
 
             var folder = {
                 'path': folderData['path'],
-                'size': folderData['size']
+                'size': folderData['size'],
+                'careful': folderData['careful'],
+                'warning': folderData['warning'],
+                'critical': folderData['critical']
             };
 
             this.folders.push(folder);
         }
     };
 
-    this.getDecoration = function(mountPoint, field) {
-        if(_view[mountPoint][field] == undefined) {
-            return;
+    this.getDecoration = function(folder) {
+
+        if (folder.critical !== null && folder.size > (folder.critical * 1000000)) {
+            return 'critical';
+        } else if (folder.warning !== null && folder.size > (folder.warning * 1000000)) {
+            return 'warning';
+        } else if (folder.careful !== null && folder.size > (folder.careful * 1000000)) {
+            return 'careful';
         }
 
-        return _view[mountPoint][field].decoration.toLowerCase();
+        return 'ok';
     };
 });
