@@ -8,7 +8,8 @@ monitor size of a predefined folders list.
 
 .. image:: ../_static/folders.png
 
-If the size can not be computed, a '?' (non existing folder) or a '!' (read right error) is displayed.
+If the size cannot be computed, a ``'?'`` (non-existing folder) or a
+``'!'`` (permission denied) is displayed.
 
 Each item is defined by:
 
