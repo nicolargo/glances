@@ -95,7 +95,14 @@ class GlancesGrabHDDTemp(object):
             return
 
         # Fetch the data
-        # data = "|/dev/sda|WDC WD2500JS-75MHB0|44|C||/dev/sdb|WDC WD2500JS-75MHB0|35|C||/dev/sdc|WDC WD3200AAKS-75B3A0|45|C||/dev/sdd|WDC WD3200AAKS-75B3A0|45|C||/dev/sde|WDC WD3200AAKS-75B3A0|43|C||/dev/sdf|SAMSUNG HM321HI|39|C||/dev/sdg|HGST HTS541010A9E680|SLP|*|"
+        # data = ("|/dev/sda|WDC WD2500JS-75MHB0|44|C|"
+        #         "|/dev/sdb|WDC WD2500JS-75MHB0|35|C|"
+        #         "|/dev/sdc|WDC WD3200AAKS-75B3A0|45|C|"
+        #         "|/dev/sdd|WDC WD3200AAKS-75B3A0|45|C|"
+        #         "|/dev/sde|WDC WD3200AAKS-75B3A0|43|C|"
+        #         "|/dev/sdf|???|ERR|*|"
+        #         "|/dev/sdg|HGST HTS541010A9E680|SLP|*|"
+        #         "|/dev/sdh|HGST HTS541010A9E680|UNK|*|")
         data = self.fetch()
 
         # Exit if no data
@@ -123,7 +130,7 @@ class GlancesGrabHDDTemp(object):
             try:
                 hddtemp_current['value'] = float(temperature)
             except ValueError:
-                # Temperature could be 'ERR' or 'SLP' (see issue#824)
+                # Temperature could be 'ERR', 'SLP' or 'UNK' (see issue #824)
                 hddtemp_current['value'] = temperature
             hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)

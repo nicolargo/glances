@@ -194,8 +194,7 @@ class Plugin(GlancesPlugin):
             else:
                 msg = '{0:13}'.format(label[:13])
             ret.append(self.curse_add_line(msg))
-            # Temperature could be 'ERR' or 'SLP' (see issue#824)
-            if i['value'] in (b'ERR', b'SLP'):
+            if i['value'] in (b'ERR', b'SLP', b'UNK'):
                 msg = '{0:>8}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
