@@ -15,3 +15,4 @@ to providing stats to multiple services.
    statsd
    rabbitmq
    elastic
+   riemann

@@ -27,7 +27,7 @@ from glances.compat import NoOptionError, NoSectionError, range
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
-# Import pika for Riemann
+# Import bernhard for Riemann
 import bernhard
 
 
@@ -39,7 +39,7 @@ class Export(GlancesExport):
         """Init the Riemann export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Load the rabbitMQ configuration file
+        # Load the Riemann configuration
         self.riemann_host = None
         self.riemann_port = None
         self.hostname = socket.gethostname()
@@ -47,7 +47,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             sys.exit(2)
 
-        # Init the rabbitmq client
+        # Init the Riemann client
         self.client = self.init()
 
     def load_conf(self, section="riemann"):
@@ -89,4 +89,4 @@ class Export(GlancesExport):
                 try:
                     self.client.send(data)
                 except Exception as e:
-                    logger.error("Can not export stats to Riemann (%s)" % e)
+                    logger.error("Cannot export stats to Riemann (%s)" % e)

@@ -1,10 +1,10 @@
 .. _riemann:
 
 Riemann
-========
+=======
 
-You can export statistics to an ``Riemann`` server (using TCP protocol). The
-connection should be defined in the Glances configuration file as
+You can export statistics to a ``Riemann`` server (using TCP protocol).
+The connection should be defined in the Glances configuration file as
 following:
 
 .. code-block:: ini
