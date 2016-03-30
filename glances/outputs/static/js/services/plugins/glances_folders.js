@@ -23,6 +23,10 @@ glancesApp.service('GlancesPluginFolders', function() {
 
     this.getDecoration = function(folder) {
 
+        if (!Number.isInteger(folder.size)) {
+            return;
+        }
+
         if (folder.critical !== null && folder.size > (folder.critical * 1000000)) {
             return 'critical';
         } else if (folder.warning !== null && folder.size > (folder.warning * 1000000)) {
