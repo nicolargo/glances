@@ -19,8 +19,11 @@
 
 """CPU plugin."""
 
+from glances.timer import getTimeSinceLastUpdate
 from glances.compat import iterkeys
 from glances.cpu_percent import cpu_percent
+from glances.globals import LINUX
+from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -65,6 +68,12 @@ class Plugin(GlancesPlugin):
         # Init stats
         self.reset()
 
+        # Call CorePlugin in order to display the core number
+        try:
+            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
+        except Exception:
+            self.nb_log_core = 1
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = {}
@@ -75,61 +84,11 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
-        # methods
+        # Grab stats into self.stats
         if self.input_method == 'local':
-            # Get all possible values for CPU stats: user, system, idle,
-            # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
-            # The following stats are returned by the API but not displayed in the UI:
-            # softirq (Linux), guest (Linux 2.6.24+), guest_nice (Linux 3.2.0+)
-            self.stats['total'] = cpu_percent.get()
-            cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
-            for stat in ['user', 'system', 'idle', 'nice', 'iowait',
-                         'irq', 'softirq', 'steal', 'guest', 'guest_nice']:
-                if hasattr(cpu_times_percent, stat):
-                    self.stats[stat] = getattr(cpu_times_percent, stat)
+            self.update_local()
         elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            if self.short_system_name in ('windows', 'esxi'):
-                # Windows or VMWare ESXi
-                # You can find the CPU utilization of windows system by querying the oid
-                # Give also the number of core (number of element in the table)
-                try:
-                    cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
-                                                    bulk=True)
-                except KeyError:
-                    self.reset()
-
-                # Iter through CPU and compute the idle CPU stats
-                self.stats['nb_log_core'] = 0
-                self.stats['idle'] = 0
-                for c in cpu_stats:
-                    if c.startswith('percent'):
-                        self.stats['idle'] += float(cpu_stats['percent.3'])
-                        self.stats['nb_log_core'] += 1
-                if self.stats['nb_log_core'] > 0:
-                    self.stats['idle'] = self.stats[
-                        'idle'] / self.stats['nb_log_core']
-                self.stats['idle'] = 100 - self.stats['idle']
-                self.stats['total'] = 100 - self.stats['idle']
-
-            else:
-                # Default behavor
-                try:
-                    self.stats = self.get_stats_snmp(
-                        snmp_oid=snmp_oid[self.short_system_name])
-                except KeyError:
-                    self.stats = self.get_stats_snmp(
-                        snmp_oid=snmp_oid['default'])
-
-                if self.stats['idle'] == '':
-                    self.reset()
-                    return self.stats
-
-                # Convert SNMP stats to float
-                for key in iterkeys(self.stats):
-                    self.stats[key] = float(self.stats[key])
-                self.stats['total'] = 100 - self.stats['idle']
+            self.update_snmp()
 
         # Update the history list
         self.update_stats_history()
@@ -138,6 +97,96 @@ class Plugin(GlancesPlugin):
         self.update_views()
 
         return self.stats
+
+    def update_local(self):
+        """Update CPU stats using PSUtil."""
+        # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
+        # Get all possible values for CPU stats: user, system, idle,
+        # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
+        # The following stats are returned by the API but not displayed in the UI:
+        # softirq (Linux), guest (Linux 2.6.24+), guest_nice (Linux 3.2.0+)
+        self.stats['total'] = cpu_percent.get()
+        cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
+        for stat in ['user', 'system', 'idle', 'nice', 'iowait',
+                     'irq', 'softirq', 'steal', 'guest', 'guest_nice']:
+            if hasattr(cpu_times_percent, stat):
+                self.stats[stat] = getattr(cpu_times_percent, stat)
+
+        # Additionnal CPU stats (number of events / not as a %)
+        # ctx_switches: number of context switches (voluntary + involuntary) per second
+        # interrupts: number of interrupts per second
+        # soft_interrupts: number of software interrupts per second. Always set to 0 on Windows and SunOS.
+        # syscalls: number of system calls since boot. Always set to 0 on Linux.
+        try:
+            cpu_stats = psutil.cpu_stats()
+        except AttributeError:
+            # cpu_stats only available with PSUtil 4.1 or +
+            pass
+        else:
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            time_since_update = getTimeSinceLastUpdate('cpu')
+
+            # Previous CPU stats are stored in the cpu_stats_old variable
+            if not hasattr(self, 'cpu_stats_old'):
+                # First call, we init the cpu_stats_old var
+                self.cpu_stats_old = cpu_stats
+            else:
+                for stat in cpu_stats._fields:
+                    self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
+
+                self.stats['time_since_update'] = time_since_update
+
+                # Core number is needed to compute the CTX switch limit
+                self.stats['cpucore'] = self.nb_log_core
+
+                # Save stats to compute next step
+                self.cpu_stats_old = cpu_stats
+
+    def update_snmp(self):
+        """Update CPU stats using SNMP."""
+        # Update stats using SNMP
+        if self.short_system_name in ('windows', 'esxi'):
+            # Windows or VMWare ESXi
+            # You can find the CPU utilization of windows system by querying the oid
+            # Give also the number of core (number of element in the table)
+            try:
+                cpu_stats = self.get_stats_snmp(snmp_oid=snmp_oid[self.short_system_name],
+                                                bulk=True)
+            except KeyError:
+                self.reset()
+
+            # Iter through CPU and compute the idle CPU stats
+            self.stats['nb_log_core'] = 0
+            self.stats['idle'] = 0
+            for c in cpu_stats:
+                if c.startswith('percent'):
+                    self.stats['idle'] += float(cpu_stats['percent.3'])
+                    self.stats['nb_log_core'] += 1
+            if self.stats['nb_log_core'] > 0:
+                self.stats['idle'] = self.stats[
+                    'idle'] / self.stats['nb_log_core']
+            self.stats['idle'] = 100 - self.stats['idle']
+            self.stats['total'] = 100 - self.stats['idle']
+
+        else:
+            # Default behavor
+            try:
+                self.stats = self.get_stats_snmp(
+                    snmp_oid=snmp_oid[self.short_system_name])
+            except KeyError:
+                self.stats = self.get_stats_snmp(
+                    snmp_oid=snmp_oid['default'])
+
+            if self.stats['idle'] == '':
+                self.reset()
+                return self.stats
+
+            # Convert SNMP stats to float
+            for key in iterkeys(self.stats):
+                self.stats[key] = float(self.stats[key])
+            self.stats['total'] = 100 - self.stats['idle']
 
     def update_views(self):
         """Update stats views."""
@@ -153,8 +202,12 @@ class Plugin(GlancesPlugin):
         for key in ['steal', 'total']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
+        # Alert only but depend on Core number
+        for key in ['ctx_switches']:
+            if key in self.stats:
+                self.views[key]['decoration'] = self.get_alert(self.stats[key], maximum=100 * self.stats['cpucore'], header=key)
         # Optional
-        for key in ['nice', 'irq', 'iowait', 'steal']:
+        for key in ['nice', 'irq', 'iowait', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
             if key in self.stats:
                 self.views[key]['optional'] = True
 
@@ -171,6 +224,7 @@ class Plugin(GlancesPlugin):
         # If user stat is not here, display only idle / total CPU usage (for
         # exemple on Windows OS)
         idle_tag = 'user' not in self.stats
+
         # Header
         msg = '{0:8}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
@@ -187,6 +241,15 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
             msg = '{0:>5}%'.format(self.stats['nice'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
+        # ctx_switches
+        if 'ctx_switches' in self.stats:
+            msg = '  {0:8}'.format('ctx_sw:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='ctx_switches', option='optional')))
+            msg = '{0:>5}'.format(int(self.stats['ctx_switches'] // self.stats['time_since_update']))
+            ret.append(self.curse_add_line(
+                msg, self.get_views(key='ctx_switches', option='decoration'),
+                optional=self.get_views(key='ctx_switches', option='optional')))
+
         # New line
         ret.append(self.curse_new_line())
         # User CPU
@@ -207,6 +270,13 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
             msg = '{0:>5}%'.format(self.stats['irq'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
+        # interrupts
+        if 'interrupts' in self.stats:
+            msg = '  {0:8}'.format('inter:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
+            msg = '{0:>5}'.format(int(self.stats['interrupts'] // self.stats['time_since_update']))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
+
         # New line
         ret.append(self.curse_new_line())
         # System CPU
@@ -229,6 +299,13 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='iowait', option='decoration'),
                 optional=self.get_views(key='iowait', option='optional')))
+        # soft_interrupts
+        if 'soft_interrupts' in self.stats:
+            msg = '  {0:8}'.format('sw_int:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='soft_interrupts', option='optional')))
+            msg = '{0:>5}'.format(int(self.stats['soft_interrupts'] // self.stats['time_since_update']))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='soft_interrupts', option='optional')))
+
         # New line
         ret.append(self.curse_new_line())
         # Idle CPU
@@ -245,6 +322,13 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='steal', option='decoration'),
                 optional=self.get_views(key='steal', option='optional')))
+        # syscalls
+        # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
+        if 'syscalls' in self.stats and not LINUX:
+            msg = '  {0:8}'.format('syscal:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
+            msg = '{0:>5}'.format(int(self.stats['syscalls'] // self.stats['time_since_update']))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
 
         # Return the message with decoration
         return ret

@@ -62,7 +62,7 @@ class Plugin(GlancesPlugin):
         try:
             self.nb_log_core = CorePlugin(args=self.args).update()["log"]
         except Exception:
-            self.nb_log_core = 0
+            self.nb_log_core = 1
 
     def reset(self):
         """Reset/init the stats."""
