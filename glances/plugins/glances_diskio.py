@@ -81,7 +81,7 @@ class Plugin(GlancesPlugin):
 
             # Previous disk IO stats are stored in the diskio_old variable
             if not hasattr(self, 'diskio_old'):
-                # First call, we init the network_old var
+                # First call, we init the diskio_old var
                 try:
                     self.diskio_old = diskiocounters
                 except (IOError, UnboundLocalError):

@@ -113,13 +113,14 @@ class Plugin(GlancesPlugin):
         bar = Bar(max_width)
 
         # Build the string message
-        if 'cpu_name' in self.stats:
-            msg = '{0} - {1:.2f}/{2:.2f}GHz'.format(self.stats['cpu_name'],
-                                                    self._hz_to_ghz(self.stats['cpu_hz_current']),
-                                                    self._hz_to_ghz(self.stats['cpu_hz']))
-            if len(msg) - 6 <= max_width:
-                ret.append(self.curse_add_line(msg))
-                ret.append(self.curse_new_line())
+        if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
+            msg_name = '{0} - '.format(self.stats['cpu_name'])
+            msg_freq = '{0:.2f}/{1:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
+                                                   self._hz_to_ghz(self.stats['cpu_hz']))
+            if len(msg_name + msg_freq) - 6 <= max_width:
+                ret.append(self.curse_add_line(msg_name))
+            ret.append(self.curse_add_line(msg_freq))
+            ret.append(self.curse_new_line())
         for key in ['cpu', 'mem', 'swap']:
             if key == 'cpu' and args.percpu:
                 for cpu in self.stats['percpu']:
