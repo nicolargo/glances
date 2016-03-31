@@ -23,6 +23,7 @@
 import shlex
 import subprocess
 import time
+import numbers
 import unittest
 
 from glances import __version__
@@ -111,7 +112,8 @@ class TestGlances(unittest.TestCase):
             req = requests.get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
-            self.assertIsInstance(req.json()[i], float)
+            print req.json()[i]
+            self.assertIsInstance(req.json()[i], numbers.Number)
 
     def test_005_values(self):
         """Values."""
