@@ -88,7 +88,7 @@ def tempfile_name():
     ret = os.path.join(tempfile.gettempdir(), 'glances.log')
     if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
         print("WARNING: Couldn't write to log file {0} (Permission denied)".format(ret))
-        ret = tempfile.mkstemp(prefix='glances', suffix='.tmp', text=True)
+        ret = tempfile.mkstemp(prefix='glances', suffix='.log', text=True)
         print("Create a new log file: {0}".format(ret[1]))
         return ret[1]
 
