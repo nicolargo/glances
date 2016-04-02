@@ -55,7 +55,7 @@
         <div class="table">
             <div class="table-row">
                 <div class="table-cell text-left">ctx_sw:</div>
-                <div class="table-cell">
+                <div class="table-cell" ng-class="statsCpu.getDecoration('ctx_switches')">
                     {{ statsCpu.ctx_switches }}
                 </div>
             </div>
