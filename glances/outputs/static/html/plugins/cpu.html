@@ -1,22 +1,82 @@
-<div class="table">
-    <div class="table-row">
-        <div class="table-cell text-left title">CPU</div>
-        <div class="table-cell">{{ statsCpu.total }}%</div>
-    </div>
-    <div class="table-row">
-        <div class="table-cell text-left">user:</div>
-        <div class="table-cell" ng-class="statsCpu.getDecoration('user')">
-            {{ statsCpu.user }}%
+<div class="row">
+    <div class="col-sm-24 col-md-12 col-lg-8">
+        <div class="table">
+            <div class="table-row">
+                <div class="table-cell text-left title">CPU</div>
+                <div class="table-cell">{{ statsCpu.total }}%</div>
+            </div>
+            <div class="table-row">
+                <div class="table-cell text-left">user:</div>
+                <div class="table-cell" ng-class="statsCpu.getDecoration('user')">
+                    {{ statsCpu.user }}%
+                </div>
+            </div>
+            <div class="table-row">
+                <div class="table-cell text-left">system:</div>
+                <div class="table-cell" ng-class="statsCpu.getDecoration('system')">
+                    {{ statsCpu.system }}%
+                </div>
+            </div>
+            <div class="table-row">
+                <div class="table-cell text-left">idle:</div>
+                <div class="table-cell">{{ statsCpu.idle }}%</div>
+            </div>
         </div>
     </div>
-    <div class="table-row">
-        <div class="table-cell text-left">system:</div>
-        <div class="table-cell" ng-class="statsCpu.getDecoration('system')">
-            {{ statsCpu.system }}%
+    <div class="hidden-xs hidden-sm col-md-12 col-lg-8">
+        <div class="table">
+            <div class="table-row">
+                <div class="table-cell text-left">nice:</div>
+                <div class="table-cell">
+                    {{ statsCpu.nice }}%
+                </div>
+            </div>
+            <div class="table-row" ng-show="statsCpu.irq != undefined">
+                <div class="table-cell text-left">irq:</div>
+                <div class="table-cell">
+                    {{ statsCpu.irq }}%
+                </div>
+            </div>
+            <div class="table-row" ng-show="statsCpu.iowait != undefined">
+                <div class="table-cell text-left">iowait:</div>
+                <div class="table-cell" ng-class="statsCpu.getDecoration('iowait')">
+                    {{ statsCpu.iowait }}%
+                </div>
+            </div>
+            <div class="table-row" ng-show="statsCpu.steal != undefined">
+                <div class="table-cell text-left">steal:</div>
+                <div class="table-cell" ng-class="statsCpu.getDecoration('steal')">
+                    {{ statsCpu.steal }}%
+                </div>
+            </div>
         </div>
     </div>
-    <div class="table-row">
-        <div class="table-cell text-left">idle:</div>
-        <div class="table-cell">{{ statsCpu.idle }}%</div>
+    <div class="hidden-xs hidden-sm hidden-md col-lg-8">
+        <div class="table">
+            <div class="table-row">
+                <div class="table-cell text-left">ctx_sw:</div>
+                <div class="table-cell">
+                    {{ statsCpu.ctx_switches }}
+                </div>
+            </div>
+            <div class="table-row">
+                <div class="table-cell text-left">inter:</div>
+                <div class="table-cell">
+                    {{ statsCpu.interrupts }}
+                </div>
+            </div>
+            <div class="table-row">
+                <div class="table-cell text-left">sw_int:</div>
+                <div class="table-cell">
+                    {{ statsCpu.soft_interrupts }}
+                </div>
+            </div>
+            <div class="table-row" ng-show="!statsSystem.isLinux()">
+                <div class="table-cell text-left">syscal:</div>
+                <div class="table-cell">
+                    {{ statsCpu.syscalls }}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
