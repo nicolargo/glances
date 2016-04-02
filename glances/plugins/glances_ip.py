@@ -19,11 +19,10 @@
 
 """IP plugin."""
 
-import Queue
 import threading
-from json import load
+from json import loads
 
-from glances.compat import iterkeys, urlopen, URLError
+from glances.compat import iterkeys, urlopen, URLError, queue
 from glances.globals import BSD
 from glances.logger import logger
 from glances.timer import Timer
@@ -160,7 +159,7 @@ class PublicIpAddress(object):
 
     def get(self):
         """Get the first public IP address returned by one of the online services"""
-        q = Queue.Queue()
+        q = queue.Queue()
 
         for u, j, k in urls:
             t = threading.Thread(target=self._get_ip_public, args=(q, u, j, k))
@@ -175,15 +174,15 @@ class PublicIpAddress(object):
 
         return ip
 
-    def _get_ip_public(self, queue, url, json=False, key=None):
-        """Request the url service and put the result in the queue"""
+    def _get_ip_public(self, queue_target, url, json=False, key=None):
+        """Request the url service and put the result in the queue_target"""
         try:
-            u = urlopen(url, timeout=self.timeout)
+            response = urlopen(url, timeout=self.timeout).read().decode('utf-8')
         except URLError:
-            queue.put(None)
+            queue_target.put(None)
         else:
             # Request depend on service
             if not json:
-                queue.put(u.read())
+                queue_target.put(response)
             else:
-                queue.put(load(u)[key])
+                queue_target.put(loads(response)[key])
