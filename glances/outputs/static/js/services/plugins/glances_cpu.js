@@ -1,7 +1,7 @@
 glancesApp.service('GlancesPluginCpu', function() {
     var _pluginName = "cpu";
     var _view = {};
-    
+
     this.total = null;
     this.user = null;
     this.system = null;
@@ -10,6 +10,10 @@ glancesApp.service('GlancesPluginCpu', function() {
     this.irq = null;
     this.iowait = null;
     this.steal = null;
+    this.ctx_switches = null;
+    this.interrupts = null;
+    this.soft_interrupts = null;
+    this.syscalls = null;
 
     this.setData = function(data, views) {
         data = data[_pluginName];
@@ -23,6 +27,10 @@ glancesApp.service('GlancesPluginCpu', function() {
         this.irq = data.irq;
         this.iowait = data.iowait;
         this.steal = data.steal;
+        this.ctx_switches = Math.floor(data.ctx_switches / data.time_since_update);
+        this.interrupts = Math.floor(data.interrupts / data.time_since_update);
+        this.soft_interrupts = Math.floor(data.soft_interrupts / data.time_since_update);
+        this.syscalls = Math.floor(data.syscalls / data.time_since_update);
     }
 
     this.getDecoration = function(value) {
