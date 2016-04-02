@@ -31,6 +31,8 @@ if PY3:
     from configparser import ConfigParser, NoOptionError, NoSectionError
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+    from urllib.request import urlopen
+    from urllib.error import URLError
 
     input = input
     range = range
@@ -79,6 +81,7 @@ else:
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, NoSectionError
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport
+    from urllib2 import urlopen, URLError
 
     input = raw_input
     range = xrange

@@ -19,9 +19,14 @@
 
 """IP plugin."""
 
-from glances.compat import iterkeys
+import Queue
+import threading
+from json import load
+
+from glances.compat import iterkeys, urlopen, URLError
 from glances.globals import BSD
 from glances.logger import logger
+from glances.timer import Timer
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # XXX *BSDs: Segmentation fault (core dumped)
@@ -34,6 +39,16 @@ if not BSD:
         netifaces_tag = False
 else:
     netifaces_tag = False
+
+# List of online services to retreive public IP address
+# List of tuple (url, json, key)
+# - url: URL of the Web site
+# - json: service return a JSON (True) or string (False)
+# - key: key of the IP addresse in the JSON structure
+urls = [('http://ip.42.pl/raw', False, None),
+        ('http://httpbin.org/ip', True, 'origin'),
+        ('http://jsonip.com', True, 'ip'),
+        ('https://api.ipify.org/?format=json', True, 'ip')]
 
 
 class Plugin(GlancesPlugin):
@@ -49,6 +64,9 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+
+        # Get the public IP address once
+        self.public_address = PublicIpAddress().get()
 
         # Init the stats
         self.reset()
@@ -78,6 +96,8 @@ class Plugin(GlancesPlugin):
                     self.stats['mask'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
                     self.stats['mask_cidr'] = self.ip_to_cidr(self.stats['mask'])
                     self.stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
+                    # !!! SHOULD be done once, not on each refresh
+                    self.stats['public_address'] = self.public_address
                 except (KeyError, AttributeError) as e:
                     logger.debug("Cannot grab IP information: {0}".format(e))
         elif self.input_method == 'snmp':
@@ -115,6 +135,11 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, 'TITLE'))
         msg = '{0:}/{1}'.format(self.stats['address'], self.stats['mask_cidr'])
         ret.append(self.curse_add_line(msg))
+        if self.stats['public_address'] is not None:
+            msg = ' Pub '
+            ret.append(self.curse_add_line(msg, 'TITLE'))
+            msg = '{0:}'.format(self.stats['public_address'])
+            ret.append(self.curse_add_line(msg))
 
         return ret
 
@@ -125,3 +150,40 @@ class Plugin(GlancesPlugin):
         Example: '255.255.255.0' will return 24
         """
         return sum([int(x) << 8 for x in ip.split('.')]) // 8128
+
+
+class PublicIpAddress(object):
+    """Get public IP address from online services"""
+
+    def __init__(self, timeout=2):
+        self.timeout = timeout
+
+    def get(self):
+        """Get the first public IP address returned by one of the online services"""
+        q = Queue.Queue()
+
+        for u, j, k in urls:
+            t = threading.Thread(target=self._get_ip_public, args=(q, u, j, k))
+            t.daemon = True
+            t.start()
+
+        t = Timer(self.timeout)
+        ip = None
+        while not t.finished() and ip is None:
+            if q.qsize() > 0:
+                ip = q.get()
+
+        return ip
+
+    def _get_ip_public(self, queue, url, json=False, key=None):
+        """Request the url service and put the result in the queue"""
+        try:
+            u = urlopen(url, timeout=self.timeout)
+        except URLError:
+            queue.put(None)
+        else:
+            # Request depend on service
+            if not json:
+                queue.put(u.read())
+            else:
+                queue.put(load(u)[key])
