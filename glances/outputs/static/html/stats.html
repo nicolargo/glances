@@ -23,11 +23,8 @@
         <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!arguments.disable_quicklook">
             <section id="quicklook" class="plugin" ng-include src="'plugins/quicklook.html'"></section>
         </div>
-        <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_cpu && !arguments.percpu">
+        <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!arguments.disable_cpu && !arguments.percpu">
             <section id="cpu" class="plugin" ng-include src="'plugins/cpu.html'"></section>
-        </div>
-        <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!arguments.disable_cpu && !arguments.percpu">
-            <section id="cpu_more" class="plugin" ng-if="statsCpu.nice != undefined" ng-include src="'plugins/cpu_more.html'"></section>
         </div>
         <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!arguments.disable_cpu && arguments.percpu">
             <section id="per_cpu" class="plugin" ng-include src="'plugins/per_cpu.html'"></section>
