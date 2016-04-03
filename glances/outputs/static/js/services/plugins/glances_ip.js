@@ -5,13 +5,15 @@ glancesApp.service('GlancesPluginIp', function() {
     this.gateway = null;
     this.mask = null;
     this.maskCidr = null;
+    this.publicAddress = null;
 
     this.setData = function(data, views) {
         data = data[_pluginName];
 
-        this.address = data['address'];
-        this.gateway = data['gateway'];
-        this.mask = data['mask'];
-        this.maskCidr = data['mask_cidr'];
+        this.address = data.address;
+        this.gateway = data.gateway;
+        this.mask = data.mask;
+        this.maskCidr = data.mask_cidr;
+        this.publicAddress = data.public_address
     };
 });
