@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -132,8 +132,12 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = 'IP '
         ret.append(self.curse_add_line(msg, 'TITLE'))
-        msg = '{0:}/{1}'.format(self.stats['address'], self.stats['mask_cidr'])
+        msg = '{0:}'.format(self.stats['address'])
         ret.append(self.curse_add_line(msg))
+        if 'mask_cidr' in self.stats:
+            # VPN with no internet access (issue #842)
+            msg = '/{0}'.format(self.stats['mask_cidr'])
+            ret.append(self.curse_add_line(msg))
         if self.stats['public_address'] is not None:
             msg = ' Pub '
             ret.append(self.curse_add_line(msg, 'TITLE'))
