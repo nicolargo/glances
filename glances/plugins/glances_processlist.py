@@ -49,7 +49,7 @@ def split_cmdline(cmdline):
     # XXX: workaround for psutil issue #742
     if LINUX and any(x in cmdline[0] for x in ('chrome', 'chromium')):
         try:
-            exe, arguments = cmdline[0].split(' ', maxsplit=1)
+            exe, arguments = cmdline[0].split(' ', 1)
             path, cmd = os.path.split(exe)
         except ValueError:
             arguments = None
