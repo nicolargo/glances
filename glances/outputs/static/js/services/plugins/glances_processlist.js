@@ -36,7 +36,9 @@ glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) 
 
             process.isNice = process.nice !== undefined && ((data['system'].os_name === 'Windows' && process.nice != 32) || (data['system'].os_name !== 'Windows' && process.nice != 0));
 
-            process.cmdline = process.cmdline.join(' ');
+            if (Array.isArray(process.cmdline)) {
+                process.cmdline = process.cmdline.join(' ');
+            }
 
             this.processes.push(process);
         }
