@@ -24,7 +24,7 @@ import os
 from datetime import timedelta
 
 from glances.compat import iteritems
-from glances.globals import WINDOWS
+from glances.globals import LINUX, WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes
 from glances.plugins.glances_core import Plugin as CorePlugin
@@ -40,6 +40,21 @@ def convert_timedelta(delta):
     microseconds = str(delta.microseconds)[:2].zfill(2)
 
     return hours, minutes, seconds, microseconds
+
+
+def split_cmdline(cmdline):
+    """Return path, cmd and arguments for a process cmdline."""
+    path, cmd = os.path.split(cmdline[0])
+    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
+    # XXX: workaround for psutil issue #742
+    if LINUX and any(x in cmdline[0] for x in ('chrome', 'chromium')):
+        try:
+            exe, arguments = cmdline[0].split(' ', maxsplit=1)
+            path, cmd = os.path.split(exe)
+        except ValueError:
+            arguments = None
+
+    return path, cmd, arguments
 
 
 class Plugin(GlancesPlugin):
@@ -293,7 +308,7 @@ class Plugin(GlancesPlugin):
         try:
             # XXX: remove `cmdline != ['']` when we'll drop support for psutil<4.0.0
             if cmdline and cmdline != ['']:
-                path, cmd = os.path.split(cmdline[0])
+                path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {0}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
@@ -301,9 +316,9 @@ class Plugin(GlancesPlugin):
                 else:
                     msg = ' {0}'.format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
-                msg = ' {0}'.format(arguments)
-                ret.append(self.curse_add_line(msg, splittable=True))
+                if arguments:
+                    msg = ' {0}'.format(arguments)
+                    ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = ' {0}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
