@@ -40,8 +40,8 @@ class GlancesStatsClient(GlancesStats):
         # Init the arguments
         self.args = args
 
-        # Load plugins and exports
-        self.load_plugins_and_exports(self.args)
+        # Load AMPs, plugins and exports modules
+        self.load_modules(self.args)
 
     def set_plugins(self, input_plugins):
         """Set the plugin list according to the Glances server."""

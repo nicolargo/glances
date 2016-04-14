@@ -403,8 +403,6 @@ class GlancesPlugin(object):
         except KeyError:
             return 'DEFAULT'
 
-        logger.debug("{0} => ret = {1}".format(stat_name, ret))
-
         # Manage log
         log_str = ""
         if self.__get_limit_log(stat_name=stat_name, default_action=log):

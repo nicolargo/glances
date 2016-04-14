@@ -535,6 +535,8 @@ class _GlancesCurses(object):
             'processcount').get_stats_display(args=self.args)
         stats_monitor = stats.get_plugin(
             'monitor').get_stats_display(args=self.args)
+        stats_amps = stats.get_plugin(
+            'amps').get_stats_display(args=self.args)
         stats_alert = stats.get_plugin(
             'alert').get_stats_display(args=self.args)
 
@@ -717,12 +719,14 @@ class _GlancesCurses(object):
             self.next_line = self.saved_line
 
             # Display right sidebar
-            # ((DOCKER)+PROCESS_COUNT+(MONITORED)+PROCESS_LIST+ALERT)
+            # ((DOCKER)+PROCESS_COUNT+(MONITORED)+(AMPS)+PROCESS_LIST+ALERT)
             self.new_column()
             self.new_line()
             self.display_plugin(stats_docker)
             self.new_line()
             self.display_plugin(stats_processcount)
+            self.new_line()
+            self.display_plugin(stats_amps)
             if glances_processes.process_filter is None and cs_status is None:
                 # Do not display stats monitor list if a filter exist
                 self.new_line()
