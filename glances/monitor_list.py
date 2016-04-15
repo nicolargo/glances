@@ -124,7 +124,7 @@ class MonitorList(object):
             return self.__monitor_list
 
         # Search monitored processes by a regular expression
-        processlist = [p for p in glances_processes.getalllist()]
+        processlist = glances_processes.getalllist()
 
         # Iter upon the monitored list
         for i in range(len(self.get())):

@@ -31,7 +31,7 @@ from glances.processes import glances_processes
 
 class AmpsList(object):
 
-    """This class describes the optional application process monitoring list.
+    """This class describes the optional application monitoring process list.
 
     The AMP list is a list of processes with a specific monitoring action.
 
@@ -91,11 +91,14 @@ class AmpsList(object):
     def update(self):
         """Update the command result attributed."""
         # Search application monitored processes by a regular expression
-        processlist = [p for p in glances_processes.getalllist()]
+        processlist = glances_processes.getalllist()
 
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):
-            amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
+            try:
+                amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
+            except TypeError:
+                continue
             if len(amps_list) > 0:
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
