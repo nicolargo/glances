@@ -24,6 +24,7 @@ I am your father...
 """
 
 from glances.compat import u
+from glances.timer import Timer
 from glances.logger import logger
 
 
@@ -42,6 +43,10 @@ class GlancesAmp(object):
         # Init the configs
         self.configs = {}
 
+        # A timer is needed to only update every refresh seconds
+        # Init to 0 in order to update the AMP on startup
+        self.timer = Timer(0)
+
     def load_config(self, config):
         """Load AMP parameters from the configuration file."""
 
@@ -55,7 +60,9 @@ class GlancesAmp(object):
         #
         # and optionnaly:
         #
+        # one_line=false
         # option1=opt1
+        # ...
         #
         if (hasattr(config, 'has_section') and
                 config.has_section(self.amp_name)):
@@ -100,12 +107,20 @@ class GlancesAmp(object):
         """Return refresh time in seconds for the current application monitoring process."""
         return self.get('refresh')
 
+    def time_until_refresh(self):
+        """Return time in seconds until refresh."""
+        return self.timer.get()
+
     def should_update(self):
         """Return True is the AMP should be updated:
         - AMP is enable
         - only update every 'refresh' seconds
         """
-        return True
+        if self.timer.finished():
+            self.timer.set(self.refresh())
+            self.timer.reset()
+            return self.enable()
+        return False
 
     def set_result(self, result):
         """Store the result (string) into the result key of the AMP"""
@@ -113,4 +128,7 @@ class GlancesAmp(object):
 
     def result(self):
         """ Return the result of the AMP (as a string)"""
-        return u(self.get('result'))
+        ret = self.get('result')
+        if ret is not None:
+            ret = u(ret)
+        return ret

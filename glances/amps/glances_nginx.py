@@ -29,19 +29,23 @@ class Amp(GlancesAmp):
 
     """Glances' Nginx AMP."""
 
-    def __init__(self, args=None):
-        """Init the AMP."""
-        super(Amp, self).__init__(args=args)
+    # def __init__(self, args=None):
+    #     """Init the AMP."""
+    #     super(Amp, self).__init__(args=args)
 
     def update(self):
         """Update the AMP"""
 
         if self.should_update():
             logger.debug('AMPS: Update {0} using status URL {1}'.format(self.amp_name, self.get('status_url')))
+            # Get the Nginx status
             req = requests.get(self.get('status_url'))
             if req.ok:
                 # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
-                self.set_result(req.text)
+                if self.get('one_line') is not None and self.get('one_line').lower() == 'true':
+                    self.set_result(req.text.replace('\n', ''))
+                else:
+                    self.set_result(req.text)
             else:
                 logger.debug('AMPS: Can not grab status URL {0} ({1})'.format(self.get('status_url'), req.reason))
 

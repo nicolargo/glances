@@ -21,7 +21,7 @@
 
 import os
 import re
-import subprocess
+import threading
 
 from glances.compat import listkeys, iteritems
 from glances.logger import logger
@@ -100,7 +100,10 @@ class AmpsList(object):
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
                 # Call the AMP update method
-                v.update()
+                # TODO: should be non blocking
+                thread = threading.Thread(target=v.update)
+                thread.start()
+                # v.update()
 
         return self.__amps_dict
 

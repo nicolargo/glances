@@ -21,6 +21,7 @@
 
 from glances.compat import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -54,10 +55,14 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         if self.input_method == 'local':
-            # TODO
             for k, v in iteritems(self.glances_amps.update()):
-                self.stats.append({k: v.result()})
+                # self.stats.append({k: v.result()})
+                self.stats.append({'key': k,
+                                   'result': v.result(),
+                                   'refresh': v.refresh(),
+                                   'timer': v.time_until_refresh()})
         else:
+            # Not available in SNMP mode
             pass
 
         return self.stats
@@ -73,12 +78,21 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for m in self.stats:
-            for k, v in iteritems(m):
-                msg = '{0:<16} '.format(k)
+            if m['result'] is None:
+                # Only display AMP if a result exist
+                continue
+            # Display AMP
+            # first_column = '{0} {1}/{2}'.format(m['key'], int(m['timer']), int(m['refresh']))
+            first_column = '{0}'.format(m['key'])
+            for l in m['result'].split('\n'):
+                # Display first column with the process name...
+                msg = '{0:<16} '.format(first_column)
                 ret.append(self.curse_add_line(msg))
-                msg = '{0}'.format(v.replace('\n', ''))
-                ret.append(self.curse_add_line(msg, splittable=True))
-            ret.append(self.curse_new_line())
+                # ... only on the first line
+                first_column = ''
+                # Display AMP result in the second column
+                ret.append(self.curse_add_line(l, splittable=True))
+                ret.append(self.curse_new_line())
 
         # Delete the last empty line
         try:
