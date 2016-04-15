@@ -723,15 +723,15 @@ class _GlancesCurses(object):
             self.new_column()
             self.new_line()
             self.display_plugin(stats_docker)
-            self.new_line()
-            self.display_plugin(stats_processcount)
             if glances_processes.process_filter is None and cs_status is None:
                 # Do not display stats monitor list and AMPS if a filter exist
                 self.new_line()
                 self.display_plugin(stats_monitor)
                 self.new_line()
                 self.display_plugin(stats_amps)
-            # self.new_line()
+            self.new_line()
+            self.display_plugin(stats_processcount)
+            self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),
                                 display_additional=(not OSX),

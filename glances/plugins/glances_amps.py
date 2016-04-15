@@ -86,8 +86,8 @@ class Plugin(GlancesPlugin):
             first_column = '{0}'.format(m['key'])
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
-                msg = '{0:<16} '.format(first_column)
-                ret.append(self.curse_add_line(msg))
+                msg = '{0:<20} '.format(first_column)
+                ret.append(self.curse_add_line(msg, "TITLE"))
                 # ... only on the first line
                 first_column = ''
                 # Display AMP result in the second column

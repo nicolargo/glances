@@ -21,6 +21,7 @@
 
 from glances.compat import u
 from glances.monitor_list import MonitorList as glancesMonitorList
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -43,6 +44,7 @@ class Plugin(GlancesPlugin):
         """Load the monitored list from the config file, if it exists."""
         self.glances_monitors = glancesMonitorList(config)
 
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the monitored list."""
         if self.input_method == 'local':
