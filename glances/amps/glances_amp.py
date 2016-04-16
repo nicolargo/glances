@@ -29,11 +29,18 @@ from glances.logger import logger
 
 
 class GlancesAmp(object):
-
     """Main class for Glances AMP."""
+
+    NAME = '?'
+    VERSION = '?'
+    DESCRIPTION = '?'
+    AUTHOR = '?'
+    EMAIL = '?'
 
     def __init__(self, args=None):
         """Init AMP classe."""
+        logger.debug("Init {0} version {1}".format(self.NAME, self.VERSION))
+
         # AMP name (= module name without glances_)
         self.amp_name = self.__class__.__module__[len('glances_'):]
 
@@ -66,7 +73,7 @@ class GlancesAmp(object):
         #
         if (hasattr(config, 'has_section') and
                 config.has_section(self.amp_name)):
-            logger.debug("AMP: Load {0} configuration".format(self.amp_name))
+            logger.debug("{0}: Load configuration".format(self.NAME))
             for param, _ in config.items(self.amp_name):
                 try:
                     self.configs[param] = config.get_float_value(self.amp_name, param)
@@ -74,19 +81,19 @@ class GlancesAmp(object):
                     self.configs[param] = config.get_value(self.amp_name, param).split(',')
                     if len(self.configs[param]) == 1:
                         self.configs[param] = self.configs[param][0]
-                logger.debug("AMP: Load {0} parameter: {1} = {2}".format(self.amp_name, param, self.configs[param]))
+                logger.debug("{0}: Load parameter: {1} = {2}".format(self.NAME, param, self.configs[param]))
         else:
-            logger.warning("AMP: Can not find section {0} in the configuration file".format(self.amp_name))
+            logger.warning("{0}: Can not find section {1} in the configuration file".format(self.NAME, self.amp_name))
 
         # enable, regex and refresh are mandatories
         # if not configured then AMP is disabled
         for k in ['enable', 'regex', 'refresh']:
             if k not in self.configs:
-                logger.warning("AMP: Can not find configuration key {0} in section {1}".format(k, self.amp_name))
+                logger.warning("{0}: Can not find configuration key {1} in section {2}".format(self.NAME, k, self.amp_name))
                 self.configs['enable'] = 'false'
 
         if not self.enable():
-            logger.warning("AMP: {0} is disabled".format(self.amp_name))
+            logger.warning("{0} is disabled".format(self.NAME))
 
     def get(self, key):
         """Generic method to get the item in the AMP configuration"""

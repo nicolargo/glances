@@ -78,12 +78,12 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for m in self.stats:
+            # Only display AMP if a result exist
             if m['result'] is None:
-                # Only display AMP if a result exist
                 continue
             # Display AMP
-            # first_column = '{0} {1}/{2}'.format(m['key'], int(m['timer']), int(m['refresh']))
             first_column = '{0}'.format(m['key'])
+            # first_column = '{0} {1}/{2}'.format(m['key'], int(m['timer']), int(m['refresh']))
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
                 msg = '{0:<20} '.format(first_column)
