@@ -27,10 +27,22 @@ glancesApp.service('GlancesPluginCpu', function() {
         this.irq = data.irq;
         this.iowait = data.iowait;
         this.steal = data.steal;
-        this.ctx_switches = Math.floor(data.ctx_switches / data.time_since_update);
-        this.interrupts = Math.floor(data.interrupts / data.time_since_update);
-        this.soft_interrupts = Math.floor(data.soft_interrupts / data.time_since_update);
-        this.syscalls = Math.floor(data.syscalls / data.time_since_update);
+
+        if (data.ctx_switches) {
+          this.ctx_switches = Math.floor(data.ctx_switches / data.time_since_update);
+        }
+
+        if (data.interrupts) {
+          this.interrupts = Math.floor(data.interrupts / data.time_since_update);
+        }
+
+        if (data.soft_interrupts) {
+          this.soft_interrupts = Math.floor(data.soft_interrupts / data.time_since_update);
+        }
+
+        if (data.syscalls) {
+          this.syscalls = Math.floor(data.syscalls / data.time_since_update);
+        }
     }
 
     this.getDecoration = function(value) {
