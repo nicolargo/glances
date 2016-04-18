@@ -256,6 +256,7 @@ class Plugin(GlancesPlugin):
         except KeyError as e:
             # all_stats do not have CPU information
             logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
+            logger.debug(all_stats)
         else:
             # Previous CPU stats stored in the cpu_old variable
             if not hasattr(self, 'cpu_old'):
@@ -294,13 +295,16 @@ class Plugin(GlancesPlugin):
         ret = {}
         # Read the stats
         try:
-            ret['rss'] = all_stats['memory_stats']['stats']['rss']
-            ret['cache'] = all_stats['memory_stats']['stats']['cache']
+            # Do not exist anymore with Docker 1.11 (issue #848)
+            # ret['rss'] = all_stats['memory_stats']['stats']['rss']
+            # ret['cache'] = all_stats['memory_stats']['stats']['cache']
             ret['usage'] = all_stats['memory_stats']['usage']
+            ret['limit'] = all_stats['memory_stats']['limit']
             ret['max_usage'] = all_stats['memory_stats']['max_usage']
-        except KeyError as e:
+        except (KeyError, TypeError) as e:
             # all_stats do not have MEM information
             logger.debug("Can not grab MEM usage for container {0} ({1})".format(container_id, e))
+            logger.debug(all_stats)
         # Return the stats
         return ret
 
@@ -319,10 +323,11 @@ class Plugin(GlancesPlugin):
 
         # Read the rx/tx stats (in bytes)
         try:
-            netcounters = all_stats["network"]
+            netcounters = all_stats["networks"]
         except KeyError as e:
             # all_stats do not have NETWORK information
             logger.debug("Can not grab NET usage for container {0} ({1})".format(container_id, e))
+            logger.debug(all_stats)
             # No fallback available...
             return network_new
 
@@ -344,11 +349,16 @@ class Plugin(GlancesPlugin):
             # By storing time data we enable Rx/s and Tx/s calculations in the
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
-            network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{0}'.format(container_id))
-            network_new['rx'] = netcounters["rx_bytes"] - self.netcounters_old[container_id]["rx_bytes"]
-            network_new['tx'] = netcounters["tx_bytes"] - self.netcounters_old[container_id]["tx_bytes"]
-            network_new['cumulative_rx'] = netcounters["rx_bytes"]
-            network_new['cumulative_tx'] = netcounters["tx_bytes"]
+            try:
+                network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{0}'.format(container_id))
+                network_new['rx'] = netcounters["eth0"]["rx_bytes"] - self.netcounters_old[container_id]["eth0"]["rx_bytes"]
+                network_new['tx'] = netcounters["eth0"]["tx_bytes"] - self.netcounters_old[container_id]["eth0"]["tx_bytes"]
+                network_new['cumulative_rx'] = netcounters["eth0"]["rx_bytes"]
+                network_new['cumulative_tx'] = netcounters["eth0"]["tx_bytes"]
+            except KeyError:
+                # all_stats do not have INTERFACE information
+                logger.debug("Can not grab network interface usage for container {0} ({1})".format(container_id, e))
+                logger.debug(all_stats)
 
             # Save stats to compute next bitrate
             self.netcounters_old[container_id] = netcounters
@@ -375,6 +385,7 @@ class Plugin(GlancesPlugin):
         except KeyError as e:
             # all_stats do not have io information
             logger.debug("Can not grab block IO usage for container {0} ({1})".format(container_id, e))
+            logger.debug(all_stats)
             # No fallback available...
             return io_new
 
@@ -455,13 +466,15 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = '{0:>7}'.format('MEM')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format('IOR/s')
+        msg = '{0:>7}'.format('/MAX')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format('IOW/s')
+        msg = '{0:>7}'.format('IOR/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format('Rx/s')
+        msg = '{0:>7}'.format('IOW/s')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>6}'.format('Tx/s')
+        msg = '{0:>7}'.format('Rx/s')
+        ret.append(self.curse_add_line(msg))
+        msg = '{0:>7}'.format('Tx/s')
         ret.append(self.curse_add_line(msg))
         msg = ' {0:8}'.format('Command')
         ret.append(self.curse_add_line(msg))
@@ -496,21 +509,26 @@ class Plugin(GlancesPlugin):
             except KeyError:
                 msg = '{0:>7}'.format('?')
             ret.append(self.curse_add_line(msg))
+            try:
+                msg = '{0:>7}'.format(self.auto_unit(container['memory']['limit']))
+            except KeyError:
+                msg = '{0:>7}'.format('?')
+            ret.append(self.curse_add_line(msg))
             # IO R/W
             for r in ['ior', 'iow']:
                 try:
                     value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'] * 8)) + "b"
-                    msg = '{0:>6}'.format(value)
+                    msg = '{0:>7}'.format(value)
                 except KeyError:
-                    msg = '{0:>6}'.format('?')
+                    msg = '{0:>7}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # NET RX/TX
             for r in ['rx', 'tx']:
                 try:
                     value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
-                    msg = '{0:>6}'.format(value)
+                    msg = '{0:>7}'.format(value)
                 except KeyError:
-                    msg = '{0:>6}'.format('?')
+                    msg = '{0:>7}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {0}'.format(container['Command'])
