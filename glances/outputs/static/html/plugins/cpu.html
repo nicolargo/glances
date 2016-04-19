@@ -53,25 +53,25 @@
     </div>
     <div class="hidden-xs hidden-sm hidden-md col-lg-8">
         <div class="table">
-            <div class="table-row">
+            <div class="table-row" ng-if="statsCpu.ctx_switches">
                 <div class="table-cell text-left">ctx_sw:</div>
                 <div class="table-cell" ng-class="statsCpu.getDecoration('ctx_switches')">
                     {{ statsCpu.ctx_switches }}
                 </div>
             </div>
-            <div class="table-row">
+            <div class="table-row" ng-if="statsCpu.interrupts">
                 <div class="table-cell text-left">inter:</div>
                 <div class="table-cell">
                     {{ statsCpu.interrupts }}
                 </div>
             </div>
-            <div class="table-row">
+            <div class="table-row" ng-if="statsCpu.soft_interrupts">
                 <div class="table-cell text-left">sw_int:</div>
                 <div class="table-cell">
                     {{ statsCpu.soft_interrupts }}
                 </div>
             </div>
-            <div class="table-row" ng-show="!statsSystem.isLinux()">
+            <div class="table-row" ng-if="!statsSystem.isLinux() && statsCpu.syscalls">
                 <div class="table-cell text-left">syscal:</div>
                 <div class="table-cell">
                     {{ statsCpu.syscalls }}
