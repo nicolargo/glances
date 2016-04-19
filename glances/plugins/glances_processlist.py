@@ -145,10 +145,9 @@ class Plugin(GlancesPlugin):
         # find process command indices in messages
         pos = []
         for i, m in enumerate(child_data):
-            if m["msg"] == "\n" and m is not child_data[-1]:
-                # new line pos + 12
-                # TODO find a way to get rid of hardcoded 12 value
-                pos.append(i + 12)
+            if m.get("_tree_decoration", False):
+                del m["_tree_decoration"]
+                pos.append(i)
 
         # add new curses items for tree decoration
         new_child_data = []
@@ -157,6 +156,7 @@ class Plugin(GlancesPlugin):
             if i in pos:
                 new_pos.append(len(new_child_data))
                 new_child_data.append(self.curse_add_line(""))
+                new_child_data[-1]["_tree_decoration"] = True
             new_child_data.append(m)
         child_data = new_child_data
         pos = new_pos
@@ -312,10 +312,16 @@ class Plugin(GlancesPlugin):
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {0}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
+                    if glances_processes.is_tree_enabled():
+                        # mark position to add tree decoration
+                        ret[-1]["_tree_decoration"] = True
                     ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
                 else:
                     msg = ' {0}'.format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
+                    if glances_processes.is_tree_enabled():
+                        # mark position to add tree decoration
+                        ret[-1]["_tree_decoration"] = True
                 if arguments:
                     msg = ' {0}'.format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
