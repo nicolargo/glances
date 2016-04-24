@@ -140,7 +140,7 @@ class GlancesStats(object):
         return [e for e in self._exports]
 
     def load_limits(self, config=None):
-        """Load the stats limits."""
+        """Load the stats limits (except the one in the exclude list)."""
         # For each plugins, call the load_limits method
         for p in self._plugins:
             self._plugins[p].load_limits(config)
