@@ -328,6 +328,9 @@ class _GlancesCurses(object):
             # 'a' > Sort processes automatically and reset to 'cpu_percent'
             glances_processes.auto_sort = True
             glances_processes.sort_key = 'cpu_percent'
+        elif self.pressedkey == ord('A'):
+            # 'A' > enable/disable AMP module
+            self.args.disable_amp = not self.args.disable_amp
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             self.args.byte = not self.args.byte
