@@ -30,7 +30,7 @@ class GlancesStatsServer(GlancesStats):
 
     def __init__(self, config=None):
         # Init the stats
-        super(GlancesStatsServer, self).__init__(config)
+        super(GlancesStatsServer, self).__init__(config=config)
 
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server

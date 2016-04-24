@@ -17,13 +17,32 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Nginx AMP."""
+"""
+AMP (Application Monitoring Process)
+A Glances AMP is a Python script called (every *refresh* seconds) if:
+- the AMP is *enabled* in the Glances configuration file
+- a process is running (match the *regex* define in the configuration file)
+The script should define a Amp (GlancesAmp) class with, at least, an update method.
+The update method should call the set_result method to set the AMP return string.
+The return string is a string with one or more line (\n between lines).
+If the *one_line* var is true then the AMP will be displayed in one line.
+"""
 
 """
-A Glances AMP is a Python script called if a process is running.
-The script should define a Amp (GlancesAmp) class with an update method.
-The update method should call the set_result method to fill the AMP return string.
-The return string is a string with one or more line (\n between lines).
+Nginx AMP
+=========
+
+Monitor the Nginx process using the status page
+
+Configuration file example:
+
+[nginx]
+# Nginx status page should be enable (https://easyengine.io/tutorials/nginx/status-page/)
+enable=true
+regex=\/usr\/sbin\/nginx
+refresh=60
+one_line=false
+status_url=http://localhost/nginx_status
 """
 
 import requests
@@ -49,8 +68,8 @@ class Amp(GlancesAmp):
         """Update the AMP"""
 
         if self.should_update():
-            logger.debug('{0}: Update stats using status URL {1}'.format(self.NAME, self.get('status_url')))
             # Get the Nginx status
+            logger.debug('{0}: Update stats using status URL {1}'.format(self.NAME, self.get('status_url')))
             req = requests.get(self.get('status_url'))
             if req.ok:
                 # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'

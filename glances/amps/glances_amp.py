@@ -83,7 +83,7 @@ class GlancesAmp(object):
                         self.configs[param] = self.configs[param][0]
                 logger.debug("{0}: Load parameter: {1} = {2}".format(self.NAME, param, self.configs[param]))
         else:
-            logger.warning("{0}: Can not find section {1} in the configuration file".format(self.NAME, self.amp_name))
+            logger.warning("{0}: Can not find section {1} in the configuration file {2}".format(self.NAME, self.amp_name, config))
 
         # enable, regex and refresh are mandatories
         # if not configured then AMP is disabled
