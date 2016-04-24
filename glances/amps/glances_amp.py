@@ -21,6 +21,15 @@
 I am your father...
 
 ...for all Glances Application Monitoring Processes (AMP).
+
+AMP (Application Monitoring Process)
+A Glances AMP is a Python script called (every *refresh* seconds) if:
+- the AMP is *enabled* in the Glances configuration file
+- a process is running (match the *regex* define in the configuration file)
+The script should define a Amp (GlancesAmp) class with, at least, an update method.
+The update method should call the set_result method to set the AMP return string.
+The return string is a string with one or more line (\n between lines).
+If the *one_line* var is true then the AMP will be displayed in one line.
 """
 
 from glances.compat import u

@@ -18,23 +18,31 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-AMP (Application Monitoring Process)
-A Glances AMP is a Python script called (every *refresh* seconds) if:
-- the AMP is *enabled* in the Glances configuration file
-- a process is running (match the *regex* define in the configuration file)
-The script should define a Amp (GlancesAmp) class with, at least, an update method.
-The update method should call the set_result method to set the AMP return string.
-The return string is a string with one or more line (\n between lines).
-If the *one_line* var is true then the AMP will be displayed in one line.
-"""
-
-"""
 Nginx AMP
 =========
 
-Monitor the Nginx process using the status page
+Monitor the Nginx process using the status page.
 
-Configuration file example:
+How to read the stats
+---------------------
+
+Active connections – Number of all open connections. This doesn’t mean number of users.
+A single user, for a single pageview can open many concurrent connections to your server.
+Server accepts handled requests – This shows three values.
+    First is total accepted connections.
+    Second is total handled connections. Usually first 2 values are same.
+    Third value is number of and handles requests. This is usually greater than second value.
+    Dividing third-value by second-one will give you number of requests per connection handled
+    by Nginx. In above example, 10993/7368, 1.49 requests per connections.
+Reading – nginx reads request header
+Writing – nginx reads request body, processes request, or writes response to a client
+Waiting – keep-alive connections, actually it is active – (reading + writing).
+This value depends on keepalive-timeout. Do not confuse non-zero waiting value for poor
+performance. It can be ignored.
+Source (https://easyengine.io/tutorials/nginx/status-page/)
+
+Configuration file example
+--------------------------
 
 [nginx]
 # Nginx status page should be enable (https://easyengine.io/tutorials/nginx/status-page/)

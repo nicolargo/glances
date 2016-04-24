@@ -88,7 +88,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_process:
+        if not self.stats or args.disable_process or args.disable_monitor:
             return ret
 
         # Build the string message
