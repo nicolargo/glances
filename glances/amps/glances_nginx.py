@@ -39,7 +39,8 @@ Writing – nginx reads request body, processes request, or writes response to a
 Waiting – keep-alive connections, actually it is active – (reading + writing).
 This value depends on keepalive-timeout. Do not confuse non-zero waiting value for poor
 performance. It can be ignored.
-Source (https://easyengine.io/tutorials/nginx/status-page/)
+
+Source reference: https://easyengine.io/tutorials/nginx/status-page/
 
 Configuration file example
 --------------------------
