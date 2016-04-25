@@ -58,6 +58,7 @@ class Plugin(GlancesPlugin):
             for k, v in iteritems(self.glances_amps.update()):
                 # self.stats.append({k: v.result()})
                 self.stats.append({'key': k,
+                                   'name': v.NAME,
                                    'result': v.result(),
                                    'refresh': v.refresh(),
                                    'timer': v.time_until_refresh()})
@@ -82,7 +83,7 @@ class Plugin(GlancesPlugin):
             if m['result'] is None:
                 continue
             # Display AMP
-            first_column = '{0}'.format(m['key'])
+            first_column = '{0}'.format(m['name'])
             # first_column = '{0} {1}/{2}'.format(m['key'], int(m['timer']), int(m['refresh']))
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
