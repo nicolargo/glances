@@ -80,14 +80,15 @@ class GlancesAmp(object):
         # option1=opt1
         # ...
         #
+        amp_section = 'amp_' + self.amp_name
         if (hasattr(config, 'has_section') and
-                config.has_section(self.amp_name)):
+                config.has_section(amp_section)):
             logger.debug("{0}: Load configuration".format(self.NAME))
-            for param, _ in config.items(self.amp_name):
+            for param, _ in config.items(amp_section):
                 try:
-                    self.configs[param] = config.get_float_value(self.amp_name, param)
+                    self.configs[param] = config.get_float_value(amp_section, param)
                 except ValueError:
-                    self.configs[param] = config.get_value(self.amp_name, param).split(',')
+                    self.configs[param] = config.get_value(amp_section, param).split(',')
                     if len(self.configs[param]) == 1:
                         self.configs[param] = self.configs[param][0]
                 logger.debug("{0}: Load parameter: {1} = {2}".format(self.NAME, param, self.configs[param]))
@@ -153,9 +154,14 @@ class GlancesAmp(object):
             return self.enable()
         return False
 
-    def set_result(self, result):
-        """Store the result (string) into the result key of the AMP"""
-        self.configs['result'] = str(result)
+    def set_result(self, result, separator=''):
+        """Store the result (string) into the result key of the AMP
+        if one_line is true then replace \n by separator
+        """
+        if self.one_line():
+            self.configs['result'] = str(result).replace('\n', separator)
+        else:
+            self.configs['result'] = str(result)
 
     def result(self):
         """ Return the result of the AMP (as a string)"""

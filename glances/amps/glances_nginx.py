@@ -44,7 +44,7 @@ Source (https://easyengine.io/tutorials/nginx/status-page/)
 Configuration file example
 --------------------------
 
-[nginx]
+[amp_nginx]
 # Nginx status page should be enable (https://easyengine.io/tutorials/nginx/status-page/)
 enable=true
 regex=\/usr\/sbin\/nginx
@@ -62,7 +62,7 @@ from glances.amps.glances_amp import GlancesAmp
 class Amp(GlancesAmp):
     """Glances' Nginx AMP."""
 
-    NAME = 'Nginx Glances AMP'
+    NAME = 'Nginx'
     VERSION = '1.0'
     DESCRIPTION = 'Get Nginx stats from status-page'
     AUTHOR = 'Nicolargo'
@@ -78,14 +78,11 @@ class Amp(GlancesAmp):
         if self.should_update():
             # Get the Nginx status
             logger.debug('{0}: Update stats using status URL {1}'.format(self.NAME, self.get('status_url')))
-            req = requests.get(self.get('status_url'))
-            if req.ok:
+            res = requests.get(self.get('status_url'))
+            if res.ok:
                 # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
-                if self.one_line():
-                    self.set_result(req.text.replace('\n', ''))
-                else:
-                    self.set_result(req.text)
+                self.set_result(res.text)
             else:
-                logger.debug('{0}: Can not grab status URL {1} ({2})'.format(self.NAME, self.get('status_url'), req.reason))
+                logger.debug('{0}: Can not grab status URL {1} ({2})'.format(self.NAME, self.get('status_url'), res.reason))
 
         return self.result()
