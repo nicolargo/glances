@@ -130,6 +130,14 @@ class GlancesAmp(object):
         """Return refresh time in seconds for the current application monitoring process."""
         return self.get('refresh')
 
+    def one_line(self):
+        """Return True|False if the AMP shoukd be displayed in oneline (one_lineline=true|false)."""
+        ret = self.get('one_line')
+        if ret is None:
+            return False
+        else:
+            return ret.lower().startswith('true')
+
     def time_until_refresh(self):
         """Return time in seconds until refresh."""
         return self.timer.get()
