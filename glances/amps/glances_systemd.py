@@ -21,12 +21,17 @@
 Systemd AMP
 ===========
 
-Monitor the Systemd.
+Monitor the state of the systemd system and service (unit) manager.
 
 How to read the stats
 ---------------------
 
-...
+active: Number of active units. This is usually a fairly basic way to tell if the
+unit has started successfully or not.
+loaded: Number of loaded units (unit's configuration has been parsed by systemd).
+failed: Number of units with an active failed status.
+
+Source reference: https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
 
 Configuration file example
 --------------------------
@@ -52,7 +57,7 @@ class Amp(GlancesAmp):
 
     NAME = 'Systemd'
     VERSION = '1.0'
-    DESCRIPTION = 'Get daemon list from systemctl (systemd)'
+    DESCRIPTION = 'Get services list from systemctl (systemd)'
     AUTHOR = 'Nicolargo'
     EMAIL = 'contact@nicolargo.com'
 
