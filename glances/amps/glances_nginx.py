@@ -81,7 +81,7 @@ class Amp(GlancesAmp):
             req = requests.get(self.get('status_url'))
             if req.ok:
                 # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
-                if self.get('one_line') is not None and self.get('one_line').lower() == 'true':
+                if self.one_line():
                     self.set_result(req.text.replace('\n', ''))
                 else:
                     self.set_result(req.text)
