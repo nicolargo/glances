@@ -21,6 +21,7 @@
 
 import os
 import sys
+import multiprocessing
 from io import open
 
 from glances import __appname__
@@ -108,95 +109,94 @@ class Config(object):
         # Quicklook
         if not self.parser.has_section('quicklook'):
             self.parser.add_section('quicklook')
-            self.parser.set('quicklook', 'cpu_careful', '50')
-            self.parser.set('quicklook', 'cpu_warning', '70')
-            self.parser.set('quicklook', 'cpu_critical', '90')
-            self.parser.set('quicklook', 'mem_careful', '50')
-            self.parser.set('quicklook', 'mem_warning', '70')
-            self.parser.set('quicklook', 'mem_critical', '90')
-            self.parser.set('quicklook', 'swap_careful', '50')
-            self.parser.set('quicklook', 'swap_warning', '70')
-            self.parser.set('quicklook', 'swap_critical', '90')
+        self.set_default('quicklook', 'cpu_careful', '50')
+        self.set_default('quicklook', 'cpu_warning', '70')
+        self.set_default('quicklook', 'cpu_critical', '90')
+        self.set_default('quicklook', 'mem_careful', '50')
+        self.set_default('quicklook', 'mem_warning', '70')
+        self.set_default('quicklook', 'mem_critical', '90')
+        self.set_default('quicklook', 'swap_careful', '50')
+        self.set_default('quicklook', 'swap_warning', '70')
+        self.set_default('quicklook', 'swap_critical', '90')
 
         # CPU
         if not self.parser.has_section('cpu'):
             self.parser.add_section('cpu')
-            self.parser.set('cpu', 'user_careful', '50')
-            self.parser.set('cpu', 'user_warning', '70')
-            self.parser.set('cpu', 'user_critical', '90')
-            self.parser.set('cpu', 'iowait_careful', '50')
-            self.parser.set('cpu', 'iowait_warning', '70')
-            self.parser.set('cpu', 'iowait_critical', '90')
-            self.parser.set('cpu', 'system_careful', '50')
-            self.parser.set('cpu', 'system_warning', '70')
-            self.parser.set('cpu', 'system_critical', '90')
-            self.parser.set('cpu', 'steal_careful', '50')
-            self.parser.set('cpu', 'steal_warning', '70')
-            self.parser.set('cpu', 'steal_critical', '90')
+        self.set_default('cpu', 'user_careful', '50')
+        self.set_default('cpu', 'user_warning', '70')
+        self.set_default('cpu', 'user_critical', '90')
+        self.set_default('cpu', 'system_careful', '50')
+        self.set_default('cpu', 'system_warning', '70')
+        self.set_default('cpu', 'system_critical', '90')
+        self.set_default('cpu', 'steal_careful', '50')
+        self.set_default('cpu', 'steal_warning', '70')
+        self.set_default('cpu', 'steal_critical', '90')
+        # By default I/O wait should be lower than 1/number of CPU cores
+        iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
+        self.set_default('cpu', 'iowait_careful', str(iowait_bottleneck - (iowait_bottleneck * 0.20)))
+        self.set_default('cpu', 'iowait_warning', str(iowait_bottleneck))
+        self.set_default('cpu', 'iowait_critical', str(iowait_bottleneck + (iowait_bottleneck * 0.20)))
 
         # Per-CPU
         if not self.parser.has_section('percpu'):
             self.parser.add_section('percpu')
-            self.parser.set('percpu', 'user_careful', '50')
-            self.parser.set('percpu', 'user_warning', '70')
-            self.parser.set('percpu', 'user_critical', '90')
-            self.parser.set('percpu', 'iowait_careful', '50')
-            self.parser.set('percpu', 'iowait_warning', '70')
-            self.parser.set('percpu', 'iowait_critical', '90')
-            self.parser.set('percpu', 'system_careful', '50')
-            self.parser.set('percpu', 'system_warning', '70')
-            self.parser.set('percpu', 'system_critical', '90')
+        self.set_default('percpu', 'user_careful', '50')
+        self.set_default('percpu', 'user_warning', '70')
+        self.set_default('percpu', 'user_critical', '90')
+        self.set_default('percpu', 'system_careful', '50')
+        self.set_default('percpu', 'system_warning', '70')
+        self.set_default('percpu', 'system_critical', '90')
 
         # Load
         if not self.parser.has_section('load'):
             self.parser.add_section('load')
-            self.parser.set('load', 'careful', '0.7')
-            self.parser.set('load', 'warning', '1.0')
-            self.parser.set('load', 'critical', '5.0')
+        self.set_default('load', 'careful', '0.7')
+        self.set_default('load', 'warning', '1.0')
+        self.set_default('load', 'critical', '5.0')
 
         # Mem
         if not self.parser.has_section('mem'):
             self.parser.add_section('mem')
-            self.parser.set('mem', 'careful', '50')
-            self.parser.set('mem', 'warning', '70')
-            self.parser.set('mem', 'critical', '90')
+        self.set_default('mem', 'careful', '50')
+        self.set_default('mem', 'warning', '70')
+        self.set_default('mem', 'critical', '90')
 
         # Swap
         if not self.parser.has_section('memswap'):
             self.parser.add_section('memswap')
-            self.parser.set('memswap', 'careful', '50')
-            self.parser.set('memswap', 'warning', '70')
-            self.parser.set('memswap', 'critical', '90')
+        self.set_default('memswap', 'careful', '50')
+        self.set_default('memswap', 'warning', '70')
+        self.set_default('memswap', 'critical', '90')
 
         # FS
         if not self.parser.has_section('fs'):
             self.parser.add_section('fs')
-            self.parser.set('fs', 'careful', '50')
-            self.parser.set('fs', 'warning', '70')
-            self.parser.set('fs', 'critical', '90')
+        self.set_default('fs', 'careful', '50')
+        self.set_default('fs', 'warning', '70')
+        self.set_default('fs', 'critical', '90')
 
         # Sensors
         if not self.parser.has_section('sensors'):
             self.parser.add_section('sensors')
-            self.parser.set('sensors', 'temperature_core_careful', '60')
-            self.parser.set('sensors', 'temperature_core_warning', '70')
-            self.parser.set('sensors', 'temperature_core_critical', '80')
-            self.parser.set('sensors', 'temperature_hdd_careful', '45')
-            self.parser.set('sensors', 'temperature_hdd_warning', '52')
-            self.parser.set('sensors', 'temperature_hdd_critical', '60')
-            self.parser.set('sensors', 'battery_careful', '80')
-            self.parser.set('sensors', 'battery_warning', '90')
-            self.parser.set('sensors', 'battery_critical', '95')
+        self.set_default('sensors', 'temperature_core_careful', '60')
+        self.set_default('sensors', 'temperature_core_warning', '70')
+        self.set_default('sensors', 'temperature_core_critical', '80')
+        self.set_default('sensors', 'temperature_hdd_careful', '45')
+        self.set_default('sensors', 'temperature_hdd_warning', '52')
+        self.set_default('sensors', 'temperature_hdd_critical', '60')
+        self.set_default('sensors', 'battery_careful', '80')
+        self.set_default('sensors', 'battery_warning', '90')
+        self.set_default('sensors', 'battery_critical', '95')
 
         # Process list
         if not self.parser.has_section('processlist'):
             self.parser.add_section('processlist')
-            self.parser.set('processlist', 'cpu_careful', '50')
-            self.parser.set('processlist', 'cpu_warning', '70')
-            self.parser.set('processlist', 'cpu_critical', '90')
-            self.parser.set('processlist', 'mem_careful', '50')
-            self.parser.set('processlist', 'mem_warning', '70')
-            self.parser.set('processlist', 'mem_critical', '90')
+        self.set_default('processlist', 'cpu_careful', '50')
+        self.set_default('processlist', 'cpu_warning', '70')
+        self.set_default('processlist', 'cpu_critical', '90')
+        self.set_default('processlist', 'mem_careful', '50')
+        self.set_default('processlist', 'mem_warning', '70')
+        self.set_default('processlist', 'mem_critical', '90')
 
     @property
     def loaded_config_file(self):
@@ -210,6 +210,11 @@ class Config(object):
     def has_section(self, section):
         """Return info about the existence of a section."""
         return self.parser.has_section(section)
+
+    def set_default(self, section, option, default):
+        """If the option did not exist, create a default value."""
+        if not self.parser.has_option(section, option):
+            self.parser.set(section, option, default)
 
     def get_value(self, section, option, default=None):
         """Get the value of an option, if it exists."""
