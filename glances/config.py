@@ -134,8 +134,12 @@ class Config(object):
         # By default I/O wait should be lower than 1/number of CPU cores
         iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
         self.set_default('cpu', 'iowait_careful', str(iowait_bottleneck - (iowait_bottleneck * 0.20)))
-        self.set_default('cpu', 'iowait_warning', str(iowait_bottleneck))
-        self.set_default('cpu', 'iowait_critical', str(iowait_bottleneck + (iowait_bottleneck * 0.20)))
+        self.set_default('cpu', 'iowait_warning', str(iowait_bottleneck - (iowait_bottleneck * 0.10)))
+        self.set_default('cpu', 'iowait_critical', str(iowait_bottleneck))
+        ctx_switches_bottleneck = 56000 / multiprocessing.cpu_count()
+        self.set_default('cpu', 'ctx_switches_careful', str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)))
+        self.set_default('cpu', 'ctx_switches_warning', str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)))
+        self.set_default('cpu', 'ctx_switches_critical', str(ctx_switches_bottleneck))
 
         # Per-CPU
         if not self.parser.has_section('percpu'):
