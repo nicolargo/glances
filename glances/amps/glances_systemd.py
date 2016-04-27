@@ -40,9 +40,9 @@ Configuration file example
 # Systemd
 enable=true
 regex=\/usr\/lib\/systemd\/systemd
-refresh=30
+refresh=60
 one_line=true
-systemctl_path=/usr/bin/systemctl
+systemctl_cmd=/usr/bin/systemctl --plain
 """
 
 from subprocess import check_output
@@ -70,9 +70,9 @@ class Amp(GlancesAmp):
 
         if self.should_update():
             # Get the systemctl status
-            logger.debug('{0}: Update stats using systemctl {1}'.format(self.NAME, self.get('systemctl_path')))
+            logger.debug('{0}: Update stats using systemctl {1}'.format(self.NAME, self.get('systemctl_cmd')))
             try:
-                res = check_output(self.get('systemctl_path').split())
+                res = check_output(self.get('systemctl_cmd').split())
             except OSError as e:
                 logger.debug('{0}: Error while executing systemctl ({1})'.format(self.NAME, e))
             else:
