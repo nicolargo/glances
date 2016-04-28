@@ -795,14 +795,14 @@
               ],
               "interval": "",
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"enp0s25.rx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"eth0.rx\")/mean(\"eth0.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
                 [
                   {
                     "params": [
-                      "enp0s25.rx"
+                      "eth0.rx"
                     ],
                     "type": "field"
                   },
@@ -817,12 +817,12 @@
             },
             {
               "alias": "Tx",
-              "column": "enp0s25.tx*-1",
+              "column": "eth0.tx*-1",
               "dsType": "influxdb",
               "fields": [
                 {
                   "func": "mean",
-                  "name": "wlan0.tx"
+                  "name": "eth0.tx"
                 }
               ],
               "fill": "null",
@@ -837,14 +837,14 @@
                 }
               ],
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"enp0s25.tx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"eth0.tx\")/mean(\"eth0.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
               "resultFormat": "time_series",
               "select": [
                 [
                   {
                     "params": [
-                      "enp0s25.tx"
+                      "eth0.tx"
                     ],
                     "type": "field"
                   },
@@ -861,7 +861,7 @@
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Net (wlan0)",
+          "title": "Net (eth0)",
           "tooltip": {
             "shared": false,
             "value_type": "cumulative"
