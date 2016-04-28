@@ -32,7 +32,7 @@ if PY3:
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from urllib.request import urlopen
-    from urllib.error import URLError, timeout
+    from urllib.error import URLError
 
     input = input
     range = range
