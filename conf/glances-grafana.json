@@ -48,16 +48,9 @@
             {
               "column": "cpucore",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "cpucore"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -101,7 +94,6 @@
         },
         {
           "aliasColors": {},
-          "aliasYAxis": {},
           "annotate": {
             "enable": false
           },
@@ -158,21 +150,19 @@
               "alias": "1min",
               "column": "min1",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "min1"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.load",
@@ -201,21 +191,19 @@
               "alias": "5mins",
               "column": "min5",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "min5"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.load",
@@ -244,21 +232,19 @@
               "alias": "15mins",
               "column": "min15",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "min15"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.load",
@@ -335,16 +321,9 @@
             {
               "column": "total",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "total"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -441,21 +420,19 @@
               "alias": "User",
               "column": "user",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "user"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.cpu",
@@ -483,21 +460,19 @@
               "alias": "System",
               "column": "system",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "system"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.cpu",
@@ -526,21 +501,19 @@
               "alias": "IoWait",
               "column": "iowait",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "iowait"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.cpu",
@@ -627,16 +600,9 @@
               "alias": "Used",
               "column": "used",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "used"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -668,16 +634,9 @@
               "alias": "Max",
               "column": "total",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "total"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -776,26 +735,24 @@
               "alias": "Rx",
               "column": "enp0s25.rx",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "wlan0.rx"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "interval": "",
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"enp0s25.rx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"enp0s25.rx\")/mean(\"enp0s25.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
@@ -813,31 +770,30 @@
                 ]
               ],
               "series": "network",
-              "tags": []
+              "tags": [],
+              "rawQuery": true
             },
             {
               "alias": "Tx",
               "column": "enp0s25.tx*-1",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "wlan0.tx"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.network",
-              "query": "SELECT mean(\"enp0s25.tx\") FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"enp0s25.tx\")/mean(\"enp0s25.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
               "resultFormat": "time_series",
               "select": [
@@ -856,12 +812,13 @@
               ],
               "series": "network",
               "tags": [],
-              "target": ""
+              "target": "",
+              "rawQuery": true
             }
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Net (wlan0)",
+          "title": "Net",
           "tooltip": {
             "shared": false,
             "value_type": "cumulative"
@@ -921,16 +878,9 @@
               "alias": "Used",
               "column": "used",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "used"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -962,16 +912,9 @@
               "alias": "Max",
               "column": "total",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "total"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1070,21 +1013,19 @@
               "alias": "Read",
               "column": "sda2.read_bytes",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "sda2.read_bytes"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.diskio",
@@ -1112,21 +1053,19 @@
               "alias": "Write",
               "column": "sda2.write_bytes",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "sda2.write_bytes"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.diskio",
@@ -1213,21 +1152,19 @@
               "alias": "Used",
               "column": "\"/.used\"",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "/.used"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.fs",
@@ -1255,21 +1192,19 @@
               "alias": "Max",
               "column": "\"/.size\"",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "/.size"
-                }
-              ],
-              "fill": "null",
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
                   "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
                 }
               ],
               "measurement": "localhost.fs",
@@ -1344,16 +1279,9 @@
             {
               "column": "\"/.percent\"",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "/.percent"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1429,16 +1357,9 @@
             {
               "column": "\"/home.percent\"",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "/boot/efi.percent"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1446,14 +1367,14 @@
                 }
               ],
               "measurement": "localhost.fs",
-              "query": "SELECT mean(\"/boot.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+              "query": "SELECT mean(\"/boot/efi.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
                 [
                   {
                     "params": [
-                      "/boot.percent"
+                      "/boot/efi.percent"
                     ],
                     "type": "field"
                   },
@@ -1571,16 +1492,9 @@
               "alias": "mean",
               "column": "user",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "user"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1613,16 +1527,9 @@
               "alias": "min",
               "column": "user",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "min",
-                  "name": "user"
-                }
-              ],
               "function": "min",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1656,16 +1563,9 @@
               "alias": "max",
               "column": "user",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "max",
-                  "name": "user"
-                }
-              ],
               "function": "max",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1775,16 +1675,9 @@
               "alias": "mean",
               "column": "system",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "system"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1817,16 +1710,9 @@
               "alias": "min",
               "column": "system",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "min",
-                  "name": "system"
-                }
-              ],
               "function": "min",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1860,16 +1746,9 @@
               "alias": "max",
               "column": "system",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "max",
-                  "name": "system"
-                }
-              ],
               "function": "max",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -1981,16 +1860,9 @@
               "alias": "mean",
               "column": "iowait",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "mean",
-                  "name": "iowait"
-                }
-              ],
               "function": "mean",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -2023,16 +1895,9 @@
               "alias": "min",
               "column": "iowait",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "min",
-                  "name": "iowait"
-                }
-              ],
               "function": "min",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -2066,16 +1931,9 @@
               "alias": "max",
               "column": "iowait",
               "dsType": "influxdb",
-              "fields": [
-                {
-                  "func": "max",
-                  "name": "iowait"
-                }
-              ],
               "function": "max",
               "groupBy": [
                 {
-                  "interval": "auto",
                   "params": [
                     "auto"
                   ],
@@ -2121,13 +1979,211 @@
             "percent",
             "short"
           ]
+        },
+        {
+          "aliasColors": {
+            "max": "#890F02"
+          },
+          "bars": false,
+          "datasource": "glances",
+          "editable": true,
+          "error": false,
+          "fill": 2,
+          "grid": {
+            "leftLogBase": 1,
+            "leftMax": null,
+            "leftMin": null,
+            "rightLogBase": 1,
+            "rightMax": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 19,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideEmpty": false,
+            "max": false,
+            "min": false,
+            "show": false,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "mean",
+              "column": "iowait",
+              "dsType": "influxdb",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "params": [
+                    "auto"
+                  ],
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "time_since_update"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "series": "cpu",
+              "tags": [],
+              "rawQuery": true
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Context switches",
+          "tooltip": {
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "transparent": true,
+          "type": "graph",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "none",
+            "short"
+          ]
+        },
+        {
+          "aliasColors": {
+            "max": "#890F02"
+          },
+          "bars": false,
+          "datasource": "glances",
+          "editable": true,
+          "error": false,
+          "fill": 2,
+          "grid": {
+            "leftLogBase": 1,
+            "leftMax": null,
+            "leftMin": null,
+            "rightLogBase": 1,
+            "rightMax": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 20,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideEmpty": false,
+            "max": false,
+            "min": false,
+            "show": false,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "mean",
+              "column": "iowait",
+              "dsType": "influxdb",
+              "function": "mean",
+              "groupBy": [
+                {
+                  "params": [
+                    "auto"
+                  ],
+                  "type": "time"
+                }
+              ],
+              "interval": "60s",
+              "measurement": "localhost.cpu",
+              "query": "SELECT mean(\"interrupts\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "time_since_update"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "series": "cpu",
+              "tags": [],
+              "rawQuery": true
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Interrupts",
+          "tooltip": {
+            "shared": false,
+            "value_type": "cumulative"
+          },
+          "transparent": true,
+          "type": "graph",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "none",
+            "short"
+          ]
         }
       ],
       "title": "New row"
     }
   ],
   "time": {
-    "from": "now-6h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -2169,6 +2225,6 @@
   },
   "refresh": "5m",
   "schemaVersion": 8,
-  "version": 1,
+  "version": 3,
   "links": []
 }
