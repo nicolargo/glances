@@ -143,7 +143,7 @@ class Export(GlancesExport):
                 try:
                     points[i] = float(points[i])
                 except (TypeError, ValueError) as e:
-                    logger.debug("InfluxDB error diring stat convertion %s=%s (%s)" % (columns[i], points[i], e))
+                    logger.debug("InfluxDB error during stat convertion %s=%s (%s)" % (columns[i], points[i], e))
 
             data = [{'measurement': name,
                      'tags': self.parse_tags(self.tags),
