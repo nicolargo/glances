@@ -60,13 +60,19 @@ class AmpsList(object):
                     item.endswith(".py") and
                     item != (header + "amp.py")):
                 # Import the amp
-                amp = __import__(os.path.basename(item)[:-3])
-                # Add the AMP to the dictionary
-                # The key is the AMP name
-                # for example, the file glances_xxx.py
-                # generate self._amps_list["xxx"] = ...
-                amp_name = os.path.basename(item)[len(header):-3].lower()
-                self.__amps_dict[amp_name] = amp.Amp(self.args)
+                try:
+                    amp = __import__(os.path.basename(item)[:-3])
+                except ImportError as e:
+                    logger.warning("Can not load {0}, you need to install an external Python package ({1})".format(os.path.basename(item), e))
+                except Exception as e:
+                    logger.warning("Can not load {0} ({1})".format(os.path.basename(item), e))
+                else:
+                    # Add the AMP to the dictionary
+                    # The key is the AMP name
+                    # for example, the file glances_xxx.py
+                    # generate self._amps_list["xxx"] = ...
+                    amp_name = os.path.basename(item)[len(header):-3].lower()
+                    self.__amps_dict[amp_name] = amp.Amp(self.args)
         # Log AMPs list
         logger.debug("Available AMPs list: {0}".format(self.getList()))
 
