@@ -48,39 +48,38 @@ class AmpsList(object):
         self.args = args
         self.config = config
 
-        # Create the AMPS list
-        self.load_amps()
+        # Load the AMP configurations / scripts
         self.load_configs()
 
-    def load_amps(self):
-        """Load all amps in the 'amps' folder."""
+    def load_configs(self):
+        """Load the AMP configuration files."""
         header = "glances_"
-        for item in os.listdir(amps_path):
-            if (item.startswith(header) and
-                    item.endswith(".py") and
-                    item != (header + "amp.py")):
-                # Import the amp
+        # For each AMP scrip, call the load_config method
+        for s in self.config.sections():
+            if s.startswith("amp_"):
+                # An AMP section exists in the configuration file
+                # If an AMP script exist in the glances/amps folder, use it
+                amp_conf_name = s[4:]
+                amp_script = os.path.join(amps_path, header + s[4:] + ".py")
+                if not os.path.exists(amp_script):
+                    # If not, use the default script
+                    amp_script = os.path.join(amps_path, "glances_default.py")
                 try:
-                    amp = __import__(os.path.basename(item)[:-3])
+                    amp = __import__(os.path.basename(amp_script)[:-3])
                 except ImportError as e:
-                    logger.warning("Can not load {0}, you need to install an external Python package ({1})".format(os.path.basename(item), e))
+                    logger.warning("Can not load {0}, you need to install an external Python package ({1})".format(os.path.basename(amp_script), e))
                 except Exception as e:
-                    logger.warning("Can not load {0} ({1})".format(os.path.basename(item), e))
+                    logger.warning("Can not load {0} ({1})".format(os.path.basename(amp_script), e))
                 else:
                     # Add the AMP to the dictionary
                     # The key is the AMP name
                     # for example, the file glances_xxx.py
                     # generate self._amps_list["xxx"] = ...
-                    amp_name = os.path.basename(item)[len(header):-3].lower()
-                    self.__amps_dict[amp_name] = amp.Amp(self.args)
+                    self.__amps_dict[amp_conf_name] = amp.Amp(name=amp_conf_name, args=self.args)
+                    # Load the AMP configuration
+                    self.__amps_dict[amp_conf_name].load_config(self.config)
         # Log AMPs list
-        logger.debug("Available AMPs list: {0}".format(self.getList()))
-
-    def load_configs(self):
-        """Load the AMP configuration files."""
-        # For each AMPs, call the load_config method
-        for a in self.get():
-            self.get()[a].load_config(self.config)
+        logger.debug("AMPs' list: {0}".format(self.getList()))
 
     def __str__(self):
         return str(self.__amps_dict)

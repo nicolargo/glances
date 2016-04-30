@@ -82,7 +82,7 @@ class Amp(GlancesAmp):
             res = requests.get(self.get('status_url'))
             if res.ok:
                 # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
-                self.set_result(res.text)
+                self.set_result(res.text.rstrip())
             else:
                 logger.debug('{0}: Can not grab status URL {1} ({2})'.format(self.NAME, self.get('status_url'), res.reason))
 

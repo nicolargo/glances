@@ -46,12 +46,15 @@ class GlancesAmp(object):
     AUTHOR = '?'
     EMAIL = '?'
 
-    def __init__(self, args=None):
+    def __init__(self, name=None, args=None):
         """Init AMP classe."""
         logger.debug("Init {0} version {1}".format(self.NAME, self.VERSION))
 
         # AMP name (= module name without glances_)
-        self.amp_name = self.__class__.__module__[len('glances_'):]
+        if name is None:
+            self.amp_name = self.__class__.__module__[len('glances_'):]
+        else:
+            self.amp_name = name
 
         # Init the args
         self.args = args
