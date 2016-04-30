@@ -65,7 +65,7 @@ class Amp(GlancesAmp):
     #     """Init the AMP."""
     #     super(Amp, self).__init__(args=args)
 
-    def update(self):
+    def update(self, process_list):
         """Update the AMP"""
 
         if self.should_update():
