@@ -108,10 +108,8 @@ class AmpsList(object):
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
                 # Call the AMP update method
-                # TODO: should be non blocking
-                thread = threading.Thread(target=v.update)
+                thread = threading.Thread(target=v.update, args=[amps_list])
                 thread.start()
-                # v.update()
 
         return self.__amps_dict
 
