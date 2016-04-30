@@ -53,6 +53,9 @@ class AmpsList(object):
 
     def load_configs(self):
         """Load the AMP configuration files."""
+        if self.config is None:
+            return False
+
         header = "glances_"
         # For each AMP scrip, call the load_config method
         for s in self.config.sections():
@@ -80,6 +83,8 @@ class AmpsList(object):
                     self.__amps_dict[amp_conf_name].load_config(self.config)
         # Log AMPs list
         logger.debug("AMPs' list: {0}".format(self.getList()))
+
+        return True
 
     def __str__(self):
         return str(self.__amps_dict)
