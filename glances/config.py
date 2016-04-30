@@ -207,6 +207,10 @@ class Config(object):
         """Return the loaded configuration file."""
         return self._loaded_config_file
 
+    def sections(self):
+        """Return a list of all sections."""
+        return self.parser.sections()
+
     def items(self, section):
         """Return the items list of a section."""
         return self.parser.items(section)
