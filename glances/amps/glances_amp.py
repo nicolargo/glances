@@ -109,6 +109,9 @@ class GlancesAmp(object):
         else:
             logger.warning("{0} is disabled".format(self.NAME))
 
+        # Init the count to 0
+        self.configs['count'] = 0
+
         return self.enable()
 
     def get(self, key):
@@ -156,6 +159,22 @@ class GlancesAmp(object):
             self.timer.reset()
             return self.enable()
         return False
+
+    def set_count(self, count):
+        """Set the number of processes matching the regex"""
+        self.configs['count'] = count
+
+    def count(self):
+        """Get the number of processes matching the regex"""
+        return self.get('count')
+
+    def count_min(self):
+        """Get the minimum number of processes"""
+        return self.get('countmin')
+
+    def count_max(self):
+        """Get the maximum number of processes"""
+        return self.get('countmax')
 
     def set_result(self, result, separator=''):
         """Store the result (string) into the result key of the AMP

@@ -61,12 +61,35 @@ class Plugin(GlancesPlugin):
                                    'name': v.NAME,
                                    'result': v.result(),
                                    'refresh': v.refresh(),
-                                   'timer': v.time_until_refresh()})
+                                   'timer': v.time_until_refresh(),
+                                   'count': v.count(),
+                                   'countmin': v.count_min(),
+                                   'countmax': v.count_max(),
+                                   })
         else:
             # Not available in SNMP mode
             pass
 
         return self.stats
+
+    def get_alert(self, nbprocess=0, countmin=None, countmax=None, header="", log=False):
+        """Return the alert status relative to the process number."""
+        if nbprocess is None:
+            return 'OK'
+        if countmin is None:
+            countmin = nbprocess
+        if countmax is None:
+            countmax = nbprocess
+        if nbprocess > 0:
+            if int(countmin) <= int(nbprocess) <= int(countmax):
+                return 'OK'
+            else:
+                return 'WARNING'
+        else:
+            if int(countmin) == 0:
+                return 'OK'
+            else:
+                return 'CRITICAL'
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -88,7 +111,7 @@ class Plugin(GlancesPlugin):
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
                 msg = '{0:<20} '.format(first_column)
-                ret.append(self.curse_add_line(msg, "TITLE"))
+                ret.append(self.curse_add_line(msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
                 # ... only on the first line
                 first_column = ''
                 # Display AMP result in the second column
