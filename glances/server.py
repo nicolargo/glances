@@ -156,11 +156,6 @@ class GlancesInstance(object):
         # Return all the plugins views
         return json.dumps(self.stats.getAllViewsAsDict())
 
-    def getAllMonitored(self):
-        # Return the processes monitored list
-        # return json.dumps(self.monitors.getAll())
-        return json.dumps(self.stats.getAll()['monitor'])
-
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
 

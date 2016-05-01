@@ -133,7 +133,7 @@ body {
     width: 100%;
     text-overflow: ellipsis;
 }
-#monitor .process-result {
+#amps .process-result {
     max-width: 300px;
     overflow: hidden;
     white-space: nowrap;

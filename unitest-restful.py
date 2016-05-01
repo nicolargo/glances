@@ -93,8 +93,8 @@ class TestGlances(unittest.TestCase):
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
                 self.assertIsInstance(req.json(), text_type)
-            elif p in ('fs', 'monitor', 'percpu', 'sensors', 'alert', 'processlist',
-                       'diskio', 'hddtemp', 'batpercent', 'network', 'folders', 'amps'):
+            elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
+                       'hddtemp', 'batpercent', 'network', 'folders', 'amps'):
                 self.assertIsInstance(req.json(), list)
             elif p in ('psutilversion', 'help'):
                 pass

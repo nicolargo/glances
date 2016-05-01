@@ -181,7 +181,6 @@ class GlancesClient(object):
         # Update the stats
         try:
             server_stats = json.loads(self.client.getAll())
-            server_stats['monitor'] = json.loads(self.client.getAllMonitored())
         except socket.error:
             # Client cannot get server stats
             return "Disconnected"

@@ -1,8 +1,0 @@
-<div class="table">
-    <div class="table-row" ng-repeat="process in statsMonitor.processes">
-        <div class="table-cell" ng-class="statsMonitor.getDescriptionDecoration(process)">{{ process.description }}</div>
-        <div class="table-cell">{{ process.count > 1 ? process.count : '' }}</div>
-        <div class="table-cell">{{ process.count > 0 ? 'RUNNING' : 'NOT RUNNING' }}</div>
-        <div class="table-cell process-result">{{ process.result }}</div>
-    </div>
-</div>

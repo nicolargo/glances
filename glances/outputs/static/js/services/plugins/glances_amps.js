@@ -1,5 +1,5 @@
-glancesApp.service('GlancesPluginMonitor', function() {
-    var _pluginName = "monitor";
+glancesApp.service('GlancesPluginAmps', function() {
+    var _pluginName = "amps";
     this.processes = [];
 
     this.setData = function(data, views) {
