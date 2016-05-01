@@ -75,15 +75,13 @@ class Amp(GlancesAmp):
 
     def update(self, process_list):
         """Update the AMP"""
-
-        if self.should_update():
-            # Get the Nginx status
-            logger.debug('{0}: Update stats using status URL {1}'.format(self.NAME, self.get('status_url')))
-            res = requests.get(self.get('status_url'))
-            if res.ok:
-                # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
-                self.set_result(res.text.rstrip())
-            else:
-                logger.debug('{0}: Can not grab status URL {1} ({2})'.format(self.NAME, self.get('status_url'), res.reason))
+        # Get the Nginx status
+        logger.debug('{0}: Update stats using status URL {1}'.format(self.NAME, self.get('status_url')))
+        res = requests.get(self.get('status_url'))
+        if res.ok:
+            # u'Active connections: 1 \nserver accepts handled requests\n 1 1 1 \nReading: 0 Writing: 1 Waiting: 0 \n'
+            self.set_result(res.text.rstrip())
+        else:
+            logger.debug('{0}: Can not grab status URL {1} ({2})'.format(self.NAME, self.get('status_url'), res.reason))
 
         return self.result()

@@ -67,31 +67,29 @@ class Amp(GlancesAmp):
 
     def update(self, process_list):
         """Update the AMP"""
-
-        if self.should_update():
-            # Get the systemctl status
-            logger.debug('{0}: Update stats using systemctl {1}'.format(self.NAME, self.get('systemctl_cmd')))
-            try:
-                res = check_output(self.get('systemctl_cmd').split())
-            except OSError as e:
-                logger.debug('{0}: Error while executing systemctl ({1})'.format(self.NAME, e))
-            else:
-                status = {}
-                # For each line
-                for r in res.split('\n')[1:-8]:
-                    # Split per space .*
-                    l = r.split()
-                    if len(l) > 3:
-                        # load column
-                        for c in range(1, 3):
-                            try:
-                                status[l[c]] += 1
-                            except KeyError:
-                                status[l[c]] = 1
-                # Build the output (string) message
-                output = 'Services\n'
-                for k, v in iteritems(status):
-                    output += '{0}: {1}\n'.format(k, v)
-                self.set_result(output, separator=' ')
+        # Get the systemctl status
+        logger.debug('{0}: Update stats using systemctl {1}'.format(self.NAME, self.get('systemctl_cmd')))
+        try:
+            res = check_output(self.get('systemctl_cmd').split())
+        except OSError as e:
+            logger.debug('{0}: Error while executing systemctl ({1})'.format(self.NAME, e))
+        else:
+            status = {}
+            # For each line
+            for r in res.split('\n')[1:-8]:
+                # Split per space .*
+                l = r.split()
+                if len(l) > 3:
+                    # load column
+                    for c in range(1, 3):
+                        try:
+                            status[l[c]] += 1
+                        except KeyError:
+                            status[l[c]] = 1
+            # Build the output (string) message
+            output = 'Services\n'
+            for k, v in iteritems(status):
+                output += '{0}: {1}\n'.format(k, v)
+            self.set_result(output, separator=' ')
 
         return self.result()

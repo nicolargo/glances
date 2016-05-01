@@ -113,8 +113,14 @@ class AmpsList(object):
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
                 # Call the AMP update method
-                thread = threading.Thread(target=v.update, args=[amps_list])
+                thread = threading.Thread(target=v.update_wrapper, args=[amps_list])
                 thread.start()
+            else:
+                # Set the process number to 0
+                v.set_count(0)
+                if v.count_min() > 0:
+                    # Only display the "No running process message" is countmin is defined
+                    v.set_result("No running process")
 
         return self.__amps_dict
 

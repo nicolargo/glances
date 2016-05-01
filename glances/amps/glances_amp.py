@@ -191,3 +191,13 @@ class GlancesAmp(object):
         if ret is not None:
             ret = u(ret)
         return ret
+
+    def update_wrapper(self, process_list):
+        """Wrapper for the children update"""
+        # Set the number of running process
+        self.set_count(len(process_list))
+        # Call the children update method
+        if self.should_update():
+            return self.update(process_list)
+        else:
+            return self.result()
