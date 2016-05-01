@@ -107,14 +107,18 @@ class Plugin(GlancesPlugin):
                 continue
             # Display AMP
             first_column = '{0}'.format(m['name'])
-            # first_column = '{0} {1}/{2}'.format(m['key'], int(m['timer']), int(m['refresh']))
+            first_column_style = self.get_alert(m['count'], m['countmin'], m['countmax'])
+            second_column = '{0}'.format(m['count'])
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
-                msg = '{0:<20} '.format(first_column)
-                ret.append(self.curse_add_line(msg, self.get_alert(m['count'], m['countmin'], m['countmax'])))
+                msg = '{0:<16} '.format(first_column)
+                ret.append(self.curse_add_line(msg, first_column_style))
+                # ... and second column with the number of matching processes...
+                msg = '{0:<4} '.format(second_column)
+                ret.append(self.curse_add_line(msg))
                 # ... only on the first line
-                first_column = ''
-                # Display AMP result in the second column
+                first_column = second_column = ''
+                # Display AMP result in the third column
                 ret.append(self.curse_add_line(l, splittable=True))
                 ret.append(self.curse_new_line())
 

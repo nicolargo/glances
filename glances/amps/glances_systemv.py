@@ -66,32 +66,30 @@ class Amp(GlancesAmp):
 
     def update(self, process_list):
         """Update the AMP"""
-
-        if self.should_update():
-            # Get the systemctl status
-            logger.debug('{0}: Update stats using service {1}'.format(self.NAME, self.get('service_cmd')))
-            try:
-                res = check_output(self.get('service_cmd').split(), stderr=STDOUT)
-            except OSError as e:
-                logger.debug('{0}: Error while executing service ({1})'.format(self.NAME, e))
-            else:
-                status = {'running': 0, 'stopped': 0, 'upstart': 0}
-                # For each line
-                for r in res.split('\n'):
-                    # Split per space .*
-                    l = r.split()
-                    if len(l) < 4:
-                        continue
-                    if l[1] == '+':
-                        status['running'] += 1
-                    elif l[1] == '-':
-                        status['stopped'] += 1
-                    elif l[1] == '?':
-                        status['upstart'] += 1
-                # Build the output (string) message
-                output = 'Services\n'
-                for k, v in iteritems(status):
-                    output += '{0}: {1}\n'.format(k, v)
-                self.set_result(output, separator=' ')
+        # Get the systemctl status
+        logger.debug('{0}: Update stats using service {1}'.format(self.NAME, self.get('service_cmd')))
+        try:
+            res = check_output(self.get('service_cmd').split(), stderr=STDOUT)
+        except OSError as e:
+            logger.debug('{0}: Error while executing service ({1})'.format(self.NAME, e))
+        else:
+            status = {'running': 0, 'stopped': 0, 'upstart': 0}
+            # For each line
+            for r in res.split('\n'):
+                # Split per space .*
+                l = r.split()
+                if len(l) < 4:
+                    continue
+                if l[1] == '+':
+                    status['running'] += 1
+                elif l[1] == '-':
+                    status['stopped'] += 1
+                elif l[1] == '?':
+                    status['upstart'] += 1
+            # Build the output (string) message
+            output = 'Services\n'
+            for k, v in iteritems(status):
+                output += '{0}: {1}\n'.format(k, v)
+            self.set_result(output, separator=' ')
 
         return self.result()
