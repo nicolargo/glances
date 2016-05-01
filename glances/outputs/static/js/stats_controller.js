@@ -31,7 +31,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsLoad = GlancesStats.getPlugin('load');
             $scope.statsMem = GlancesStats.getPlugin('mem');
             $scope.statsMemSwap = GlancesStats.getPlugin('memswap');
-            $scope.statsMonitor = GlancesStats.getPlugin('monitor');
+            $scope.statsAmps = GlancesStats.getPlugin('amps');
             $scope.statsNetwork = GlancesStats.getPlugin('network');
             $scope.statsPerCpu = GlancesStats.getPlugin('percpu');
             $scope.statsProcessCount = GlancesStats.getPlugin('processcount');
