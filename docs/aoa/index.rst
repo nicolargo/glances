@@ -32,6 +32,7 @@ Legend:
    sensors
    ps
    monitor
+   amps
    logs
    docker
    actions

@@ -129,7 +129,7 @@ class GlancesClient(object):
                     logger.debug("Client version: {0} / Server version: {1}".format(__version__, client_version))
                 else:
                     self.log_and_exit("Client and server not compatible: \
-                                      Client version: {0} / Server version: {1}".format(version, client_version))
+                                       Client version: {0} / Server version: {1}".format(__version__, client_version))
                     return False
 
         else:
@@ -151,6 +151,7 @@ class GlancesClient(object):
         if ret:
             # Load limits from the configuration file
             # Each client can choose its owns limits
+            logger.debug("Load limits from the client configuration file")
             self.stats.load_limits(self.config)
 
             # Init screen
@@ -180,7 +181,6 @@ class GlancesClient(object):
         # Update the stats
         try:
             server_stats = json.loads(self.client.getAll())
-            server_stats['monitor'] = json.loads(self.client.getAllMonitored())
         except socket.error:
             # Client cannot get server stats
             return "Disconnected"

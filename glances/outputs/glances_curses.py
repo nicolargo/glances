@@ -328,6 +328,9 @@ class _GlancesCurses(object):
             # 'a' > Sort processes automatically and reset to 'cpu_percent'
             glances_processes.auto_sort = True
             glances_processes.sort_key = 'cpu_percent'
+        elif self.pressedkey == ord('A'):
+            # 'A' > enable/disable AMP module
+            self.args.disable_amps = not self.args.disable_amps
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             self.args.byte = not self.args.byte
@@ -422,7 +425,7 @@ class _GlancesCurses(object):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
         elif self.pressedkey == ord('z'):
-            # 'z' > Enable/Disable processes stats (count + list + monitor)
+            # 'z' > Enable/Disable processes stats (count + list + AMPs)
             # Enable/Disable display
             self.args.disable_process = not self.args.disable_process
             # Enable/Disable update
@@ -533,8 +536,8 @@ class _GlancesCurses(object):
             args=self.args)
         stats_processcount = stats.get_plugin(
             'processcount').get_stats_display(args=self.args)
-        stats_monitor = stats.get_plugin(
-            'monitor').get_stats_display(args=self.args)
+        stats_amps = stats.get_plugin(
+            'amps').get_stats_display(args=self.args)
         stats_alert = stats.get_plugin(
             'alert').get_stats_display(args=self.args)
 
@@ -717,16 +720,14 @@ class _GlancesCurses(object):
             self.next_line = self.saved_line
 
             # Display right sidebar
-            # ((DOCKER)+PROCESS_COUNT+(MONITORED)+PROCESS_LIST+ALERT)
+            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
             self.new_column()
             self.new_line()
             self.display_plugin(stats_docker)
             self.new_line()
             self.display_plugin(stats_processcount)
-            if glances_processes.process_filter is None and cs_status is None:
-                # Do not display stats monitor list if a filter exist
-                self.new_line()
-                self.display_plugin(stats_monitor)
+            self.new_line()
+            self.display_plugin(stats_amps)
             self.new_line()
             self.display_plugin(stats_processlist,
                                 display_optional=(screen_x > 102),

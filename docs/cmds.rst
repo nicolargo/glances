@@ -95,6 +95,10 @@ Command-Line Options
 
     disable process module
 
+.. option:: --disable-amps
+
+    disable application monitoring process module
+
 .. option:: --disable-log
 
     disable log module
@@ -290,6 +294,9 @@ The following commands (key pressed) are supported while in Glances:
     - If MEM ``>70%``, sort processes by MEM usage
 
     - If CPU iowait ``>60%``, sort processes by I/O read and write
+
+``A``
+    Enable/disable Application Monitoring Process
 
 ``b``
     Switch between bit/s or Byte/s for network I/O

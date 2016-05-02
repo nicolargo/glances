@@ -31,7 +31,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsLoad = GlancesStats.getPlugin('load');
             $scope.statsMem = GlancesStats.getPlugin('mem');
             $scope.statsMemSwap = GlancesStats.getPlugin('memswap');
-            $scope.statsMonitor = GlancesStats.getPlugin('monitor');
+            $scope.statsAmps = GlancesStats.getPlugin('amps');
             $scope.statsNetwork = GlancesStats.getPlugin('network');
             $scope.statsPerCpu = GlancesStats.getPlugin('percpu');
             $scope.statsProcessCount = GlancesStats.getPlugin('processcount');
@@ -63,6 +63,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // a => Sort processes automatically
                 $scope.sorter.column = "cpu_percent";
                 $scope.sorter.auto = true;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.A:
+                // D => Enable/disable AMPs
+                $scope.arguments.disable_amps = !$scope.arguments.disable_amps;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.c:
                 // c => Sort processes by CPU%

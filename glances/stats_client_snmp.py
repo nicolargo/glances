@@ -51,8 +51,8 @@ class GlancesStatsClientSNMP(GlancesStats):
         # OS name is used because OID is differents between system
         self.os_name = None
 
-        # Load plugins and export modules
-        self.load_plugins_and_exports(self.args)
+        # Load AMPs, plugins and exports modules
+        self.load_modules(self.args)
 
     def check_snmp(self):
         """Chek if SNMP is available on the server."""

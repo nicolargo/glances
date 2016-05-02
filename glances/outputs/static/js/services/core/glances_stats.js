@@ -12,7 +12,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'load': 'GlancesPluginLoad',
         'mem': 'GlancesPluginMem',
         'memswap': 'GlancesPluginMemSwap',
-        'monitor': 'GlancesPluginMonitor',
+        'amps': 'GlancesPluginAmps',
         'network': 'GlancesPluginNetwork',
         'percpu': 'GlancesPluginPerCpu',
         'processcount': 'GlancesPluginProcessCount',

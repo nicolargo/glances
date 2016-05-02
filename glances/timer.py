@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -52,6 +52,9 @@ class Timer(object):
 
     def reset(self):
         self.start()
+
+    def get(self):
+        return self.duration - (self.target - time())
 
     def set(self, duration):
         self.duration = duration

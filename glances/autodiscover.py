@@ -204,12 +204,16 @@ class GlancesAutoDiscoverClient(object):
                     # Issue #528 (no network interface available)
                     pass
 
-            print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
             self.info = ServiceInfo(
                 zeroconf_type, '{0}:{1}.{2}'.format(hostname, args.port, zeroconf_type),
                 address=socket.inet_aton(zeroconf_bind_address), port=args.port,
                 weight=0, priority=0, properties={}, server=hostname)
-            self.zeroconf.register_service(self.info)
+            try:
+                self.zeroconf.register_service(self.info)
+            except socket.error as e:
+                logger.error("Error while announcing Glances server: {0}".format(e))
+            else:
+                print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
 
