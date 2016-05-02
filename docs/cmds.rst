@@ -95,11 +95,7 @@ Command-Line Options
 
     disable process module
 
-.. option:: --disable-monitor
-
-    disable monitoring process list module
-
-.. option:: --disable-amp
+.. option:: --disable-amps
 
     disable application monitoring process module
 

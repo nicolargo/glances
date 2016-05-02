@@ -330,7 +330,7 @@ class _GlancesCurses(object):
             glances_processes.sort_key = 'cpu_percent'
         elif self.pressedkey == ord('A'):
             # 'A' > enable/disable AMP module
-            self.args.disable_amp = not self.args.disable_amp
+            self.args.disable_amps = not self.args.disable_amps
         elif self.pressedkey == ord('b'):
             # 'b' > Switch between bit/s and Byte/s for network IO
             self.args.byte = not self.args.byte

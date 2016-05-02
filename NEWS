@@ -19,6 +19,11 @@ Bugs corrected:
     * [Web UI] Fix folders plugin never displayed (issue #829)
     * Correct issue IP plugin: VPN with no internet access (issue #842)
 
+Deprecated:
+
+    * Python 2.6 is no longer supported
+    * Monitoring process list module is replaced by AMP
+
 Version 2.6.1
 =============
 
