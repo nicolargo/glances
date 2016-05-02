@@ -65,7 +65,7 @@ following section in the Glances configuration file:
 
 The *dropbox status* command line will be executed and displayed in the Glances UI:
 
-.. image:: ../_static/amp-python-dropbox.png
+.. image:: ../_static/amp-dropbox.png
 
 You can force Glances to display the result in one line setting the *one_line* to true.
 
