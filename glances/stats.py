@@ -33,16 +33,16 @@ class GlancesStats(object):
     """This class stores, updates and gives stats."""
 
     def __init__(self, config=None, args=None):
-        # Set the argument instance
-        self.args = args
-
         # Set the config instance
         self.config = config
 
-        # Load plugins and export modules
-        self.load_plugins_and_exports(self.args)
+        # Set the argument instance
+        self.args = args
 
-        # Load the limits
+        # Load plugins and exports modules
+        self.load_modules(self.args)
+
+        # Load the limits (for plugins)
         self.load_limits(config)
 
     def __getattr__(self, item):
@@ -67,8 +67,9 @@ class GlancesStats(object):
             # Default behavior
             raise AttributeError(item)
 
-    def load_plugins_and_exports(self, args):
-        """Wrapper to load both plugins and export modules."""
+    def load_modules(self, args):
+        """Wrapper to load: plugins and export modules."""
+
         # Init the plugins dict
         self._plugins = collections.defaultdict(dict)
         # Load the plugins
@@ -96,7 +97,7 @@ class GlancesStats(object):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 plugin_name = os.path.basename(item)[len(header):-3].lower()
-                if plugin_name == 'help':
+                if plugin_name in ('help', 'amps'):
                     self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
                 else:
                     self._plugins[plugin_name] = plugin.Plugin(args=args)
@@ -136,13 +137,12 @@ class GlancesStats(object):
 
     def getExportList(self):
         """Return the exports modules list."""
-        return [p for p in self._exports]
+        return [e for e in self._exports]
 
     def load_limits(self, config=None):
-        """Load the stats limits."""
-        # For each plugins, call the init_limits method
+        """Load the stats limits (except the one in the exclude list)."""
+        # For each plugins, call the load_limits method
         for p in self._plugins:
-            # logger.debug("Load limits for %s" % p)
             self._plugins[p].load_limits(config)
 
     def update(self):

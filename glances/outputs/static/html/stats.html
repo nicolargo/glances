@@ -59,9 +59,9 @@
             <section id="alert" class="plugin" ng-show="!arguments.disable_log" ng-include src="'plugins/alert.html'"></section>
             <div ng-show="!arguments.disable_process">
                 <section id="processcount" class="plugin" ng-include src="'plugins/processcount.html'"></section>
-                <div class="row">
+                <div class="row" ng-if="!arguments.disable_amps">
                     <div class="col-lg-18">
-                        <section id="monitor" class="plugin" ng-include src="'plugins/monitor.html'"></section>
+                        <section id="amps" class="plugin" ng-include src="'plugins/amps.html'"></section>
                     </div>
                 </div>
                 <section id="processlist" class="plugin" ng-include src="'plugins/processlist.html'"></section>

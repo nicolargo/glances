@@ -32,16 +32,13 @@ class GlancesStatsClient(GlancesStats):
 
     def __init__(self, config=None, args=None):
         """Init the GlancesStatsClient class."""
-        super(GlancesStatsClient, self).__init__()
+        super(GlancesStatsClient, self).__init__(config=config, args=args)
 
         # Init the configuration
         self.config = config
 
         # Init the arguments
         self.args = args
-
-        # Load plugins and exports
-        self.load_plugins_and_exports(self.args)
 
     def set_plugins(self, input_plugins):
         """Set the plugin list according to the Glances server."""

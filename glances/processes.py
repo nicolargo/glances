@@ -510,8 +510,8 @@ class GlancesProcesses(object):
                 # Next...
                 first = False
 
-        # Build the all processes list used by the monitored list
-        self.allprocesslist = itervalues(processdict)
+        # Build the all processes list used by the AMPs
+        self.allprocesslist = [p for p in itervalues(processdict)]
 
         # Clean internals caches if timeout is reached
         if self.cache_timer.finished():

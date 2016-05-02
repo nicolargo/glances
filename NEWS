@@ -7,6 +7,7 @@ Version 2.7
 
 Enhancements and new features:
 
+    * Add Application Monitoring Process plugin (issue #780)
     * Improve IP plugin to display public IP address (issue #646)
     * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
@@ -17,6 +18,11 @@ Bugs corrected:
     * Crash on launch when viewing temperature of laptop HDD in sleep mode (issue #824)
     * [Web UI] Fix folders plugin never displayed (issue #829)
     * Correct issue IP plugin: VPN with no internet access (issue #842)
+
+Deprecated:
+
+    * Python 2.6 is no longer supported
+    * Monitoring process list module is replaced by AMP
 
 Version 2.6.1
 =============

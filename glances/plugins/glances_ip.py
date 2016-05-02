@@ -138,11 +138,15 @@ class Plugin(GlancesPlugin):
             # VPN with no internet access (issue #842)
             msg = '/{0}'.format(self.stats['mask_cidr'])
             ret.append(self.curse_add_line(msg))
-        if self.stats['public_address'] is not None:
-            msg = ' Pub '
-            ret.append(self.curse_add_line(msg, 'TITLE'))
-            msg = '{0:}'.format(self.stats['public_address'])
-            ret.append(self.curse_add_line(msg))
+        try:
+            msg_pub = '{0:}'.format(self.stats['public_address'])
+        except UnicodeEncodeError:
+            pass
+        else:
+            if self.stats['public_address'] is not None:
+                msg = ' Pub '
+                ret.append(self.curse_add_line(msg, 'TITLE'))
+                ret.append(self.curse_add_line(msg_pub))
 
         return ret
 
@@ -186,7 +190,10 @@ class PublicIpAddress(object):
             queue_target.put(None)
         else:
             # Request depend on service
-            if not json:
-                queue_target.put(response)
-            else:
-                queue_target.put(loads(response)[key])
+            try:
+                if not json:
+                    queue_target.put(response)
+                else:
+                    queue_target.put(loads(response)[key])
+            except ValueError:
+                queue_target.put(None)
