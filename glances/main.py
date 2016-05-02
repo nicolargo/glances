@@ -138,8 +138,8 @@ Start the client browser (browser mode):\n\
                             help='disable network, disk I/O, FS and sensors modules')
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help='disable process module')
-        parser.add_argument('--disable-amp', action='store_true', default=False,
-                            dest='disable_amp', help='disable applications monitoring process (AMP) module')
+        parser.add_argument('--disable-amps', action='store_true', default=False,
+                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help='disable log module')
         parser.add_argument('--disable-bold', action='store_true', default=False,

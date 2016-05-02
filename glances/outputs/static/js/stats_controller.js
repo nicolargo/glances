@@ -64,6 +64,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.sorter.column = "cpu_percent";
                 $scope.sorter.auto = true;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.A:
+                // D => Enable/disable AMPs
+                $scope.arguments.disable_amps = !$scope.arguments.disable_amps;
+                break;
             case !$event.shiftKey && $event.keyCode == keycodes.c:
                 // c => Sort processes by CPU%
                 $scope.sorter.column = "cpu_percent";
