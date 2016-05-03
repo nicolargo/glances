@@ -65,7 +65,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.sorter.auto = true;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.A:
-                // D => Enable/disable AMPs
+                // A => Enable/disable AMPs
                 $scope.arguments.disable_amps = !$scope.arguments.disable_amps;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.c:
