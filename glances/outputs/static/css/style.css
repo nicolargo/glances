@@ -136,7 +136,7 @@ body {
 #amps .process-result {
     max-width: 300px;
     overflow: hidden;
-    white-space: nowrap;
+    white-space: pre-wrap;
     padding-left: 10px;
     text-overflow: ellipsis;
 }

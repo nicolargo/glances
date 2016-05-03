@@ -3,7 +3,14 @@ glancesApp.service('GlancesPluginAmps', function() {
     this.processes = [];
 
     this.setData = function(data, views) {
-        this.processes = data[_pluginName];
+        var processes = data[_pluginName];
+
+        this.processes = [];
+        angular.forEach(processes, function(process, key) {
+            if (process.result !== null) {
+                this.processes.push(process);
+            }
+        }, this);
     };
 
     this.getDescriptionDecoration = function(process) {
