@@ -1088,7 +1088,7 @@
                 }
               ],
               "measurement": "localhost.diskio",
-              "query": "SELECT mean(\"sda2.read_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"sda2.read_bytes\")/mean(\"sda2.time_since_update\")*8 FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
@@ -1130,7 +1130,7 @@
                 }
               ],
               "measurement": "localhost.diskio",
-              "query": "SELECT mean(\"sda2.write_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+              "query": "SELECT mean(\"sda2.write_bytes\")/mean(\"sda2.time_since_update\")*8 FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
               "refId": "B",
               "resultFormat": "time_series",
               "select": [
