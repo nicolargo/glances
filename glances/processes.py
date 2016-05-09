@@ -406,24 +406,25 @@ class GlancesProcesses(object):
             if self.no_kernel_threads and not WINDOWS and is_kernel_thread(proc):
                 continue
 
-            # If self.max_processes is None: Only retreive mandatory stats
-            # Else: retreive mandatory and standard stats
+            # If self.max_processes is None: Only retrieve mandatory stats
+            # Else: retrieve mandatory and standard stats
             s = self.__get_process_stats(proc,
                                          mandatory_stats=True,
                                          standard_stats=self.max_processes is None)
+            # ignore the 'idle' process on Windows and *BSD
+            # ignore the 'kernel_task' process on OS X
+            # waiting for upstream patch from psutil
+            if (BSD and s['name'] == 'idle' or
+               WINDOWS and s['name'] == 'System Idle Process' or
+               OSX and s['name'] == 'kernel_task'):
+                continue
             # Continue to the next process if it has to be filtered
             if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
                 excluded_processes.add(proc)
                 continue
+
             # Ok add the process to the list
             processdict[proc] = s
-            # ignore the 'idle' process on Windows and *BSD
-            # ignore the 'kernel_task' process on OS X
-            # waiting for upstream patch from psutil
-            if (BSD and processdict[proc]['name'] == 'idle' or
-                    WINDOWS and processdict[proc]['name'] == 'System Idle Process' or
-                    OSX and processdict[proc]['name'] == 'kernel_task'):
-                continue
             # Update processcount (global statistics)
             try:
                 self.processcount[str(proc.status())] += 1
