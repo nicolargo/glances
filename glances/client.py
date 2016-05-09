@@ -155,7 +155,7 @@ class GlancesClient(object):
             self.stats.load_limits(self.config)
 
             # Init screen
-            self.screen = GlancesCursesClient(args=self.args)
+            self.screen = GlancesCursesClient(config=self.config, args=self.args)
 
         # Return result
         return ret

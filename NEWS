@@ -11,7 +11,8 @@ Enhancements and new features:
     * Improve IP plugin to display public IP address (issue #646)
     * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
-    * [Web UI] add cpu name in quicklook plugin (issue #825)
+    * [Web UI] Add cpu name in quicklook plugin (issue #825)
+    * Allow theme to be set in configuration file (issue #862)
 
 Bugs corrected:
 
