@@ -51,8 +51,9 @@ class _GlancesCurses(object):
     Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
     """
 
-    def __init__(self, args=None):
-        # Init args
+    def __init__(self, config=None, args=None):
+        # Init
+        self.config = config
         self.args = args
 
         # Init windows positions
@@ -68,6 +69,11 @@ class _GlancesCurses(object):
         if not self.screen:
             logger.critical("Cannot init the curses library.\n")
             sys.exit(1)
+
+        # Load the 'outputs' section of the configuration file
+        # - Init the theme (default is black)
+        self.theme = {'name': 'black'}
+        self.load_config(self.config)
 
         # Init cursor
         self._init_cursor()
@@ -94,6 +100,18 @@ class _GlancesCurses(object):
 
         # History tag
         self._init_history()
+
+    def load_config(self, config):
+        '''Load the outputs section of the configuration file'''
+        # Load the theme
+        if config.has_section('outputs'):
+            logger.debug('Read the outputs section in the configuration file')
+            self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
+            logger.debug('Theme for the curse interface: {0}'.format(self.theme['name']))
+
+    def is_theme(self, name):
+        '''Return True if the theme *name* should be used'''
+        return getattr(self.args, 'theme_' + name) or self.theme['name'] == name
 
     def _init_history(self):
         '''Init the history option'''
@@ -141,7 +159,7 @@ class _GlancesCurses(object):
 
         if curses.has_colors():
             # The screen is compatible with a colored design
-            if self.args.theme_white:
+            if self.is_theme('white'):
                 # White theme: black ==> white
                 curses.init_pair(1, curses.COLOR_BLACK, -1)
             else:
@@ -165,14 +183,14 @@ class _GlancesCurses(object):
                 try:
                     curses.init_pair(9, curses.COLOR_MAGENTA, -1)
                 except Exception:
-                    if self.args.theme_white:
+                    if self.is_theme('white'):
                         curses.init_pair(9, curses.COLOR_BLACK, -1)
                     else:
                         curses.init_pair(9, curses.COLOR_WHITE, -1)
                 try:
                     curses.init_pair(10, curses.COLOR_CYAN, -1)
                 except Exception:
-                    if self.args.theme_white:
+                    if self.is_theme('white'):
                         curses.init_pair(10, curses.COLOR_BLACK, -1)
                     else:
                         curses.init_pair(10, curses.COLOR_WHITE, -1)

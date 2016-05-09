@@ -75,7 +75,7 @@ class GlancesStandalone(object):
             glances_processes.max_processes = 50
 
             # Init screen
-            self.screen = GlancesCursesStandalone(args=args)
+            self.screen = GlancesCursesStandalone(config=config, args=args)
 
     @property
     def quiet(self):
