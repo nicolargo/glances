@@ -19,6 +19,7 @@ Bugs corrected:
     * Crash on launch when viewing temperature of laptop HDD in sleep mode (issue #824)
     * [Web UI] Fix folders plugin never displayed (issue #829)
     * Correct issue IP plugin: VPN with no internet access (issue #842)
+    * Idle process is back on FreeBSD and Windows (issue #844)
 
 Deprecated:
 
