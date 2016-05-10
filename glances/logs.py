@@ -110,77 +110,95 @@ class GlancesLogs(object):
         item_index = self.__itemexist__(item_type)
         if item_index < 0:
             # Item did not exist, add if WARNING or CRITICAL
-            if item_state == "WARNING" or item_state == "CRITICAL":
-                # Define the automatic process sort key
-                self.set_process_sort(item_type)
-
-                # Create the new log item
-                # Time is stored in Epoch format
-                # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
-                item = [
-                    time.mktime(datetime.now().timetuple()),  # START DATE
-                    -1,  # END DATE
-                    item_state,  # STATE: WARNING|CRITICAL
-                    item_type,  # TYPE: CPU, LOAD, MEM...
-                    item_value,  # MAX
-                    item_value,  # AVG
-                    item_value,  # MIN
-                    item_value,  # SUM
-                    1,  # COUNT
-                    # Process list is sorted automatically
-                    # Overwrite the user choice
-                    # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                    #                     reverse=True)
-                    # topprocess[0:3],  # TOP 3 PROCESS LIST
-                    [],  # TOP 3 PROCESS LIST
-                    proc_desc]  # MONITORED PROCESSES DESC
-
-                # Add the item to the list
-                self.logs_list.insert(0, item)
-                if self.len() > self.logs_max:
-                    self.logs_list.pop()
+            self._create_item(item_state, item_type, item_value,
+                              proc_list, proc_desc, peak_time)
         else:
             # Item exist, update
-            if item_state == "OK" or item_state == "CAREFUL":
-                # Reset the automatic process sort key
-                self.reset_process_sort()
-
-                endtime = time.mktime(datetime.now().timetuple())
-                if endtime - self.logs_list[item_index][0] > peak_time:
-                    # If event is > peak_time seconds
-                    self.logs_list[item_index][1] = endtime
-                else:
-                    # If event <= peak_time seconds, ignore
-                    self.logs_list.remove(self.logs_list[item_index])
-            else:
-                # Update the item
-                # State
-                if item_state == "CRITICAL":
-                    self.logs_list[item_index][2] = item_state
-                # Value
-                if item_value > self.logs_list[item_index][4]:
-                    # MAX
-                    self.logs_list[item_index][4] = item_value
-                elif item_value < self.logs_list[item_index][6]:
-                    # MIN
-                    self.logs_list[item_index][6] = item_value
-                # AVG
-                self.logs_list[item_index][7] += item_value
-                self.logs_list[item_index][8] += 1
-                self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
-                                                 self.logs_list[item_index][8])
-                # TOP PROCESS LIST
-                # # Process list is sorted automaticaly
-                # # Overwrite the user choise
-                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                #                     reverse=True)
-                # # TOP PROCESS LIST
-                # self.logs_list[item_index][9] = topprocess[0:3]
-                self.logs_list[item_index][9] = []
-                # MONITORED PROCESSES DESC
-                self.logs_list[item_index][10] = proc_desc
+            self._update_item(item_index, item_state, item_type, item_value,
+                              proc_list, proc_desc, peak_time)
 
         return self.len()
+
+    def _create_item(self, item_state, item_type, item_value,
+                     proc_list, proc_desc, peak_time):
+        """Create a new item in the log list"""
+        if item_state == "WARNING" or item_state == "CRITICAL":
+            # Define the automatic process sort key
+            self.set_process_sort(item_type)
+
+            # Create the new log item
+            # Time is stored in Epoch format
+            # Epoch -> DMYHMS = datetime.fromtimestamp(epoch)
+            item = [
+                time.mktime(datetime.now().timetuple()),  # START DATE
+                -1,  # END DATE
+                item_state,  # STATE: WARNING|CRITICAL
+                item_type,  # TYPE: CPU, LOAD, MEM...
+                item_value,  # MAX
+                item_value,  # AVG
+                item_value,  # MIN
+                item_value,  # SUM
+                1,  # COUNT
+                # Process list is sorted automatically
+                # Overwrite the user choice
+                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+                #                     reverse=True)
+                # topprocess[0:3],  # TOP 3 PROCESS LIST
+                [],  # TOP 3 PROCESS LIST
+                proc_desc]  # MONITORED PROCESSES DESC
+
+            # Add the item to the list
+            self.logs_list.insert(0, item)
+            if self.len() > self.logs_max:
+                self.logs_list.pop()
+
+            return True
+        else:
+            return False
+
+    def _update_item(self, item_index, item_state, item_type, item_value,
+                     proc_list, proc_desc, peak_time):
+        """Update a item in the log list"""
+        if item_state == "OK" or item_state == "CAREFUL":
+            # Reset the automatic process sort key
+            self.reset_process_sort()
+
+            endtime = time.mktime(datetime.now().timetuple())
+            if endtime - self.logs_list[item_index][0] > peak_time:
+                # If event is > peak_time seconds
+                self.logs_list[item_index][1] = endtime
+            else:
+                # If event <= peak_time seconds, ignore
+                self.logs_list.remove(self.logs_list[item_index])
+        else:
+            # Update the item
+            # State
+            if item_state == "CRITICAL":
+                self.logs_list[item_index][2] = item_state
+            # Value
+            if item_value > self.logs_list[item_index][4]:
+                # MAX
+                self.logs_list[item_index][4] = item_value
+            elif item_value < self.logs_list[item_index][6]:
+                # MIN
+                self.logs_list[item_index][6] = item_value
+            # AVG
+            self.logs_list[item_index][7] += item_value
+            self.logs_list[item_index][8] += 1
+            self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
+                                             self.logs_list[item_index][8])
+            # TOP PROCESS LIST
+            # # Process list is sorted automaticaly
+            # # Overwrite the user choise
+            # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
+            #                     reverse=True)
+            # # TOP PROCESS LIST
+            # self.logs_list[item_index][9] = topprocess[0:3]
+            self.logs_list[item_index][9] = []
+            # MONITORED PROCESSES DESC
+            self.logs_list[item_index][10] = proc_desc
+
+        return True
 
     def clean(self, critical=False):
         """Clean the logs list by deleting finished items.
