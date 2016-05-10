@@ -523,9 +523,17 @@ class Plugin(GlancesPlugin):
                     msg = '{0:>7}'.format('?')
                 ret.append(self.curse_add_line(msg))
             # NET RX/TX
+            if args.byte:
+                # Bytes per second (for dummy)
+                to_bit = 1
+                unit = ''
+            else:
+                # Bits per second (for real network administrator | Default)
+                to_bit = 8
+                unit = 'b'
             for r in ['rx', 'tx']:
                 try:
-                    value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * 8)) + "b"
+                    value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * to_bit)) + unit
                     msg = '{0:>7}'.format(value)
                 except KeyError:
                     msg = '{0:>7}'.format('?')
