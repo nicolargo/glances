@@ -285,30 +285,27 @@ class Plugin(GlancesPlugin):
             if len(ifname) > ifname_max_width:
                 # Cut interface name if it is too long
                 ifname = '_' + ifname[-ifname_max_width + 1:]
+
             if args.byte:
                 # Bytes per second (for dummy)
-                if args.network_cumul:
-                    rx = self.auto_unit(int(i['cumulative_rx']))
-                    tx = self.auto_unit(int(i['cumulative_tx']))
-                    sx = self.auto_unit(int(i['cumulative_tx']) +
-                                        int(i['cumulative_tx']))
-                else:
-                    rx = self.auto_unit(int(i['rx'] // i['time_since_update']))
-                    tx = self.auto_unit(int(i['tx'] // i['time_since_update']))
-                    sx = self.auto_unit(int(i['rx'] // i['time_since_update']) +
-                                        int(i['tx'] // i['time_since_update']))
+                to_bit = 1
+                unit = ''
             else:
                 # Bits per second (for real network administrator | Default)
-                if args.network_cumul:
-                    rx = self.auto_unit(int(i['cumulative_rx'] * 8)) + "b"
-                    tx = self.auto_unit(int(i['cumulative_tx'] * 8)) + "b"
-                    sx = self.auto_unit(int(i['cumulative_rx'] * 8) +
-                                        int(i['cumulative_tx'] * 8)) + "b"
-                else:
-                    rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8)) + "b"
-                    tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * 8)) + "b"
-                    sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * 8) +
-                                        int(i['tx'] // i['time_since_update'] * 8)) + "b"
+                to_bit = 8
+                unit = 'b'
+
+            if args.network_cumul:
+                rx = self.auto_unit(int(i['cumulative_rx'] * to_bit)) + unit
+                tx = self.auto_unit(int(i['cumulative_tx'] * to_bit)) + unit
+                sx = self.auto_unit(int(i['cumulative_rx'] * to_bit) +
+                                    int(i['cumulative_tx'] * to_bit)) + unit
+            else:
+                rx = self.auto_unit(int(i['rx'] // i['time_since_update'] * to_bit)) + unit
+                tx = self.auto_unit(int(i['tx'] // i['time_since_update'] * to_bit)) + unit
+                sx = self.auto_unit(int(i['rx'] // i['time_since_update'] * to_bit) +
+                                    int(i['tx'] // i['time_since_update'] * to_bit)) + unit
+
             # New line
             ret.append(self.curse_new_line())
             msg = '{0:{width}}'.format(ifname, width=ifname_max_width)
