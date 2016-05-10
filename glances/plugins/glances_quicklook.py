@@ -129,23 +129,26 @@ class Plugin(GlancesPlugin):
                         msg = '{0:3}{1} '.format(key.upper(), cpu['cpu_number'])
                     else:
                         msg = '{0:4} '.format(cpu['cpu_number'])
-                    ret.append(self.curse_add_line(msg))
-                    ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
-                    ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
-                    ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
-                    ret.append(self.curse_add_line('  '))
-                    ret.append(self.curse_new_line())
+                    ret.extend(self._msg_create_line(msg, bar, key))
             else:
                 bar.percent = self.stats[key]
                 msg = '{0:4} '.format(key.upper())
-                ret.append(self.curse_add_line(msg))
-                ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
-                ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
-                ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
-                ret.append(self.curse_add_line('  '))
-                ret.append(self.curse_new_line())
+                ret.extend(self._msg_create_line(msg, bar, key))
 
         # Return the message with decoration
+        return ret
+
+    def _msg_create_line(self, msg, bar, key):
+        """Create a new line to the Quickview"""
+        ret = []
+
+        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(bar.pre_char, decoration='BOLD'))
+        ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
+        ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
+        ret.append(self.curse_add_line('  '))
+        ret.append(self.curse_new_line())
+
         return ret
 
     def _hz_to_ghz(self, hz):
