@@ -550,22 +550,13 @@ class _GlancesCurses(object):
             # ... and exit
             return False
 
-        # ==================================
-        # Display first line (system+uptime)
-        # ==================================
-        # Space between column
-        self.space_between_column = 0
-        self.new_line()
+        # =====================================
+        # Display first line (SYSTEM+IP+UPTIME)
+        # =====================================
         l_uptime = self.get_stats_display_width(
             stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime)
-        self.display_plugin(
-            stats_system, display_optional=(screen_x >= l_uptime))
-        self.new_column()
-        self.display_plugin(stats_ip)
-        # Space between column
-        self.space_between_column = 3
-        self.new_column()
-        self.display_plugin(stats_uptime)
+        display_optional_system = (screen_x >= l_uptime)
+        self._display_first_line(stats_system, display_optional_system, stats_ip, stats_uptime)
 
         # ========================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+LOAD+MEM+SWAP)
@@ -651,13 +642,10 @@ class _GlancesCurses(object):
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
-        self.new_column()
-        self.display_plugin(stats_mem, display_optional=display_optional_mem)
-        self.new_column()
-        self.display_plugin(stats_memswap)
-        self.new_column()
-        self.display_plugin(stats_load)
+        self._display_second_line(stats_cpu, display_optional_cpu,
+                                  stats_mem, display_optional_mem,
+                                  stats_memswap,
+                                  stats_load)
 
         # Space between column
         self.space_between_column = 3
@@ -666,57 +654,34 @@ class _GlancesCurses(object):
         self.saved_line = self.next_line
 
         # ==================================================================
-        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
+        # Display left stats (NETWORK+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
-        if not (self.args.disable_network and
-                self.args.disable_diskio and
-                self.args.disable_fs and
-                self.args.disable_folder and
-                self.args.disable_raid and
-                self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            self.new_line()
-            self.display_plugin(stats_network)
-            self.new_line()
-            self.display_plugin(stats_diskio)
-            self.new_line()
-            self.display_plugin(stats_fs)
-            self.new_line()
-            self.display_plugin(stats_folders)
-            self.new_line()
-            self.display_plugin(stats_raid)
-            self.new_line()
-            self.display_plugin(stats_sensors)
-            self.new_line()
-            self.display_plugin(stats_now)
+        self._display_left_column(stats_network, stats_diskio,
+                                  stats_fs, stats_folders,
+                                  stats_raid, stats_sensors, stats_now)
 
-        # ====================================
-        # Display right stats (process and co)
-        # ====================================
+        # ==================================================================
+        # Display right stats (DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT)
+        # ==================================================================
         # If space available...
         if screen_x > 52:
             # Restore line position
             self.next_line = self.saved_line
-
-            # Display right sidebar
-            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
+            # Create a new column
             self.new_column()
-            self.new_line()
-            self.display_plugin(stats_docker)
-            self.new_line()
-            self.display_plugin(stats_processcount)
-            self.new_line()
-            self.display_plugin(stats_amps)
-            self.new_line()
-            self.display_plugin(stats_processlist,
-                                display_optional=(screen_x > 102),
-                                display_additional=(not OSX),
-                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
-            self.new_line()
-            self.display_plugin(stats_alert)
+            # Option for processes list
+            display_optional = screen_x > 102
+            display_additional = not OSX
+            max_y = (screen_y - self.get_stats_display_height(stats_alert) - 2)
+            # Let's display the column
+            self._display_right(stats_docker, stats_processcount, stats_amps,
+                                stats_processlist, display_optional, display_additional, max_y,
+                                stats_alert)
 
         # History option
         # Generate history graph
+        # TODO: to be exclude from curses interface (related to issue #696)
         if self.history_tag and self.args.enable_history:
             self.display_popup(
                 'Generate graphs history in {0}\nPlease wait...'.format(
@@ -750,6 +715,83 @@ class _GlancesCurses(object):
         self.edit_filter = False
 
         return True
+
+    def _display_first_line(self, stats_system, display_optional_system, stats_ip, stats_uptime):
+        """Display the first line of stats
+        SYSTEM+IP+UPTIME
+        """
+        # Space between column
+        self.space_between_column = 0
+        self.new_line()
+        self.display_plugin(
+            stats_system, display_optional=display_optional_system)
+        self.new_column()
+        self.display_plugin(stats_ip)
+        # Space between column
+        self.space_between_column = 3
+        self.new_column()
+        self.display_plugin(stats_uptime)
+
+    def _display_second_line(self, stats_cpu, display_optional_cpu,
+                             stats_mem, display_optional_mem,
+                             stats_memswap,
+                             stats_load):
+        """Display the second line of stats
+        QUICKLOOK+CPU|PERCPU+LOAD+MEM+SWAP
+        """
+        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
+        self.new_column()
+        self.display_plugin(stats_mem, display_optional=display_optional_mem)
+        self.new_column()
+        self.display_plugin(stats_memswap)
+        self.new_column()
+        self.display_plugin(stats_load)
+
+    def _display_left_column(self, stats_network, stats_diskio, stats_fs,
+                             stats_folders, stats_raid, stats_sensors, stats_now):
+        """Display the left column
+        NETWORK+DISKIO+FS+(FOLDER)+SENSORS+TIME
+        """
+        if not (self.args.disable_network and
+                self.args.disable_diskio and
+                self.args.disable_fs and
+                self.args.disable_folder and
+                self.args.disable_raid and
+                self.args.disable_sensors) and not self.args.disable_left_sidebar:
+            self.new_line()
+            self.display_plugin(stats_network)
+            self.new_line()
+            self.display_plugin(stats_diskio)
+            self.new_line()
+            self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_folders)
+            self.new_line()
+            self.display_plugin(stats_raid)
+            self.new_line()
+            self.display_plugin(stats_sensors)
+            self.new_line()
+            self.display_plugin(stats_now)
+
+    def _display_right(self, stats_docker, stats_processcount, stats_amps,
+                       stats_processlist, display_optional, display_additional, max_y,
+                       stats_alert):
+        """Display the right column
+
+        """
+        self.new_line()
+        self.display_plugin(stats_docker)
+        self.new_line()
+        self.display_plugin(stats_processcount)
+        self.new_line()
+        self.display_plugin(stats_amps)
+        self.new_line()
+        self.display_plugin(stats_processlist,
+                            display_optional=display_optional,
+                            display_additional=display_additional,
+                            max_y=max_y)
+        self.new_line()
+        self.display_plugin(stats_alert)
 
     def display_popup(self, message,
                       size_x=None, size_y=None,
