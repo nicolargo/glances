@@ -2,12 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.7
-===========
+Version 2.6.2
+=============
 
 Bugs corrected:
 
-    *  Crash on launch when viewing temperature of laptop HDD in sleep mode (issue #824)
+    *  Crash with Docker 1.11 (issue #848)
 
 Version 2.6.1
 =============
