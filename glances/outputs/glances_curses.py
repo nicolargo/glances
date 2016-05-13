@@ -22,7 +22,7 @@
 import re
 import sys
 
-from glances.compat import u, iteritems
+from glances.compat import u
 from glances.globals import OSX, WINDOWS
 from glances.logger import logger
 from glances.logs import glances_logs
@@ -50,45 +50,6 @@ class _GlancesCurses(object):
 
     Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
     """
-
-    # Shortcuts list
-    # Note: This list is not exhaustive. See the __catch_key method
-    _switch_shortcuts = {
-        '0': 'disable_irix',
-        '1': 'percpu',
-        '2': 'disable_left_sidebar',
-        '3': 'disable_quicklook',
-        '4': 'full_quicklook',
-        '5': 'disable_top',
-        '/': 'process_short_name',
-        'A': 'disable_amps',
-        'b': 'byte',
-        'B': 'diskio_iops',
-        'd': 'disable_diskio',
-        'e': 'enable_process_extended',
-        'D': 'disable_docker',
-        'F': 'fs_free_space',
-        'f': 'disable_fs',
-        'h': 'help_tag',
-        'I': 'disable_ip',
-        'l': 'disable_log',
-        'M': 'reset_minmax_tag',
-        'n': 'disable_network',
-        'R': 'disable_raid',
-        's': 'disable_sensors',
-        'T': 'network_sum',
-        'U': 'network_cumul',
-        'z': 'disable_process'
-    }
-
-    _sort_shortcuts = {
-        'c': 'cpu_percent',
-        'i': 'io_counters',
-        'm': 'memory_percent',
-        'p': 'name',
-        't': 'cpu_times',
-        'u': 'username'
-    }
 
     def __init__(self, config=None, args=None):
         # Init
@@ -325,61 +286,7 @@ class _GlancesCurses(object):
         # Catch the pressed key
         self.pressedkey = self.get_key(self.term_window)
 
-        # Switch keys actions
-        for k, a in iteritems(self._switch_shortcuts):
-            if self.pressedkey == ord(k):
-                setattr(self.args, a, not getattr(self.args, a))
-                logger.debug('Keypressed (\'{0}\'), set {1} to {2}'.format(k, a, getattr(self.args, a)))
-
-        # Sort keys actions
-        for k, a in iteritems(self._sort_shortcuts):
-            if self.pressedkey == ord(k):
-                glances_processes.auto_sort = False
-                glances_processes.sort_key = a
-                logger.debug('Keypressed (\'{0}\'), sort processes by {1}'.format(k, a))
-
-        # Same action for folder and fs plugin
-        self.args.disable_folder = self.args.disable_fs
-
-        # Quicklook action
-        if self.args.full_quicklook:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = True
-            self.args.disable_mem = True
-            self.args.disable_swap = True
-        else:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = False
-            self.args.disable_mem = False
-            self.args.disable_swap = False
-
-        # Top action
-        if self.args.disable_top:
-            self.args.disable_quicklook = True
-            self.args.disable_cpu = True
-            self.args.disable_mem = True
-            self.args.disable_swap = True
-            self.args.disable_load = True
-        else:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = False
-            self.args.disable_mem = False
-            self.args.disable_swap = False
-            self.args.disable_load = False
-
-        # Extended stats on top process
-        if self.args.enable_process_extended:
-            glances_processes.enable_extended()
-        else:
-            glances_processes.disable_extended()
-
-        # Disable process action
-        if self.args.disable_process:
-            glances_processes.disable()
-        else:
-            glances_processes.enable()
-
-        # Others actions...
+        # Actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             if return_to_browser:
@@ -391,27 +298,159 @@ class _GlancesCurses(object):
         elif self.pressedkey == 10:
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
+        elif self.pressedkey == ord('0'):
+            # '0' > Switch between IRIX and Solaris mode
+            self.args.disable_irix = not self.args.disable_irix
+        elif self.pressedkey == ord('1'):
+            # '1' > Switch between CPU and PerCPU information
+            self.args.percpu = not self.args.percpu
+        elif self.pressedkey == ord('2'):
+            # '2' > Enable/disable left sidebar
+            self.args.disable_left_sidebar = not self.args.disable_left_sidebar
+        elif self.pressedkey == ord('3'):
+            # '3' > Enable/disable quicklook
+            self.args.disable_quicklook = not self.args.disable_quicklook
+        elif self.pressedkey == ord('4'):
+            # '4' > Enable/disable all but quick look and load
+            self.args.full_quicklook = not self.args.full_quicklook
+            if self.args.full_quicklook:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = True
+                self.args.disable_mem = True
+                self.args.disable_swap = True
+            else:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = False
+                self.args.disable_mem = False
+                self.args.disable_swap = False
+        elif self.pressedkey == ord('5'):
+            # '5' > Enable/disable top menu
+            logger.info(self.args.disable_top)
+            self.args.disable_top = not self.args.disable_top
+            if self.args.disable_top:
+                self.args.disable_quicklook = True
+                self.args.disable_cpu = True
+                self.args.disable_mem = True
+                self.args.disable_swap = True
+                self.args.disable_load = True
+            else:
+                self.args.disable_quicklook = False
+                self.args.disable_cpu = False
+                self.args.disable_mem = False
+                self.args.disable_swap = False
+                self.args.disable_load = False
+        elif self.pressedkey == ord('/'):
+            # '/' > Switch between short/long name for processes
+            self.args.process_short_name = not self.args.process_short_name
         elif self.pressedkey == ord('a'):
             # 'a' > Sort processes automatically and reset to 'cpu_percent'
             glances_processes.auto_sort = True
             glances_processes.sort_key = 'cpu_percent'
+        elif self.pressedkey == ord('A'):
+            # 'A' > enable/disable AMP module
+            self.args.disable_amps = not self.args.disable_amps
+        elif self.pressedkey == ord('b'):
+            # 'b' > Switch between bit/s and Byte/s for network IO
+            self.args.byte = not self.args.byte
+        elif self.pressedkey == ord('B'):
+            # 'B' > Switch between bit/s and IO/s for Disk IO
+            self.args.diskio_iops = not self.args.diskio_iops
+        elif self.pressedkey == ord('c'):
+            # 'c' > Sort processes by CPU usage
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'cpu_percent'
+        elif self.pressedkey == ord('d'):
+            # 'd' > Show/hide disk I/O stats
+            self.args.disable_diskio = not self.args.disable_diskio
+        elif self.pressedkey == ord('D'):
+            # 'D' > Show/hide Docker stats
+            self.args.disable_docker = not self.args.disable_docker
+        elif self.pressedkey == ord('e'):
+            # 'e' > Enable/Disable extended stats for top process
+            self.args.enable_process_extended = not self.args.enable_process_extended
+            if not self.args.enable_process_extended:
+                glances_processes.disable_extended()
+            else:
+                glances_processes.enable_extended()
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             logger.info("Erase process filter")
             glances_processes.process_filter = None
+        elif self.pressedkey == ord('F'):
+            # 'F' > Switch between FS available and free space
+            self.args.fs_free_space = not self.args.fs_free_space
+        elif self.pressedkey == ord('f'):
+            # 'f' > Show/hide fs / folder stats
+            self.args.disable_fs = not self.args.disable_fs
+            self.args.disable_folder = not self.args.disable_folder
         elif self.pressedkey == ord('g'):
             # 'g' > History
             self.history_tag = not self.history_tag
+        elif self.pressedkey == ord('h'):
+            # 'h' > Show/hide help
+            self.args.help_tag = not self.args.help_tag
+        elif self.pressedkey == ord('i'):
+            # 'i' > Sort processes by IO rate (not available on OS X)
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'io_counters'
+        elif self.pressedkey == ord('I'):
+            # 'I' > Show/hide IP module
+            self.args.disable_ip = not self.args.disable_ip
+        elif self.pressedkey == ord('l'):
+            # 'l' > Show/hide log messages
+            self.args.disable_log = not self.args.disable_log
+        elif self.pressedkey == ord('m'):
+            # 'm' > Sort processes by MEM usage
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'memory_percent'
+        elif self.pressedkey == ord('M'):
+            # 'M' > Reset processes summary min/max
+            self.args.reset_minmax_tag = not self.args.reset_minmax_tag
+        elif self.pressedkey == ord('n'):
+            # 'n' > Show/hide network stats
+            self.args.disable_network = not self.args.disable_network
+        elif self.pressedkey == ord('p'):
+            # 'p' > Sort processes by name
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'name'
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag
+        elif self.pressedkey == ord('R'):
+            # 'R' > Hide RAID plugins
+            self.args.disable_raid = not self.args.disable_raid
+        elif self.pressedkey == ord('s'):
+            # 's' > Show/hide sensors stats (Linux-only)
+            self.args.disable_sensors = not self.args.disable_sensors
+        elif self.pressedkey == ord('t'):
+            # 't' > Sort processes by TIME usage
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'cpu_times'
+        elif self.pressedkey == ord('T'):
+            # 'T' > View network traffic as sum Rx+Tx
+            self.args.network_sum = not self.args.network_sum
+        elif self.pressedkey == ord('u'):
+            # 'u' > Sort processes by USER
+            glances_processes.auto_sort = False
+            glances_processes.sort_key = 'username'
+        elif self.pressedkey == ord('U'):
+            # 'U' > View cumulative network I/O (instead of bitrate)
+            self.args.network_cumul = not self.args.network_cumul
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
-
+        elif self.pressedkey == ord('z'):
+            # 'z' > Enable/Disable processes stats (count + list + AMPs)
+            # Enable/Disable display
+            self.args.disable_process = not self.args.disable_process
+            # Enable/Disable update
+            if self.args.disable_process:
+                glances_processes.disable()
+            else:
+                glances_processes.enable()
         # Return the key code
         return self.pressedkey
 
@@ -550,13 +589,22 @@ class _GlancesCurses(object):
             # ... and exit
             return False
 
-        # =====================================
-        # Display first line (SYSTEM+IP+UPTIME)
-        # =====================================
+        # ==================================
+        # Display first line (system+uptime)
+        # ==================================
+        # Space between column
+        self.space_between_column = 0
+        self.new_line()
         l_uptime = self.get_stats_display_width(
             stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime)
-        display_optional_system = (screen_x >= l_uptime)
-        self._display_first_line(stats_system, display_optional_system, stats_ip, stats_uptime)
+        self.display_plugin(
+            stats_system, display_optional=(screen_x >= l_uptime))
+        self.new_column()
+        self.display_plugin(stats_ip)
+        # Space between column
+        self.space_between_column = 3
+        self.new_column()
+        self.display_plugin(stats_uptime)
 
         # ========================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+LOAD+MEM+SWAP)
@@ -642,10 +690,13 @@ class _GlancesCurses(object):
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        self._display_second_line(stats_cpu, display_optional_cpu,
-                                  stats_mem, display_optional_mem,
-                                  stats_memswap,
-                                  stats_load)
+        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
+        self.new_column()
+        self.display_plugin(stats_mem, display_optional=display_optional_mem)
+        self.new_column()
+        self.display_plugin(stats_memswap)
+        self.new_column()
+        self.display_plugin(stats_load)
 
         # Space between column
         self.space_between_column = 3
@@ -654,34 +705,57 @@ class _GlancesCurses(object):
         self.saved_line = self.next_line
 
         # ==================================================================
-        # Display left stats (NETWORK+DISKIO+FS+SENSORS+Current time)
+        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
-        self._display_left_column(stats_network, stats_diskio,
-                                  stats_fs, stats_folders,
-                                  stats_raid, stats_sensors, stats_now)
+        if not (self.args.disable_network and
+                self.args.disable_diskio and
+                self.args.disable_fs and
+                self.args.disable_folder and
+                self.args.disable_raid and
+                self.args.disable_sensors) and not self.args.disable_left_sidebar:
+            self.new_line()
+            self.display_plugin(stats_network)
+            self.new_line()
+            self.display_plugin(stats_diskio)
+            self.new_line()
+            self.display_plugin(stats_fs)
+            self.new_line()
+            self.display_plugin(stats_folders)
+            self.new_line()
+            self.display_plugin(stats_raid)
+            self.new_line()
+            self.display_plugin(stats_sensors)
+            self.new_line()
+            self.display_plugin(stats_now)
 
-        # ==================================================================
-        # Display right stats (DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT)
-        # ==================================================================
+        # ====================================
+        # Display right stats (process and co)
+        # ====================================
         # If space available...
         if screen_x > 52:
             # Restore line position
             self.next_line = self.saved_line
-            # Create a new column
+
+            # Display right sidebar
+            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
             self.new_column()
-            # Option for processes list
-            display_optional = screen_x > 102
-            display_additional = not OSX
-            max_y = (screen_y - self.get_stats_display_height(stats_alert) - 2)
-            # Let's display the column
-            self._display_right(stats_docker, stats_processcount, stats_amps,
-                                stats_processlist, display_optional, display_additional, max_y,
-                                stats_alert)
+            self.new_line()
+            self.display_plugin(stats_docker)
+            self.new_line()
+            self.display_plugin(stats_processcount)
+            self.new_line()
+            self.display_plugin(stats_amps)
+            self.new_line()
+            self.display_plugin(stats_processlist,
+                                display_optional=(screen_x > 102),
+                                display_additional=(not OSX),
+                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
+            self.new_line()
+            self.display_plugin(stats_alert)
 
         # History option
         # Generate history graph
-        # TODO: to be exclude from curses interface (related to issue #696)
         if self.history_tag and self.args.enable_history:
             self.display_popup(
                 'Generate graphs history in {0}\nPlease wait...'.format(
@@ -715,83 +789,6 @@ class _GlancesCurses(object):
         self.edit_filter = False
 
         return True
-
-    def _display_first_line(self, stats_system, display_optional_system, stats_ip, stats_uptime):
-        """Display the first line of stats
-        SYSTEM+IP+UPTIME
-        """
-        # Space between column
-        self.space_between_column = 0
-        self.new_line()
-        self.display_plugin(
-            stats_system, display_optional=display_optional_system)
-        self.new_column()
-        self.display_plugin(stats_ip)
-        # Space between column
-        self.space_between_column = 3
-        self.new_column()
-        self.display_plugin(stats_uptime)
-
-    def _display_second_line(self, stats_cpu, display_optional_cpu,
-                             stats_mem, display_optional_mem,
-                             stats_memswap,
-                             stats_load):
-        """Display the second line of stats
-        QUICKLOOK+CPU|PERCPU+LOAD+MEM+SWAP
-        """
-        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
-        self.new_column()
-        self.display_plugin(stats_mem, display_optional=display_optional_mem)
-        self.new_column()
-        self.display_plugin(stats_memswap)
-        self.new_column()
-        self.display_plugin(stats_load)
-
-    def _display_left_column(self, stats_network, stats_diskio, stats_fs,
-                             stats_folders, stats_raid, stats_sensors, stats_now):
-        """Display the left column
-        NETWORK+DISKIO+FS+(FOLDER)+SENSORS+TIME
-        """
-        if not (self.args.disable_network and
-                self.args.disable_diskio and
-                self.args.disable_fs and
-                self.args.disable_folder and
-                self.args.disable_raid and
-                self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            self.new_line()
-            self.display_plugin(stats_network)
-            self.new_line()
-            self.display_plugin(stats_diskio)
-            self.new_line()
-            self.display_plugin(stats_fs)
-            self.new_line()
-            self.display_plugin(stats_folders)
-            self.new_line()
-            self.display_plugin(stats_raid)
-            self.new_line()
-            self.display_plugin(stats_sensors)
-            self.new_line()
-            self.display_plugin(stats_now)
-
-    def _display_right(self, stats_docker, stats_processcount, stats_amps,
-                       stats_processlist, display_optional, display_additional, max_y,
-                       stats_alert):
-        """Display the right column
-
-        """
-        self.new_line()
-        self.display_plugin(stats_docker)
-        self.new_line()
-        self.display_plugin(stats_processcount)
-        self.new_line()
-        self.display_plugin(stats_amps)
-        self.new_line()
-        self.display_plugin(stats_processlist,
-                            display_optional=display_optional,
-                            display_additional=display_additional,
-                            max_y=max_y)
-        self.new_line()
-        self.display_plugin(stats_alert)
 
     def display_popup(self, message,
                       size_x=None, size_y=None,
