@@ -208,7 +208,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
         parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
-                            dest='disable_irix', help='Task\'s cpu usage will be divided by the total number of CPUs')
+                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
@@ -229,7 +229,9 @@ Start the client browser (browser mode):\n\
                             dest='fs_free_space', help='display FS free space instead of used')
         parser.add_argument('--theme-white', action='store_true', default=False,
                             dest='theme_white', help='optimize display colors for white background')
-
+        # Globals options
+        parser.add_argument('--disable-check-update', action='store_true', default=False,
+                            dest='disable_check_update', help='disable online Glances version ckeck')
         return parser
 
     def parse_args(self):
