@@ -71,6 +71,10 @@ LOGGING_CFG = {
             'handlers': ['file'],
             'level': 'INFO'
         },
+        'requests': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
+        },
         'elasticsearch': {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
