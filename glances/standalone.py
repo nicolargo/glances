@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
+from glances.outdated import Outdated
 
 
 class GlancesStandalone(object):
@@ -77,6 +78,9 @@ class GlancesStandalone(object):
             # Init screen
             self.screen = GlancesCursesStandalone(config=config, args=args)
 
+        # Check the latest Glances version
+        self.outdated = Outdated(config=config, args=args)
+
     @property
     def quiet(self):
         return self._quiet
@@ -115,3 +119,8 @@ class GlancesStandalone(object):
 
         # Exit from export modules
         self.stats.end()
+
+        # Check Glances version versus Pypi one
+        if self.outdated.is_outdated():
+            print("You are using Glances version {0}, however version {1} is available.".format(self.outdated.installed_version(), self.outdated.latest_version()))
+            print("You should consider upgrading using: pip install --upgrade glances")
