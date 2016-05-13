@@ -53,13 +53,31 @@ class Outdated(object):
         self.config = config
 
         # Set default value...
+        self.outdated_config_tag = True
         self.data = {
             'installed_version': __version__,
             'latest_version': '0.0',
-            'refresh_date': None
+            'refresh_date': datetime.now()
         }
-        # ... and update
+        # Read the configuration file
+        self.load_config(config)
+
+        # And update !
         self.get_pypi_version()
+
+    def load_config(self, config):
+        """Load outdated parameter in the global section of the configuration file."""
+
+        global_section = 'global'
+        if (hasattr(config, 'has_section') and
+                config.has_section(global_section)):
+            self.outdated_config_tag = config.get_value(global_section, 'check_update').lower() == 'true'
+            logger.debug("Check Glances version up-to-date: {0}".format(self.outdated_config_tag))
+        else:
+            logger.debug("Can not find section {0} in the configuration file".format(global_section))
+            return False
+
+        return True
 
     def installed_version(self):
         return self.data['installed_version']
@@ -75,10 +93,13 @@ class Outdated(object):
         The data are stored in a cached file
         Only update online once a week
         """
+        if not outdated_tag or not self.outdated_config_tag:
+            return
+
         # If the cached file exist, read-it
         cached_data = self._load_cache()
 
-        if outdated_tag and cached_data == {}:
+        if cached_data == {}:
             # Update needed
             # Update and save the cache
             thread = threading.Thread(target=self._update_pypi_version)
@@ -87,6 +108,19 @@ class Outdated(object):
             # Update not needed
             self.data['latest_version'] = cached_data['latest_version']
             logger.debug("Get the Glances version from the cache file")
+
+    def is_outdated(self):
+        """Return True if a new version is available"""
+        if not self.self.outdated_config_tag:
+            # Check is disabled by configuration
+            return False
+
+        if not outdated_tag:
+            logger.debug("Python Request lib is not installed. Can not get last Glances version on Pypi.")
+            return False
+
+        logger.debug("Check Glances version (installed: {0} / latest: {1})".format(self.installed_version(), self.latest_version()))
+        return LooseVersion(self.latest_version()) > LooseVersion(self.installed_version())
 
     def _load_cache(self):
         """Load cache file and return cached data"""
@@ -133,6 +167,10 @@ class Outdated(object):
         """Get the latest Pypi version (as a string) via the Restful JSON API"""
         # Get the Nginx status
         logger.debug("Get latest Glances version from the Pypi Restfull API ({0})".format(self.PYPI_API_URL))
+
+        # Update the current time
+        self.data['refresh_date'] = datetime.now()
+
         try:
             res = requests.get(self.PYPI_API_URL)
         except Exception as e:
@@ -141,19 +179,12 @@ class Outdated(object):
             if res.ok:
                 # Update data
                 self.data['latest_version'] = json.loads(res.text)['info']['version']
-                self.data['refresh_date'] = datetime.now()
-                # Save result to the cache file
-                self._save_cache()
                 logger.debug("Save Glances version to the cache file")
             else:
                 logger.debug("Can not get the Glances version from the Pypi Restfull API ({0})".format(res.reason))
 
-        return self.data
+        # Save result to the cache file
+        # Note: also saved if the Glances Pypi version can not be grabed
+        self._save_cache()
 
-    def is_outdated(self):
-        """Return True if a new version is available"""
-        if not outdated_tag:
-            logger.debug("Python Request lib is not installed. Can not get last Glances version on Pypi.")
-            return False
-        logger.debug("Check Glances version (installed: {0} / latest: {1})".format(self.installed_version(), self.latest_version()))
-        return LooseVersion(self.latest_version()) > LooseVersion(self.installed_version())
+        return self.data
