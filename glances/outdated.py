@@ -53,14 +53,14 @@ class Outdated(object):
         self.config = config
 
         # Set default value...
-        self.outdated_config_tag = True
         self.data = {
-            'installed_version': __version__,
-            'latest_version': '0.0',
-            'refresh_date': datetime.now()
+            u'installed_version': __version__,
+            u'latest_version': '0.0',
+            u'refresh_date': datetime.now()
         }
         # Read the configuration file
         self.load_config(config)
+        logger.debug("Check Glances version up-to-date: {0}".format(not self.args.disable_check_update))
 
         # And update !
         self.get_pypi_version()
@@ -71,8 +71,7 @@ class Outdated(object):
         global_section = 'global'
         if (hasattr(config, 'has_section') and
                 config.has_section(global_section)):
-            self.outdated_config_tag = config.get_value(global_section, 'check_update').lower() == 'true'
-            logger.debug("Check Glances version up-to-date: {0}".format(self.outdated_config_tag))
+            self.args.disable_check_update = config.get_value(global_section, 'check_update').lower() == 'false'
         else:
             logger.debug("Can not find section {0} in the configuration file".format(global_section))
             return False
@@ -93,7 +92,7 @@ class Outdated(object):
         The data are stored in a cached file
         Only update online once a week
         """
-        if not outdated_tag or not self.outdated_config_tag:
+        if not outdated_tag or self.args.disable_check_update:
             return
 
         # If the cached file exist, read-it
@@ -111,7 +110,7 @@ class Outdated(object):
 
     def is_outdated(self):
         """Return True if a new version is available"""
-        if not self.self.outdated_config_tag:
+        if self.args.disable_check_update:
             # Check is disabled by configuration
             return False
 
@@ -169,7 +168,7 @@ class Outdated(object):
         logger.debug("Get latest Glances version from the Pypi Restfull API ({0})".format(self.PYPI_API_URL))
 
         # Update the current time
-        self.data['refresh_date'] = datetime.now()
+        self.data[u'refresh_date'] = datetime.now()
 
         try:
             res = requests.get(self.PYPI_API_URL)
@@ -178,7 +177,7 @@ class Outdated(object):
         else:
             if res.ok:
                 # Update data
-                self.data['latest_version'] = json.loads(res.text)['info']['version']
+                self.data[u'latest_version'] = json.loads(res.text)['info']['version']
                 logger.debug("Save Glances version to the cache file")
             else:
                 logger.debug("Can not get the Glances version from the Pypi Restfull API ({0})".format(res.reason))
