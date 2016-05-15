@@ -128,7 +128,7 @@ class Outdated(object):
         try:
             with open(os.path.join(self._cache_path(), 'glances-version.db'), 'rb') as f:
                 cached_data = pickle.load(f)
-        except (EOFError, IOError) as e:
+        except Exception as e:
             logger.debug("Can not read the version cache file ({0})".format(e))
         else:
             logger.debug("Read the version cache file")
