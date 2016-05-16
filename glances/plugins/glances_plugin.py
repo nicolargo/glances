@@ -410,7 +410,7 @@ class GlancesPlugin(object):
             # So stats will be highlited with a specific color
             log_str = "_LOG"
             # Add the log to the list
-            glances_logs.add(ret, stat_name.upper(), value, [])
+            glances_logs.add(ret, stat_name.upper(), value)
 
         # Manage action
         # Here is a command line for the current trigger ?

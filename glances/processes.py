@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import operator
 import os
 import re
 
@@ -546,5 +547,42 @@ class GlancesProcesses(object):
     def sort_key(self, key):
         """Set the current sort key."""
         self._sort_key = key
+
+
+# TODO: move this global function (also used in glances_processlist
+#       and logs) inside the GlancesProcesses class
+def sort_stats(stats, sortedby=None, tree=False, reverse=True):
+    """Return the stats (dict) sorted by (sortedby)
+    Reverse the sort if reverse is True."""
+    if sortedby is None:
+        # No need to sort...
+        return stats
+
+    if sortedby == 'io_counters' and not tree:
+        # Specific case for io_counters
+        # Sum of io_r + io_w
+        try:
+            # Sort process by IO rate (sum IO read + IO write)
+            stats.sort(key=lambda process: process[sortedby][0] -
+                       process[sortedby][2] + process[sortedby][1] -
+                       process[sortedby][3],
+                       reverse=reverse)
+        except Exception:
+            stats.sort(key=operator.itemgetter('cpu_percent'),
+                       reverse=reverse)
+    else:
+        # Others sorts
+        if tree:
+            stats.set_sorting(sortedby, reverse)
+        else:
+            try:
+                stats.sort(key=operator.itemgetter(sortedby),
+                           reverse=reverse)
+            except (KeyError, TypeError):
+                stats.sort(key=operator.itemgetter('name'),
+                           reverse=False)
+
+    return stats
+
 
 glances_processes = GlancesProcesses()
