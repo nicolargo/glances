@@ -109,14 +109,11 @@ class Plugin(GlancesPlugin):
                     msg = ' (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})'.format(
                         alert[6], alert[5], alert[4])
                 ret.append(self.curse_add_line(msg))
-
-                # else:
-                #     msg = ' Running...'
-                #     ret.append(self.curse_add_line(msg))
-
-                # !!! Debug only
-                # msg = ' | {0}'.format(alert)
-                # ret.append(self.curse_add_line(msg))
+                # Top processes
+                top_process = ', '.join([p['name'] for p in alert[9]])
+                if top_process != '':
+                    msg = ': {0}'.format(top_process)
+                    ret.append(self.curse_add_line(msg))
 
         return ret
 

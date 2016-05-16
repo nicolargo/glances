@@ -23,7 +23,8 @@ import time
 from datetime import datetime
 
 from glances.compat import range
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_stats
+# from glances.logger import logger
 
 
 class GlancesLogs(object):
@@ -42,7 +43,8 @@ class GlancesLogs(object):
        "CPU|LOAD|MEM",
        MAX, AVG, MIN, SUM, COUNT,
        [top3 process list],
-       "Processes description"]
+       "Processes description",
+       "top sort key"]
     """
 
     def __init__(self):
@@ -74,20 +76,24 @@ class GlancesLogs(object):
                 return i
         return -1
 
-    def set_process_sort(self, item_type):
-        """Define the process auto sort key from the alert type."""
+    def get_process_sort_key(self, item_type):
+        """Return the process sort key"""
         # Process sort depending on alert type
         if item_type.startswith("MEM"):
             # Sort TOP process by memory_percent
-            process_auto_by = 'memory_percent'
+            ret = 'memory_percent'
         elif item_type.startswith("CPU_IOWAIT"):
             # Sort TOP process by io_counters (only for Linux OS)
-            process_auto_by = 'io_counters'
+            ret = 'io_counters'
         else:
             # Default sort is...
-            process_auto_by = 'cpu_percent'
+            ret = 'cpu_percent'
+        return ret
+
+    def set_process_sort(self, item_type):
+        """Define the process auto sort key from the alert type."""
         glances_processes.auto_sort = True
-        glances_processes.sort_key = process_auto_by
+        glances_processes.sort_key = self.get_process_sort_key(item_type)
 
     def reset_process_sort(self):
         """Reset the process auto sort key."""
@@ -104,7 +110,7 @@ class GlancesLogs(object):
         If 'item' is not a 'new one', update the existing item.
         If event < peak_time the the alert is not setoff.
         """
-        proc_list = proc_list or []
+        proc_list = proc_list or glances_processes.getalllist()
 
         # Add or update the log
         item_index = self.__itemexist__(item_type)
@@ -139,13 +145,9 @@ class GlancesLogs(object):
                 item_value,  # MIN
                 item_value,  # SUM
                 1,  # COUNT
-                # Process list is sorted automatically
-                # Overwrite the user choice
-                # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-                #                     reverse=True)
-                # topprocess[0:3],  # TOP 3 PROCESS LIST
                 [],  # TOP 3 PROCESS LIST
-                proc_desc]  # MONITORED PROCESSES DESC
+                proc_desc,  # MONITORED PROCESSES DESC
+                'cpu_percent']  # TOP PROCESS SORTKEY
 
             # Add the item to the list
             self.logs_list.insert(0, item)
@@ -172,9 +174,11 @@ class GlancesLogs(object):
                 self.logs_list.remove(self.logs_list[item_index])
         else:
             # Update the item
+
             # State
             if item_state == "CRITICAL":
                 self.logs_list[item_index][2] = item_state
+
             # Value
             if item_value > self.logs_list[item_index][4]:
                 # MAX
@@ -182,19 +186,18 @@ class GlancesLogs(object):
             elif item_value < self.logs_list[item_index][6]:
                 # MIN
                 self.logs_list[item_index][6] = item_value
-            # AVG
+            # AVG (compute average value)
             self.logs_list[item_index][7] += item_value
             self.logs_list[item_index][8] += 1
             self.logs_list[item_index][5] = (self.logs_list[item_index][7] /
                                              self.logs_list[item_index][8])
-            # TOP PROCESS LIST
-            # # Process list is sorted automaticaly
-            # # Overwrite the user choise
-            # topprocess = sorted(proc_list, key=lambda process: process[process_auto_by],
-            #                     reverse=True)
-            # # TOP PROCESS LIST
-            # self.logs_list[item_index][9] = topprocess[0:3]
-            self.logs_list[item_index][9] = []
+
+            # TOP PROCESS LIST (only for CRITICAL ALERT)
+            if item_state == "CRITICAL":
+                # Sort the current process list to retreive the TOP 3 processes
+                self.logs_list[item_index][9] = sort_stats(proc_list, glances_processes.sort_key)[0:3]
+                self.logs_list[item_index][11] = glances_processes.sort_key
+
             # MONITORED PROCESSES DESC
             self.logs_list[item_index][10] = proc_desc
 

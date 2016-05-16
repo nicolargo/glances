@@ -19,14 +19,13 @@
 
 """Process list plugin."""
 
-import operator
 import os
 from datetime import timedelta
 
 from glances.compat import iteritems
 from glances.globals import LINUX, WINDOWS
 from glances.logger import logger
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_stats
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -425,12 +424,12 @@ class Plugin(GlancesPlugin):
         # Process list
         if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(
-                self.sort_stats(process_sort_key), args, first_level=True,
+                self.__sort_stats(process_sort_key), args, first_level=True,
                 max_node_count=glances_processes.max_processes))
         else:
             # Loop over processes (sorted by the sort key previously compute)
             first = True
-            for p in self.sort_stats(process_sort_key):
+            for p in self.__sort_stats(process_sort_key):
                 ret.extend(self.get_process_curses_data(p, first, args))
                 # End of extended stats
                 first = False
@@ -626,36 +625,8 @@ class Plugin(GlancesPlugin):
             ret += str(indice)
         return ret
 
-    def sort_stats(self, sortedby=None):
-        """Return the stats sorted by sortedby variable."""
-        if sortedby is None:
-            # No need to sort...
-            return self.stats
-
-        tree = glances_processes.is_tree_enabled()
-
-        if sortedby == 'io_counters' and not tree:
-            # Specific case for io_counters
-            # Sum of io_r + io_w
-            try:
-                # Sort process by IO rate (sum IO read + IO write)
-                self.stats.sort(key=lambda process: process[sortedby][0] -
-                                process[sortedby][2] + process[sortedby][1] -
-                                process[sortedby][3],
-                                reverse=glances_processes.sort_reverse)
-            except Exception:
-                self.stats.sort(key=operator.itemgetter('cpu_percent'),
-                                reverse=glances_processes.sort_reverse)
-        else:
-            # Others sorts
-            if tree:
-                self.stats.set_sorting(sortedby, glances_processes.sort_reverse)
-            else:
-                try:
-                    self.stats.sort(key=operator.itemgetter(sortedby),
-                                    reverse=glances_processes.sort_reverse)
-                except (KeyError, TypeError):
-                    self.stats.sort(key=operator.itemgetter('name'),
-                                    reverse=False)
-
-        return self.stats
+    def __sort_stats(self, sortedby=None):
+        """Return the stats (dict) sorted by (sortedby)"""
+        return sort_stats(self.stats, sortedby,
+                          tree=glances_processes.is_tree_enabled(),
+                          reverse=glances_processes.sort_reverse)
