@@ -13,7 +13,7 @@ Enhancements and new features:
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
     * Allow theme to be set in configuration file (issue #862)
-    * Display a warning message when Glances is outdated (issue #865) 
+    * Display a warning message when Glances is outdated (issue #865)
 
 Bugs corrected:
 
@@ -21,6 +21,7 @@ Bugs corrected:
     * [Web UI] Fix folders plugin never displayed (issue #829)
     * Correct issue IP plugin: VPN with no internet access (issue #842)
     * Idle process is back on FreeBSD and Windows (issue #844)
+    * Top 3 processes are back in the alert summay
 
 Deprecated:
 
