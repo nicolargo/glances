@@ -23,9 +23,10 @@ import re
 
 from glances.compat import iteritems, itervalues, listitems
 from glances.globals import BSD, LINUX, OSX, WINDOWS
-from glances.logger import logger
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.processes_tree import ProcessTreeNode
+from glances.filter import GlancesFilter
+from glances.logger import logger
 
 import psutil
 
@@ -82,8 +83,7 @@ class GlancesProcesses(object):
         self._max_processes = None
 
         # Process filter is a regular expression
-        self._process_filter = None
-        self._process_filter_re = None
+        self._filter = GlancesFilter()
 
         # Whether or not to hide kernel threads
         self.no_kernel_threads = False
@@ -119,39 +119,17 @@ class GlancesProcesses(object):
     @property
     def process_filter(self):
         """Get the process filter."""
-        return self._process_filter
+        return self._filter.filter
 
     @process_filter.setter
     def process_filter(self, value):
         """Set the process filter."""
-        logger.info("Set process filter to {0}".format(value))
-        self._process_filter = value
-        if value is not None:
-            try:
-                self._process_filter_re = re.compile(value)
-                logger.debug("Process filter regex compilation OK: {0}".format(self.process_filter))
-            except Exception:
-                logger.error("Cannot compile process filter regex: {0}".format(value))
-                self._process_filter_re = None
-        else:
-            self._process_filter_re = None
+        self._filter.filter = value
 
     @property
     def process_filter_re(self):
         """Get the process regular expression compiled."""
-        return self._process_filter_re
-
-    def is_filtered(self, value):
-        """Return True if the value should be filtered."""
-        if self.process_filter is None:
-            # No filter => Not filtered
-            return False
-        else:
-            try:
-                return self.process_filter_re.match(' '.join(value)) is None
-            except AttributeError:
-                #  Filter processes crashs with a bad regular expression pattern (issue #665)
-                return False
+        return self._filter.filter_re
 
     def disable_kernel_threads(self):
         """Ignore kernel threads in process list."""
@@ -420,7 +398,7 @@ class GlancesProcesses(object):
                OSX and s['name'] == 'kernel_task'):
                 continue
             # Continue to the next process if it has to be filtered
-            if s is None or (self.is_filtered(s['cmdline']) and self.is_filtered(s['name'])):
+            if s is None or (self._filter.is_filtered(s, 'cmdline') and self._filter.is_filtered(s, 'name')):
                 excluded_processes.add(proc)
                 continue
 
