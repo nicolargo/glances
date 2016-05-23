@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -24,6 +24,7 @@
 import operator
 import sys
 import unicodedata
+from logging.config import dictConfig
 
 PY3 = sys.version_info[0] == 3
 
@@ -128,9 +129,3 @@ else:
         if isinstance(s, binary_type):
             return s
         return s.encode('utf-8', 'replace')
-
-try:
-    # Python 2.6
-    from logutils.dictconfig import dictConfig
-except ImportError:
-    from logging.config import dictConfig

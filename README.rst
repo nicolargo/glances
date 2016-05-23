@@ -30,7 +30,7 @@ written in Python.
 Requirements
 ============
 
-- ``python >= 2.6`` or ``>= 3.3`` (tested with version 2.6, 2.7, 3.3, 3.4, 3.5)
+- ``python >= 2.7`` or ``>= 3.3`` (tested with version 2.7, 3.3, 3.4, 3.5)
 - ``psutil >= 2.0.0``
 - ``setuptools``
 
@@ -53,6 +53,12 @@ Optional dependencies:
 - ``bernhard`` (for the Riemann export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+
+Note for Python 2.6 users:
+
+Glances 2.7 (or higher) no longer support Python 2.6. Please upgrade to
+Python 2.7/3.3+ or downgrade Glances to 2.6.2 (latest version with Python
+2.6 support).
 
 Installation
 ============
