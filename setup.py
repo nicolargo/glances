@@ -5,8 +5,8 @@ import sys
 
 from setuptools import setup, Command
 
-if sys.version_info < (2, 6) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances requires at least Python 2.6 or 3.3 to run.')
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.7 or 3.3 to run.')
     sys.exit(1)
 
 
@@ -41,16 +41,15 @@ def get_data_files():
 
 def get_requires():
     requires = ['psutil>=2.0.0']
+
     if sys.platform.startswith('win'):
         requires += ['colorconsole']
-    if sys.version_info[:2] == (2, 6):
-        requires += ['argparse', 'logutils']
 
     return requires
 
 setup(
     name='Glances',
-    version='2.6.1',
+    version='2.7',
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
@@ -89,7 +88,6 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
