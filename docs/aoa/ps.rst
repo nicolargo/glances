@@ -79,6 +79,18 @@ Columns display
                           pressing on the ``'/'`` key
 ========================= ==============================================
 
+Process filtering
+-----------------
+
+It's possible to filter the processes list using the ``ENTER`` key.
+
+Filter syntax is the following (examples):
+
+- python > Filter processes name or command line starting with *python* (regexp)
+- .*python.* > Filter processes name or command line containing *python* (regexp)
+- username:nicolargo > Processes of nicolargo user (key:regexp)
+- cmdline:\/usr\/bin.* > Processes starting by */usr/bin*
+
 Extended info
 -------------
 

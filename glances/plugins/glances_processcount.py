@@ -84,6 +84,8 @@ class Plugin(GlancesPlugin):
             msg = 'Processes filter:'
             ret.append(self.curse_add_line(msg, "TITLE"))
             msg = ' {0} '.format(glances_processes.process_filter)
+            if glances_processes.process_filter_key is not None:
+                msg += 'on column {0} '.format(glances_processes.process_filter_key)
             ret.append(self.curse_add_line(msg, "FILTER"))
             msg = '(\'ENTER\' to edit, \'E\' to reset)'
             ret.append(self.curse_add_line(msg))
