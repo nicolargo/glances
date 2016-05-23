@@ -10,6 +10,7 @@ Enhancements and new features:
     * Add Application Monitoring Process plugin (issue #780)
     * Improve IP plugin to display public IP address (issue #646)
     * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
+    * Filter processes by others stats (username) (issue #748)
     * [Folders] Differentiate permission issue and non-existence of a directory (issue #828)
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
     * Allow theme to be set in configuration file (issue #862)

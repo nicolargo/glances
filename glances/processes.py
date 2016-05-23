@@ -117,14 +117,24 @@ class GlancesProcesses(object):
         self._max_processes = value
 
     @property
+    def process_filter_input(self):
+        """Get the process filter (given by the user)."""
+        return self._filter.filter_input
+
+    @property
     def process_filter(self):
-        """Get the process filter."""
+        """Get the process filter (current apply filter)."""
         return self._filter.filter
 
     @process_filter.setter
     def process_filter(self, value):
         """Set the process filter."""
         self._filter.filter = value
+
+    @property
+    def process_filter_key(self):
+        """Get the process filter key."""
+        return self._filter.filter_key
 
     @property
     def process_filter_re(self):
@@ -398,7 +408,7 @@ class GlancesProcesses(object):
                OSX and s['name'] == 'kernel_task'):
                 continue
             # Continue to the next process if it has to be filtered
-            if s is None or (self._filter.is_filtered(s, 'cmdline') and self._filter.is_filtered(s, 'name')):
+            if s is None or self._filter.is_filtered(s):
                 excluded_processes.add(proc)
                 continue
 
