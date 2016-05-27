@@ -144,6 +144,22 @@ Run the container in console mode:
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
+Additionally, If you want to use your own glances.conf file, you can create your
+own Dockerfile:
+
+.. code-block:: console
+
+    FROM nicolargo/glances
+    COPY glances.conf /glances/conf/glances.conf
+    CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+
+Alternatively, you can specify something along the same lines with docker run options:
+
+.. code-block:: console
+
+    docker run -v ./glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+
+Where ./glances.conf is a local directory containing your glances.conf file.
 
 GNU/Linux
 ---------
