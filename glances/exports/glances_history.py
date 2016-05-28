@@ -71,7 +71,7 @@ class GlancesHistory(object):
 
     def get_graph_legend(self, item):
         """Get the item's legend."""
-        return item['name']
+        return item['description']
 
     def get_graph_yunit(self, item, pre_label=''):
         """Get the item's Y unit."""
@@ -95,9 +95,12 @@ class GlancesHistory(object):
 
         index_all = 0
         for p in stats.getAllPlugins():
+            # History
             h = stats.get_plugin(p).get_stats_history()
-            # Data
-            if h is None:
+            # Current plugin item history list
+            ih = stats.get_plugin(p).get_items_history_list()
+            # Check if we must process history
+            if h is None or ih is None:
                 # History (h) not available for plugin (p)
                 continue
             # Init graph
@@ -105,7 +108,7 @@ class GlancesHistory(object):
             index_graph = 0
             handles = []
             labels = []
-            for i in stats.get_plugin(p).get_items_history_list():
+            for i in ih:
                 if i['name'] in iterkeys(h):
                     # The key exist
                     # Add the curves in the current chart
