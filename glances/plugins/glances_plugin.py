@@ -30,6 +30,7 @@ from operator import itemgetter
 
 from glances.compat import iterkeys, itervalues, listkeys, map
 from glances.actions import GlancesActions
+from glances.attribute import GlancesAttribute
 from glances.logger import logger
 from glances.logs import glances_logs
 
@@ -86,34 +87,39 @@ class GlancesPlugin(object):
         """Return the key of the list."""
         return None
 
-    def add_item_history(self, key, value):
+    def add_item_history(self, key, value,
+                         description='',
+                         history_max_size=None,
+                         is_rate=False):
         """Add an new item (key, value) to the current history."""
-        try:
-            self.stats_history[key].append(value)
-        except KeyError:
-            self.stats_history[key] = [value]
+        if key not in self.stats_history:
+            self.stats_history[key] = GlancesAttribute(key,
+                                                       description=description,
+                                                       history_max_size=history_max_size)
+        self.stats_history[key].value = value
 
     def init_stats_history(self):
-        """Init the stats history (dict of list)."""
-        ret = None
+        """Init the stats history (dict of GlancesAttribute)."""
+        ret = {}
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
-            init_list = [i['name'] for i in self.get_items_history_list()]
+            init_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
-            ret = {}
         return ret
 
     def reset_stats_history(self):
-        """Reset the stats history (dict of list)."""
+        """Reset the stats history (dict of GlancesAttribute)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
-            reset_list = [i['name'] for i in self.get_items_history_list()]
+            reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
-            self.stats_history = {}
+            for a in self.stats_history:
+                self.stats_history[a].history_reset()
 
     def update_stats_history(self, item_name=''):
         """Update stats history."""
         if (self.stats and self.args is not None and
                 self.args.enable_history and
                 self.get_items_history_list() is not None):
+            # TODO in attribute ?
             self.add_item_history('date', datetime.now())
             for i in self.get_items_history_list():
                 if isinstance(self.stats, list):
@@ -122,18 +128,24 @@ class GlancesPlugin(object):
                     # interface)
                     for l in self.stats:
                         self.add_item_history(
-                            l[item_name] + '_' + i['name'], l[i['name']])
+                            l[item_name] + '_' + i['name'],
+                            l[i['name']],
+                            description=i['description'],
+                            history_max_size=None)
                 else:
                     # Stats is not a list
                     # Add the item to the history directly
-                    self.add_item_history(i['name'], self.stats[i['name']])
+                    self.add_item_history(i['name'],
+                                          self.stats[i['name']],
+                                          description=i['description'],
+                                          history_max_size=None)
 
     def get_stats_history(self):
-        """Return the stats history."""
-        return self.stats_history
+        """Return the stats history (dict of list)."""
+        return {i: self.stats_history[i].history for i in self.stats_history}
 
     def get_items_history_list(self):
-        """Return the items history list."""
+        """Return the items history list (define inside the plugins scripts)."""
         return self.items_history_list
 
     @property
