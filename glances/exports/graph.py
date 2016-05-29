@@ -121,7 +121,9 @@ class GlancesGraph(object):
                     plt.ylabel(self.get_graph_yunit(i, pre_label=''))
                     # Curves
                     plt.grid(True)
-                    plt.plot_date(h['date'], h[i['name']],
+                    # Points are stored as tuple (date, value)
+                    x, y = zip(*h[i['name']])
+                    plt.plot_date(x, y,
                                   fmt='', drawstyle='default', linestyle='-',
                                   color=self.get_graph_color(i),
                                   xdate=True, ydate=False)
@@ -145,9 +147,13 @@ class GlancesGraph(object):
                             index_item += 1
                             plt.subplot(
                                 len(stats_history_filtered), 1, index_item)
+                            # Legend
                             plt.ylabel(self.get_graph_yunit(i, pre_label=k))
+                            # Curves
                             plt.grid(True)
-                            plt.plot_date(h['date'], h[k],
+                            # Points are stored as tuple (date, value)
+                            x, y = zip(*h[k])
+                            plt.plot_date(x, y,
                                           fmt='', drawstyle='default', linestyle='-',
                                           color=self.get_graph_color(i),
                                           xdate=True, ydate=False)
