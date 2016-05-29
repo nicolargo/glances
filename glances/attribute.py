@@ -129,5 +129,5 @@ class GlancesAttribute(object):
     def history_mean(self, nb=5):
         """Return the mean on the <nb> values in the history.
         """
-        h_sum = map(sum, zip(*self._history[-nb:]))
-        return h_sum[1] / float(self._history[-1][0] - self._history[-nb][0])
+        d, v = zip(*self._history)
+        return sum(v[-nb:]) / float(v[-1] - v[-nb])
