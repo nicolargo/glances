@@ -25,7 +25,6 @@ I am your father...
 
 import re
 import json
-from datetime import datetime
 from operator import itemgetter
 
 from glances.compat import iterkeys, itervalues, listkeys, map
@@ -106,7 +105,6 @@ class GlancesPlugin(object):
         if (self.stats and self.args is not None and
                 self.args.export_graph and
                 self.get_items_history_list() is not None):
-            # self.stats_history.add('date', datetime.now())
             for i in self.get_items_history_list():
                 if isinstance(self.stats, list):
                     # Stats is a list of data

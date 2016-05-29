@@ -193,6 +193,47 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
         print('INFO: IP stats: %s' % stats_grab)
 
+    def test_097_attribute(self):
+        """Test GlancesAttribute classe"""
+        print('INFO: [TEST_097] Test attribute')
+        # GlancesAttribute
+        from glances.attribute import GlancesAttribute
+        a = GlancesAttribute('a', description='ad', history_max_size=3)
+        self.assertEqual(a.name, 'a')
+        self.assertEqual(a.description, 'ad')
+        a.description = 'adn'
+        self.assertEqual(a.description, 'adn')
+        a.value = 1
+        a.value = 2
+        self.assertEqual(len(a.history), 2)
+        a.value = 3
+        self.assertEqual(len(a.history), 3)
+        a.value = 4
+        # Check if history_max_size=3 is OK
+        self.assertEqual(len(a.history), 3)
+        self.assertEqual(a.history_size(), 3)
+        self.assertEqual(a.history_len(), 3)
+        self.assertEqual(a.history_value()[1], 4)
+        self.assertEqual(a.history_mean(nb=3), 4.5)
+
+    def test_098_history(self):
+        """Test GlancesHistory classe"""
+        print('INFO: [TEST_098] Test history')
+        # GlancesHistory
+        from glances.history import GlancesHistory
+        h = GlancesHistory()
+        h.add('a', 1)
+        h.add('a', 2)
+        h.add('a', 3)
+        h.add('b', 10)
+        h.add('b', 20)
+        h.add('b', 30)
+        self.assertEqual(len(h.get()), 2)
+        self.assertEqual(len(h.get()['a']), 3)
+        h.reset()
+        self.assertEqual(len(h.get()), 2)
+        self.assertEqual(len(h.get()['a']), 0)
+
     def test_099_output_bars_must_be_between_0_and_100_percent(self):
         """Test quick look plugin.
 
@@ -207,12 +248,18 @@ class TestGlances(unittest.TestCase):
         > bar.percent
         100
         """
-        print('INFO: [TEST_011] Test progress bar')
+        print('INFO: [TEST_099] Test progress bar')
         bar = Bar(size=1)
         bar.percent = -1
         self.assertLessEqual(bar.percent, bar.min_value)
         bar.percent = 101
         self.assertGreaterEqual(bar.percent, bar.max_value)
+
+    def test_999_the_end(self):
+        """Free all the stats"""
+        print('INFO: [TEST_999] Free the stats')
+        stats.end()
+        self.assertTrue(True)
 
 if __name__ == '__main__':
     unittest.main()
