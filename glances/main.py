@@ -148,11 +148,13 @@ Start the client browser (browser mode):\n\
                             dest='disable_bg', help='disable background colors in the terminal')
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
-        parser.add_argument('--enable-history', action='store_true', default=False,
-                            dest='enable_history', help='enable the history mode (matplotlib needed)')
-        parser.add_argument('--path-history', default=tempfile.gettempdir(),
-                            dest='path_history', help='set the export path for graph history')
         # Export modules feature
+        # --enable-history is for 2.7< version compatibility
+        parser.add_argument('--export-graph', '--enable-history', action='store_true', default=None,
+                            dest='export_graph', help='export stats to graphs')
+        # --path-history is for 2.7< version compatibility
+        parser.add_argument('--path-graph', '--path-history', default=tempfile.gettempdir(),
+                            dest='path_graph', help='set the export path for graphs (default is {0})'.format(tempfile.gettempdir()))
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help='export stats to a CSV file')
         parser.add_argument('--export-influxdb', action='store_true', default=False,
@@ -337,11 +339,11 @@ Start the client browser (browser mode):\n\
             sys.exit(2)
 
         # Check graph output path
-        if args.enable_history and args.path_history is not None:
-            if not os.access(args.path_history, os.W_OK):
-                logger.critical("History output path {0} do not exist or is not writable".format(args.path_history))
+        if args.export_graph and args.path_graph is not None:
+            if not os.access(args.path_graph, os.W_OK):
+                logger.critical("Graphs output path {0} do not exist or is not writable".format(args.path_graph))
                 sys.exit(2)
-            logger.debug("History output path is set to {0}".format(args.path_history))
+            logger.debug("Graphs output path is set to {0}".format(args.path_graph))
 
         # Disable HDDTemp if sensors are disabled
         if args.disable_sensors:

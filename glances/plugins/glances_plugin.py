@@ -101,14 +101,14 @@ class GlancesPlugin(object):
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
         ret = {}
-        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+        if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
             init_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
         return ret
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
-        if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
+        if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
             reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
             for a in self.stats_history:
@@ -117,7 +117,7 @@ class GlancesPlugin(object):
     def update_stats_history(self, item_name=''):
         """Update stats history."""
         if (self.stats and self.args is not None and
-                self.args.enable_history and
+                self.args.export_graph and
                 self.get_items_history_list() is not None):
             # TODO in attribute ?
             self.add_item_history('date', datetime.now())
