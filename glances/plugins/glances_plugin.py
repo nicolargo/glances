@@ -106,7 +106,7 @@ class GlancesPlugin(object):
         if (self.stats and self.args is not None and
                 self.args.export_graph and
                 self.get_items_history_list() is not None):
-            self.stats_history.add('date', datetime.now())
+            # self.stats_history.add('date', datetime.now())
             for i in self.get_items_history_list():
                 if isinstance(self.stats, list):
                     # Stats is a list of data

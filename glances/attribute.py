@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -19,24 +19,24 @@
 
 """Attribute class."""
 
-from time import time
+from datetime import datetime
 
 
 class GlancesAttribute(object):
 
-    def __init__(self, name, description='', history_max_size=None, is_rate=False):
+    def __init__(self, name, description='', history_max_size=None):
         """Init the attribute
         name: Attribute name (string)
         description: Attribute human reading description (string)
         history_max_size: Maximum size of the history list (default is no limit)
-        is_rate: If True then the value is manage like a rate (store timestamp in the history)
+
+        History is stored as a list for tuple: [(date, value), ...]
         """
         self._name = name
         self._description = description
         self._value = None
         self._history_max_size = history_max_size
         self._history = []
-        self.is_rate = is_rate
 
     def __repr__(self):
         return self.value
@@ -71,25 +71,18 @@ class GlancesAttribute(object):
     """
     @property
     def value(self):
-        if self.is_rate:
-            if self.history_len() > 0:
-                return (self._value[1] - self.history_value()[1]) / (self._value[0] - self.history_value()[0])
-            else:
-                return None
+        if self.history_len() > 0:
+            return (self._value[1] - self.history_value()[1]) / (self._value[0] - self.history_value()[0])
         else:
-            return self._value
+            return None
 
     @value.setter
     def value(self, new_value):
         """Set a value.
-        If self.is_rate is True, store a tuple with (<timestamp>, value)
-        else, store directly the value (wathever type is it)
+        Value is a tuple: (<timestamp>, <new_value>)
         """
-        if self.is_rate:
-            new_value = (time(), new_value)
-        if self._value is not None:
-            self.history_add(self._value)
-        self._value = new_value
+        self._value = (datetime.now(), new_value)
+        self.history_add(self._value)
 
     """
     Properties for the attribute history
@@ -136,8 +129,5 @@ class GlancesAttribute(object):
     def history_mean(self, nb=5):
         """Return the mean on the <nb> values in the history.
         """
-        if self.is_rate:
-            h_sum = map(sum, zip(*self._history[-nb:]))
-            return h_sum[1] / float(self._history[-1][0] - self._history[-nb][0])
-        else:
-            return sum(self._history[-nb:]) / float(nb)
+        h_sum = map(sum, zip(*self._history[-nb:]))
+        return h_sum[1] / float(self._history[-1][0] - self._history[-nb][0])
