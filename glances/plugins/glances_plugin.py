@@ -30,7 +30,7 @@ from operator import itemgetter
 
 from glances.compat import iterkeys, itervalues, listkeys, map
 from glances.actions import GlancesActions
-from glances.attribute import GlancesAttribute
+from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.logs import glances_logs
 
@@ -87,47 +87,33 @@ class GlancesPlugin(object):
         """Return the key of the list."""
         return None
 
-    def add_item_history(self, key, value,
-                         description='',
-                         history_max_size=None,
-                         is_rate=False):
-        """Add an new item (key, value) to the current history."""
-        if key not in self.stats_history:
-            self.stats_history[key] = GlancesAttribute(key,
-                                                       description=description,
-                                                       history_max_size=history_max_size)
-        self.stats_history[key].value = value
-
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
-        ret = {}
         if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
             init_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
-        return ret
+        return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
         if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
             reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
-            for a in self.stats_history:
-                self.stats_history[a].history_reset()
+            self.stats_history.reset()
 
     def update_stats_history(self, item_name=''):
         """Update stats history."""
         if (self.stats and self.args is not None and
                 self.args.export_graph and
                 self.get_items_history_list() is not None):
-            # TODO in attribute ?
-            self.add_item_history('date', datetime.now())
+            self.stats_history.add('date', datetime.now())
             for i in self.get_items_history_list():
                 if isinstance(self.stats, list):
                     # Stats is a list of data
                     # Iter throught it (for exemple, iter throught network
                     # interface)
                     for l in self.stats:
-                        self.add_item_history(
+                        self.stats_history.add(
                             l[item_name] + '_' + i['name'],
                             l[i['name']],
                             description=i['description'],
@@ -135,17 +121,17 @@ class GlancesPlugin(object):
                 else:
                     # Stats is not a list
                     # Add the item to the history directly
-                    self.add_item_history(i['name'],
-                                          self.stats[i['name']],
-                                          description=i['description'],
-                                          history_max_size=None)
+                    self.stats_history.add(i['name'],
+                                           self.stats[i['name']],
+                                           description=i['description'],
+                                           history_max_size=None)
 
     def get_stats_history(self):
         """Return the stats history (dict of list)."""
-        return {i: self.stats_history[i].history for i in self.stats_history}
+        return self.stats_history.get()
 
     def get_items_history_list(self):
-        """Return the items history list (define inside the plugins scripts)."""
+        """Return the items history list."""
         return self.items_history_list
 
     @property

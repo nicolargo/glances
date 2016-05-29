@@ -5,6 +5,13 @@ Glances Version 2
 Version 2.7
 ===========
 
+Deprecated:
+
+    * Drop Python 2.6 support (issue #300)
+    * Monitoring process list module is replaced by AMP (see issue #780)
+    * Use --export-graph instead of --enable-history (issue #696)
+    * Use --path-graph instead of --path-history (issue #696)
+
 Enhancements and new features:
 
     * Add Application Monitoring Process plugin (issue #780)
@@ -15,6 +22,7 @@ Enhancements and new features:
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
     * Allow theme to be set in configuration file (issue #862)
     * Display a warning message when Glances is outdated (issue #865)
+    * Refactor stats history and export to graph (issue #696)
 
 Bugs corrected:
 
@@ -23,13 +31,6 @@ Bugs corrected:
     * Correct issue IP plugin: VPN with no internet access (issue #842)
     * Idle process is back on FreeBSD and Windows (issue #844)
     * Top 3 processes are back in the alert summay
-
-Deprecated:
-
-    * Drop Python 2.6 support (issue #300)
-    * Monitoring process list module is replaced by AMP (see issue #780)
-    * Use --export-graph instead of --enable-history (issue #696)
-    * Use --path-graph instead of --path-history (issue #696)
 
 Version 2.6.1
 =============
