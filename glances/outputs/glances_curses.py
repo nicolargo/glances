@@ -117,16 +117,15 @@ class _GlancesCurses(object):
         '''Init the history option'''
 
         self.reset_history_tag = False
-        self.history_tag = False
-        if self.args.enable_history:
-            logger.info('Stats history enabled with output path %s' %
-                        self.args.path_history)
-            from glances.exports.glances_history import GlancesHistory
-            self.glances_history = GlancesHistory(self.args.path_history)
-            if not self.glances_history.graph_enabled():
-                self.args.enable_history = False
-                logger.error(
-                    'Stats history disabled because MatPlotLib is not installed')
+        self.graph_tag = False
+        if self.args.export_graph:
+            logger.info('Export graphs function enabled with output path %s' %
+                        self.args.path_graph)
+            from glances.exports.graph import GlancesGraph
+            self.glances_graph = GlancesGraph(self.args.path_graph)
+            if not self.glances_graph.graph_enabled():
+                self.args.export_graph = False
+                logger.error('Export graphs disabled')
 
     def _init_cursor(self):
         '''Init cursors'''
@@ -384,8 +383,8 @@ class _GlancesCurses(object):
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folder = not self.args.disable_folder
         elif self.pressedkey == ord('g'):
-            # 'g' > History
-            self.history_tag = not self.history_tag
+            # 'g' > Export graphs to file
+            self.graph_tag = not self.graph_tag
         elif self.pressedkey == ord('h'):
             # 'h' > Show/hide help
             self.args.help_tag = not self.args.help_tag
@@ -756,25 +755,25 @@ class _GlancesCurses(object):
 
         # History option
         # Generate history graph
-        if self.history_tag and self.args.enable_history:
+        if self.graph_tag and self.args.export_graph:
             self.display_popup(
                 'Generate graphs history in {0}\nPlease wait...'.format(
-                    self.glances_history.get_output_folder()))
+                    self.glances_graph.get_output_folder()))
             self.display_popup(
                 'Generate graphs history in {0}\nDone: {1} graphs generated'.format(
-                    self.glances_history.get_output_folder(),
-                    self.glances_history.generate_graph(stats)))
-        elif self.reset_history_tag and self.args.enable_history:
+                    self.glances_graph.get_output_folder(),
+                    self.glances_graph.generate_graph(stats)))
+        elif self.reset_history_tag and self.args.export_graph:
             self.display_popup('Reset history')
-            self.glances_history.reset(stats)
-        elif (self.history_tag or self.reset_history_tag) and not self.args.enable_history:
+            self.glances_graph.reset(stats)
+        elif (self.graph_tag or self.reset_history_tag) and not self.args.export_graph:
             try:
-                self.glances_history.graph_enabled()
+                self.glances_graph.graph_enabled()
             except Exception:
                 self.display_popup('History disabled\nEnable it using --enable-history')
             else:
                 self.display_popup('History disabled\nPlease install matplotlib')
-        self.history_tag = False
+        self.graph_tag = False
         self.reset_history_tag = False
 
         # Display edit filter popup

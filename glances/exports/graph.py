@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""History class."""
+"""Graph generation class."""
 
 import os
 
@@ -35,9 +35,9 @@ else:
     logger.info('Load Matplotlib version %s' % matplotlib_version)
 
 
-class GlancesHistory(object):
+class GlancesGraph(object):
 
-    """This class define the object to manage stats history."""
+    """Thanks to this class, Glances can export history to graphs."""
 
     def __init__(self, output_folder):
         self.output_folder = output_folder
