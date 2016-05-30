@@ -96,6 +96,7 @@ class GlancesBottle(object):
         self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
         self._app.route('/api/2/:plugin/:item/history', method="GET", callback=self._api_item_history)
+        self._app.route('/api/2/:plugin/:item/history/:nb', method="GET", callback=self._api_item_history)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
     def start(self, stats):
@@ -360,7 +361,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
-    def _api_itemvalue(self, plugin, item, value=None, history=False):
+    def _api_itemvalue(self, plugin, item, value=None, history=False, nb=0):
         """Father method for _api_item and _api_value"""
         response.content_type = 'application/json'
 
@@ -372,7 +373,7 @@ class GlancesBottle(object):
 
         if value is None:
             if history:
-                ret = self.stats.get_plugin(plugin).get_stats_history(item)
+                ret = self.stats.get_plugin(plugin).get_stats_history(item, nb=int(nb))
             else:
                 ret = self.stats.get_plugin(plugin).get_stats_item(item)
 
@@ -380,7 +381,8 @@ class GlancesBottle(object):
                 abort(404, "Cannot get item %s%s in plugin %s" % (item, 'history ' if history else '', plugin))
         else:
             if history:
-                ret = self.stats.get_plugin(plugin).get_stats_value_history(item, value)
+                # Not available
+                ret = None
             else:
                 ret = self.stats.get_plugin(plugin).get_stats_value(item, value)
 
@@ -400,7 +402,7 @@ class GlancesBottle(object):
         """
         return self._api_itemvalue(plugin, item)
 
-    def _api_item_history(self, plugin, item):
+    def _api_item_history(self, plugin, item, nb=0):
         """Glances API RESTFul implementation.
 
         Return the JSON representation of the couple plugin/history of item
@@ -409,7 +411,7 @@ class GlancesBottle(object):
         HTTP/404 if others error
 
         """
-        return self._api_itemvalue(plugin, item, history=True)
+        return self._api_itemvalue(plugin, item, history=True, nb=int(nb))
 
     def _api_value(self, plugin, item, value):
         """Glances API RESTFul implementation.
