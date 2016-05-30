@@ -90,9 +90,12 @@ class GlancesBottle(object):
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
         self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
         self._app.route('/api/2/:plugin', method="GET", callback=self._api)
+        self._app.route('/api/2/:plugin/history', method="GET", callback=self._api_history)
+        self._app.route('/api/2/:plugin/history/:nb', method="GET", callback=self._api_history)
         self._app.route('/api/2/:plugin/limits', method="GET", callback=self._api_limits)
         self._app.route('/api/2/:plugin/views', method="GET", callback=self._api_views)
         self._app.route('/api/2/:plugin/:item', method="GET", callback=self._api_item)
+        self._app.route('/api/2/:plugin/:item/history', method="GET", callback=self._api_item_history)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
 
     def start(self, stats):
@@ -287,6 +290,30 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
         return statval
 
+    def _api_history(self, plugin, nb=0):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of a given plugin history
+        Limit to the last nb items (all if nb=0)
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        if plugin not in self.plugins_list:
+            abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
+
+        # Update the stat
+        self.stats.update()
+
+        try:
+            # Get the JSON value of the stat ID
+            statval = self.stats.get_plugin(plugin).get_stats_history(nb=int(nb))
+        except Exception as e:
+            abort(404, "Cannot get plugin history %s (%s)" % (plugin, str(e)))
+        return statval
+
     def _api_limits(self, plugin):
         """Glances API RESTFul implementation.
 
@@ -333,8 +360,8 @@ class GlancesBottle(object):
             abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
-    def _api_itemvalue(self, plugin, item, value=None):
-        """ Father method for _api_item and _api_value"""
+    def _api_itemvalue(self, plugin, item, value=None, history=False):
+        """Father method for _api_item and _api_value"""
         response.content_type = 'application/json'
 
         if plugin not in self.plugins_list:
@@ -344,28 +371,45 @@ class GlancesBottle(object):
         self.stats.update()
 
         if value is None:
-            ret = self.stats.get_plugin(plugin).get_stats_item(item)
+            if history:
+                ret = self.stats.get_plugin(plugin).get_stats_history(item)
+            else:
+                ret = self.stats.get_plugin(plugin).get_stats_item(item)
 
             if ret is None:
-                abort(404, "Cannot get item %s in plugin %s" % (item, plugin))
+                abort(404, "Cannot get item %s%s in plugin %s" % (item, 'history ' if history else '', plugin))
         else:
-            ret = self.stats.get_plugin(plugin).get_stats_value(item, value)
+            if history:
+                ret = self.stats.get_plugin(plugin).get_stats_value_history(item, value)
+            else:
+                ret = self.stats.get_plugin(plugin).get_stats_value(item, value)
 
             if ret is None:
-                abort(404, "Cannot get item(%s)=value(%s) in plugin %s" % (item, value, plugin))
+                abort(404, "Cannot get item %s(%s=%s) in plugin %s" % ('history ' if history else '', item, value, plugin))
 
         return ret
 
     def _api_item(self, plugin, item):
         """Glances API RESTFul implementation.
 
-        Return the JSON represenation of the couple plugin/item
+        Return the JSON representation of the couple plugin/item
         HTTP/200 if OK
         HTTP/400 if plugin is not found
         HTTP/404 if others error
 
         """
         return self._api_itemvalue(plugin, item)
+
+    def _api_item_history(self, plugin, item):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of the couple plugin/history of item
+        HTTP/200 if OK
+        HTTP/400 if plugin is not found
+        HTTP/404 if others error
+
+        """
+        return self._api_itemvalue(plugin, item, history=True)
 
     def _api_value(self, plugin, item, value):
         """Glances API RESTFul implementation.
