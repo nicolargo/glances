@@ -124,13 +124,68 @@ class GlancesPlugin(object):
                                            description=i['description'],
                                            history_max_size=None)
 
-    def get_stats_history(self):
-        """Return the stats history (dict of list)."""
-        return self.stats_history.get()
-
     def get_items_history_list(self):
         """Return the items history list."""
         return self.items_history_list
+
+    def get_raw_history(self, item=None):
+        """Return
+        - the stats history (dict of list) if item is None
+        - the stats history for the given item (list) instead
+        - None if item did not exist in the history"""
+        s = self.stats_history.get()
+        if item is None:
+            return s
+        else:
+            if item in s:
+                return s[item]
+            else:
+                return None
+
+    def get_json_history(self, item=None, nb=0):
+        """Return:
+        - the stats history (dict of list) if item is None
+        - the stats history for the given item (list) instead
+        - None if item did not exist in the history
+        Limit to lasts nb items (all if nb=0)"""
+        s = self.stats_history.get_json(nb=nb)
+        if item is None:
+            return s
+        else:
+            if item in s:
+                return s[item]
+            else:
+                return None
+
+    def get_export_history(self, item=None):
+        """Return the stats history object to export.
+        See get_raw_history for a full description"""
+        return self.get_raw_history(item=item)
+
+    def get_stats_history(self, item=None, nb=0):
+        """Return the stats history as a JSON object (dict or None).
+        Limit to lasts nb items (all if nb=0)"""
+        s = self.get_json_history(nb=nb)
+
+        if item is None:
+            return json.dumps(s)
+
+        if isinstance(s, dict):
+            try:
+                return json.dumps({item: s[item]})
+            except KeyError as e:
+                logger.error("Cannot get item history {0} ({1})".format(item, e))
+                return None
+        elif isinstance(s, list):
+            try:
+                # Source:
+                # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
+                return json.dumps({item: map(itemgetter(item), s)})
+            except (KeyError, ValueError) as e:
+                logger.error("Cannot get item history {0} ({1})".format(item, e))
+                return None
+        else:
+            return None
 
     @property
     def input_method(self):

@@ -96,7 +96,7 @@ class GlancesGraph(object):
         index_all = 0
         for p in stats.getAllPlugins():
             # History
-            h = stats.get_plugin(p).get_stats_history()
+            h = stats.get_plugin(p).get_export_history()
             # Current plugin item history list
             ih = stats.get_plugin(p).get_items_history_list()
             # Check if we must process history
