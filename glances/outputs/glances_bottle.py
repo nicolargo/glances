@@ -59,6 +59,9 @@ class GlancesBottle(object):
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
 
+    def app(self):
+        return self._app()
+
     def check_auth(self, username, password):
         """Check if a username/password combination is valid."""
         if username == self.args.username:
