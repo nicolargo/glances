@@ -13,3 +13,5 @@ API documentation is available at:
 
 .. _XML-RPC server: http://docs.python.org/2/library/simplexmlrpcserver.html
 .. _RESTful-JSON: http://jsonapi.org/
+
+.. autobottle:: glances.outputs.glances_bottle:GlancesBottle.app

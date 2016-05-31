@@ -770,9 +770,9 @@ class _GlancesCurses(object):
             try:
                 self.glances_graph.graph_enabled()
             except Exception:
-                self.display_popup('History disabled\nEnable it using --enable-history')
+                self.display_popup('History disabled\nEnable it using --export-graph')
             else:
-                self.display_popup('History disabled\nPlease install matplotlib')
+                self.display_popup('History disabled')
         self.graph_tag = False
         self.reset_history_tag = False
 
