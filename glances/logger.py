@@ -22,8 +22,7 @@
 import logging
 import os
 import tempfile
-
-from glances.compat import dictConfig
+from logging.config import dictConfig
 
 # Define the logging configuration
 LOGGING_CFG = {
