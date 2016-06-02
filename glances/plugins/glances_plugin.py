@@ -86,25 +86,26 @@ class GlancesPlugin(object):
         """Return the key of the list."""
         return None
 
+    def _history_enable(self):
+        return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
+
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
-        if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
+        if self._history_enable():
             init_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
         return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
-        if self.args is not None and self.args.export_graph and self.get_items_history_list() is not None:
+        if self._history_enable():
             reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
             self.stats_history.reset()
 
     def update_stats_history(self, item_name=''):
         """Update stats history."""
-        if (self.stats and self.args is not None and
-                self.args.export_graph and
-                self.get_items_history_list() is not None):
+        if self.stats and self._history_enable():
             for i in self.get_items_history_list():
                 if isinstance(self.stats, list):
                     # Stats is a list of data
