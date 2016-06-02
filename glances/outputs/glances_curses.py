@@ -764,15 +764,15 @@ class _GlancesCurses(object):
                     self.glances_graph.get_output_folder(),
                     self.glances_graph.generate_graph(stats)))
         elif self.reset_history_tag and self.args.export_graph:
-            self.display_popup('Reset history')
+            self.display_popup('Reset graph history')
             self.glances_graph.reset(stats)
         elif (self.graph_tag or self.reset_history_tag) and not self.args.export_graph:
             try:
                 self.glances_graph.graph_enabled()
             except Exception:
-                self.display_popup('History disabled\nEnable it using --export-graph')
+                self.display_popup('Graph disabled\nEnable it using --export-graph')
             else:
-                self.display_popup('History disabled')
+                self.display_popup('Graph disabled')
         self.graph_tag = False
         self.reset_history_tag = False
 

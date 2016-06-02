@@ -142,6 +142,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_amps', help='disable applications monitoring process (AMP) module')
         parser.add_argument('--disable-log', action='store_true', default=False,
                             dest='disable_log', help='disable log module')
+        parser.add_argument('--disable-history', action='store_true', default=False,
+                            dest='disable_history', help='disable stats history')
         parser.add_argument('--disable-bold', action='store_true', default=False,
                             dest='disable_bold', help='disable bold mode in the terminal')
         parser.add_argument('--disable-bg', action='store_true', default=False,
@@ -149,11 +151,9 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
         # Export modules feature
-        # --enable-history is for 2.7< version compatibility
-        parser.add_argument('--export-graph', '--enable-history', action='store_true', default=None,
+        parser.add_argument('--export-graph', action='store_true', default=None,
                             dest='export_graph', help='export stats to graphs')
-        # --path-history is for 2.7< version compatibility
-        parser.add_argument('--path-graph', '--path-history', default=tempfile.gettempdir(),
+        parser.add_argument('--path-graph', default=tempfile.gettempdir(),
                             dest='path_graph', help='set the export path for graphs (default is {0})'.format(tempfile.gettempdir()))
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help='export stats to a CSV file')
@@ -344,6 +344,11 @@ Start the client browser (browser mode):\n\
                 logger.critical("Graphs output path {0} do not exist or is not writable".format(args.path_graph))
                 sys.exit(2)
             logger.debug("Graphs output path is set to {0}".format(args.path_graph))
+
+        # For export graph, history is mandatory
+        if args.export_graph and args.disable_history:
+            logger.critical("Can not export graph if history is disabled")
+            sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
         if args.disable_sensors:
