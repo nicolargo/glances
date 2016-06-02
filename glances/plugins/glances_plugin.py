@@ -72,7 +72,7 @@ class GlancesPlugin(object):
 
     def exit(self):
         """Method to be called when Glances exit"""
-        logger.debug("Stop the {0} plugin".format(self.plugin_name))
+        logger.debug("Stop the {} plugin".format(self.plugin_name))
 
     def __repr__(self):
         """Return the raw stats."""
@@ -98,7 +98,7 @@ class GlancesPlugin(object):
         ret = None
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             init_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {} (items: {})".format(self.plugin_name, init_list))
             ret = {}
         return ret
 
@@ -106,7 +106,7 @@ class GlancesPlugin(object):
         """Reset the stats history (dict of list)."""
         if self.args is not None and self.args.enable_history and self.get_items_history_list() is not None:
             reset_list = [i['name'] for i in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
             self.stats_history = {}
 
     def update_stats_history(self, item_name=''):
@@ -241,7 +241,7 @@ class GlancesPlugin(object):
             try:
                 return json.dumps({item: self.stats[item]})
             except KeyError as e:
-                logger.error("Cannot get item {0} ({1})".format(item, e))
+                logger.error("Cannot get item {} ({})".format(item, e))
                 return None
         elif isinstance(self.stats, list):
             try:
@@ -249,7 +249,7 @@ class GlancesPlugin(object):
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
                 return json.dumps({item: map(itemgetter(item), self.stats)})
             except (KeyError, ValueError) as e:
-                logger.error("Cannot get item {0} ({1})".format(item, e))
+                logger.error("Cannot get item {} ({})".format(item, e))
                 return None
         else:
             return None
@@ -268,7 +268,7 @@ class GlancesPlugin(object):
                 return json.dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
                 logger.error(
-                    "Cannot get item({0})=value({1}) ({2})".format(item, value, e))
+                    "Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
 
     def update_views(self):
@@ -346,7 +346,7 @@ class GlancesPlugin(object):
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
                     self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
-                logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
+                logger.debug("Load limit: {} = {}".format(limit, self._limits[limit]))
 
     @property
     def limits(self):
@@ -455,7 +455,7 @@ class GlancesPlugin(object):
             # Exemple: network_careful
             limit = self._limits[self.plugin_name + '_' + criticity]
 
-        # logger.debug("{0} {1} value is {2}".format(stat_name, criticity, limit))
+        # logger.debug("{} {} value is {}".format(stat_name, criticity, limit))
 
         # Return the limit
         return limit
@@ -650,9 +650,9 @@ class GlancesPlugin(object):
                         decimal_precision = min(1, decimal_precision)
                 elif symbol in 'K':
                     decimal_precision = 0
-                return '{0:.{decimal}f}{symbol}'.format(
+                return '{:.{decimal}f}{symbol}'.format(
                     value, decimal=decimal_precision, symbol=symbol)
-        return '{0!s}'.format(number)
+        return '{!s}'.format(number)
 
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""

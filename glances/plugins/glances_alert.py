@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, "TITLE"))
             logs_len = glances_logs.len()
             if logs_len > 1:
-                msg = ' (last {0} entries)'.format(logs_len)
+                msg = ' (last {} entries)'.format(logs_len)
             else:
                 msg = ' (one entry)'
             ret.append(self.curse_add_line(msg, "TITLE"))
@@ -88,8 +88,8 @@ class Plugin(GlancesPlugin):
                 # Duration
                 if alert[1] > 0:
                     # If finished display duration
-                    msg = ' ({0})'.format(datetime.fromtimestamp(alert[1]) -
-                                          datetime.fromtimestamp(alert[0]))
+                    msg = ' ({})'.format(datetime.fromtimestamp(alert[1]) -
+                                         datetime.fromtimestamp(alert[0]))
                 else:
                     msg = ' (ongoing)'
                 ret.append(self.curse_add_line(msg))
@@ -97,22 +97,22 @@ class Plugin(GlancesPlugin):
                 # Infos
                 if alert[1] > 0:
                     # If finished do not display status
-                    msg = '{0} on {1}'.format(alert[2], alert[3])
+                    msg = '{} on {}'.format(alert[2], alert[3])
                     ret.append(self.curse_add_line(msg))
                 else:
                     msg = str(alert[3])
                     ret.append(self.curse_add_line(msg, decoration=alert[2]))
                 # Min / Mean / Max
                 if self.approx_equal(alert[6], alert[4], tolerance=0.1):
-                    msg = ' ({0:.1f})'.format(alert[5])
+                    msg = ' ({:.1f})'.format(alert[5])
                 else:
-                    msg = ' (Min:{0:.1f} Mean:{1:.1f} Max:{2:.1f})'.format(
+                    msg = ' (Min:{:.1f} Mean:{:.1f} Max:{:.1f})'.format(
                         alert[6], alert[5], alert[4])
                 ret.append(self.curse_add_line(msg))
                 # Top processes
                 top_process = ', '.join([p['name'] for p in alert[9]])
                 if top_process != '':
-                    msg = ': {0}'.format(top_process)
+                    msg = ': {}'.format(top_process)
                     ret.append(self.curse_add_line(msg))
 
         return ret
