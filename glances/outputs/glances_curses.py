@@ -107,7 +107,7 @@ class _GlancesCurses(object):
         if config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
-            logger.debug('Theme for the curse interface: {0}'.format(self.theme['name']))
+            logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
 
     def is_theme(self, name):
         '''Return True if the theme *name* should be used'''
@@ -572,7 +572,7 @@ class _GlancesCurses(object):
             max_processes_displayed = 0
         if (glances_processes.max_processes is None or
                 glances_processes.max_processes != max_processes_displayed):
-            logger.debug("Set number of displayed processes to {0}".format(max_processes_displayed))
+            logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
         stats_processlist = stats.get_plugin(
@@ -758,10 +758,10 @@ class _GlancesCurses(object):
         # Generate history graph
         if self.history_tag and self.args.enable_history:
             self.display_popup(
-                'Generate graphs history in {0}\nPlease wait...'.format(
+                'Generate graphs history in {}\nPlease wait...'.format(
                     self.glances_history.get_output_folder()))
             self.display_popup(
-                'Generate graphs history in {0}\nDone: {1} graphs generated'.format(
+                'Generate graphs history in {}\nDone: {} graphs generated'.format(
                     self.glances_history.get_output_folder(),
                     self.glances_history.generate_graph(stats)))
         elif self.reset_history_tag and self.args.enable_history:

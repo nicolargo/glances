@@ -73,7 +73,7 @@ class Export(GlancesExport):
             return None
 
         try:
-            es = Elasticsearch(hosts=['{0}:{1}'.format(self.host, self.port)])
+            es = Elasticsearch(hosts=['{}:{}'.format(self.host, self.port)])
         except Exception as e:
             logger.critical("Cannot connect to ElasticSearch server %s:%s (%s)" % (self.host, self.port, e))
             sys.exit(2)
@@ -93,7 +93,7 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Write the points to the ES server."""
-        logger.debug("Export {0} stats to ElasticSearch".format(name))
+        logger.debug("Export {} stats to ElasticSearch".format(name))
 
         # Create DB input
         # http://elasticsearch-py.readthedocs.org/en/master/helpers.html
@@ -114,4 +114,4 @@ class Export(GlancesExport):
         try:
             helpers.bulk(self.client, actions)
         except Exception as e:
-            logger.error("Cannot export {0} stats to ElasticSearch ({1})".format(name, e))
+            logger.error("Cannot export {} stats to ElasticSearch ({})".format(name, e))

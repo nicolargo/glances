@@ -165,17 +165,17 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:9}'.format('DISK I/O')
+        msg = '{:9}'.format('DISK I/O')
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.diskio_iops:
-            msg = '{0:>7}'.format('IOR/s')
+            msg = '{:>7}'.format('IOR/s')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>7}'.format('IOW/s')
+            msg = '{:>7}'.format('IOW/s')
             ret.append(self.curse_add_line(msg))
         else:
-            msg = '{0:>7}'.format('R/s')
+            msg = '{:>7}'.format('R/s')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>7}'.format('W/s')
+            msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
@@ -189,7 +189,7 @@ class Plugin(GlancesPlugin):
             if len(disk_name) > 9:
                 # Cut disk name if it is too long
                 disk_name = '_' + disk_name[-8:]
-            msg = '{0:9}'.format(disk_name)
+            msg = '{:9}'.format(disk_name)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
                 # count
@@ -197,12 +197,12 @@ class Plugin(GlancesPlugin):
                     int(i['read_count'] // i['time_since_update']))
                 rxps = self.auto_unit(
                     int(i['write_count'] // i['time_since_update']))
-                msg = '{0:>7}'.format(txps)
+                msg = '{:>7}'.format(txps)
                 ret.append(self.curse_add_line(msg,
                                                self.get_views(item=i[self.get_key()],
                                                               key='read_count',
                                                               option='decoration')))
-                msg = '{0:>7}'.format(rxps)
+                msg = '{:>7}'.format(rxps)
                 ret.append(self.curse_add_line(msg,
                                                self.get_views(item=i[self.get_key()],
                                                               key='write_count',
@@ -213,12 +213,12 @@ class Plugin(GlancesPlugin):
                     int(i['read_bytes'] // i['time_since_update']))
                 rxps = self.auto_unit(
                     int(i['write_bytes'] // i['time_since_update']))
-                msg = '{0:>7}'.format(txps)
+                msg = '{:>7}'.format(txps)
                 ret.append(self.curse_add_line(msg,
                                                self.get_views(item=i[self.get_key()],
                                                               key='read_bytes',
                                                               option='decoration')))
-                msg = '{0:>7}'.format(rxps)
+                msg = '{:>7}'.format(rxps)
                 ret.append(self.curse_add_line(msg,
                                                self.get_views(item=i[self.get_key()],
                                                               key='write_bytes',

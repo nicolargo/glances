@@ -214,14 +214,14 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:{width}}'.format('FILE SYS', width=fsname_max_width)
+        msg = '{:{width}}'.format('FILE SYS', width=fsname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.fs_free_space:
-            msg = '{0:>7}'.format('Free')
+            msg = '{:>7}'.format('Free')
         else:
-            msg = '{0:>7}'.format('Used')
+            msg = '{:>7}'.format('Used')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>7}'.format('Total')
+        msg = '{:>7}'.format('Total')
         ret.append(self.curse_add_line(msg))
 
         # Filesystem list (sorted by name)
@@ -239,16 +239,16 @@ class Plugin(GlancesPlugin):
                 mnt_point = '_' + i['mnt_point'][-fsname_max_width + 1:]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{0:{width}}'.format(mnt_point, width=fsname_max_width)
+            msg = '{:{width}}'.format(mnt_point, width=fsname_max_width)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:
-                msg = '{0:>7}'.format(self.auto_unit(i['free']))
+                msg = '{:>7}'.format(self.auto_unit(i['free']))
             else:
-                msg = '{0:>7}'.format(self.auto_unit(i['used']))
+                msg = '{:>7}'.format(self.auto_unit(i['used']))
             ret.append(self.curse_add_line(msg, self.get_views(item=i[self.get_key()],
                                                                key='used',
                                                                option='decoration')))
-            msg = '{0:>7}'.format(self.auto_unit(i['size']))
+            msg = '{:>7}'.format(self.auto_unit(i['size']))
             ret.append(self.curse_add_line(msg))
 
         return ret

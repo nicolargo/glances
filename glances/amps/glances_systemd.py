@@ -68,11 +68,11 @@ class Amp(GlancesAmp):
     def update(self, process_list):
         """Update the AMP"""
         # Get the systemctl status
-        logger.debug('{0}: Update stats using systemctl {1}'.format(self.NAME, self.get('systemctl_cmd')))
+        logger.debug('{}: Update stats using systemctl {}'.format(self.NAME, self.get('systemctl_cmd')))
         try:
             res = check_output(self.get('systemctl_cmd').split())
         except OSError as e:
-            logger.debug('{0}: Error while executing systemctl ({1})'.format(self.NAME, e))
+            logger.debug('{}: Error while executing systemctl ({})'.format(self.NAME, e))
         else:
             status = {}
             # For each line
@@ -89,7 +89,7 @@ class Amp(GlancesAmp):
             # Build the output (string) message
             output = 'Services\n'
             for k, v in iteritems(status):
-                output += '{0}: {1}\n'.format(k, v)
+                output += '{}: {}\n'.format(k, v)
             self.set_result(output, separator=' ')
 
         return self.result()

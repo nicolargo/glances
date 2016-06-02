@@ -195,69 +195,69 @@ class Plugin(GlancesPlugin):
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             if args.disable_irix and self.nb_log_core != 0:
-                msg = '{0:>6.1f}'.format(p['cpu_percent'] / float(self.nb_log_core))
+                msg = '{:>6.1f}'.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
-                msg = '{0:>6.1f}'.format(p['cpu_percent'])
+                msg = '{:>6.1f}'.format(p['cpu_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['cpu_percent'], header="cpu")))
         else:
-            msg = '{0:>6}'.format('?')
+            msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
         # MEM
         if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
-            msg = '{0:>6.1f}'.format(p['memory_percent'])
+            msg = '{:>6.1f}'.format(p['memory_percent'])
             ret.append(self.curse_add_line(msg,
                                            self.get_alert(p['memory_percent'], header="mem")))
         else:
-            msg = '{0:>6}'.format('?')
+            msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
         # VMS/RSS
         if 'memory_info' in p and p['memory_info'] is not None and p['memory_info'] != '':
             # VMS
-            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
+            msg = '{:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # RSS
-            msg = '{0:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
+            msg = '{:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = '{0:>6}'.format('?')
+            msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = '{0:>6}'.format(p['pid'])
+        msg = '{:>6}'.format(p['pid'])
         ret.append(self.curse_add_line(msg))
         # USER
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
-            msg = ' {0:9}'.format(str(p['username'])[:9])
+            msg = ' {:9}'.format(str(p['username'])[:9])
             ret.append(self.curse_add_line(msg))
         else:
-            msg = ' {0:9}'.format('?')
+            msg = ' {:9}'.format('?')
             ret.append(self.curse_add_line(msg))
         # NICE
         if 'nice' in p:
             nice = p['nice']
             if nice is None:
                 nice = '?'
-            msg = '{0:>5}'.format(nice)
+            msg = '{:>5}'.format(nice)
             if isinstance(nice, int) and ((WINDOWS and nice != 32) or
                                           (not WINDOWS and nice != 0)):
                 ret.append(self.curse_add_line(msg, decoration='NICE'))
             else:
                 ret.append(self.curse_add_line(msg))
         else:
-            msg = '{0:>5}'.format('?')
+            msg = '{:>5}'.format('?')
             ret.append(self.curse_add_line(msg))
         # STATUS
         if 'status' in p:
             status = p['status']
-            msg = '{0:>2}'.format(status)
+            msg = '{:>2}'.format(status)
             if status == 'R':
                 ret.append(self.curse_add_line(msg, decoration='STATUS'))
             else:
                 ret.append(self.curse_add_line(msg))
         else:
-            msg = '{0:>2}'.format('?')
+            msg = '{:>2}'.format('?')
             ret.append(self.curse_add_line(msg))
         # TIME+
         if self.tag_proc_time:
@@ -268,37 +268,37 @@ class Plugin(GlancesPlugin):
                 # See https://github.com/nicolargo/glances/issues/87
                 # Also catch TypeError on Mac OS X
                 # See: https://github.com/nicolargo/glances/issues/622
-                logger.debug("Cannot get TIME+ ({0})".format(e))
+                logger.debug("Cannot get TIME+ ({})".format(e))
                 self.tag_proc_time = False
             else:
                 hours, minutes, seconds, microseconds = convert_timedelta(delta)
                 if hours:
-                    msg = '{0:>4}h'.format(hours)
+                    msg = '{:>4}h'.format(hours)
                     ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
-                    msg = '{0}:{1}'.format(str(minutes).zfill(2), seconds)
+                    msg = '{}:{}'.format(str(minutes).zfill(2), seconds)
                 else:
-                    msg = '{0:>4}:{1}.{2}'.format(minutes, seconds, microseconds)
+                    msg = '{:>4}:{}.{}'.format(minutes, seconds, microseconds)
         else:
-            msg = '{0:>10}'.format('?')
+            msg = '{:>10}'.format('?')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in p:
             # IO read
             io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
             if io_rs == 0:
-                msg = '{0:>6}'.format("0")
+                msg = '{:>6}'.format("0")
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
+                msg = '{:>6}'.format(self.auto_unit(io_rs, low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             # IO write
             io_ws = int((p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update'])
             if io_ws == 0:
-                msg = '{0:>6}'.format("0")
+                msg = '{:>6}'.format("0")
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
+                msg = '{:>6}'.format(self.auto_unit(io_ws, low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         else:
-            msg = '{0:>6}'.format("?")
+            msg = '{:>6}'.format("?")
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
 
@@ -311,23 +311,23 @@ class Plugin(GlancesPlugin):
             if cmdline and cmdline != ['']:
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
-                    msg = ' {0}'.format(path) + os.sep
+                    msg = ' {}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
                     if glances_processes.is_tree_enabled():
                         # mark position to add tree decoration
                         ret[-1]["_tree_decoration"] = True
                     ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
                 else:
-                    msg = ' {0}'.format(cmd)
+                    msg = ' {}'.format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                     if glances_processes.is_tree_enabled():
                         # mark position to add tree decoration
                         ret[-1]["_tree_decoration"] = True
                 if arguments:
-                    msg = ' {0}'.format(arguments)
+                    msg = ' {}'.format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                msg = ' {0}'.format(p['name'])
+                msg = ' {}'.format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
             ret.append(self.curse_add_line('', splittable=True))
@@ -451,33 +451,33 @@ class Plugin(GlancesPlugin):
         sort_style = 'SORT'
 
         if args.disable_irix and 0 < self.nb_log_core < 10:
-            msg = '{0:>6}'.format('CPU%/' + str(self.nb_log_core))
+            msg = '{:>6}'.format('CPU%/' + str(self.nb_log_core))
         elif args.disable_irix and self.nb_log_core != 0:
-            msg = '{0:>6}'.format('CPU%/C')
+            msg = '{:>6}'.format('CPU%/C')
         else:
-            msg = '{0:>6}'.format('CPU%')
+            msg = '{:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = '{0:>6}'.format('MEM%')
+        msg = '{:>6}'.format('MEM%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg = '{0:>6}'.format('VIRT')
+        msg = '{:>6}'.format('VIRT')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{0:>6}'.format('RES')
+        msg = '{:>6}'.format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{0:>6}'.format('PID')
+        msg = '{:>6}'.format('PID')
         ret.append(self.curse_add_line(msg))
-        msg = ' {0:10}'.format('USER')
+        msg = ' {:10}'.format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
-        msg = '{0:>4}'.format('NI')
+        msg = '{:>4}'.format('NI')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>2}'.format('S')
+        msg = '{:>2}'.format('S')
         ret.append(self.curse_add_line(msg))
-        msg = '{0:>10}'.format('TIME+')
+        msg = '{:>10}'.format('TIME+')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
-        msg = '{0:>6}'.format('R/s')
+        msg = '{:>6}'.format('R/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = '{0:>6}'.format('W/s')
+        msg = '{:>6}'.format('W/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = ' {0:8}'.format('Command')
+        msg = ' {:8}'.format('Command')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
@@ -493,73 +493,73 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(sep_char * 69))
             ret.append(self.curse_new_line())
         # CPU percent sum
-        msg = '{0:>6.1f}'.format(self.__sum_stats('cpu_percent', mmm=mmm))
+        msg = '{:>6.1f}'.format(self.__sum_stats('cpu_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg,
                                        decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
-        msg = '{0:>6.1f}'.format(self.__sum_stats('memory_percent', mmm=mmm))
+        msg = '{:>6.1f}'.format(self.__sum_stats('memory_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg,
                                        decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
         if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
             # VMS
-            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
+            msg = '{:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))
             # RSS
-            msg = '{0:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
+            msg = '{:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))
         else:
-            msg = '{0:>6}'.format('')
+            msg = '{:>6}'.format('')
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = '{0:>6}'.format('')
+        msg = '{:>6}'.format('')
         ret.append(self.curse_add_line(msg))
         # USER
-        msg = ' {0:9}'.format('')
+        msg = ' {:9}'.format('')
         ret.append(self.curse_add_line(msg))
         # NICE
-        msg = '{0:>5}'.format('')
+        msg = '{:>5}'.format('')
         ret.append(self.curse_add_line(msg))
         # STATUS
-        msg = '{0:>2}'.format('')
+        msg = '{:>2}'.format('')
         ret.append(self.curse_add_line(msg))
         # TIME+
-        msg = '{0:>10}'.format('')
+        msg = '{:>10}'.format('')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
             io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_rs == 0:
-                msg = '{0:>6}'.format('0')
+                msg = '{:>6}'.format('0')
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_rs, low_precision=True))
+                msg = '{:>6}'.format(self.auto_unit(io_rs, low_precision=True))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True, additional=True))
             # IO write
             io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_ws == 0:
-                msg = '{0:>6}'.format('0')
+                msg = '{:>6}'.format('0')
             else:
-                msg = '{0:>6}'.format(self.auto_unit(io_ws, low_precision=True))
+                msg = '{:>6}'.format(self.auto_unit(io_ws, low_precision=True))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True, additional=True))
         else:
-            msg = '{0:>6}'.format('')
+            msg = '{:>6}'.format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         if mmm is None:
-            msg = ' < {0}'.format('current')
+            msg = ' < {}'.format('current')
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = ' < {0}'.format(mmm)
+            msg = ' < {}'.format(mmm)
             ret.append(self.curse_add_line(msg, optional=True))
             msg = ' (\'M\' to reset)'
             ret.append(self.curse_add_line(msg, optional=True))

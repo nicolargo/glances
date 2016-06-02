@@ -122,5 +122,6 @@ class GlancesStandalone(object):
 
         # Check Glances version versus Pypi one
         if self.outdated.is_outdated():
-            print("You are using Glances version {0}, however version {1} is available.".format(self.outdated.installed_version(), self.outdated.latest_version()))
+            print("You are using Glances version {}, however version {} is available.".format(
+                self.outdated.installed_version(), self.outdated.latest_version()))
             print("You should consider upgrading using: pip install --upgrade glances")

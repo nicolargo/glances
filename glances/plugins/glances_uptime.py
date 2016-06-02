@@ -78,4 +78,4 @@ class Plugin(GlancesPlugin):
 
     def msg_curse(self, args=None):
         """Return the string to display in the curse interface."""
-        return [self.curse_add_line('Uptime: {0}'.format(self.stats))]
+        return [self.curse_add_line('Uptime: {}'.format(self.stats))]

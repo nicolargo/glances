@@ -246,30 +246,30 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:{width}}'.format('NETWORK', width=ifname_max_width)
+        msg = '{:{width}}'.format('NETWORK', width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format('Rx+Tx')
+                msg = '{:>14}'.format('Rx+Tx')
                 ret.append(self.curse_add_line(msg))
             else:
                 # Rx/Tx stats
-                msg = '{0:>7}'.format('Rx')
+                msg = '{:>7}'.format('Rx')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format('Tx')
+                msg = '{:>7}'.format('Tx')
                 ret.append(self.curse_add_line(msg))
         else:
             # Bitrate stats
             if args.network_sum:
                 # Sum stats
-                msg = '{0:>14}'.format('Rx+Tx/s')
+                msg = '{:>14}'.format('Rx+Tx/s')
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = '{0:>7}'.format('Rx/s')
+                msg = '{:>7}'.format('Rx/s')
                 ret.append(self.curse_add_line(msg))
-                msg = '{0:>7}'.format('Tx/s')
+                msg = '{:>7}'.format('Tx/s')
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
@@ -308,16 +308,16 @@ class Plugin(GlancesPlugin):
 
             # New line
             ret.append(self.curse_new_line())
-            msg = '{0:{width}}'.format(ifname, width=ifname_max_width)
+            msg = '{:{width}}'.format(ifname, width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
-                msg = '{0:>14}'.format(sx)
+                msg = '{:>14}'.format(sx)
                 ret.append(self.curse_add_line(msg))
             else:
-                msg = '{0:>7}'.format(rx)
+                msg = '{:>7}'.format(rx)
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()], key='rx', option='decoration')))
-                msg = '{0:>7}'.format(tx)
+                msg = '{:>7}'.format(tx)
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()], key='tx', option='decoration')))
 

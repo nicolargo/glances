@@ -88,13 +88,13 @@ class GlancesFilter(object):
 
         self._filter_re = None
         if self.filter is not None:
-            logger.info("Set filter to {0} on key {1}".format(self.filter, self.filter_key))
+            logger.info("Set filter to {} on key {}".format(self.filter, self.filter_key))
             # Compute the regular expression
             try:
                 self._filter_re = re.compile(self.filter)
-                logger.debug("Filter regex compilation OK: {0}".format(self.filter))
+                logger.debug("Filter regex compilation OK: {}".format(self.filter))
             except Exception as e:
-                logger.error("Cannot compile filter regex: {0} ({1})".format(self.filter, e))
+                logger.error("Cannot compile filter regex: {} ({})".format(self.filter, e))
                 self._filter = None
                 self._filter_re = None
                 self._filter_key = None

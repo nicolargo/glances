@@ -100,8 +100,8 @@ def main():
     Run it...
     """
     # Log Glances and PSutil version
-    logger.info('Start Glances {0}'.format(__version__))
-    logger.info('{0} {1} and PSutil {2} detected'.format(
+    logger.info('Start Glances {}'.format(__version__))
+    logger.info('{} {} and PSutil {} detected'.format(
         platform.python_implementation(),
         platform.python_version(),
         psutil_version))
@@ -172,7 +172,7 @@ def main():
         server = GlancesServer(cached_time=core.cached_time,
                                config=core.get_config(),
                                args=args)
-        print('Glances server is running on {0}:{1}'.format(args.bind_address, args.port))
+        print('Glances server is running on {}:{}'.format(args.bind_address, args.port))
 
         # Set the server login/password (if -P/--password tag)
         if args.password != "":

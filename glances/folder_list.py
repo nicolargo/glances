@@ -84,7 +84,7 @@ class FolderList(object):
             try:
                 value['path'] = self.config.get_value(section, key + 'path')
             except Exception as e:
-                logger.error("Cannot read folder list: {0}".format(e))
+                logger.error("Cannot read folder list: {}".format(e))
                 continue
             if value['path'] is None:
                 continue
@@ -95,7 +95,7 @@ class FolderList(object):
                     value[i] = self.config.get_value(section, key + i)
                 except:
                     value[i] = None
-                    logger.debug("No {0} threshold for folder {1}".format(i, value["path"]))
+                    logger.debug("No {} threshold for folder {}".format(i, value["path"]))
 
             # Add the item to the list
             self.__folder_list.append(value)
@@ -154,7 +154,7 @@ class FolderList(object):
             try:
                 self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
             except Exception as e:
-                logger.debug('Can get folder size ({0}). Error: {1}'.format(self.path(i), e))
+                logger.debug('Cannot get folder size ({}). Error: {}'.format(self.path(i), e))
                 if e.errno == 13:
                     # Permission denied
                     self.__folder_list[i]['size'] = '!'

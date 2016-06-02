@@ -106,7 +106,7 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
-            logger.error("Couldn't open socket: {0}".format(e))
+            logger.error("Couldn't open socket: {}".format(e))
             sys.exit(1)
 
         super(GlancesXMLRPCServer, self).__init__((bind_address, bind_port), requestHandler)
@@ -192,7 +192,7 @@ class GlancesServer(object):
         try:
             self.server = GlancesXMLRPCServer(args.bind_address, args.port, requestHandler)
         except Exception as e:
-            logger.critical("Cannot start Glances server: {0}".format(e))
+            logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
 
         # The users dict

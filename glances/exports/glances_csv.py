@@ -47,10 +47,10 @@ class Export(GlancesExport):
                 self.csv_file = open(self.csv_filename, 'wb')
             self.writer = csv.writer(self.csv_file)
         except IOError as e:
-            logger.critical("Cannot create the CSV file: {0}".format(e))
+            logger.critical("Cannot create the CSV file: {}".format(e))
             sys.exit(2)
 
-        logger.info("Stats exported to CSV file: {0}".format(self.csv_filename))
+        logger.info("Stats exported to CSV file: {}".format(self.csv_filename))
 
         self.export_enable = True
 
@@ -78,7 +78,7 @@ class Export(GlancesExport):
                     for stat in all_stats[i]:
                         # First line: header
                         if self.first_line:
-                            csv_header += ('{0}_{1}_{2}'.format(
+                            csv_header += ('{}_{}_{}'.format(
                                 plugin, self.get_item_key(stat), item) for item in stat)
                         # Others lines: stats
                         csv_data += itervalues(stat)
@@ -86,7 +86,7 @@ class Export(GlancesExport):
                     # First line: header
                     if self.first_line:
                         fieldnames = iterkeys(all_stats[i])
-                        csv_header += ('{0}_{1}'.format(plugin, fieldname)
+                        csv_header += ('{}_{}'.format(plugin, fieldname)
                                        for fieldname in fieldnames)
                     # Others lines: stats
                     csv_data += itervalues(all_stats[i])
