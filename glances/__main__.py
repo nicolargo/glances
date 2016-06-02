@@ -18,21 +18,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Allow user to run Glances as a module from a dir or zip file."""
+"""Allow user to run Glances as a module."""
 
 # Execute with:
-# $ python glances/__main__.py (2.6)
-# $ python -m glances          (2.7+)
+# $ python -m glances (2.7+)
 
-import sys
-
-if __package__ is None and not hasattr(sys, "frozen"):
-    # It is a direct call to __main__.py
-    import os.path
-    path = os.path.realpath(os.path.abspath(__file__))
-    sys.path.insert(0, os.path.dirname(os.path.dirname(path)))
-
-import glances  # noqa
+import glances
 
 if __name__ == '__main__':
     glances.main()
