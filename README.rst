@@ -30,8 +30,8 @@ written in Python.
 Requirements
 ============
 
-- ``python >= 2.7`` or ``>= 3.3`` (tested with version 2.7, 3.3, 3.4, 3.5)
-- ``psutil >= 2.0.0``
+- ``python 2.7,>=3.3`` (tested with version 2.7, 3.3, 3.4, 3.5)
+- ``psutil>=2.0.0``
 - ``setuptools``
 
 Optional dependencies:
@@ -54,11 +54,16 @@ Optional dependencies:
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 
-Note for Python 2.6 users:
+*Note for Python 2.6 users*
 
-Glances 2.7 (or higher) no longer support Python 2.6. Please upgrade to
-Python 2.7/3.3+ or downgrade Glances to 2.6.2 (latest version with Python
-2.6 support).
+Since version 2.7, Glances no longer support Python 2.6. Please upgrade
+to at least Python 2.7/3.3+ or downgrade to Glances 2.6.2 (latest version
+with Python 2.6 support).
+
+*Note for CentOS Linux 6 and 7 users*
+
+Python 2.7, 3.3 and 3.4 are now available via SCLs. See:
+https://lists.centos.org/pipermail/centos-announce/2015-December/021555.html.
 
 Installation
 ============
@@ -245,26 +250,6 @@ Puppet
 ------
 
 You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-glances
-
-Known issue on RHEL/CentOS/Fedora installation
-==============================================
-
-For Python 2.6 RedHat-based distros there might be an issue with starting Glances:
-
-    Traceback (most recent call last):
-    File "/usr/bin/glances", line 5, in <module>
-    from pkg_resources import load_entry_point
-    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 2655, in <module>
-    workingset.require(_requires)
-    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 648, in require
-    needed = self.resolve(parse_requirements(requirements))
-    File "/usr/lib/python2.6/site-packages/pkg_resources.py", line 546, in resolve
-    raise DistributionNotFound(req)
-    pkg_resources.DistributionNotFound: argparse
-
-Try upgrading setuptools, has been proven to solve the problem:
-
-    sudo pip install -U setuptools
 
 Usage
 =====

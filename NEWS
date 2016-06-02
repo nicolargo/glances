@@ -5,6 +5,14 @@ Glances Version 2
 Version 2.7
 ===========
 
+Backward-incompatible changes:
+
+    * Drop support for Python 2.6 (issue #300)
+
+Deprecations:
+
+    * Monitoring process list module is replaced by AMP (see issue #780)
+
 Enhancements and new features:
 
     * Add Application Monitoring Process plugin (issue #780)
@@ -23,11 +31,6 @@ Bugs corrected:
     * Correct issue IP plugin: VPN with no internet access (issue #842)
     * Idle process is back on FreeBSD and Windows (issue #844)
     * Top 3 processes are back in the alert summay
-
-Deprecated:
-
-    * Drop Python 2.6 support (issue #300)
-    * Monitoring process list module is replaced by AMP (see issue #780)
 
 Version 2.6.1
 =============
