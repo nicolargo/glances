@@ -101,7 +101,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0}'.format('FOLDERS')
+        msg = '{}'.format('FOLDERS')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Data
@@ -112,12 +112,12 @@ class Plugin(GlancesPlugin):
                 path = '_' + i['path'][-15 + 1:]
             else:
                 path = i['path']
-            msg = '{0:<16} '.format(path)
+            msg = '{:<16} '.format(path)
             ret.append(self.curse_add_line(msg))
             try:
-                msg = '{0:>6}'.format(self.auto_unit(i['size']))
+                msg = '{:>6}'.format(self.auto_unit(i['size']))
             except (TypeError, ValueError):
-                msg = '{0:>6}'.format(i['size'])
+                msg = '{:>6}'.format(i['size'])
             ret.append(self.curse_add_line(msg, self.get_alert(i)))
 
         return ret

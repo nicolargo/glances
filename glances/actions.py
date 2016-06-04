@@ -77,10 +77,8 @@ class GlancesActions(object):
             # Action already executed => Exit
             return False
 
-        logger.debug("Run action {0} for {1} ({2}) with stats {3}".format(commands,
-                                                                          stat_name,
-                                                                          criticity,
-                                                                          mustache_dict))
+        logger.debug("Run action {} for {} ({}) with stats {}".format(
+            commands, stat_name, criticity, mustache_dict))
 
         # Run all actions in background
         for cmd in commands:
@@ -90,12 +88,12 @@ class GlancesActions(object):
             else:
                 cmd_full = cmd
             # Execute the action
-            logger.info("Action triggered for {0} ({1}): {2}".format(stat_name, criticity, cmd_full))
-            logger.debug("Stats value for the trigger: {0}".format(mustache_dict))
+            logger.info("Action triggered for {} ({}): {}".format(stat_name, criticity, cmd_full))
+            logger.debug("Stats value for the trigger: {}".format(mustache_dict))
             try:
                 Popen(cmd_full, shell=True)
             except OSError as e:
-                logger.error("Can't execute the action ({0})".format(e))
+                logger.error("Can't execute the action ({})".format(e))
 
         self.set(stat_name, criticity)
 

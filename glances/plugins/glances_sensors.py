@@ -179,7 +179,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:18}'.format('SENSORS')
+        msg = '{:18}'.format('SENSORS')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
@@ -190,12 +190,12 @@ class Plugin(GlancesPlugin):
             if label is None:
                 label = i['label']
             if i['type'] != 'fan_speed':
-                msg = '{0:15}'.format(label[:15])
+                msg = '{:15}'.format(label[:15])
             else:
-                msg = '{0:13}'.format(label[:13])
+                msg = '{:13}'.format(label[:13])
             ret.append(self.curse_add_line(msg))
             if i['value'] in (b'ERR', b'SLP', b'UNK'):
-                msg = '{0:>8}'.format(i['value'])
+                msg = '{:>8}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
                                         key='value',
@@ -209,7 +209,7 @@ class Plugin(GlancesPlugin):
                     value = i['value']
                     unit = i['unit']
                 try:
-                    msg = '{0:>7.0f}{1}'.format(value, unit)
+                    msg = '{:>7.0f}{}'.format(value, unit)
                     ret.append(self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()],
                                             key='value',

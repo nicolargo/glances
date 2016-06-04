@@ -107,7 +107,7 @@ class _GlancesCurses(object):
         if config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
-            logger.debug('Theme for the curse interface: {0}'.format(self.theme['name']))
+            logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
 
     def is_theme(self, name):
         '''Return True if the theme *name* should be used'''
@@ -571,7 +571,7 @@ class _GlancesCurses(object):
             max_processes_displayed = 0
         if (glances_processes.max_processes is None or
                 glances_processes.max_processes != max_processes_displayed):
-            logger.debug("Set number of displayed processes to {0}".format(max_processes_displayed))
+            logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
         stats_processlist = stats.get_plugin(

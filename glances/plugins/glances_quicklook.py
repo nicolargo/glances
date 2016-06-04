@@ -114,9 +114,9 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
-            msg_name = '{0} - '.format(self.stats['cpu_name'])
-            msg_freq = '{0:.2f}/{1:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
-                                                   self._hz_to_ghz(self.stats['cpu_hz']))
+            msg_name = '{} - '.format(self.stats['cpu_name'])
+            msg_freq = '{:.2f}/{:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
+                                                 self._hz_to_ghz(self.stats['cpu_hz']))
             if len(msg_name + msg_freq) - 6 <= max_width:
                 ret.append(self.curse_add_line(msg_name))
             ret.append(self.curse_add_line(msg_freq))
@@ -126,13 +126,13 @@ class Plugin(GlancesPlugin):
                 for cpu in self.stats['percpu']:
                     bar.percent = cpu['total']
                     if cpu[cpu['key']] < 10:
-                        msg = '{0:3}{1} '.format(key.upper(), cpu['cpu_number'])
+                        msg = '{:3}{} '.format(key.upper(), cpu['cpu_number'])
                     else:
-                        msg = '{0:4} '.format(cpu['cpu_number'])
+                        msg = '{:4} '.format(cpu['cpu_number'])
                     ret.extend(self._msg_create_line(msg, bar, key))
             else:
                 bar.percent = self.stats[key]
-                msg = '{0:4} '.format(key.upper())
+                msg = '{:4} '.format(key.upper())
                 ret.extend(self._msg_create_line(msg, bar, key))
 
         # Return the message with decoration

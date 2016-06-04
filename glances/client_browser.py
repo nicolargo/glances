@@ -85,10 +85,10 @@ class GlancesClientBrowser(object):
                 clear_password = self.password.get_password(server['name'])
                 if clear_password is not None:
                     server['password'] = self.password.sha256_hash(clear_password)
-            return 'http://{0}:{1}@{2}:{3}'.format(server['username'], server['password'],
-                                                   server['ip'], server['port'])
+            return 'http://{}:{}@{}:{}'.format(server['username'], server['password'],
+                                               server['ip'], server['port'])
         else:
-            return 'http://{0}:{1}'.format(server['ip'], server['port'])
+            return 'http://{}:{}'.format(server['ip'], server['port'])
 
     def __serve_forever(self):
         """Main client loop."""
@@ -118,20 +118,20 @@ class GlancesClientBrowser(object):
                         s = ServerProxy(uri, transport=t)
                     except Exception as e:
                         logger.warning(
-                            "Client browser couldn't create socket {0}: {1}".format(uri, e))
+                            "Client browser couldn't create socket {}: {}".format(uri, e))
                     else:
                         # Mandatory stats
                         try:
                             # CPU%
                             cpu_percent = 100 - json.loads(s.getCpu())['idle']
-                            v['cpu_percent'] = '{0:.1f}'.format(cpu_percent)
+                            v['cpu_percent'] = '{:.1f}'.format(cpu_percent)
                             # MEM%
                             v['mem_percent'] = json.loads(s.getMem())['percent']
                             # OS (Human Readable name)
                             v['hr_name'] = json.loads(s.getSystem())['hr_name']
                         except (socket.error, Fault, KeyError) as e:
                             logger.debug(
-                                "Error while grabbing stats form {0}: {1}".format(uri, e))
+                                "Error while grabbing stats form {}: {}".format(uri, e))
                             v['status'] = 'OFFLINE'
                         except ProtocolError as e:
                             if e.errcode == 401:
@@ -141,7 +141,7 @@ class GlancesClientBrowser(object):
                                 v['status'] = 'PROTECTED'
                             else:
                                 v['status'] = 'OFFLINE'
-                            logger.debug("Cannot grab stats from {0} ({1} {2})".format(uri, e.errcode, e.errmsg))
+                            logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
                         else:
                             # Status
                             v['status'] = 'ONLINE'
@@ -150,10 +150,10 @@ class GlancesClientBrowser(object):
                             try:
                                 # LOAD
                                 load_min5 = json.loads(s.getLoad())['min5']
-                                v['load_min5'] = '{0:.2f}'.format(load_min5)
+                                v['load_min5'] = '{:.2f}'.format(load_min5)
                             except Exception as e:
                                 logger.warning(
-                                    "Error while grabbing stats form {0}: {1}".format(uri, e))
+                                    "Error while grabbing stats form {}: {}".format(uri, e))
             # List can change size during iteration...
             except RuntimeError:
                 logger.debug(
@@ -165,12 +165,12 @@ class GlancesClientBrowser(object):
                 self.screen.update(self.get_servers_list())
             else:
                 # Display the Glances client for the selected server
-                logger.debug("Selected server: {0}".format(self.get_servers_list()[self.screen.active_server]))
+                logger.debug("Selected server: {}".format(self.get_servers_list()[self.screen.active_server]))
 
                 # Connection can take time
                 # Display a popup
                 self.screen.display_popup(
-                    'Connect to {0}:{1}'.format(v['name'], v['port']), duration=1)
+                    'Connect to {}:{}'.format(v['name'], v['port']), duration=1)
 
                 # A password is needed to access to the server's stats
                 if self.get_servers_list()[self.screen.active_server]['password'] is None:
@@ -181,13 +181,13 @@ class GlancesClientBrowser(object):
                         # Else, the password should be enter by the user
                         # Display a popup to enter password
                         clear_password = self.screen.display_popup(
-                            'Password needed for {0}: '.format(v['name']), is_input=True)
+                            'Password needed for {}: '.format(v['name']), is_input=True)
                     # Store the password for the selected server
                     if clear_password is not None:
                         self.set_in_selected('password', self.password.sha256_hash(clear_password))
 
                 # Display the Glance client on the selected server
-                logger.info("Connect Glances client to the {0} server".format(
+                logger.info("Connect Glances client to the {} server".format(
                     self.get_servers_list()[self.screen.active_server]['key']))
 
                 # Init the client
@@ -203,7 +203,7 @@ class GlancesClientBrowser(object):
                 # Test if client and server are in the same major version
                 if not client.login():
                     self.screen.display_popup(
-                        "Sorry, cannot connect to '{0}'\n"
+                        "Sorry, cannot connect to '{}'\n"
                         "See 'glances.log' for more details".format(v['name']))
 
                     # Set the ONLINE status for the selected server
@@ -214,7 +214,7 @@ class GlancesClientBrowser(object):
                     connection_type = client.serve_forever()
 
                     try:
-                        logger.debug("Disconnect Glances client from the {0} server".format(
+                        logger.debug("Disconnect Glances client from the {} server".format(
                             self.get_servers_list()[self.screen.active_server]['key']))
                     except IndexError:
                         # Server did not exist anymore

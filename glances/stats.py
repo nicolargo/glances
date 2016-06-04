@@ -102,7 +102,7 @@ class GlancesStats(object):
                 else:
                     self._plugins[plugin_name] = plugin.Plugin(args=args)
         # Log plugins list
-        logger.debug("Available plugins list: {0}".format(self.getAllPlugins()))
+        logger.debug("Available plugins list: {}".format(self.getAllPlugins()))
 
     def load_exports(self, args=None):
         """Load all export modules in the 'exports' folder."""
@@ -128,7 +128,7 @@ class GlancesStats(object):
                 # generate self._exports_list["xxx"] = ...
                 self._exports[export_name] = export_module.Export(args=args, config=self.config)
         # Log plugins list
-        logger.debug("Available exports modules list: {0}".format(self.getExportList()))
+        logger.debug("Available exports modules list: {}".format(self.getExportList()))
         return True
 
     def getAllPlugins(self):

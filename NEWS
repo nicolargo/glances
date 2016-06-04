@@ -5,9 +5,12 @@ Glances Version 2
 Version 2.7
 ===========
 
+Backward-incompatible changes:
+
+    * Drop support for Python 2.6 (issue #300)
+
 Deprecated:
 
-    * Drop Python 2.6 support (issue #300)
     * Monitoring process list module is replaced by AMP (see issue #780)
     * Use --export-graph instead of --enable-history (issue #696)
     * Use --path-graph instead of --path-history (issue #696)

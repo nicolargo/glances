@@ -24,7 +24,6 @@
 import operator
 import sys
 import unicodedata
-from logging.config import dictConfig
 
 PY3 = sys.version_info[0] == 3
 

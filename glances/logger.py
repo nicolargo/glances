@@ -22,8 +22,7 @@
 import logging
 import os
 import tempfile
-
-from glances.compat import dictConfig
+from logging.config import dictConfig
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -91,9 +90,9 @@ def tempfile_name():
     """Return the tempfile name (full path)."""
     ret = os.path.join(tempfile.gettempdir(), 'glances.log')
     if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
-        print("WARNING: Couldn't write to log file {0} (Permission denied)".format(ret))
+        print("WARNING: Couldn't write to log file {} (Permission denied)".format(ret))
         ret = tempfile.mkstemp(prefix='glances', suffix='.log', text=True)
-        print("Create a new log file: {0}".format(ret[1]))
+        print("Create a new log file: {}".format(ret[1]))
         return ret[1]
 
     return ret

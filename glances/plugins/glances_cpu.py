@@ -232,10 +232,10 @@ class Plugin(GlancesPlugin):
         idle_tag = 'user' not in self.stats
 
         # Header
-        msg = '{0:8}'.format('CPU')
+        msg = '{:8}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Total CPU usage
-        msg = '{0:>5}%'.format(self.stats['total'])
+        msg = '{:>5}%'.format(self.stats['total'])
         if idle_tag:
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='total', option='decoration')))
@@ -243,15 +243,15 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
         # Nice CPU
         if 'nice' in self.stats:
-            msg = '  {0:8}'.format('nice:')
+            msg = '  {:8}'.format('nice:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
-            msg = '{0:>5}%'.format(self.stats['nice'])
+            msg = '{:>5}%'.format(self.stats['nice'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
         # ctx_switches
         if 'ctx_switches' in self.stats:
-            msg = '  {0:8}'.format('ctx_sw:')
+            msg = '  {:8}'.format('ctx_sw:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='ctx_switches', option='optional')))
-            msg = '{0:>5}'.format(int(self.stats['ctx_switches'] // self.stats['time_since_update']))
+            msg = '{:>5}'.format(int(self.stats['ctx_switches'] // self.stats['time_since_update']))
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='ctx_switches', option='decoration'),
                 optional=self.get_views(key='ctx_switches', option='optional')))
@@ -260,80 +260,80 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # User CPU
         if 'user' in self.stats:
-            msg = '{0:8}'.format('user:')
+            msg = '{:8}'.format('user:')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}%'.format(self.stats['user'])
+            msg = '{:>5}%'.format(self.stats['user'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='user', option='decoration')))
         elif 'idle' in self.stats:
-            msg = '{0:8}'.format('idle:')
+            msg = '{:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}%'.format(self.stats['idle'])
+            msg = '{:>5}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg))
         # IRQ CPU
         if 'irq' in self.stats:
-            msg = '  {0:8}'.format('irq:')
+            msg = '  {:8}'.format('irq:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
-            msg = '{0:>5}%'.format(self.stats['irq'])
+            msg = '{:>5}%'.format(self.stats['irq'])
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='irq', option='optional')))
         # interrupts
         if 'interrupts' in self.stats:
-            msg = '  {0:8}'.format('inter:')
+            msg = '  {:8}'.format('inter:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
-            msg = '{0:>5}'.format(int(self.stats['interrupts'] // self.stats['time_since_update']))
+            msg = '{:>5}'.format(int(self.stats['interrupts'] // self.stats['time_since_update']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='interrupts', option='optional')))
 
         # New line
         ret.append(self.curse_new_line())
         # System CPU
         if 'system' in self.stats and not idle_tag:
-            msg = '{0:8}'.format('system:')
+            msg = '{:8}'.format('system:')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}%'.format(self.stats['system'])
+            msg = '{:>5}%'.format(self.stats['system'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='system', option='decoration')))
         else:
-            msg = '{0:8}'.format('core:')
+            msg = '{:8}'.format('core:')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>6}'.format(self.stats['nb_log_core'])
+            msg = '{:>6}'.format(self.stats['nb_log_core'])
             ret.append(self.curse_add_line(msg))
         # IOWait CPU
         if 'iowait' in self.stats:
-            msg = '  {0:8}'.format('iowait:')
+            msg = '  {:8}'.format('iowait:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='iowait', option='optional')))
-            msg = '{0:>5}%'.format(self.stats['iowait'])
+            msg = '{:>5}%'.format(self.stats['iowait'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='iowait', option='decoration'),
                 optional=self.get_views(key='iowait', option='optional')))
         # soft_interrupts
         if 'soft_interrupts' in self.stats:
-            msg = '  {0:8}'.format('sw_int:')
+            msg = '  {:8}'.format('sw_int:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='soft_interrupts', option='optional')))
-            msg = '{0:>5}'.format(int(self.stats['soft_interrupts'] // self.stats['time_since_update']))
+            msg = '{:>5}'.format(int(self.stats['soft_interrupts'] // self.stats['time_since_update']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='soft_interrupts', option='optional')))
 
         # New line
         ret.append(self.curse_new_line())
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
-            msg = '{0:8}'.format('idle:')
+            msg = '{:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
-            msg = '{0:>5}%'.format(self.stats['idle'])
+            msg = '{:>5}%'.format(self.stats['idle'])
             ret.append(self.curse_add_line(msg))
         # Steal CPU usage
         if 'steal' in self.stats:
-            msg = '  {0:8}'.format('steal:')
+            msg = '  {:8}'.format('steal:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='steal', option='optional')))
-            msg = '{0:>5}%'.format(self.stats['steal'])
+            msg = '{:>5}%'.format(self.stats['steal'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='steal', option='decoration'),
                 optional=self.get_views(key='steal', option='optional')))
         # syscalls
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
         if 'syscalls' in self.stats and not LINUX:
-            msg = '  {0:8}'.format('syscal:')
+            msg = '  {:8}'.format('syscal:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
-            msg = '{0:>5}'.format(int(self.stats['syscalls'] // self.stats['time_since_update']))
+            msg = '{:>5}'.format(int(self.stats['syscalls'] // self.stats['time_since_update']))
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='syscalls', option='optional')))
 
         # Return the message with decoration
