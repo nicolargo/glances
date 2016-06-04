@@ -116,14 +116,14 @@ class GlancesPlugin(object):
                             l[item_name] + '_' + i['name'],
                             l[i['name']],
                             description=i['description'],
-                            history_max_size=None)
+                            history_max_size=self._limits['history_size'])
                 else:
                     # Stats is not a list
                     # Add the item to the history directly
                     self.stats_history.add(i['name'],
                                            self.stats[i['name']],
                                            description=i['description'],
-                                           history_max_size=None)
+                                           history_max_size=self._limits['history_size'])
 
     def get_items_history_list(self):
         """Return the items history list."""
@@ -389,8 +389,20 @@ class GlancesPlugin(object):
 
     def load_limits(self, config):
         """Load limits from the configuration file, if it exists."""
-        if (hasattr(config, 'has_section') and
-                config.has_section(self.plugin_name)):
+
+        # By default set the history length to 3 points per second during one day
+        self._limits['history_size'] = 28800
+
+        if not hasattr(config, 'has_section'):
+            return False
+
+        # Read the global section
+        if config.has_section('global'):
+            self._limits['history_size'] = config.get_float_value('global', 'history_size', default=28800)
+            logger.debug("Load configuration key: {0} = {1}".format('history_size', self._limits['history_size']))
+
+        # Read the plugin specific section
+        if config.has_section(self.plugin_name):
             for level, _ in config.items(self.plugin_name):
                 # Read limits
                 limit = '_'.join([self.plugin_name, level])
@@ -399,6 +411,8 @@ class GlancesPlugin(object):
                 except ValueError:
                     self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
                 logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
+
+        return True
 
     @property
     def limits(self):
