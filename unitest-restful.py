@@ -169,6 +169,31 @@ class TestGlances(unittest.TestCase):
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
 
+    def test_010_history(self):
+        """History."""
+        method = "history"
+        print('INFO: [TEST_010] History')
+        print("HTTP RESTful request: %s/cpu/%s" % (URL, method))
+        req = requests.get("%s/cpu/%s" % (URL, method))
+        self.assertIsInstance(req.json(), dict)
+        self.assertIsInstance(req.json()['user'], list)
+        self.assertTrue(len(req.json()['user']) > 0)
+        print("HTTP RESTful request: %s/cpu/%s/3" % (URL, method))
+        req = requests.get("%s/cpu/%s/3" % (URL, method))
+        self.assertIsInstance(req.json(), dict)
+        self.assertIsInstance(req.json()['user'], list)
+        self.assertTrue(len(req.json()['user']) == 3)
+        print("HTTP RESTful request: %s/cpu/system/%s" % (URL, method))
+        req = requests.get("%s/cpu/system/%s" % (URL, method))
+        self.assertIsInstance(req.json(), dict)
+        self.assertIsInstance(req.json()['system'], list)
+        self.assertTrue(len(req.json()['system']) > 0)
+        print("HTTP RESTful request: %s/cpu/system/%s/3" % (URL, method))
+        req = requests.get("%s/cpu/system/%s/3" % (URL, method))
+        self.assertIsInstance(req.json(), dict)
+        self.assertIsInstance(req.json()['system'], list)
+        self.assertTrue(len(req.json()['system']) == 3)
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Web Server')
