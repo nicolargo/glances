@@ -106,15 +106,15 @@ class Plugin(GlancesPlugin):
             if m['result'] is None:
                 continue
             # Display AMP
-            first_column = '{0}'.format(m['name'])
+            first_column = '{}'.format(m['name'])
             first_column_style = self.get_alert(m['count'], m['countmin'], m['countmax'])
-            second_column = '{0}'.format(m['count'])
+            second_column = '{}'.format(m['count'])
             for l in m['result'].split('\n'):
                 # Display first column with the process name...
-                msg = '{0:<16} '.format(first_column)
+                msg = '{:<16} '.format(first_column)
                 ret.append(self.curse_add_line(msg, first_column_style))
                 # ... and second column with the number of matching processes...
-                msg = '{0:<4} '.format(second_column)
+                msg = '{:<4} '.format(second_column)
                 ret.append(self.curse_add_line(msg))
                 # ... only on the first line
                 first_column = second_column = ''

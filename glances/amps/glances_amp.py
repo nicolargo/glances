@@ -48,7 +48,7 @@ class GlancesAmp(object):
 
     def __init__(self, name=None, args=None):
         """Init AMP classe."""
-        logger.debug("Init {0} version {1}".format(self.NAME, self.VERSION))
+        logger.debug("Init {} version {}".format(self.NAME, self.VERSION))
 
         # AMP name (= module name without glances_)
         if name is None:
@@ -86,7 +86,7 @@ class GlancesAmp(object):
         amp_section = 'amp_' + self.amp_name
         if (hasattr(config, 'has_section') and
                 config.has_section(amp_section)):
-            logger.debug("{0}: Load configuration".format(self.NAME))
+            logger.debug("{}: Load configuration".format(self.NAME))
             for param, _ in config.items(amp_section):
                 try:
                     self.configs[param] = config.get_float_value(amp_section, param)
@@ -94,9 +94,9 @@ class GlancesAmp(object):
                     self.configs[param] = config.get_value(amp_section, param).split(',')
                     if len(self.configs[param]) == 1:
                         self.configs[param] = self.configs[param][0]
-                logger.debug("{0}: Load parameter: {1} = {2}".format(self.NAME, param, self.configs[param]))
+                logger.debug("{}: Load parameter: {} = {}".format(self.NAME, param, self.configs[param]))
         else:
-            logger.debug("{0}: Can not find section {1} in the configuration file".format(self.NAME, self.amp_name))
+            logger.debug("{}: Can not find section {} in the configuration file".format(self.NAME, self.amp_name))
             return False
 
         # enable, regex and refresh are mandatories
@@ -104,10 +104,10 @@ class GlancesAmp(object):
         if self.enable():
             for k in ['regex', 'refresh']:
                 if k not in self.configs:
-                    logger.warning("{0}: Can not find configuration key {1} in section {2}".format(self.NAME, k, self.amp_name))
+                    logger.warning("{}: Can not find configuration key {} in section {}".format(self.NAME, k, self.amp_name))
                     self.configs['enable'] = 'false'
         else:
-            logger.warning("{0} is disabled".format(self.NAME))
+            logger.warning("{} is disabled".format(self.NAME))
 
         # Init the count to 0
         self.configs['count'] = 0

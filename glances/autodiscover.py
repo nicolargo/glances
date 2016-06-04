@@ -41,7 +41,7 @@ except ImportError:
 if zeroconf_tag:
     zeroconf_min_version = (0, 17, 0)
     zeroconf_version = tuple([int(num) for num in __zeroconf_version.split('.')])
-    logger.debug("Zeroconf version {0} detected.".format(__zeroconf_version))
+    logger.debug("Zeroconf version {} detected.".format(__zeroconf_version))
     if zeroconf_version < zeroconf_min_version:
         logger.critical("Please install zeroconf 0.17 or higher.")
         sys.exit(1)
@@ -191,7 +191,7 @@ class GlancesAutoDiscoverClient(object):
             try:
                 self.zeroconf = Zeroconf()
             except socket.error as e:
-                logger.error("Cannot start zeroconf: {0}".format(e))
+                logger.error("Cannot start zeroconf: {}".format(e))
 
             # XXX *BSDs: Segmentation fault (core dumped)
             # -- https://bitbucket.org/al45tair/netifaces/issues/15
@@ -205,15 +205,15 @@ class GlancesAutoDiscoverClient(object):
                     pass
 
             self.info = ServiceInfo(
-                zeroconf_type, '{0}:{1}.{2}'.format(hostname, args.port, zeroconf_type),
+                zeroconf_type, '{}:{}.{}'.format(hostname, args.port, zeroconf_type),
                 address=socket.inet_aton(zeroconf_bind_address), port=args.port,
                 weight=0, priority=0, properties={}, server=hostname)
             try:
                 self.zeroconf.register_service(self.info)
             except socket.error as e:
-                logger.error("Error while announcing Glances server: {0}".format(e))
+                logger.error("Error while announcing Glances server: {}".format(e))
             else:
-                print("Announce the Glances server on the LAN (using {0} IP address)".format(zeroconf_bind_address))
+                print("Announce the Glances server on the LAN (using {} IP address)".format(zeroconf_bind_address))
         else:
             logger.error("Cannot announce Glances server on the network: zeroconf library not found.")
 

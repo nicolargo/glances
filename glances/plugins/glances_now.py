@@ -53,7 +53,7 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # 23 is the padding for the process list
-        msg = '{0:23}'.format(self.stats)
+        msg = '{:23}'.format(self.stats)
         ret.append(self.curse_add_line(msg))
 
         return ret

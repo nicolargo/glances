@@ -106,7 +106,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
-            logger.debug("Server number {0} selected".format(self.cursor + 1))
+            logger.debug("Server number {} selected".format(self.cursor + 1))
             self.active_server = self.cursor
         elif self.pressedkey == 65:
             # 'UP' > Up in the server list
@@ -126,7 +126,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         servers_list: Dict of dict with servers stats
         """
         # Flush display
-        logger.debug('Servers list: {0}'.format(servers_list))
+        logger.debug('Servers list: {}'.format(servers_list))
         self.flush(servers_list)
 
         # Wait
@@ -182,7 +182,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif len(servers_list) == 1:
             msg = 'One Glances server available'
         else:
-            msg = '{0} Glances servers available'.format(len(servers_list))
+            msg = '{} Glances servers available'.format(len(servers_list))
         if self.args.disable_autodiscover:
             msg += ' ' + '(auto discover is disabled)'
         self.term_window.addnstr(y, x,
@@ -238,7 +238,7 @@ class GlancesCursesBrowser(_GlancesCurses):
                     server_stat[c[0]] = v[c[0]]
                 except KeyError as e:
                     logger.debug(
-                        "Cannot grab stats {0} from server (KeyError: {1})".format(c[0], e))
+                        "Cannot grab stats {} from server (KeyError: {})".format(c[0], e))
                     server_stat[c[0]] = '?'
                 # Display alias instead of name
                 try:

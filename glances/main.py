@@ -179,7 +179,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--disable-autodiscover', action='store_true', default=False,
                             dest='disable_autodiscover', help='disable autodiscover feature')
         parser.add_argument('-p', '--port', default=None, type=int, dest='port',
-                            help='define the client/server TCP port [default: {0}]'.format(self.server_port))
+                            help='define the client/server TCP port [default: {}]'.format(self.server_port))
         parser.add_argument('-B', '--bind', default='0.0.0.0', dest='bind_address',
                             help='bind server to the given IPv4/IPv6 address or hostname')
         parser.add_argument('--username', action='store_true', default=False, dest='username_prompt',
@@ -199,7 +199,7 @@ Start the client browser (browser mode):\n\
         parser.add_argument('--snmp-force', action='store_true', default=False,
                             dest='snmp_force', help='force SNMP mode')
         parser.add_argument('-t', '--time', default=self.refresh_time, type=float,
-                            dest='time', help='set refresh time in seconds [default: {0} sec]'.format(self.refresh_time))
+                            dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
         # Display options
@@ -282,17 +282,17 @@ Start the client browser (browser mode):\n\
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the Glances server password ({0} username): '.format(args.username),
+                    description='Define the Glances server password ({} username): '.format(args.username),
                     confirm=True,
                     username=args.username)
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the Glances webserver password ({0} username): '.format(args.username),
+                    description='Define the Glances webserver password ({} username): '.format(args.username),
                     confirm=True,
                     username=args.username)
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password ({0} username): '.format(args.username),
+                    description='Enter the Glances server password ({} username): '.format(args.username),
                     clear=True,
                     username=args.username)
         else:

@@ -81,12 +81,12 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{0:8}'.format('PER CPU')
+        msg = '{:8}'.format('PER CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Total per-CPU usage
         for cpu in self.stats:
-            msg = '{0:>6}%'.format(cpu['total'])
+            msg = '{:>6}%'.format(cpu['total'])
             ret.append(self.curse_add_line(msg))
 
         # Stats per-CPU
@@ -95,10 +95,10 @@ class Plugin(GlancesPlugin):
                 continue
 
             ret.append(self.curse_new_line())
-            msg = '{0:8}'.format(stat + ':')
+            msg = '{:8}'.format(stat + ':')
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = '{0:>6}%'.format(cpu[stat])
+                msg = '{:>6}%'.format(cpu[stat])
                 ret.append(self.curse_add_line(msg,
                                                self.get_alert(cpu[stat], header=stat)))
 

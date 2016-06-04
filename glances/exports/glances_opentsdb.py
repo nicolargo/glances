@@ -103,14 +103,14 @@ class Export(GlancesExport):
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
-            stat_name = '{0}.{1}.{2}'.format(self.prefix, name, columns[i])
+            stat_name = '{}.{}.{}'.format(self.prefix, name, columns[i])
             stat_value = points[i]
             tags = self.parse_tags(self.tags)
             try:
                 self.client.send(stat_name, stat_value, **tags)
             except Exception as e:
                 logger.error("Can not export stats %s to OpenTSDB (%s)" % (name, e))
-        logger.debug("Export {0} stats to OpenTSDB".format(name))
+        logger.debug("Export {} stats to OpenTSDB".format(name))
 
     def exit(self):
         """Close the OpenTSDB export module."""

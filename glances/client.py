@@ -55,11 +55,11 @@ class GlancesClient(object):
 
         # Build the URI
         if args.password != "":
-            self.uri = 'http://{0}:{1}@{2}:{3}'.format(args.username, args.password,
-                                                       args.client, args.port)
+            self.uri = 'http://{}:{}@{}:{}'.format(args.username, args.password,
+                                                   args.client, args.port)
         else:
-            self.uri = 'http://{0}:{1}'.format(args.client, args.port)
-        logger.debug("Try to connect to {0}".format(self.uri))
+            self.uri = 'http://{}:{}'.format(args.client, args.port)
+        logger.debug("Try to connect to {}".format(self.uri))
 
         # Try to connect to the URI
         transport = GlancesClientTransport()
@@ -68,7 +68,7 @@ class GlancesClient(object):
         try:
             self.client = ServerProxy(self.uri, transport=transport)
         except Exception as e:
-            self.log_and_exit("Client couldn't create socket {0}: {1}".format(self.uri, e))
+            self.log_and_exit("Client couldn't create socket {}: {}".format(self.uri, e))
 
     def log_and_exit(self, msg=''):
         """Log and exit."""
@@ -100,7 +100,7 @@ class GlancesClient(object):
         except socket.error as err:
             # Fallback to SNMP
             self.client_mode = 'snmp'
-            logger.error("Connection to Glances server failed ({0} {1})".format(err.errno, err.strerror))
+            logger.error("Connection to Glances server failed ({} {})".format(err.errno, err.strerror))
             fallbackmsg = 'No Glances server found on {}. Trying fallback to SNMP...'.format(self.uri)
             if not self.return_to_browser:
                 print(fallbackmsg)
@@ -112,7 +112,7 @@ class GlancesClient(object):
             if err.errcode == 401:
                 msg += " (Bad username/password)"
             else:
-                msg += " ({0} {1})".format(err.errcode, err.errmsg)
+                msg += " ({} {})".format(err.errcode, err.errmsg)
             self.log_and_exit(msg)
             return False
 
@@ -122,10 +122,10 @@ class GlancesClient(object):
                 # Init stats
                 self.stats = GlancesStatsClient(config=self.config, args=self.args)
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
-                logger.debug("Client version: {0} / Server version: {1}".format(__version__, client_version))
+                logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
             else:
                 self.log_and_exit("Client and server not compatible: \
-                                   Client version: {0} / Server version: {1}".format(__version__, client_version))
+                                   Client version: {} / Server version: {}".format(__version__, client_version))
                 return False
 
         return True
@@ -180,7 +180,7 @@ class GlancesClient(object):
             return self.update_snmp()
         else:
             self.end()
-            logger.critical("Unknown server mode: {0}".format(self.client_mode))
+            logger.critical("Unknown server mode: {}".format(self.client_mode))
             sys.exit(2)
 
     def update_glances(self):

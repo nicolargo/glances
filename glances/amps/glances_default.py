@@ -59,11 +59,11 @@ class Amp(GlancesAmp):
     def update(self, process_list):
         """Update the AMP"""
         # Get the systemctl status
-        logger.debug('{0}: Update stats using service {1}'.format(self.NAME, self.get('service_cmd')))
+        logger.debug('{}: Update stats using service {}'.format(self.NAME, self.get('service_cmd')))
         try:
             res = self.get('command')
         except OSError as e:
-            logger.debug('{0}: Error while executing service ({1})'.format(self.NAME, e))
+            logger.debug('{}: Error while executing service ({})'.format(self.NAME, e))
         else:
             if res is not None:
                 msg = u(check_output(res.split(), stderr=STDOUT))
@@ -71,7 +71,7 @@ class Amp(GlancesAmp):
             else:
                 # Set the default message if command return None
                 # Default sum of CPU and MEM for the matching regex
-                self.set_result('CPU: {0:.1f}% | MEM: {1:.1f}%'.format(
+                self.set_result('CPU: {:.1f}% | MEM: {:.1f}%'.format(
                     sum([p['cpu_percent'] for p in process_list]),
                     sum([p['memory_percent'] for p in process_list])))
 

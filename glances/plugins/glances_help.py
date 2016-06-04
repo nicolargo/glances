@@ -50,16 +50,16 @@ class Plugin(GlancesPlugin):
         pass
 
     def generate_view_data(self):
-        self.view_data['version'] = '{0} {1}'.format(__appname__.title(), __version__)
-        self.view_data['psutil_version'] = ' with PSutil {0}'.format(psutil_version)
+        self.view_data['version'] = '{} {}'.format(__appname__.title(), __version__)
+        self.view_data['psutil_version'] = ' with PSutil {}'.format(psutil_version)
 
         try:
-            self.view_data['configuration_file'] = 'Configuration file: {0}'.format(self.config.loaded_config_file)
+            self.view_data['configuration_file'] = 'Configuration file: {}'.format(self.config.loaded_config_file)
         except AttributeError:
             pass
 
-        msg_col = ' {0:1}  {1:35}'
-        msg_col2 = '   {0:1}  {1:35}'
+        msg_col = ' {:1}  {:35}'
+        msg_col2 = '   {:1}  {:35}'
         self.view_data['sort_auto'] = msg_col.format('a', 'Sort processes automatically')
         self.view_data['sort_network'] = msg_col2.format('b', 'Bytes or bits for network I/O')
         self.view_data['sort_cpu'] = msg_col.format('c', 'Sort processes by CPU%')

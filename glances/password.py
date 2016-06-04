@@ -101,7 +101,7 @@ class GlancesPassword(object):
         """
         if os.path.exists(self.password_filepath) and not clear:
             # If the password file exist then use it
-            logger.info("Read password from file {0}".format(self.password_filepath))
+            logger.info("Read password from file {}".format(self.password_filepath))
             password = self.load_password()
         else:
             # password_sha256 is the plain SHA-256 password
@@ -138,7 +138,7 @@ class GlancesPassword(object):
             try:
                 os.makedirs(self.password_path)
             except OSError as e:
-                logger.error("Cannot create Glances directory: {0}".format(e))
+                logger.error("Cannot create Glances directory: {}".format(e))
                 return
 
         # Create/overwrite the password file

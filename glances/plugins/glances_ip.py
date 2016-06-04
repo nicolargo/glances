@@ -88,7 +88,7 @@ class Plugin(GlancesPlugin):
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]
             except (KeyError, AttributeError) as e:
-                logger.debug("Cannot grab the default gateway ({0})".format(e))
+                logger.debug("Cannot grab the default gateway ({})".format(e))
             else:
                 try:
                     self.stats['address'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
@@ -98,7 +98,7 @@ class Plugin(GlancesPlugin):
                     # !!! SHOULD be done once, not on each refresh
                     self.stats['public_address'] = self.public_address
                 except (KeyError, AttributeError) as e:
-                    logger.debug("Cannot grab IP information: {0}".format(e))
+                    logger.debug("Cannot grab IP information: {}".format(e))
         elif self.input_method == 'snmp':
             # Not implemented yet
             pass
@@ -132,14 +132,14 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = 'IP '
         ret.append(self.curse_add_line(msg, 'TITLE'))
-        msg = '{0:}'.format(self.stats['address'])
+        msg = '{}'.format(self.stats['address'])
         ret.append(self.curse_add_line(msg))
         if 'mask_cidr' in self.stats:
             # VPN with no internet access (issue #842)
-            msg = '/{0}'.format(self.stats['mask_cidr'])
+            msg = '/{}'.format(self.stats['mask_cidr'])
             ret.append(self.curse_add_line(msg))
         try:
-            msg_pub = '{0:}'.format(self.stats['public_address'])
+            msg_pub = '{}'.format(self.stats['public_address'])
         except UnicodeEncodeError:
             pass
         else:

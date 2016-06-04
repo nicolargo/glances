@@ -89,10 +89,10 @@ class Export(GlancesExport):
         for i in range(len(columns)):
             if not isinstance(points[i], Number):
                 continue
-            stat_name = '{0}.{1}'.format(name, columns[i])
+            stat_name = '{}.{}'.format(name, columns[i])
             stat_value = points[i]
             try:
                 self.client.gauge(stat_name, stat_value)
             except Exception as e:
                 logger.error("Can not export stats to Statsd (%s)" % e)
-        logger.debug("Export {0} stats to Statsd".format(name))
+        logger.debug("Export {} stats to Statsd".format(name))

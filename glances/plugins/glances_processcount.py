@@ -83,9 +83,9 @@ class Plugin(GlancesPlugin):
         if glances_processes.process_filter is not None:
             msg = 'Processes filter:'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' {0} '.format(glances_processes.process_filter)
+            msg = ' {} '.format(glances_processes.process_filter)
             if glances_processes.process_filter_key is not None:
-                msg += 'on column {0} '.format(glances_processes.process_filter_key)
+                msg += 'on column {} '.format(glances_processes.process_filter_key)
             ret.append(self.curse_add_line(msg, "FILTER"))
             msg = '(\'ENTER\' to edit, \'E\' to reset)'
             ret.append(self.curse_add_line(msg))
@@ -97,34 +97,34 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Compute processes
         other = self.stats['total']
-        msg = '{0:>4}'.format(self.stats['total'])
+        msg = '{:>4}'.format(self.stats['total'])
         ret.append(self.curse_add_line(msg))
 
         if 'thread' in self.stats:
-            msg = ' ({0} thr),'.format(self.stats['thread'])
+            msg = ' ({} thr),'.format(self.stats['thread'])
             ret.append(self.curse_add_line(msg))
 
         if 'running' in self.stats:
             other -= self.stats['running']
-            msg = ' {0} run,'.format(self.stats['running'])
+            msg = ' {} run,'.format(self.stats['running'])
             ret.append(self.curse_add_line(msg))
 
         if 'sleeping' in self.stats:
             other -= self.stats['sleeping']
-            msg = ' {0} slp,'.format(self.stats['sleeping'])
+            msg = ' {} slp,'.format(self.stats['sleeping'])
             ret.append(self.curse_add_line(msg))
 
-        msg = ' {0} oth '.format(other)
+        msg = ' {} oth '.format(other)
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
         if glances_processes.auto_sort:
             msg = 'sorted automatically'
             ret.append(self.curse_add_line(msg))
-            msg = ' by {0}'.format(glances_processes.sort_key)
+            msg = ' by {}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         else:
-            msg = 'sorted by {0}'.format(glances_processes.sort_key)
+            msg = 'sorted by {}'.format(glances_processes.sort_key)
             ret.append(self.curse_add_line(msg))
         ret[-1]["msg"] += ", %s view" % ("tree" if glances_processes.is_tree_enabled() else "flat")
         # if args.disable_irix:

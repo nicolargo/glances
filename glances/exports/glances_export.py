@@ -71,7 +71,7 @@ class GlancesExport(object):
         try:
             ret = item[item['key']]
         except KeyError:
-            logger.error("No 'key' available in {0}".format(item))
+            logger.error("No 'key' available in {}".format(item))
         if isinstance(ret, list):
             return ret[0]
         else:
@@ -136,7 +136,7 @@ class GlancesExport(object):
             # Stats is a dict
             # Is there a key ?
             if 'key' in iterkeys(stats):
-                pre_key = '{0}.'.format(stats[stats['key']])
+                pre_key = '{}.'.format(stats[stats['key']])
             else:
                 pre_key = ''
             # Walk through the dict

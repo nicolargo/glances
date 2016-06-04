@@ -72,7 +72,7 @@ class GlancesPlugin(object):
 
     def exit(self):
         """Method to be called when Glances exit"""
-        logger.debug("Stop the {0} plugin".format(self.plugin_name))
+        logger.debug("Stop the {} plugin".format(self.plugin_name))
 
     def __repr__(self):
         """Return the raw stats."""
@@ -293,7 +293,7 @@ class GlancesPlugin(object):
             try:
                 return json.dumps({item: self.stats[item]})
             except KeyError as e:
-                logger.error("Cannot get item {0} ({1})".format(item, e))
+                logger.error("Cannot get item {} ({})".format(item, e))
                 return None
         elif isinstance(self.stats, list):
             try:
@@ -301,7 +301,7 @@ class GlancesPlugin(object):
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
                 return json.dumps({item: map(itemgetter(item), self.stats)})
             except (KeyError, ValueError) as e:
-                logger.error("Cannot get item {0} ({1})".format(item, e))
+                logger.error("Cannot get item {} ({})".format(item, e))
                 return None
         else:
             return None
@@ -320,7 +320,7 @@ class GlancesPlugin(object):
                 return json.dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
                 logger.error(
-                    "Cannot get item({0})=value({1}) ({2})".format(item, value, e))
+                    "Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
 
     def update_views(self):
@@ -410,7 +410,7 @@ class GlancesPlugin(object):
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
                     self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
-                logger.debug("Load limit: {0} = {1}".format(limit, self._limits[limit]))
+                logger.debug("Load limit: {} = {}".format(limit, self._limits[limit]))
 
         return True
 
@@ -521,7 +521,7 @@ class GlancesPlugin(object):
             # Exemple: network_careful
             limit = self._limits[self.plugin_name + '_' + criticity]
 
-        # logger.debug("{0} {1} value is {2}".format(stat_name, criticity, limit))
+        # logger.debug("{} {} value is {}".format(stat_name, criticity, limit))
 
         # Return the limit
         return limit
@@ -716,9 +716,9 @@ class GlancesPlugin(object):
                         decimal_precision = min(1, decimal_precision)
                 elif symbol in 'K':
                     decimal_precision = 0
-                return '{0:.{decimal}f}{symbol}'.format(
+                return '{:.{decimal}f}{symbol}'.format(
                     value, decimal=decimal_precision, symbol=symbol)
-        return '{0!s}'.format(number)
+        return '{!s}'.format(number)
 
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""

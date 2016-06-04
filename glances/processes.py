@@ -467,8 +467,8 @@ class GlancesProcesses(object):
                                          key=lambda x: x[1][self.sort_key],
                                          reverse=self.sort_reverse)
                 except (KeyError, TypeError) as e:
-                    logger.error("Cannot sort process list by {0}: {1}".format(self.sort_key, e))
-                    logger.error('{0}'.format(listitems(processdict)[0]))
+                    logger.error("Cannot sort process list by {}: {}".format(self.sort_key, e))
+                    logger.error('{}'.format(listitems(processdict)[0]))
                     # Fallback to all process (issue #423)
                     processloop = iteritems(processdict)
                     first = False

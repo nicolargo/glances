@@ -70,9 +70,9 @@ class AmpsList(object):
                 try:
                     amp = __import__(os.path.basename(amp_script)[:-3])
                 except ImportError as e:
-                    logger.warning("Can not load {0}, you need to install an external Python package ({1})".format(os.path.basename(amp_script), e))
+                    logger.warning("Cannot load {}, you need to install an external Python package ({})".format(os.path.basename(amp_script), e))
                 except Exception as e:
-                    logger.warning("Can not load {0} ({1})".format(os.path.basename(amp_script), e))
+                    logger.warning("Cannot load {} ({})".format(os.path.basename(amp_script), e))
                 else:
                     # Add the AMP to the dictionary
                     # The key is the AMP name
@@ -82,7 +82,7 @@ class AmpsList(object):
                     # Load the AMP configuration
                     self.__amps_dict[amp_conf_name].load_config(self.config)
         # Log AMPs list
-        logger.debug("AMPs' list: {0}".format(self.getList()))
+        logger.debug("AMPs list: {}".format(self.getList()))
 
         return True
 
