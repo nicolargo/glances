@@ -112,7 +112,7 @@ class TestGlances(unittest.TestCase):
             req = requests.get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
-            print req.json()[i]
+            print(req.json()[i])
             self.assertIsInstance(req.json()[i], numbers.Number)
 
     def test_005_values(self):
