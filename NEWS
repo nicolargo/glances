@@ -22,7 +22,7 @@ Enhancements and new features:
     * [Web UI] Add cpu name in quicklook plugin (issue #825)
     * Allow theme to be set in configuration file (issue #862)
     * Display a warning message when Glances is outdated (issue #865)
-    * Refactor stats history and export to graph (issue #696)
+    * Refactor stats history and export to graph. History available through API (issue #696)
 
 Bugs corrected:
 
