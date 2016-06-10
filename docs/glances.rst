@@ -42,7 +42,8 @@ Monitor local machine and export stats to a CSV file:
     $ glances --export-csv
 
 Monitor local machine and export stats to a InfluxDB server with 5s
-refresh time:
+refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
+ElasticSearch, RabbitMQ and Riemann):
 
     $ glances -t 5 --export-influxdb
 

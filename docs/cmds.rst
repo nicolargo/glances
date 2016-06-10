@@ -131,6 +131,10 @@ Command-Line Options
 
     export stats to an InfluxDB server (influxdb lib needed)
 
+.. option:: --export-cassandra
+
+    export stats to a Cassandra/Scylla server (cassandra lib needed)
+
 .. option:: --export-opentsdb
 
     export stats to an OpenTSDB server (potsdb lib needed)
