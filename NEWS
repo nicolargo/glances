@@ -34,7 +34,8 @@ Bugs corrected:
     * [Web UI] Fix folders plugin never displayed (issue #829)
     * Correct issue IP plugin: VPN with no internet access (issue #842)
     * Idle process is back on FreeBSD and Windows (issue #844)
-    * Top 3 processes are back in the alert summay
+    * On Windows, Glances try to display unexisting Load stats (issue #871)
+    * Top 3 processes are back in the alert summary
 
 Version 2.6.1
 =============
