@@ -47,8 +47,6 @@ A first section (called global) is available:
     # Does Glances should check if a newer version is available on Pypi ?
     check_update=true
 
-
-
 Each plugin, export module and application monitoring process (AMP) can have a
 section. Below an example for the CPU plugin:
 
