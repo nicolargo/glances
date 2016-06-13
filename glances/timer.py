@@ -61,3 +61,20 @@ class Timer(object):
 
     def finished(self):
         return time() > self.target
+
+
+class Counter(object):
+
+    """The counter class."""
+
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        self.target = time()
+
+    def reset(self):
+        self.start()
+
+    def get(self):
+        return time() - self.target

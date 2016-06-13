@@ -97,7 +97,7 @@ class GlancesStats(object):
                 # for example, the file glances_xxx.py
                 # generate self._plugins_list["xxx"] = ...
                 plugin_name = os.path.basename(item)[len(header):-3].lower()
-                if plugin_name in ('help', 'amps'):
+                if plugin_name in ('help', 'amps', 'ports'):
                     self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
                 else:
                     self._plugins[plugin_name] = plugin.Plugin(args=args)

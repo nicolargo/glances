@@ -114,6 +114,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_load', help='disable load module')
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help='disable network module')
+        parser.add_argument('--disable-ports', action='store_true', default=False,
+                            dest='disable_ports', help='disable ports scanner module')
         parser.add_argument('--disable-ip', action='store_true', default=False,
                             dest='disable_ip', help='disable IP module')
         parser.add_argument('--disable-diskio', action='store_true', default=False,

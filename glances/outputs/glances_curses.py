@@ -412,6 +412,9 @@ class _GlancesCurses(object):
             # 'p' > Sort processes by name
             glances_processes.auto_sort = False
             glances_processes.sort_key = 'name'
+        elif self.pressedkey == ord('P'):
+            # 'P' > Disable ports scan plugins
+            self.args.disable_ports = not self.args.disable_ports
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag
@@ -548,6 +551,8 @@ class _GlancesCurses(object):
             args=self.args)
         stats_sensors = stats.get_plugin(
             'sensors').get_stats_display(args=self.args)
+        stats_ports = stats.get_plugin(
+            'ports').get_stats_display(args=self.args)
         stats_now = stats.get_plugin('now').get_stats_display()
         stats_docker = stats.get_plugin('docker').get_stats_display(
             args=self.args)
@@ -704,10 +709,11 @@ class _GlancesCurses(object):
         self.saved_line = self.next_line
 
         # ==================================================================
-        # Display left sidebar (NETWORK+DISKIO+FS+SENSORS+Current time)
+        # Display left sidebar (NETWORK+PORTS+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
         self.init_column()
         if not (self.args.disable_network and
+                self.args.disable_ports and
                 self.args.disable_diskio and
                 self.args.disable_fs and
                 self.args.disable_folder and
@@ -715,6 +721,8 @@ class _GlancesCurses(object):
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
             self.new_line()
             self.display_plugin(stats_network)
+            self.new_line()
+            self.display_plugin(stats_ports)
             self.new_line()
             self.display_plugin(stats_diskio)
             self.new_line()

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -32,7 +32,7 @@ class GlancesStaticServer(object):
     _section = "serverlist"
 
     def __init__(self, config=None, args=None):
-        # server_dict is a list of dict (JSON compliant)
+        # server_list is a list of dict (JSON compliant)
         # [ {'key': 'zeroconf name', ip': '172.1.2.3', 'port': 61209, 'cpu': 3, 'mem': 34 ...} ... ]
         # Load the configuration file
         self._server_list = self.load(config)
@@ -42,7 +42,7 @@ class GlancesStaticServer(object):
         server_list = []
 
         if config is None:
-            logger.warning("No configuration file available. Cannot load server list.")
+            logger.debug("No configuration file available. Cannot load server list.")
         elif not config.has_section(self._section):
             logger.warning("No [%s] section in the configuration file. Cannot load server list." % self._section)
         else:
@@ -84,7 +84,7 @@ class GlancesStaticServer(object):
         return server_list
 
     def get_servers_list(self):
-        """Return the current server list (dict of dict)."""
+        """Return the current server list (list of dict)."""
         return self._server_list
 
     def set_server(self, server_pos, key, value):
