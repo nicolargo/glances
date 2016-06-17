@@ -53,14 +53,17 @@ class GlancesPortsList(object):
                 new_port = {}
                 postfix = 'port_%s_' % str(i)
 
-                # Read mandatories configuration keys: host and port
-                for s in ['host', 'port']:
-                    new_port[s] = config.get_value(self._section, '%s%s' % (postfix, s))
+                # Read mandatories configuration key: host
+                new_port['host'] = config.get_value(self._section, '%s%s' % (postfix, 'host'))
 
-                if new_port['host'] is None or new_port['port'] is None:
+                if new_port['host'] is None:
                     continue
 
                 # Read optionals configuration keys
+                # Port is set to 0 by default. 0 mean ICMP check instead of TCP check
+                new_port['port'] = config.get_value(self._section,
+                                                    '%s%s' % (postfix, 'port'),
+                                                    0)
                 new_port['description'] = config.get_value(self._section,
                                                            '%sdescription' % postfix,
                                                            default="%s:%s" % (new_port['host'], new_port['port']))
@@ -72,7 +75,9 @@ class GlancesPortsList(object):
                 new_port['refresh'] = refresh
 
                 # Timeout in second
-                new_port['timeout'] = timeout
+                new_port['timeout'] = config.get_value(self._section,
+                                                       '%stimeout' % postfix,
+                                                       default=timeout)
 
                 # Add the server to the list
                 logger.debug("Add port %s:%s to the static list" % (new_port['host'], new_port['port']))

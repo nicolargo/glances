@@ -107,7 +107,7 @@ class GlancesAmp(object):
                     logger.warning("{}: Can not find configuration key {} in section {}".format(self.NAME, k, self.amp_name))
                     self.configs['enable'] = 'false'
         else:
-            logger.warning("{} is disabled".format(self.NAME))
+            logger.debug("{} is disabled".format(self.NAME))
 
         # Init the count to 0
         self.configs['count'] = 0
