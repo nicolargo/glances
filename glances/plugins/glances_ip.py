@@ -30,6 +30,7 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 # XXX *BSDs: Segmentation fault (core dumped)
 # -- https://bitbucket.org/al45tair/netifaces/issues/15
+# Also used in the ports_list script
 if not BSD:
     try:
         import netifaces

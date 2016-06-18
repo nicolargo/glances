@@ -25,6 +25,7 @@ from glances.globals import BSD
 
 # XXX *BSDs: Segmentation fault (core dumped)
 # -- https://bitbucket.org/al45tair/netifaces/issues/15
+# Also used in the glances_ip plugin
 if not BSD:
     try:
         import netifaces
