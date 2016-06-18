@@ -21,6 +21,18 @@
 
 from glances.compat import range
 from glances.logger import logger
+from glances.globals import BSD
+
+# XXX *BSDs: Segmentation fault (core dumped)
+# -- https://bitbucket.org/al45tair/netifaces/issues/15
+if not BSD:
+    try:
+        import netifaces
+        netifaces_tag = True
+    except ImportError:
+        netifaces_tag = False
+else:
+    netifaces_tag = False
 
 
 class GlancesPortsList(object):
@@ -47,8 +59,25 @@ class GlancesPortsList(object):
             logger.warning("No [%s] section in the configuration file. Cannot load ports list." % self._section)
         else:
             logger.debug("Start reading the [%s] section in the configuration file" % self._section)
+
             refresh = config.get_value(self._section, 'refresh', default=self._default_refresh)
             timeout = config.get_value(self._section, 'timeout', default=self._default_timeout)
+
+            # Add default gateway on top of the ports_list lits
+            default_gateway = config.get_value(self._section, 'port_default_gateway', default='False')
+            if default_gateway.lower().startswith('true') and netifaces_tag:
+                new_port = {}
+                new_port['host'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
+                # ICMP
+                new_port['port'] = 0
+                new_port['description'] = 'DefaultGateway'
+                new_port['refresh'] = refresh
+                new_port['timeout'] = timeout
+                new_port['status'] = None
+                logger.debug("Add default gateway %s to the static list" % (new_port['host']))
+                ports_list.append(new_port)
+
+            # Read the scan list
             for i in range(1, 256):
                 new_port = {}
                 postfix = 'port_%s_' % str(i)

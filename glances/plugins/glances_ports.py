@@ -141,12 +141,17 @@ class Plugin(GlancesPlugin):
         fnull = open(os.devnull, 'w')
 
         counter = Counter()
-        ret = subprocess.check_call(cmd, stdout=fnull, stderr=fnull, close_fds=True)
-        if ret == 0:
-            # Ping return RTT.
-            port['status'] = counter.get() / 2.0
+        try:
+            ret = subprocess.check_call(cmd, stdout=fnull, stderr=fnull, close_fds=True)
+        except Exception as e:
+            logger.debug("{0}: Error while pinging host ({2})".format(self.plugin_name, port['host'], e))
+            return 1
         else:
-            port['status'] = False
+            if ret == 0:
+                # Ping return RTT.
+                port['status'] = counter.get() / 2.0
+            else:
+                port['status'] = False
 
         return ret
 
