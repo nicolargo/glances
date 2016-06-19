@@ -82,6 +82,10 @@ Command-Line Options
 
     disable Docker module
 
+.. option:: --disable-ports
+
+    disable Ports module
+
 .. option:: -5, --disable-top
 
     disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)

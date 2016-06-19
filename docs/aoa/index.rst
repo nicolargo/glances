@@ -26,6 +26,7 @@ Legend:
    load
    memory
    network
+   ports
    disk
    fs
    folders
