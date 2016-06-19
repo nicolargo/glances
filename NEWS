@@ -18,6 +18,7 @@ Deprecated:
 Enhancements and new features:
 
     * Add Application Monitoring Process plugin (issue #780)
+    * Add a new "Ports scanner" plugin (issue #734)
     * Improve IP plugin to display public IP address (issue #646)
     * CPU additionnal stats monitoring: Context switch, Interrupts... (issue #810)
     * Filter processes by others stats (username) (issue #748)
