@@ -23,6 +23,7 @@ import os
 import subprocess
 import threading
 import socket
+import types
 
 from glances.globals import WINDOWS
 from glances.ports_list import GlancesPortsList
@@ -61,9 +62,8 @@ class Plugin(GlancesPlugin):
             # Only refresh every refresh seconds (define in the configuration file)
             if self.timer_ports.finished():
                 # Run ports scanner
-                for p in self.stats:
-                    thread = threading.Thread(target=self._port_scan, args=(p,))
-                    thread.start()
+                thread = threading.Thread(target=self._port_scan_all, args=(self.stats,))
+                thread.start()
                 # Restart timer
                 if len(self.stats) > 0:
                     self.timer_ports = Timer(int(self.stats[0]['refresh']))
@@ -99,11 +99,13 @@ class Plugin(GlancesPlugin):
         for p in self.stats:
             if p['status'] is None:
                 status = 'Scanning'
+            elif isinstance(p['status'], types.BooleanType) and p['status'] is True:
+                status = 'Open'
             elif p['status'] == 0:
                 status = 'Timeout'
             else:
                 # Convert second to ms
-                status = '{0:.0f}ms'.format(p['status'] * 100.0)
+                status = '{0:.0f}ms'.format(p['status'] * 1000.0)
 
             msg = '{:14.14} '.format(p['description'])
             ret.append(self.curse_add_line(msg))
@@ -118,6 +120,11 @@ class Plugin(GlancesPlugin):
             pass
 
         return ret
+
+    def _port_scan_all(self, stats):
+        """Scan all host/port of the given stats"""
+        for p in stats:
+            self._port_scan(p)
 
     def _port_scan(self, port):
         """Scan the port structure (dict) and update the status key"""
@@ -137,22 +144,25 @@ class Plugin(GlancesPlugin):
 
     def _port_scan_icmp(self, port):
         """Scan the (ICMP) port structure (dict) and update the status key"""
+        ret = None
+
+        # Create the ping command
+        # Use the system ping command because it already have the steacky bit set
+        # Python can not create ICMP packet with non root right
         cmd = ['ping', '-n' if WINDOWS else '-c', '1', self._resolv_name(port['host'])]
         fnull = open(os.devnull, 'w')
 
-        counter = Counter()
         try:
+            counter = Counter()
             ret = subprocess.check_call(cmd, stdout=fnull, stderr=fnull, close_fds=True)
-        except Exception as e:
-            logger.debug("{0}: Error while pinging host ({2})".format(self.plugin_name, port['host'], e))
-            return 1
-        else:
             if ret == 0:
-                # Ping return RTT.
-                port['status'] = counter.get() / 2.0
+                port['status'] = counter.get()
             else:
                 port['status'] = False
+        except Exception as e:
+            logger.debug("{0}: Error while pinging host ({2})".format(self.plugin_name, port['host'], e))
 
+        logger.info("Ping {} ({}) in {} second".format(port['host'], self._resolv_name(port['host']), port['status']))
         return ret
 
     def _port_scan_tcp(self, port):
