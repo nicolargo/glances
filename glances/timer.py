@@ -20,6 +20,7 @@
 """The timer manager."""
 
 from time import time
+from datetime import datetime
 
 # Global list to manage the elapsed time
 last_update_times = {}
@@ -71,10 +72,10 @@ class Counter(object):
         self.start()
 
     def start(self):
-        self.target = time()
+        self.target = datetime.now()
 
     def reset(self):
         self.start()
 
     def get(self):
-        return time() - self.target
+        return (datetime.now() - self.target).total_seconds()
