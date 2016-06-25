@@ -38,6 +38,13 @@ Bugs corrected:
     * On Windows, Glances try to display unexisting Load stats (issue #871)
     * Top 3 processes are back in the alert summary
 
+Version 2.6.2
+=============
+
+Bugs corrected:
+
+    * Crash with Docker 1.11 (issue #848)
+    
 Version 2.6.1
 =============
 
