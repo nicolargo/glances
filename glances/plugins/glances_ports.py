@@ -24,6 +24,7 @@ import subprocess
 import threading
 import socket
 import types
+import time
 
 from glances.globals import WINDOWS
 from glances.ports_list import GlancesPortsList
@@ -51,6 +52,16 @@ class Plugin(GlancesPlugin):
         # Init global Timer
         self.timer_ports = Timer(0)
 
+        # Global Thread running all the scans
+        self._thread = None
+
+    def exit(self):
+        """Overwrite the exit method to close threads"""
+        if self._thread is not None:
+            self._thread.stop()
+        # Call the father class
+        super(Plugin, self).exit()
+
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the ports list."""
@@ -59,14 +70,20 @@ class Plugin(GlancesPlugin):
             return {}
 
         if self.input_method == 'local':
-            # Only refresh every refresh seconds (define in the configuration file)
-            if self.timer_ports.finished():
+            # Only refresh:
+            # * if there is not other scanning thread
+            # * every refresh seconds (define in the configuration file)
+            if self._thread is None:
+                thread_is_running = False
+            else:
+                thread_is_running = self._thread.isAlive()
+            if self.timer_ports.finished() and not thread_is_running:
                 # Run ports scanner
-                thread = threading.Thread(target=self._port_scan_all, args=(self.stats,))
-                thread.start()
+                self._thread = ThreadScanner(self.stats)
+                self._thread.start()
                 # Restart timer
                 if len(self.stats) > 0:
-                    self.timer_ports = Timer(int(self.stats[0]['refresh']))
+                    self.timer_ports = Timer(self.stats[0]['refresh'])
                 else:
                     self.timer_ports = Timer(0)
         else:
@@ -80,9 +97,12 @@ class Plugin(GlancesPlugin):
 
         if port['status'] is None:
             return 'CAREFUL'
-
-        if port['status'] == 0:
+        elif port['status'] == 0:
             return 'CRITICAL'
+        elif isinstance(port['status'], (float, int)) and \
+                port['rtt_warning'] is not None and \
+                port['status'] > port['rtt_warning']:
+            return 'WARNING'
 
         return 'OK'
 
@@ -125,6 +145,59 @@ class Plugin(GlancesPlugin):
         """Scan all host/port of the given stats"""
         for p in stats:
             self._port_scan(p)
+            # Had to wait between two scans
+            # If not, result are not ok
+            time.sleep(1)
+
+
+class ThreadScanner(threading.Thread):
+    """
+    Specific thread for the port scanner.
+
+    stats is a list of dict
+    """
+
+    def __init__(self, stats):
+        """Init the class"""
+        logger.debug("ports plugin - Create thread for scan list {}".format(stats))
+        super(ThreadScanner, self).__init__()
+        # Event needed to stop properly the thread
+        self._stopper = threading.Event()
+        # The class return the stats as a list of dict
+        self._stats = stats
+        # Is part of Ports plugin
+        self.plugin_name = "ports"
+
+    def run(self):
+        """Function called to grab stats.
+        Infinite loop, should be stopped by calling the stop() method"""
+
+        for p in self._stats:
+            self._port_scan(p)
+            if self.stopped():
+                break
+            # Had to wait between two scans
+            # If not, result are not ok
+            time.sleep(1)
+
+    @property
+    def stats(self):
+        """Stats getter"""
+        return self._stats
+
+    @stats.setter
+    def stats(self, value):
+        """Stats setter"""
+        self._stats = value
+
+    def stop(self, timeout=None):
+        """Stop the thread"""
+        logger.debug("ports plugin - Close thread for scan list {}".format(self._stats))
+        self._stopper.set()
+
+    def stopped(self):
+        """Return True is the thread is stopped"""
+        return self._stopper.isSet()
 
     def _port_scan(self, port):
         """Scan the port structure (dict) and update the status key"""
@@ -162,7 +235,6 @@ class Plugin(GlancesPlugin):
         except Exception as e:
             logger.debug("{0}: Error while pinging host ({2})".format(self.plugin_name, port['host'], e))
 
-        logger.info("Ping {} ({}) in {} second".format(port['host'], self._resolv_name(port['host']), port['status']))
         return ret
 
     def _port_scan_tcp(self, port):
@@ -171,7 +243,7 @@ class Plugin(GlancesPlugin):
 
         # Create and configure the scanning socket
         try:
-            socket.setdefaulttimeout(int(port['timeout']))
+            socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
             logger.debug("{0}: Error while creating scanning socket".format(self.plugin_name))

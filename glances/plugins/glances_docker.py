@@ -68,9 +68,10 @@ class Plugin(GlancesPlugin):
 
     def exit(self):
         """Overwrite the exit method to close threads"""
-        logger.debug("Stop the Docker plugin")
         for t in itervalues(self.thread_list):
             t.stop()
+        # Call the father class
+        super(Plugin, self).exit()
 
     def get_key(self):
         """Return the key of the list."""

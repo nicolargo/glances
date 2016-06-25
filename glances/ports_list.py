@@ -61,8 +61,8 @@ class GlancesPortsList(object):
         else:
             logger.debug("Start reading the [%s] section in the configuration file" % self._section)
 
-            refresh = config.get_value(self._section, 'refresh', default=self._default_refresh)
-            timeout = config.get_value(self._section, 'timeout', default=self._default_timeout)
+            refresh = int(config.get_value(self._section, 'refresh', default=self._default_refresh))
+            timeout = int(config.get_value(self._section, 'timeout', default=self._default_timeout))
 
             # Add default gateway on top of the ports_list lits
             default_gateway = config.get_value(self._section, 'port_default_gateway', default='False')
@@ -75,6 +75,7 @@ class GlancesPortsList(object):
                 new_port['refresh'] = refresh
                 new_port['timeout'] = timeout
                 new_port['status'] = None
+                new_port['rtt_warning'] = None
                 logger.debug("Add default gateway %s to the static list" % (new_port['host']))
                 ports_list.append(new_port)
 
@@ -105,9 +106,17 @@ class GlancesPortsList(object):
                 new_port['refresh'] = refresh
 
                 # Timeout in second
-                new_port['timeout'] = config.get_value(self._section,
-                                                       '%stimeout' % postfix,
-                                                       default=timeout)
+                new_port['timeout'] = int(config.get_value(self._section,
+                                                           '%stimeout' % postfix,
+                                                           default=timeout))
+
+                # RTT warning
+                new_port['rtt_warning'] = config.get_value(self._section,
+                                                           '%srtt_warning' % postfix,
+                                                           default=None)
+                if new_port['rtt_warning'] is not None:
+                    # Convert to second
+                    new_port['rtt_warning'] = int(new_port['rtt_warning']) / 1000.0
 
                 # Add the server to the list
                 logger.debug("Add port %s:%s to the static list" % (new_port['host'], new_port['port']))
