@@ -112,7 +112,7 @@ class Plugin(GlancesPlugin):
         # Only process if stats exist and display plugin enable...
         ret = []
 
-        if not self.stats or self.args.disable_ports:
+        if not self.stats or args.disable_ports:
             return ret
 
         # Build the string message
