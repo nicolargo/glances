@@ -56,8 +56,8 @@ class TestGlances(unittest.TestCase):
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
-        print("Please wait...")
-        time.sleep(3)
+        print("Please wait 5 seconds...")
+        time.sleep(5)
 
         self.assertTrue(pid is not None)
 
@@ -94,7 +94,7 @@ class TestGlances(unittest.TestCase):
             if p in ('uptime', 'now'):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
-                       'hddtemp', 'batpercent', 'network', 'folders', 'amps'):
+                       'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports'):
                 self.assertIsInstance(req.json(), list)
             elif p in ('psutilversion', 'help'):
                 pass
