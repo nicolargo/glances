@@ -67,7 +67,7 @@ Bugs corrected:
 
 Others:
     * A new Glances docker container to monitor your Docker infrastructure is available here (issue #728): https://hub.docker.com/r/nicolargo/glances/
-    * Documentation is now generated automatically thanks to Sphinx and the Alessio Sergi patch (http://glances.readthedocs.org/en/latest/)
+    * Documentation is now generated automatically thanks to Sphinx and the Alessio Sergi patch (https://glances.readthedocs.io/en/latest/)
 
 Contributors summary:
     * Nicolas Hennion: 112 commits
