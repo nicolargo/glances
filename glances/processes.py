@@ -400,15 +400,17 @@ class GlancesProcesses(object):
             s = self.__get_process_stats(proc,
                                          mandatory_stats=True,
                                          standard_stats=self.max_processes is None)
+            # Check if s is note None (issue #879)
             # ignore the 'idle' process on Windows and *BSD
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
-            if (BSD and s['name'] == 'idle' or
+            if (s is None or
+               BSD and s['name'] == 'idle' or
                WINDOWS and s['name'] == 'System Idle Process' or
                OSX and s['name'] == 'kernel_task'):
                 continue
             # Continue to the next process if it has to be filtered
-            if s is None or self._filter.is_filtered(s):
+            if self._filter.is_filtered(s):
                 excluded_processes.add(proc)
                 continue
 
