@@ -25,7 +25,7 @@ Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 **Glances** is a cross-platform curses-based system monitoring tool
 written in Python.
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/master/docs/_static/screenshot-wide.png
+.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/screencast.gif
 
 Requirements
 ============
