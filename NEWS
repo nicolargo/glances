@@ -36,6 +36,7 @@ Bugs corrected:
     * Correct issue IP plugin: VPN with no internet access (issue #842)
     * Idle process is back on FreeBSD and Windows (issue #844)
     * On Windows, Glances try to display unexisting Load stats (issue #871)
+    * Check CPU info (issue #881)
     * Top 3 processes are back in the alert summary
 
 Version 2.6.2
@@ -44,7 +45,7 @@ Version 2.6.2
 Bugs corrected:
 
     * Crash with Docker 1.11 (issue #848)
-    
+
 Version 2.6.1
 =============
 
