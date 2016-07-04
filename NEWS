@@ -39,6 +39,8 @@ Bugs corrected:
     * Check CPU info (issue #881)
     * Top 3 processes are back in the alert summary
 
+Code quality follow up: from 5.93 to 6.24 (source: https://scrutinizer-ci.com/g/nicolargo/glances)
+
 Version 2.6.2
 =============
 
