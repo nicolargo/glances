@@ -15,6 +15,7 @@ following:
     user=root
     password=root
     db=glances
+    tags=foo:bar,spam:eggs
 
 and run Glances with:
 
@@ -22,18 +23,9 @@ and run Glances with:
 
     $ glances --export-influxdb
 
-InfluxDB 0.9 or higher also supports an optional ``tags`` configuration
-parameter specified as comma separated ``key:value`` pairs. For example:
-
-.. code-block:: ini
-
-    [influxdb]
-    host=localhost
-    port=8086
-    user=root
-    password=root
-    db=glances
-    tags=foo:bar,spam:eggs
+Glances generates a lot of column (for example if you have many running Docker
+containers). You should use the *tsm1* engine in the InfluxDB configuration
+file (no limit on column number).
 
 Grafana
 -------
