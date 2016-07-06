@@ -329,6 +329,6 @@ LGPL. See ``COPYING`` for more details.
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _Python: https://www.python.org/getit/
-.. _readthedocs: https://glances.readthedocs.org/
+.. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
