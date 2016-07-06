@@ -57,7 +57,7 @@ class GlancesPortsList(object):
         if config is None:
             logger.debug("No configuration file available. Cannot load ports list.")
         elif not config.has_section(self._section):
-            logger.warning("No [%s] section in the configuration file. Cannot load ports list." % self._section)
+            logger.debug("No [%s] section in the configuration file. Cannot load ports list." % self._section)
         else:
             logger.debug("Start reading the [%s] section in the configuration file" % self._section)
 
