@@ -1,4 +1,4 @@
-Before filling this issue, please read the manual (http://glances.readthedocs.org/en/latest/) and search if the bug do not already exists in the database (https://github.com/nicolargo/glances/issues).
+Before filling this issue, please read the manual (https://glances.readthedocs.io/en/latest/) and search if the bug do not already exists in the database (https://github.com/nicolargo/glances/issues).
 
 #### Description
 
@@ -14,4 +14,4 @@ For an enhancement or new feature: Describe your needs.
 
 #### Logs
 
-You can also pastebin the Glances logs file (http://glances.readthedocs.org/en/latest/config.html#logging)
+You can also pastebin the Glances logs file (https://glances.readthedocs.io/en/latest/config.html#logging)

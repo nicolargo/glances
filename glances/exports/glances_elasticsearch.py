@@ -96,7 +96,7 @@ class Export(GlancesExport):
         logger.debug("Export {} stats to ElasticSearch".format(name))
 
         # Create DB input
-        # http://elasticsearch-py.readthedocs.org/en/master/helpers.html
+        # https://elasticsearch-py.readthedocs.io/en/master/helpers.html
         actions = []
         for c, p in zip(columns, points):
             action = {
