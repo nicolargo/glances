@@ -94,7 +94,7 @@ class Plugin(GlancesPlugin):
             netstatus = {}
             try:
                 netstatus = psutil.net_if_stats()
-            except AttributeError:
+            except:
                 pass
 
             # Previous network interface stats are stored in the network_old variable
