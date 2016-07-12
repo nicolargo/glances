@@ -37,6 +37,7 @@ Bugs corrected:
     * Idle process is back on FreeBSD and Windows (issue #844)
     * On Windows, Glances try to display unexisting Load stats (issue #871)
     * Check CPU info (issue #881)
+    * Unicode error on processlist on Windows server 2008 (french) (issue #886) 
     * Top 3 processes are back in the alert summary
 
 Code quality follow up: from 5.93 to 6.24 (source: https://scrutinizer-ci.com/g/nicolargo/glances)
