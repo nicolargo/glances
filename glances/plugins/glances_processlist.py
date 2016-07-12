@@ -229,6 +229,7 @@ class Plugin(GlancesPlugin):
         # USER
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
+            # Correct issue #886 on Windows OS
             msg = ' {:9}'.format(str(p['username'])[:9])
             ret.append(self.curse_add_line(msg))
         else:
