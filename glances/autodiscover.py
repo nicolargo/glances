@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,9 @@ if zeroconf_tag:
         sys.exit(1)
 
 # Global var
-zeroconf_type = "_%s._tcp." % __appname__
+# Recent versions of the zeroconf python package doesnt like a zeroconf type that ends with '._tcp.'.
+# Correct issue: zeroconf problem with zeroconf_type = "_%s._tcp." % __appname__ #888
+zeroconf_type = "_%s._tcp.local." % __appname__
 
 
 class AutoDiscovered(object):

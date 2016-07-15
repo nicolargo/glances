@@ -104,7 +104,7 @@ class _GlancesCurses(object):
     def load_config(self, config):
         '''Load the outputs section of the configuration file'''
         # Load the theme
-        if config.has_section('outputs'):
+        if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
             self.theme['name'] = config.get_value('outputs', 'curse_theme', default='black')
             logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
