@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -207,7 +207,8 @@ class GlancesServer(object):
 
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
-            self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname(), args)
+            # Correct issue: Zeroconf problem with zeroconf service name #889
+            self.autodiscover_client = GlancesAutoDiscoverClient(socket.gethostname().split('.', 1)[0], args)
         else:
             logger.info("Glances autodiscover announce is disabled")
 
