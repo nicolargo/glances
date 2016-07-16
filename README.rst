@@ -148,6 +148,12 @@ Run the container in console mode:
 .. code-block:: console
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    
+Run the container in Web server mode (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
+
+.. code-block:: console
+
+    docker run -d -p 61208:61208 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
 Additionally, If you want to use your own glances.conf file, you can create your
 own Dockerfile:
