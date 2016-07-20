@@ -20,7 +20,8 @@ glancesApp.service('GlancesPluginDiskio', function($filter) {
                 'count': {
                   'txps': $filter('bytes')(diskioData['read_count'] / timeSinceUpdate),
                   'rxps': $filter('bytes')(diskioData['write_count'] / timeSinceUpdate)
-                }
+                },
+                'alias': diskioData['alias'] !== undefined ? diskioData['alias'] : null
             };
 
             this.disks.push(diskio);
