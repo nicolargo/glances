@@ -125,6 +125,9 @@ class Plugin(GlancesPlugin):
                             'write_count': write_count,
                             'read_bytes': read_bytes,
                             'write_bytes': write_bytes}
+                        # Add alias if exist (define in the configuration file)
+                        if self.has_alias(disk) is not None:
+                            diskstat['alias'] = self.has_alias(disk)
                     except KeyError:
                         continue
                     else:
