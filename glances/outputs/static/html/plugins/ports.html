@@ -1,0 +1,10 @@
+<div class="table-row" ng-repeat="port in statsPorts.ports">
+  <div class="table-cell text-left">{{(port.description ? port.description : port.host + ' ' + port.port) | min_size: 20}}</div>
+  <div class="table-cell"></div>
+  <div ng-switch="port.status" ng-class="statsPorts.getDecoration(port)" class="table-cell">
+    <span ng-switch-when="null">Scanning</span>
+    <span ng-switch-when="false">Timeout</span>
+    <span ng-switch-when="true">Open</span>
+    <span ng-switch-default>{{port.status * 1000.0 | number:0}}ms</span>
+  </div>
+</div>

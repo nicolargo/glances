@@ -1,6 +1,6 @@
 glancesApp.filter('min_size', function() {
-    return function(input) {
-        var max = 8;
+    return function(input, max) {
+        var max = max || 8;
         if (input.length > max) {
             return "_" + input.substring(input.length - max)
         }
