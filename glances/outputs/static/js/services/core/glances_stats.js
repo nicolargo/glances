@@ -21,7 +21,8 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'raid': 'GlancesPluginRaid',
         'sensors': 'GlancesPluginSensors',
         'system': 'GlancesPluginSystem',
-        'uptime': 'GlancesPluginUptime'
+        'uptime': 'GlancesPluginUptime',
+        'ports': 'GlancesPluginPorts'
     };
 
     this.getData = function() {

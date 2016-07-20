@@ -41,6 +41,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsSensors = GlancesStats.getPlugin('sensors');
             $scope.statsSystem = GlancesStats.getPlugin('system');
             $scope.statsUptime = GlancesStats.getPlugin('uptime');
+            $scope.statsPorts = GlancesStats.getPlugin('ports');
 
             $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
 
