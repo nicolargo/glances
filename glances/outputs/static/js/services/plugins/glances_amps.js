@@ -6,7 +6,7 @@ glancesApp.service('GlancesPluginAmps', function() {
         var processes = data[_pluginName];
 
         this.processes = [];
-        angular.forEach(processes, function(process, key) {
+        angular.forEach(processes, function(process) {
             if (process.result !== null) {
                 this.processes.push(process);
             }
