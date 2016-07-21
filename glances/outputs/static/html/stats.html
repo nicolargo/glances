@@ -46,6 +46,7 @@
         <div class="col-sm-6 sidebar" ng-show="!arguments.disable_left_sidebar">
             <div class="table">
                 <section id="network" class="plugin table-row-group" ng-show="!arguments.disable_network" ng-include src="'plugins/network.html'"></section>
+                <section id="ports" class="plugin table-row-group" ng-include src="'plugins/ports.html'"></section>
                 <section id="diskio" class="plugin table-row-group" ng-show="!arguments.disable_diskio && statsDiskio.disks.length > 0" ng-include src="'plugins/diskio.html'"></section>
                 <section id="fs" class="plugin table-row-group" ng-show="!arguments.disable_fs" ng-include src="'plugins/fs.html'"></section>
                 <section id="folders" class="plugin table-row-group" ng-show="!arguments.disable_fs && statsFolders.folders.length > 0" ng-include src="'plugins/folders.html'"></section>
