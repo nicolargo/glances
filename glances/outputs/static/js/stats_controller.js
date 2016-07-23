@@ -178,6 +178,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // I => Show/hide IP module
                 $scope.arguments.disable_ip = !$scope.arguments.disable_ip;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.p:
+                // I => Enable/disable ports module
+                $scope.arguments.disable_ports = !$scope.arguments.disable_ports;
+                break;
         }
     };
 });
