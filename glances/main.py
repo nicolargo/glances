@@ -39,7 +39,7 @@ class GlancesMain(object):
     refresh_time = 3
 
     # Set the default cache lifetime to 1 second (only for server)
-    # !!! Todo: configuration from the command line
+    # !!! Todo: To be configurable (=> https://github.com/nicolargo/glances/issues/901)
     cached_time = 1
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
