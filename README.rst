@@ -5,9 +5,6 @@ Glances - An eye on your system
 
 .. image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
-.. image:: https://img.shields.io/pypi/dm/glances.svg
-    :target: https://pypi.python.org/pypi/glances#downloads
-    :alt: Downloads this month
 .. image:: https://img.shields.io/github/stars/nicolargo/glances.svg
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
@@ -148,7 +145,7 @@ Run the container in console mode:
 .. code-block:: console
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
-    
+
 Run the container in Web server mode (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
 
 .. code-block:: console
