@@ -43,3 +43,7 @@ _build
 
 # Tox
 .tox/
+
+# web ui
+node_modules/
+bower_components/

@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-angular-templatecache": "^2.0.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-ng-annotate": "^2.0.0",
+    "gulp-uglify": "^1.5.4",
+    "main-bower-files": "^2.13.1"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "watch": "gulp watch",
+    "postinstall": "bower install"
+  }
+}
