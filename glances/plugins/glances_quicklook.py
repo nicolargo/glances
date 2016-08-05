@@ -80,9 +80,10 @@ class Plugin(GlancesPlugin):
         # thanks to the cpuinfo lib: https://github.com/workhorsy/py-cpuinfo
         if cpuinfo_tag:
             cpu_info = cpuinfo.get_cpu_info()
-            self.stats['cpu_name'] = cpu_info['brand']
-            self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
-            self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+            if cpu_info:
+                self.stats['cpu_name'] = cpu_info['brand']
+                self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
+                self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
 
         # Update the view
         self.update_views()
