@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Angelo Poerio <angelo.poerio@gmail.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -101,9 +101,7 @@ class Plugin(GlancesPlugin):
         if not self.stats or args.disable_irq:
             return ret
 
-        # Max size for the fsname name
         if max_width is not None and max_width >= 23:
-            # Interface size name = max_width - space for interfaces bitrate
             irq_max_width = max_width - 14
         else:
             irq_max_width = 9
@@ -115,9 +113,7 @@ class Plugin(GlancesPlugin):
         msg = '{:>7}'.format('Rate/s')
         ret.append(self.curse_add_line(msg))
 
-        # Filesystem list (sorted by name)
         for i in self.stats:
-            # New line
             ret.append(self.curse_new_line())
             msg = '{:>3}'.format(i['irq_line'])
             ret.append(self.curse_add_line(msg))
