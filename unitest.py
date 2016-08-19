@@ -76,7 +76,7 @@ class TestGlances(unittest.TestCase):
 
     def test_001_plugins(self):
         """Check mandatory plugins."""
-        plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
+        plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'irq']
         print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plugins_to_check))
         plugins_list = stats.getAllPlugins()
         for plugin in plugins_to_check:
@@ -192,6 +192,14 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('ip').get_raw()
         self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
         print('INFO: IP stats: %s' % stats_grab)
+
+    def test_013_irq(self):
+        """Check IRQ plugin."""
+        print('INFO: [TEST_013] Check IRQ stats')
+        stats_grab = stats.get_plugin('irq').get_raw()
+        self.assertTrue(type(stats_grab) is list, msg='IRQ stats is not a list')
+        print('INFO: IRQ stats: %s' % stats_grab)
+
 
     def test_097_attribute(self):
         """Test GlancesAttribute classe"""
