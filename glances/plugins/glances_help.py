@@ -74,7 +74,8 @@ class Plugin(GlancesPlugin):
         self.view_data['sort_cpu_times'] = msg_col.format('t', 'Sort processes by TIME')
         self.view_data['show_hide_help'] = msg_col2.format('h', 'Show/hide this help screen')
         self.view_data['show_hide_diskio'] = msg_col.format('d', 'Show/hide disk I/O stats')
-        self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
+        self.view_data['show_hide_irq']    = msg_col2.format('R', 'Show/hide IRQ stats')
+	self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
         self.view_data['show_hide_filesystem'] = msg_col.format('f', 'Show/hide filesystem stats')
         self.view_data['view_cumulative_network'] = msg_col2.format('U', 'View cumulative network I/O')
         self.view_data['show_hide_network'] = msg_col.format('n', 'Show/hide network stats')
@@ -172,6 +173,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['quit']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_ports']))
+	ret.append(self.curse_add_line(self.view_data['show_hide_irq']))
         ret.append(self.curse_new_line())
 
         ret.append(self.curse_new_line())
