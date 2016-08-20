@@ -76,8 +76,6 @@ class GlancesBottle(object):
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
 
-        self._app.route('/<filepath:path>', method="GET", callback=self._resource)
-
         # REST API
         self._app.route('/api/2/args', method="GET", callback=self._api_args)
         self._app.route('/api/2/args/:item', method="GET", callback=self._api_args_item)
@@ -95,6 +93,8 @@ class GlancesBottle(object):
         self._app.route('/api/2/:plugin/:item/history', method="GET", callback=self._api_item_history)
         self._app.route('/api/2/:plugin/:item/history/:nb', method="GET", callback=self._api_item_history)
         self._app.route('/api/2/:plugin/:item/:value', method="GET", callback=self._api_value)
+
+        self._app.route('/<filepath:path>', method="GET", callback=self._resource)
 
     def start(self, stats):
         """Start the bottle."""
