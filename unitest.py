@@ -39,7 +39,7 @@ from glances.stats import GlancesStats
 stats = GlancesStats()
 
 from glances import __version__
-from glances.globals import WINDOWS
+from glances.globals import WINDOWS, LINUX
 from glances.outputs.glances_bars import Bar
 
 # Unitest class
@@ -193,6 +193,7 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is dict, msg='IP stats is not a dict')
         print('INFO: IP stats: %s' % stats_grab)
 
+    @unittest.skipIf(not LINUX, "IRQs available only on Linux")
     def test_013_irq(self):
         """Check IRQ plugin."""
         print('INFO: [TEST_013] Check IRQ stats')
