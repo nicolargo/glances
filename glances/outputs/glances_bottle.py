@@ -57,7 +57,7 @@ class GlancesBottle(object):
         self._route()
 
         # Path where the statics files are stored
-        self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
+        self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
 
     def app(self):
         return self._app()
@@ -76,13 +76,7 @@ class GlancesBottle(object):
         self._app.route('/', method="GET", callback=self._index)
         self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
 
-        self._app.route('/<filename:re:.*\.css>', method="GET", callback=self._css)
-        self._app.route('/<filename:re:.*\.js>', method="GET", callback=self._js)
-        self._app.route('/<filename:re:.*\.js.map>', method="GET", callback=self._js_map)
-        self._app.route('/<filename:re:.*\.html>', method="GET", callback=self._html)
-
-        self._app.route('/<filename:re:.*\.png>', method="GET", callback=self._images)
-        self._app.route('/favicon.ico', method="GET", callback=self._favicon)
+        self._app.route('/<filepath:path>', method="GET", callback=self._resource)
 
         # REST API
         self._app.route('/api/2/args', method="GET", callback=self._api_args)
@@ -126,37 +120,12 @@ class GlancesBottle(object):
         self.stats.update()
 
         # Display
-        return static_file("index.html", root=os.path.join(self.STATIC_PATH, 'html'))
+        return static_file("index.html", root=self.STATIC_PATH)
 
-    def _html(self, filename):
-        """Bottle callback for *.html files."""
+    def _resource(self, filepath):
+        """Bottle callback for resources files."""
         # Return the static file
-        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'html'))
-
-    def _css(self, filename):
-        """Bottle callback for *.css files."""
-        # Return the static file
-        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'css'))
-
-    def _js(self, filename):
-        """Bottle callback for *.js files."""
-        # Return the static file
-        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
-
-    def _js_map(self, filename):
-        """Bottle callback for *.js.map files."""
-        # Return the static file
-        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'js'))
-
-    def _images(self, filename):
-        """Bottle callback for *.png files."""
-        # Return the static file
-        return static_file(filename, root=os.path.join(self.STATIC_PATH, 'images'))
-
-    def _favicon(self):
-        """Bottle callback for favicon."""
-        # Return the static file
-        return static_file('favicon.ico', root=self.STATIC_PATH)
+        return static_file(filepath, root=self.STATIC_PATH)
 
     def _api_help(self):
         """Glances API RESTFul implementation.
