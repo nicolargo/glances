@@ -50,16 +50,16 @@ class Plugin(GlancesPlugin):
         pass
 
     def generate_view_data(self):
-        self.view_data['version'] = '{} {}'.format(__appname__.title(), __version__)
-        self.view_data['psutil_version'] = ' with PSutil {}'.format(psutil_version)
+        self.view_data['version'] = '{0} {1}'.format(__appname__.title(), __version__)
+        self.view_data['psutil_version'] = ' with PSutil {0}'.format(psutil_version)
 
         try:
-            self.view_data['configuration_file'] = 'Configuration file: {}'.format(self.config.loaded_config_file)
+            self.view_data['configuration_file'] = 'Configuration file: {0}'.format(self.config.loaded_config_file)
         except AttributeError:
             pass
 
-        msg_col = ' {:1}  {:35}'
-        msg_col2 = '   {:1}  {:35}'
+        msg_col = ' {0:1}  {1:35}'
+        msg_col2 = '   {0:1}  {1:35}'
         self.view_data['sort_auto'] = msg_col.format('a', 'Sort processes automatically')
         self.view_data['sort_network'] = msg_col2.format('b', 'Bytes or bits for network I/O')
         self.view_data['sort_cpu'] = msg_col.format('c', 'Sort processes by CPU%')
@@ -74,8 +74,8 @@ class Plugin(GlancesPlugin):
         self.view_data['sort_cpu_times'] = msg_col.format('t', 'Sort processes by TIME')
         self.view_data['show_hide_help'] = msg_col2.format('h', 'Show/hide this help screen')
         self.view_data['show_hide_diskio'] = msg_col.format('d', 'Show/hide disk I/O stats')
-        self.view_data['show_hide_irq']    = msg_col2.format('R', 'Show/hide IRQ stats')
-	self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
+        self.view_data['show_hide_irq'] = msg_col2.format('R', 'Show/hide IRQ stats')
+        self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
         self.view_data['show_hide_filesystem'] = msg_col.format('f', 'Show/hide filesystem stats')
         self.view_data['view_cumulative_network'] = msg_col2.format('U', 'View cumulative network I/O')
         self.view_data['show_hide_network'] = msg_col.format('n', 'Show/hide network stats')
@@ -94,8 +94,6 @@ class Plugin(GlancesPlugin):
         self.view_data['show_hide_ip'] = msg_col2.format('I', 'Show/hide IP module')
         self.view_data['diskio_iops'] = msg_col2.format('B', 'Count/rate for Disk I/O')
         self.view_data['show_hide_top_menu'] = msg_col2.format('5', 'Show/hide top menu (QL, CPU, MEM, SWAP and LOAD)')
-        self.view_data['show_hide_amp'] = msg_col2.format('A', 'Show/hide AMP plugin')
-        self.view_data['enable_disable_ports'] = msg_col.format('P', 'Enable/disable ports plugin')
         self.view_data['edit_pattern_filter'] = 'ENTER: Edit the process filter pattern'
 
     def get_view_data(self, args=None):
@@ -167,13 +165,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(self.view_data['show_hide_top_menu']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_short_processname']))
-        ret.append(self.curse_add_line(self.view_data['show_hide_amp']))
+        ret.append(self.curse_add_line(self.view_data['show_hide_irq']))
         ret.append(self.curse_new_line())
         ret.append(self.curse_add_line(self.view_data['enable_disable_irix']))
         ret.append(self.curse_add_line(self.view_data['quit']))
-        ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(self.view_data['enable_disable_ports']))
-	ret.append(self.curse_add_line(self.view_data['show_hide_irq']))
         ret.append(self.curse_new_line())
 
         ret.append(self.curse_new_line())

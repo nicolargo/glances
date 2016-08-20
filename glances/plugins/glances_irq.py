@@ -38,7 +38,7 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-	self.lasts = {}
+        self.lasts = {}
 
         # Init the stats
         self.reset()
@@ -58,39 +58,43 @@ class Plugin(GlancesPlugin):
         # Reset the list
         self.reset()
 
-	if self.input_method == 'local':
-		with open('/proc/interrupts') as irq_proc:
-			time_since_update = getTimeSinceLastUpdate('irq')
-			irq_proc.readline() # skip header line
-			for irq_line in irq_proc.readlines():
-				splitted_line = irq_line.split()
-				irq_line = splitted_line[0].replace(':','')
-				current_irqs = sum([int(count) for count in splitted_line[1:] if count.isdigit()]) # sum interrupts on all CPUs
-                		irq_rate = int(current_irqs - self.lasts.get(irq_line) if self.lasts.get(irq_line) else 0 // time_since_update)
-				irq_current = {
-                    			'irq_line': irq_line,
-                    			'irq_rate': irq_rate,
-                    			'key': self.get_key(),
-					'time_since_update': time_since_update
-				}
-                		self.stats.append(irq_current)
-				self.lasts[irq_line] = current_irqs
+        if self.input_method == 'local':
+            with open('/proc/interrupts') as irq_proc:
+                time_since_update = getTimeSinceLastUpdate('irq')
+                irq_proc.readline()  # skip header line
+                for irq_line in irq_proc.readlines():
+                    splitted_line = irq_line.split()
+                    irq_line = splitted_line[0].replace(':', '')
+                    current_irqs = sum([int(count) for count in splitted_line[
+                                       1:] if count.isdigit()])  # sum interrupts on all CPUs
+                    irq_rate = int(
+                        current_irqs -
+                        self.lasts.get(irq_line) if self.lasts.get(irq_line) else 0 //
+                        time_since_update)
+                    irq_current = {
+                        'irq_line': irq_line,
+                        'irq_rate': irq_rate,
+                        'key': self.get_key(),
+                        'time_since_update': time_since_update
+                    }
+                    self.stats.append(irq_current)
+                    self.lasts[irq_line] = current_irqs
 
-	elif self.input_method == 'snmp':
-		# not available
-		pass
+        elif self.input_method == 'snmp':
+            # not available
+            pass
 
         # Update the view
         self.update_views()
 
-        self.stats = sorted(self.stats, key=operator.itemgetter('irq_rate'), reverse=True)[:5] # top 5 IRQ by rate/s
-	return self.stats
+        self.stats = sorted(self.stats, key=operator.itemgetter(
+            'irq_rate'), reverse=True)[:5]  # top 5 IRQ by rate/s
+        return self.stats
 
     def update_views(self):
         """Update stats views."""
         # Call the father's method
         super(Plugin, self).update_views()
-
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -110,14 +114,14 @@ class Plugin(GlancesPlugin):
         # Header
         msg = '{:{width}}'.format('IRQ', width=irq_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{:>7}'.format('Rate/s')
+        msg = '{:>14}'.format('Rate/s')
         ret.append(self.curse_add_line(msg))
 
         for i in self.stats:
             ret.append(self.curse_new_line())
             msg = '{:>3}'.format(i['irq_line'])
             ret.append(self.curse_add_line(msg))
-            msg = '{:>12}'.format(str(i['irq_rate']))
+            msg = '{:>20}'.format(str(i['irq_rate']))
             ret.append(self.curse_add_line(msg))
 
         return ret
