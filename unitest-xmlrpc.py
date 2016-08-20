@@ -176,7 +176,7 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req['cpu'], dict)
 
     def test_012_irq(self):
-	"""IRQS"""
+        """IRQS"""
         method = "getIrqs()"
         print('INFO: [TEST_012] Method: %s' % method)
         req = json.loads(client.getIrq())
