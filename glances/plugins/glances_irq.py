@@ -20,6 +20,7 @@
 """IRQ plugin."""
 
 import operator
+from glances.globals import LINUX
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -54,6 +55,9 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the IRQ stats"""
+
+	if not LINUX: # only available on GNU/Linux
+		return []
 
         # Reset the list
         self.reset()
@@ -100,6 +104,9 @@ class Plugin(GlancesPlugin):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
+
+	if not LINUX: # only available on GNU/Linux
+		return ret
 
         # Only process if stats exist and display plugin enable...
         if not self.stats or args.disable_irq:
