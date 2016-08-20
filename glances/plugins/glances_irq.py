@@ -56,8 +56,8 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update the IRQ stats"""
 
-	if not LINUX: # only available on GNU/Linux
-		return []
+        if not LINUX: # only available on GNU/Linux
+            return []
 
         # Reset the list
         self.reset()
@@ -105,8 +105,8 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-	if not LINUX: # only available on GNU/Linux
-		return ret
+        if not LINUX: # only available on GNU/Linux
+            return ret
 
         # Only process if stats exist and display plugin enable...
         if not self.stats or args.disable_irq:
