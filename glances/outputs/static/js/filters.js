@@ -81,7 +81,7 @@ glancesApp.filter('leftPad', function($filter) {
     return function (value, length, chars) {
       length = length || 0;
       chars = chars || ' ';
-      return _.padLeft(value, length, chars);
+      return _.padStart(value, length, chars);
     }
 });
 

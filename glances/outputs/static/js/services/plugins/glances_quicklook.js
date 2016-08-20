@@ -22,7 +22,7 @@ glancesApp.service('GlancesPluginQuicklook', function() {
         this.swap = data.swap;
         this.percpus = [];
 
-        _.forEach(data.percpu, function(cpu, key) {
+        angular.forEach(data.percpu, function(cpu) {
             this.percpus.push({
                 'number': cpu.cpu_number,
                 'total': cpu.total
