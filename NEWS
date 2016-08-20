@@ -28,6 +28,7 @@ Enhancements and new features:
     * Display a warning message when Glances is outdated (issue #865)
     * Refactor stats history and export to graph. History available through API (issue #696)
     * Add Cassandra/Scylla export plugin (issue #857)
+    * Huge pull request by Nicolas Hart to optimize the WebUI (issue #906)
 
 Bugs corrected:
 
