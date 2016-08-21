@@ -356,7 +356,7 @@ class Plugin(GlancesPlugin):
                 network_new['tx'] = netcounters["eth0"]["tx_bytes"] - self.netcounters_old[container_id]["eth0"]["tx_bytes"]
                 network_new['cumulative_rx'] = netcounters["eth0"]["rx_bytes"]
                 network_new['cumulative_tx'] = netcounters["eth0"]["tx_bytes"]
-            except KeyError:
+            except KeyError as e:
                 # all_stats do not have INTERFACE information
                 logger.debug("Cannot grab network interface usage for container {} ({})".format(container_id, e))
                 logger.debug(all_stats)
