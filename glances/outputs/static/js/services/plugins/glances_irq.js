@@ -1,4 +1,4 @@
-glancesApp.service('GlancesPluginIrq', function($filter) {
+glancesApp.service('GlancesPluginIrq', function() {
     var _pluginName = "irq";
     this.irqs = [];
 
