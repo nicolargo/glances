@@ -1,0 +1,9 @@
+{
+  "name": "Glances",
+  "private": true,
+  "dependencies": {
+    "angular": "^1.5.8",
+    "angular-route": "^1.5.8",
+    "lodash": "^4.13.1"
+  }
+}
