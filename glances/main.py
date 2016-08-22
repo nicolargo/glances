@@ -120,6 +120,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_ip', help='disable IP module')
         parser.add_argument('--disable-diskio', action='store_true', default=False,
                             dest='disable_diskio', help='disable disk I/O module')
+        parser.add_argument('--disable-irq', action='store_true', default=False,
+                            dest='disable_irq', help='disable IRQ module'),
         parser.add_argument('--disable-fs', action='store_true', default=False,
                             dest='disable_fs', help='disable filesystem module')
         parser.add_argument('--disable-folder', action='store_true', default=False,

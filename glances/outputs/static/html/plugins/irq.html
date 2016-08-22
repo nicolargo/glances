@@ -1,0 +1,10 @@
+<div class="table-row">
+    <div class="table-cell text-left title">IRQ</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">Rate/s</div>
+</div>
+<div class="table-row" ng-repeat="irq in statsIrq.irqs">
+    <div class="table-cell text-left">{{irq.irq_line}}</div>
+    <div class="table-cell"></div>
+    <div class="table-cell"><span>{{irq.irq_rate}}</span></div>
+</div>
