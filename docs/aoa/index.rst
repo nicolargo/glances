@@ -30,6 +30,7 @@ Legend:
    disk
    fs
    folders
+   irq
    sensors
    ps
    monitor
