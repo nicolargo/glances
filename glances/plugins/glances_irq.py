@@ -56,11 +56,11 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update the IRQ stats"""
 
-        if not LINUX: # only available on GNU/Linux
-            return []
-
         # Reset the list
         self.reset()
+
+        if not LINUX:  # only available on GNU/Linux
+            return self.stats
 
         if self.input_method == 'local':
             with open('/proc/interrupts') as irq_proc:
@@ -105,7 +105,7 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        if not LINUX: # only available on GNU/Linux
+        if not LINUX:  # only available on GNU/Linux
             return ret
 
         # Only process if stats exist and display plugin enable...
