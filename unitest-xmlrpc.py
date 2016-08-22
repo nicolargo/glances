@@ -175,6 +175,14 @@ class TestGlances(unittest.TestCase):
         self.assertIsInstance(req, dict)
         self.assertIsInstance(req['cpu'], dict)
 
+    def test_012_irq(self):
+        """IRQS"""
+        method = "getIrqs()"
+        print('INFO: [TEST_012] Method: %s' % method)
+        req = json.loads(client.getIrq())
+        self.assertIsInstance(req, list)
+
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Server')

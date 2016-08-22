@@ -24,6 +24,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsAlert = GlancesStats.getPlugin('alert');
             $scope.statsCpu = GlancesStats.getPlugin('cpu');
             $scope.statsDiskio = GlancesStats.getPlugin('diskio');
+	    $scope.statsIrq = GlancesStats.getPlugin('irq');
             $scope.statsDocker = GlancesStats.getPlugin('docker');
             $scope.statsFs = GlancesStats.getPlugin('fs');
             $scope.statsFolders = GlancesStats.getPlugin('folders');
@@ -102,6 +103,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             case !$event.shiftKey && $event.keyCode == keycodes.d:
                 // d => Show/hide disk I/O stats
                 $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
+                break;
+	    case $event.shiftKey && $event.keyCode == keycodes.R:
+                // R => Show/hide IRQ
+                $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:
                 // f => Show/hide filesystem stats
