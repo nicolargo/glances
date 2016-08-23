@@ -74,7 +74,7 @@ class Plugin(GlancesPlugin):
         self.view_data['sort_cpu_times'] = msg_col.format('t', 'Sort processes by TIME')
         self.view_data['show_hide_help'] = msg_col2.format('h', 'Show/hide this help screen')
         self.view_data['show_hide_diskio'] = msg_col.format('d', 'Show/hide disk I/O stats')
-        self.view_data['show_hide_irq'] = msg_col2.format('R', 'Show/hide IRQ stats')
+        self.view_data['show_hide_irq'] = msg_col2.format('Q', 'Show/hide IRQ stats')
         self.view_data['view_network_io_combination'] = msg_col2.format('T', 'View network I/O as combination')
         self.view_data['show_hide_filesystem'] = msg_col.format('f', 'Show/hide filesystem stats')
         self.view_data['view_cumulative_network'] = msg_col2.format('U', 'View cumulative network I/O')

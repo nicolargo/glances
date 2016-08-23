@@ -104,7 +104,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // d => Show/hide disk I/O stats
                 $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
                 break;
-	    case $event.shiftKey && $event.keyCode == keycodes.R:
+	    case $event.shiftKey && $event.keyCode == keycodes.Q:
                 // R => Show/hide IRQ
                 $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
                 break;
