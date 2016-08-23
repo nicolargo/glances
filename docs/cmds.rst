@@ -66,6 +66,10 @@ Command-Line Options
 
     disable folder module
 
+.. option:: --disable-irq
+
+    disable IRQ module
+
 .. option:: --disable-sensors
 
     disable sensors module
@@ -362,6 +366,9 @@ The following commands (key pressed) are supported while in Glances:
 
 ``q|ESC``
     Quit the current Glances session
+
+``Q``
+    Show/hide IRQ module
 
 ``r``
     Reset history

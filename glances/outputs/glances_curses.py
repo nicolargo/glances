@@ -361,8 +361,6 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('d'):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
-        elif self.pressedkey == ord('R'):
-            self.args.disable_irq = not self.args.disable_irq
         elif self.pressedkey == ord('D'):
             # 'D' > Show/hide Docker stats
             self.args.disable_docker = not self.args.disable_docker
@@ -417,6 +415,8 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('P'):
             # 'P' > Disable ports scan plugins
             self.args.disable_ports = not self.args.disable_ports
+        elif self.pressedkey == ord('Q'):
+            self.args.disable_irq = not self.args.disable_irq
         elif self.pressedkey == ord('r'):
             # 'r' > Reset history
             self.reset_history_tag = not self.reset_history_tag
