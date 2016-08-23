@@ -362,8 +362,8 @@ class _GlancesCurses(object):
             # 'd' > Show/hide disk I/O stats
             self.args.disable_diskio = not self.args.disable_diskio
         elif self.pressedkey == ord('R'):
-	    self.args.disable_irq    = not self.args.disable_irq
-	elif self.pressedkey == ord('D'):
+            self.args.disable_irq = not self.args.disable_irq
+        elif self.pressedkey == ord('D'):
             # 'D' > Show/hide Docker stats
             self.args.disable_docker = not self.args.disable_docker
         elif self.pressedkey == ord('e'):
@@ -539,9 +539,9 @@ class _GlancesCurses(object):
         stats_memswap = stats.get_plugin('memswap').get_stats_display(args=self.args)
         stats_network = stats.get_plugin('network').get_stats_display(
             args=self.args, max_width=plugin_max_width)
-        stats_irq = stats.get_plugin('irq').get_stats_display( 
+        stats_irq = stats.get_plugin('irq').get_stats_display(
             args=self.args, max_width=plugin_max_width)
-	try:
+        try:
             stats_ip = stats.get_plugin('ip').get_stats_display(args=self.args)
         except AttributeError:
             stats_ip = None
@@ -732,8 +732,8 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stats_fs)
             self.new_line()
-	    self.display_plugin(stats_irq)
-	    self.new_line()
+            self.display_plugin(stats_irq)
+            self.new_line()
             self.display_plugin(stats_folders)
             self.new_line()
             self.display_plugin(stats_raid)
@@ -741,7 +741,7 @@ class _GlancesCurses(object):
             self.display_plugin(stats_sensors)
             self.new_line()
             self.display_plugin(stats_now)
-	    self.new_line()
+            self.new_line()
 
         # ====================================
         # Display right stats (process and co)
