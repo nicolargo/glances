@@ -13,7 +13,7 @@ Glances offers 3 modes:
 Standalone Mode
 ---------------
 
-Simply run:
+If you want to monitor your local machine, simply run:
 
 .. code-block:: console
 
@@ -37,10 +37,6 @@ and on the client:
 
 where ``@server`` is the IP address or hostname of the server.
 
-Glances can centralize available Glances servers using the ``--browser``
-option. The server list can be statically defined via the configuration
-file (section ``[serverlist]``).
-
 In server mode, you can set the bind address with ``-B ADDRESS`` and
 the listening TCP port with ``-p PORT``.
 
@@ -53,24 +49,55 @@ In client/server mode, limits are set by the server side.
 
 You can set a password to access to the server ``--password``. By
 default, the username is ``glances`` but you can change it with
-``--username``.
+``--username``. It is also possible to set the password in the
+Glances configuration file:
+
+.. code-block:: ini
+
+    [passwords]
+    # Define the passwords list
+    # Syntax: host=password
+    # Where: host is the hostname
+    #        password is the clear password
+    # Additionally (and optionally) a default password could be defined
+    localhost=mylocalhostpassword
+    default=mydefaultpassword
 
 If you ask it, the SHA password will be stored in ``username.pwd`` file.
+Next time your run the server/client, password will not be asked.
 
-Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to
-all IPv6 addresses.
+Central client
+^^^^^^^^^^^^^^
 
-Autodiscover
-^^^^^^^^^^^^
+.. image:: _static/browser.png
+
+Glances can centralize available Glances servers using the ``--browser``
+option. The server list can be statically defined via the configuration
+file (section ``[serverlist]``).
+
+Example:
+
+.. code-block:: ini
+
+    [serverlist]
+    # Define the static servers list
+    server_1_name=xps
+    server_1_alias=xps
+    server_1_port=61209
+    server_2_name=win
+    server_2_port=61235
 
 Glances can also detect and display all Glances servers available on
 your network via the ``zeroconf`` protocol (not available on Windows):
+
+To start the central client, use the following option:
 
 .. code-block:: console
 
     client$ glances --browser
 
-Use ``--disable-autodiscover`` to disable it.
+.. note::
+Use ``--disable-autodiscover`` to disable the auto discovery mode.
 
 SNMP
 ^^^^
@@ -84,6 +111,14 @@ client, the latter will try to grab stats using the ``SNMP`` protocol:
 
 .. note::
     Stats grabbed by SNMP request are limited and OS dependent.
+    A SNMP server should be installed and configured...
+
+
+IPv6
+^^^^
+
+Glances is ``IPv6`` compatible. Just use the ``-B ::`` option to bind to
+all IPv6 addresses.
 
 Web Server Mode
 ---------------
