@@ -1,13 +1,13 @@
 Building the docs
 =================
 
-First install Sphinx:
+First install Sphinx and the RTD theme:
 
-    pip install sphinx
+    pip install sphinx sphinx_rtd_theme
 
 or update it if already installed:
 
-    pip install --upgrade sphinx
+    pip install --upgrade sphinx sphinx_rtd_theme
 
 Go to the docs folder:
 
