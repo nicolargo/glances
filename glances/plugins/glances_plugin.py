@@ -86,6 +86,14 @@ class GlancesPlugin(object):
         """Return the key of the list."""
         return None
 
+    def _json_dumps(self, d):
+        """Return the object 'd' in a JSON format
+        Manage the issue #815 for Windows OS"""
+        try:
+            return json.dumps(d)
+        except UnicodeDecodeError:
+            return json.dumps(d, ensure_ascii=False)
+
     def _history_enable(self):
         return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
 
@@ -169,11 +177,11 @@ class GlancesPlugin(object):
         s = self.get_json_history(nb=nb)
 
         if item is None:
-            return json.dumps(s)
+            return self._json_dumps(s)
 
         if isinstance(s, dict):
             try:
-                return json.dumps({item: s[item]})
+                return self._json_dumps({item: s[item]})
             except KeyError as e:
                 logger.error("Cannot get item history {0} ({1})".format(item, e))
                 return None
@@ -181,7 +189,7 @@ class GlancesPlugin(object):
             try:
                 # Source:
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-                return json.dumps({item: map(itemgetter(item), s)})
+                return self._json_dumps({item: map(itemgetter(item), s)})
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item history {0} ({1})".format(item, e))
                 return None
@@ -282,7 +290,7 @@ class GlancesPlugin(object):
 
     def get_stats(self):
         """Return the stats object in JSON format."""
-        return json.dumps(self.stats)
+        return self._json_dumps(self.stats)
 
     def get_stats_item(self, item):
         """Return the stats object for a specific item in JSON format.
@@ -291,7 +299,7 @@ class GlancesPlugin(object):
         """
         if isinstance(self.stats, dict):
             try:
-                return json.dumps({item: self.stats[item]})
+                return self._json_dumps({item: self.stats[item]})
             except KeyError as e:
                 logger.error("Cannot get item {} ({})".format(item, e))
                 return None
@@ -299,7 +307,7 @@ class GlancesPlugin(object):
             try:
                 # Source:
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
-                return json.dumps({item: map(itemgetter(item), self.stats)})
+                return self._json_dumps({item: map(itemgetter(item), self.stats)})
             except (KeyError, ValueError) as e:
                 logger.error("Cannot get item {} ({})".format(item, e))
                 return None
@@ -317,7 +325,7 @@ class GlancesPlugin(object):
             if value.isdigit():
                 value = int(value)
             try:
-                return json.dumps({value: [i for i in self.stats if i[item] == value]})
+                return self._json_dumps({value: [i for i in self.stats if i[item] == value]})
             except (KeyError, ValueError) as e:
                 logger.error(
                     "Cannot get item({})=value({}) ({})".format(item, value, e))

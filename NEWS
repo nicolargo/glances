@@ -43,6 +43,7 @@ Bugs corrected:
     * PermissionError/OSError when starting glances (issue #885)
     * Zeroconf problem with zeroconf_type = "_%s._tcp." % __appname__ (issue #888)
     * Zeroconf problem with zeroconf service name (issue #889)
+    * [WebUI] Glances will not get past loading screen - Windows OS (issue #815)
     * Top 3 processes are back in the alert summary
 
 Code quality follow up: from 5.93 to 6.24 (source: https://scrutinizer-ci.com/g/nicolargo/glances)
