@@ -2,12 +2,40 @@
 
 import glob
 import sys
+import re
 
 from setuptools import setup, Command
 
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances requires at least Python 2.7 or 3.3 to run.')
-    sys.exit(1)
+
+# Global functions
+##################
+
+def get_version():
+    """Get version inside the __init__.py file"""
+    init_file = open("glances/__init__.py").read()
+    reg_version = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    find_version = re.search(reg_version, init_file, re.M)
+    if find_version:
+        return find_version.group(1)
+    else:
+        print("Can not retreive Glances version in the glances/__init__.py file.")
+        sys.exit(1)
+
+
+def get_data_files():
+    data_files = [
+        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
+                               'conf/glances.conf']),
+        ('share/man/man1', ['docs/man/glances.1'])
+    ]
+
+    return data_files
+
+
+def get_requires():
+    requires = ['psutil>=2.0.0']
+
+    return requires
 
 
 class tests(Command):
@@ -28,28 +56,21 @@ class tests(Command):
                 raise SystemExit(ret)
         raise SystemExit(0)
 
+# Global vars
+#############
 
-def get_data_files():
-    data_files = [
-        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                               'conf/glances.conf']),
-        ('share/man/man1', ['docs/man/glances.1'])
-    ]
+glances_version = get_version()
 
-    return data_files
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances {0} require at least Python 2.7 or 3.3 to run.'.format(glances_version))
+    print('Please install Glances 2.6.2 on your system.')
+    sys.exit(1)
 
-
-def get_requires():
-    requires = ['psutil>=2.0.0']
-
-    if sys.platform.startswith('win'):
-        requires += ['colorconsole']
-
-    return requires
+# Setup !
 
 setup(
     name='Glances',
-    version='2.7',
+    version=glances_version,
     description="A cross-platform curses-based monitoring tool",
     long_description=open('README.rst').read(),
     author='Nicolas Hennion',
