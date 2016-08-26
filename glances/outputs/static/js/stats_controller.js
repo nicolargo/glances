@@ -1,4 +1,4 @@
-glancesApp.controller('statsController', function ($scope, $rootScope, $interval, GlancesStats, help, arguments) {
+glancesApp.controller('statsController', function ($scope, $rootScope, $interval, GlancesStats, help, arguments, favicoService) {
     $scope.help = help;
     $scope.arguments = arguments;
 
@@ -24,7 +24,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsAlert = GlancesStats.getPlugin('alert');
             $scope.statsCpu = GlancesStats.getPlugin('cpu');
             $scope.statsDiskio = GlancesStats.getPlugin('diskio');
-	    $scope.statsIrq = GlancesStats.getPlugin('irq');
+            $scope.statsIrq = GlancesStats.getPlugin('irq');
             $scope.statsDocker = GlancesStats.getPlugin('docker');
             $scope.statsFs = GlancesStats.getPlugin('fs');
             $scope.statsFolders = GlancesStats.getPlugin('folders');
@@ -45,6 +45,12 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsPorts = GlancesStats.getPlugin('ports');
 
             $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
+
+            if ($scope.statsAlert.hasOngoingAlerts()) {
+                favicoService.badge($scope.statsAlert.countOngoingAlerts());
+            } else {
+                favicoService.reset();
+            }
 
             $scope.is_disconnected = false;
             $scope.dataLoaded = true;
@@ -104,8 +110,8 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // d => Show/hide disk I/O stats
                 $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
                 break;
-	    case $event.shiftKey && $event.keyCode == keycodes.Q:
-                // R => Show/hide IRQ
+            case $event.shiftKey && $event.keyCode == keycodes.Q:
+                // Q => Show/hide IRQ
                 $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:

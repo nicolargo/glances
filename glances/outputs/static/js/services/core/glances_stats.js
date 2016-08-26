@@ -5,7 +5,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'alert': 'GlancesPluginAlert',
         'cpu': 'GlancesPluginCpu',
         'diskio': 'GlancesPluginDiskio',
-	'irq'   : 'GlancesPluginIrq',
+        'irq'   : 'GlancesPluginIrq',
         'docker': 'GlancesPluginDocker',
         'ip': 'GlancesPluginIp',
         'fs': 'GlancesPluginFs',
