@@ -56,6 +56,10 @@ class AmpsList(object):
         if self.config is None:
             return False
 
+        # Display a warning (deprecated) message if the monitor section exist
+        if "monitor" in self.config.sections():
+            logger.warning("A deprecated [monitor] section exists in the Glances configuration file. You should use the new Applications Monitoring Process module instead (http://glances.readthedocs.io/en/develop/aoa/amps.html).")
+
         header = "glances_"
         # For each AMP scrip, call the load_config method
         for s in self.config.sections():
