@@ -183,7 +183,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
-            logger.info(i)
             # Do not display anything if no battery are detected
             if (i['type'] == 'battery' and i['value'] == []):
                 continue
