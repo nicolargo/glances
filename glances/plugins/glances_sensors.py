@@ -183,6 +183,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         for i in self.stats:
+            logger.info(i)
             # Do not display anything if no battery are detected
             if (i['type'] == 'battery' and i['value'] == []):
                 continue
@@ -197,7 +198,7 @@ class Plugin(GlancesPlugin):
             else:
                 msg = '{:13}'.format(label[:13])
             ret.append(self.curse_add_line(msg))
-            if i['value'] in (b'ERR', b'SLP', b'UNK'):
+            if i['value'] in (b'ERR', b'SLP', b'UNK', b'NOS'):
                 msg = '{:>8}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],

@@ -131,7 +131,8 @@ class GlancesGrabHDDTemp(object):
                 hddtemp_current['value'] = float(temperature)
             except ValueError:
                 # Temperature could be 'ERR', 'SLP' or 'UNK' (see issue #824)
-                hddtemp_current['value'] = temperature
+                # Improper bytes/unicode in glances_hddtemp.py (see issue #887)
+                hddtemp_current['value'] = nativestr(temperature)
             hddtemp_current['unit'] = unit
             self.hddtemp_list.append(hddtemp_current)
 
