@@ -89,7 +89,7 @@ setup(
         'IP': ['netifaces'],
         'RAID': ['pymdstat'],
         'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb>=1.0.0', 'potsdb' 'statsd', 'pika'],
+        'EXPORT': ['influxdb>=1.0.0', 'elasticsearch', 'potsdb' 'statsd', 'pika', 'bernhard', 'cassandra'],
         'ACTION': ['pystache'],
         'CPUINFO': ['py-cpuinfo'],
         'FOLDERS': ['scandir']
