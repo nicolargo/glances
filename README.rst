@@ -100,21 +100,15 @@ To install, simply use ``pip``:
 
 *Note*: Python headers are required to install `psutil`_. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
-For Fedora/CentOS/RHEL install first *python-devel* package.
+For Fedora/CentOS/RHEL install first *python-devel* package. For Windows,
+just install PsUtil from the binary installation file.
 
 You can also install the following libraries in order to use optional
-features (like the Web interface):
+features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install bottle batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb potsdb statsd pystache docker-py pysnmp pika py-cpuinfo scandir
-
-Install or upgrade Glances from the Git ``develop`` repository:
-
-.. code-block:: console
-
-    git clone -b develop https://github.com/nicolargo/glances.git
-
+    pip install bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir
 
 To upgrade Glances to the latest version:
 
@@ -183,6 +177,7 @@ At the moment, packages exist for the following GNU/Linux distributions:
 - Void Linux
 
 So you should be able to install it using your favorite package manager.
+Be aware that the Glances version can not be the latest one using this method.
 
 FreeBSD
 -------
@@ -229,6 +224,13 @@ then just:
 .. code-block:: console
 
     $ pip install glances
+
+You can also install the following libraries in order to use optional
+features (like the Web interface, exports modules, sensors...):
+
+.. code-block:: console
+
+    pip install bottle requests zeroconf netifaces influxdb elasticsearch potsdb statsd pystache pysnmp pika py-cpuinfo bernhard cassandra scandir
 
 Source
 ------
@@ -304,8 +306,8 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``OpenTSDB``,
-``StatsD``, ``ElasticSearch``, ``RabbitMQ`` and  ``Riemann`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``Cassandra``,
+``OpenTSDB``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ`` and  ``Riemann`` server.
 
 How to contribute ?
 ===================
