@@ -1,6 +1,6 @@
 .. _cassandra:
 
-CASSANDRA
+Cassandra
 =========
 
 You can export statistics to an ``Cassandra`` or ``Scylla`` server.
@@ -30,3 +30,4 @@ The data model is the following:
     CREATE TABLE <table> (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time))
 
 Only numerical stats are stored in the Cassandra table. All the stats are converted to float.
+If a stat can not be converted to float, it is not stored in the database.
