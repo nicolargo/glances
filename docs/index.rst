@@ -3,14 +3,13 @@ Glances
 
 .. image:: _static/screenshot-wide.png
 
-Glances is a cross-platform curses-based monitoring tool which aims to
-present a maximum of information in a minimum of space, ideally to fit
-in a classical 80x24 terminal or higher to have additional information.
-It can adapt dynamically the displayed information depending on the
-terminal size.
+Glances is a cross-platform monitoring tool which aims to present a
+maximum of information in a minimum of space through a curses or Web
+based interface. It can adapt dynamically the displayed information
+depending on the terminal size.
 
-It can also work in client/server mode. Remote monitoring
-could be done via terminal or Web interface.
+It can also work in client/server mode. Remote monitoring could be
+done via terminal, Web interface or API (XMLRPC and RESTful).
 
 Glances is written in Python and uses the `psutil`_ library to get
 information from your system.

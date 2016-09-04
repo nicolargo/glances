@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "March 31, 2016" "2.7_BETA" "Glances"
+.TH "GLANCES" "1" "Sep 04, 2016" "2.7_RC1" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -148,6 +148,11 @@ disable Docker module
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-\-disable\-ports
+disable Ports module
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-5, \-\-disable\-top
 disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
 .UNINDENT
@@ -161,6 +166,11 @@ needed)
 .TP
 .B \-\-disable\-process
 disable process module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-amps
+disable application monitoring process module
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -201,6 +211,11 @@ export stats to a CSV file
 .TP
 .B \-\-export\-influxdb
 export stats to an InfluxDB server (influxdb lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-cassandra
+export stats to a Cassandra/Scylla server (cassandra lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -404,6 +419,9 @@ If MEM \fB>70%\fP, sort processes by MEM usage
 If CPU iowait \fB>60%\fP, sort processes by I/O read and write
 .UNINDENT
 .TP
+.B \fBA\fP
+Enable/disable Application Monitoring Process
+.TP
 .B \fBb\fP
 Switch between bit/s or Byte/s for network I/O
 .TP
@@ -460,6 +478,9 @@ Sort processes by name
 .TP
 .B \fBq|ESC\fP
 Quit the current Glances session
+.TP
+.B \fBQ\fP
+Show/hide IRQ module
 .TP
 .B \fBr\fP
 Reset history
@@ -555,7 +576,8 @@ $ glances \-\-export\-csv
 .UNINDENT
 .sp
 Monitor local machine and export stats to a InfluxDB server with 5s
-refresh time:
+refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
+ElasticSearch, RabbitMQ and Riemann):
 .INDENT 0.0
 .INDENT 3.5
 $ glances \-t 5 \-\-export\-influxdb
