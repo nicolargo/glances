@@ -759,7 +759,7 @@
                 [
                   {
                     "params": [
-                      "enp0s25.rx"
+                      "eth0.rx"
                     ],
                     "type": "field"
                   },
@@ -775,7 +775,7 @@
             },
             {
               "alias": "Tx",
-              "column": "enp0s25.tx*-1",
+              "column": "eth0.tx*-1",
               "dsType": "influxdb",
               "function": "mean",
               "groupBy": [
@@ -800,7 +800,7 @@
                 [
                   {
                     "params": [
-                      "enp0s25.tx"
+                      "eth0.tx"
                     ],
                     "type": "field"
                   },
