@@ -27,6 +27,7 @@ import unicodedata
 
 PY3 = sys.version_info[0] == 3
 
+
 def to_ascii(s):
     """Convert the unicode 's' to a ASCII string
     Usefull to remove accent (diacritics)"""

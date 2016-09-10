@@ -182,7 +182,6 @@ class TestGlances(unittest.TestCase):
         req = json.loads(client.getIrq())
         self.assertIsInstance(req, list)
 
-
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Server')

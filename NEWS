@@ -2,8 +2,8 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.6.2
-=============
+Version 2.7
+===========
 
 Backward-incompatible changes:
 
@@ -55,11 +55,7 @@ Version 2.6.2
 
 Bugs corrected:
 
-<<<<<<< HEAD
     * Crash with Docker 1.11 (issue #848)
-=======
-    *  Crash with Docker 1.11 (issue #848)
->>>>>>> master
 
 Version 2.6.1
 =============

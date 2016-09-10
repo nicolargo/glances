@@ -201,7 +201,6 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is list, msg='IRQ stats is not a list')
         print('INFO: IRQ stats: %s' % stats_grab)
 
-
     def test_097_attribute(self):
         """Test GlancesAttribute classe"""
         print('INFO: [TEST_097] Test attribute')
