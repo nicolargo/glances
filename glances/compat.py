@@ -24,6 +24,7 @@
 import operator
 import sys
 import unicodedata
+import types
 
 PY3 = sys.version_info[0] == 3
 
@@ -47,6 +48,7 @@ if PY3:
 
     text_type = str
     binary_type = bytes
+    bool_type = bool
 
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
@@ -96,6 +98,7 @@ else:
 
     text_type = unicode
     binary_type = str
+    bool_type = types.BooleanType
 
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
