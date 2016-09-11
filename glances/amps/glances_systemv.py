@@ -69,7 +69,7 @@ class Amp(GlancesAmp):
         # Get the systemctl status
         logger.debug('{}: Update stats using service {}'.format(self.NAME, self.get('service_cmd')))
         try:
-            res = check_output(self.get('service_cmd').split(), stderr=STDOUT)
+            res = check_output(self.get('service_cmd').split(), stderr=STDOUT).decode('utf-8')
         except OSError as e:
             logger.debug('{}: Error while executing service ({})'.format(self.NAME, e))
         else:
