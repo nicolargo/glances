@@ -29,6 +29,7 @@ import time
 from glances.globals import WINDOWS
 from glances.ports_list import GlancesPortsList
 from glances.timer import Timer, Counter
+from glances.compat import bool_type
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -116,7 +117,7 @@ class Plugin(GlancesPlugin):
         for p in self.stats:
             if p['status'] is None:
                 status = 'Scanning'
-            elif isinstance(p['status'], types.BooleanType) and p['status'] is True:
+            elif isinstance(p['status'], bool_type) and p['status'] is True:
                 status = 'Open'
             elif p['status'] == 0:
                 status = 'Timeout'
