@@ -2,10 +2,13 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.8
-===========
+Version 2.7.1
+=============
 
-...
+Bugs corrected:
+
+    * AMP plugin crashs on start with Python 3 (issue #917)
+    * Ports plugin crashs on start with Python 3 (issue #918)
 
 Version 2.7
 ===========

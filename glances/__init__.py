@@ -27,7 +27,7 @@ import sys
 
 # Global name
 __appname__ = 'glances'
-__version__ = '2.8_DEVELOP'
+__version__ = '2.7.1'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
