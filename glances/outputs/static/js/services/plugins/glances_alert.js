@@ -29,7 +29,7 @@ glancesApp.service('GlancesPluginAlert', function () {
                     , minutes = parseInt((duration / (1000 * 60)) % 60)
                     , hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
-                alert.duration = _.padLeft(hours, 2, '0') + ":" + _.padLeft(minutes, 2, '0') + ":" + _.padLeft(seconds, 2, '0');
+                alert.duration = _.padStart(hours, 2, '0') + ":" + _.padStart(minutes, 2, '0') + ":" + _.padStart(seconds, 2, '0');
             }
 
             _alerts.push(alert);
@@ -47,4 +47,12 @@ glancesApp.service('GlancesPluginAlert', function () {
     this.count = function () {
         return _alerts.length;
     };
+
+    this.hasOngoingAlerts = function () {
+        return _.filter(_alerts, { 'ongoing': true }).length > 0;
+    };
+
+    this.countOngoingAlerts = function () {
+        return _.filter(_alerts, { 'ongoing': true }).length;
+    }
 });
