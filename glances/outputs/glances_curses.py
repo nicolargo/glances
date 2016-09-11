@@ -723,25 +723,9 @@ class _GlancesCurses(object):
                 self.args.disable_folder and
                 self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            self.new_line()
-            self.display_plugin(stats_network)
-            self.new_line()
-            self.display_plugin(stats_ports)
-            self.new_line()
-            self.display_plugin(stats_diskio)
-            self.new_line()
-            self.display_plugin(stats_fs)
-            self.new_line()
-            self.display_plugin(stats_irq)
-            self.new_line()
-            self.display_plugin(stats_folders)
-            self.new_line()
-            self.display_plugin(stats_raid)
-            self.new_line()
-            self.display_plugin(stats_sensors)
-            self.new_line()
-            self.display_plugin(stats_now)
-            self.new_line()
+            for s in (stats_network, stats_ports, stats_diskio, stats_fs, stats_irq, stats_folders, stats_raid, stats_sensors, stats_now):
+                self.new_line()
+                self.display_plugin(s)
 
         # ====================================
         # Display right stats (process and co)
