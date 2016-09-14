@@ -199,7 +199,7 @@ class Plugin(GlancesPlugin):
             else:
                 msg = '{:>6.1f}'.format(p['cpu_percent'])
             ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['cpu_percent'], header="cpu")))
+                                           self.get_alert(p['cpu_percent'], highlight_zero=False, header="cpu")))
         else:
             msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
@@ -207,7 +207,7 @@ class Plugin(GlancesPlugin):
         if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
             msg = '{:>6.1f}'.format(p['memory_percent'])
             ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['memory_percent'], header="mem")))
+                                           self.get_alert(p['memory_percent'], highlight_zero=False, header="mem")))
         else:
             msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
