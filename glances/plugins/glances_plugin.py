@@ -432,7 +432,13 @@ class GlancesPlugin(object):
         """Set the limits to input_limits."""
         self._limits = input_limits
 
-    def get_alert(self, current=0, minimum=0, maximum=100, header="", log=False):
+    def get_alert(self,
+                  current=0,
+                  minimum=0,
+                  maximum=100,
+                  highlight_zero=True,
+                  header="",
+                  log=False):
         """Return the alert status relative to a current value.
 
         Use this function for minor stats.
@@ -442,13 +448,19 @@ class GlancesPlugin(object):
         If current > WARNING of max then alert = WARNING
         If current > CRITICAL of max then alert = CRITICAL
 
+        If highlight=True than 0.0 is highlighted
+
         If defined 'header' is added between the plugin name and the status.
         Only useful for stats with several alert status.
 
         If log=True than add log if necessary
         elif log=False than do not log
-        elig log=None than apply the config given in the conf file
+        elif log=None than apply the config given in the conf file
         """
+        # Manage 0 (0.0) value if highlight_zero is not True
+        if not highlight_zero and current == 0:
+            return 'DEFAULT'
+
         # Compute the %
         try:
             value = (current * 100) / maximum
