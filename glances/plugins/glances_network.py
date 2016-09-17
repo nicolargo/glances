@@ -90,7 +90,9 @@ class Plugin(GlancesPlugin):
             except UnicodeDecodeError:
                 return self.stats
 
-            # New in PsUtil 3.0: optionaly import the interface's status (issue #765)
+            # New in PsUtil 3.0
+            # - import the interface's status (issue #765)
+            # - import the interface's speed (issue #718)
             netstatus = {}
             try:
                 netstatus = psutil.net_if_stats()
@@ -136,11 +138,19 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         # Optional stats (only compliant with PsUtil 3.0+)
+                        # Interface status
                         try:
                             netstat['is_up'] = netstatus[net].isup
                         except (KeyError, AttributeError):
                             pass
-                        # Set the key
+                        # Interface speed in Mbps, convert it to bps
+                        # Can be always 0 on some OS
+                        try:
+                            netstat['speed'] = netstatus[net].speed * 1048576
+                        except (KeyError, AttributeError):
+                            pass
+
+                        # Finaly, set the key
                         netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
