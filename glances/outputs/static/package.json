@@ -8,7 +8,6 @@
     "gulp-angular-templatecache": "^2.0.0",
     "gulp-concat": "^2.6.0",
     "gulp-ng-annotate": "^2.0.0",
-    "gulp-uglify": "^1.5.4",
     "main-bower-files": "^2.13.1"
   },
   "scripts": {
