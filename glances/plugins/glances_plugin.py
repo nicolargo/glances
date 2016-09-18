@@ -437,6 +437,7 @@ class GlancesPlugin(object):
                   minimum=0,
                   maximum=100,
                   highlight_zero=True,
+                  is_max=False,
                   header="",
                   log=False):
         """Return the alert status relative to a current value.
@@ -476,7 +477,8 @@ class GlancesPlugin(object):
             stat_name = self.plugin_name + '_' + header
 
         # Manage limits
-        ret = 'OK'
+        # If is_max is set then display the value in MAX
+        ret = 'MAX' if is_max else 'OK'
         try:
             if value > self.__get_limit('critical', stat_name=stat_name):
                 ret = 'CRITICAL'
@@ -528,7 +530,11 @@ class GlancesPlugin(object):
 
     def get_alert_log(self, current=0, minimum=0, maximum=100, header=""):
         """Get the alert log."""
-        return self.get_alert(current, minimum, maximum, header, log=True)
+        return self.get_alert(current=current,
+                              minimum=minimum,
+                              maximum=maximum,
+                              header=header,
+                              log=True)
 
     def __get_limit(self, criticity, stat_name=""):
         """Return the limit value for the alert."""
