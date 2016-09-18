@@ -1,1 +1,1289 @@
-var glancesApp=angular.module("glancesApp",["ngRoute"]).config(["$routeProvider","$locationProvider",function(e,t){e.when("/:refresh_time?",{templateUrl:"stats.html",controller:"statsController",resolve:{help:["GlancesStats",function(e){return e.getHelp()}],arguments:["GlancesStats","$route",function(e,t){return e.getArguments().then(function(arguments){var e=parseInt(t.current.params.refresh_time);return!isNaN(e)&&e>1&&(arguments.time=e),arguments})}]}}),t.html5Mode(!0)}]).run(["$rootScope",function(e){e.title="Glances"}]);glancesApp.directive("sortableTh",function(){return{restrict:"A",scope:{sorter:"="},link:function(e,t,s){t.addClass("sortable"),e.$watch(function(){return e.sorter.column},function(e,i){angular.isArray(e)?e.indexOf(s.column)!==-1?t.addClass("sort"):t.removeClass("sort"):s.column===e?t.addClass("sort"):t.removeClass("sort")}),t.on("click",function(){e.sorter.column=s.column,e.$apply()})}}}),glancesApp.filter("min_size",function(){return function(e,t){var t=t||8;return e.length>t?"_"+e.substring(e.length-t):e}}),glancesApp.filter("exclamation",function(){return function(e){return void 0===e||""===e?"?":e}}),glancesApp.filter("bytes",function(){return function(e,t){if(t=t||!1,isNaN(parseFloat(e))||!isFinite(e)||0==e)return e;for(var s=["K","M","G","T","P","E","Z","Y"],i={Y:1.2089258196146292e24,Z:0x400000000000000000,E:0x1000000000000000,P:0x4000000000000,T:1099511627776,G:1073741824,M:1048576,K:1024},n=_(s).reverse().value(),r=0;r<n.length;r++){var a=n[r],o=e/i[a];if(o>1){var u=0;return o<10?u=2:o<100&&(u=1),t?u="MK"==a?0:_.min([1,u]):"K"==a&&(u=0),parseFloat(o).toFixed(u)+a}}return e.toFixed(0)}}),glancesApp.filter("bits",["$filter",function(e){return function(t,s){return t=8*Math.round(t),e("bytes")(t,s)+"b"}}]),glancesApp.filter("leftPad",["$filter",function(e){return function(e,t,s){return t=t||0,s=s||" ",_.padStart(e,t,s)}}]),glancesApp.filter("timemillis",function(){return function(e){for(var t=0,s=0;s<e.length;s++)t+=1e3*e[s];return t}}),glancesApp.filter("timedelta",["$filter",function(e){return function(t){var s=e("timemillis")(t),i=new Date(s);return{hours:i.getUTCHours(),minutes:i.getUTCMinutes(),seconds:i.getUTCSeconds(),milliseconds:parseInt(""+i.getUTCMilliseconds()/10)}}}]),glancesApp.controller("statsController",["$scope","$rootScope","$interval","GlancesStats","help","arguments","favicoService",function(e,t,s,i,n,arguments,r){e.help=n,e.arguments=arguments,e.sorter={column:"cpu_percent",auto:!0,isReverseColumn:function(e){return!("username"==e||"name"==e)},getColumnLabel:function(e){return _.isEqual(e,["io_read","io_write"])?"io_counters":e}},e.dataLoaded=!1,e.refreshData=function(){i.getData().then(function(s){e.statsAlert=i.getPlugin("alert"),e.statsCpu=i.getPlugin("cpu"),e.statsDiskio=i.getPlugin("diskio"),e.statsIrq=i.getPlugin("irq"),e.statsDocker=i.getPlugin("docker"),e.statsFs=i.getPlugin("fs"),e.statsFolders=i.getPlugin("folders"),e.statsIp=i.getPlugin("ip"),e.statsLoad=i.getPlugin("load"),e.statsMem=i.getPlugin("mem"),e.statsMemSwap=i.getPlugin("memswap"),e.statsAmps=i.getPlugin("amps"),e.statsNetwork=i.getPlugin("network"),e.statsPerCpu=i.getPlugin("percpu"),e.statsProcessCount=i.getPlugin("processcount"),e.statsProcessList=i.getPlugin("processlist"),e.statsQuicklook=i.getPlugin("quicklook"),e.statsRaid=i.getPlugin("raid"),e.statsSensors=i.getPlugin("sensors"),e.statsSystem=i.getPlugin("system"),e.statsUptime=i.getPlugin("uptime"),e.statsPorts=i.getPlugin("ports"),t.title=e.statsSystem.hostname+" - Glances",e.statsAlert.hasOngoingAlerts()?r.badge(e.statsAlert.countOngoingAlerts()):r.reset(),e.is_disconnected=!1,e.dataLoaded=!0},function(){e.is_disconnected=!0})},e.refreshData(),s(function(){e.refreshData()},1e3*arguments.time),e.onKeyDown=function(t){switch(!0){case!t.shiftKey&&t.keyCode==keycodes.a:e.sorter.column="cpu_percent",e.sorter.auto=!0;break;case t.shiftKey&&t.keyCode==keycodes.A:e.arguments.disable_amps=!e.arguments.disable_amps;break;case!t.shiftKey&&t.keyCode==keycodes.c:e.sorter.column="cpu_percent",e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.m:e.sorter.column="memory_percent",e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.u:e.sorter.column="username",e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.p:e.sorter.column="name",e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.i:e.sorter.column=["io_read","io_write"],e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.t:e.sorter.column="timemillis",e.sorter.auto=!1;break;case!t.shiftKey&&t.keyCode==keycodes.d:e.arguments.disable_diskio=!e.arguments.disable_diskio;break;case t.shiftKey&&t.keyCode==keycodes.Q:e.arguments.disable_irq=!e.arguments.disable_irq;break;case!t.shiftKey&&t.keyCode==keycodes.f:e.arguments.disable_fs=!e.arguments.disable_fs;break;case!t.shiftKey&&t.keyCode==keycodes.n:e.arguments.disable_network=!e.arguments.disable_network;break;case!t.shiftKey&&t.keyCode==keycodes.s:e.arguments.disable_sensors=!e.arguments.disable_sensors;break;case t.shiftKey&&t.keyCode==keycodes.TWO:e.arguments.disable_left_sidebar=!e.arguments.disable_left_sidebar;break;case!t.shiftKey&&t.keyCode==keycodes.z:e.arguments.disable_process=!e.arguments.disable_process;break;case t.keyCode==keycodes.SLASH:e.arguments.process_short_name=!e.arguments.process_short_name;break;case t.shiftKey&&t.keyCode==keycodes.D:e.arguments.disable_docker=!e.arguments.disable_docker;break;case!t.shiftKey&&t.keyCode==keycodes.b:e.arguments["byte"]=!e.arguments["byte"];break;case t.shiftKey&&t.keyCode==keycodes.b:e.arguments.diskio_iops=!e.arguments.diskio_iops;break;case!t.shiftKey&&t.keyCode==keycodes.l:e.arguments.disable_log=!e.arguments.disable_log;break;case t.shiftKey&&t.keyCode==keycodes.ONE:e.arguments.percpu=!e.arguments.percpu;break;case!t.shiftKey&&t.keyCode==keycodes.h:e.arguments.help_tag=!e.arguments.help_tag;break;case t.shiftKey&&t.keyCode==keycodes.T:e.arguments.network_sum=!e.arguments.network_sum;break;case t.shiftKey&&t.keyCode==keycodes.u:e.arguments.network_cumul=!e.arguments.network_cumul;break;case t.shiftKey&&t.keyCode==keycodes.f:e.arguments.fs_free_space=!e.arguments.fs_free_space;break;case t.shiftKey&&t.keyCode==keycodes.THREE:e.arguments.disable_quicklook=!e.arguments.disable_quicklook;break;case t.shiftKey&&t.keyCode==keycodes.FIVE:e.arguments.disable_quicklook=!e.arguments.disable_quicklook,e.arguments.disable_cpu=!e.arguments.disable_cpu,e.arguments.disable_mem=!e.arguments.disable_mem,e.arguments.disable_swap=!e.arguments.disable_swap,e.arguments.disable_load=!e.arguments.disable_load;break;case t.shiftKey&&t.keyCode==keycodes.i:e.arguments.disable_ip=!e.arguments.disable_ip;break;case t.shiftKey&&t.keyCode==keycodes.p:e.arguments.disable_ports=!e.arguments.disable_ports}}}]);var keycodes={a:"65",c:"67",m:"77",p:"80",i:"73",t:"84",u:"85",d:"68",f:"70",n:"78",s:"83",z:"90",e:"69",SLASH:"191",D:"68",b:"66",l:"76",w:"87",x:"88",ONE:"49",TWO:"50",THREE:"51",FOUR:"52",FIVE:"53",h:"72",T:"84",F:"70",g:"71",r:"82",q:"81",A:"65",R:"82"};glancesApp.service("favicoService",function(){var e=new Favico({animation:"none"});this.badge=function(t){e.badge(t)},this.reset=function(){e.reset()}}),glancesApp.service("GlancesStats",["$http","$injector","$q","GlancesPlugin",function(e,t,s,i){var n=[],r=[],a=[],o={alert:"GlancesPluginAlert",cpu:"GlancesPluginCpu",diskio:"GlancesPluginDiskio",irq:"GlancesPluginIrq",docker:"GlancesPluginDocker",ip:"GlancesPluginIp",fs:"GlancesPluginFs",folders:"GlancesPluginFolders",load:"GlancesPluginLoad",mem:"GlancesPluginMem",memswap:"GlancesPluginMemSwap",amps:"GlancesPluginAmps",network:"GlancesPluginNetwork",percpu:"GlancesPluginPerCpu",processcount:"GlancesPluginProcessCount",processlist:"GlancesPluginProcessList",quicklook:"GlancesPluginQuicklook",raid:"GlancesPluginRaid",sensors:"GlancesPluginSensors",system:"GlancesPluginSystem",uptime:"GlancesPluginUptime",ports:"GlancesPluginPorts"};this.getData=function(){return s.all([this.getAllStats(),this.getAllViews()]).then(function(e){return{stats:e[0],view:e[1]}})},this.getAllStats=function(){return e.get("/api/2/all").then(function(e){return n=e.data,e.data})},this.getAllLimits=function(){return e.get("/api/2/all/limits").then(function(e){return a=e.data,e.data})},this.getAllViews=function(){return e.get("/api/2/all/views").then(function(e){return r=e.data,e.data})},this.getHelp=function(){return e.get("/api/2/help").then(function(e){return e.data})},this.getArguments=function(){return e.get("/api/2/args").then(function(e){return e.data})},this.getPlugin=function(e){var s=o[e];if(void 0===s)throw"Plugin '"+e+"' not found";return s=t.get(s),s.setData(n,r),s},this.getAllLimits().then(function(e){i.setLimits(e)})}]),glancesApp.service("GlancesPluginAlert",function(){var e="alert",t=[];this.setData=function(s,i){s=s[e],t=[],_.isArray(s)||(s=[]);for(var n=0;n<s.length;n++){var r=s[n],a={};if(a.name=r[3],a.level=r[2],a.begin=1e3*r[0],a.end=1e3*r[1],a.ongoing=r[1]==-1,a.min=r[6],a.mean=r[5],a.max=r[4],!a.ongoing){var o=a.end-a.begin,u=parseInt(o/1e3%60),l=parseInt(o/6e4%60),c=parseInt(o/36e5%24);a.duration=_.padStart(c,2,"0")+":"+_.padStart(l,2,"0")+":"+_.padStart(u,2,"0")}t.push(a)}},this.hasAlerts=function(){return t.length>0},this.getAlerts=function(){return t},this.count=function(){return t.length},this.hasOngoingAlerts=function(){return _.filter(t,{ongoing:!0}).length>0},this.countOngoingAlerts=function(){return _.filter(t,{ongoing:!0}).length}}),glancesApp.service("GlancesPluginAmps",function(){var e="amps";this.processes=[],this.setData=function(t,s){var i=t[e];this.processes=[],angular.forEach(i,function(e){null!==e.result&&this.processes.push(e)},this)},this.getDescriptionDecoration=function(e){var t=e.count,s=e.countmin,i=e.countmax,n="ok";return n=t>0?(null==s||t>=s)&&(null==i||t<=i)?"ok":"careful":null==s?"ok":"critical"}}),glancesApp.service("GlancesPluginCpu",function(){var e="cpu",t={};this.total=null,this.user=null,this.system=null,this.idle=null,this.nice=null,this.irq=null,this.iowait=null,this.steal=null,this.ctx_switches=null,this.interrupts=null,this.soft_interrupts=null,this.syscalls=null,this.setData=function(s,i){s=s[e],t=i[e],this.total=s.total,this.user=s.user,this.system=s.system,this.idle=s.idle,this.nice=s.nice,this.irq=s.irq,this.iowait=s.iowait,this.steal=s.steal,s.ctx_switches&&(this.ctx_switches=Math.floor(s.ctx_switches/s.time_since_update)),s.interrupts&&(this.interrupts=Math.floor(s.interrupts/s.time_since_update)),s.soft_interrupts&&(this.soft_interrupts=Math.floor(s.soft_interrupts/s.time_since_update)),s.syscalls&&(this.syscalls=Math.floor(s.syscalls/s.time_since_update))},this.getDecoration=function(e){if(void 0!=t[e])return t[e].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginDiskio",["$filter",function(e){var t="diskio";this.disks=[],this.setData=function(s,i){s=s[t],s=e("orderBy")(s,"disk_name"),this.disks=[];for(var n=0;n<s.length;n++){var r=s[n],a=r.time_since_update,o={name:r.disk_name,bitrate:{txps:e("bytes")(r.read_bytes/a),rxps:e("bytes")(r.write_bytes/a)},count:{txps:e("bytes")(r.read_count/a),rxps:e("bytes")(r.write_count/a)},alias:void 0!==r.alias?r.alias:null};this.disks.push(o)}}}]),glancesApp.service("GlancesPluginDocker",["GlancesPlugin",function(e){var t="docker";this.containers=[],this.version=null,this.setData=function(e,s){if(e=e[t],this.containers=[],!_.isEmpty(e)){for(var i=0;i<e.containers.length;i++){var n=e.containers[i],r={id:n.Id,name:n.Names[0].split("/").splice(-1)[0],status:n.Status,cpu:n.cpu.total,memory:void 0!=n.memory.usage?n.memory.usage:"?",ior:void 0!=n.io.ior?n.io.ior:"?",iow:void 0!=n.io.iow?n.io.iow:"?",io_time_since_update:n.io.time_since_update,rx:void 0!=n.network.rx?n.network.rx:"?",tx:void 0!=n.network.tx?n.network.tx:"?",net_time_since_update:n.network.time_since_update,command:n.Command,image:n.Image};this.containers.push(r)}this.version=e.version.Version}}}]),glancesApp.service("GlancesPluginFolders",function(){var e="folders";this.folders=[],this.setData=function(t,s){t=t[e],this.folders=[];for(var i=0;i<t.length;i++){var n=t[i],r={path:n.path,size:n.size,careful:n.careful,warning:n.warning,critical:n.critical};this.folders.push(r)}},this.getDecoration=function(e){if(Number.isInteger(e.size))return null!==e.critical&&e.size>1e6*e.critical?"critical":null!==e.warning&&e.size>1e6*e.warning?"warning":null!==e.careful&&e.size>1e6*e.careful?"careful":"ok"}}),glancesApp.service("GlancesPluginFs",function(){var e="fs",t={};this.fileSystems=[],this.setData=function(s,i){t=i[e],s=s[e],this.fileSystems=[];for(var n=0;n<s.length;n++){var r=s[n],a={name:r.device_name,mountPoint:r.mnt_point,percent:r.percent,size:r.size,used:r.used,free:r.free};this.fileSystems.push(a)}},this.getDecoration=function(e,s){if(void 0!=t[e][s])return t[e][s].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginIp",function(){var e="ip";this.address=null,this.gateway=null,this.mask=null,this.maskCidr=null,this.publicAddress=null,this.setData=function(t,s){t=t[e],this.address=t.address,this.gateway=t.gateway,this.mask=t.mask,this.maskCidr=t.mask_cidr,this.publicAddress=t.public_address}}),glancesApp.service("GlancesPluginIrq",function(){var e="irq";this.irqs=[],this.setData=function(t,s){t=t[e],this.irqs=[];for(var i=0;i<t.length;i++){var n=t[i],r=(n.time_since_update,{irq_line:n.irq_line,irq_rate:n.irq_rate});this.irqs.push(r)}}}),glancesApp.service("GlancesPluginLoad",function(){var e="load",t={};this.cpucore=null,this.min1=null,this.min5=null,this.min15=null,this.setData=function(s,i){t=i[e],s=s[e],this.cpucore=s.cpucore,this.min1=s.min1,this.min5=s.min5,this.min15=s.min15},this.getDecoration=function(e){if(void 0!=t[e])return t[e].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginMem",function(){var e="mem",t={};this.percent=null,this.total=null,this.used=null,this.free=null,this.version=null,this.active=null,this.inactive=null,this.buffers=null,this.cached=null,this.setData=function(s,i){t=i[e],s=s[e],this.percent=s.percent,this.total=s.total,this.used=s.used,this.free=s.free,this.active=s.active,this.inactive=s.inactive,this.buffers=s.buffers,this.cached=s.cached},this.getDecoration=function(e){if(void 0!=t[e])return t[e].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginMemSwap",function(){var e="memswap",t={};this.percent=null,this.total=null,this.used=null,this.free=null,this.setData=function(s,i){t=i[e],s=s[e],this.percent=s.percent,this.total=s.total,this.used=s.used,this.free=s.free},this.getDecoration=function(e){if(void 0!=t[e])return t[e].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginNetwork",function(){var e="network";this.networks=[],this.setData=function(t,s){this.networks=[];for(var i=0;i<t[e].length;i++){var n=t[e][i],r={interfaceName:n.interface_name,rx:n.rx,tx:n.tx,cx:n.cx,time_since_update:n.time_since_update,cumulativeRx:n.cumulative_rx,cumulativeTx:n.cumulative_tx,cumulativeCx:n.cumulative_cx};this.networks.push(r)}}}),glancesApp.service("GlancesPluginPerCpu",["$filter","GlancesPlugin",function(e,t){var s="percpu";this.cpus=[],this.setData=function(e,t){e=e[s],this.cpus=[];for(var i=0;i<e.length;i++){var n=e[i];this.cpus.push({total:n.total,user:n.user,system:n.system,idle:n.idle,iowait:n.iowait,steal:n.steal})}},this.getUserAlert=function(e){return t.getAlert(s,"percpu_user_",e.user)},this.getSystemAlert=function(e){return t.getAlert(s,"percpu_system_",e.system)}}]),glancesApp.service("GlancesPlugin",function(){var e={limits:{},limitSuffix:["critical","careful","warning"]};return e.setLimits=function(e){this.limits=e},e.getAlert=function(e,t,s,i,n){s=s||0,i=i||100,n=n||!1;var r=n?"_log":"",a=100*s/i;if(void 0!=this.limits[e])for(var o=0;o<this.limitSuffix.length;o++){var u=t+this.limitSuffix[o],l=this.limits[e][u];if(a>=l){var c=u.lastIndexOf("_"),h=u.substring(c+1);return h+r}}return"ok"+r},e.getAlertLog=function(e,t,s,i){return this.getAlert(e,t,s,i,!0)},e}),glancesApp.service("GlancesPluginPorts",function(){var e="ports";this.ports=[],this.setData=function(t,s){var i=t[e];this.ports=[],angular.forEach(i,function(e){this.ports.push(e)},this)},this.getDecoration=function(e){return null===e.status?"careful":e.status===!1?"critical":null!==e.rtt_warning&&e.status>e.rtt_warning?"warning":"ok"}}),glancesApp.service("GlancesPluginProcessCount",function(){var e="processcount";this.total=null,this.running=null,this.sleeping=null,this.stopped=null,this.thread=null,this.setData=function(t,s){t=t[e],this.total=t.total||0,this.running=t.running||0,this.sleeping=t.sleeping||0,this.stopped=t.stopped||0,this.thread=t.thread||0}}),glancesApp.service("GlancesPluginProcessList",["$filter","GlancesPlugin",function(e,t){var s="processlist";this.processes=[],this.setData=function(t,i){this.processes=[],this.ioReadWritePresent=!1;for(var n=0;n<t[s].length;n++){var r=t[s][n];r.memvirt=r.memory_info[1],r.memres=r.memory_info[0],r.timeplus=e("timedelta")(r.cpu_times),r.timemillis=e("timemillis")(r.cpu_times),r.ioRead=null,r.ioWrite=null,r.io_counters&&(this.ioReadWritePresent=!0,r.ioRead=(r.io_counters[0]-r.io_counters[2])/r.time_since_update,0!=r.ioRead&&(r.ioRead=e("bytes")(r.ioRead)),r.ioWrite=(r.io_counters[1]-r.io_counters[3])/r.time_since_update,0!=r.ioWrite&&(r.ioWrite=e("bytes")(r.ioWrite))),r.isNice=void 0!==r.nice&&("Windows"===t.system.os_name&&32!=r.nice||"Windows"!==t.system.os_name&&0!=r.nice),Array.isArray(r.cmdline)&&(r.cmdline=r.cmdline.join(" ")),this.processes.push(r)}},this.getCpuPercentAlert=function(e){return t.getAlert(s,"processlist_cpu_",e.cpu_percent)},this.getMemoryPercentAlert=function(e){return t.getAlert(s,"processlist_mem_",e.cpu_percent)}}]),glancesApp.service("GlancesPluginQuicklook",function(){var e="quicklook",t={};this.mem=null,this.cpu=null,this.cpu_name=null,this.cpu_hz_current=null,this.cpu_hz=null,this.swap=null,this.percpus=[],this.setData=function(s,i){s=s[e],t=i[e],this.mem=s.mem,this.cpu=s.cpu,this.cpu_name=s.cpu_name,this.cpu_hz_current=s.cpu_hz_current,this.cpu_hz=s.cpu_hz,this.swap=s.swap,this.percpus=[],angular.forEach(s.percpu,function(e){this.percpus.push({number:e.cpu_number,total:e.total})},this)},this.getDecoration=function(e){if(void 0!=t[e])return t[e].decoration.toLowerCase()}}),glancesApp.service("GlancesPluginRaid",function(){var e="raid";this.disks=[],this.setData=function(t,s){this.disks=[],t=t[e],_.forIn(t,function(e,t){var s={name:t,type:null==e.type?"UNKNOWN":e.type,used:e.used,available:e.available,status:e.status,degraded:e.used<e.available,config:null==e.config?"":e.config.replace("_","A"),inactive:"inactive"==e.status,components:[]};_.forEach(e.components,function(e,t){s.components.push({number:e,name:t})}),this.disks.push(s)},this)},this.hasDisks=function(){return this.disks.length>0},this.getAlert=function(e){return e.inactive?"critical":e.degraded?"warning":"ok"}}),glancesApp.service("GlancesPluginSensors",["GlancesPlugin",function(e){var t="sensors";this.sensors=[],this.setData=function(e,s){e=e[t],_.remove(e,function(e){return _.isArray(e.value)&&_.isEmpty(e.value)||0===e.value}),this.sensors=e},this.getAlert=function(s){var i="battery"==s.type?100-s.value:s.value;return e.getAlert(t,"sensors_"+s.type+"_",i)}}]),glancesApp.service("GlancesPluginSystem",function(){var e="system";this.hostname=null,this.platform=null,this.humanReadableName=null,this.os={name:null,version:null},this.setData=function(t,s){t=t[e],this.hostname=t.hostname,this.platform=t.platform,this.os.name=t.os_name,this.os.version=t.os_version,this.humanReadableName=t.hr_name},this.isBsd=function(){return"FreeBSD"===this.os.name},this.isLinux=function(){return"Linux"===this.os.name},this.isMac=function(){return"Darwin"===this.os.name},this.isWindows=function(){return"Windows"===this.os.name}}),glancesApp.service("GlancesPluginUptime",function(){this.uptime=null,this.setData=function(e,t){this.uptime=e.uptime}});
+var glancesApp = angular.module('glancesApp', ['ngRoute'])
+
+.config(["$routeProvider", "$locationProvider", function($routeProvider, $locationProvider) {
+    $routeProvider.when('/:refresh_time?', {
+        templateUrl : 'stats.html',
+        controller : 'statsController',
+        resolve: {
+            help: ["GlancesStats", function(GlancesStats) {
+                return GlancesStats.getHelp();
+            }],
+            arguments: ["GlancesStats", "$route", function(GlancesStats, $route) {
+                return GlancesStats.getArguments().then(function(arguments) {
+                    var refreshTimeRoute = parseInt($route.current.params.refresh_time);
+                    if (!isNaN(refreshTimeRoute) && refreshTimeRoute > 1) {
+                        arguments.time = refreshTimeRoute;
+                    }
+
+                    return arguments;
+                });
+            }]
+        }
+    });
+
+    $locationProvider.html5Mode(true);
+}])
+.run(["$rootScope", function($rootScope) {
+      $rootScope.title = "Glances";
+}]);
+
+glancesApp.directive("sortableTh", function() {
+    return {
+        restrict: 'A',
+        scope: {
+            sorter: '='
+        },
+        link: function (scope, element, attrs) {
+
+            element.addClass('sortable');
+
+            scope.$watch(function() {
+                return scope.sorter.column;
+            }, function(newValue, oldValue) {
+
+                if (angular.isArray(newValue)) {
+                    if (newValue.indexOf(attrs.column) !== -1) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
+                } else {
+                    if (attrs.column === newValue) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
+                }
+
+            });
+
+            element.on('click', function() {
+
+                scope.sorter.column = attrs.column;
+
+                scope.$apply();
+            });
+        }
+    };
+});
+glancesApp.filter('min_size', function() {
+    return function(input, max) {
+        var max = max || 8;
+        if (input.length > max) {
+            return "_" + input.substring(input.length - max)
+        }
+        return input
+    };
+});
+glancesApp.filter('exclamation', function() {
+    return function(input) {
+        if (input === undefined || input === '') {
+            return '?';
+        }
+        return input;
+    };
+});
+
+glancesApp.filter('bytes', function() {
+    return function (bytes, low_precision) {
+        low_precision = low_precision || false;
+        if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0){
+            return bytes;
+        }
+
+        var symbols = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+        var prefix = {
+          'Y': 1208925819614629174706176,
+          'Z': 1180591620717411303424,
+          'E': 1152921504606846976,
+          'P': 1125899906842624,
+          'T': 1099511627776,
+          'G': 1073741824,
+          'M': 1048576,
+          'K': 1024
+        };
+
+        var reverseSymbols = _(symbols).reverse().value();
+        for (var i = 0; i < reverseSymbols.length; i++) {
+          var symbol = reverseSymbols[i];
+          var value = bytes / prefix[symbol];
+
+          if(value > 1) {
+            var decimal_precision = 0;
+
+            if(value < 10) {
+              decimal_precision = 2;
+            }
+            else if(value < 100) {
+              decimal_precision = 1;
+            }
+
+            if(low_precision) {
+              if(symbol == 'MK') {
+                decimal_precision = 0;
+              }
+              else {
+                decimal_precision = _.min([1, decimal_precision]);
+              }
+            }
+            else if(symbol == 'K') {
+              decimal_precision = 0;
+            }
+
+            return parseFloat(value).toFixed(decimal_precision) + symbol;
+          }
+        }
+
+        return bytes.toFixed(0);
+    }
+});
+
+glancesApp.filter('bits', ["$filter", function($filter) {
+    return function (bits, low_precision) {
+      bits = Math.round(bits) * 8;
+      return $filter('bytes')(bits, low_precision) + 'b';
+    }
+}]);
+
+glancesApp.filter('leftPad', ["$filter", function($filter) {
+    return function (value, length, chars) {
+      length = length || 0;
+      chars = chars || ' ';
+      return _.padStart(value, length, chars);
+    }
+}]);
+
+glancesApp.filter('timemillis', function() {
+    return function (array) {
+      var sum = 0.0;
+      for (var i = 0; i < array.length; i++) {
+          sum += array[i] * 1000.0;
+      }
+      return sum;
+    }
+});
+
+glancesApp.filter('timedelta', ["$filter", function($filter) {
+    return function (value) {
+      var sum = $filter('timemillis')(value);
+      var d = new Date(sum);
+
+      return {
+        hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24)))
+        minutes: d.getUTCMinutes(),
+        seconds: d.getUTCSeconds(),
+        milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
+      };
+    }
+}]);
+
+glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "GlancesStats", "help", "arguments", function ($scope, $rootScope, $interval, GlancesStats, help, arguments) {
+    $scope.help = help;
+    $scope.arguments = arguments;
+
+    $scope.sorter = {
+        column: "cpu_percent",
+        auto: true,
+        isReverseColumn: function (column) {
+            return !(column == 'username' || column == 'name');
+        },
+        getColumnLabel: function (column) {
+            if (_.isEqual(column, ['io_read', 'io_write'])) {
+                return 'io_counters';
+            } else {
+                return column;
+            }
+        }
+    };
+
+    $scope.dataLoaded = false;
+    $scope.refreshData = function () {
+        GlancesStats.getData().then(function (data) {
+
+            $scope.statsAlert = GlancesStats.getPlugin('alert');
+            $scope.statsCpu = GlancesStats.getPlugin('cpu');
+            $scope.statsDiskio = GlancesStats.getPlugin('diskio');
+	    $scope.statsIrq = GlancesStats.getPlugin('irq');
+            $scope.statsDocker = GlancesStats.getPlugin('docker');
+            $scope.statsFs = GlancesStats.getPlugin('fs');
+            $scope.statsFolders = GlancesStats.getPlugin('folders');
+            $scope.statsIp = GlancesStats.getPlugin('ip');
+            $scope.statsLoad = GlancesStats.getPlugin('load');
+            $scope.statsMem = GlancesStats.getPlugin('mem');
+            $scope.statsMemSwap = GlancesStats.getPlugin('memswap');
+            $scope.statsAmps = GlancesStats.getPlugin('amps');
+            $scope.statsNetwork = GlancesStats.getPlugin('network');
+            $scope.statsPerCpu = GlancesStats.getPlugin('percpu');
+            $scope.statsProcessCount = GlancesStats.getPlugin('processcount');
+            $scope.statsProcessList = GlancesStats.getPlugin('processlist');
+            $scope.statsQuicklook = GlancesStats.getPlugin('quicklook');
+            $scope.statsRaid = GlancesStats.getPlugin('raid');
+            $scope.statsSensors = GlancesStats.getPlugin('sensors');
+            $scope.statsSystem = GlancesStats.getPlugin('system');
+            $scope.statsUptime = GlancesStats.getPlugin('uptime');
+            $scope.statsPorts = GlancesStats.getPlugin('ports');
+
+            $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
+
+            $scope.is_disconnected = false;
+            $scope.dataLoaded = true;
+        }, function() {
+            $scope.is_disconnected = true;
+        });
+    };
+
+    $scope.refreshData();
+    $interval(function () {
+        $scope.refreshData();
+    }, arguments.time * 1000); // in milliseconds
+
+    $scope.onKeyDown = function ($event) {
+
+        switch (true) {
+            case !$event.shiftKey && $event.keyCode == keycodes.a:
+                // a => Sort processes automatically
+                $scope.sorter.column = "cpu_percent";
+                $scope.sorter.auto = true;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.A:
+                // A => Enable/disable AMPs
+                $scope.arguments.disable_amps = !$scope.arguments.disable_amps;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.c:
+                // c => Sort processes by CPU%
+                $scope.sorter.column = "cpu_percent";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.m:
+                // m => Sort processes by MEM%
+                $scope.sorter.column = "memory_percent";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.u:
+                // u => Sort processes by user
+                $scope.sorter.column = "username";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.p:
+                // p => Sort processes by name
+                $scope.sorter.column = "name";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.i:
+                // i => Sort processes by I/O rate
+                $scope.sorter.column = ['io_read', 'io_write'];
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.t:
+                // t => Sort processes by time
+                $scope.sorter.column = "timemillis";
+                $scope.sorter.auto = false;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.d:
+                // d => Show/hide disk I/O stats
+                $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
+                break;
+	    case $event.shiftKey && $event.keyCode == keycodes.Q:
+                // R => Show/hide IRQ
+                $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.f:
+                // f => Show/hide filesystem stats
+                $scope.arguments.disable_fs = !$scope.arguments.disable_fs;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.n:
+                // n => Show/hide network stats
+                $scope.arguments.disable_network = !$scope.arguments.disable_network;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.s:
+                // s => Show/hide sensors stats
+                $scope.arguments.disable_sensors = !$scope.arguments.disable_sensors;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.TWO:
+                // 2 => Show/hide left sidebar
+                $scope.arguments.disable_left_sidebar = !$scope.arguments.disable_left_sidebar;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.z:
+                // z => Enable/disable processes stats
+                $scope.arguments.disable_process = !$scope.arguments.disable_process;
+                break;
+            case $event.keyCode == keycodes.SLASH:
+                // SLASH => Enable/disable short processes name
+                $scope.arguments.process_short_name = !$scope.arguments.process_short_name;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.D:
+                // D => Enable/disable Docker stats
+                $scope.arguments.disable_docker = !$scope.arguments.disable_docker;
+                break;
+            case !$event.shiftKey && $event.keyCode == keycodes.b:
+                // b => Bytes or bits for network I/O
+                $scope.arguments.byte = !$scope.arguments.byte;
+               break;
+            case $event.shiftKey && $event.keyCode == keycodes.b:
+               // 'B' => Switch between bit/s and IO/s for Disk IO
+                $scope.arguments.diskio_iops = !$scope.arguments.diskio_iops;
+               break;
+            case !$event.shiftKey && $event.keyCode == keycodes.l:
+                // l => Show/hide alert logs
+                $scope.arguments.disable_log = !$scope.arguments.disable_log;
+               break;
+            case $event.shiftKey && $event.keyCode == keycodes.ONE:
+               // 1 => Global CPU or per-CPU stats
+               $scope.arguments.percpu = !$scope.arguments.percpu;
+               break;
+            case !$event.shiftKey && $event.keyCode == keycodes.h:
+                // h => Show/hide this help screen
+                $scope.arguments.help_tag = !$scope.arguments.help_tag;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.T:
+                // T => View network I/O as combination
+                $scope.arguments.network_sum = !$scope.arguments.network_sum;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.u:
+                // U => View cumulative network I/O
+                $scope.arguments.network_cumul = !$scope.arguments.network_cumul;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.f:
+                // F => Show filesystem free space
+                $scope.arguments.fs_free_space = !$scope.arguments.fs_free_space;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.THREE:
+                // 3 => Enable/disable quick look plugin
+                $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.FIVE:
+                $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
+                $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;
+                $scope.arguments.disable_mem = !$scope.arguments.disable_mem;
+                $scope.arguments.disable_swap = !$scope.arguments.disable_swap;
+                $scope.arguments.disable_load = !$scope.arguments.disable_load;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.i:
+                // I => Show/hide IP module
+                $scope.arguments.disable_ip = !$scope.arguments.disable_ip;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.p:
+                // I => Enable/disable ports module
+                $scope.arguments.disable_ports = !$scope.arguments.disable_ports;
+                break;
+        }
+    };
+}]);
+
+var keycodes = {
+	'a' : '65',
+	'c' : '67',
+	'm' : '77',
+	'p' : '80',
+	'i' : '73',
+	't' : '84',
+	'u' : '85',
+	'd' : '68',
+	'f' : '70',
+	'n' : '78',
+	's' : '83',
+	'z' : '90',
+	'e' : '69',
+	'SLASH': '191',
+	'D' : '68',
+	'b' : '66',
+	'l' : '76',
+	'w' : '87',
+	'x' : '88',
+	'ONE': '49',
+	'TWO': '50',
+	'THREE': '51',
+	'FOUR': '52',
+	'FIVE': '53',
+	'h' : '72',
+	'T' : '84',
+	'F' : '70',
+	'g' : '71',
+	'r' : '82',
+	'q' : '81',
+	'A' : '65',
+	'R' : '82',
+}
+
+glancesApp.service('GlancesStats', ["$http", "$injector", "$q", "GlancesPlugin", function($http, $injector, $q, GlancesPlugin) {
+    var _stats = [], _views = [], _limits = [];
+
+    var _plugins = {
+        'alert': 'GlancesPluginAlert',
+        'cpu': 'GlancesPluginCpu',
+        'diskio': 'GlancesPluginDiskio',
+	'irq'   : 'GlancesPluginIrq',
+        'docker': 'GlancesPluginDocker',
+        'ip': 'GlancesPluginIp',
+        'fs': 'GlancesPluginFs',
+        'folders': 'GlancesPluginFolders',
+        'load': 'GlancesPluginLoad',
+        'mem': 'GlancesPluginMem',
+        'memswap': 'GlancesPluginMemSwap',
+        'amps': 'GlancesPluginAmps',
+        'network': 'GlancesPluginNetwork',
+        'percpu': 'GlancesPluginPerCpu',
+        'processcount': 'GlancesPluginProcessCount',
+        'processlist': 'GlancesPluginProcessList',
+        'quicklook': 'GlancesPluginQuicklook',
+        'raid': 'GlancesPluginRaid',
+        'sensors': 'GlancesPluginSensors',
+        'system': 'GlancesPluginSystem',
+        'uptime': 'GlancesPluginUptime',
+        'ports': 'GlancesPluginPorts'
+    };
+
+    this.getData = function() {
+        return $q.all([
+            this.getAllStats(),
+            this.getAllViews()
+        ]).then(function(results) {
+            return {
+                'stats': results[0],
+                'view': results[1]
+            };
+        });
+    };
+
+    this.getAllStats = function() {
+        return $http.get('/api/2/all').then(function (response) {
+            _stats = response.data;
+
+            return response.data;
+        });
+    };
+
+    this.getAllLimits = function() {
+        return $http.get('/api/2/all/limits').then(function (response) {
+            _limits = response.data;
+
+            return response.data;
+        });
+    };
+
+    this.getAllViews = function() {
+        return $http.get('/api/2/all/views').then(function (response) {
+            _views = response.data;
+
+            return response.data;
+        });
+    };
+
+    this.getHelp = function() {
+        return $http.get('/api/2/help').then(function (response) {
+            return response.data;
+        });
+    };
+
+    this.getArguments = function() {
+        return $http.get('/api/2/args').then(function (response) {
+            return response.data;
+        });
+    };
+
+    this.getPlugin = function(name) {
+        var plugin = _plugins[name];
+
+        if (plugin === undefined) {
+            throw "Plugin '" + name + "' not found";
+        }
+
+        plugin = $injector.get(plugin);
+        plugin.setData(_stats, _views);
+
+        return plugin;
+    };
+
+    // load limits to init GlancePlugin helper
+    this.getAllLimits().then(function(limits) {
+        GlancesPlugin.setLimits(limits);
+    });
+
+}]);
+
+glancesApp.service('GlancesPluginAlert', function () {
+    var _pluginName = "alert";
+    var _alerts = [];
+
+    this.setData = function (data, views) {
+        data = data[_pluginName];
+        _alerts = [];
+
+        if(!_.isArray(data)) {
+          data = [];
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            var alertData = data[i];
+            var alert = {};
+
+            alert.name = alertData[3];
+            alert.level = alertData[2];
+            alert.begin = alertData[0] * 1000;
+            alert.end = alertData[1] * 1000;
+            alert.ongoing = alertData[1] == -1;
+            alert.min = alertData[6];
+            alert.mean = alertData[5];
+            alert.max = alertData[4];
+
+            if (!alert.ongoing) {
+                var duration = alert.end - alert.begin;
+                var seconds = parseInt((duration / 1000) % 60)
+                    , minutes = parseInt((duration / (1000 * 60)) % 60)
+                    , hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+                alert.duration = _.padLeft(hours, 2, '0') + ":" + _.padLeft(minutes, 2, '0') + ":" + _.padLeft(seconds, 2, '0');
+            }
+
+            _alerts.push(alert);
+        }
+    };
+
+    this.hasAlerts = function () {
+        return _alerts.length > 0;
+    };
+
+    this.getAlerts = function () {
+        return _alerts;
+    };
+
+    this.count = function () {
+        return _alerts.length;
+    };
+});
+
+glancesApp.service('GlancesPluginAmps', function() {
+    var _pluginName = "amps";
+    this.processes = [];
+
+    this.setData = function(data, views) {
+        var processes = data[_pluginName];
+
+        this.processes = [];
+        angular.forEach(processes, function(process) {
+            if (process.result !== null) {
+                this.processes.push(process);
+            }
+        }, this);
+    };
+
+    this.getDescriptionDecoration = function(process) {
+        var count = process.count;
+        var countMin = process.countmin;
+        var countMax = process.countmax;
+        var decoration = "ok";
+
+        if (count > 0) {
+            if ((countMin == null || count >= countMin) && (countMax == null || count <= countMax)) {
+                decoration = 'ok';
+            } else {
+                decoration = 'careful';
+            }
+        } else {
+            decoration = countMin == null ? 'ok' : 'critical';
+        }
+
+        return decoration;
+    }
+});
+
+glancesApp.service('GlancesPluginCpu', function() {
+    var _pluginName = "cpu";
+    var _view = {};
+
+    this.total = null;
+    this.user = null;
+    this.system = null;
+    this.idle = null;
+    this.nice = null;
+    this.irq = null;
+    this.iowait = null;
+    this.steal = null;
+    this.ctx_switches = null;
+    this.interrupts = null;
+    this.soft_interrupts = null;
+    this.syscalls = null;
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        _view = views[_pluginName];
+
+        this.total = data.total;
+        this.user = data.user;
+        this.system = data.system;
+        this.idle = data.idle;
+        this.nice = data.nice;
+        this.irq = data.irq;
+        this.iowait = data.iowait;
+        this.steal = data.steal;
+
+        if (data.ctx_switches) {
+          this.ctx_switches = Math.floor(data.ctx_switches / data.time_since_update);
+        }
+
+        if (data.interrupts) {
+          this.interrupts = Math.floor(data.interrupts / data.time_since_update);
+        }
+
+        if (data.soft_interrupts) {
+          this.soft_interrupts = Math.floor(data.soft_interrupts / data.time_since_update);
+        }
+
+        if (data.syscalls) {
+          this.syscalls = Math.floor(data.syscalls / data.time_since_update);
+        }
+    }
+
+    this.getDecoration = function(value) {
+        if(_view[value] == undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    }
+});
+
+glancesApp.service('GlancesPluginDiskio', ["$filter", function($filter) {
+    var _pluginName = "diskio";
+    this.disks = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        data = $filter('orderBy')(data,'disk_name');
+        this.disks = [];
+
+        for (var i = 0; i < data.length; i++) {
+            var diskioData = data[i];
+            var timeSinceUpdate = diskioData['time_since_update'];
+
+            var diskio = {
+                'name': diskioData['disk_name'],
+                'bitrate': {
+                  'txps': $filter('bytes')(diskioData['read_bytes'] / timeSinceUpdate),
+                  'rxps': $filter('bytes')(diskioData['write_bytes'] / timeSinceUpdate)
+                },
+                'count': {
+                  'txps': $filter('bytes')(diskioData['read_count'] / timeSinceUpdate),
+                  'rxps': $filter('bytes')(diskioData['write_count'] / timeSinceUpdate)
+                },
+                'alias': diskioData['alias'] !== undefined ? diskioData['alias'] : null
+            };
+
+            this.disks.push(diskio);
+        }
+    };
+}]);
+
+glancesApp.service('GlancesPluginDocker', ["GlancesPlugin", function(GlancesPlugin) {
+
+    var _pluginName = "docker";
+    this.containers = [];
+    this.version = null;
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        this.containers = [];
+
+        if(_.isEmpty(data)) {
+            return;
+        }
+
+        for (var i = 0; i < data['containers'].length; i++) {
+            var containerData = data['containers'][i];
+
+            var container = {
+                'id': containerData.Id,
+                'name': containerData.Names[0].split('/').splice(-1)[0],
+                'status': containerData.Status,
+                'cpu': containerData.cpu.total,
+                'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',
+                'ior': containerData.io.ior != undefined ? containerData.io.ior : '?',
+                'iow': containerData.io.iow != undefined ? containerData.io.iow : '?',
+                'io_time_since_update': containerData.io.time_since_update,
+                'rx': containerData.network.rx != undefined ? containerData.network.rx : '?',
+                'tx': containerData.network.tx != undefined ? containerData.network.tx : '?',
+                'net_time_since_update': containerData.network.time_since_update,
+                'command': containerData.Command,
+                'image': containerData.Image
+            };
+
+            this.containers.push(container);
+        }
+
+        this.version = data['version']['Version'];
+    };
+}]);
+
+glancesApp.service('GlancesPluginFolders', function() {
+    var _pluginName = "folders";
+    this.folders = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        this.folders = [];
+
+        for (var i = 0; i < data.length; i++) {
+            var folderData = data[i];
+
+            var folder = {
+                'path': folderData['path'],
+                'size': folderData['size'],
+                'careful': folderData['careful'],
+                'warning': folderData['warning'],
+                'critical': folderData['critical']
+            };
+
+            this.folders.push(folder);
+        }
+    };
+
+    this.getDecoration = function(folder) {
+
+        if (!Number.isInteger(folder.size)) {
+            return;
+        }
+
+        if (folder.critical !== null && folder.size > (folder.critical * 1000000)) {
+            return 'critical';
+        } else if (folder.warning !== null && folder.size > (folder.warning * 1000000)) {
+            return 'warning';
+        } else if (folder.careful !== null && folder.size > (folder.careful * 1000000)) {
+            return 'careful';
+        }
+
+        return 'ok';
+    };
+});
+
+glancesApp.service('GlancesPluginFs', function() {
+    var _pluginName = "fs";
+    var _view = {};
+    this.fileSystems = [];
+
+    this.setData = function(data, views) {
+        _view = views[_pluginName];
+        data = data[_pluginName];
+        this.fileSystems = [];
+
+        for (var i = 0; i < data.length; i++) {
+            var fsData = data[i];
+
+            var fs = {
+                'name': fsData['device_name'],
+                'mountPoint': fsData['mnt_point'],
+                'percent': fsData['percent'],
+                'size': fsData['size'],
+                'used': fsData['used'],
+                'free': fsData['free']
+            };
+
+            this.fileSystems.push(fs);
+        }
+    };
+
+    this.getDecoration = function(mountPoint, field) {
+        if(_view[mountPoint][field] == undefined) {
+            return;
+        }
+
+        return _view[mountPoint][field].decoration.toLowerCase();
+    };
+});
+
+glancesApp.service('GlancesPluginIp', function() {
+    var _pluginName = "ip";
+
+    this.address  = null;
+    this.gateway = null;
+    this.mask = null;
+    this.maskCidr = null;
+    this.publicAddress = null;
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+
+        this.address = data.address;
+        this.gateway = data.gateway;
+        this.mask = data.mask;
+        this.maskCidr = data.mask_cidr;
+        this.publicAddress = data.public_address
+    };
+});
+
+glancesApp.service('GlancesPluginIrq', function() {
+    var _pluginName = "irq";
+    this.irqs = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        this.irqs = [];
+
+        for (var i = 0; i < data.length; i++) {
+            var IrqData = data[i];
+            var timeSinceUpdate = IrqData['time_since_update'];
+
+            var irq = {
+                'irq_line': IrqData['irq_line'],
+		'irq_rate': IrqData['irq_rate']
+            };
+
+            this.irqs.push(irq);
+        }
+    };
+});
+
+glancesApp.service('GlancesPluginLoad', function() {
+    var _pluginName = "load";
+    var _view = {};
+
+    this.cpucore = null;
+    this.min1 = null;
+    this.min5 = null;
+    this.min15 = null;
+
+    this.setData = function(data, views) {
+        _view = views[_pluginName];
+        data = data[_pluginName];
+
+        this.cpucore = data['cpucore'];
+        this.min1 = data['min1'];
+        this.min5 = data['min5'];
+        this.min15 = data['min15'];
+    };
+
+    this.getDecoration = function(value) {
+        if(_view[value] == undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    };
+});
+
+glancesApp.service('GlancesPluginMem', function() {
+    var _pluginName = "mem";
+    var _view = {};
+
+    this.percent = null;
+    this.total = null;
+    this.used = null;
+    this.free = null;
+    this.version = null;
+    this.active = null;
+    this.inactive = null;
+    this.buffers = null;
+    this.cached = null;
+
+    this.setData = function(data, views) {
+        _view = views[_pluginName];
+        data = data[_pluginName];
+
+        this.percent = data['percent'];
+        this.total = data['total'];
+        this.used = data['used'];
+        this.free = data['free'];
+        this.active = data['active'];
+        this.inactive = data['inactive'];
+        this.buffers = data['buffers'];
+        this.cached = data['cached'];
+    };
+
+    this.getDecoration = function(value) {
+        if(_view[value] == undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    };
+});
+
+glancesApp.service('GlancesPluginMemSwap', function() {
+    var _pluginName = "memswap";
+    var _view = {};
+
+    this.percent = null;
+    this.total = null;
+    this.used = null;
+    this.free = null;
+
+    this.setData = function(data, views) {
+        _view = views[_pluginName];
+        data = data[_pluginName];
+
+        this.percent = data['percent'];
+        this.total = data['total'];
+        this.used = data['used'];
+        this.free = data['free'];
+    };
+
+    this.getDecoration = function(value) {
+        if(_view[value] == undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    };
+});
+
+glancesApp.service('GlancesPluginNetwork', function() {
+    var _pluginName = "network";
+    this.networks = [];
+
+    this.setData = function(data, views) {
+        this.networks = [];
+
+        for (var i = 0; i < data[_pluginName].length; i++) {
+            var networkData = data[_pluginName][i];
+
+            var network = {
+                'interfaceName': networkData['interface_name'],
+                'rx': networkData['rx'],
+                'tx': networkData['tx'],
+                'cx': networkData['cx'],
+                'time_since_update': networkData['time_since_update'],
+                'cumulativeRx': networkData['cumulative_rx'],
+                'cumulativeTx': networkData['cumulative_tx'],
+                'cumulativeCx': networkData['cumulative_cx']
+            };
+
+            this.networks.push(network);
+        }
+    };
+});
+
+glancesApp.service('GlancesPluginPerCpu', ["$filter", "GlancesPlugin", function($filter, GlancesPlugin) {
+    var _pluginName = "percpu";
+    this.cpus = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        this.cpus = [];
+
+        for (var i = 0; i < data.length; i++) {
+            var cpuData = data[i];
+
+            this.cpus.push({
+                'total': cpuData.total,
+                'user': cpuData.user,
+                'system': cpuData.system,
+                'idle': cpuData.idle,
+                'iowait': cpuData.iowait,
+                'steal': cpuData.steal
+            });
+        }
+    };
+
+    this.getUserAlert = function(cpu) {
+        return GlancesPlugin.getAlert(_pluginName, 'percpu_user_', cpu.user)
+    };
+
+    this.getSystemAlert = function(cpu) {
+        return GlancesPlugin.getAlert(_pluginName, 'percpu_system_', cpu.system);
+    };
+}]);
+
+glancesApp.service('GlancesPlugin', function () {
+
+    var plugin = {
+        'limits': {},
+        'limitSuffix': ['critical', 'careful', 'warning']
+    };
+
+    plugin.setLimits = function(limits){
+        this.limits = limits;
+    };
+
+    plugin.getAlert = function (pluginName, limitNamePrefix, current, maximum, log) {
+        current = current || 0;
+        maximum = maximum || 100;
+        log = log || false;
+
+        var log_str = log ? '_log' : '';
+        var value = (current * 100) / maximum;
+
+        if (this.limits[pluginName] != undefined) {
+            for (var i = 0; i < this.limitSuffix.length; i++) {
+                var limitName = limitNamePrefix + this.limitSuffix[i];
+                var limit = this.limits[pluginName][limitName];
+
+                if (value >= limit) {
+                    var pos = limitName.lastIndexOf("_");
+                    var className = limitName.substring(pos + 1);
+
+                    return className + log_str;
+                }
+            }
+        }
+
+        return "ok" + log_str;
+    };
+
+    plugin.getAlertLog = function (pluginName, limitNamePrefix, current, maximum) {
+        return this.getAlert(pluginName, limitNamePrefix, current, maximum, true);
+    };
+
+    return plugin;
+});
+
+glancesApp.service('GlancesPluginPorts', function() {
+  var _pluginName = "ports";
+  this.ports = [];
+
+  this.setData = function(data, views) {
+    var ports = data[_pluginName];
+    this.ports = [];
+
+    angular.forEach(ports, function(port) {
+      this.ports.push(port);
+    }, this);
+  };
+
+  this.getDecoration = function(port) {
+    if (port.status === null) {
+      return 'careful';
+    }
+
+    if (port.status === false) {
+      return 'critical';
+    }
+
+    if (port.rtt_warning !== null && port.status > port.rtt_warning) {
+      return 'warning';
+    }
+
+    return 'ok';
+  };
+});
+
+glancesApp.service('GlancesPluginProcessCount', function() {
+    var _pluginName = "processcount";
+
+    this.total  = null;
+    this.running = null;
+    this.sleeping = null;
+    this.stopped = null;
+    this.thread = null;
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+
+        this.total = data['total'] || 0;
+        this.running = data['running'] || 0;
+        this.sleeping = data['sleeping'] || 0;
+        this.stopped = data['stopped'] || 0;
+        this.thread = data['thread'] || 0;
+    };
+});
+
+glancesApp.service('GlancesPluginProcessList', ["$filter", "GlancesPlugin", function($filter, GlancesPlugin) {
+    var _pluginName = "processlist";
+    var _ioReadWritePresent = false;
+    this.processes = [];
+
+    this.setData = function(data, views) {
+        this.processes = [];
+        this.ioReadWritePresent = false;
+
+        for (var i = 0; i < data[_pluginName].length; i++) {
+            var process = data[_pluginName][i];
+
+            process.memvirt = process.memory_info[1];
+            process.memres  = process.memory_info[0];
+            process.timeplus = $filter('timedelta')(process.cpu_times);
+            process.timemillis = $filter('timemillis')(process.cpu_times);
+
+            process.ioRead = null;
+            process.ioWrite = null;
+
+            if (process.io_counters) {
+                this.ioReadWritePresent = true;
+
+                process.ioRead  = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update;
+
+                if (process.ioRead != 0) {
+                    process.ioRead = $filter('bytes')(process.ioRead);
+                }
+
+                process.ioWrite = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update;
+
+                if (process.ioWrite != 0) {
+                    process.ioWrite = $filter('bytes')(process.ioWrite);
+                }
+            }
+
+            process.isNice = process.nice !== undefined && ((data['system'].os_name === 'Windows' && process.nice != 32) || (data['system'].os_name !== 'Windows' && process.nice != 0));
+
+            if (Array.isArray(process.cmdline)) {
+                process.cmdline = process.cmdline.join(' ');
+            }
+
+            this.processes.push(process);
+        }
+    };
+
+    this.getCpuPercentAlert = function(process) {
+        return GlancesPlugin.getAlert(_pluginName, 'processlist_cpu_', process.cpu_percent);
+    };
+
+    this.getMemoryPercentAlert = function(process) {
+        return GlancesPlugin.getAlert(_pluginName, 'processlist_mem_', process.cpu_percent);
+    };
+}]);
+
+glancesApp.service('GlancesPluginQuicklook', function() {
+    var _pluginName = "quicklook";
+    var _view = {};
+
+    this.mem = null;
+    this.cpu = null;
+    this.cpu_name = null;
+    this.cpu_hz_current = null;
+    this.cpu_hz = null;
+    this.swap = null;
+    this.percpus = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        _view = views[_pluginName];
+
+        this.mem = data.mem;
+        this.cpu = data.cpu;
+        this.cpu_name = data.cpu_name;
+        this.cpu_hz_current = data.cpu_hz_current;
+        this.cpu_hz = data.cpu_hz;
+        this.swap = data.swap;
+        this.percpus = [];
+
+        angular.forEach(data.percpu, function(cpu) {
+            this.percpus.push({
+                'number': cpu.cpu_number,
+                'total': cpu.total
+            });
+        }, this);
+    }
+
+    this.getDecoration = function(value) {
+        if(_view[value] == undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    }
+});
+
+glancesApp.service('GlancesPluginRaid', function () {
+    var _pluginName = "raid";
+    this.disks = [];
+
+    this.setData = function (data, views) {
+      this.disks = [];
+        data = data[_pluginName];
+
+        _.forIn(data, function(diskData, diskKey) {
+            var disk = {
+                'name': diskKey,
+                'type': diskData.type == null ? 'UNKNOWN' : diskData.type,
+                'used': diskData.used,
+                'available': diskData.available,
+                'status': diskData.status,
+                'degraded': diskData.used < diskData.available,
+                'config': diskData.config == null ? '' : diskData.config.replace('_', 'A'),
+                'inactive': diskData.status == 'inactive',
+                'components': []
+            };
+
+            _.forEach(diskData.components, function(number, name) {
+                disk.components.push({
+                    'number': number,
+                    'name': name
+                });
+            });
+
+            this.disks.push(disk);
+        }, this);
+    };
+
+    this.hasDisks = function() {
+        return this.disks.length > 0;
+    }
+
+    this.getAlert = function(disk) {
+        if (disk.inactive) {
+            return 'critical';
+        }
+
+        if (disk.degraded) {
+            return 'warning';
+        }
+
+        return 'ok'
+    }
+});
+
+glancesApp.service('GlancesPluginSensors', ["GlancesPlugin", function(GlancesPlugin) {
+
+    var _pluginName = "sensors";
+    this.sensors = [];
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+
+        _.remove(data, function(sensor) {
+            return (_.isArray(sensor.value) && _.isEmpty(sensor.value)) || sensor.value === 0;
+        });
+
+        this.sensors = data;
+    };
+
+    this.getAlert = function(sensor) {
+        var current = sensor.type == 'battery' ? 100 - sensor.value : sensor.value;
+
+        return GlancesPlugin.getAlert(_pluginName, 'sensors_' + sensor.type + '_', current);
+    };
+}]);
+
+glancesApp.service('GlancesPluginSystem', function() {
+    var _pluginName = "system";
+
+    this.hostname  = null;
+    this.platform = null;
+    this.humanReadableName = null;
+    this.os = {
+        'name': null,
+        'version': null
+    };
+
+    this.setData = function(data, views) {
+        data = data[_pluginName];
+        
+        this.hostname = data['hostname'];
+        this.platform = data['platform'];
+        this.os.name = data['os_name'];
+        this.os.version = data['os_version'];
+        this.humanReadableName = data['hr_name'];
+    };
+
+    this.isBsd = function() {
+        return this.os.name === 'FreeBSD';
+    };
+
+    this.isLinux = function() {
+        return this.os.name === 'Linux';
+    };
+
+    this.isMac = function() {
+        return this.os.name === 'Darwin';
+    };
+
+    this.isWindows = function() {
+        return this.os.name === 'Windows';
+    };
+});
+
+glancesApp.service('GlancesPluginUptime', function() {
+    this.uptime = null;
+
+    this.setData = function(data, views) {
+        this.uptime = data['uptime'];
+    };
+});
