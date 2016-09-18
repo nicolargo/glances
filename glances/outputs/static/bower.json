@@ -1,5 +1,5 @@
 {
-  "name": "Glances",
+  "name": "glances",
   "private": true,
   "dependencies": {
     "angular": "^1.5.8",
