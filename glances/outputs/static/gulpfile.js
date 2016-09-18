@@ -1,5 +1,4 @@
 var gulp = require('gulp');
-var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
 var mainBowerFiles = require('main-bower-files');
 var ngAnnotate = require('gulp-ng-annotate');
@@ -27,7 +26,6 @@ gulp.task('copy', function() {
 gulp.task('bower', function() {
   return gulp.src(mainBowerFiles())
     .pipe(concat('vendor.js'))
-    .pipe(uglify())
     .pipe(gulp.dest('./public/js'))
 });
 
@@ -35,7 +33,6 @@ gulp.task('build-js', function() {
   return gulp.src('./js/**/*.js')
     .pipe(ngAnnotate())
     .pipe(concat('main.js'))
-    .pipe(uglify())
     .pipe(gulp.dest('./public/js'))
 });
 
