@@ -194,19 +194,19 @@ class _GlancesCurses(object):
                     else:
                         curses.init_pair(10, curses.COLOR_WHITE, -1)
 
-                self.ifWARNING_color2 = curses.color_pair(9)
-                self.ifCRITICAL_color2 = curses.color_pair(6)
+                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
+                self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
                 self.filter_color = curses.color_pair(10) | A_BOLD
 
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3)
             self.nice_color = curses.color_pair(9)
             self.cpu_time_color = curses.color_pair(9)
-            self.ifCAREFUL_color = curses.color_pair(4)
-            self.ifWARNING_color = curses.color_pair(5)
-            self.ifCRITICAL_color = curses.color_pair(2)
+            self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
+            self.ifWARNING_color = curses.color_pair(5) | A_BOLD
+            self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7)
-            self.ifCAREFUL_color2 = curses.color_pair(8)
+            self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
 
         else:
             # The screen is NOT compatible with a colored design

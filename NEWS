@@ -5,7 +5,9 @@ Glances Version 2
 Version 2.8
 ===========
 
-...
+Enhancements and new features:
+
+    * Highlight max stats in the processes list (issue #878)
 
 Version 2.7.1
 =============
