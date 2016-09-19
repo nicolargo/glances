@@ -210,7 +210,7 @@ class Plugin(GlancesPlugin):
                 msg = '{:>6.1f}'.format(p['cpu_percent'])
             alert = self.get_alert(p['cpu_percent'],
                                    highlight_zero=False,
-                                   is_max=(p['cpu_percent']==self.max_values['cpu_percent']),
+                                   is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
                                    header="cpu")
             ret.append(self.curse_add_line(msg, alert))
         else:
@@ -221,7 +221,7 @@ class Plugin(GlancesPlugin):
             msg = '{:>6.1f}'.format(p['memory_percent'])
             alert = self.get_alert(p['memory_percent'],
                                    highlight_zero=False,
-                                   is_max=(p['memory_percent']==self.max_values['memory_percent']),
+                                   is_max=(p['memory_percent'] == self.max_values['memory_percent']),
                                    header="mem")
             ret.append(self.curse_add_line(msg, alert))
         else:
