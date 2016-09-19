@@ -8,8 +8,9 @@
 FROM ubuntu
 
 # Install Glances (develop branch)
-RUN apt-get -y install curl && \
-    curl -L https://raw.githubusercontent.com/nicolargo/glancesautoinstall/master/install-develop.sh | /bin/bash
+RUN apt-get update && apt-get -y install curl && rm -rf /var/lib/apt/lists/*
+RUN curl -L https://raw.githubusercontent.com/nicolargo/glancesautoinstall/master/install-develop.sh | /bin/bash && rm -rf /var/lib/apt/lists/*
+
 
 # Define working directory.
 WORKDIR /glances
