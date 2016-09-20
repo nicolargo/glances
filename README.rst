@@ -136,17 +136,11 @@ Get the Glances container:
 
     docker pull nicolargo/glances
 
-Run the container in console mode:
+Run the container in *console mode*:
 
 .. code-block:: console
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
-
-Run the container in Web server mode (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
-
-.. code-block:: console
-
-    docker run -d -p 61208:61208 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
 Additionally, If you want to use your own glances.conf file, you can create your
 own Dockerfile:
@@ -164,6 +158,12 @@ Alternatively, you can specify something along the same lines with docker run op
     docker run -v ./glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
 Where ./glances.conf is a local directory containing your glances.conf file.
+
+Run the container in *Web server mode* (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
+
+.. code-block:: console
+
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
 GNU/Linux
 ---------
