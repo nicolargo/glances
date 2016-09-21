@@ -145,6 +145,8 @@ class Plugin(GlancesPlugin):
         """
         if status == 'inactive':
             return 'CRITICAL'
-        if used < available:
+        if used is None or available is None:
+            return 'DEFAULT'
+        elif used < available:
             return 'WARNING'
         return 'OK'
