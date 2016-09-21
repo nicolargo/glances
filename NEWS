@@ -9,6 +9,10 @@ Enhancements and new features:
 
     * Highlight max stats in the processes list (issue #878)
 
+Bugs corrected:
+
+    * Glances RAID plugin Traceback (issue #927)
+
 Version 2.7.1
 =============
 
