@@ -163,6 +163,10 @@ Command-Line Options
 
     export stats to an Elasticsearch server (elasticsearch lib needed)
 
+.. option:: --export-couchdb
+
+    export stats to a CouchDB server (couchdb lib needed)
+
 .. option:: -c CLIENT, --client CLIENT
 
     connect to a Glances server by IPv4/IPv6 address or hostname

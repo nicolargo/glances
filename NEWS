@@ -7,6 +7,7 @@ Version 2.8
 
 Enhancements and new features:
 
+    * Add CouchDB exporter (issue #928)
     * Highlight max stats in the processes list (issue #878)
 
 Bugs corrected:
