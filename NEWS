@@ -9,6 +9,7 @@ Enhancements and new features:
 
     * Add CouchDB exporter (issue #928)
     * Highlight max stats in the processes list (issue #878)
+    * Glances API returns the processes PPID (issue #926)
 
 Bugs corrected:
 

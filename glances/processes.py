@@ -281,10 +281,10 @@ class GlancesProcesses(object):
                     self.username_cache[procstat['pid']] = "?"
         procstat['username'] = self.username_cache[procstat['pid']]
 
-        # Process status, nice, memory_info and cpu_times
+        # Process status, nice, memory_info, cpu_times and ppid (issue #926)
         try:
             procstat.update(
-                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times', 'ppid']))
         except psutil.NoSuchProcess:
             pass
         else:
