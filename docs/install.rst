@@ -22,7 +22,7 @@ features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir
+    pip install bottle requests batinfo py3sensors zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir couchdb
 
 To upgrade Glances to the latest version:
 
