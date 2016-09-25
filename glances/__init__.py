@@ -168,12 +168,12 @@ def main():
         from glances.server import GlancesServer
 
         args = core.get_args()
+        print args.cached_time
 
-        server = GlancesServer(cached_time=core.cached_time,
+        server = GlancesServer(cached_time=args.cached_time,
                                config=core.get_config(),
                                args=args)
         print('Glances server is running on {}:{}'.format(args.bind_address, args.port))
-
         # Set the server login/password (if -P/--password tag)
         if args.password != "":
             server.add_user(args.username, args.password)
