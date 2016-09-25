@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 from glances import __appname__, __version__, psutil_version
-from glances.compat import input
+from glances.compat import input, NoOptionError, NoSectionError
 from glances.config import Config
 from glances.globals import LINUX, WINDOWS
 from glances.logger import logger
@@ -37,9 +37,7 @@ class GlancesMain(object):
 
     # Default stats' refresh time is 3 seconds
     refresh_time = 3
-
     # Set the default cache lifetime to 1 second (only for server)
-    # !!! Todo: To be configurable (=> https://github.com/nicolargo/glances/issues/901)
     cached_time = 1
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
@@ -83,6 +81,7 @@ Start the client browser (browser mode):\n\
 
     def __init__(self):
         """Manage the command line arguments."""
+        # Read the command line arguments
         self.args = self.parse_args()
 
     def init_args(self):
@@ -210,6 +209,8 @@ Start the client browser (browser mode):\n\
                             dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
+        parser.add_argument('--cached-time', default=self.cached_time, type=int,
+                            dest='cached_time', help='set the server cache time [default: {} sec]'.format(self.cached_time))
         # Display options
         parser.add_argument('-q', '--quiet', default=False, action='store_true',
                             dest='quiet', help='do not display the curses interface')
