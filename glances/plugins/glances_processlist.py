@@ -80,7 +80,7 @@ class Plugin(GlancesPlugin):
             self.nb_log_core = 0
 
         # Get the max values (dict)
-        max_values = glances_processes.max_values()
+        self.max_values = glances_processes.max_values()
 
         # Note: 'glances_processes' is already init in the processes.py script
 
