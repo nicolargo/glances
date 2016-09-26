@@ -168,7 +168,6 @@ def main():
         from glances.server import GlancesServer
 
         args = core.get_args()
-        print args.cached_time
 
         server = GlancesServer(cached_time=args.cached_time,
                                config=core.get_config(),
