@@ -15,6 +15,7 @@ Enhancements and new features:
 Bugs corrected:
 
     * Glances RAID plugin Traceback (issue #927)
+    * Default AMP crashes when 'command' given (issue #933)
 
 Version 2.7.1
 =============
