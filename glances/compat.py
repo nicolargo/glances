@@ -28,12 +28,6 @@ import types
 
 PY3 = sys.version_info[0] == 3
 
-
-def to_ascii(s):
-    """Convert the unicode 's' to a ASCII string
-    Usefull to remove accent (diacritics)"""
-    return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore')
-
 if PY3:
     import queue
     from configparser import ConfigParser, NoOptionError, NoSectionError
@@ -53,6 +47,11 @@ if PY3:
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
     viewitems = operator.methodcaller('items')
+
+    def to_ascii(s):
+        """Convert the bytes string to a ASCII string
+        Usefull to remove accent (diacritics)"""
+        return str(s, 'utf-8')
 
     def listitems(d):
         return list(d.items())
@@ -103,6 +102,11 @@ else:
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
+
+    def to_ascii(s):
+        """Convert the unicode 's' to a ASCII string
+        Usefull to remove accent (diacritics)"""
+        return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore')
 
     def listitems(d):
         return d.items()
