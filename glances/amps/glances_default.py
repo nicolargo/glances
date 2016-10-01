@@ -35,7 +35,7 @@ one_line=false
 command=foo status
 """
 
-from subprocess import check_output, STDOUT
+from subprocess import check_output, STDOUT, CalledProcessError
 
 from glances.compat import u, to_ascii
 from glances.logger import logger
@@ -66,8 +66,11 @@ class Amp(GlancesAmp):
             logger.debug('{}: Error while executing service ({})'.format(self.NAME, e))
         else:
             if res is not None:
-                msg = u(check_output(res.split(), stderr=STDOUT))
-                self.set_result(to_ascii(msg.rstrip()))
+                try:
+                    msg = u(check_output(res.split(), stderr=STDOUT))
+                    self.set_result(to_ascii(msg.rstrip()))
+                except CalledProcessError as e:
+                    self.set_result(e.output)
             else:
                 # Set the default message if command return None
                 # Default sum of CPU and MEM for the matching regex

@@ -106,9 +106,11 @@ class AmpsList(object):
         """Update the command result attributed."""
         # Search application monitored processes by a regular expression
         processlist = glances_processes.getalllist()
-
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):
+            if not v.enable():
+                # Do not update if the enable tag is set
+                continue
             try:
                 amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
             except TypeError:
