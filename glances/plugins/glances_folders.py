@@ -52,6 +52,8 @@ class Plugin(GlancesPlugin):
         """Load the foldered list from the config file, if it exists."""
         self.glances_folders = glancesFolderList(config)
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the foldered list."""
         # Reset the list

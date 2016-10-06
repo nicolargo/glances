@@ -66,6 +66,9 @@ class Plugin(GlancesPlugin):
         # value: instance of ThreadDockerGrabber
         self.thread_list = {}
 
+        # Init the stats
+        self.reset()
+
     def exit(self):
         """Overwrite the exit method to close threads"""
         for t in itervalues(self.thread_list):
@@ -141,6 +144,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update Docker stats using the input method."""
