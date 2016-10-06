@@ -86,6 +86,15 @@ class GlancesPlugin(object):
         """Return the key of the list."""
         return None
 
+    def is_enable(self):
+        """Return true if plugin is enable"""
+        try:
+            d = getattr(self.args, 'disable_' + self.plugin_name)
+        except AttributeError:
+            return True
+        else:
+            return d is False
+
     def _json_dumps(self, d):
         """Return the object 'd' in a JSON format
         Manage the issue #815 for Windows OS"""
@@ -746,6 +755,16 @@ class GlancesPlugin(object):
                     value, decimal=decimal_precision, symbol=symbol)
         return '{!s}'.format(number)
 
+    def _check_decorator(fct):
+        """Check if the plugin is enabled."""
+        def wrapper(self, *args, **kw):
+            if self.is_enable():
+                ret = fct(self, *args, **kw)
+            else:
+                ret = self.stats
+            return ret
+        return wrapper
+
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
         def wrapper(*args, **kw):
@@ -758,4 +777,5 @@ class GlancesPlugin(object):
         return wrapper
 
     # Mandatory to call the decorator in childs' classes
+    _check_decorator = staticmethod(_check_decorator)
     _log_result_decorator = staticmethod(_log_result_decorator)
