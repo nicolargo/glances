@@ -444,6 +444,13 @@ class GlancesPlugin(object):
         """Set the limits to input_limits."""
         self._limits = input_limits
 
+    def get_stats_action(self):
+        """Return stats for the action
+        By default return all the stats.
+        Can be overwrite by plugins implementation.
+        For example, Docker will return self.stats['containers']"""
+        return self.stats
+
     def get_alert(self,
                   current=0,
                   minimum=0,
@@ -451,6 +458,7 @@ class GlancesPlugin(object):
                   highlight_zero=True,
                   is_max=False,
                   header="",
+                  action_key=None,
                   log=False):
         """Return the alert status relative to a current value.
 
@@ -465,6 +473,9 @@ class GlancesPlugin(object):
 
         If defined 'header' is added between the plugin name and the status.
         Only useful for stats with several alert status.
+
+        If defined, 'action_key' define the key for the actions.
+        By default, the action_key is equal to the header.
 
         If log=True than add log if necessary
         elif log=False than do not log
@@ -520,19 +531,24 @@ class GlancesPlugin(object):
             # Reset the trigger
             self.actions.set(stat_name, ret.lower())
         else:
+            # Define the action key for the stats dict
+            # If not define, then it sets to header
+            if action_key is None:
+                action_key = header
+
             # A command line is available for the current alert, run it
             # Build the {{mustache}} dictionnary
-            if isinstance(self.stats, list):
+            if isinstance(self.get_stats_action(), list):
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
                 mustache_dict = {}
-                for item in self.stats:
-                    if item[self.get_key()] == header:
+                for item in self.get_stats_action():
+                    if item[self.get_key()] == action_key:
                         mustache_dict = item
                         break
             else:
                 # Use the stats dict
-                mustache_dict = self.stats
+                mustache_dict = self.get_stats_action()
             # Run the action
             self.actions.run(
                 stat_name, ret.lower(), command, mustache_dict=mustache_dict)

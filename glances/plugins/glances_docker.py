@@ -441,6 +441,11 @@ class Plugin(GlancesPlugin):
         """Return the user ticks by reading the environment variable."""
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
+    def get_stats_action(self):
+        """Return stats for the action
+        Docker will return self.stats['containers']"""
+        return self.stats['containers']
+
     def update_views(self):
         """Update stats views."""
         # Call the father's method
@@ -458,7 +463,8 @@ class Plugin(GlancesPlugin):
             if 'cpu' in i and 'total' in i['cpu']:
                 # Looking for specific CPU container threasold in the conf file
                 alert = self.get_alert(i['cpu']['total'],
-                                       header=i['name'] + '_cpu')
+                                       header=i['name'] + '_cpu',
+                                       action_key=i['name'])
                 if alert == 'DEFAULT':
                     # Not found ? Get back to default CPU threasold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
@@ -468,7 +474,8 @@ class Plugin(GlancesPlugin):
                 # Looking for specific MEM container threasold in the conf file
                 alert = self.get_alert(i['memory']['usage'],
                                        maximum=i['memory']['limit'],
-                                       header=i['name'] + '_mem')
+                                       header=i['name'] + '_mem',
+                                       action_key=i['name'])
                 if alert == 'DEFAULT':
                    # Not found ? Get back to default MEM threasold value
                    alert = self.get_alert(i['memory']['usage'],
