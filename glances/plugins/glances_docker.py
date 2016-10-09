@@ -237,6 +237,9 @@ class Plugin(GlancesPlugin):
             # Not available
             pass
 
+        # Update the view
+        self.update_views()
+
         return self.stats
 
     def get_docker_cpu(self, container_id, all_stats):
@@ -438,6 +441,30 @@ class Plugin(GlancesPlugin):
         """Return the user ticks by reading the environment variable."""
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
+    def update_views(self):
+        """Update stats views."""
+        # Call the father's method
+        super(Plugin, self).update_views()
+
+        if 'containers' not in self.stats:
+            return False
+
+        # Add specifics informations
+        # Alert
+        for i in self.stats['containers']:
+            # Init the views for the current container (key = container name)
+            self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
+            # CPU alert
+            if 'cpu' in i and 'total' in i['cpu']:
+                self.views[i[self.get_key()]]['cpu']['decoration'] = self.get_alert(
+                    i['cpu']['total'], header='cpu')
+            # MEM alert
+            if 'memory' in i and 'usage' in i['memory']:
+                self.views[i[self.get_key()]]['mem']['decoration'] = self.get_alert(
+                    i['memory']['usage'], maximum=i['memory']['limit'], header='mem')
+
+        return True
+
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
@@ -506,13 +533,17 @@ class Plugin(GlancesPlugin):
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
             except KeyError:
                 msg = '{:>6}'.format('?')
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
+                                                               key='cpu',
+                                                               option='decoration')))
             # MEM
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
             except KeyError:
                 msg = '{:>7}'.format('?')
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
+                                                               key='mem',
+                                                               option='decoration')))
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:
