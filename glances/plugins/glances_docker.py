@@ -456,12 +456,25 @@ class Plugin(GlancesPlugin):
             self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
-                self.views[i[self.get_key()]]['cpu']['decoration'] = self.get_alert(
-                    i['cpu']['total'], header='cpu')
+                # Looking for specific CPU container threasold in the conf file
+                alert = self.get_alert(i['cpu']['total'],
+                                       header=i['name'] + '_cpu')
+                if alert == 'DEFAULT':
+                    # Not found ? Get back to default CPU threasold value
+                    alert = self.get_alert(i['cpu']['total'], header='cpu')
+                self.views[i[self.get_key()]]['cpu']['decoration'] = alert
             # MEM alert
             if 'memory' in i and 'usage' in i['memory']:
-                self.views[i[self.get_key()]]['mem']['decoration'] = self.get_alert(
-                    i['memory']['usage'], maximum=i['memory']['limit'], header='mem')
+                # Looking for specific MEM container threasold in the conf file
+                alert = self.get_alert(i['memory']['usage'],
+                                       maximum=i['memory']['limit'],
+                                       header=i['name'] + '_mem')
+                if alert == 'DEFAULT':
+                   # Not found ? Get back to default MEM threasold value
+                   alert = self.get_alert(i['memory']['usage'],
+                                          maximum=i['memory']['limit'],
+                                          header='mem')
+                self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         return True
 
