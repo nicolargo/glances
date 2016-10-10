@@ -524,20 +524,31 @@ class GlancesPlugin(object):
             glances_logs.add(ret, stat_name.upper(), value)
 
         # Manage action
+        self.manage_action(stat_name, ret.lower(), header, action_key)
+
+        # Default is ok
+        return ret + log_str
+
+    def manage_action(self,
+                      stat_name,
+                      trigger,
+                      header,
+                      action_key):
+        """Manage the action for the current stat"""
         # Here is a command line for the current trigger ?
         try:
-            command = self.__get_limit_action(ret.lower(), stat_name=stat_name)
+            command = self.__get_limit_action(trigger, stat_name=stat_name)
         except KeyError:
             # Reset the trigger
-            self.actions.set(stat_name, ret.lower())
+            self.actions.set(stat_name, trigger)
         else:
             # Define the action key for the stats dict
             # If not define, then it sets to header
             if action_key is None:
                 action_key = header
 
-            # A command line is available for the current alert, run it
-            # Build the {{mustache}} dictionnary
+            # A command line is available for the current alert
+            # 1) Build the {{mustache}} dictionnary
             if isinstance(self.get_stats_action(), list):
                 # If the stats are stored in a list of dict (fs plugin for exemple)
                 # Return the dict for the current header
@@ -549,19 +560,22 @@ class GlancesPlugin(object):
             else:
                 # Use the stats dict
                 mustache_dict = self.get_stats_action()
-            # Run the action
+            # 2) Run the action
             self.actions.run(
-                stat_name, ret.lower(), command, mustache_dict=mustache_dict)
+                stat_name, trigger, command, mustache_dict=mustache_dict)
 
-        # Default is ok
-        return ret + log_str
-
-    def get_alert_log(self, current=0, minimum=0, maximum=100, header=""):
+    def get_alert_log(self,
+                      current=0,
+                      minimum=0,
+                      maximum=100,
+                      header="",
+                      action_key=None):
         """Get the alert log."""
         return self.get_alert(current=current,
                               minimum=minimum,
                               maximum=maximum,
                               header=header,
+                              action_key=action_key,
                               log=True)
 
     def __get_limit(self, criticity, stat_name=""):

@@ -9,6 +9,7 @@ Enhancements and new features:
 
     * Add CouchDB exporter (issue #928)
     * Highlight max stats in the processes list (issue #878)
+    * Docker alerts and actions (issue #875)
     * Glances API returns the processes PPID (issue #926)
     * Configure server cached time from the command line --cached-time (issue #901)
 
