@@ -23,13 +23,12 @@ import sys
 from datetime import datetime
 import time
 import json
+import zmq
+from zmq.utils.strtypes import asbytes
 
-from glances.compat import NoOptionError, NoSectionError
+from glances.compat import NoOptionError, NoSectionError, u, b, nativestr
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
-
-import zmq
-
 
 class Export(GlancesExport):
 
@@ -56,7 +55,7 @@ class Export(GlancesExport):
         try:
             self.host = self.config.get_value(section, 'host')
             self.port = self.config.get_value(section, 'port')
-            self.prefix = self.config.get_value(section, 'prefix')
+            self.prefix = str(self.config.get_value(section, 'prefix'))
         except NoSectionError:
             logger.critical("No ZeroMQ configuration found")
             return False
@@ -106,9 +105,9 @@ class Export(GlancesExport):
         # - First frame containing the following prefix (STRING)
         # - Second frame with the Glances plugin name (STRING)
         # - Third frame with the Glances plugin stats (JSON)
-        message = [str(self.prefix),
-                   name,
-                   json.dumps(data)]
+        message = [b(self.prefix),
+                   b(name),
+                   asbytes(json.dumps(data))]
 
         # Write data to the ZeroMQ bus
         # Result can be view: tcp://host:port

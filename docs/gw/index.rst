@@ -10,10 +10,11 @@ to providing stats to multiple services (see list below).
    :maxdepth: 2
 
    csv
-   influxdb
    cassandra
-   opentsdb
-   statsd
-   rabbitmq
    elastic
+   influxdb
+   opentsdb
+   rabbitmq
    riemann
+   statsd
+   zeromq
