@@ -23,7 +23,6 @@ import os
 import subprocess
 import threading
 import socket
-import types
 import time
 
 from glances.globals import WINDOWS

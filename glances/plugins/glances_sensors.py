@@ -263,8 +263,8 @@ class GlancesGrabSensors(object):
                         try:
                             sensors_current['label'] = feature.label
                             sensors_current['value'] = int(feature.get_value())
-                        except SensorsError as e:
-                            logger.debug("Cannot grab sensor stat(%s)" % e)
+                        except Exception as e:
+                            logger.debug("Cannot grab sensor stat (%s)" % e)
                         else:
                             self.sensors_list.append(sensors_current)
 

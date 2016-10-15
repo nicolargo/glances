@@ -21,7 +21,6 @@
 
 from glances.compat import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
-from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

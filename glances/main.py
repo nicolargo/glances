@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 from glances import __appname__, __version__, psutil_version
-from glances.compat import input, NoOptionError, NoSectionError
+from glances.compat import input
 from glances.config import Config
 from glances.globals import LINUX, WINDOWS
 from glances.logger import logger

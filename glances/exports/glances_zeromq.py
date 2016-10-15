@@ -20,15 +20,14 @@
 """ZeroMQ interface class."""
 
 import sys
-from datetime import datetime
-import time
 import json
 import zmq
 from zmq.utils.strtypes import asbytes
 
-from glances.compat import NoOptionError, NoSectionError, u, b, nativestr
+from glances.compat import NoOptionError, NoSectionError, b
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+
 
 class Export(GlancesExport):
 

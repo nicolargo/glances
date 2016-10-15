@@ -19,7 +19,6 @@
 
 import operator
 import os
-import re
 
 from glances.compat import iteritems, itervalues, listitems
 from glances.globals import BSD, LINUX, OSX, WINDOWS

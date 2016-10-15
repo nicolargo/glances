@@ -22,7 +22,7 @@
 import threading
 from json import loads
 
-from glances.compat import iterkeys, urlopen, URLError, queue
+from glances.compat import iterkeys, urlopen, queue
 from glances.globals import BSD
 from glances.logger import logger
 from glances.timer import Timer

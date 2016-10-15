@@ -477,10 +477,10 @@ class Plugin(GlancesPlugin):
                                        header=i['name'] + '_mem',
                                        action_key=i['name'])
                 if alert == 'DEFAULT':
-                   # Not found ? Get back to default MEM threasold value
-                   alert = self.get_alert(i['memory']['usage'],
-                                          maximum=i['memory']['limit'],
-                                          header='mem')
+                    # Not found ? Get back to default MEM threasold value
+                    alert = self.get_alert(i['memory']['usage'],
+                                           maximum=i['memory']['limit'],
+                                           header='mem')
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
 
         return True
