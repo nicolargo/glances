@@ -22,7 +22,6 @@
 from glances.cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.logger import logger
 
 import psutil
 
