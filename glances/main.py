@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -176,6 +176,8 @@ Start the client browser (browser mode):\n\
                             dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
         parser.add_argument('--export-couchdb', action='store_true', default=False,
                             dest='export_couchdb', help='export stats to a CouchDB server (couch lib needed)')
+        parser.add_argument('--export-zeromq', action='store_true', default=False,
+                            dest='export_zeromq', help='export stats to a ZeroMQ server (pyzmq lib needed)')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')
