@@ -4,6 +4,7 @@ ZeroMQ
 ======
 
 You can export statistics to a ``ZeroMQ`` server.
+
 The connection should be defined in the Glances configuration file as
 following:
 
@@ -14,9 +15,10 @@ following:
     port=5678
     prefix=G
 
-Note: Glances envelopes the stats in a publish message with two frames.
+Note: Glances `envelopes`_ the stats before publishing it.
+The message is composed of three frames.
 
-- first frame containing the following prefix (as STRING)
+- first frame containing the prefix configured in the [zeromq] section (as STRING)
 - second frame with the Glances plugin name (as STRING)
 - third frame with the Glances plugin stats (as JSON)
 
@@ -24,7 +26,7 @@ Run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-zeromq
+    $ glances --export-zeromq -C <path>/glances.conf
 
 Following is a simple Python client to subscribe to the Glances stats:
 
@@ -51,3 +53,5 @@ Following is a simple Python client to subscribe to the Glances stats:
 
     subscriber.close()
     context.term()
+
+.. _envelopes: http://zguide.zeromq.org/page:all#Pub-Sub-Message-Envelopes
