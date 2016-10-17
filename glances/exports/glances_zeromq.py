@@ -45,6 +45,7 @@ class Export(GlancesExport):
             sys.exit(2)
 
         # Init the ZeroMQ context
+        self.context = None
         self.client = self.init()
 
     def load_conf(self, section="zeromq"):
@@ -74,8 +75,8 @@ class Export(GlancesExport):
         server_uri = 'tcp://{}:{}'.format(self.host, self.port)
 
         try:
-            context = zmq.Context()
-            publisher = context.socket(zmq.PUB)
+            self.context = zmq.Context()
+            publisher = self.context.socket(zmq.PUB)
             publisher.bind(server_uri)
         except Exception as e:
             logger.critical("Cannot connect to ZeroMQ server %s (%s)" % (server_uri, e))
@@ -86,8 +87,11 @@ class Export(GlancesExport):
         return publisher
 
     def exit(self):
-        """Close the socket"""
-        self.client.close()
+        """Close the socket and context"""
+        if self.client is not None:
+            self.client.close()
+        if self.context is not None:
+            self.context.destroy()
 
     def export(self, name, columns, points):
         """Write the points to the ZeroMQ server."""
