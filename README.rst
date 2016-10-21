@@ -51,6 +51,7 @@ Optional dependencies:
 - ``bernhard`` (for the Riemann export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+- ``wifi`` (for the wifi plugin) [Linux-only]
 
 *Note for Python 2.6 users*
 
