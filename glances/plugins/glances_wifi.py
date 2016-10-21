@@ -165,10 +165,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = '{:>6}'.format('Quality')
         ret.append(self.curse_add_line(msg))
-        ret.append(self.curse_new_line())
 
         # Hotspot list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+            ret.append(self.curse_new_line())
             # Do not display hotspot with no name (/ssid)
             if i['ssid'] == '':
                 continue
