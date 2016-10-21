@@ -129,19 +129,36 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
+    def get_alert(self, value):
+        """Overwrite the default get_alert method.
+        Alert is on signal quality where lower is better...
+
+        :returns: string -- Signal alert
+        """
+
+        ret = 'OK'
+        try:
+            if value <= self.get_limit('critical', stat_name=self.plugin_name):
+                ret = 'CRITICAL'
+            elif value <= self.get_limit('warning', stat_name=self.plugin_name):
+                ret = 'WARNING'
+            elif value <= self.get_limit('careful', stat_name=self.plugin_name):
+                ret = 'CAREFUL'
+        except KeyError:
+            ret = 'DEFAULT'
+
+        return ret
+
     def update_views(self):
         """Update stats views."""
         # Call the father's method
         super(Plugin, self).update_views()
 
         # Add specifics informations
-        # Alert
-        # for i in self.stats:
-        #     ifrealname = i['interface_name'].split(':')[0]
-        #     self.views[i[self.get_key()]]['rx']['decoration'] = self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
-        #                                                                        header=ifrealname + '_rx')
-        #     self.views[i[self.get_key()]]['tx']['decoration'] = self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
-        #                                                                        header=ifrealname + '_tx')
+        # Alert on signal thresholds
+        for i in self.stats:
+            self.views[i[self.get_key()]]['signal']['decoration'] = self.get_alert(i['signal'])
+            self.views[i[self.get_key()]]['quality']['decoration'] = self.views[i[self.get_key()]]['signal']['decoration']
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -163,15 +180,15 @@ class Plugin(GlancesPlugin):
         # Header
         msg = '{:{width}}'.format('WIFI', width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{:>6}'.format('Quality')
+        msg = '{:>7}'.format('dBm')
         ret.append(self.curse_add_line(msg))
 
         # Hotspot list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
-            ret.append(self.curse_new_line())
             # Do not display hotspot with no name (/ssid)
             if i['ssid'] == '':
                 continue
+            ret.append(self.curse_new_line())
             # New hotspot
             hotspotname = i['ssid']
             # Add the encryption type (if it is available)
@@ -183,7 +200,10 @@ class Plugin(GlancesPlugin):
             # Add the new hotspot to the message
             msg = '{:{width}}'.format(hotspotname, width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format(i['quality'], width=ifname_max_width)
-            ret.append(self.curse_add_line(msg))
+            msg = '{:>7}'.format(i['signal'], width=ifname_max_width)
+            ret.append(self.curse_add_line(msg,
+                                           self.get_views(item=i[self.get_key()],
+                                                          key='signal',
+                                                          option='decoration')))
 
         return ret
