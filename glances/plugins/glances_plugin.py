@@ -503,11 +503,11 @@ class GlancesPlugin(object):
         # If is_max is set then display the value in MAX
         ret = 'MAX' if is_max else 'OK'
         try:
-            if value > self.__get_limit('critical', stat_name=stat_name):
+            if value >= self.get_limit('critical', stat_name=stat_name):
                 ret = 'CRITICAL'
-            elif value > self.__get_limit('warning', stat_name=stat_name):
+            elif value >= self.get_limit('warning', stat_name=stat_name):
                 ret = 'WARNING'
-            elif value > self.__get_limit('careful', stat_name=stat_name):
+            elif value >= self.get_limit('careful', stat_name=stat_name):
                 ret = 'CAREFUL'
             elif current < minimum:
                 ret = 'CAREFUL'
@@ -516,7 +516,7 @@ class GlancesPlugin(object):
 
         # Manage log
         log_str = ""
-        if self.__get_limit_log(stat_name=stat_name, default_action=log):
+        if self.get_limit_log(stat_name=stat_name, default_action=log):
             # Add _LOG to the return string
             # So stats will be highlited with a specific color
             log_str = "_LOG"
@@ -537,7 +537,7 @@ class GlancesPlugin(object):
         """Manage the action for the current stat"""
         # Here is a command line for the current trigger ?
         try:
-            command = self.__get_limit_action(trigger, stat_name=stat_name)
+            command = self.get_limit_action(trigger, stat_name=stat_name)
         except KeyError:
             # Reset the trigger
             self.actions.set(stat_name, trigger)
@@ -578,7 +578,7 @@ class GlancesPlugin(object):
                               action_key=action_key,
                               log=True)
 
-    def __get_limit(self, criticity, stat_name=""):
+    def get_limit(self, criticity, stat_name=""):
         """Return the limit value for the alert."""
         # Get the limit for stat + header
         # Exemple: network_wlan0_rx_careful
@@ -594,7 +594,7 @@ class GlancesPlugin(object):
         # Return the limit
         return limit
 
-    def __get_limit_action(self, criticity, stat_name=""):
+    def get_limit_action(self, criticity, stat_name=""):
         """Return the action for the alert."""
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
@@ -608,7 +608,7 @@ class GlancesPlugin(object):
         # Return the action list
         return ret
 
-    def __get_limit_log(self, stat_name, default_action=False):
+    def get_limit_log(self, stat_name, default_action=False):
         """Return the log tag for the alert."""
         # Get the log tag for stat + header
         # Exemple: network_wlan0_rx_log

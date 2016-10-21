@@ -92,7 +92,8 @@ setup(
         'EXPORT': ['influxdb>=1.0.0', 'elasticsearch', 'potsdb' 'statsd', 'pika', 'bernhard', 'cassandra-driver'],
         'ACTION': ['pystache'],
         'CPUINFO': ['py-cpuinfo'],
-        'FOLDERS': ['scandir']
+        'FOLDERS': ['scandir'],
+        'WIFI': ['wifi']
     },
     packages=['glances'],
     include_package_data=True,
