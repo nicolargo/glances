@@ -113,6 +113,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_load', help='disable load module')
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help='disable network module')
+        parser.add_argument('--disable-wifi', action='store_true', default=False,
+                            dest='disable_wifi', help='disable wifi module')
         parser.add_argument('--disable-ports', action='store_true', default=False,
                             dest='disable_ports', help='disable ports scanner module')
         parser.add_argument('--disable-ip', action='store_true', default=False,

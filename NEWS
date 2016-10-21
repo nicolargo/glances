@@ -5,10 +5,11 @@ Glances Version 2
 Version 2.8
 ===========
 
-Enhancements and new features:
+Enhancements and news features:
 
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
+    * Add hotspot Wifi informations (issue #937)
     * Highlight max stats in the processes list (issue #878)
     * Docker alerts and actions (issue #875)
     * Glances API returns the processes PPID (issue #926)

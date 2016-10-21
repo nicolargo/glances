@@ -11,7 +11,7 @@ dynamically (bit/s, kbit/s, Mbit/s, etc).
 Alerts are only set if the maximum speed per network interface is
 available (see sample in the configuration file).
 
-It's also possibile to define:
+It's also possible to define:
 
 - a list of network interfaces to hide
 - per-interface limit values

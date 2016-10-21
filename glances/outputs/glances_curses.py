@@ -444,6 +444,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
+        elif self.pressedkey == ord('W'):
+            # 'W' > Enable/Disable Wifi plugin
+            self.args.disable_wifi = not self.args.disable_wifi
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
@@ -539,6 +542,8 @@ class _GlancesCurses(object):
         stats_mem = stats.get_plugin('mem').get_stats_display(args=self.args)
         stats_memswap = stats.get_plugin('memswap').get_stats_display(args=self.args)
         stats_network = stats.get_plugin('network').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        stats_wifi = stats.get_plugin('wifi').get_stats_display(
             args=self.args, max_width=plugin_max_width)
         stats_irq = stats.get_plugin('irq').get_stats_display(
             args=self.args, max_width=plugin_max_width)
@@ -718,13 +723,15 @@ class _GlancesCurses(object):
         # ==================================================================
         self.init_column()
         if not (self.args.disable_network and
+                self.args.disable_wifi and
                 self.args.disable_ports and
                 self.args.disable_diskio and
                 self.args.disable_fs and
+                self.args.disable_irq and
                 self.args.disable_folder and
                 self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            for s in (stats_network, stats_ports, stats_diskio, stats_fs, stats_irq, stats_folders, stats_raid, stats_sensors, stats_now):
+            for s in (stats_network, stats_wifi, stats_ports, stats_diskio, stats_fs, stats_irq, stats_folders, stats_raid, stats_sensors, stats_now):
                 self.new_line()
                 self.display_plugin(s)
 
