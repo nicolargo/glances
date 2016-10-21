@@ -154,16 +154,16 @@ class Plugin(GlancesPlugin):
 
         # Max size for the interface name
         if max_width is not None and max_width >= 23:
-            # Interface size name = max_width - space for interfaces bitrate
-            ifname_max_width = max_width - 14
+            # Interface size name = max_width - space for encyption + quality
+            ifname_max_width = max_width - 5
         else:
-            ifname_max_width = 9
+            ifname_max_width = 16
 
         # Build the string message
         # Header
         msg = '{:{width}}'.format('WIFI', width=ifname_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{:>14}'.format('Quality')
+        msg = '{:>6}'.format('Quality')
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
 
@@ -174,12 +174,16 @@ class Plugin(GlancesPlugin):
                 continue
             # New hotspot
             hotspotname = i['ssid']
+            # Add the encryption type (if it is available)
+            if i['encrypted']:
+                hotspotname = hotspotname + ' {}'.format(i['encryption_type'])
+            # Cut hotspotname if it is too long
             if len(hotspotname) > ifname_max_width:
-                # Cut hotspotname if it is too long
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
+            # Add the new hotspot to the message
             msg = '{:{width}}'.format(hotspotname, width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>14}'.format(i['quality'], width=ifname_max_width)
+            msg = '{:>7}'.format(i['quality'], width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
 
         return ret
