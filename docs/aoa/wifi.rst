@@ -3,6 +3,8 @@
 Wifi
 =====
 
+*Availability: Linux*
+
 .. image:: ../_static/wifi.png
 
 Glances displays the Wifi hotspots' name and signal quality.
