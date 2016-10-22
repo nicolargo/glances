@@ -14,6 +14,7 @@ Enhancements and news features:
     * Docker alerts and actions (issue #875)
     * Glances API returns the processes PPID (issue #926)
     * Configure server cached time from the command line --cached-time (issue #901)
+    * Make the log logger configurable (issue #900)
 
 Bugs corrected:
 

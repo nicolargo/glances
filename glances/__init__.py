@@ -20,6 +20,7 @@
 
 """Init the Glances software."""
 
+# Import system libs
 import locale
 import platform
 import signal
@@ -43,6 +44,7 @@ except ImportError:
 from glances.logger import logger
 from glances.main import GlancesMain
 
+# Check locale
 try:
     locale.setlocale(locale.LC_ALL, '')
 except locale.Error:
