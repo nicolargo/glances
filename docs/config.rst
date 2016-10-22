@@ -110,3 +110,76 @@ By default, the ``glances.log`` file is under the temporary directory:
 
 If ``glances.log`` is not writable, a new file will be created and
 returned to the user console.
+
+If you want to use another system path or change the log message, you can use
+your own logger configuration. First of all you have to create a glances.json
+file with (for example) the following content (JSON format):
+
+.. code-block:: json
+
+    {
+        "version": 1,
+        "disable_existing_loggers": "False",
+        "root": {
+            "level": "INFO",
+            "handlers": ["file", "console"]
+        },
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s -- %(levelname)s -- %(message)s"
+            },
+            "short": {
+                "format": "%(levelname)s: %(message)s"
+            },
+            "free": {
+                "format": "%(message)s"
+            }
+        },
+        "handlers": {
+            "file": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "formatter": "standard",
+                "filename": "/var/tmp/glances.log"
+            },
+            "console": {
+                "level": "CRITICAL",
+                "class": "logging.StreamHandler",
+                "formatter": "free"
+            }
+        },
+        "loggers": {
+            "debug": {
+                "handlers": ["file", "console"],
+                "level": "DEBUG"
+            },
+            "verbose": {
+                "handlers": ["file", "console"],
+                "level": "INFO"
+            },
+            "standard": {
+                "handlers": ["file"],
+                "level": "INFO"
+            },
+            "requests": {
+                "handlers": ["file", "console"],
+                "level": "ERROR"
+            },
+            "elasticsearch": {
+                "handlers": ["file", "console"],
+                "level": "ERROR"
+            },
+            "elasticsearch.trace": {
+                "handlers": ["file", "console"],
+                "level": "ERROR"
+            }
+        }
+    }
+
+and start Glances using the following command line:
+
+.. code-block:: console
+
+    LOG_CFG=<path>/glances.json glances
+
+Note: Replace <path> by the folder where your glances.json file is hosted.
