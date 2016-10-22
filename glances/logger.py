@@ -22,66 +22,66 @@
 import logging
 import os
 import tempfile
+import json
 from logging.config import dictConfig
 
 # Define the logging configuration
 LOGGING_CFG = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'root': {
-        'level': 'INFO',
-        'handlers': ['file', 'console']
+    "version": 1,
+    "disable_existing_loggers": "False",
+    "root": {
+        "level": "INFO",
+        "handlers": ["file", "console"]
     },
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s -- %(levelname)s -- %(message)s'
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s -- %(levelname)s -- %(message)s"
         },
-        'short': {
-            'format': '%(levelname)s: %(message)s'
+        "short": {
+            "format": "%(levelname)s: %(message)s"
         },
-        'free': {
-            'format': '%(message)s'
+        "free": {
+            "format": "%(message)s"
         }
     },
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'standard',
-            # http://stackoverflow.com/questions/847850/cross-platform-way-of-getting-temp-directory-in-python
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
             'filename': os.path.join(tempfile.gettempdir(), 'glances.log')
         },
-        'console': {
-            'level': 'CRITICAL',
-            'class': 'logging.StreamHandler',
-            'formatter': 'free'
+        "console": {
+            "level": "CRITICAL",
+            "class": "logging.StreamHandler",
+            "formatter": "free"
         }
     },
-    'loggers': {
-        'debug': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+    "loggers": {
+        "debug": {
+            "handlers": ["file", "console"],
+            "level": "DEBUG"
         },
-        'verbose': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO'
+        "verbose": {
+            "handlers": ["file", "console"],
+            "level": "INFO"
         },
-        'standard': {
-            'handlers': ['file'],
-            'level': 'INFO'
+        "standard": {
+            "handlers": ["file"],
+            "level": "INFO"
         },
-        'requests': {
-            'handlers': ['file', 'console'],
-            'level': 'ERROR',
+        "requests": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
         },
-        'elasticsearch': {
-            'handlers': ['file', 'console'],
-            'level': 'ERROR',
+        "elasticsearch": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
         },
-        'elasticsearch.trace': {
-            'handlers': ['file', 'console'],
-            'level': 'ERROR',
-        },
+        "elasticsearch.trace": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
+        }
     }
 }
 
@@ -98,12 +98,31 @@ def tempfile_name():
     return ret
 
 
-def glances_logger():
-    """Build and return the logger."""
-    temp_path = tempfile_name()
+def glances_logger(env_key='LOG_CFG'):
+    """Build and return the logger.
+
+    env_key define the env var where a path to a specific JSON logger
+            could be defined
+
+    :return: logger -- Logger instance
+    """
     _logger = logging.getLogger()
-    LOGGING_CFG['handlers']['file']['filename'] = temp_path
-    dictConfig(LOGGING_CFG)
+
+    # Overwrite the default logger file
+    LOGGING_CFG['handlers']['file']['filename'] = tempfile_name()
+
+    # By default, use the LOGGING_CFG lgger configuration
+    config = LOGGING_CFG
+
+    # Check if a specific configuration is available
+    user_file = os.getenv(env_key, None)
+    if user_file and os.path.exists(user_file):
+        # A user file as been defined. Use it...
+        with open(user_file, 'rt') as f:
+            config = json.load(f)
+
+    # Load the configuration
+    dictConfig(config)
 
     return _logger
 
