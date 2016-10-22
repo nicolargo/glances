@@ -177,7 +177,7 @@ glancesApp.filter('timedelta', ["$filter", function($filter) {
     }
 }]);
 
-glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "GlancesStats", "help", "arguments", function ($scope, $rootScope, $interval, GlancesStats, help, arguments) {
+glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "GlancesStats", "help", "arguments", "favicoService", function ($scope, $rootScope, $interval, GlancesStats, help, arguments, favicoService) {
     $scope.help = help;
     $scope.arguments = arguments;
 
@@ -203,7 +203,7 @@ glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "
             $scope.statsAlert = GlancesStats.getPlugin('alert');
             $scope.statsCpu = GlancesStats.getPlugin('cpu');
             $scope.statsDiskio = GlancesStats.getPlugin('diskio');
-	    $scope.statsIrq = GlancesStats.getPlugin('irq');
+            $scope.statsIrq = GlancesStats.getPlugin('irq');
             $scope.statsDocker = GlancesStats.getPlugin('docker');
             $scope.statsFs = GlancesStats.getPlugin('fs');
             $scope.statsFolders = GlancesStats.getPlugin('folders');
@@ -224,6 +224,12 @@ glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "
             $scope.statsPorts = GlancesStats.getPlugin('ports');
 
             $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
+
+            if ($scope.statsAlert.hasOngoingAlerts()) {
+                favicoService.badge($scope.statsAlert.countOngoingAlerts());
+            } else {
+                favicoService.reset();
+            }
 
             $scope.is_disconnected = false;
             $scope.dataLoaded = true;
@@ -283,8 +289,8 @@ glancesApp.controller('statsController', ["$scope", "$rootScope", "$interval", "
                 // d => Show/hide disk I/O stats
                 $scope.arguments.disable_diskio = !$scope.arguments.disable_diskio;
                 break;
-	    case $event.shiftKey && $event.keyCode == keycodes.Q:
-                // R => Show/hide IRQ
+            case $event.shiftKey && $event.keyCode == keycodes.Q:
+                // Q => Show/hide IRQ
                 $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:
@@ -405,6 +411,21 @@ var keycodes = {
 	'R' : '82',
 }
 
+glancesApp.service('favicoService', function() {
+
+  var favico = new Favico({
+    animation : 'none'
+  });
+
+  this.badge = function(nb) {
+    favico.badge(nb);
+  };
+
+  this.reset = function() {
+    favico.reset();
+  };
+});
+
 glancesApp.service('GlancesStats', ["$http", "$injector", "$q", "GlancesPlugin", function($http, $injector, $q, GlancesPlugin) {
     var _stats = [], _views = [], _limits = [];
 
@@ -412,7 +433,7 @@ glancesApp.service('GlancesStats', ["$http", "$injector", "$q", "GlancesPlugin",
         'alert': 'GlancesPluginAlert',
         'cpu': 'GlancesPluginCpu',
         'diskio': 'GlancesPluginDiskio',
-	'irq'   : 'GlancesPluginIrq',
+        'irq'   : 'GlancesPluginIrq',
         'docker': 'GlancesPluginDocker',
         'ip': 'GlancesPluginIp',
         'fs': 'GlancesPluginFs',
@@ -532,7 +553,7 @@ glancesApp.service('GlancesPluginAlert', function () {
                     , minutes = parseInt((duration / (1000 * 60)) % 60)
                     , hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
-                alert.duration = _.padLeft(hours, 2, '0') + ":" + _.padLeft(minutes, 2, '0') + ":" + _.padLeft(seconds, 2, '0');
+                alert.duration = _.padStart(hours, 2, '0') + ":" + _.padStart(minutes, 2, '0') + ":" + _.padStart(seconds, 2, '0');
             }
 
             _alerts.push(alert);
@@ -550,6 +571,14 @@ glancesApp.service('GlancesPluginAlert', function () {
     this.count = function () {
         return _alerts.length;
     };
+
+    this.hasOngoingAlerts = function () {
+        return _.filter(_alerts, { 'ongoing': true }).length > 0;
+    };
+
+    this.countOngoingAlerts = function () {
+        return _.filter(_alerts, { 'ongoing': true }).length;
+    }
 });
 
 glancesApp.service('GlancesPluginAmps', function() {
@@ -1176,7 +1205,7 @@ glancesApp.service('GlancesPluginRaid', function () {
     this.disks = [];
 
     this.setData = function (data, views) {
-      this.disks = [];
+        var disks = [];
         data = data[_pluginName];
 
         _.forIn(data, function(diskData, diskKey) {
@@ -1199,8 +1228,10 @@ glancesApp.service('GlancesPluginRaid', function () {
                 });
             });
 
-            this.disks.push(disk);
-        }, this);
+            disks.push(disk);
+        });
+
+        this.disks = disks;
     };
 
     this.hasDisks = function() {
