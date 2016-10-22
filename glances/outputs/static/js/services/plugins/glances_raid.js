@@ -3,7 +3,7 @@ glancesApp.service('GlancesPluginRaid', function () {
     this.disks = [];
 
     this.setData = function (data, views) {
-      this.disks = [];
+        var disks = [];
         data = data[_pluginName];
 
         _.forIn(data, function(diskData, diskKey) {
@@ -26,8 +26,10 @@ glancesApp.service('GlancesPluginRaid', function () {
                 });
             });
 
-            this.disks.push(disk);
-        }, this);
+            disks.push(disk);
+        });
+
+        this.disks = disks;
     };
 
     this.hasDisks = function() {
