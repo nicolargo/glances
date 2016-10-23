@@ -10,6 +10,7 @@ Enhancements and news features:
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
     * Add hotspot Wifi informations (issue #937)
+    * Add default interface speed and automatic rate thresolds (issue #718) 
     * Highlight max stats in the processes list (issue #878)
     * Docker alerts and actions (issue #875)
     * Glances API returns the processes PPID (issue #926)
