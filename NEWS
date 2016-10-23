@@ -15,6 +15,7 @@ Enhancements and news features:
     * Glances API returns the processes PPID (issue #926)
     * Configure server cached time from the command line --cached-time (issue #901)
     * Make the log logger configurable (issue #900)
+    * System uptime in export (issue #890)
 
 Bugs corrected:
 
