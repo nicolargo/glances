@@ -82,7 +82,7 @@ class TestGlances(unittest.TestCase):
         for plugin in plugins_to_check:
             self.assertTrue(plugin in plugins_list)
 
-    def test_002_cpu(self):
+    def test_002_system(self):
         """Check SYSTEM plugin."""
         stats_to_check = ['hostname', 'os_name']
         print('INFO: [TEST_002] Check SYSTEM stats: %s' % ', '.join(stats_to_check))
@@ -200,6 +200,16 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('irq').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='IRQ stats is not a list')
         print('INFO: IRQ stats: %s' % stats_grab)
+
+    def test_096_views(self):
+        """Test get_views method"""
+        print('INFO: [TEST_096] Test views')
+        plugins_list = stats.getAllPlugins()
+        for plugin in plugins_list:
+            stats_grab = stats.get_plugin(plugin).get_raw()
+            views_grab = stats.get_plugin(plugin).get_views()
+            self.assertTrue(type(views_grab) is dict,
+                            msg='{} view is not a dict'.format(plugin))
 
     def test_097_attribute(self):
         """Test GlancesAttribute classe"""
