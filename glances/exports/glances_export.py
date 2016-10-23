@@ -64,7 +64,8 @@ class GlancesExport(object):
                 'system',
                 'uptime',
                 'sensors',
-                'docker']
+                'docker',
+                'uptime']
 
     def get_item_key(self, item):
         """Return the value of the item 'key'."""
