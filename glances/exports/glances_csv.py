@@ -91,12 +91,6 @@ class Export(GlancesExport):
                                        for fieldname in fieldnames)
                     # Others lines: stats
                     csv_data += itervalues(all_stats[i])
-                elif isinstance(all_stats[i], (int, float, str)):
-                    # First line: header
-                    if self.first_line:
-                        csv_header.append(str(plugin))
-                    # Others lines: stats
-                    csv_data.append(str(all_stats[i]))
 
         # Export to CSV
         if self.first_line:
