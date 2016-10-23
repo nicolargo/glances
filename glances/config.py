@@ -172,6 +172,16 @@ class Config(object):
         self.set_default('memswap', 'warning', '70')
         self.set_default('memswap', 'critical', '90')
 
+        # NETWORK
+        if not self.parser.has_section('network'):
+            self.parser.add_section('network')
+        self.set_default('network', 'rx_careful', '70')
+        self.set_default('network', 'rx_warning', '80')
+        self.set_default('network', 'rx_critical', '90')
+        self.set_default('network', 'tx_careful', '70')
+        self.set_default('network', 'tx_warning', '80')
+        self.set_default('network', 'tx_critical', '90')
+
         # FS
         if not self.parser.has_section('fs'):
             self.parser.add_section('fs')
