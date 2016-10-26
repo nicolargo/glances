@@ -10,13 +10,14 @@ Enhancements and news features:
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
     * Add hotspot Wifi informations (issue #937)
-    * Add default interface speed and automatic rate thresolds (issue #718) 
+    * Add default interface speed and automatic rate thresolds (issue #718)
     * Highlight max stats in the processes list (issue #878)
     * Docker alerts and actions (issue #875)
     * Glances API returns the processes PPID (issue #926)
     * Configure server cached time from the command line --cached-time (issue #901)
     * Make the log logger configurable (issue #900)
     * System uptime in export (issue #890)
+    * Deprecated platform method in Python 3.7 (issue #945)
 
 Bugs corrected:
 
