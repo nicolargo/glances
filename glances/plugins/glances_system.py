@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,14 @@ import os
 import platform
 import re
 from io import open
+try:
+    import distro
+except ImportError:
+    distro_tag = False
+else:
+    distro_tag = True
 
+from glances.logger import logger
 from glances.compat import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -38,7 +45,8 @@ snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
 # Dict (key: OS short name) of dict (reg exp OID to human)
 # Windows:
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
-snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
+snmp_to_human = {'windows': {'Windows Version 10.0': 'Windows 10 or Server 2016',
+                             'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
                              'Windows Version 6.2': 'Windows 8 or Server 2012',
                              'Windows Version 6.1': 'Windows 7 or Server 2008R2',
                              'Windows Version 6.0': 'Windows Vista or Server 2008',
@@ -112,11 +120,19 @@ class Plugin(GlancesPlugin):
             self.stats['hostname'] = platform.node()
             self.stats['platform'] = platform.architecture()[0]
             if self.stats['os_name'] == "Linux":
-                linux_distro = platform.linux_distribution()
-                if linux_distro[0] == '':
-                    self.stats['linux_distro'] = _linux_os_release()
-                else:
+                if distro_tag:
+                    # Use the distro external lib
+                    # Why ?
+                    # Because platform.linux_distribution is predicated in Python 3.7
+                    linux_distro = distro.linux_distribution()
                     self.stats['linux_distro'] = ' '.join(linux_distro[:2])
+                else:
+                    try:
+                        # For Python < 3.7
+                        linux_distro = platform.linux_distribution()
+                        self.stats['linux_distro'] = ' '.join(linux_distro[:2])
+                    except AttributeError:
+                        self.stats['linux_distro'] = _linux_os_release()
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'].endswith('BSD'):
                 self.stats['os_version'] = platform.release()

@@ -33,7 +33,7 @@ def get_data_files():
 
 
 def get_requires():
-    requires = ['psutil>=2.0.0']
+    requires = ['psutil>=2.0.0', 'distro>=1.0.0']
 
     return requires
 
