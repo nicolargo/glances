@@ -215,6 +215,8 @@ Start the client browser (browser mode):\n\
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
         parser.add_argument('--cached-time', default=self.cached_time, type=int,
                             dest='cached_time', help='set the server cache time [default: {} sec]'.format(self.cached_time))
+        parser.add_argument('--open-web-browser', action='store_true', default=False,
+                            dest='open_web_browser', help='try to open the Web UI in the default Web browser')
         # Display options
         parser.add_argument('-q', '--quiet', default=False, action='store_true',
                             dest='quiet', help='do not display the curses interface')
