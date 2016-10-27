@@ -43,6 +43,7 @@ except ImportError:
 # Note: others Glances libs will be imported optionally
 from glances.logger import logger
 from glances.main import GlancesMain
+from glances.globals import WINDOWS
 
 # Check locale
 try:
@@ -118,7 +119,7 @@ def main():
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if core.is_standalone():
+    if core.is_standalone() and not WINDOWS:
         logger.info("Start standalone mode")
 
         # Import the Glances standalone module
@@ -131,7 +132,7 @@ def main():
         # Start the standalone (CLI) loop
         standalone.serve_forever()
 
-    elif core.is_client():
+    elif core.is_client() and not WINDOWS:
         if core.is_client_browser():
             logger.info("Start client mode (browser)")
 
@@ -185,15 +186,22 @@ def main():
         # Shutdown the server?
         server.server_close()
 
-    elif core.is_webserver():
+    elif core.is_webserver() or (core.is_standalone() and WINDOWS):
         logger.info("Start web server mode")
 
         # Import the Glances web server module
         from glances.webserver import GlancesWebServer
 
+        args = core.get_args()
+
+        # Web server mode replace the standalone mode on Windows OS
+        # In this case, try to start the web browser mode automaticaly
+        if core.is_standalone() and WINDOWS:
+            args.open_web_browser = True
+
         # Init the web server mode
         webserver = GlancesWebServer(config=core.get_config(),
-                                     args=core.get_args())
+                                     args=args)
 
         # Start the web server loop
         webserver.serve_forever()
