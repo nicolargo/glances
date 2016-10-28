@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
         # Reset the stats
         self.reset()
 
-        if self.args.disable_sensors:
+        if self.args is not None and self.args.disable_sensors:
             return self.stats
 
         if self.input_method == 'local':
