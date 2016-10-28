@@ -66,6 +66,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
+        self.args = args
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -82,6 +84,9 @@ class Plugin(GlancesPlugin):
         """Update RAM memory stats using the input method."""
         # Reset stats
         self.reset()
+
+        if self.args is not None and self.args.disable_mem:
+            return self.stats
 
         if self.input_method == 'local':
             # Update stats using the standard system lib

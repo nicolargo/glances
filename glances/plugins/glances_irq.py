@@ -36,6 +36,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
+        self.args = args
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -60,7 +62,8 @@ class Plugin(GlancesPlugin):
         # Reset the list
         self.reset()
 
-        if not LINUX:  # only available on GNU/Linux
+        # IRQ plugin only available on GNU/Linux
+        if not LINUX or self.args.disable_irq:
             return self.stats
 
         if self.input_method == 'local':

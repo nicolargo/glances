@@ -68,6 +68,8 @@ class Plugin(GlancesPlugin):
         """Init the CPU plugin."""
         super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
+        self.args = args
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -88,8 +90,12 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update CPU stats using the input method."""
+
         # Reset stats
         self.reset()
+
+        if self.args is not None and self.args.disable_cpu:
+            return self.stats
 
         # Grab stats into self.stats
         if self.input_method == 'local':
