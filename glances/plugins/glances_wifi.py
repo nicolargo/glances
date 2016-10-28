@@ -84,7 +84,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Exist if we can not grab the stats
-        if not wifi_tag or self.args.disable_wifi:
+        if not wifi_tag or (self.args is not None and self.args.disable_wifi):
             return self.stats
 
         if self.input_method == 'local':

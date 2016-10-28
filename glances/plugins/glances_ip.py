@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.args.disable_ip:
+        if self.args is not None and self.args.disable_ip:
             return self.stats
 
         if self.input_method == 'local' and netifaces_tag:

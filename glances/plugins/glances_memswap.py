@@ -73,7 +73,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.args.disable_swap:
+        if self.args is not None and self.args.disable_swap:
             return self.stats
 
         if self.input_method == 'local':

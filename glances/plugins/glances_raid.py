@@ -60,7 +60,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.args.disable_raid:
+        if self.args is not None and self.args.disable_raid:
             return self.stats
 
         if self.input_method == 'local':

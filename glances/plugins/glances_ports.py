@@ -66,7 +66,7 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update the ports list."""
 
-        if self.args.disable_ports:
+        if self.args is not None and self.args.disable_ports:
             return self.stats
 
         if self.input_method == 'local':
