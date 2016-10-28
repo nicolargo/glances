@@ -62,6 +62,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
+        self.args = args
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -84,6 +86,9 @@ class Plugin(GlancesPlugin):
         """
         # Reset stats
         self.reset()
+
+        if self.args.disable_ip:
+            return self.stats
 
         if self.input_method == 'local' and netifaces_tag:
             # Update stats using the netifaces lib

@@ -53,6 +53,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
+        self.args = args
+
         # Init the sensor class
         self.glancesgrabsensors = GlancesGrabSensors()
 
@@ -84,6 +86,9 @@ class Plugin(GlancesPlugin):
         """Update sensors stats using the input method."""
         # Reset the stats
         self.reset()
+
+        if self.args.disable_sensors:
+            return self.stats
 
         if self.input_method == 'local':
             # Update stats using the dedicated lib

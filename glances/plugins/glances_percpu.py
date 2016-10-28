@@ -35,6 +35,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
+        self.args = args
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -55,6 +57,9 @@ class Plugin(GlancesPlugin):
         """Update per-CPU stats using the input method."""
         # Reset stats
         self.reset()
+
+        if self.args is not None and self.args.disable_cpu:
+            return self.stats
 
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
