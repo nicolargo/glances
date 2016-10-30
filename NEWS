@@ -28,6 +28,7 @@ Bugs corrected:
     * Glances RAID plugin Traceback (issue #927)
     * Default AMP crashes when 'command' given (issue #933)
     * Default AMP ignores `enable` setting (issue #932)
+    * /proc/interrupts not found in an OpenVZ container (issue #947)
 
 Version 2.7.1
 =============
