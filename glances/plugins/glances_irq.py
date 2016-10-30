@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Angelo Poerio <angelo.poerio@gmail.com>
+# Copyright (C) 2016 Angelo Poerio <angelo.poerio@gmail.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -19,7 +19,9 @@
 
 """IRQ plugin."""
 
+import os
 import operator
+
 from glances.globals import LINUX
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -31,6 +33,8 @@ class Plugin(GlancesPlugin):
 
     stats is a list
     """
+
+    IRQ_FILE = '/proc/interrupts'
 
     def __init__(self, args=None):
         """Init the plugin."""
@@ -63,11 +67,14 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # IRQ plugin only available on GNU/Linux
-        if not LINUX or (self.args is not None and self.args.disable_irq):
+        # Correct issue #947: IRQ file do not exist on OpenVZ container
+        if not LINUX \
+           or (self.args is not None and self.args.disable_irq) \
+           or not os.path.exists(self.IRQ_FILE):
             return self.stats
 
         if self.input_method == 'local':
-            with open('/proc/interrupts') as irq_proc:
+            with open(self.IRQ_FILE) as irq_proc:
                 time_since_update = getTimeSinceLastUpdate('irq')
                 irq_proc.readline()  # skip header line
                 for irq_line in irq_proc.readlines():
