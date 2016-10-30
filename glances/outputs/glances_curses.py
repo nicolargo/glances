@@ -317,12 +317,12 @@ class _GlancesCurses(object):
                 self.args.disable_quicklook = False
                 self.args.disable_cpu = True
                 self.args.disable_mem = True
-                self.args.disable_swap = True
+                self.args.disable_memswap = True
             else:
                 self.args.disable_quicklook = False
                 self.args.disable_cpu = False
                 self.args.disable_mem = False
-                self.args.disable_swap = False
+                self.args.disable_memswap = False
         elif self.pressedkey == ord('5'):
             # '5' > Enable/disable top menu
             logger.info(self.args.disable_top)
@@ -331,13 +331,13 @@ class _GlancesCurses(object):
                 self.args.disable_quicklook = True
                 self.args.disable_cpu = True
                 self.args.disable_mem = True
-                self.args.disable_swap = True
+                self.args.disable_memswap = True
                 self.args.disable_load = True
             else:
                 self.args.disable_quicklook = False
                 self.args.disable_cpu = False
                 self.args.disable_mem = False
-                self.args.disable_swap = False
+                self.args.disable_memswap = False
                 self.args.disable_load = False
         elif self.pressedkey == ord('/'):
             # '/' > Switch between short/long name for processes
@@ -382,7 +382,7 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
-            self.args.disable_folder = not self.args.disable_folder
+            self.args.disable_folders = not self.args.disable_folders
         elif self.pressedkey == ord('g'):
             # 'g' > Export graphs to file
             self.graph_tag = not self.graph_tag
@@ -397,8 +397,8 @@ class _GlancesCurses(object):
             # 'I' > Show/hide IP module
             self.args.disable_ip = not self.args.disable_ip
         elif self.pressedkey == ord('l'):
-            # 'l' > Show/hide log messages
-            self.args.disable_log = not self.args.disable_log
+            # 'l' > Show/hide alert/log messages
+            self.args.disable_alert = not self.args.disable_alert
         elif self.pressedkey == ord('m'):
             # 'm' > Sort processes by MEM usage
             glances_processes.auto_sort = False
@@ -639,7 +639,7 @@ class _GlancesCurses(object):
             mem_width = 0
         else:
             mem_width = self.get_stats_display_width(stats_mem)
-        if self.args.disable_swap:
+        if self.args.disable_memswap:
             swap_width = 0
         else:
             swap_width = self.get_stats_display_width(stats_memswap)
@@ -655,7 +655,7 @@ class _GlancesCurses(object):
         stats_number = (
             int(not self.args.disable_cpu and stats_cpu['msgdict'] != []) +
             int(not self.args.disable_mem and stats_mem['msgdict'] != []) +
-            int(not self.args.disable_swap and stats_memswap['msgdict'] != []) +
+            int(not self.args.disable_memswap and stats_memswap['msgdict'] != []) +
             int(not self.args.disable_load and stats_load['msgdict'] != []))
 
         if not self.args.disable_quicklook:
@@ -728,7 +728,7 @@ class _GlancesCurses(object):
                 self.args.disable_diskio and
                 self.args.disable_fs and
                 self.args.disable_irq and
-                self.args.disable_folder and
+                self.args.disable_folders and
                 self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
             for s in (stats_network, stats_wifi, stats_ports, stats_diskio, stats_fs, stats_irq, stats_folders, stats_raid, stats_sensors, stats_now):

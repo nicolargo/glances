@@ -49,8 +49,6 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -84,7 +82,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Exist if we can not grab the stats
-        if not wifi_tag or (self.args is not None and self.args.disable_wifi):
+        if not wifi_tag:
             return self.stats
 
         if self.input_method == 'local':
