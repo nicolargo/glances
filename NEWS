@@ -22,6 +22,7 @@ Enhancements and news features:
     * Make the log logger configurable (issue #900)
     * System uptime in export (issue #890)
     * Deprecated platform method in Python 3.7 (issue #945)
+    * Refactor the --disable-* options (issue #948)
 
 Bugs corrected:
 

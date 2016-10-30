@@ -41,8 +41,6 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -59,9 +57,6 @@ class Plugin(GlancesPlugin):
         """Update RAID stats using the input method."""
         # Reset stats
         self.reset()
-
-        if self.args is not None and self.args.disable_raid:
-            return self.stats
 
         if self.input_method == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
@@ -87,8 +82,8 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_raid:
+        # Only process if stats exist...
+        if not self.stats:
             return ret
 
         # Build the string message

@@ -92,10 +92,6 @@ class GlancesGrabHDDTemp(object):
         # Reset the list
         self.reset()
 
-        # Only update if --disable-hddtemp is not set
-        if self.args is None or self.args.disable_hddtemp:
-            return
-
         # Fetch the data
         # data = ("|/dev/sda|WDC WD2500JS-75MHB0|44|C|"
         #         "|/dev/sdb|WDC WD2500JS-75MHB0|35|C|"

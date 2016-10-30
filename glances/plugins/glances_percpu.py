@@ -35,8 +35,6 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -58,9 +56,6 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.args is not None and self.args.disable_cpu:
-            return self.stats
-
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
@@ -75,10 +70,6 @@ class Plugin(GlancesPlugin):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
-
-        # Only process if plugin not disable
-        if args.disable_cpu:
-            return ret
 
         # No per CPU stat ? Exit...
         if not self.stats:
