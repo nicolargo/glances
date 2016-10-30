@@ -99,54 +99,54 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
         # Enable or disable option on startup
+        parser.add_argument('--disable-alert', action='store_true', default=False,
+                            dest='disable_alert', help='disable alert module')
+        parser.add_argument('--disable-amps', action='store_true', default=False,
+                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
+        parser.add_argument('--disable-cpu', action='store_true', default=False,
+                            dest='disable_cpu', help='disable CPU module')
+        parser.add_argument('--disable-diskio', action='store_true', default=False,
+                            dest='disable_diskio', help='disable disk I/O module')
+        parser.add_argument('--disable-docker', action='store_true', default=False,
+                            dest='disable_docker', help='disable Docker module')
+        parser.add_argument('--disable-folders', action='store_true', default=False,
+                            dest='disable_folders', help='disable folder module')
+        parser.add_argument('--disable-fs', action='store_true', default=False,
+                            dest='disable_fs', help='disable filesystem module')
+        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
+                            dest='disable_hddtemp', help='disable HD temperature module')
+        parser.add_argument('--disable-ip', action='store_true', default=False,
+                            dest='disable_ip', help='disable IP module')
+        parser.add_argument('--disable-irq', action='store_true', default=False,
+                            dest='disable_irq', help='disable IRQ module'),
+        parser.add_argument('--disable-load', action='store_true', default=False,
+                            dest='disable_load', help='disable load module')
+        parser.add_argument('--disable-mem', action='store_true', default=False,
+                            dest='disable_mem', help='disable memory module')
+        parser.add_argument('--disable-memswap', action='store_true', default=False,
+                            dest='disable_memswap', help='disable memory swap module')
+        parser.add_argument('--disable-network', action='store_true', default=False,
+                            dest='disable_network', help='disable network module')
+        parser.add_argument('--disable-ports', action='store_true', default=False,
+                            dest='disable_ports', help='disable ports scanner module')
+        parser.add_argument('--disable-process', action='store_true', default=False,
+                            dest='disable_process', help='disable process module')
+        parser.add_argument('--disable-raid', action='store_true', default=False,
+                            dest='disable_raid', help='disable RAID module')
+        parser.add_argument('--disable-sensors', action='store_true', default=False,
+                            dest='disable_sensors', help='disable sensors module')
+        parser.add_argument('--disable-wifi', action='store_true', default=False,
+                            dest='disable_wifi', help='disable wifi module')
+        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
+                            default=False, dest='disable_left_sidebar',
+                            help='disable network, disk I/O, FS and sensors modules')
         parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
                             dest='disable_quicklook', help='disable quick look module')
         parser.add_argument('-4', '--full-quicklook', action='store_true', default=False,
                             dest='full_quicklook', help='disable all but quick look and load')
-        parser.add_argument('--disable-cpu', action='store_true', default=False,
-                            dest='disable_cpu', help='disable CPU module')
-        parser.add_argument('--disable-mem', action='store_true', default=False,
-                            dest='disable_mem', help='disable memory module')
-        parser.add_argument('--disable-swap', action='store_true', default=False,
-                            dest='disable_swap', help='disable swap module')
-        parser.add_argument('--disable-load', action='store_true', default=False,
-                            dest='disable_load', help='disable load module')
-        parser.add_argument('--disable-network', action='store_true', default=False,
-                            dest='disable_network', help='disable network module')
-        parser.add_argument('--disable-wifi', action='store_true', default=False,
-                            dest='disable_wifi', help='disable wifi module')
-        parser.add_argument('--disable-ports', action='store_true', default=False,
-                            dest='disable_ports', help='disable ports scanner module')
-        parser.add_argument('--disable-ip', action='store_true', default=False,
-                            dest='disable_ip', help='disable IP module')
-        parser.add_argument('--disable-diskio', action='store_true', default=False,
-                            dest='disable_diskio', help='disable disk I/O module')
-        parser.add_argument('--disable-irq', action='store_true', default=False,
-                            dest='disable_irq', help='disable IRQ module'),
-        parser.add_argument('--disable-fs', action='store_true', default=False,
-                            dest='disable_fs', help='disable filesystem module')
-        parser.add_argument('--disable-folder', action='store_true', default=False,
-                            dest='disable_folder', help='disable folder module')
-        parser.add_argument('--disable-sensors', action='store_true', default=False,
-                            dest='disable_sensors', help='disable sensors module')
-        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
-                            dest='disable_hddtemp', help='disable HD temperature module')
-        parser.add_argument('--disable-raid', action='store_true', default=False,
-                            dest='disable_raid', help='disable RAID module')
-        parser.add_argument('--disable-docker', action='store_true', default=False,
-                            dest='disable_docker', help='disable Docker module')
         parser.add_argument('-5', '--disable-top', action='store_true',
                             default=False, dest='disable_top',
                             help='disable top menu (QL, CPU, MEM, SWAP and LOAD)')
-        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
-                            default=False, dest='disable_left_sidebar',
-                            help='disable network, disk I/O, FS and sensors modules')
-        parser.add_argument('--disable-process', action='store_true', default=False,
-                            dest='disable_process', help='disable process module')
-        parser.add_argument('--disable-amps', action='store_true', default=False,
-                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
-        parser.add_argument('--disable-log', action='store_true', default=False,
-                            dest='disable_log', help='disable log module')
         parser.add_argument('--disable-history', action='store_true', default=False,
                             dest='disable_history', help='disable stats history')
         parser.add_argument('--disable-bold', action='store_true', default=False,

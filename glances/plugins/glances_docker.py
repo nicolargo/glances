@@ -160,7 +160,7 @@ class Plugin(GlancesPlugin):
                 docker_tag = False
 
         # The Docker-py lib is mandatory
-        if not docker_tag or (self.args is not None and self.args.disable_docker):
+        if not docker_tag:
             return self.stats
 
         if self.input_method == 'local':
@@ -491,7 +491,9 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist (and non null) and display plugin enable...
-        if not self.stats or args.disable_docker or len(self.stats['containers']) == 0:
+        if not self.stats \
+           or len(self.stats['containers']) == 0 \
+           or self.is_disable():
             return ret
 
         # Build the string message

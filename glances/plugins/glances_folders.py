@@ -33,8 +33,6 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -60,9 +58,6 @@ class Plugin(GlancesPlugin):
         """Update the foldered list."""
         # Reset the list
         self.reset()
-
-        if self.args is not None and self.args.disable_folder:
-            return self.stats
 
         if self.input_method == 'local':
             # Folder list only available in a full Glances environment
@@ -103,7 +98,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_folder:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

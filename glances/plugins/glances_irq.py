@@ -40,8 +40,6 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -69,7 +67,6 @@ class Plugin(GlancesPlugin):
         # IRQ plugin only available on GNU/Linux
         # Correct issue #947: IRQ file do not exist on OpenVZ container
         if not LINUX \
-           or (self.args is not None and self.args.disable_irq) \
            or not os.path.exists(self.IRQ_FILE):
             return self.stats
 
@@ -120,7 +117,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_irq:
+        if not self.stats or self.is_disable():
             return ret
 
         if max_width is not None and max_width >= 23:
