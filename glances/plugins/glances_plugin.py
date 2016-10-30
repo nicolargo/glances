@@ -87,13 +87,17 @@ class GlancesPlugin(object):
         return None
 
     def is_enable(self):
-        """Return true if plugin is enable"""
+        """Return true if plugin is enabled"""
         try:
             d = getattr(self.args, 'disable_' + self.plugin_name)
         except AttributeError:
             return True
         else:
             return d is False
+
+    def is_disable(self):
+        """Return true if plugin is disabled"""
+        return not self.is_enable()
 
     def _json_dumps(self, d):
         """Return the object 'd' in a JSON format

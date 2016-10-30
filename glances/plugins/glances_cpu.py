@@ -68,8 +68,6 @@ class Plugin(GlancesPlugin):
         """Init the CPU plugin."""
         super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
 
-        self.args = args
-
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -93,9 +91,6 @@ class Plugin(GlancesPlugin):
 
         # Reset stats
         self.reset()
-
-        if self.args is not None and self.args.disable_cpu:
-            return self.stats
 
         # Grab stats into self.stats
         if self.input_method == 'local':
@@ -230,7 +225,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and plugin not disable
-        if not self.stats or args.disable_cpu:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

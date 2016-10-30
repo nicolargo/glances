@@ -150,7 +150,11 @@ class GlancesStats(object):
         # For standalone and server modes
         # For each plugins, call the update method
         for p in self._plugins:
-            # logger.debug("Update %s stats" % p)
+            if self._plugins[p].is_disable():
+                # If current plugin is disable
+                # then continue to next plugin
+                continue
+            # Update the stats
             self._plugins[p].update()
 
     def export(self, input_stats=None):
