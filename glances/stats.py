@@ -133,7 +133,7 @@ class GlancesStats(object):
 
     def getAllPlugins(self):
         """Return the plugins list."""
-        return [p for p in self._plugins]
+        return [p for p in self._plugins if self._plugins[p].is_enable()]
 
     def getExportList(self):
         """Return the exports modules list."""
