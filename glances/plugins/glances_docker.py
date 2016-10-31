@@ -237,9 +237,6 @@ class Plugin(GlancesPlugin):
             # Not available
             pass
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def get_docker_cpu(self, container_id, all_stats):
