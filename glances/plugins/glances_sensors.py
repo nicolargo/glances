@@ -132,9 +132,6 @@ class Plugin(GlancesPlugin):
 
             pass
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def __set_type(self, stats, sensor_type):

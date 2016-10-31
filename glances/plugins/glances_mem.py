@@ -157,12 +157,6 @@ class Plugin(GlancesPlugin):
                 # percent: the percentage usage calculated as (total - available) / total * 100.
                 self.stats['percent'] = float((self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

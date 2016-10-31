@@ -96,11 +96,9 @@ class Plugin(GlancesPlugin):
             # not available
             pass
 
-        # Update the view
-        self.update_views()
-
         self.stats = sorted(self.stats, key=operator.itemgetter(
             'irq_rate'), reverse=True)[:5]  # top 5 IRQ by rate/s
+
         return self.stats
 
     def update_views(self):
