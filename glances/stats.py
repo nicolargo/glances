@@ -43,7 +43,7 @@ class GlancesStats(object):
         self.load_modules(self.args)
 
         # Load the limits (for plugins)
-        self.load_limits(config)
+        self.load_limits(self.config)
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -72,11 +72,13 @@ class GlancesStats(object):
 
         # Init the plugins dict
         self._plugins = collections.defaultdict(dict)
+
         # Load the plugins
         self.load_plugins(args=args)
 
         # Init the export modules dict
         self._exports = collections.defaultdict(dict)
+
         # Load the export modules
         self.load_exports(args=args)
 
