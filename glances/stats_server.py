@@ -51,20 +51,8 @@ class GlancesStatsServer(GlancesStats):
     def _set_stats(self, input_stats):
         """Set the stats to the input_stats one."""
         # Build the all_stats with the get_raw() method of the plugins
-        ret = collections.defaultdict(dict)
-        for p in self._plugins:
-            ret[p] = self._plugins[p].get_raw()
-        return ret
+        return {p: self._plugins[p].get_raw() for p in self._plugins if self._plugins[p].is_enable()}
 
     def getAll(self):
         """Return the stats as a list."""
         return self.all_stats
-
-    def getAllAsDict(self):
-        """Return the stats as a dict."""
-        # Python > 2.6
-        # return {p: self.all_stats[p] for p in self._plugins}
-        ret = {}
-        for p in self._plugins:
-            ret[p] = self.all_stats[p]
-        return ret
