@@ -109,8 +109,13 @@ class GlancesStatsClientSNMP(GlancesStats):
             self._plugins[p].input_method = 'snmp'
             self._plugins[p].short_system_name = self.system_name
 
-            # Update the stats
+            # Update the stats...
             try:
                 self._plugins[p].update()
             except Exception as e:
                 logger.error("Update {} failed: {}".format(p, e))
+            else:
+                # ... the history
+                self._plugins[p].update_stats_history()
+                # ... and the views
+                self._plugins[p].update_views()

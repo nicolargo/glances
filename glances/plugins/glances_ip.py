@@ -105,9 +105,6 @@ class Plugin(GlancesPlugin):
             # Not implemented yet
             pass
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

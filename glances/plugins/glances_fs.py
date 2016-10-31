@@ -180,12 +180,6 @@ class Plugin(GlancesPlugin):
                         'key': self.get_key()}
                     self.stats.append(fs_current)
 
-        # Update the history list
-        self.update_stats_history('mnt_point')
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

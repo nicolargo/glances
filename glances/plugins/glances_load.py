@@ -109,12 +109,6 @@ class Plugin(GlancesPlugin):
 
             self.stats['cpucore'] = self.nb_log_core
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

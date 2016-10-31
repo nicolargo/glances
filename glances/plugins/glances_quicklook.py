@@ -86,9 +86,6 @@ class Plugin(GlancesPlugin):
                 self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
                 self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

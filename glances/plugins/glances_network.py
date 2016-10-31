@@ -224,12 +224,6 @@ class Plugin(GlancesPlugin):
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
-        # Update the history list
-        self.update_stats_history(self.get_key())
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):

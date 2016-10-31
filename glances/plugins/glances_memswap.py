@@ -132,12 +132,6 @@ class Plugin(GlancesPlugin):
                 self.stats['percent'] = float(
                     (self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
