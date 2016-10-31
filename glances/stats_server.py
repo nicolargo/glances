@@ -28,9 +28,11 @@ class GlancesStatsServer(GlancesStats):
 
     """This class stores, updates and gives stats for the server."""
 
-    def __init__(self, config=None):
+    def __init__(self,
+                 config=None,
+                 args=None):
         # Init the stats
-        super(GlancesStatsServer, self).__init__(config=config)
+        super(GlancesStatsServer, self).__init__(config=config, args=args)
 
         # Init the all_stats dict used by the server
         # all_stats is a dict of dicts filled by the server

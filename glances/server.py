@@ -116,9 +116,12 @@ class GlancesInstance(object):
 
     """All the methods of this class are published as XML-RPC methods."""
 
-    def __init__(self, cached_time=1, config=None):
+    def __init__(self,
+                 cached_time=1,
+                 config=None,
+                 args=None):
         # Init stats
-        self.stats = GlancesStatsServer(config)
+        self.stats = GlancesStatsServer(config=config, args=args)
 
         # Initial update
         self.stats.update()
@@ -181,7 +184,8 @@ class GlancesServer(object):
 
     """This class creates and manages the TCP server."""
 
-    def __init__(self, requestHandler=GlancesXMLRPCHandler,
+    def __init__(self,
+                 requestHandler=GlancesXMLRPCHandler,
                  cached_time=1,
                  config=None,
                  args=None):
@@ -203,7 +207,7 @@ class GlancesServer(object):
 
         # Register functions
         self.server.register_introspection_functions()
-        self.server.register_instance(GlancesInstance(cached_time, config))
+        self.server.register_instance(GlancesInstance(cached_time, config, args))
 
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
