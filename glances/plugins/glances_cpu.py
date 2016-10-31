@@ -98,12 +98,6 @@ class Plugin(GlancesPlugin):
         elif self.input_method == 'snmp':
             self.update_snmp()
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_local(self):

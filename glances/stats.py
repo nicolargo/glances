@@ -154,8 +154,12 @@ class GlancesStats(object):
                 # If current plugin is disable
                 # then continue to next plugin
                 continue
-            # Update the stats
+            # Update the stats...
             self._plugins[p].update()
+            # ... the history
+            self._plugins[p].update_stats_history()
+            # ... and the views
+            self._plugins[p].update_views()
 
     def export(self, input_stats=None):
         """Export all the stats.

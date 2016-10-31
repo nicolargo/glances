@@ -142,12 +142,6 @@ class Plugin(GlancesPlugin):
             # No standard way for the moment...
             pass
 
-        # Update the history list
-        self.update_stats_history('disk_name')
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
