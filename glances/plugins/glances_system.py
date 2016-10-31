@@ -23,14 +23,7 @@ import os
 import platform
 import re
 from io import open
-try:
-    import distro
-except ImportError:
-    distro_tag = False
-else:
-    distro_tag = True
 
-from glances.logger import logger
 from glances.compat import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -120,19 +113,11 @@ class Plugin(GlancesPlugin):
             self.stats['hostname'] = platform.node()
             self.stats['platform'] = platform.architecture()[0]
             if self.stats['os_name'] == "Linux":
-                if distro_tag:
-                    # Use the distro external lib
-                    # Why ?
-                    # Because platform.linux_distribution is predicated in Python 3.7
-                    linux_distro = distro.linux_distribution()
-                    self.stats['linux_distro'] = ' '.join(linux_distro[:2])
+                linux_distro = platform.linux_distribution()
+                if linux_distro[0] == '':
+                    self.stats['linux_distro'] = _linux_os_release()
                 else:
-                    try:
-                        # For Python < 3.7
-                        linux_distro = platform.linux_distribution()
-                        self.stats['linux_distro'] = ' '.join(linux_distro[:2])
-                    except AttributeError:
-                        self.stats['linux_distro'] = _linux_os_release()
+                    self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'].endswith('BSD'):
                 self.stats['os_version'] = platform.release()
