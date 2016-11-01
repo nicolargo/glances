@@ -10,6 +10,6 @@ install:
   - pip install coveralls
 script:
   - python setup.py install
-  - coverage run --source=glances unitest.sh
+  - coverage run --source=glances unitest.py
 after_success:
   - coveralls
