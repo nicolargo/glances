@@ -148,16 +148,21 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update Docker stats using the input method."""
+        global docker_tag
+
         # Reset stats
         self.reset()
 
         # Get the current Docker API client
         if not self.docker_client:
             # First time, try to connect to the server
-            self.docker_client = self.connect()
-            if self.docker_client is None:
-                global docker_tag
+            try:
+                self.docker_client = self.connect()
+            except:
                 docker_tag = False
+            else:
+                if self.docker_client is None:
+                    docker_tag = False
 
         # The Docker-py lib is mandatory
         if not docker_tag:
