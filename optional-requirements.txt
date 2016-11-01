@@ -4,17 +4,9 @@ batinfo
 zeroconf
 netifaces
 pymdstat
-influxdb
-elasticsearch
-potsdb
-statsd
 pystache
 docker-py
 pysnmp
 pika
 py-cpuinfo
-bernhard
-cassandra-driver
 scandir
-couchdb
-pyzmq
