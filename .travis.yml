@@ -7,9 +7,10 @@ python:
   - "pypy"
 install:
   - pip install -r requirements.txt
+  - pip install -r optional-requirements.txt
   - pip install coveralls
 script:
   - python setup.py install
-  - coverage run --source=glances unitest.py
+  - coverage run --source=glances unitest-all.sh
 after_success:
   - coveralls
