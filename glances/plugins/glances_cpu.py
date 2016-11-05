@@ -136,7 +136,8 @@ class Plugin(GlancesPlugin):
                 self.cpu_stats_old = cpu_stats
             else:
                 for stat in cpu_stats._fields:
-                    self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
+                    if getattr(cpu_stats, stat) is not None:
+                        self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
 
                 self.stats['time_since_update'] = time_since_update
 
