@@ -137,6 +137,10 @@ Start the client browser (browser mode):\n\
                             dest='disable_sensors', help='disable sensors module')
         parser.add_argument('--disable-wifi', action='store_true', default=False,
                             dest='disable_wifi', help='disable wifi module')
+        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
+                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
+        parser.add_argument('-1', '--percpu', action='store_true', default=False,
+                            dest='percpu', help='start Glances in per CPU mode')
         parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
                             default=False, dest='disable_left_sidebar',
                             help='disable network, disk I/O, FS and sensors modules')
@@ -224,8 +228,6 @@ Start the client browser (browser mode):\n\
                             dest='process_filter', help='set the process filter pattern (regular expression)')
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
-        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
-                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
@@ -240,8 +242,6 @@ Start the client browser (browser mode):\n\
                             dest='diskio_iops', help='show IO per second in the DiskIO plugin')
         parser.add_argument('--fahrenheit', action='store_true', default=False,
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
-        parser.add_argument('-1', '--percpu', action='store_true', default=False,
-                            dest='percpu', help='start Glances in per CPU mode')
         parser.add_argument('--fs-free-space', action='store_true', default=False,
                             dest='fs_free_space', help='display FS free space instead of used')
         parser.add_argument('--theme-white', action='store_true', default=False,
