@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Oct 30, 2016" "2.8_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Nov 05, 2016" "2.8_DEVELOP" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -68,6 +68,117 @@ path to the configuration file
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-\-disable\-alert
+disable alert/log module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-amps
+disable application monitoring process module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-cpu
+disable CPU module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-diskio
+disable disk I/O module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-docker
+disable Docker module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-folders
+disable folders module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-fs
+disable file system module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-hddtemp
+disable HD temperature module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-ip
+disable IP module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-irq
+disable IRQ module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-load
+disable load module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-mem
+disable memory module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-memswap
+disable memory swap module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-network
+disable network module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-ports
+disable Ports module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-process
+disable process module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-raid
+disable RAID module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-sensors
+disable sensors module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-wifi
+disable Wifi module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-0, \-\-disable\-irix
+task\(aqs CPU usage will be divided by the total number of CPUs
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-1, \-\-percpu
+start Glances in per CPU mode
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-2, \-\-disable\-left\-sidebar
+disable network, disk I/O, FS and sensors modules (py3sensors lib
+needed)
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-3, \-\-disable\-quicklook
 disable quick look module
 .UNINDENT
@@ -78,104 +189,13 @@ disable all but quick look and load
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-cpu
-disable CPU module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-mem
-disable memory module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-swap
-disable swap module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-load
-disable load module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-network
-disable network module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-ip
-disable IP module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-diskio
-disable disk I/O module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-fs
-disable filesystem module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-folder
-disable folder module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-irq
-disable IRQ module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-sensors
-disable sensors module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-hddtemp
-disable HD temperature module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-raid
-disable RAID module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-docker
-disable Docker module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-ports
-disable Ports module
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-5, \-\-disable\-top
 disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-2, \-\-disable\-left\-sidebar
-disable network, disk I/O, FS and sensors modules (py3sensors lib
-needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-process
-disable process module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-amps
-disable application monitoring process module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-log
-disable log module
+.B \-\-enable\-history
+enable the history mode (matplotlib lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -194,12 +214,12 @@ enable extended stats on top process
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-enable\-history
-enable the history mode (matplotlib lib needed)
+.B \-\-export\-graph
+export stats to graph
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-path\-history PATH_HISTORY
+.B \-\-path\-graph PATH_GRAPH
 set the export path for graph history
 .UNINDENT
 .INDENT 0.0
@@ -209,33 +229,13 @@ export stats to a CSV file
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-export\-influxdb
-export stats to an InfluxDB server (influxdb lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-\-export\-cassandra
 export stats to a Cassandra/Scylla server (cassandra lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-export\-opentsdb
-export stats to an OpenTSDB server (potsdb lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-statsd
-export stats to a StatsD server (statsd lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-rabbitmq
-export stats to RabbitMQ broker (pika lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-riemann
-export stats to Riemann server (bernhard lib needed)
+.B \-\-export\-couchdb
+export stats to a CouchDB server (couchdb lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -244,8 +244,33 @@ export stats to an Elasticsearch server (elasticsearch lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-export\-couchdb
-export stats to a CouchDB server (couchdb lib needed)
+.B \-\-export\-influxdb
+export stats to an InfluxDB server (influxdb lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-opentsdb
+export stats to an OpenTSDB server (potsdb lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-rabbitmq
+export stats to RabbitMQ broker (pika lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-statsd
+export stats to a StatsD server (statsd lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-riemann
+export stats to Riemann server (bernhard lib needed)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-export\-zeromq
+export stats to a ZeroMQ server (zmq lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -329,6 +354,16 @@ run Glances in web server mode (bottle lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-\-cached\-time CACHED_TIME
+set the server cache time [default: 1 sec]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B open\-web\-browser
+try to open the Web UI in the default Web browser
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-q, \-\-quiet
 do not display the curses interface
 .UNINDENT
@@ -341,11 +376,6 @@ set the process filter pattern (regular expression)
 .TP
 .B \-\-process\-short\-name
 force short name for processes name
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-0, \-\-disable\-irix
-task\(aqs CPU usage will be divided by the total number of CPUs
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -379,11 +409,6 @@ display temperature in Fahrenheit (default is Celsius)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-1, \-\-percpu
-start Glances in per CPU mode
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-\-fs\-free\-space
 display FS free space instead of used
 .UNINDENT
@@ -391,6 +416,11 @@ display FS free space instead of used
 .TP
 .B \-\-theme\-white
 optimize display colors for white background
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-check\-update
+disable online Glances version ckeck
 .UNINDENT
 .SH INTERACTIVE COMMANDS
 .sp
@@ -510,6 +540,9 @@ View cumulative network I/O
 .TP
 .B \fBw\fP
 Delete finished warning log messages
+.TP
+.B \fBW\fP
+Show/hide Wifi module
 .TP
 .B \fBx\fP
 Delete finished warning and critical log messages

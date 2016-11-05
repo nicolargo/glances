@@ -22,6 +22,95 @@ Command-Line Options
 
     path to the configuration file
 
+.. option:: --disable-alert
+
+    disable alert/log module
+
+.. option:: --disable-amps
+
+    disable application monitoring process module
+
+.. option:: --disable-cpu
+
+    disable CPU module
+
+.. option:: --disable-diskio
+
+    disable disk I/O module
+
+.. option:: --disable-docker
+
+    disable Docker module
+
+.. option:: --disable-folders
+
+    disable folders module
+
+.. option:: --disable-fs
+
+    disable file system module
+
+.. option:: --disable-hddtemp
+
+    disable HD temperature module
+
+.. option:: --disable-ip
+
+    disable IP module
+
+.. option:: --disable-irq
+
+    disable IRQ module
+
+.. option:: --disable-load
+
+    disable load module
+
+.. option:: --disable-mem
+
+    disable memory module
+
+.. option:: --disable-memswap
+
+    disable memory swap module
+
+.. option:: --disable-network
+
+    disable network module
+
+.. option:: --disable-ports
+
+    disable Ports module
+
+.. option:: --disable-process
+
+    disable process module
+
+.. option:: --disable-raid
+
+    disable RAID module
+
+.. option:: --disable-sensors
+
+    disable sensors module
+
+.. option:: --disable-wifi
+
+    disable Wifi module
+
+.. option:: -0, --disable-irix
+
+    task's CPU usage will be divided by the total number of CPUs
+
+.. option:: -1, --percpu
+
+    start Glances in per CPU mode
+
+.. option:: -2, --disable-left-sidebar
+
+    disable network, disk I/O, FS and sensors modules (py3sensors lib
+    needed)
+
 .. option:: -3, --disable-quicklook
 
     disable quick look module
@@ -30,86 +119,13 @@ Command-Line Options
 
     disable all but quick look and load
 
-.. option:: --disable-cpu
-
-    disable CPU module
-
-.. option:: --disable-mem
-
-    disable memory module
-
-.. option:: --disable-swap
-
-    disable swap module
-
-.. option:: --disable-load
-
-    disable load module
-
-.. option:: --disable-network
-
-    disable network module
-
-.. option:: --disable-ip
-
-    disable IP module
-
-.. option:: --disable-diskio
-
-    disable disk I/O module
-
-.. option:: --disable-fs
-
-    disable filesystem module
-
-.. option:: --disable-folder
-
-    disable folder module
-
-.. option:: --disable-irq
-
-    disable IRQ module
-
-.. option:: --disable-sensors
-
-    disable sensors module
-
-.. option:: --disable-hddtemp
-
-    disable HD temperature module
-
-.. option:: --disable-raid
-
-    disable RAID module
-
-.. option:: --disable-docker
-
-    disable Docker module
-
-.. option:: --disable-ports
-
-    disable Ports module
-
 .. option:: -5, --disable-top
 
     disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
 
-.. option:: -2, --disable-left-sidebar
+.. option:: --enable-history
 
-    disable network, disk I/O, FS and sensors modules (py3sensors lib
-    needed)
-
-.. option:: --disable-process
-
-    disable process module
-
-.. option:: --disable-amps
-
-    disable application monitoring process module
-
-.. option:: --disable-log
-
-    disable log module
+    enable the history mode (matplotlib lib needed)
 
 .. option:: --disable-bold
 
@@ -123,11 +139,11 @@ Command-Line Options
 
     enable extended stats on top process
 
-.. option:: --enable-history
+.. option:: --export-graph
 
-    enable the history mode (matplotlib lib needed)
+    export stats to graph
 
-.. option:: --path-history PATH_HISTORY
+.. option:: --path-graph PATH_GRAPH
 
     set the export path for graph history
 
@@ -135,37 +151,41 @@ Command-Line Options
 
     export stats to a CSV file
 
-.. option:: --export-influxdb
-
-    export stats to an InfluxDB server (influxdb lib needed)
-
 .. option:: --export-cassandra
 
     export stats to a Cassandra/Scylla server (cassandra lib needed)
 
-.. option:: --export-opentsdb
+.. option:: --export-couchdb
 
-    export stats to an OpenTSDB server (potsdb lib needed)
-
-.. option:: --export-statsd
-
-    export stats to a StatsD server (statsd lib needed)
-
-.. option:: --export-rabbitmq
-
-    export stats to RabbitMQ broker (pika lib needed)
-
-.. option:: --export-riemann
-
-    export stats to Riemann server (bernhard lib needed)
+    export stats to a CouchDB server (couchdb lib needed)
 
 .. option:: --export-elasticsearch
 
     export stats to an Elasticsearch server (elasticsearch lib needed)
 
-.. option:: --export-couchdb
+.. option:: --export-influxdb
 
-    export stats to a CouchDB server (couchdb lib needed)
+    export stats to an InfluxDB server (influxdb lib needed)
+
+.. option:: --export-opentsdb
+
+    export stats to an OpenTSDB server (potsdb lib needed)
+
+.. option:: --export-rabbitmq
+
+    export stats to RabbitMQ broker (pika lib needed)
+
+.. option:: --export-statsd
+
+    export stats to a StatsD server (statsd lib needed)
+
+.. option:: --export-riemann
+
+    export stats to Riemann server (bernhard lib needed)
+
+.. option:: --export-zeromq
+
+    export stats to a ZeroMQ server (zmq lib needed)
 
 .. option:: -c CLIENT, --client CLIENT
 
@@ -231,6 +251,14 @@ Command-Line Options
 
     run Glances in web server mode (bottle lib needed)
 
+.. option:: --cached-time CACHED_TIME
+
+    set the server cache time [default: 1 sec]
+
+.. option:: open-web-browser
+
+    try to open the Web UI in the default Web browser
+
 .. option:: -q, --quiet
 
     do not display the curses interface
@@ -242,10 +270,6 @@ Command-Line Options
 .. option:: --process-short-name
 
     force short name for processes name
-
-.. option:: -0, --disable-irix
-
-    task's CPU usage will be divided by the total number of CPUs
 
 .. option:: --hide-kernel-threads
 
@@ -271,10 +295,6 @@ Command-Line Options
 
     display temperature in Fahrenheit (default is Celsius)
 
-.. option:: -1, --percpu
-
-    start Glances in per CPU mode
-
 .. option:: --fs-free-space
 
     display FS free space instead of used
@@ -282,6 +302,10 @@ Command-Line Options
 .. option:: --theme-white
 
     optimize display colors for white background
+
+.. option:: --disable-check-update
+
+    disable online Glances version ckeck
 
 Interactive Commands
 --------------------
@@ -397,6 +421,9 @@ The following commands (key pressed) are supported while in Glances:
 
 ``w``
     Delete finished warning log messages
+
+``W``
+    Show/hide Wifi module
 
 ``x``
     Delete finished warning and critical log messages
