@@ -327,7 +327,7 @@ Start the client browser (browser mode):\n\
             args.disable_quicklook = False
             args.disable_cpu = True
             args.disable_mem = True
-            args.disable_swap = True
+            args.disable_memswap = True
             args.disable_load = False
 
         # Manage disable_top option
@@ -336,7 +336,7 @@ Start the client browser (browser mode):\n\
             args.disable_quicklook = True
             args.disable_cpu = True
             args.disable_mem = True
-            args.disable_swap = True
+            args.disable_memswap = True
             args.disable_load = True
 
         # Control parameter and exit if it is not OK
