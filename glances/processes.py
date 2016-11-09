@@ -187,20 +187,35 @@ class GlancesProcesses(object):
 
     def __get_mandatory_stats(self, proc, procstat):
         """
-        Get mandatory_stats: need for the sorting/filter step.
+        Get mandatory_stats: for all processes.
+        Needed for the sorting/filter step.
 
-        => cpu_percent, memory_percent, io_counters, name, cmdline
+        Stats grabbed inside this method:
+        * 'name', 'cpu_times', 'status', 'ppid'
+        * 'username', 'cpu_percent', 'memory_percent'
         """
         procstat['mandatory_stats'] = True
 
-        # Process CPU, MEM percent and name
+        # Name, cpu_times, status and ppid stats are in the same /proc file
+        # Optimisation fir issue #958
         try:
             procstat.update(proc.as_dict(
-                attrs=['username', 'cpu_percent', 'memory_percent',
-                       'name', 'cpu_times'], ad_value=''))
+                attrs=['name', 'cpu_times', 'status', 'ppid'],
+                ad_value=''))
         except psutil.NoSuchProcess:
-            # Try/catch for issue #432
+            # Try/catch for issue #432 (process no longer exist)
             return None
+        else:
+            procstat['status'] = str(procstat['status'])[:1].upper()
+
+        try:
+            procstat.update(proc.as_dict(
+                attrs=['username', 'cpu_percent', 'memory_percent'],
+                ad_value=''))
+        except psutil.NoSuchProcess:
+            # Try/catch for issue #432 (process no longer exist)
+            return None
+
         if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
@@ -259,35 +274,19 @@ class GlancesProcesses(object):
 
     def __get_standard_stats(self, proc, procstat):
         """
-        Get standard_stats: for all the displayed processes.
+        Get standard_stats: only for displayed processes.
 
-        => username, status, memory_info, cpu_times
+        Stats grabbed inside this method:
+        * nice and memory_info
         """
         procstat['standard_stats'] = True
 
-        # Process username (cached with internal cache)
-        try:
-            self.username_cache[procstat['pid']]
-        except KeyError:
-            try:
-                self.username_cache[procstat['pid']] = proc.username()
-            except psutil.NoSuchProcess:
-                self.username_cache[procstat['pid']] = "?"
-            except (KeyError, psutil.AccessDenied):
-                try:
-                    self.username_cache[procstat['pid']] = proc.uids().real
-                except (KeyError, AttributeError, psutil.AccessDenied):
-                    self.username_cache[procstat['pid']] = "?"
-        procstat['username'] = self.username_cache[procstat['pid']]
-
-        # Process status, nice, memory_info, cpu_times and ppid (issue #926)
+        # Process nice and memory_info (issue #926)
         try:
             procstat.update(
-                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times', 'ppid']))
+                proc.as_dict(attrs=['nice', 'memory_info']))
         except psutil.NoSuchProcess:
             pass
-        else:
-            procstat['status'] = str(procstat['status'])[:1].upper()
 
         return procstat
 
@@ -388,7 +387,7 @@ class GlancesProcesses(object):
                             mandatory_stats=True,
                             standard_stats=True,
                             extended_stats=False):
-        """Get stats of running processes."""
+        """Get stats of a running processes."""
         # Process ID (always)
         procstat = proc.as_dict(attrs=['pid'])
 
