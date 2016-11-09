@@ -208,6 +208,8 @@ Start the client browser (browser mode):\n\
                             dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
+        parser.add_argument('--password_from_config', action='store_true', default=False, dest='password_from_config',
+                            help='load server password')
         # Display options
         parser.add_argument('-q', '--quiet', default=False, action='store_true',
                             dest='quiet', help='do not display the curses interface')
