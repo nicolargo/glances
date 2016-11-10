@@ -111,7 +111,7 @@ class Plugin(GlancesPlugin):
 
         for i in self.stats:
             ret.append(self.curse_new_line())
-            msg = '{:<15}'.format(i['irq_line'])
+            msg = '{:<15}'.format(i['irq_line'][:15])
             ret.append(self.curse_add_line(msg))
             msg = '{:>8}'.format(str(i['irq_rate']))
             ret.append(self.curse_add_line(msg))
