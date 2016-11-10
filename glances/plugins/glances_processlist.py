@@ -484,7 +484,7 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, optional=True))
         msg = '{:>6}'.format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{:>6}'.format('PID')
+        msg = '{:>{width}}'.format('PID', width=self.__max_pid_size() + 1)
         ret.append(self.curse_add_line(msg))
         msg = ' {:10}'.format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
