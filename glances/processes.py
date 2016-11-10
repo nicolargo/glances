@@ -69,7 +69,7 @@ class GlancesProcesses(object):
         self._sort_key = 'cpu_percent'
         self.allprocesslist = []
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.reset_processcount()
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
@@ -94,6 +94,13 @@ class GlancesProcesses(object):
         self._max_values = {}
         self.reset_max_values()
 
+    def reset_processcount(self):
+        self.processcount = {'total': 0,
+                             'running': 0,
+                             'sleeping': 0,
+                             'thread': 0,
+                             'pid_max': None}
+
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -111,6 +118,25 @@ class GlancesProcesses(object):
     def disable_extended(self):
         """Disable extended process stats."""
         self.disable_extended_tag = True
+
+    @property
+    def pid_max(self):
+        """Get the maximum number of PID
+        On a Linux operating system, the value is read from
+        the /proc/sys/kernel/pid_max file.
+
+        If the file is unreadable or not available (on others OS),
+        return None.
+
+        :returns: int or None
+        """
+        if LINUX:
+            # For the moment, only available on LINUX
+            # Waiting from https://github.com/giampaolo/psutil/issues/720
+            try:
+                return int(open('/proc/sys/kernel/pid_max').readline().rstrip())
+            except IOError:
+                return None
 
     @property
     def max_processes(self):
@@ -406,7 +432,7 @@ class GlancesProcesses(object):
         """Update the processes stats."""
         # Reset the stats
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.reset_processcount()
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -417,6 +443,9 @@ class GlancesProcesses(object):
 
         # Reset the max dict
         self.reset_max_values()
+
+        # Update the maximum process ID (pid) number
+        self.processcount['pid_max'] = self.pid_max
 
         # Build an internal dict with only mandatories stats (sort keys)
         processdict = {}
