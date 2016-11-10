@@ -51,6 +51,46 @@ class _GlancesCurses(object):
     Note: It is a private class, use GlancesCursesClient or GlancesCursesBrowser.
     """
 
+    _hotkeys = {
+        '0': {'switch': 'disable_irix'},
+        '1': {'switch': 'percpu'},
+        '2': {'switch': 'disable_left_sidebar'},
+        '3': {'switch': 'disable_quicklook'},
+        '4': {'switch': 'full_quicklook'},
+        '5': {'switch': 'disable_top'},
+        '/': {'switch': 'process_short_name'},
+        'd': {'switch': 'disable_diskio'},
+        'A': {'switch': 'disable_amps'},
+        'b': {'switch': 'byte'},
+        'B': {'switch': 'diskio_iops'},
+        'D': {'switch': 'disable_docker'},
+        'e': {'switch': 'enable_process_extended'},
+        'F': {'switch': 'fs_free_space'},
+        'g': {'switch': 'graph_tag'},
+        'h': {'switch': 'help_tag'},
+        'I': {'switch': 'disable_ip'},
+        'l': {'switch': 'disable_alert'},
+        'M': {'switch': 'reset_minmax_tag'},
+        'n': {'switch': 'disable_network'},
+        'P': {'switch': 'disable_ports'},
+        'Q': {'switch': 'disable_irq'},
+        'r': {'switch': 'reset_history_tag'},
+        'R': {'switch': 'disable_raid'},
+        's': {'switch': 'disable_sensors'},
+        'T': {'switch': 'network_sum'},
+        'U': {'switch': 'network_cumul'},
+        'W': {'switch': 'disable_wifi'},
+        # Processes sort hotkeys
+        'a': {'auto_sort': True, 'sort_key': 'cpu_percent'},
+        'c': {'auto_sort': False, 'sort_key': 'cpu_percent'},
+        'i': {'auto_sort': False, 'sort_key': 'io_counters'},
+        'm': {'auto_sort': False, 'sort_key': 'memory_percent'},
+        'p': {'auto_sort': False, 'sort_key': 'name'},
+        't': {'auto_sort': False, 'sort_key': 'cpu_times'},
+        'u': {'auto_sort': False, 'sort_key': 'username'},
+        'c': {'auto_sort': False, 'sort_key': 'cpu_percent'}
+    }
+
     def __init__(self, config=None, args=None):
         # Init
         self.config = config
@@ -286,7 +326,23 @@ class _GlancesCurses(object):
         # Catch the pressed key
         self.pressedkey = self.get_key(self.term_window)
 
-        # Actions...
+        # Actions (available in the global hotkey dict)...
+        for hotkey in self._hotkeys:
+            if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
+                setattr(self.args,
+                        self._hotkeys[hotkey]['switch'],
+                        not getattr(self.args,
+                                    self._hotkeys[hotkey]['switch']))
+            if self.pressedkey == ord(hotkey) and 'auto_sort' in self._hotkeys[hotkey]:
+                setattr(glances_processes,
+                        'auto_sort',
+                        self._hotkeys[hotkey]['auto_sort'])
+            if self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
+                setattr(glances_processes,
+                        'sort_key',
+                        self._hotkeys[hotkey]['sort_key'])
+
+        # Other actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
             if return_to_browser:
@@ -295,170 +351,60 @@ class _GlancesCurses(object):
                 self.end()
                 logger.info("Stop Glances")
                 sys.exit(0)
-        elif self.pressedkey == 10:
+        elif self.pressedkey == ord('\n'):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
-        elif self.pressedkey == ord('0'):
-            # '0' > Switch between IRIX and Solaris mode
-            self.args.disable_irix = not self.args.disable_irix
-        elif self.pressedkey == ord('1'):
-            # '1' > Switch between CPU and PerCPU information
-            self.args.percpu = not self.args.percpu
-        elif self.pressedkey == ord('2'):
-            # '2' > Enable/disable left sidebar
-            self.args.disable_left_sidebar = not self.args.disable_left_sidebar
-        elif self.pressedkey == ord('3'):
-            # '3' > Enable/disable quicklook
-            self.args.disable_quicklook = not self.args.disable_quicklook
-        elif self.pressedkey == ord('4'):
-            # '4' > Enable/disable all but quick look and load
-            self.args.full_quicklook = not self.args.full_quicklook
-            if self.args.full_quicklook:
-                self.args.disable_quicklook = False
-                self.args.disable_cpu = True
-                self.args.disable_mem = True
-                self.args.disable_memswap = True
-            else:
-                self.args.disable_quicklook = False
-                self.args.disable_cpu = False
-                self.args.disable_mem = False
-                self.args.disable_memswap = False
-        elif self.pressedkey == ord('5'):
-            # '5' > Enable/disable top menu
-            logger.info(self.args.disable_top)
-            self.args.disable_top = not self.args.disable_top
-            if self.args.disable_top:
-                self.args.disable_quicklook = True
-                self.args.disable_cpu = True
-                self.args.disable_mem = True
-                self.args.disable_memswap = True
-                self.args.disable_load = True
-            else:
-                self.args.disable_quicklook = False
-                self.args.disable_cpu = False
-                self.args.disable_mem = False
-                self.args.disable_memswap = False
-                self.args.disable_load = False
-        elif self.pressedkey == ord('/'):
-            # '/' > Switch between short/long name for processes
-            self.args.process_short_name = not self.args.process_short_name
-        elif self.pressedkey == ord('a'):
-            # 'a' > Sort processes automatically and reset to 'cpu_percent'
-            glances_processes.auto_sort = True
-            glances_processes.sort_key = 'cpu_percent'
-        elif self.pressedkey == ord('A'):
-            # 'A' > enable/disable AMP module
-            self.args.disable_amps = not self.args.disable_amps
-        elif self.pressedkey == ord('b'):
-            # 'b' > Switch between bit/s and Byte/s for network IO
-            self.args.byte = not self.args.byte
-        elif self.pressedkey == ord('B'):
-            # 'B' > Switch between bit/s and IO/s for Disk IO
-            self.args.diskio_iops = not self.args.diskio_iops
-        elif self.pressedkey == ord('c'):
-            # 'c' > Sort processes by CPU usage
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'cpu_percent'
-        elif self.pressedkey == ord('d'):
-            # 'd' > Show/hide disk I/O stats
-            self.args.disable_diskio = not self.args.disable_diskio
-        elif self.pressedkey == ord('D'):
-            # 'D' > Show/hide Docker stats
-            self.args.disable_docker = not self.args.disable_docker
-        elif self.pressedkey == ord('e'):
-            # 'e' > Enable/Disable extended stats for top process
-            self.args.enable_process_extended = not self.args.enable_process_extended
-            if not self.args.enable_process_extended:
-                glances_processes.disable_extended()
-            else:
-                glances_processes.enable_extended()
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
-            logger.info("Erase process filter")
             glances_processes.process_filter = None
-        elif self.pressedkey == ord('F'):
-            # 'F' > Switch between FS available and free space
-            self.args.fs_free_space = not self.args.fs_free_space
         elif self.pressedkey == ord('f'):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('g'):
-            # 'g' > Export graphs to file
-            self.graph_tag = not self.graph_tag
-        elif self.pressedkey == ord('h'):
-            # 'h' > Show/hide help
-            self.args.help_tag = not self.args.help_tag
-        elif self.pressedkey == ord('i'):
-            # 'i' > Sort processes by IO rate (not available on OS X)
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'io_counters'
-        elif self.pressedkey == ord('I'):
-            # 'I' > Show/hide IP module
-            self.args.disable_ip = not self.args.disable_ip
-        elif self.pressedkey == ord('l'):
-            # 'l' > Show/hide alert/log messages
-            self.args.disable_alert = not self.args.disable_alert
-        elif self.pressedkey == ord('m'):
-            # 'm' > Sort processes by MEM usage
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'memory_percent'
-        elif self.pressedkey == ord('M'):
-            # 'M' > Reset processes summary min/max
-            self.args.reset_minmax_tag = not self.args.reset_minmax_tag
-        elif self.pressedkey == ord('n'):
-            # 'n' > Show/hide network stats
-            self.args.disable_network = not self.args.disable_network
-        elif self.pressedkey == ord('p'):
-            # 'p' > Sort processes by name
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'name'
-        elif self.pressedkey == ord('P'):
-            # 'P' > Disable ports scan plugins
-            self.args.disable_ports = not self.args.disable_ports
-        elif self.pressedkey == ord('Q'):
-            self.args.disable_irq = not self.args.disable_irq
-        elif self.pressedkey == ord('r'):
-            # 'r' > Reset history
-            self.reset_history_tag = not self.reset_history_tag
-        elif self.pressedkey == ord('R'):
-            # 'R' > Hide RAID plugins
-            self.args.disable_raid = not self.args.disable_raid
-        elif self.pressedkey == ord('s'):
-            # 's' > Show/hide sensors stats (Linux-only)
-            self.args.disable_sensors = not self.args.disable_sensors
-        elif self.pressedkey == ord('t'):
-            # 't' > Sort processes by TIME usage
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'cpu_times'
-        elif self.pressedkey == ord('T'):
-            # 'T' > View network traffic as sum Rx+Tx
-            self.args.network_sum = not self.args.network_sum
-        elif self.pressedkey == ord('u'):
-            # 'u' > Sort processes by USER
-            glances_processes.auto_sort = False
-            glances_processes.sort_key = 'username'
-        elif self.pressedkey == ord('U'):
-            # 'U' > View cumulative network I/O (instead of bitrate)
-            self.args.network_cumul = not self.args.network_cumul
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
-        elif self.pressedkey == ord('W'):
-            # 'W' > Enable/Disable Wifi plugin
-            self.args.disable_wifi = not self.args.disable_wifi
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
             glances_logs.clean(critical=True)
         elif self.pressedkey == ord('z'):
-            # 'z' > Enable/Disable processes stats (count + list + AMPs)
-            # Enable/Disable display
+            # 'z' > Enable or disable processes
             self.args.disable_process = not self.args.disable_process
-            # Enable/Disable update
             if self.args.disable_process:
                 glances_processes.disable()
             else:
                 glances_processes.enable()
+
+        # Change the curse interface according to the current configuration
+        if not self.args.enable_process_extended:
+            glances_processes.disable_extended()
+        else:
+            glances_processes.enable_extended()
+
+        if self.args.disable_top:
+            self.args.disable_quicklook = True
+            self.args.disable_cpu = True
+            self.args.disable_mem = True
+            self.args.disable_memswap = True
+            self.args.disable_load = True
+        else:
+            self.args.disable_quicklook = False
+            self.args.disable_cpu = False
+            self.args.disable_mem = False
+            self.args.disable_memswap = False
+            self.args.disable_load = False
+
+        if self.args.full_quicklook:
+            self.args.disable_quicklook = False
+            self.args.disable_cpu = True
+            self.args.disable_mem = True
+            self.args.disable_memswap = True
+        else:
+            self.args.disable_quicklook = False
+            self.args.disable_cpu = False
+            self.args.disable_mem = False
+            self.args.disable_memswap = False
+
         # Return the key code
         return self.pressedkey
 
