@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -81,6 +81,10 @@ class Plugin(GlancesPlugin):
 
         # Get the max values (dict)
         self.max_values = glances_processes.max_values()
+
+        # Get the maximum PID number
+        # Use to optimize space (see https://github.com/nicolargo/glances/issues/959)
+        self.pid_max = glances_processes.pid_max
 
         # Note: 'glances_processes' is already init in the processes.py script
 
@@ -240,7 +244,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = '{:>6}'.format(p['pid'])
+        msg = '{:>{width}}'.format(p['pid'], width=self.__max_pid_size() + 1)
         ret.append(self.curse_add_line(msg))
         # USER
         if 'username' in p:
@@ -647,3 +651,11 @@ class Plugin(GlancesPlugin):
         return sort_stats(self.stats, sortedby,
                           tree=glances_processes.is_tree_enabled(),
                           reverse=glances_processes.sort_reverse)
+
+    def __max_pid_size(self):
+        """Return the maximum PID size in number of char"""
+        if self.pid_max is not None:
+            return len(str(self.pid_max))
+        else:
+            # By default return 5 (corresponding to 99999 PID number)
+            return 5
