@@ -8,6 +8,8 @@ IRQ
 Glances displays the top 5 interrupts rate. This plugin is only available on
 GNU/Linux machine (stats are grabbed from the /proc/interrupts file).
 
+Note: /proc/interrupts file did not exist inside OpenVZ containers.
+
 How to read the informations:
 
 * The first Column is the IRQ number / name

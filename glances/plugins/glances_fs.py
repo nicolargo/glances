@@ -89,6 +89,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the FS stats using the input method."""
@@ -179,12 +180,6 @@ class Plugin(GlancesPlugin):
                         'key': self.get_key()}
                     self.stats.append(fs_current)
 
-        # Update the history list
-        self.update_stats_history('mnt_point')
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -204,7 +199,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_fs:
+        if not self.stats or self.is_disable():
             return ret
 
         # Max size for the fsname name

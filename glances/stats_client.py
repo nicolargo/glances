@@ -51,7 +51,7 @@ class GlancesStatsClient(GlancesStats):
             # for example, the file glances_xxx.py
             # generate self._plugins_list["xxx"] = ...
             logger.debug("Server uses {} plugin".format(item))
-            self._plugins[item] = plugin.Plugin()
+            self._plugins[item] = plugin.Plugin(args=self.args)
         # Restoring system path
         sys.path = sys_path
 

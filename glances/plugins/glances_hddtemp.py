@@ -52,6 +52,8 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update HDD stats using the input method."""
         # Reset stats
@@ -89,10 +91,6 @@ class GlancesGrabHDDTemp(object):
         """Update the stats."""
         # Reset the list
         self.reset()
-
-        # Only update if --disable-hddtemp is not set
-        if self.args is None or self.args.disable_hddtemp:
-            return
 
         # Fetch the data
         # data = ("|/dev/sda|WDC WD2500JS-75MHB0|44|C|"
@@ -146,7 +144,8 @@ class GlancesGrabHDDTemp(object):
         except socket.error as e:
             logger.debug("Cannot connect to an HDDtemp server ({}:{} => {})".format(self.host, self.port, e))
             logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
-            self.args.disable_hddtemp = True
+            if self.args is not None:
+                self.args.disable_hddtemp = True
             data = ""
         finally:
             sck.close()

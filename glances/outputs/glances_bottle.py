@@ -24,7 +24,10 @@ import os
 import sys
 import tempfile
 from io import open
+import webbrowser
 
+from glances.timer import Timer
+from glances.globals import WINDOWS
 from glances.logger import logger
 
 try:
@@ -46,6 +49,11 @@ class GlancesBottle(object):
         # Will be updated within Bottle route
         self.stats = None
 
+        # cached_time is the minimum time interval between stats updates
+        # i.e. HTTP/Restful calls will not retrieve updated info until the time
+        # since last update is passed (will retrieve old cached info instead)
+        self.timer = Timer(0)
+
         # Init Bottle
         self._app = Bottle()
         # Enable CORS (issue #479)
@@ -58,6 +66,12 @@ class GlancesBottle(object):
 
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
+
+    def __update__(self):
+        # Never update more than 1 time per cached_time
+        if self.timer.finished():
+            self.stats.update()
+            self.timer = Timer(self.args.cached_time)
 
     def app(self):
         return self._app()
@@ -105,9 +119,19 @@ class GlancesBottle(object):
         self.plugins_list = self.stats.getAllPlugins()
 
         # Bind the Bottle TCP address/port
-        bindmsg = 'Glances web server started on http://{}:{}/'.format(self.args.bind_address, self.args.port)
+        bindurl = 'http://{}:{}/'.format(self.args.bind_address,
+                                         self.args.port)
+        bindmsg = 'Glances web server started on {}'.format(bindurl)
         logger.info(bindmsg)
         print(bindmsg)
+        if self.args.open_web_browser:
+            # Implementation of the issue #946
+            # Try to open the Glances Web UI in the default Web browser if:
+            # 1) --open-web-browser option is used
+            # 2) Glances standalone mode is running on Windows OS
+            webbrowser.open(bindurl,
+                            new=2,
+                            autoraise=1)
         self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
 
     def end(self):
@@ -117,7 +141,7 @@ class GlancesBottle(object):
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         # Display
         return static_file("index.html", root=self.STATIC_PATH)
@@ -170,7 +194,7 @@ class GlancesBottle(object):
         response.content_type = 'application/json'
 
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         try:
             plist = json.dumps(self.plugins_list)
@@ -197,7 +221,7 @@ class GlancesBottle(object):
                 logger.debug("Debug file (%s) not found" % fname)
 
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         try:
             # Get the JSON value of the stat ID
@@ -254,7 +278,7 @@ class GlancesBottle(object):
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
 
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         try:
             # Get the JSON value of the stat ID
@@ -278,7 +302,7 @@ class GlancesBottle(object):
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
 
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         try:
             # Get the JSON value of the stat ID
@@ -301,7 +325,7 @@ class GlancesBottle(object):
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
 
         # Update the stat
-        # self.stats.update()
+        # self.__update__()
 
         try:
             # Get the JSON value of the stat limits
@@ -324,7 +348,7 @@ class GlancesBottle(object):
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
 
         # Update the stat
-        # self.stats.update()
+        # self.__update__()
 
         try:
             # Get the JSON value of the stat views
@@ -341,7 +365,7 @@ class GlancesBottle(object):
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
 
         # Update the stat
-        self.stats.update()
+        self.__update__()
 
         if value is None:
             if history:

@@ -1,0 +1,12 @@
+bottle
+requests
+batinfo
+zeroconf
+netifaces
+pymdstat
+pystache
+docker-py
+pysnmp
+pika
+py-cpuinfo
+scandir

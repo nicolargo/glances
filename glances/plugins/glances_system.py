@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,8 @@ snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',
 # Dict (key: OS short name) of dict (reg exp OID to human)
 # Windows:
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
-snmp_to_human = {'windows': {'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
+snmp_to_human = {'windows': {'Windows Version 10.0': 'Windows 10 or Server 2016',
+                             'Windows Version 6.3': 'Windows 8.1 or Server 2012R2',
                              'Windows Version 6.2': 'Windows 8 or Server 2012',
                              'Windows Version 6.1': 'Windows 7 or Server 2008R2',
                              'Windows Version 6.0': 'Windows Vista or Server 2008',
@@ -96,6 +97,8 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the host/system info using the input method.
 

@@ -20,6 +20,7 @@
 
 """Init the Glances software."""
 
+# Import system libs
 import locale
 import platform
 import signal
@@ -27,7 +28,7 @@ import sys
 
 # Global name
 __appname__ = 'glances'
-__version__ = '2.7.1'
+__version__ = '2.8_DEVELOP'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPL'
 
@@ -42,7 +43,9 @@ except ImportError:
 # Note: others Glances libs will be imported optionally
 from glances.logger import logger
 from glances.main import GlancesMain
+from glances.globals import WINDOWS
 
+# Check locale
 try:
     locale.setlocale(locale.LC_ALL, '')
 except locale.Error:
@@ -93,6 +96,111 @@ def end():
     sys.exit(0)
 
 
+def start_standalone(config, args):
+    """Start the standalone mode"""
+    logger.info("Start standalone mode")
+
+    # Share global var
+    global standalone
+
+    # Import the Glances standalone module
+    from glances.standalone import GlancesStandalone
+
+    # Init the standalone mode
+    standalone = GlancesStandalone(config=config, args=args)
+
+    # Start the standalone (CLI) loop
+    standalone.serve_forever()
+
+
+def start_clientbrowser(config, args):
+    """Start the browser client mode"""
+    logger.info("Start client mode (browser)")
+
+    # Share global var
+    global client
+
+    # Import the Glances client browser module
+    from glances.client_browser import GlancesClientBrowser
+
+    # Init the client
+    client = GlancesClientBrowser(config=config, args=args)
+
+    # Start the client loop
+    client.serve_forever()
+
+    # Shutdown the client
+    client.end()
+
+
+def start_client(config, args):
+    """Start the client mode"""
+    logger.info("Start client mode")
+
+    # Share global var
+    global client
+
+    # Import the Glances client browser module
+    from glances.client import GlancesClient
+
+    # Init the client
+    client = GlancesClient(config=config, args=args)
+
+    # Test if client and server are in the same major version
+    if not client.login():
+        logger.critical("The server version is not compatible with the client")
+        sys.exit(2)
+
+    # Start the client loop
+    client.serve_forever()
+
+    # Shutdown the client
+    client.end()
+
+
+def start_server(config, args):
+    """Start the server mode"""
+    logger.info("Start server mode")
+
+    # Share global var
+    global server
+
+    # Import the Glances server module
+    from glances.server import GlancesServer
+
+    server = GlancesServer(cached_time=args.cached_time,
+                           config=config,
+                           args=args)
+    print('Glances server is running on {}:{}'.format(args.bind_address, args.port))
+
+    # Set the server login/password (if -P/--password tag)
+    if args.password != "":
+        server.add_user(args.username, args.password)
+
+    # Start the server loop
+    server.serve_forever()
+
+    # Shutdown the server?
+    server.server_close()
+
+
+def start_webserver(config, args):
+    """Start the Web server mode"""
+    logger.info("Start web server mode")
+
+    # Share global var
+    global webserver
+
+    # Import the Glances web server module
+    from glances.webserver import GlancesWebServer
+
+    # Init the web server mode
+    webserver = GlancesWebServer(config=config, args=args)
+
+    # Start the web server loop
+    webserver.serve_forever()
+
+
 def main():
     """Main entry point for Glances.
 
@@ -107,92 +215,29 @@ def main():
         psutil_version))
 
     # Share global var
-    global core, standalone, client, server, webserver
+    global core
 
     # Create the Glances main instance
     core = GlancesMain()
+    config = core.get_config()
+    args = core.get_args()
 
     # Catch the CTRL-C signal
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if core.is_standalone():
-        logger.info("Start standalone mode")
-
-        # Import the Glances standalone module
-        from glances.standalone import GlancesStandalone
-
-        # Init the standalone mode
-        standalone = GlancesStandalone(config=core.get_config(),
-                                       args=core.get_args())
-
-        # Start the standalone (CLI) loop
-        standalone.serve_forever()
-
-    elif core.is_client():
+    if core.is_standalone() and not WINDOWS:
+        start_standalone(config=config, args=args)
+    elif core.is_client() and not WINDOWS:
         if core.is_client_browser():
-            logger.info("Start client mode (browser)")
-
-            # Import the Glances client browser module
-            from glances.client_browser import GlancesClientBrowser
-
-            # Init the client
-            client = GlancesClientBrowser(config=core.get_config(),
-                                          args=core.get_args())
-
+            start_clientbrowser(config=config, args=args)
         else:
-            logger.info("Start client mode")
-
-            # Import the Glances client module
-            from glances.client import GlancesClient
-
-            # Init the client
-            client = GlancesClient(config=core.get_config(),
-                                   args=core.get_args())
-
-            # Test if client and server are in the same major version
-            if not client.login():
-                logger.critical("The server version is not compatible with the client")
-                sys.exit(2)
-
-        # Start the client loop
-        client.serve_forever()
-
-        # Shutdown the client
-        client.end()
-
+            start_client(config=config, args=args)
     elif core.is_server():
-        logger.info("Start server mode")
-
-        # Import the Glances server module
-        from glances.server import GlancesServer
-
-        args = core.get_args()
-
-        server = GlancesServer(cached_time=core.cached_time,
-                               config=core.get_config(),
-                               args=args)
-        print('Glances server is running on {}:{}'.format(args.bind_address, args.port))
-
-        # Set the server login/password (if -P/--password tag)
-        if args.password != "":
-            server.add_user(args.username, args.password)
-
-        # Start the server loop
-        server.serve_forever()
-
-        # Shutdown the server?
-        server.server_close()
-
-    elif core.is_webserver():
-        logger.info("Start web server mode")
-
-        # Import the Glances web server module
-        from glances.webserver import GlancesWebServer
-
-        # Init the web server mode
-        webserver = GlancesWebServer(config=core.get_config(),
-                                     args=core.get_args())
-
-        # Start the web server loop
-        webserver.serve_forever()
+        start_server(config=config, args=args)
+    elif core.is_webserver() or (core.is_standalone() and WINDOWS):
+        # Web server mode replace the standalone mode on Windows OS
+        # In this case, try to start the web browser mode automaticaly
+        if core.is_standalone() and WINDOWS:
+            args.open_web_browser = True
+        start_webserver(config=config, args=args)

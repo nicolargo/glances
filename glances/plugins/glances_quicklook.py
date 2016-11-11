@@ -22,7 +22,6 @@
 from glances.cpu_percent import cpu_percent
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.logger import logger
 
 import psutil
 
@@ -58,6 +57,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update quicklook stats using the input method."""
@@ -86,9 +86,6 @@ class Plugin(GlancesPlugin):
                 self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
                 self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -108,7 +105,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if not self.stats or args.disable_quicklook:
+        if not self.stats or self.is_disable():
             return ret
 
         # Define the bar

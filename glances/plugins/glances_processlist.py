@@ -79,6 +79,9 @@ class Plugin(GlancesPlugin):
         except Exception:
             self.nb_log_core = 0
 
+        # Get the max values (dict)
+        self.max_values = glances_processes.max_values()
+
         # Note: 'glances_processes' is already init in the processes.py script
 
     def get_key(self):
@@ -102,6 +105,10 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.gettree()
             else:
                 self.stats = glances_processes.getlist()
+
+            # Get the max values (dict)
+            self.max_values = glances_processes.max_values()
+
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
@@ -190,7 +197,10 @@ class Plugin(GlancesPlugin):
         return child_data
 
     def get_process_curses_data(self, p, first, args):
-        """Get curses data to display for a process."""
+        """Get curses data to display for a process.
+        - p is the process to display
+        - first is a tag=True if the process is the first on the list
+        """
         ret = [self.curse_new_line()]
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
@@ -198,16 +208,22 @@ class Plugin(GlancesPlugin):
                 msg = '{:>6.1f}'.format(p['cpu_percent'] / float(self.nb_log_core))
             else:
                 msg = '{:>6.1f}'.format(p['cpu_percent'])
-            ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['cpu_percent'], header="cpu")))
+            alert = self.get_alert(p['cpu_percent'],
+                                   highlight_zero=False,
+                                   is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
+                                   header="cpu")
+            ret.append(self.curse_add_line(msg, alert))
         else:
             msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))
         # MEM
         if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
             msg = '{:>6.1f}'.format(p['memory_percent'])
-            ret.append(self.curse_add_line(msg,
-                                           self.get_alert(p['memory_percent'], header="mem")))
+            alert = self.get_alert(p['memory_percent'],
+                                   highlight_zero=False,
+                                   is_max=(p['memory_percent'] == self.max_values['memory_percent']),
+                                   header="mem")
+            ret.append(self.curse_add_line(msg, alert))
         else:
             msg = '{:>6}'.format('?')
             ret.append(self.curse_add_line(msg))

@@ -19,7 +19,6 @@
 
 import operator
 import os
-import re
 
 from glances.compat import iteritems, itervalues, listitems
 from glances.globals import BSD, LINUX, OSX, WINDOWS
@@ -87,6 +86,13 @@ class GlancesProcesses(object):
 
         # Whether or not to hide kernel threads
         self.no_kernel_threads = False
+
+        # Store maximums values in a dict
+        # Used in the UI to highlight the maximum value
+        self._max_values_list = ('cpu_percent', 'memory_percent')
+        # { 'cpu_percent': 0.0, 'memory_percent': 0.0 }
+        self._max_values = {}
+        self.reset_max_values()
 
     def enable(self):
         """Enable process stats."""
@@ -161,6 +167,24 @@ class GlancesProcesses(object):
 
         return True
 
+    def max_values(self):
+        """Return the max values dict."""
+        return self._max_values
+
+    def get_max_values(self, key):
+        """Get the maximum values of the given stat (key)."""
+        return self._max_values[key]
+
+    def set_max_values(self, key, value):
+        """Set the maximum value for a specific stat (key)."""
+        self._max_values[key] = value
+
+    def reset_max_values(self):
+        """Reset the maximum values dict."""
+        self._max_values = {}
+        for k in self._max_values_list:
+            self._max_values[k] = 0.0
+
     def __get_mandatory_stats(self, proc, procstat):
         """
         Get mandatory_stats: need for the sorting/filter step.
@@ -181,6 +205,11 @@ class GlancesProcesses(object):
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
             return None
+
+        # Compute the maximum value for cpu_percent and memory_percent
+        for k in self._max_values_list:
+            if procstat[k] > self.get_max_values(k):
+                self.set_max_values(k, procstat[k])
 
         # Process command line (cached with internal cache)
         try:
@@ -251,10 +280,10 @@ class GlancesProcesses(object):
                     self.username_cache[procstat['pid']] = "?"
         procstat['username'] = self.username_cache[procstat['pid']]
 
-        # Process status, nice, memory_info and cpu_times
+        # Process status, nice, memory_info, cpu_times and ppid (issue #926)
         try:
             procstat.update(
-                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times']))
+                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times', 'ppid']))
         except psutil.NoSuchProcess:
             pass
         else:
@@ -386,6 +415,9 @@ class GlancesProcesses(object):
 
         # Get the time since last update
         time_since_update = getTimeSinceLastUpdate('process_disk')
+
+        # Reset the max dict
+        self.reset_max_values()
 
         # Build an internal dict with only mandatories stats (sort keys)
         processdict = {}

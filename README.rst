@@ -42,6 +42,7 @@ Optional dependencies:
 - ``zeroconf`` (for the autodiscover mode)
 - ``netifaces`` (for the IP plugin)
 - ``influxdb`` (for the InfluxDB export module)
+- ``cassandra-driver`` (for the Cassandra export module)
 - ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
 - ``docker-py`` (for the Docker monitoring support) [Linux-only]
@@ -50,6 +51,7 @@ Optional dependencies:
 - ``bernhard`` (for the Riemann export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+- ``wifi`` (for the wifi plugin) [Linux-only]
 
 *Note for Python 2.6 users*
 
@@ -108,13 +110,14 @@ features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir
+    pip install bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra-driver scandir pyzmq
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
     pip install --upgrade glances
+    pip install --upgrade bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra-driver scandir pyzmq
 
 If you need to install Glances in a specific user location, use:
 
@@ -134,17 +137,11 @@ Get the Glances container:
 
     docker pull nicolargo/glances
 
-Run the container in console mode:
+Run the container in *console mode*:
 
 .. code-block:: console
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
-
-Run the container in Web server mode (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
-
-.. code-block:: console
-
-    docker run -d -p 61208:61208 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
 Additionally, If you want to use your own glances.conf file, you can create your
 own Dockerfile:
@@ -162,6 +159,12 @@ Alternatively, you can specify something along the same lines with docker run op
     docker run -v ./glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
 Where ./glances.conf is a local directory containing your glances.conf file.
+
+Run the container in *Web server mode* (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
+
+.. code-block:: console
+
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
 GNU/Linux
 ---------

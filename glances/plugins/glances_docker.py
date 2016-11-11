@@ -66,6 +66,9 @@ class Plugin(GlancesPlugin):
         # value: instance of ThreadDockerGrabber
         self.thread_list = {}
 
+        # Init the stats
+        self.reset()
+
     def exit(self):
         """Overwrite the exit method to close threads"""
         for t in itervalues(self.thread_list):
@@ -141,22 +144,28 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update Docker stats using the input method."""
+        global docker_tag
+
         # Reset stats
         self.reset()
 
         # Get the current Docker API client
         if not self.docker_client:
             # First time, try to connect to the server
-            self.docker_client = self.connect()
-            if self.docker_client is None:
-                global docker_tag
+            try:
+                self.docker_client = self.connect()
+            except:
                 docker_tag = False
+            else:
+                if self.docker_client is None:
+                    docker_tag = False
 
         # The Docker-py lib is mandatory
-        if not docker_tag or (self.args is not None and self.args.disable_docker):
+        if not docker_tag:
             return self.stats
 
         if self.input_method == 'local':
@@ -434,13 +443,59 @@ class Plugin(GlancesPlugin):
         """Return the user ticks by reading the environment variable."""
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
+    def get_stats_action(self):
+        """Return stats for the action
+        Docker will return self.stats['containers']"""
+        return self.stats['containers']
+
+    def update_views(self):
+        """Update stats views."""
+        # Call the father's method
+        super(Plugin, self).update_views()
+
+        if 'containers' not in self.stats:
+            return False
+
+        # Add specifics informations
+        # Alert
+        for i in self.stats['containers']:
+            # Init the views for the current container (key = container name)
+            self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
+            # CPU alert
+            if 'cpu' in i and 'total' in i['cpu']:
+                # Looking for specific CPU container threasold in the conf file
+                alert = self.get_alert(i['cpu']['total'],
+                                       header=i['name'] + '_cpu',
+                                       action_key=i['name'])
+                if alert == 'DEFAULT':
+                    # Not found ? Get back to default CPU threasold value
+                    alert = self.get_alert(i['cpu']['total'], header='cpu')
+                self.views[i[self.get_key()]]['cpu']['decoration'] = alert
+            # MEM alert
+            if 'memory' in i and 'usage' in i['memory']:
+                # Looking for specific MEM container threasold in the conf file
+                alert = self.get_alert(i['memory']['usage'],
+                                       maximum=i['memory']['limit'],
+                                       header=i['name'] + '_mem',
+                                       action_key=i['name'])
+                if alert == 'DEFAULT':
+                    # Not found ? Get back to default MEM threasold value
+                    alert = self.get_alert(i['memory']['usage'],
+                                           maximum=i['memory']['limit'],
+                                           header='mem')
+                self.views[i[self.get_key()]]['mem']['decoration'] = alert
+
+        return True
+
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
 
         # Only process if stats exist (and non null) and display plugin enable...
-        if not self.stats or args.disable_docker or len(self.stats['containers']) == 0:
+        if not self.stats \
+           or len(self.stats['containers']) == 0 \
+           or self.is_disable():
             return ret
 
         # Build the string message
@@ -502,13 +557,17 @@ class Plugin(GlancesPlugin):
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
             except KeyError:
                 msg = '{:>6}'.format('?')
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
+                                                               key='cpu',
+                                                               option='decoration')))
             # MEM
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
             except KeyError:
                 msg = '{:>7}'.format('?')
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
+                                                               key='mem',
+                                                               option='decoration')))
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:

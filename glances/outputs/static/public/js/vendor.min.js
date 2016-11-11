@@ -32850,16 +32850,20 @@ function ngViewFillContentFactory($compile, $controller, $route) {
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.15.0';
+  var VERSION = '4.16.4';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
 
-  /** Used as the `TypeError` message for "Functions" methods. */
-  var FUNC_ERROR_TEXT = 'Expected a function';
+  /** Error message constants. */
+  var CORE_ERROR_TEXT = 'Unsupported core-js use. Try https://github.com/es-shims.',
+      FUNC_ERROR_TEXT = 'Expected a function';
 
   /** Used to stand-in for `undefined` hash values. */
   var HASH_UNDEFINED = '__lodash_hash_undefined__';
+
+  /** Used as the maximum memoize cache size. */
+  var MAX_MEMOIZE_SIZE = 500;
 
   /** Used as the internal argument placeholder. */
   var PLACEHOLDER = '__lodash_placeholder__';
@@ -32885,7 +32889,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       DEFAULT_TRUNC_OMISSION = '...';
 
   /** Used to detect hot functions by number of calls within a span of milliseconds. */
-  var HOT_COUNT = 150,
+  var HOT_COUNT = 500,
       HOT_SPAN = 16;
 
   /** Used to indicate the type of lazy iteratees. */
@@ -32929,6 +32933,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       numberTag = '[object Number]',
       objectTag = '[object Object]',
       promiseTag = '[object Promise]',
+      proxyTag = '[object Proxy]',
       regexpTag = '[object RegExp]',
       setTag = '[object Set]',
       stringTag = '[object String]',
@@ -32954,8 +32959,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
 
   /** Used to match HTML entities and HTML characters. */
-  var reEscapedHtml = /&(?:amp|lt|gt|quot|#39|#96);/g,
-      reUnescapedHtml = /[&<>"'`]/g,
+  var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g,
+      reUnescapedHtml = /[&<>"']/g,
       reHasEscapedHtml = RegExp(reEscapedHtml.source),
       reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
 
@@ -33001,9 +33006,6 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
   /** Used to match `RegExp` flags from their coerced string values. */
   var reFlags = /\w*$/;
-
-  /** Used to detect hexadecimal string values. */
-  var reHasHexPrefix = /^0x/i;
 
   /** Used to detect bad signed hexadecimal string values. */
   var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
@@ -33199,7 +33201,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     '\u017a': 'z',  '\u017c': 'z', '\u017e': 'z',
     '\u0132': 'IJ', '\u0133': 'ij',
     '\u0152': 'Oe', '\u0153': 'oe',
-    '\u0149': "'n", '\u017f': 'ss'
+    '\u0149': "'n", '\u017f': 's'
   };
 
   /** Used to map characters to HTML entities. */
@@ -33208,8 +33210,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;',
-    '`': '&#96;'
+    "'": '&#39;'
   };
 
   /** Used to map HTML entities to characters. */
@@ -33218,8 +33219,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     '&lt;': '<',
     '&gt;': '>',
     '&quot;': '"',
-    '&#39;': "'",
-    '&#96;': '`'
+    '&#39;': "'"
   };
 
   /** Used to escape characters for inclusion in compiled string literals. */
@@ -33660,18 +33660,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
    * @returns {number} Returns the index of the matched value, else `-1`.
    */
   function baseIndexOf(array, value, fromIndex) {
-    if (value !== value) {
-      return baseFindIndex(array, baseIsNaN, fromIndex);
-    }
-    var index = fromIndex - 1,
-        length = array.length;
-
-    while (++index < length) {
-      if (array[index] === value) {
-        return index;
-      }
-    }
-    return -1;
+    return value === value
+      ? strictIndexOf(array, value, fromIndex)
+      : baseFindIndex(array, baseIsNaN, fromIndex);
   }
 
   /**
@@ -33876,7 +33867,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
   }
 
   /**
-   * Checks if a cache value for `key` exists.
+   * Checks if a `cache` value for `key` exists.
    *
    * @private
    * @param {Object} cache The cache to query.
@@ -33934,7 +33925,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     while (length--) {
       if (array[length] === placeholder) {
-        result++;
+        ++result;
       }
     }
     return result;
@@ -34002,25 +33993,6 @@ function ngViewFillContentFactory($compile, $controller, $route) {
    */
   function hasUnicodeWord(string) {
     return reHasUnicodeWord.test(string);
-  }
-
-  /**
-   * Checks if `value` is a host object in IE < 9.
-   *
-   * @private
-   * @param {*} value The value to check.
-   * @returns {boolean} Returns `true` if `value` is a host object, else `false`.
-   */
-  function isHostObject(value) {
-    // Many host objects are `Object` objects that can coerce to strings
-    // despite having improperly defined `toString` methods.
-    var result = false;
-    if (value != null && typeof value.toString != 'function') {
-      try {
-        result = !!(value + '');
-      } catch (e) {}
-    }
-    return result;
   }
 
   /**
@@ -34131,6 +34103,48 @@ function ngViewFillContentFactory($compile, $controller, $route) {
   }
 
   /**
+   * A specialized version of `_.indexOf` which performs strict equality
+   * comparisons of values, i.e. `===`.
+   *
+   * @private
+   * @param {Array} array The array to inspect.
+   * @param {*} value The value to search for.
+   * @param {number} fromIndex The index to search from.
+   * @returns {number} Returns the index of the matched value, else `-1`.
+   */
+  function strictIndexOf(array, value, fromIndex) {
+    var index = fromIndex - 1,
+        length = array.length;
+
+    while (++index < length) {
+      if (array[index] === value) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * A specialized version of `_.lastIndexOf` which performs strict equality
+   * comparisons of values, i.e. `===`.
+   *
+   * @private
+   * @param {Array} array The array to inspect.
+   * @param {*} value The value to search for.
+   * @param {number} fromIndex The index to search from.
+   * @returns {number} Returns the index of the matched value, else `-1`.
+   */
+  function strictLastIndexOf(array, value, fromIndex) {
+    var index = fromIndex + 1;
+    while (index--) {
+      if (array[index] === value) {
+        return index;
+      }
+    }
+    return index;
+  }
+
+  /**
    * Gets the number of symbols in `string`.
    *
    * @private
@@ -34175,7 +34189,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
   function unicodeSize(string) {
     var result = reUnicode.lastIndex = 0;
     while (reUnicode.test(string)) {
-      result++;
+      ++result;
     }
     return result;
   }
@@ -34230,17 +34244,10 @@ function ngViewFillContentFactory($compile, $controller, $route) {
    * lodash.isFunction(lodash.bar);
    * // => true
    *
-   * // Use `context` to stub `Date#getTime` use in `_.now`.
-   * var stubbed = _.runInContext({
-   *   'Date': function() {
-   *     return { 'getTime': stubGetTime };
-   *   }
-   * });
-   *
    * // Create a suped-up `defer` in Node.js.
    * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
    */
-  function runInContext(context) {
+  var runInContext = (function runInContext(context) {
     context = context ? _.defaults(root.Object(), context, _.pick(root, contextProps)) : root;
 
     /** Built-in constructor references. */
@@ -34300,12 +34307,21 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     var Buffer = moduleExports ? context.Buffer : undefined,
         Symbol = context.Symbol,
         Uint8Array = context.Uint8Array,
+        allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined,
         getPrototype = overArg(Object.getPrototypeOf, Object),
         iteratorSymbol = Symbol ? Symbol.iterator : undefined,
         objectCreate = Object.create,
         propertyIsEnumerable = objectProto.propertyIsEnumerable,
         splice = arrayProto.splice,
         spreadableSymbol = Symbol ? Symbol.isConcatSpreadable : undefined;
+
+    var defineProperty = (function() {
+      try {
+        var func = getNative(Object, 'defineProperty');
+        func({}, '', {});
+        return func;
+      } catch (e) {}
+    }());
 
     /** Mocked built-ins. */
     var ctxClearTimeout = context.clearTimeout !== root.clearTimeout && context.clearTimeout,
@@ -34322,6 +34338,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         nativeKeys = overArg(Object.keys, Object),
         nativeMax = Math.max,
         nativeMin = Math.min,
+        nativeNow = Date.now,
         nativeParseInt = context.parseInt,
         nativeRandom = Math.random,
         nativeReverse = arrayProto.reverse;
@@ -34334,19 +34351,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         WeakMap = getNative(context, 'WeakMap'),
         nativeCreate = getNative(Object, 'create');
 
-    /* Used to set `toString` methods. */
-    var defineProperty = (function() {
-      var func = getNative(Object, 'defineProperty'),
-          name = getNative.name;
-
-      return (name && name.length > 2) ? func : undefined;
-    }());
-
     /** Used to store function metadata. */
     var metaMap = WeakMap && new WeakMap;
-
-    /** Detect if properties shadowing those on `Object.prototype` are non-enumerable. */
-    var nonEnumShadows = !propertyIsEnumerable.call({ 'valueOf': 1 }, 'valueOf');
 
     /** Used to lookup unminified function names. */
     var realNames = {};
@@ -34493,6 +34499,30 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       }
       return new LodashWrapper(value);
     }
+
+    /**
+     * The base implementation of `_.create` without support for assigning
+     * properties to the created object.
+     *
+     * @private
+     * @param {Object} proto The object to inherit from.
+     * @returns {Object} Returns the new object.
+     */
+    var baseCreate = (function() {
+      function object() {}
+      return function(proto) {
+        if (!isObject(proto)) {
+          return {};
+        }
+        if (objectCreate) {
+          return objectCreate(proto);
+        }
+        object.prototype = proto;
+        var result = new object;
+        object.prototype = undefined;
+        return result;
+      };
+    }());
 
     /**
      * The function whose prototype chain sequence wrappers inherit from.
@@ -34735,6 +34765,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function hashClear() {
       this.__data__ = nativeCreate ? nativeCreate(null) : {};
+      this.size = 0;
     }
 
     /**
@@ -34748,7 +34779,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function hashDelete(key) {
-      return this.has(key) && delete this.__data__[key];
+      var result = this.has(key) && delete this.__data__[key];
+      this.size -= result ? 1 : 0;
+      return result;
     }
 
     /**
@@ -34795,6 +34828,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function hashSet(key, value) {
       var data = this.__data__;
+      this.size += this.has(key) ? 0 : 1;
       data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
       return this;
     }
@@ -34835,6 +34869,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function listCacheClear() {
       this.__data__ = [];
+      this.size = 0;
     }
 
     /**
@@ -34859,6 +34894,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       } else {
         splice.call(data, index, 1);
       }
+      --this.size;
       return true;
     }
 
@@ -34906,6 +34942,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
           index = assocIndexOf(data, key);
 
       if (index < 0) {
+        ++this.size;
         data.push([key, value]);
       } else {
         data[index][1] = value;
@@ -34948,6 +34985,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @memberOf MapCache
      */
     function mapCacheClear() {
+      this.size = 0;
       this.__data__ = {
         'hash': new Hash,
         'map': new (Map || ListCache),
@@ -34965,7 +35003,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function mapCacheDelete(key) {
-      return getMapData(this, key)['delete'](key);
+      var result = getMapData(this, key)['delete'](key);
+      this.size -= result ? 1 : 0;
+      return result;
     }
 
     /**
@@ -35005,7 +35045,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Object} Returns the map cache instance.
      */
     function mapCacheSet(key, value) {
-      getMapData(this, key).set(key, value);
+      var data = getMapData(this, key),
+          size = data.size;
+
+      data.set(key, value);
+      this.size += data.size == size ? 0 : 1;
       return this;
     }
 
@@ -35078,7 +35122,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @param {Array} [entries] The key-value pairs to cache.
      */
     function Stack(entries) {
-      this.__data__ = new ListCache(entries);
+      var data = this.__data__ = new ListCache(entries);
+      this.size = data.size;
     }
 
     /**
@@ -35090,6 +35135,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function stackClear() {
       this.__data__ = new ListCache;
+      this.size = 0;
     }
 
     /**
@@ -35102,7 +35148,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function stackDelete(key) {
-      return this.__data__['delete'](key);
+      var data = this.__data__,
+          result = data['delete'](key);
+
+      this.size = data.size;
+      return result;
     }
 
     /**
@@ -35142,16 +35192,18 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Object} Returns the stack cache instance.
      */
     function stackSet(key, value) {
-      var cache = this.__data__;
-      if (cache instanceof ListCache) {
-        var pairs = cache.__data__;
+      var data = this.__data__;
+      if (data instanceof ListCache) {
+        var pairs = data.__data__;
         if (!Map || (pairs.length < LARGE_ARRAY_SIZE - 1)) {
           pairs.push([key, value]);
+          this.size = ++data.size;
           return this;
         }
-        cache = this.__data__ = new MapCache(pairs);
+        data = this.__data__ = new MapCache(pairs);
       }
-      cache.set(key, value);
+      data.set(key, value);
+      this.size = data.size;
       return this;
     }
 
@@ -35173,22 +35225,65 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Array} Returns the array of property names.
      */
     function arrayLikeKeys(value, inherited) {
-      // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
-      // Safari 9 makes `arguments.length` enumerable in strict mode.
-      var result = (isArray(value) || isArguments(value))
-        ? baseTimes(value.length, String)
-        : [];
-
-      var length = result.length,
-          skipIndexes = !!length;
+      var isArr = isArray(value),
+          isArg = !isArr && isArguments(value),
+          isBuff = !isArr && !isArg && isBuffer(value),
+          isType = !isArr && !isArg && !isBuff && isTypedArray(value),
+          skipIndexes = isArr || isArg || isBuff || isType,
+          result = skipIndexes ? baseTimes(value.length, String) : [],
+          length = result.length;
 
       for (var key in value) {
         if ((inherited || hasOwnProperty.call(value, key)) &&
-            !(skipIndexes && (key == 'length' || isIndex(key, length)))) {
+            !(skipIndexes && (
+               // Safari 9 has enumerable `arguments.length` in strict mode.
+               key == 'length' ||
+               // Node.js 0.10 has enumerable non-index properties on buffers.
+               (isBuff && (key == 'offset' || key == 'parent')) ||
+               // PhantomJS 2 has enumerable non-index properties on typed arrays.
+               (isType && (key == 'buffer' || key == 'byteLength' || key == 'byteOffset')) ||
+               // Skip index properties.
+               isIndex(key, length)
+            ))) {
           result.push(key);
         }
       }
       return result;
+    }
+
+    /**
+     * A specialized version of `_.sample` for arrays.
+     *
+     * @private
+     * @param {Array} array The array to sample.
+     * @returns {*} Returns the random element.
+     */
+    function arraySample(array) {
+      var length = array.length;
+      return length ? array[baseRandom(0, length - 1)] : undefined;
+    }
+
+    /**
+     * A specialized version of `_.sampleSize` for arrays.
+     *
+     * @private
+     * @param {Array} array The array to sample.
+     * @param {number} n The number of elements to sample.
+     * @returns {Array} Returns the random elements.
+     */
+    function arraySampleSize(array, n) {
+      return shuffleSelf(copyArray(array), baseClamp(n, 0, array.length));
+    }
+
+    /**
+     * A specialized version of `_.shuffle` for arrays.
+     *
+     * @private
+     * @param {Array} array The array to shuffle.
+     * @returns {Array} Returns the new shuffled array.
+     */
+    function arrayShuffle(array) {
+      return shuffleSelf(copyArray(array));
     }
 
     /**
@@ -35220,8 +35315,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function assignMergeValue(object, key, value) {
       if ((value !== undefined && !eq(object[key], value)) ||
-          (typeof key == 'number' && value === undefined && !(key in object))) {
-        object[key] = value;
+          (value === undefined && !(key in object))) {
+        baseAssignValue(object, key, value);
       }
     }
 
@@ -35239,7 +35334,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       var objValue = object[key];
       if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
           (value === undefined && !(key in object))) {
-        object[key] = value;
+        baseAssignValue(object, key, value);
       }
     }
 
@@ -35290,6 +35385,28 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function baseAssign(object, source) {
       return object && copyObject(source, keys(source), object);
+    }
+
+    /**
+     * The base implementation of `assignValue` and `assignMergeValue` without
+     * value checks.
+     *
+     * @private
+     * @param {Object} object The object to modify.
+     * @param {string} key The key of the property to assign.
+     * @param {*} value The value to assign.
+     */
+    function baseAssignValue(object, key, value) {
+      if (key == '__proto__' && defineProperty) {
+        defineProperty(object, key, {
+          'configurable': true,
+          'enumerable': true,
+          'value': value,
+          'writable': true
+        });
+      } else {
+        object[key] = value;
+      }
     }
 
     /**
@@ -35372,9 +35489,6 @@ function ngViewFillContentFactory($compile, $controller, $route) {
           return cloneBuffer(value, isDeep);
         }
         if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
-          if (isHostObject(value)) {
-            return object ? value : {};
-          }
           result = initCloneObject(isFunc ? {} : value);
           if (!isDeep) {
             return copySymbols(value, baseAssign(result, value));
@@ -35394,9 +35508,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       }
       stack.set(value, result);
 
-      if (!isArr) {
-        var props = isFull ? getAllKeys(value) : keys(value);
-      }
+      var props = isArr ? undefined : (isFull ? getAllKeys : keys)(value);
       arrayEach(props || value, function(subValue, key) {
         if (props) {
           key = subValue;
@@ -35446,18 +35558,6 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         }
       }
       return true;
-    }
-
-    /**
-     * The base implementation of `_.create` without support for assigning
-     * properties to the created object.
-     *
-     * @private
-     * @param {Object} prototype The object to inherit from.
-     * @returns {Object} Returns the new object.
-     */
-    function baseCreate(proto) {
-      return isObject(proto) ? objectCreate(proto) : {};
     }
 
     /**
@@ -35943,6 +36043,17 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
+     * The base implementation of `_.isArguments`.
+     *
+     * @private
+     * @param {*} value The value to check.
+     * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+     */
+    function baseIsArguments(value) {
+      return isObjectLike(value) && objectToString.call(value) == argsTag;
+    }
+
+    /**
      * The base implementation of `_.isArrayBuffer` without Node.js optimizations.
      *
      * @private
@@ -36018,10 +36129,17 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         othTag = getTag(other);
         othTag = othTag == argsTag ? objectTag : othTag;
       }
-      var objIsObj = objTag == objectTag && !isHostObject(object),
-          othIsObj = othTag == objectTag && !isHostObject(other),
+      var objIsObj = objTag == objectTag,
+          othIsObj = othTag == objectTag,
           isSameTag = objTag == othTag;
 
+      if (isSameTag && isBuffer(object)) {
+        if (!isBuffer(other)) {
+          return false;
+        }
+        objIsArr = true;
+        objIsObj = false;
+      }
       if (isSameTag && !objIsObj) {
         stack || (stack = new Stack);
         return (objIsArr || isTypedArray(object))
@@ -36124,7 +36242,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       if (!isObject(value) || isMasked(value)) {
         return false;
       }
-      var pattern = (isFunction(value) || isHostObject(value)) ? reIsNative : reIsHostCtor;
+      var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
       return pattern.test(toSource(value));
     }
 
@@ -36311,14 +36429,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       if (object === source) {
         return;
       }
-      if (!(isArray(source) || isTypedArray(source))) {
-        var props = baseKeysIn(source);
-      }
-      arrayEach(props || source, function(srcValue, key) {
-        if (props) {
-          key = srcValue;
-          srcValue = source[key];
-        }
+      baseFor(source, function(srcValue, key) {
         if (isObject(srcValue)) {
           stack || (stack = new Stack);
           baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
@@ -36333,7 +36444,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
           }
           assignMergeValue(object, key, newValue);
         }
-      });
+      }, keysIn);
     }
 
     /**
@@ -36367,29 +36478,37 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       var isCommon = newValue === undefined;
 
       if (isCommon) {
+        var isArr = isArray(srcValue),
+            isBuff = !isArr && isBuffer(srcValue),
+            isTyped = !isArr && !isBuff && isTypedArray(srcValue);
+
         newValue = srcValue;
-        if (isArray(srcValue) || isTypedArray(srcValue)) {
+        if (isArr || isBuff || isTyped) {
           if (isArray(objValue)) {
             newValue = objValue;
           }
           else if (isArrayLikeObject(objValue)) {
             newValue = copyArray(objValue);
           }
-          else {
+          else if (isBuff) {
             isCommon = false;
-            newValue = baseClone(srcValue, true);
+            newValue = cloneBuffer(srcValue, true);
+          }
+          else if (isTyped) {
+            isCommon = false;
+            newValue = cloneTypedArray(srcValue, true);
+          }
+          else {
+            newValue = [];
           }
         }
         else if (isPlainObject(srcValue) || isArguments(srcValue)) {
+          newValue = objValue;
           if (isArguments(objValue)) {
             newValue = toPlainObject(objValue);
           }
           else if (!isObject(objValue) || (srcIndex && isFunction(objValue))) {
-            isCommon = false;
-            newValue = baseClone(srcValue, true);
-          }
-          else {
-            newValue = objValue;
+            newValue = initCloneObject(srcValue);
           }
         }
         else {
@@ -36482,7 +36601,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
             value = object[key];
 
         if (predicate(value, key)) {
-          result[key] = value;
+          baseAssignValue(result, key, value);
         }
       }
       return result;
@@ -36648,24 +36767,31 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Function} Returns the new function.
      */
     function baseRest(func, start) {
-      start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
-      return function() {
-        var args = arguments,
-            index = -1,
-            length = nativeMax(args.length - start, 0),
-            array = Array(length);
+      return setToString(overRest(func, start, identity), func + '');
+    }
 
-        while (++index < length) {
-          array[index] = args[start + index];
-        }
-        index = -1;
-        var otherArgs = Array(start + 1);
-        while (++index < start) {
-          otherArgs[index] = args[index];
-        }
-        otherArgs[start] = array;
-        return apply(func, this, otherArgs);
-      };
+    /**
+     * The base implementation of `_.sample`.
+     *
+     * @private
+     * @param {Array|Object} collection The collection to sample.
+     * @returns {*} Returns the random element.
+     */
+    function baseSample(collection) {
+      return arraySample(values(collection));
+    }
+
+    /**
+     * The base implementation of `_.sampleSize` without param guards.
+     *
+     * @private
+     * @param {Array|Object} collection The collection to sample.
+     * @param {number} n The number of elements to sample.
+     * @returns {Array} Returns the random elements.
+     */
+    function baseSampleSize(collection, n) {
+      var array = values(collection);
+      return shuffleSelf(array, baseClamp(n, 0, array.length));
     }
 
     /**
@@ -36709,7 +36835,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
-     * The base implementation of `setData` without support for hot loop detection.
+     * The base implementation of `setData` without support for hot loop shorting.
      *
      * @private
      * @param {Function} func The function to associate metadata with.
@@ -36720,6 +36846,34 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       metaMap.set(func, data);
       return func;
     };
+
+    /**
+     * The base implementation of `setToString` without support for hot loop shorting.
+     *
+     * @private
+     * @param {Function} func The function to modify.
+     * @param {Function} string The `toString` result.
+     * @returns {Function} Returns `func`.
+     */
+    var baseSetToString = !defineProperty ? identity : function(func, string) {
+      return defineProperty(func, 'toString', {
+        'configurable': true,
+        'enumerable': false,
+        'value': constant(string),
+        'writable': true
+      });
+    };
+
+    /**
+     * The base implementation of `_.shuffle`.
+     *
+     * @private
+     * @param {Array|Object} collection The collection to shuffle.
+     * @returns {Array} Returns the new shuffled array.
+     */
+    function baseShuffle(collection) {
+      return shuffleSelf(values(collection));
+    }
 
     /**
      * The base implementation of `_.slice` without an iteratee call guard.
@@ -36913,6 +37067,10 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       // Exit early for strings to avoid a performance hit in some environments.
       if (typeof value == 'string') {
         return value;
+      }
+      if (isArray(value)) {
+        // Recursively convert values (susceptible to call stack limits).
+        return arrayMap(value, baseToString) + '';
       }
       if (isSymbol(value)) {
         return symbolToString ? symbolToString.call(value) : '';
@@ -37136,6 +37294,17 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
+     * A `baseRest` alias which can be replaced with `identity` by module
+     * replacement plugins.
+     *
+     * @private
+     * @type {Function}
+     * @param {Function} func The function to apply a rest parameter to.
+     * @returns {Function} Returns the new function.
+     */
+    var castRest = baseRest;
+
+    /**
      * Casts `array` to a slice if it's needed.
      *
      * @private
@@ -37172,7 +37341,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       if (isDeep) {
         return buffer.slice();
       }
-      var result = new buffer.constructor(buffer.length);
+      var length = buffer.length,
+          result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
+
       buffer.copy(result);
       return result;
     }
@@ -37449,6 +37620,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Object} Returns `object`.
      */
     function copyObject(source, props, object, customizer) {
+      var isNew = !object;
       object || (object = {});
 
       var index = -1,
@@ -37461,7 +37633,14 @@ function ngViewFillContentFactory($compile, $controller, $route) {
           ? customizer(object[key], source[key], key, object, source)
           : undefined;
 
-        assignValue(object, key, newValue === undefined ? source[key] : newValue);
+        if (newValue === undefined) {
+          newValue = source[key];
+        }
+        if (isNew) {
+          baseAssignValue(object, key, newValue);
+        } else {
+          assignValue(object, key, newValue);
+        }
       }
       return object;
     }
@@ -37740,9 +37919,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Function} Returns the new flow function.
      */
     function createFlow(fromRight) {
-      return baseRest(function(funcs) {
-        funcs = baseFlatten(funcs, 1);
-
+      return flatRest(function(funcs) {
         var length = funcs.length,
             index = length,
             prereq = LodashWrapper.prototype.thru;
@@ -37925,11 +38102,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {Function} Returns the new over function.
      */
     function createOver(arrayFunc) {
-      return baseRest(function(iteratees) {
-        iteratees = (iteratees.length == 1 && isArray(iteratees[0]))
-          ? arrayMap(iteratees[0], baseUnary(getIteratee()))
-          : arrayMap(baseFlatten(iteratees, 1), baseUnary(getIteratee()));
-
+      return flatRest(function(iteratees) {
+        iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
         return baseRest(function(args) {
           var thisArg = this;
           return arrayFunc(iteratees, function(iteratee) {
@@ -38272,9 +38446,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         // Recursively compare arrays (susceptible to call stack limits).
         if (seen) {
           if (!arraySome(other, function(othValue, othIndex) {
-                if (!seen.has(othIndex) &&
+                if (!cacheHas(seen, othIndex) &&
                     (arrValue === othValue || equalFunc(arrValue, othValue, customizer, bitmask, stack))) {
-                  return seen.add(othIndex);
+                  return seen.push(othIndex);
                 }
               })) {
             result = false;
@@ -38455,6 +38629,17 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
+     * A specialized version of `baseRest` which flattens the rest array.
+     *
+     * @private
+     * @param {Function} func The function to apply a rest parameter to.
+     * @returns {Function} Returns the new function.
+     */
+    function flatRest(func) {
+      return setToString(overRest(func, undefined, flatten), func + '');
+    }
+
+    /**
      * Creates an array of own enumerable property names and symbols of `object`.
      *
      * @private
@@ -38622,8 +38807,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     var getTag = baseGetTag;
 
-    // Fallback for data views, maps, sets, and weak maps in IE 11,
-    // for data views in Edge < 14, and promises in Node.js.
+    // Fallback for data views, maps, sets, and weak maps in IE 11 and promises in Node.js < 6.
     if ((DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag) ||
         (Map && getTag(new Map) != mapTag) ||
         (Promise && getTag(Promise.resolve()) != promiseTag) ||
@@ -38699,9 +38883,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     function hasPath(object, path, hasFunc) {
       path = isKey(path, object) ? [path] : castPath(path);
 
-      var result,
-          index = -1,
-          length = path.length;
+      var index = -1,
+          length = path.length,
+          result = false;
 
       while (++index < length) {
         var key = toKey(path[index]);
@@ -38710,10 +38894,10 @@ function ngViewFillContentFactory($compile, $controller, $route) {
         }
         object = object[key];
       }
-      if (result) {
+      if (result || ++index != length) {
         return result;
       }
-      var length = object ? object.length : 0;
+      length = object ? object.length : 0;
       return !!length && isLength(length) && isIndex(key, length) &&
         (isArray(object) || isArguments(object));
     }
@@ -38808,9 +38992,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @returns {string} Returns the modified source.
      */
     function insertWrapDetails(source, details) {
-      var length = details.length,
-          lastIndex = length - 1;
-
+      var length = details.length;
+      if (!length) {
+        return source;
+      }
+      var lastIndex = length - 1;
       details[lastIndex] = (length > 1 ? '& ' : '') + details[lastIndex];
       details = details.join(length > 2 ? ', ' : ' ');
       return source.replace(reWrapComment, '{\n/* [wrapped with ' + details + '] */\n');
@@ -38990,6 +39176,26 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
+     * A specialized version of `_.memoize` which clears the memoized function's
+     * cache when it exceeds `MAX_MEMOIZE_SIZE`.
+     *
+     * @private
+     * @param {Function} func The function to have its output memoized.
+     * @returns {Function} Returns the new memoized function.
+     */
+    function memoizeCapped(func) {
+      var result = memoize(func, function(key) {
+        if (cache.size === MAX_MEMOIZE_SIZE) {
+          cache.clear();
+        }
+        return key;
+      });
+
+      var cache = result.cache;
+      return result;
+    }
+
+    /**
      * Merges the function metadata of `source` into `data`.
      *
      * Merging metadata reduces the number of wrappers used to invoke a function.
@@ -39103,6 +39309,36 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
+     * A specialized version of `baseRest` which transforms the rest array.
+     *
+     * @private
+     * @param {Function} func The function to apply a rest parameter to.
+     * @param {number} [start=func.length-1] The start position of the rest parameter.
+     * @param {Function} transform The rest array transform.
+     * @returns {Function} Returns the new function.
+     */
+    function overRest(func, start, transform) {
+      start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
+      return function() {
+        var args = arguments,
+            index = -1,
+            length = nativeMax(args.length - start, 0),
+            array = Array(length);
+
+        while (++index < length) {
+          array[index] = args[start + index];
+        }
+        index = -1;
+        var otherArgs = Array(start + 1);
+        while (++index < start) {
+          otherArgs[index] = args[index];
+        }
+        otherArgs[start] = transform(array);
+        return apply(func, this, otherArgs);
+      };
+    }
+
+    /**
      * Gets the parent value at `path` of `object`.
      *
      * @private
@@ -39150,25 +39386,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @param {*} data The metadata.
      * @returns {Function} Returns `func`.
      */
-    var setData = (function() {
-      var count = 0,
-          lastCalled = 0;
-
-      return function(key, value) {
-        var stamp = now(),
-            remaining = HOT_SPAN - (stamp - lastCalled);
-
-        lastCalled = stamp;
-        if (remaining > 0) {
-          if (++count >= HOT_COUNT) {
-            return key;
-          }
-        } else {
-          count = 0;
-        }
-        return baseSetData(key, value);
-      };
-    }());
+    var setData = shortOut(baseSetData);
 
     /**
      * A simple wrapper around the global [`setTimeout`](https://mdn.io/setTimeout).
@@ -39183,6 +39401,16 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     };
 
     /**
+     * Sets the `toString` method of `func` to return `string`.
+     *
+     * @private
+     * @param {Function} func The function to modify.
+     * @param {Function} string The `toString` result.
+     * @returns {Function} Returns `func`.
+     */
+    var setToString = shortOut(baseSetToString);
+
+    /**
      * Sets the `toString` method of `wrapper` to mimic the source of `reference`
      * with wrapper details in a comment at the top of the source body.
      *
@@ -39192,14 +39420,64 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @param {number} bitmask The bitmask flags. See `createWrap` for more details.
      * @returns {Function} Returns `wrapper`.
      */
-    var setWrapToString = !defineProperty ? identity : function(wrapper, reference, bitmask) {
+    function setWrapToString(wrapper, reference, bitmask) {
       var source = (reference + '');
-      return defineProperty(wrapper, 'toString', {
-        'configurable': true,
-        'enumerable': false,
-        'value': constant(insertWrapDetails(source, updateWrapDetails(getWrapDetails(source), bitmask)))
-      });
-    };
+      return setToString(wrapper, insertWrapDetails(source, updateWrapDetails(getWrapDetails(source), bitmask)));
+    }
+
+    /**
+     * Creates a function that'll short out and invoke `identity` instead
+     * of `func` when it's called `HOT_COUNT` or more times in `HOT_SPAN`
+     * milliseconds.
+     *
+     * @private
+     * @param {Function} func The function to restrict.
+     * @returns {Function} Returns the new shortable function.
+     */
+    function shortOut(func) {
+      var count = 0,
+          lastCalled = 0;
+
+      return function() {
+        var stamp = nativeNow(),
+            remaining = HOT_SPAN - (stamp - lastCalled);
+
+        lastCalled = stamp;
+        if (remaining > 0) {
+          if (++count >= HOT_COUNT) {
+            return arguments[0];
+          }
+        } else {
+          count = 0;
+        }
+        return func.apply(undefined, arguments);
+      };
+    }
+
+    /**
+     * A specialized version of `_.shuffle` which mutates and sets the size of `array`.
+     *
+     * @private
+     * @param {Array} array The array to shuffle.
+     * @param {number} [size=array.length] The size of `array`.
+     * @returns {Array} Returns `array`.
+     */
+    function shuffleSelf(array, size) {
+      var index = -1,
+          length = array.length,
+          lastIndex = length - 1;
+
+      size = size === undefined ? length : size;
+      while (++index < size) {
+        var rand = baseRandom(index, lastIndex),
+            value = array[rand];
+
+        array[rand] = array[index];
+        array[index] = value;
+      }
+      array.length = size;
+      return array;
+    }
 
     /**
      * Converts `string` to a property path array.
@@ -39208,7 +39486,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @param {string} string The string to convert.
      * @returns {Array} Returns the property path array.
      */
-    var stringToPath = memoize(function(string) {
+    var stringToPath = memoizeCapped(function(string) {
       string = toString(string);
 
       var result = [];
@@ -39387,24 +39665,25 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => [1]
      */
     function concat() {
-      var length = arguments.length,
-          args = Array(length ? length - 1 : 0),
+      var length = arguments.length;
+      if (!length) {
+        return [];
+      }
+      var args = Array(length - 1),
           array = arguments[0],
           index = length;
 
       while (index--) {
         args[index - 1] = arguments[index];
       }
-      return length
-        ? arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1))
-        : [];
+      return arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1));
     }
 
     /**
      * Creates an array of `array` values not included in the other given arrays
      * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
-     * for equality comparisons. The order of result values is determined by the
-     * order they occur in the first array.
+     * for equality comparisons. The order and references of result values are
+     * determined by the first array.
      *
      * **Note:** Unlike `_.pullAll`, this method returns a new array.
      *
@@ -39430,8 +39709,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * This method is like `_.difference` except that it accepts `iteratee` which
      * is invoked for each element of `array` and `values` to generate the criterion
-     * by which they're compared. Result values are chosen from the first array.
-     * The iteratee is invoked with one argument: (value).
+     * by which they're compared. The order and references of result values are
+     * determined by the first array. The iteratee is invoked with one argument:
+     * (value).
      *
      * **Note:** Unlike `_.pullAllBy`, this method returns a new array.
      *
@@ -39464,9 +39744,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     /**
      * This method is like `_.difference` except that it accepts `comparator`
-     * which is invoked to compare elements of `array` to `values`. Result values
-     * are chosen from the first array. The comparator is invoked with two arguments:
-     * (arrVal, othVal).
+     * which is invoked to compare elements of `array` to `values`. The order and
+     * references of result values are determined by the first array. The comparator
+     * is invoked with two arguments: (arrVal, othVal).
      *
      * **Note:** Unlike `_.pullAllWith`, this method returns a new array.
      *
@@ -39960,8 +40240,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * Creates an array of unique values that are included in all given arrays
      * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
-     * for equality comparisons. The order of result values is determined by the
-     * order they occur in the first array.
+     * for equality comparisons. The order and references of result values are
+     * determined by the first array.
      *
      * @static
      * @memberOf _
@@ -39984,8 +40264,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * This method is like `_.intersection` except that it accepts `iteratee`
      * which is invoked for each element of each `arrays` to generate the criterion
-     * by which they're compared. Result values are chosen from the first array.
-     * The iteratee is invoked with one argument: (value).
+     * by which they're compared. The order and references of result values are
+     * determined by the first array. The iteratee is invoked with one argument:
+     * (value).
      *
      * @static
      * @memberOf _
@@ -40019,9 +40300,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     /**
      * This method is like `_.intersection` except that it accepts `comparator`
-     * which is invoked to compare elements of `arrays`. Result values are chosen
-     * from the first array. The comparator is invoked with two arguments:
-     * (arrVal, othVal).
+     * which is invoked to compare elements of `arrays`. The order and references
+     * of result values are determined by the first array. The comparator is
+     * invoked with two arguments: (arrVal, othVal).
      *
      * @static
      * @memberOf _
@@ -40119,21 +40400,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       var index = length;
       if (fromIndex !== undefined) {
         index = toInteger(fromIndex);
-        index = (
-          index < 0
-            ? nativeMax(length + index, 0)
-            : nativeMin(index, length - 1)
-        ) + 1;
+        index = index < 0 ? nativeMax(length + index, 0) : nativeMin(index, length - 1);
       }
-      if (value !== value) {
-        return baseFindIndex(array, baseIsNaN, index - 1, true);
-      }
-      while (index--) {
-        if (array[index] === value) {
-          return index;
-        }
-      }
-      return -1;
+      return value === value
+        ? strictLastIndexOf(array, value, index)
+        : baseFindIndex(array, baseIsNaN, index, true);
     }
 
     /**
@@ -40295,9 +40566,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * console.log(pulled);
      * // => ['b', 'd']
      */
-    var pullAt = baseRest(function(array, indexes) {
-      indexes = baseFlatten(indexes, 1);
-
+    var pullAt = flatRest(function(array, indexes) {
       var length = array ? array.length : 0,
           result = baseAt(array, indexes);
 
@@ -40872,8 +41141,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * Creates a duplicate-free version of an array, using
      * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
-     * for equality comparisons, in which only the first occurrence of each
-     * element is kept.
+     * for equality comparisons, in which only the first occurrence of each element
+     * is kept. The order of result values is determined by the order they occur
+     * in the array.
      *
      * @static
      * @memberOf _
@@ -40895,7 +41165,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * This method is like `_.uniq` except that it accepts `iteratee` which is
      * invoked for each element in `array` to generate the criterion by which
-     * uniqueness is computed. The iteratee is invoked with one argument: (value).
+     * uniqueness is computed. The order of result values is determined by the
+     * order they occur in the array. The iteratee is invoked with one argument:
+     * (value).
      *
      * @static
      * @memberOf _
@@ -40922,8 +41194,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     /**
      * This method is like `_.uniq` except that it accepts `comparator` which
-     * is invoked to compare elements of `array`. The comparator is invoked with
-     * two arguments: (arrVal, othVal).
+     * is invoked to compare elements of `array`. The order of result values is
+     * determined by the order they occur in the array.The comparator is invoked
+     * with two arguments: (arrVal, othVal).
      *
      * @static
      * @memberOf _
@@ -41065,8 +41338,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     /**
      * This method is like `_.xor` except that it accepts `iteratee` which is
      * invoked for each element of each `arrays` to generate the criterion by
-     * which by which they're compared. The iteratee is invoked with one argument:
-     * (value).
+     * which by which they're compared. The order of result values is determined
+     * by the order they occur in the arrays. The iteratee is invoked with one
+     * argument: (value).
      *
      * @static
      * @memberOf _
@@ -41095,8 +41369,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     /**
      * This method is like `_.xor` except that it accepts `comparator` which is
-     * invoked to compare elements of `arrays`. The comparator is invoked with
-     * two arguments: (arrVal, othVal).
+     * invoked to compare elements of `arrays`. The order of result values is
+     * determined by the order they occur in the arrays. The comparator is invoked
+     * with two arguments: (arrVal, othVal).
      *
      * @static
      * @memberOf _
@@ -41313,8 +41588,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _(object).at(['a[0].b.c', 'a[1]']).value();
      * // => [3, 4]
      */
-    var wrapperAt = baseRest(function(paths) {
-      paths = baseFlatten(paths, 1);
+    var wrapperAt = flatRest(function(paths) {
       var length = paths.length,
           start = length ? paths[0] : 0,
           value = this.__wrapped__,
@@ -41579,7 +41853,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => { '3': 2, '5': 1 }
      */
     var countBy = createAggregator(function(result, value, key) {
-      hasOwnProperty.call(result, key) ? ++result[key] : (result[key] = 1);
+      if (hasOwnProperty.call(result, key)) {
+        ++result[key];
+      } else {
+        baseAssignValue(result, key, 1);
+      }
     });
 
     /**
@@ -41834,7 +42112,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @see _.forEachRight
      * @example
      *
-     * _([1, 2]).forEach(function(value) {
+     * _.forEach([1, 2], function(value) {
      *   console.log(value);
      * });
      * // => Logs `1` then `2`.
@@ -41902,7 +42180,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       if (hasOwnProperty.call(result, key)) {
         result[key].push(value);
       } else {
-        result[key] = [value];
+        baseAssignValue(result, key, [value]);
       }
     });
 
@@ -42015,7 +42293,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => { 'left': { 'dir': 'left', 'code': 97 }, 'right': { 'dir': 'right', 'code': 100 } }
      */
     var keyBy = createAggregator(function(result, value, key) {
-      result[key] = value;
+      baseAssignValue(result, key, value);
     });
 
     /**
@@ -42275,10 +42553,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => 2
      */
     function sample(collection) {
-      var array = isArrayLike(collection) ? collection : values(collection),
-          length = array.length;
-
-      return length > 0 ? array[baseRandom(0, length - 1)] : undefined;
+      var func = isArray(collection) ? arraySample : baseSample;
+      return func(collection);
     }
 
     /**
@@ -42302,25 +42578,13 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => [2, 3, 1]
      */
     function sampleSize(collection, n, guard) {
-      var index = -1,
-          result = toArray(collection),
-          length = result.length,
-          lastIndex = length - 1;
-
       if ((guard ? isIterateeCall(collection, n, guard) : n === undefined)) {
         n = 1;
       } else {
-        n = baseClamp(toInteger(n), 0, length);
+        n = toInteger(n);
       }
-      while (++index < n) {
-        var rand = baseRandom(index, lastIndex),
-            value = result[rand];
-
-        result[rand] = result[index];
-        result[index] = value;
-      }
-      result.length = n;
-      return result;
+      var func = isArray(collection) ? arraySampleSize : baseSampleSize;
+      return func(collection, n);
     }
 
     /**
@@ -42339,7 +42603,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => [4, 1, 3, 2]
      */
     function shuffle(collection) {
-      return sampleSize(collection, MAX_ARRAY_LENGTH);
+      var func = isArray(collection) ? arrayShuffle : baseShuffle;
+      return func(collection);
     }
 
     /**
@@ -42444,16 +42709,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      *   { 'user': 'barney', 'age': 34 }
      * ];
      *
-     * _.sortBy(users, function(o) { return o.user; });
+     * _.sortBy(users, [function(o) { return o.user; }]);
      * // => objects for [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 40]]
      *
      * _.sortBy(users, ['user', 'age']);
      * // => objects for [['barney', 34], ['barney', 36], ['fred', 40], ['fred', 48]]
-     *
-     * _.sortBy(users, 'user', function(o) {
-     *   return Math.floor(o.age / 10);
-     * });
-     * // => objects for [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 40]]
      */
     var sortBy = baseRest(function(collection, iteratees) {
       if (collection == null) {
@@ -42968,7 +43228,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _.defer(function(text) {
      *   console.log(text);
      * }, 'deferred');
-     * // => Logs 'deferred' after one or more milliseconds.
+     * // => Logs 'deferred' after one millisecond.
      */
     var defer = baseRest(function(func, args) {
       return baseDelay(func, 1, args);
@@ -43076,14 +43336,14 @@ function ngViewFillContentFactory($compile, $controller, $route) {
           return cache.get(key);
         }
         var result = func.apply(this, args);
-        memoized.cache = cache.set(key, result);
+        memoized.cache = cache.set(key, result) || cache;
         return result;
       };
       memoized.cache = new (memoize.Cache || MapCache);
       return memoized;
     }
 
-    // Assign cache to `_.memoize`.
+    // Expose `MapCache`.
     memoize.Cache = MapCache;
 
     /**
@@ -43175,7 +43435,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * func(10, 5);
      * // => [100, 10]
      */
-    var overArgs = baseRest(function(func, transforms) {
+    var overArgs = castRest(function(func, transforms) {
       transforms = (transforms.length == 1 && isArray(transforms[0]))
         ? arrayMap(transforms[0], baseUnary(getIteratee()))
         : arrayMap(baseFlatten(transforms, 1), baseUnary(getIteratee()));
@@ -43289,8 +43549,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * rearged('b', 'c', 'a')
      * // => ['a', 'b', 'c']
      */
-    var rearg = baseRest(function(func, indexes) {
-      return createWrap(func, REARG_FLAG, undefined, undefined, undefined, baseFlatten(indexes, 1));
+    var rearg = flatRest(function(func, indexes) {
+      return createWrap(func, REARG_FLAG, undefined, undefined, undefined, indexes);
     });
 
     /**
@@ -43780,11 +44040,10 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _.isArguments([1, 2, 3]);
      * // => false
      */
-    function isArguments(value) {
-      // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
-      return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
-        (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
-    }
+    var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsArguments : function(value) {
+      return isObjectLike(value) && hasOwnProperty.call(value, 'callee') &&
+        !propertyIsEnumerable.call(value, 'callee');
+    };
 
     /**
      * Checks if `value` is classified as an `Array` object.
@@ -43966,7 +44225,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => false
      */
     function isElement(value) {
-      return !!value && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value);
+      return value != null && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value);
     }
 
     /**
@@ -44004,16 +44263,16 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function isEmpty(value) {
       if (isArrayLike(value) &&
-          (isArray(value) || typeof value == 'string' ||
-            typeof value.splice == 'function' || isBuffer(value) || isArguments(value))) {
+          (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
+            isBuffer(value) || isTypedArray(value) || isArguments(value))) {
         return !value.length;
       }
       var tag = getTag(value);
       if (tag == mapTag || tag == setTag) {
         return !value.size;
       }
-      if (nonEnumShadows || isPrototype(value)) {
-        return !nativeKeys(value).length;
+      if (isPrototype(value)) {
+        return !baseKeys(value).length;
       }
       for (var key in value) {
         if (hasOwnProperty.call(value, key)) {
@@ -44168,9 +44427,9 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function isFunction(value) {
       // The use of `Object#toString` avoids issues with the `typeof` operator
-      // in Safari 8-9 which returns 'object' for typed array and other constructors.
+      // in Safari 9 which returns 'object' for typed array and other constructors.
       var tag = isObject(value) ? objectToString.call(value) : '';
-      return tag == funcTag || tag == genTag;
+      return tag == funcTag || tag == genTag || tag == proxyTag;
     }
 
     /**
@@ -44261,7 +44520,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function isObject(value) {
       var type = typeof value;
-      return !!value && (type == 'object' || type == 'function');
+      return value != null && (type == 'object' || type == 'function');
     }
 
     /**
@@ -44289,7 +44548,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => false
      */
     function isObjectLike(value) {
-      return !!value && typeof value == 'object';
+      return value != null && typeof value == 'object';
     }
 
     /**
@@ -44443,7 +44702,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      */
     function isNative(value) {
       if (isMaskable(value)) {
-        throw new Error('This method is not supported with core-js. Try https://github.com/es-shims.');
+        throw new Error(CORE_ERROR_TEXT);
       }
       return baseIsNative(value);
     }
@@ -44553,8 +44812,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => true
      */
     function isPlainObject(value) {
-      if (!isObjectLike(value) ||
-          objectToString.call(value) != objectTag || isHostObject(value)) {
+      if (!isObjectLike(value) || objectToString.call(value) != objectTag) {
         return false;
       }
       var proto = getPrototype(value);
@@ -45059,8 +45317,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * @memberOf _
      * @since 4.0.0
      * @category Lang
-     * @param {*} value The value to process.
-     * @returns {string} Returns the string.
+     * @param {*} value The value to convert.
+     * @returns {string} Returns the converted string.
      * @example
      *
      * _.toString(null);
@@ -45111,7 +45369,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => { 'a': 1, 'c': 3 }
      */
     var assign = createAssigner(function(object, source) {
-      if (nonEnumShadows || isPrototype(source) || isArrayLike(source)) {
+      if (isPrototype(source) || isArrayLike(source)) {
         copyObject(source, keys(source), object);
         return;
       }
@@ -45239,9 +45497,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _.at(object, ['a[0].b.c', 'a[1]']);
      * // => [3, 4]
      */
-    var at = baseRest(function(object, paths) {
-      return baseAt(object, baseFlatten(paths, 1));
-    });
+    var at = flatRest(baseAt);
 
     /**
      * Creates an object that inherits from the `prototype` object. If a
@@ -45844,7 +46100,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       iteratee = getIteratee(iteratee, 3);
 
       baseForOwn(object, function(value, key, object) {
-        result[iteratee(value, key, object)] = value;
+        baseAssignValue(result, iteratee(value, key, object), value);
       });
       return result;
     }
@@ -45882,7 +46138,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       iteratee = getIteratee(iteratee, 3);
 
       baseForOwn(object, function(value, key, object) {
-        result[key] = iteratee(value, key, object);
+        baseAssignValue(result, key, iteratee(value, key, object));
       });
       return result;
     }
@@ -45926,7 +46182,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * This method is like `_.merge` except that it accepts `customizer` which
      * is invoked to produce the merged values of the destination and source
      * properties. If `customizer` returns `undefined`, merging is handled by the
-     * method instead. The `customizer` is invoked with seven arguments:
+     * method instead. The `customizer` is invoked with six arguments:
      * (objValue, srcValue, key, object, source, stack).
      *
      * **Note:** This method mutates `object`.
@@ -45976,11 +46232,11 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _.omit(object, ['a', 'c']);
      * // => { 'b': '2' }
      */
-    var omit = baseRest(function(object, props) {
+    var omit = flatRest(function(object, props) {
       if (object == null) {
         return {};
       }
-      props = arrayMap(baseFlatten(props, 1), toKey);
+      props = arrayMap(props, toKey);
       return basePick(object, baseDifference(getAllKeysIn(object), props));
     });
 
@@ -46025,8 +46281,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * _.pick(object, ['a', 'c']);
      * // => { 'a': 1, 'c': 3 }
      */
-    var pick = baseRest(function(object, props) {
-      return object == null ? {} : basePick(object, arrayMap(baseFlatten(props, 1), toKey));
+    var pick = flatRest(function(object, props) {
+      return object == null ? {} : basePick(object, arrayMap(props, toKey));
     });
 
     /**
@@ -46246,22 +46502,23 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => { '1': ['a', 'c'], '2': ['b'] }
      */
     function transform(object, iteratee, accumulator) {
-      var isArr = isArray(object) || isTypedArray(object);
-      iteratee = getIteratee(iteratee, 4);
+      var isArr = isArray(object),
+          isArrLike = isArr || isBuffer(object) || isTypedArray(object);
 
+      iteratee = getIteratee(iteratee, 4);
       if (accumulator == null) {
-        if (isArr || isObject(object)) {
-          var Ctor = object.constructor;
-          if (isArr) {
-            accumulator = isArray(object) ? new Ctor : [];
-          } else {
-            accumulator = isFunction(Ctor) ? baseCreate(getPrototype(object)) : {};
-          }
-        } else {
+        var Ctor = object && object.constructor;
+        if (isArrLike) {
+          accumulator = isArr ? new Ctor : [];
+        }
+        else if (isObject(object)) {
+          accumulator = isFunction(Ctor) ? baseCreate(getPrototype(object)) : {};
+        }
+        else {
           accumulator = {};
         }
       }
-      (isArr ? arrayEach : baseForOwn)(object, function(value, index, object) {
+      (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object) {
         return iteratee(accumulator, value, index, object);
       });
       return accumulator;
@@ -46680,8 +46937,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     }
 
     /**
-     * Converts the characters "&", "<", ">", '"', "'", and "\`" in `string` to
-     * their corresponding HTML entities.
+     * Converts the characters "&", "<", ">", '"', and "'" in `string` to their
+     * corresponding HTML entities.
      *
      * **Note:** No other characters are escaped. To escape additional
      * characters use a third-party library like [_he_](https://mths.be/he).
@@ -46691,12 +46948,6 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * unless they're part of a tag or unquoted attribute value. See
      * [Mathias Bynens's article](https://mathiasbynens.be/notes/ambiguous-ampersands)
      * (under "semi-related fun fact") for more details.
-     *
-     * Backticks are escaped because in IE < 9, they can break out of
-     * attribute values or HTML comments. See [#59](https://html5sec.org/#59),
-     * [#102](https://html5sec.org/#102), [#108](https://html5sec.org/#108), and
-     * [#133](https://html5sec.org/#133) of the
-     * [HTML5 Security Cheatsheet](https://html5sec.org/) for more details.
      *
      * When working with HTML you should always
      * [quote attribute values](http://wonko.com/post/html-escaping) to reduce
@@ -46940,15 +47191,12 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * // => [6, 8, 10]
      */
     function parseInt(string, radix, guard) {
-      // Chrome fails to trim leading <BOM> whitespace characters.
-      // See https://bugs.chromium.org/p/v8/issues/detail?id=3109 for more details.
       if (guard || radix == null) {
         radix = 0;
       } else if (radix) {
         radix = +radix;
       }
-      string = toString(string).replace(reTrim, '');
-      return nativeParseInt(string, radix || (reHasHexPrefix.test(string) ? 16 : 10));
+      return nativeParseInt(toString(string).replace(reTrimStart, ''), radix || 0);
     }
 
     /**
@@ -47187,7 +47435,8 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * compiled({ 'user': 'barney' });
      * // => 'hello barney!'
      *
-     * // Use the ES delimiter as an alternative to the default "interpolate" delimiter.
+     * // Use the ES template literal delimiter as an "interpolate" delimiter.
+     * // Disable support by replacing the "interpolate" delimiter.
      * var compiled = _.template('hello ${ user }!');
      * compiled({ 'user': 'pebbles' });
      * // => 'hello pebbles!'
@@ -47588,7 +47837,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
 
     /**
      * The inverse of `_.escape`; this method converts the HTML entities
-     * `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;`, and `&#96;` in `string` to
+     * `&amp;`, `&lt;`, `&gt;`, `&quot;`, and `&#39;` in `string` to
      * their corresponding characters.
      *
      * **Note:** No other HTML entities are unescaped. To unescape additional
@@ -47742,10 +47991,10 @@ function ngViewFillContentFactory($compile, $controller, $route) {
      * jQuery(element).on('click', view.click);
      * // => Logs 'clicked docs' when clicked.
      */
-    var bindAll = baseRest(function(object, methodNames) {
-      arrayEach(baseFlatten(methodNames, 1), function(key) {
+    var bindAll = flatRest(function(object, methodNames) {
+      arrayEach(methodNames, function(key) {
         key = toKey(key);
-        object[key] = bind(object[key], object);
+        baseAssignValue(object, key, bind(object[key], object));
       });
       return object;
     });
@@ -49536,7 +49785,7 @@ function ngViewFillContentFactory($compile, $controller, $route) {
       lodash.prototype[iteratorSymbol] = wrapperToIterator;
     }
     return lodash;
-  }
+  });
 
   /*--------------------------------------------------------------------------*/
 
@@ -49569,3 +49818,861 @@ function ngViewFillContentFactory($compile, $controller, $route) {
     root._ = _;
   }
 }.call(this));
+
+/**
+ * @license MIT
+ * @fileOverview Favico animations
+ * @author Miroslav Magda, http://blog.ejci.net
+ * @version 0.3.10
+ */
+
+/**
+ * Create new favico instance
+ * @param {Object} Options
+ * @return {Object} Favico object
+ * @example
+ * var favico = new Favico({
+ *    bgColor : '#d00',
+ *    textColor : '#fff',
+ *    fontFamily : 'sans-serif',
+ *    fontStyle : 'bold',
+ *    position : 'down',
+ *    type : 'circle',
+ *    animation : 'slide',
+ *    dataUrl: function(url){},
+ *    win: top
+ * });
+ */
+(function () {
+
+	var Favico = (function (opt) {
+		'use strict';
+		opt = (opt) ? opt : {};
+		var _def = {
+			bgColor: '#d00',
+			textColor: '#fff',
+			fontFamily: 'sans-serif', //Arial,Verdana,Times New Roman,serif,sans-serif,...
+			fontStyle: 'bold', //normal,italic,oblique,bold,bolder,lighter,100,200,300,400,500,600,700,800,900
+			type: 'circle',
+			position: 'down', // down, up, left, leftup (upleft)
+			animation: 'slide',
+			elementId: false,
+			dataUrl: false,
+			win: window
+		};
+		var _opt, _orig, _h, _w, _canvas, _context, _img, _ready, _lastBadge, _running, _readyCb, _stop, _browser, _animTimeout, _drawTimeout, _doc;
+
+		_browser = {};
+		_browser.ff = typeof InstallTrigger != 'undefined';
+		_browser.chrome = !!window.chrome;
+		_browser.opera = !!window.opera || navigator.userAgent.indexOf('Opera') >= 0;
+		_browser.ie = /*@cc_on!@*/false;
+		_browser.safari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+		_browser.supported = (_browser.chrome || _browser.ff || _browser.opera);
+
+		var _queue = [];
+		_readyCb = function () {
+		};
+		_ready = _stop = false;
+		/**
+		 * Initialize favico
+		 */
+		var init = function () {
+			//merge initial options
+			_opt = merge(_def, opt);
+			_opt.bgColor = hexToRgb(_opt.bgColor);
+			_opt.textColor = hexToRgb(_opt.textColor);
+			_opt.position = _opt.position.toLowerCase();
+			_opt.animation = (animation.types['' + _opt.animation]) ? _opt.animation : _def.animation;
+
+			_doc = _opt.win.document;
+
+			var isUp = _opt.position.indexOf('up') > -1;
+			var isLeft = _opt.position.indexOf('left') > -1;
+
+			//transform animation
+			if (isUp || isLeft) {
+				for (var i = 0; i < animation.types['' + _opt.animation].length; i++) {
+					var step = animation.types['' + _opt.animation][i];
+
+					if (isUp) {
+						if (step.y < 0.6) {
+							step.y = step.y - 0.4;
+						} else {
+							step.y = step.y - 2 * step.y + (1 - step.w);
+						}
+					}
+
+					if (isLeft) {
+						if (step.x < 0.6) {
+							step.x = step.x - 0.4;
+						} else {
+							step.x = step.x - 2 * step.x + (1 - step.h);
+						}
+					}
+
+					animation.types['' + _opt.animation][i] = step;
+				}
+			}
+			_opt.type = (type['' + _opt.type]) ? _opt.type : _def.type;
+
+			_orig = link.getIcon();
+			//create temp canvas
+			_canvas = document.createElement('canvas');
+			//create temp image
+			_img = document.createElement('img');
+			if (_orig.hasAttribute('href')) {
+				_img.setAttribute('crossOrigin', 'anonymous');
+				//get width/height
+				_img.onload = function () {
+					_h = (_img.height > 0) ? _img.height : 32;
+					_w = (_img.width > 0) ? _img.width : 32;
+					_canvas.height = _h;
+					_canvas.width = _w;
+					_context = _canvas.getContext('2d');
+					icon.ready();
+				};
+				_img.setAttribute('src', _orig.getAttribute('href'));
+			} else {
+				_img.onload = function () {
+					_h = 32;
+					_w = 32;
+					_img.height = _h;
+					_img.width = _w;
+					_canvas.height = _h;
+					_canvas.width = _w;
+					_context = _canvas.getContext('2d');
+					icon.ready();
+				};
+				_img.setAttribute('src', '');
+			}
+
+		};
+		/**
+		 * Icon namespace
+		 */
+		var icon = {};
+		/**
+		 * Icon is ready (reset icon) and start animation (if ther is any)
+		 */
+		icon.ready = function () {
+			_ready = true;
+			icon.reset();
+			_readyCb();
+		};
+		/**
+		 * Reset icon to default state
+		 */
+		icon.reset = function () {
+			//reset
+			if (!_ready) {
+				return;
+			}
+			_queue = [];
+			_lastBadge = false;
+			_running = false;
+			_context.clearRect(0, 0, _w, _h);
+			_context.drawImage(_img, 0, 0, _w, _h);
+			//_stop=true;
+			link.setIcon(_canvas);
+			//webcam('stop');
+			//video('stop');
+			window.clearTimeout(_animTimeout);
+			window.clearTimeout(_drawTimeout);
+		};
+		/**
+		 * Start animation
+		 */
+		icon.start = function () {
+			if (!_ready || _running) {
+				return;
+			}
+			var finished = function () {
+				_lastBadge = _queue[0];
+				_running = false;
+				if (_queue.length > 0) {
+					_queue.shift();
+					icon.start();
+				} else {
+
+				}
+			};
+			if (_queue.length > 0) {
+				_running = true;
+				var run = function () {
+					// apply options for this animation
+					['type', 'animation', 'bgColor', 'textColor', 'fontFamily', 'fontStyle'].forEach(function (a) {
+						if (a in _queue[0].options) {
+							_opt[a] = _queue[0].options[a];
+						}
+					});
+					animation.run(_queue[0].options, function () {
+						finished();
+					}, false);
+				};
+				if (_lastBadge) {
+					animation.run(_lastBadge.options, function () {
+						run();
+					}, true);
+				} else {
+					run();
+				}
+			}
+		};
+
+		/**
+		 * Badge types
+		 */
+		var type = {};
+		var options = function (opt) {
+			opt.n = ((typeof opt.n) === 'number') ? Math.abs(opt.n | 0) : opt.n;
+			opt.x = _w * opt.x;
+			opt.y = _h * opt.y;
+			opt.w = _w * opt.w;
+			opt.h = _h * opt.h;
+			opt.len = ("" + opt.n).length;
+			return opt;
+		};
+		/**
+		 * Generate circle
+		 * @param {Object} opt Badge options
+		 */
+		type.circle = function (opt) {
+			opt = options(opt);
+			var more = false;
+			if (opt.len === 2) {
+				opt.x = opt.x - opt.w * 0.4;
+				opt.w = opt.w * 1.4;
+				more = true;
+			} else if (opt.len >= 3) {
+				opt.x = opt.x - opt.w * 0.65;
+				opt.w = opt.w * 1.65;
+				more = true;
+			}
+			_context.clearRect(0, 0, _w, _h);
+			_context.drawImage(_img, 0, 0, _w, _h);
+			_context.beginPath();
+			_context.font = _opt.fontStyle + " " + Math.floor(opt.h * (opt.n > 99 ? 0.85 : 1)) + "px " + _opt.fontFamily;
+			_context.textAlign = 'center';
+			if (more) {
+				_context.moveTo(opt.x + opt.w / 2, opt.y);
+				_context.lineTo(opt.x + opt.w - opt.h / 2, opt.y);
+				_context.quadraticCurveTo(opt.x + opt.w, opt.y, opt.x + opt.w, opt.y + opt.h / 2);
+				_context.lineTo(opt.x + opt.w, opt.y + opt.h - opt.h / 2);
+				_context.quadraticCurveTo(opt.x + opt.w, opt.y + opt.h, opt.x + opt.w - opt.h / 2, opt.y + opt.h);
+				_context.lineTo(opt.x + opt.h / 2, opt.y + opt.h);
+				_context.quadraticCurveTo(opt.x, opt.y + opt.h, opt.x, opt.y + opt.h - opt.h / 2);
+				_context.lineTo(opt.x, opt.y + opt.h / 2);
+				_context.quadraticCurveTo(opt.x, opt.y, opt.x + opt.h / 2, opt.y);
+			} else {
+				_context.arc(opt.x + opt.w / 2, opt.y + opt.h / 2, opt.h / 2, 0, 2 * Math.PI);
+			}
+			_context.fillStyle = 'rgba(' + _opt.bgColor.r + ',' + _opt.bgColor.g + ',' + _opt.bgColor.b + ',' + opt.o + ')';
+			_context.fill();
+			_context.closePath();
+			_context.beginPath();
+			_context.stroke();
+			_context.fillStyle = 'rgba(' + _opt.textColor.r + ',' + _opt.textColor.g + ',' + _opt.textColor.b + ',' + opt.o + ')';
+			//_context.fillText((more) ? '9+' : opt.n, Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.15));
+			if ((typeof opt.n) === 'number' && opt.n > 999) {
+				_context.fillText(((opt.n > 9999) ? 9 : Math.floor(opt.n / 1000)) + 'k+', Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.2));
+			} else {
+				_context.fillText(opt.n, Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.15));
+			}
+			_context.closePath();
+		};
+		/**
+		 * Generate rectangle
+		 * @param {Object} opt Badge options
+		 */
+		type.rectangle = function (opt) {
+			opt = options(opt);
+			var more = false;
+			if (opt.len === 2) {
+				opt.x = opt.x - opt.w * 0.4;
+				opt.w = opt.w * 1.4;
+				more = true;
+			} else if (opt.len >= 3) {
+				opt.x = opt.x - opt.w * 0.65;
+				opt.w = opt.w * 1.65;
+				more = true;
+			}
+			_context.clearRect(0, 0, _w, _h);
+			_context.drawImage(_img, 0, 0, _w, _h);
+			_context.beginPath();
+			_context.font = _opt.fontStyle + " " + Math.floor(opt.h * (opt.n > 99 ? 0.9 : 1)) + "px " + _opt.fontFamily;
+			_context.textAlign = 'center';
+			_context.fillStyle = 'rgba(' + _opt.bgColor.r + ',' + _opt.bgColor.g + ',' + _opt.bgColor.b + ',' + opt.o + ')';
+			_context.fillRect(opt.x, opt.y, opt.w, opt.h);
+			_context.fillStyle = 'rgba(' + _opt.textColor.r + ',' + _opt.textColor.g + ',' + _opt.textColor.b + ',' + opt.o + ')';
+			//_context.fillText((more) ? '9+' : opt.n, Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.15));
+			if ((typeof opt.n) === 'number' && opt.n > 999) {
+				_context.fillText(((opt.n > 9999) ? 9 : Math.floor(opt.n / 1000)) + 'k+', Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.2));
+			} else {
+				_context.fillText(opt.n, Math.floor(opt.x + opt.w / 2), Math.floor(opt.y + opt.h - opt.h * 0.15));
+			}
+			_context.closePath();
+		};
+
+		/**
+		 * Set badge
+		 */
+		var badge = function (number, opts) {
+			opts = ((typeof opts) === 'string' ? {
+				animation: opts
+			} : opts) || {};
+			_readyCb = function () {
+				try {
+					if (typeof (number) === 'number' ? (number > 0) : (number !== '')) {
+						var q = {
+							type: 'badge',
+							options: {
+								n: number
+							}
+						};
+						if ('animation' in opts && animation.types['' + opts.animation]) {
+							q.options.animation = '' + opts.animation;
+						}
+						if ('type' in opts && type['' + opts.type]) {
+							q.options.type = '' + opts.type;
+						}
+						['bgColor', 'textColor'].forEach(function (o) {
+							if (o in opts) {
+								q.options[o] = hexToRgb(opts[o]);
+							}
+						});
+						['fontStyle', 'fontFamily'].forEach(function (o) {
+							if (o in opts) {
+								q.options[o] = opts[o];
+							}
+						});
+						_queue.push(q);
+						if (_queue.length > 100) {
+							throw new Error('Too many badges requests in queue.');
+						}
+						icon.start();
+					} else {
+						icon.reset();
+					}
+				} catch (e) {
+					throw new Error('Error setting badge. Message: ' + e.message);
+				}
+			};
+			if (_ready) {
+				_readyCb();
+			}
+		};
+
+		/**
+		 * Set image as icon
+		 */
+		var image = function (imageElement) {
+			_readyCb = function () {
+				try {
+					var w = imageElement.width;
+					var h = imageElement.height;
+					var newImg = document.createElement('img');
+					var ratio = (w / _w < h / _h) ? (w / _w) : (h / _h);
+					newImg.setAttribute('crossOrigin', 'anonymous');
+					newImg.onload=function(){
+						_context.clearRect(0, 0, _w, _h);
+						_context.drawImage(newImg, 0, 0, _w, _h);
+						link.setIcon(_canvas);
+					};
+					newImg.setAttribute('src', imageElement.getAttribute('src'));
+					newImg.height = (h / ratio);
+					newImg.width = (w / ratio);
+				} catch (e) {
+					throw new Error('Error setting image. Message: ' + e.message);
+				}
+			};
+			if (_ready) {
+				_readyCb();
+			}
+		};
+		/**
+		 * Set video as icon
+		 */
+		var video = function (videoElement) {
+			_readyCb = function () {
+				try {
+					if (videoElement === 'stop') {
+						_stop = true;
+						icon.reset();
+						_stop = false;
+						return;
+					}
+					//var w = videoElement.width;
+					//var h = videoElement.height;
+					//var ratio = (w / _w < h / _h) ? (w / _w) : (h / _h);
+					videoElement.addEventListener('play', function () {
+						drawVideo(this);
+					}, false);
+
+				} catch (e) {
+					throw new Error('Error setting video. Message: ' + e.message);
+				}
+			};
+			if (_ready) {
+				_readyCb();
+			}
+		};
+		/**
+		 * Set video as icon
+		 */
+		var webcam = function (action) {
+			//UR
+			if (!window.URL || !window.URL.createObjectURL) {
+				window.URL = window.URL || {};
+				window.URL.createObjectURL = function (obj) {
+					return obj;
+				};
+			}
+			if (_browser.supported) {
+				var newVideo = false;
+				navigator.getUserMedia = navigator.getUserMedia || navigator.oGetUserMedia || navigator.msGetUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+				_readyCb = function () {
+					try {
+						if (action === 'stop') {
+							_stop = true;
+							icon.reset();
+							_stop = false;
+							return;
+						}
+						newVideo = document.createElement('video');
+						newVideo.width = _w;
+						newVideo.height = _h;
+						navigator.getUserMedia({
+							video: true,
+							audio: false
+						}, function (stream) {
+							newVideo.src = URL.createObjectURL(stream);
+							newVideo.play();
+							drawVideo(newVideo);
+						}, function () {
+						});
+					} catch (e) {
+						throw new Error('Error setting webcam. Message: ' + e.message);
+					}
+				};
+				if (_ready) {
+					_readyCb();
+				}
+			}
+
+		};
+
+		/**
+		 * Draw video to context and repeat :)
+		 */
+		function drawVideo(video) {
+			if (video.paused || video.ended || _stop) {
+				return false;
+			}
+			//nasty hack for FF webcam (Thanks to Julian Ćwirko, kontakt@redsunmedia.pl)
+			try {
+				_context.clearRect(0, 0, _w, _h);
+				_context.drawImage(video, 0, 0, _w, _h);
+			} catch (e) {
+
+			}
+			_drawTimeout = setTimeout(function () {
+				drawVideo(video);
+			}, animation.duration);
+			link.setIcon(_canvas);
+		}
+
+		var link = {};
+		/**
+		 * Get icon from HEAD tag or create a new <link> element
+		 */
+		link.getIcon = function () {
+			var elm = false;
+			//get link element
+			var getLink = function () {
+				var link = _doc.getElementsByTagName('head')[0].getElementsByTagName('link');
+				for (var l = link.length, i = (l - 1); i >= 0; i--) {
+					if ((/(^|\s)icon(\s|$)/i).test(link[i].getAttribute('rel'))) {
+						return link[i];
+					}
+				}
+				return false;
+			};
+			if (_opt.element) {
+				elm = _opt.element;
+			} else if (_opt.elementId) {
+				//if img element identified by elementId
+				elm = _doc.getElementById(_opt.elementId);
+				elm.setAttribute('href', elm.getAttribute('src'));
+			} else {
+				//if link element
+				elm = getLink();
+				if (elm === false) {
+					elm = _doc.createElement('link');
+					elm.setAttribute('rel', 'icon');
+					_doc.getElementsByTagName('head')[0].appendChild(elm);
+				}
+			}
+			elm.setAttribute('type', 'image/png');
+			return elm;
+		};
+		link.setIcon = function (canvas) {
+			var url = canvas.toDataURL('image/png');
+			if (_opt.dataUrl) {
+				//if using custom exporter
+				_opt.dataUrl(url);
+			}
+			if (_opt.element) {
+				_opt.element.setAttribute('href', url);
+				_opt.element.setAttribute('src', url);
+			} else if (_opt.elementId) {
+				//if is attached to element (image)
+				var elm = _doc.getElementById(_opt.elementId);
+				elm.setAttribute('href', url);
+				elm.setAttribute('src', url);
+			} else {
+				//if is attached to fav icon
+				if (_browser.ff || _browser.opera) {
+					//for FF we need to "recreate" element, atach to dom and remove old <link>
+					//var originalType = _orig.getAttribute('rel');
+					var old = _orig;
+					_orig = _doc.createElement('link');
+					//_orig.setAttribute('rel', originalType);
+					if (_browser.opera) {
+						_orig.setAttribute('rel', 'icon');
+					}
+					_orig.setAttribute('rel', 'icon');
+					_orig.setAttribute('type', 'image/png');
+					_doc.getElementsByTagName('head')[0].appendChild(_orig);
+					_orig.setAttribute('href', url);
+					if (old.parentNode) {
+						old.parentNode.removeChild(old);
+					}
+				} else {
+					_orig.setAttribute('href', url);
+				}
+			}
+		};
+
+		//http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb#answer-5624139
+		//HEX to RGB convertor
+		function hexToRgb(hex) {
+			var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+			hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+				return r + r + g + g + b + b;
+			});
+			var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : false;
+		}
+
+		/**
+		 * Merge options
+		 */
+		function merge(def, opt) {
+			var mergedOpt = {};
+			var attrname;
+			for (attrname in def) {
+				mergedOpt[attrname] = def[attrname];
+			}
+			for (attrname in opt) {
+				mergedOpt[attrname] = opt[attrname];
+			}
+			return mergedOpt;
+		}
+
+		/**
+		 * Cross-browser page visibility shim
+		 * http://stackoverflow.com/questions/12536562/detect-whether-a-window-is-visible
+		 */
+		function isPageHidden() {
+			return _doc.hidden || _doc.msHidden || _doc.webkitHidden || _doc.mozHidden;
+		}
+
+		/**
+		 * @namespace animation
+		 */
+		var animation = {};
+		/**
+		 * Animation "frame" duration
+		 */
+		animation.duration = 40;
+		/**
+		 * Animation types (none,fade,pop,slide)
+		 */
+		animation.types = {};
+		animation.types.fade = [{
+			x: 0.4,
+			y: 0.4,
+			w: 0.6,
+			h: 0.6,
+			o: 0.0
+		}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.1
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.2
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.3
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.4
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.5
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.6
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.7
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.8
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 0.9
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 1.0
+			}];
+		animation.types.none = [{
+			x: 0.4,
+			y: 0.4,
+			w: 0.6,
+			h: 0.6,
+			o: 1
+		}];
+		animation.types.pop = [{
+			x: 1,
+			y: 1,
+			w: 0,
+			h: 0,
+			o: 1
+		}, {
+				x: 0.9,
+				y: 0.9,
+				w: 0.1,
+				h: 0.1,
+				o: 1
+			}, {
+				x: 0.8,
+				y: 0.8,
+				w: 0.2,
+				h: 0.2,
+				o: 1
+			}, {
+				x: 0.7,
+				y: 0.7,
+				w: 0.3,
+				h: 0.3,
+				o: 1
+			}, {
+				x: 0.6,
+				y: 0.6,
+				w: 0.4,
+				h: 0.4,
+				o: 1
+			}, {
+				x: 0.5,
+				y: 0.5,
+				w: 0.5,
+				h: 0.5,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}];
+		animation.types.popFade = [{
+			x: 0.75,
+			y: 0.75,
+			w: 0,
+			h: 0,
+			o: 0
+		}, {
+				x: 0.65,
+				y: 0.65,
+				w: 0.1,
+				h: 0.1,
+				o: 0.2
+			}, {
+				x: 0.6,
+				y: 0.6,
+				w: 0.2,
+				h: 0.2,
+				o: 0.4
+			}, {
+				x: 0.55,
+				y: 0.55,
+				w: 0.3,
+				h: 0.3,
+				o: 0.6
+			}, {
+				x: 0.50,
+				y: 0.50,
+				w: 0.4,
+				h: 0.4,
+				o: 0.8
+			}, {
+				x: 0.45,
+				y: 0.45,
+				w: 0.5,
+				h: 0.5,
+				o: 0.9
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}];
+		animation.types.slide = [{
+			x: 0.4,
+			y: 1,
+			w: 0.6,
+			h: 0.6,
+			o: 1
+		}, {
+				x: 0.4,
+				y: 0.9,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.9,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.8,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.7,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.6,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.5,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}, {
+				x: 0.4,
+				y: 0.4,
+				w: 0.6,
+				h: 0.6,
+				o: 1
+			}];
+		/**
+		 * Run animation
+		 * @param {Object} opt Animation options
+		 * @param {Object} cb Callabak after all steps are done
+		 * @param {Object} revert Reverse order? true|false
+		 * @param {Object} step Optional step number (frame bumber)
+		 */
+		animation.run = function (opt, cb, revert, step) {
+			var animationType = animation.types[isPageHidden() ? 'none' : _opt.animation];
+			if (revert === true) {
+				step = (typeof step !== 'undefined') ? step : animationType.length - 1;
+			} else {
+				step = (typeof step !== 'undefined') ? step : 0;
+			}
+			cb = (cb) ? cb : function () {
+			};
+			if ((step < animationType.length) && (step >= 0)) {
+				type[_opt.type](merge(opt, animationType[step]));
+				_animTimeout = setTimeout(function () {
+					if (revert) {
+						step = step - 1;
+					} else {
+						step = step + 1;
+					}
+					animation.run(opt, cb, revert, step);
+				}, animation.duration);
+
+				link.setIcon(_canvas);
+			} else {
+				cb();
+				return;
+			}
+		};
+		//auto init
+		init();
+		return {
+			badge: badge,
+			video: video,
+			image: image,
+			webcam: webcam,
+			reset: icon.reset,
+			browser: {
+				supported: _browser.supported
+			}
+		};
+	});
+
+	// AMD / RequireJS
+	if (typeof define !== 'undefined' && define.amd) {
+		define([], function () {
+			return Favico;
+		});
+	}
+	// CommonJS
+	else if (typeof module !== 'undefined' && module.exports) {
+		module.exports = Favico;
+	}
+	// included directly via <script> tag
+	else {
+		this.Favico = Favico;
+	}
+
+})();

@@ -2,6 +2,34 @@
 Glances Version 2
 ==============================================================================
 
+Version 2.8
+===========
+
+Deprecated:
+
+    * Deprecate Windows Curse UI: automaticaly open Web Browser for the standalone mode (issue #946)
+
+Enhancements and news features:
+
+    * Add ZeroMQ exporter (issue #939)
+    * Add CouchDB exporter (issue #928)
+    * Add hotspot Wifi informations (issue #937)
+    * Add default interface speed and automatic rate thresolds (issue #718)
+    * Highlight max stats in the processes list (issue #878)
+    * Docker alerts and actions (issue #875)
+    * Glances API returns the processes PPID (issue #926)
+    * Configure server cached time from the command line --cached-time (issue #901)
+    * Make the log logger configurable (issue #900)
+    * System uptime in export (issue #890)
+    * Refactor the --disable-* options (issue #948)
+
+Bugs corrected:
+
+    * Glances RAID plugin Traceback (issue #927)
+    * Default AMP crashes when 'command' given (issue #933)
+    * Default AMP ignores `enable` setting (issue #932)
+    * /proc/interrupts not found in an OpenVZ container (issue #947)
+
 Version 2.7.1
 =============
 

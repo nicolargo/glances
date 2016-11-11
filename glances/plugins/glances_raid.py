@@ -51,6 +51,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update RAID stats using the input method."""
@@ -71,9 +72,6 @@ class Plugin(GlancesPlugin):
             # No standard way for the moment...
             pass
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def msg_curse(self, args=None):
@@ -81,8 +79,8 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_raid:
+        # Only process if stats exist...
+        if not self.stats:
             return ret
 
         # Build the string message
@@ -145,6 +143,8 @@ class Plugin(GlancesPlugin):
         """
         if status == 'inactive':
             return 'CRITICAL'
-        if used < available:
+        if used is None or available is None:
+            return 'DEFAULT'
+        elif used < available:
             return 'WARNING'
         return 'OK'
