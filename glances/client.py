@@ -28,6 +28,7 @@ from glances.compat import Fault, ProtocolError, ServerProxy, Transport
 from glances.logger import logger
 from glances.stats_client import GlancesStatsClient
 from glances.outputs.glances_curses import GlancesCursesClient
+from glances.password import GlancesPassword
 
 
 class GlancesClientTransport(Transport):
@@ -56,6 +57,11 @@ class GlancesClient(object):
         # Build the URI
         if args.password != "":
             self.uri = 'http://{}:{}@{}:{}'.format(args.username, args.password,
+                                                   args.client, args.port)
+        elif args.password_from_config and self.config.get_value('passwords', args.client):
+            plain = self.config.get_value('passwords', str(args.client))
+            worker = GlancesPassword()
+            self.uri = 'http://{}:{}@{}:{}'.format('glances', worker.sha256_hash(plain),
                                                    args.client, args.port)
         else:
             self.uri = 'http://{}:{}'.format(args.client, args.port)

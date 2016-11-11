@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -37,7 +37,9 @@ class GlancesMain(object):
 
     # Default stats' refresh time is 3 seconds
     refresh_time = 3
+
     # Set the default cache lifetime to 1 second (only for server)
+    # !!! Todo: To be configurable (=> https://github.com/nicolargo/glances/issues/901)
     cached_time = 1
     # By default, Glances is ran in standalone mode (no client/server)
     client_tag = False
@@ -81,7 +83,6 @@ Start the client browser (browser mode):\n\
 
     def __init__(self):
         """Manage the command line arguments."""
-        # Read the command line arguments
         self.args = self.parse_args()
 
     def init_args(self):
@@ -99,58 +100,52 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
         # Enable or disable option on startup
-        parser.add_argument('--disable-alert', action='store_true', default=False,
-                            dest='disable_alert', help='disable alert module')
-        parser.add_argument('--disable-amps', action='store_true', default=False,
-                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
-        parser.add_argument('--disable-cpu', action='store_true', default=False,
-                            dest='disable_cpu', help='disable CPU module')
-        parser.add_argument('--disable-diskio', action='store_true', default=False,
-                            dest='disable_diskio', help='disable disk I/O module')
-        parser.add_argument('--disable-docker', action='store_true', default=False,
-                            dest='disable_docker', help='disable Docker module')
-        parser.add_argument('--disable-folders', action='store_true', default=False,
-                            dest='disable_folders', help='disable folder module')
-        parser.add_argument('--disable-fs', action='store_true', default=False,
-                            dest='disable_fs', help='disable filesystem module')
-        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
-                            dest='disable_hddtemp', help='disable HD temperature module')
-        parser.add_argument('--disable-ip', action='store_true', default=False,
-                            dest='disable_ip', help='disable IP module')
-        parser.add_argument('--disable-irq', action='store_true', default=False,
-                            dest='disable_irq', help='disable IRQ module'),
-        parser.add_argument('--disable-load', action='store_true', default=False,
-                            dest='disable_load', help='disable load module')
-        parser.add_argument('--disable-mem', action='store_true', default=False,
-                            dest='disable_mem', help='disable memory module')
-        parser.add_argument('--disable-memswap', action='store_true', default=False,
-                            dest='disable_memswap', help='disable memory swap module')
-        parser.add_argument('--disable-network', action='store_true', default=False,
-                            dest='disable_network', help='disable network module')
-        parser.add_argument('--disable-ports', action='store_true', default=False,
-                            dest='disable_ports', help='disable ports scanner module')
-        parser.add_argument('--disable-process', action='store_true', default=False,
-                            dest='disable_process', help='disable process module')
-        parser.add_argument('--disable-raid', action='store_true', default=False,
-                            dest='disable_raid', help='disable RAID module')
-        parser.add_argument('--disable-sensors', action='store_true', default=False,
-                            dest='disable_sensors', help='disable sensors module')
-        parser.add_argument('--disable-wifi', action='store_true', default=False,
-                            dest='disable_wifi', help='disable wifi module')
-        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
-                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
-        parser.add_argument('-1', '--percpu', action='store_true', default=False,
-                            dest='percpu', help='start Glances in per CPU mode')
-        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
-                            default=False, dest='disable_left_sidebar',
-                            help='disable network, disk I/O, FS and sensors modules')
         parser.add_argument('-3', '--disable-quicklook', action='store_true', default=False,
                             dest='disable_quicklook', help='disable quick look module')
         parser.add_argument('-4', '--full-quicklook', action='store_true', default=False,
                             dest='full_quicklook', help='disable all but quick look and load')
+        parser.add_argument('--disable-cpu', action='store_true', default=False,
+                            dest='disable_cpu', help='disable CPU module')
+        parser.add_argument('--disable-mem', action='store_true', default=False,
+                            dest='disable_mem', help='disable memory module')
+        parser.add_argument('--disable-swap', action='store_true', default=False,
+                            dest='disable_swap', help='disable swap module')
+        parser.add_argument('--disable-load', action='store_true', default=False,
+                            dest='disable_load', help='disable load module')
+        parser.add_argument('--disable-network', action='store_true', default=False,
+                            dest='disable_network', help='disable network module')
+        parser.add_argument('--disable-ports', action='store_true', default=False,
+                            dest='disable_ports', help='disable ports scanner module')
+        parser.add_argument('--disable-ip', action='store_true', default=False,
+                            dest='disable_ip', help='disable IP module')
+        parser.add_argument('--disable-diskio', action='store_true', default=False,
+                            dest='disable_diskio', help='disable disk I/O module')
+        parser.add_argument('--disable-irq', action='store_true', default=False,
+                            dest='disable_irq', help='disable IRQ module'),
+        parser.add_argument('--disable-fs', action='store_true', default=False,
+                            dest='disable_fs', help='disable filesystem module')
+        parser.add_argument('--disable-folder', action='store_true', default=False,
+                            dest='disable_folder', help='disable folder module')
+        parser.add_argument('--disable-sensors', action='store_true', default=False,
+                            dest='disable_sensors', help='disable sensors module')
+        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
+                            dest='disable_hddtemp', help='disable HD temperature module')
+        parser.add_argument('--disable-raid', action='store_true', default=False,
+                            dest='disable_raid', help='disable RAID module')
+        parser.add_argument('--disable-docker', action='store_true', default=False,
+                            dest='disable_docker', help='disable Docker module')
         parser.add_argument('-5', '--disable-top', action='store_true',
                             default=False, dest='disable_top',
                             help='disable top menu (QL, CPU, MEM, SWAP and LOAD)')
+        parser.add_argument('-2', '--disable-left-sidebar', action='store_true',
+                            default=False, dest='disable_left_sidebar',
+                            help='disable network, disk I/O, FS and sensors modules')
+        parser.add_argument('--disable-process', action='store_true', default=False,
+                            dest='disable_process', help='disable process module')
+        parser.add_argument('--disable-amps', action='store_true', default=False,
+                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
+        parser.add_argument('--disable-log', action='store_true', default=False,
+                            dest='disable_log', help='disable log module')
         parser.add_argument('--disable-history', action='store_true', default=False,
                             dest='disable_history', help='disable stats history')
         parser.add_argument('--disable-bold', action='store_true', default=False,
@@ -180,10 +175,6 @@ Start the client browser (browser mode):\n\
                             dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
         parser.add_argument('--export-riemann', action='store_true', default=False,
                             dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
-        parser.add_argument('--export-couchdb', action='store_true', default=False,
-                            dest='export_couchdb', help='export stats to a CouchDB server (couch lib needed)')
-        parser.add_argument('--export-zeromq', action='store_true', default=False,
-                            dest='export_zeromq', help='export stats to a ZeroMQ server (pyzmq lib needed)')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')
@@ -217,10 +208,8 @@ Start the client browser (browser mode):\n\
                             dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.refresh_time))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
-        parser.add_argument('--cached-time', default=self.cached_time, type=int,
-                            dest='cached_time', help='set the server cache time [default: {} sec]'.format(self.cached_time))
-        parser.add_argument('--open-web-browser', action='store_true', default=False,
-                            dest='open_web_browser', help='try to open the Web UI in the default Web browser')
+        parser.add_argument('--password_from_config', action='store_true', default=False, dest='password_from_config',
+                            help='load server password')
         # Display options
         parser.add_argument('-q', '--quiet', default=False, action='store_true',
                             dest='quiet', help='do not display the curses interface')
@@ -228,6 +217,8 @@ Start the client browser (browser mode):\n\
                             dest='process_filter', help='set the process filter pattern (regular expression)')
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
+        parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
+                            dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
@@ -242,6 +233,8 @@ Start the client browser (browser mode):\n\
                             dest='diskio_iops', help='show IO per second in the DiskIO plugin')
         parser.add_argument('--fahrenheit', action='store_true', default=False,
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
+        parser.add_argument('-1', '--percpu', action='store_true', default=False,
+                            dest='percpu', help='start Glances in per CPU mode')
         parser.add_argument('--fs-free-space', action='store_true', default=False,
                             dest='fs_free_space', help='display FS free space instead of used')
         parser.add_argument('--theme-white', action='store_true', default=False,
@@ -327,7 +320,7 @@ Start the client browser (browser mode):\n\
             args.disable_quicklook = False
             args.disable_cpu = True
             args.disable_mem = True
-            args.disable_memswap = True
+            args.disable_swap = True
             args.disable_load = False
 
         # Manage disable_top option
@@ -336,21 +329,14 @@ Start the client browser (browser mode):\n\
             args.disable_quicklook = True
             args.disable_cpu = True
             args.disable_mem = True
-            args.disable_memswap = True
+            args.disable_swap = True
             args.disable_load = True
 
         # Control parameter and exit if it is not OK
         self.args = args
 
         # Export is only available in standalone or client mode (issue #614)
-        export_tag = args.export_csv or \
-                     args.export_elasticsearch or \
-                     args.export_statsd or \
-                     args.export_influxdb or \
-                     args.export_cassandra or \
-                     args.export_opentsdb or \
-                     args.export_rabbitmq or \
-                     args.export_couchdb
+        export_tag = args.export_csv or args.export_elasticsearch or args.export_statsd or args.export_influxdb or args.export_cassandra or args.export_opentsdb or args.export_rabbitmq
         if not (self.is_standalone() or self.is_client()) and export_tag:
             logger.critical("Export is only available in standalone or client mode")
             sys.exit(2)
