@@ -90,11 +90,9 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        if not LINUX:  # only available on GNU/Linux
-            return ret
-
+        # Only available on GNU/Linux
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disable():
+        if not LINUX or not self.stats or not self.args.enable_irq:
             return ret
 
         if max_width is not None and max_width >= 23:

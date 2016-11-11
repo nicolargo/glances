@@ -117,8 +117,6 @@ Start the client browser (browser mode):\n\
                             dest='disable_hddtemp', help='disable HD temperature module')
         parser.add_argument('--disable-ip', action='store_true', default=False,
                             dest='disable_ip', help='disable IP module')
-        parser.add_argument('--disable-irq', action='store_true', default=False,
-                            dest='disable_irq', help='disable IRQ module'),
         parser.add_argument('--disable-load', action='store_true', default=False,
                             dest='disable_load', help='disable load module')
         parser.add_argument('--disable-mem', action='store_true', default=False,
@@ -157,6 +155,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_bold', help='disable bold mode in the terminal')
         parser.add_argument('--disable-bg', action='store_true', default=False,
                             dest='disable_bg', help='disable background colors in the terminal')
+        parser.add_argument('--enable-irq', action='store_true', default=False,
+                            dest='enable_irq', help='enable IRQ module'),
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
         # Export modules feature

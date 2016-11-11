@@ -73,7 +73,7 @@ class _GlancesCurses(object):
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
         'P': {'switch': 'disable_ports'},
-        'Q': {'switch': 'disable_irq'},
+        'Q': {'switch': 'enable_irq'},
         'r': {'switch': 'reset_history_tag'},
         'R': {'switch': 'disable_raid'},
         's': {'switch': 'disable_sensors'},
@@ -673,7 +673,7 @@ class _GlancesCurses(object):
                 self.args.disable_ports and
                 self.args.disable_diskio and
                 self.args.disable_fs and
-                self.args.disable_irq and
+                self.args.enable_irq and
                 self.args.disable_folders and
                 self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
