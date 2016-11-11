@@ -63,7 +63,7 @@ def _linux_os_release():
             for line in f:
                 for key in keys:
                     if line.startswith(key):
-                        ashtray[key] = line.strip().split('=')[1][1:-1]
+                        ashtray[key] = re.sub(r'^"|"$', '', line.strip().split('=')[1])
     except (OSError, IOError):
         return pretty_name
 
