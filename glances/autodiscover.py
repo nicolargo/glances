@@ -22,7 +22,6 @@
 import socket
 import sys
 
-from glances import __appname__
 from glances.globals import BSD
 from glances.logger import logger
 
@@ -48,8 +47,8 @@ if zeroconf_tag:
 
 # Global var
 # Recent versions of the zeroconf python package doesnt like a zeroconf type that ends with '._tcp.'.
-# Correct issue: zeroconf problem with zeroconf_type = "_%s._tcp." % __appname__ #888
-zeroconf_type = "_%s._tcp.local." % __appname__
+# Correct issue: zeroconf problem with zeroconf_type = "_%s._tcp." % 'glances' #888
+zeroconf_type = "_%s._tcp.local." % 'glances'
 
 
 class AutoDiscovered(object):

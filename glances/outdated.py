@@ -32,7 +32,7 @@ except ImportError:
 else:
     outdated_tag = True
 
-from glances import __version__, __appname__
+from glances import __version__
 from glances.globals import BSD, LINUX, OSX, WINDOWS
 from glances.logger import logger
 
@@ -155,12 +155,11 @@ class Outdated(object):
         if LINUX or BSD:
             return os.path.join(os.environ.get('XDG_CONFIG_HOME') or
                                 os.path.expanduser('~/.config'),
-                                __appname__)
+                                'glances')
         elif OSX:
-            return os.path.join(os.path.expanduser('~/Library/Application Support/'),
-                                __appname__)
+            return os.path.expanduser('~/Library/Application Support/glances')
         elif WINDOWS:
-            return os.path.join(os.environ.get('APPDATA'), __appname__)
+            return os.path.join(os.environ.get('APPDATA'), 'glances')
 
     def _update_pypi_version(self):
         """Get the latest Pypi version (as a string) via the Restful JSON API"""

@@ -24,7 +24,7 @@ import os
 import sys
 import tempfile
 
-from glances import __appname__, __version__, psutil_version
+from glances import __version__, psutil_version
 from glances.compat import input
 from glances.config import Config
 from glances.globals import LINUX, WINDOWS
@@ -88,7 +88,7 @@ Start the client browser (browser mode):\n\
         """Init all the command line arguments."""
         version = "Glances v" + __version__ + " with psutil v" + psutil_version
         parser = argparse.ArgumentParser(
-            prog=__appname__,
+            prog='glances',
             conflict_handler='resolve',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.example_of_use)
