@@ -113,11 +113,15 @@ class Plugin(GlancesPlugin):
             self.stats['hostname'] = platform.node()
             self.stats['platform'] = platform.architecture()[0]
             if self.stats['os_name'] == "Linux":
-                linux_distro = platform.linux_distribution()
-                if linux_distro[0] == '':
+                try:
+                    linux_distro = platform.linux_distribution()
+                except AttributeError:
                     self.stats['linux_distro'] = _linux_os_release()
                 else:
-                    self.stats['linux_distro'] = ' '.join(linux_distro[:2])
+                    if linux_distro[0] == '':
+                        self.stats['linux_distro'] = _linux_os_release()
+                    else:
+                        self.stats['linux_distro'] = ' '.join(linux_distro[:2])
                 self.stats['os_version'] = platform.release()
             elif self.stats['os_name'].endswith('BSD'):
                 self.stats['os_version'] = platform.release()
