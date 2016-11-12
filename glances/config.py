@@ -241,6 +241,13 @@ class Config(object):
         except NoOptionError:
             return default
 
+    def get_int_value(self, section, option, default=0):
+        """Get the int value of an option, if it exists."""
+        try:
+            return self.parser.getint(section, option)
+        except NoOptionError:
+            return int(default)
+
     def get_float_value(self, section, option, default=0.0):
         """Get the float value of an option, if it exists."""
         try:
