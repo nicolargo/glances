@@ -113,7 +113,6 @@ class _GlancesCurses(object):
         # Load the 'outputs' section of the configuration file
         # - Init the theme (default is black)
         self.theme = {'name': 'black'}
-        self.load_config(self.config)
 
         # Init cursor
         self._init_cursor()
@@ -382,31 +381,47 @@ class _GlancesCurses(object):
             glances_processes.enable_extended()
 
         if self.args.disable_top:
-            self.args.disable_quicklook = True
-            self.args.disable_cpu = True
-            self.args.disable_mem = True
-            self.args.disable_memswap = True
-            self.args.disable_load = True
+            self.disable_top()
         else:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = False
-            self.args.disable_mem = False
-            self.args.disable_memswap = False
-            self.args.disable_load = False
+            self.enable_top()
 
         if self.args.full_quicklook:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = True
-            self.args.disable_mem = True
-            self.args.disable_memswap = True
+            self.enable_fullquicklook()
         else:
-            self.args.disable_quicklook = False
-            self.args.disable_cpu = False
-            self.args.disable_mem = False
-            self.args.disable_memswap = False
+            self.disable_fullquicklook()
 
         # Return the key code
         return self.pressedkey
+
+    def disable_top(self):
+        """Disable the top panel"""
+        self.args.disable_quicklook = True
+        self.args.disable_cpu = True
+        self.args.disable_mem = True
+        self.args.disable_memswap = True
+        self.args.disable_load = True
+
+    def enable_top(self):
+        """Enable the top panel"""
+        self.args.disable_quicklook = False
+        self.args.disable_cpu = False
+        self.args.disable_mem = False
+        self.args.disable_memswap = False
+        self.args.disable_load = False
+
+    def disable_fullquicklook(self):
+        """Disable the full quicklook mode"""
+        self.args.disable_quicklook = False
+        self.args.disable_cpu = False
+        self.args.disable_mem = False
+        self.args.disable_memswap = False
+
+    def enable_fullquicklook(self):
+        """Disable the full quicklook mode"""
+        self.args.disable_quicklook = False
+        self.args.disable_cpu = True
+        self.args.disable_mem = True
+        self.args.disable_memswap = True
 
     def end(self):
         """Shutdown the curses window."""
