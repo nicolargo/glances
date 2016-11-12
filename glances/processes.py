@@ -121,18 +121,29 @@ class GlancesProcesses(object):
 
     @property
     def pid_max(self):
-        """Get the maximum number of PID
-        On a Linux operating system, the value is read from
-        the /proc/sys/kernel/pid_max file.
+        """
+        Get the maximum PID value.
 
-        If the file is unreadable or not available (on others OS),
-        return None.
+        On Linux, the value is read from the `/proc/sys/kernel/pid_max` file.
+
+        From `man 5 proc`:
+        The default value for this file, 32768, results in the same range of
+        PIDs as on earlier kernels. On 32-bit platfroms, 32768 is the maximum
+        value for pid_max. On 64-bit systems, pid_max can be set to any value
+        up to 2^22 (PID_MAX_LIMIT, approximately 4 million).
+
+        If the file is unreadable or not available for whatever reason,
+        returns None.
+
+        Some other OSes:
+        - On FreeBSD and macOS the maximum is 99999.
+        - On OpenBSD >= 6.0 the maximum is 99999 (was 32766).
+        - On NetBSD the maximum is 30000.
 
         :returns: int or None
         """
         if LINUX:
-            # For the moment, only available on LINUX
-            # Waiting from https://github.com/giampaolo/psutil/issues/720
+            # XXX: waiting for https://github.com/giampaolo/psutil/issues/720
             try:
                 with open('/proc/sys/kernel/pid_max', 'rb') as f:
                     return int(f.read())
