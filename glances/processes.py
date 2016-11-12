@@ -134,8 +134,9 @@ class GlancesProcesses(object):
             # For the moment, only available on LINUX
             # Waiting from https://github.com/giampaolo/psutil/issues/720
             try:
-                return int(open('/proc/sys/kernel/pid_max').readline().rstrip())
-            except IOError:
+                with open('/proc/sys/kernel/pid_max', 'rb') as f:
+                    return int(f.read())
+            except (OSError, IOError):
                 return None
 
     @property
