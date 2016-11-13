@@ -23,7 +23,8 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'sensors': 'GlancesPluginSensors',
         'system': 'GlancesPluginSystem',
         'uptime': 'GlancesPluginUptime',
-        'ports': 'GlancesPluginPorts'
+        'ports': 'GlancesPluginPorts',
+        'wifi': 'GlancesPluginWifi'
     };
 
     this.getData = function() {
