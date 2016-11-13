@@ -51,7 +51,7 @@
                 <section id="diskio" class="plugin table-row-group" ng-show="!arguments.disable_diskio && statsDiskio.disks.length > 0" ng-include src="'plugins/diskio.html'"></section>
 
                 <section id="fs" class="plugin table-row-group" ng-show="!arguments.disable_fs" ng-include src="'plugins/fs.html'"></section>
-                <section id="irq" class="plugin table-row-group" ng-show="!arguments.disable_irq && statsIrq.irqs.length > 0" ng-include src="'plugins/irq.html'"></section>
+                <section id="irq" class="plugin table-row-group" ng-show="arguments.enable_irq && statsIrq.irqs.length > 0" ng-include src="'plugins/irq.html'"></section>
                 <section id="folders" class="plugin table-row-group" ng-show="!arguments.disable_fs && statsFolders.folders.length > 0" ng-include src="'plugins/folders.html'"></section>
                 <section id="raid" class="plugin table-row-group" ng-show="statsRaid.hasDisks()" ng-include src="'plugins/raid.html'"></section>
                 <section id="sensors" class="plugin table-row-group" ng-show="!arguments.disable_sensors && statsSensors.sensors.length > 0" ng-include src="'plugins/sensors.html'"></section>
