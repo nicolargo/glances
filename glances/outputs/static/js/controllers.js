@@ -43,6 +43,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsSystem = GlancesStats.getPlugin('system');
             $scope.statsUptime = GlancesStats.getPlugin('uptime');
             $scope.statsPorts = GlancesStats.getPlugin('ports');
+            $scope.statsWifi = GlancesStats.getPlugin('wifi');
 
             $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
 
@@ -192,6 +193,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             case $event.shiftKey && $event.keyCode == keycodes.p:
                 // I => Enable/disable ports module
                 $scope.arguments.disable_ports = !$scope.arguments.disable_ports;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.w:
+                // 'W' > Enable/Disable Wifi plugin
+                $scope.arguments.disable_wifi = !$scope.arguments.disable_wifi;
                 break;
         }
     };
