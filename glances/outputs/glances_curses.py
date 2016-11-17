@@ -66,7 +66,6 @@ class _GlancesCurses(object):
         'D': {'switch': 'disable_docker'},
         'e': {'switch': 'enable_process_extended'},
         'F': {'switch': 'fs_free_space'},
-        'g': {'switch': 'graph_tag'},
         'h': {'switch': 'help_tag'},
         'I': {'switch': 'disable_ip'},
         'l': {'switch': 'disable_alert'},
@@ -353,6 +352,16 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('\n'):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
+        elif self.pressedkey == ord('4'):
+            if self.args.full_quicklook:
+                self.enable_fullquicklook()
+            else:
+                self.disable_fullquicklook()
+        elif self.pressedkey == ord('5'):
+            if self.args.disable_top:
+                self.disable_top()
+            else:
+                self.enable_top()
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             glances_processes.process_filter = None
@@ -360,6 +369,9 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
+        elif self.pressedkey == ord('g'):
+            # 'g' > Generate graph from history
+            self.graph_tag = not self.graph_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
@@ -379,16 +391,6 @@ class _GlancesCurses(object):
             glances_processes.disable_extended()
         else:
             glances_processes.enable_extended()
-
-        if self.args.disable_top:
-            self.disable_top()
-        else:
-            self.enable_top()
-
-        if self.args.full_quicklook:
-            self.enable_fullquicklook()
-        else:
-            self.disable_fullquicklook()
 
         # Return the key code
         return self.pressedkey
