@@ -66,7 +66,6 @@ class _GlancesCurses(object):
         'D': {'switch': 'disable_docker'},
         'e': {'switch': 'enable_process_extended'},
         'F': {'switch': 'fs_free_space'},
-        'g': {'switch': 'graph_tag'},
         'h': {'switch': 'help_tag'},
         'I': {'switch': 'disable_ip'},
         'l': {'switch': 'disable_alert'},
@@ -360,6 +359,9 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
+        elif self.pressedkey == ord('g'):
+            # 'g' > Generate graph from history
+            self.graph_tag = not self.graph_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
