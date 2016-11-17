@@ -113,7 +113,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.Q:
                 // Q => Show/hide IRQ
-                $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
+                $scope.arguments.enable_irq = !$scope.arguments.enable_irq;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:
                 // f => Show/hide filesystem stats
