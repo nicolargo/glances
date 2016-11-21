@@ -16,7 +16,7 @@ Command-Line Options
 
 .. option:: -d, --debug
 
-    enable debug mode
+    enable debug mode. The debugging output is saved to /tmp/glances.log.
 
 .. option:: -C CONF_FILE, --config CONF_FILE
 
