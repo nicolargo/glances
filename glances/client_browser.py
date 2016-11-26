@@ -21,6 +21,7 @@
 
 import json
 import socket
+import threading
 
 from glances.compat import Fault, ProtocolError, ServerProxy
 from glances.autodiscover import GlancesAutoDiscoverServer
@@ -94,12 +95,6 @@ class GlancesClientBrowser(object):
         """
         Update stats for the given server (picked from the server list)
         """
-        # Do not retreive stats for statics server
-        # Why ? Because for each offline servers, the timeout will be reached
-        # So ? The curse interface freezes
-        if server['type'] == 'STATIC' and server['status'] in ['UNKNOWN', 'SNMP', 'OFFLINE']:
-            return server
-
         # Get the server URI
         uri = self.__get_uri(server)
 
@@ -224,14 +219,11 @@ class GlancesClientBrowser(object):
         # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
         # Or define staticaly in the configuration file (module static_list.py)
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
-        # logger.debug(self.get_servers_list())
-        try:
-            for v in self.get_servers_list():
-                self.__update_stats(v)
-        # List can change size during iteration...
-        except RuntimeError:
-            logger.debug(
-                "Server list dictionnary change inside the loop (wait next update)")
+
+        logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
+        for v in self.get_servers_list():
+            thread = threading.Thread(target=self.__update_stats, args=[v])
+            thread.start()
 
         # Update the screen (list or Glances client)
         if self.screen.active_server is None:
