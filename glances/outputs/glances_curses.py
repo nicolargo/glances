@@ -461,6 +461,51 @@ class _GlancesCurses(object):
         """New column in the curses interface."""
         self.column = self.next_column
 
+    def __get_stat_display(self, stats, plugin_max_width):
+        ret = {}
+        ret["system"] = stats.get_plugin(
+            'system').get_stats_display(args=self.args)
+        ret["uptime"] = stats.get_plugin('uptime').get_stats_display()
+        if self.args.percpu:
+            ret["cpu"] = stats.get_plugin('percpu').get_stats_display(args=self.args)
+        else:
+            ret["cpu"] = stats.get_plugin('cpu').get_stats_display(args=self.args)
+        ret["load"] = stats.get_plugin('load').get_stats_display(args=self.args)
+        ret["mem"] = stats.get_plugin('mem').get_stats_display(args=self.args)
+        ret["memswap"] = stats.get_plugin('memswap').get_stats_display(args=self.args)
+        ret["network"] = stats.get_plugin('network').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        ret["wifi"] = stats.get_plugin('wifi').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        ret["irq"] = stats.get_plugin('irq').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        try:
+            ret["ip"] = stats.get_plugin('ip').get_stats_display(args=self.args)
+        except AttributeError:
+            ret["ip"] = None
+        ret["diskio"] = stats.get_plugin(
+            'diskio').get_stats_display(args=self.args)
+        ret["fs"] = stats.get_plugin('fs').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        ret["folders"] = stats.get_plugin('folders').get_stats_display(
+            args=self.args, max_width=plugin_max_width)
+        ret["raid"] = stats.get_plugin('raid').get_stats_display(
+            args=self.args)
+        ret["sensors"] = stats.get_plugin(
+            'sensors').get_stats_display(args=self.args)
+        ret["ports"] = stats.get_plugin(
+            'ports').get_stats_display(args=self.args)
+        ret["now"] = stats.get_plugin('now').get_stats_display()
+        ret["docker"] = stats.get_plugin('docker').get_stats_display(
+            args=self.args)
+        ret["processcount"] = stats.get_plugin(
+            'processcount').get_stats_display(args=self.args)
+        ret["amps"] = stats.get_plugin(
+            'amps').get_stats_display(args=self.args)
+        ret["alert"] = stats.get_plugin(
+            'alert').get_stats_display(args=self.args)
+        return ret
+
     def display(self, stats, cs_status=None):
         """Display stats on the screen.
 
@@ -494,52 +539,12 @@ class _GlancesCurses(object):
 
         # Update the client server status
         self.args.cs_status = cs_status
-        stats_system = stats.get_plugin(
-            'system').get_stats_display(args=self.args)
-        stats_uptime = stats.get_plugin('uptime').get_stats_display()
-        if self.args.percpu:
-            stats_cpu = stats.get_plugin('percpu').get_stats_display(args=self.args)
-        else:
-            stats_cpu = stats.get_plugin('cpu').get_stats_display(args=self.args)
-        stats_load = stats.get_plugin('load').get_stats_display(args=self.args)
-        stats_mem = stats.get_plugin('mem').get_stats_display(args=self.args)
-        stats_memswap = stats.get_plugin('memswap').get_stats_display(args=self.args)
-        stats_network = stats.get_plugin('network').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        stats_wifi = stats.get_plugin('wifi').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        stats_irq = stats.get_plugin('irq').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        try:
-            stats_ip = stats.get_plugin('ip').get_stats_display(args=self.args)
-        except AttributeError:
-            stats_ip = None
-        stats_diskio = stats.get_plugin(
-            'diskio').get_stats_display(args=self.args)
-        stats_fs = stats.get_plugin('fs').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        stats_folders = stats.get_plugin('folders').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        stats_raid = stats.get_plugin('raid').get_stats_display(
-            args=self.args)
-        stats_sensors = stats.get_plugin(
-            'sensors').get_stats_display(args=self.args)
-        stats_ports = stats.get_plugin(
-            'ports').get_stats_display(args=self.args)
-        stats_now = stats.get_plugin('now').get_stats_display()
-        stats_docker = stats.get_plugin('docker').get_stats_display(
-            args=self.args)
-        stats_processcount = stats.get_plugin(
-            'processcount').get_stats_display(args=self.args)
-        stats_amps = stats.get_plugin(
-            'amps').get_stats_display(args=self.args)
-        stats_alert = stats.get_plugin(
-            'alert').get_stats_display(args=self.args)
+        __stat_display = self.__get_stat_display(stats, plugin_max_width)
 
         # Adapt number of processes to the available space
         max_processes_displayed = screen_y - 11 - \
-            self.get_stats_display_height(stats_alert) - \
-            self.get_stats_display_height(stats_docker)
+            self.get_stats_display_height(__stat_display["alert"]) - \
+            self.get_stats_display_height(__stat_display["docker"])
         try:
             if self.args.enable_process_extended and not self.args.process_tree:
                 max_processes_displayed -= 4
@@ -552,7 +557,7 @@ class _GlancesCurses(object):
             logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
-        stats_processlist = stats.get_plugin(
+        __stat_display["processlist"] = stats.get_plugin(
             'processlist').get_stats_display(args=self.args)
 
         # Display the stats on the curses interface
@@ -572,16 +577,19 @@ class _GlancesCurses(object):
         # Space between column
         self.space_between_column = 0
         self.new_line()
-        l_uptime = self.get_stats_display_width(
-            stats_system) + self.space_between_column + self.get_stats_display_width(stats_ip) + 3 + self.get_stats_display_width(stats_uptime)
+        l_uptime = self.get_stats_display_width(__stat_display["system"]) \
+            + self.space_between_column \
+            + self.get_stats_display_width(__stat_display["ip"]) + 3 \
+            + self.get_stats_display_width(__stat_display["uptime"])
         self.display_plugin(
-            stats_system, display_optional=(screen_x >= l_uptime))
+            __stat_display["system"],
+            display_optional=(screen_x >= l_uptime))
         self.new_column()
-        self.display_plugin(stats_ip)
+        self.display_plugin(__stat_display["ip"])
         # Space between column
         self.space_between_column = 3
         self.new_column()
-        self.display_plugin(stats_uptime)
+        self.display_plugin(__stat_display["uptime"])
 
         # ========================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+LOAD+MEM+SWAP)
@@ -590,36 +598,36 @@ class _GlancesCurses(object):
         self.new_line()
 
         # Init quicklook
-        stats_quicklook = {'msgdict': []}
+        __stat_display["quicklook"] = {'msgdict': []}
         quicklook_width = 0
 
         # Get stats for CPU, MEM, SWAP and LOAD (if needed)
         if self.args.disable_cpu:
             cpu_width = 0
         else:
-            cpu_width = self.get_stats_display_width(stats_cpu)
+            cpu_width = self.get_stats_display_width(__stat_display["cpu"])
         if self.args.disable_mem:
             mem_width = 0
         else:
-            mem_width = self.get_stats_display_width(stats_mem)
+            mem_width = self.get_stats_display_width(__stat_display["mem"])
         if self.args.disable_memswap:
             swap_width = 0
         else:
-            swap_width = self.get_stats_display_width(stats_memswap)
+            swap_width = self.get_stats_display_width(__stat_display["memswap"])
         if self.args.disable_load:
             load_width = 0
         else:
-            load_width = self.get_stats_display_width(stats_load)
+            load_width = self.get_stats_display_width(__stat_display["load"])
 
         # Size of plugins but quicklook
         stats_width = cpu_width + mem_width + swap_width + load_width
 
         # Number of plugin but quicklook
         stats_number = (
-            int(not self.args.disable_cpu and stats_cpu['msgdict'] != []) +
-            int(not self.args.disable_mem and stats_mem['msgdict'] != []) +
-            int(not self.args.disable_memswap and stats_memswap['msgdict'] != []) +
-            int(not self.args.disable_load and stats_load['msgdict'] != []))
+            int(not self.args.disable_cpu and __stat_display["cpu"]['msgdict'] != []) +
+            int(not self.args.disable_mem and __stat_display["mem"]['msgdict'] != []) +
+            int(not self.args.disable_memswap and __stat_display["memswap"]['msgdict'] != []) +
+            int(not self.args.disable_load and __stat_display["load"]['msgdict'] != []))
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
@@ -628,15 +636,15 @@ class _GlancesCurses(object):
             else:
                 quicklook_width = min(screen_x - (stats_width + 8 + stats_number * self.space_between_column), 79)
             try:
-                stats_quicklook = stats.get_plugin(
+                __stat_display["quicklook"] = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
             except AttributeError as e:
                 logger.debug("Quicklook plugin not available (%s)" % e)
             else:
-                quicklook_width = self.get_stats_display_width(stats_quicklook)
+                quicklook_width = self.get_stats_display_width(__stat_display["quicklook"])
                 stats_width += quicklook_width + 1
             self.space_between_column = 1
-            self.display_plugin(stats_quicklook)
+            self.display_plugin(__stat_display["quicklook"])
             self.new_column()
 
         # Compute spaces between plugins
@@ -651,7 +659,7 @@ class _GlancesCurses(object):
                 if self.args.disable_mem:
                     mem_width = 0
                 else:
-                    mem_width = self.get_stats_display_width(stats_mem, without_option=True)
+                    mem_width = self.get_stats_display_width(__stat_display["mem"], without_option=True)
                 stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
                 self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
             # No space again ? Remove optionnal CPU stats
@@ -660,20 +668,20 @@ class _GlancesCurses(object):
                 if self.args.disable_cpu:
                     cpu_width = 0
                 else:
-                    cpu_width = self.get_stats_display_width(stats_cpu, without_option=True)
+                    cpu_width = self.get_stats_display_width(__stat_display["cpu"], without_option=True)
                 stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
                 self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
         else:
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        self.display_plugin(stats_cpu, display_optional=display_optional_cpu)
+        self.display_plugin(__stat_display["cpu"], display_optional=display_optional_cpu)
         self.new_column()
-        self.display_plugin(stats_mem, display_optional=display_optional_mem)
+        self.display_plugin(__stat_display["mem"], display_optional=display_optional_mem)
         self.new_column()
-        self.display_plugin(stats_memswap)
+        self.display_plugin(__stat_display["memswap"])
         self.new_column()
-        self.display_plugin(stats_load)
+        self.display_plugin(__stat_display["load"])
 
         # Space between column
         self.space_between_column = 3
@@ -694,7 +702,16 @@ class _GlancesCurses(object):
                 self.args.disable_folders and
                 self.args.disable_raid and
                 self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            for s in (stats_network, stats_wifi, stats_ports, stats_diskio, stats_fs, stats_irq, stats_folders, stats_raid, stats_sensors, stats_now):
+            for s in (__stat_display["network"],
+                      __stat_display["wifi"],
+                      __stat_display["ports"],
+                      __stat_display["diskio"],
+                      __stat_display["fs"],
+                      __stat_display["irq"],
+                      __stat_display["folders"],
+                      __stat_display["raid"],
+                      __stat_display["sensors"],
+                      __stat_display["now"]):
                 self.new_line()
                 self.display_plugin(s)
 
@@ -710,18 +727,18 @@ class _GlancesCurses(object):
             # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
             self.new_column()
             self.new_line()
-            self.display_plugin(stats_docker)
+            self.display_plugin(__stat_display["docker"])
             self.new_line()
-            self.display_plugin(stats_processcount)
+            self.display_plugin(__stat_display["processcount"])
             self.new_line()
-            self.display_plugin(stats_amps)
+            self.display_plugin(__stat_display["amps"])
             self.new_line()
-            self.display_plugin(stats_processlist,
+            self.display_plugin(__stat_display["processlist"],
                                 display_optional=(screen_x > 102),
                                 display_additional=(not OSX),
-                                max_y=(screen_y - self.get_stats_display_height(stats_alert) - 2))
+                                max_y=(screen_y - self.get_stats_display_height(__stat_display["alert"]) - 2))
             self.new_line()
-            self.display_plugin(stats_alert)
+            self.display_plugin(__stat_display["alert"])
 
         # History option
         # Generate history graph
