@@ -19,6 +19,7 @@
 
 """NVIDIA plugin."""
 
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 try:
@@ -26,7 +27,8 @@ try:
 except ImportError:
     logger.info("Could not import pynvml.  NVIDIA stats will not be collected.")
 
-class NvidiaPlugin(GlancesPlugin):
+
+class Plugin(GlancesPlugin):
 
     """Glances NVIDIA  plugin.
 
@@ -35,45 +37,32 @@ class NvidiaPlugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin"""
-        super(NvidiaPlugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args)
 
         try:
             nvmlInit()
-            self.nvmlReady = true
-            self.deviceHandles = self.getDeviceHandles()
-            self.devicesReady
+            self.nvml_ready = True
+            self.device_handles = self.get_device_handles()
+            self.devices_ready
         except Exception:
             logger.info("pynvml could not be initialized.")
-            self.nvmlReady = false
+            self.nvml_ready = False
 
-        self.display_curse = false
+        self.display_curse = False
 
         self.reset()
 
         if self.input_method == 'local':
             # Update stats
-            self.stats = self.getStats()
-
+            self.stats = self.get_stats()
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not avalaible
             pass
 
-        return self.stats
-
-    def get_key(self):
-        """Return the key of the list."""
-        return 'device_id'
-
     def reset(self):
         """Reset/init the stats."""
         self.stats = []
-
-    def getDeviceHandles(self):
-        """
-        Returns a list of NVML device handles, one per device.  Can throw NVMLError.
-        """
-        return [nvmlDeviceGetHandleByIndex(i) for i in range(0, nvmlDeviceGetCount())]
 
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -81,23 +70,11 @@ class NvidiaPlugin(GlancesPlugin):
 
         self.reset()
 
-        if not self.devicesReady:
+        if not self.devices_ready:
             return self.stats
 
         if self.input_method == 'local':
-            # TODO loop over devices and put the stats in self.stats.
-            # I think each list item needs a key/value pair corresponding to
-            # get_key().  Each device's unique identifier, I'm guessing.
-            # for each device, stats.append {
-            #   'key': name + idx
-            #   'memUsed': ...
-            #   'processorUsed': ...
-            #   'memTotal': ...
-            #   '...': ...
-            # }
-            # Only put in what you need.  Don't compute derived stats on the view.
-            # Redundancy is fine.  If you need mem%, just put it right in here as
-            # an int between 0 and 99.
+            self.stats = self.get_stats()
         elif self.input_method == 'snmp':
             # not available
             pass
@@ -107,9 +84,54 @@ class NvidiaPlugin(GlancesPlugin):
 
         return self.stats
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'gpu_id'
+
+    def get_device_handles(self):
+        """
+        Returns a list of NVML device handles, one per device.  Can throw NVMLError.
+        """
+        return [nvmlDeviceGetHandleByIndex(i) for i in range(0, nvmlDeviceGetCount())]
+
+    def get_stats(self):
+        stats = []
+        for index, device_handle in enumerate(self.device_handles):
+            device_stats = {}
+            device_stats['key'] = index
+            device_stats['name'] = self.get_device_name(device_handle)
+            device_stats['memory_percent'] = self.get_memory_percent(device_handle)
+            device_stats['processor_percent'] = self.get_processor_percent(device_handle)
+
+            stats.append(device_stats)
+
+        return stats
+
+    def get_device_name(self, device_handle):
+        try:
+            return nvmlDeviceGetName(device_handle)
+        except NVMlError:
+            return "NVIDIA GPU"
+
+    def get_memory_percent(self, device_handle):
+        try:
+            return nvmlDeviceGetUtilizationRates(device_handle).memory
+        except NVMLError:
+            try:
+                memory_info = nvmlDeviceGetMemoryInfo(device_handle)
+                return memory_info.used * 100 / memory_info.total
+            except NVMLError:
+                return -1
+
+    def get_processor_percent(self, device_handle):
+        try:
+            return nvmlDeviceGetUtilizationRates(device_handle).gpu
+        except NVMLError:
+            return -1
+
     def exit(self):
         super(NvidiaPlugin, self).exit(args=args)
-        if self.nvmlReady:
+        if self.nvml_ready:
             try:
                 nvmlShutdown()
             except Exception:
