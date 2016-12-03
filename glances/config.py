@@ -212,6 +212,15 @@ class Config(object):
         """Return the loaded configuration file."""
         return self._loaded_config_file
 
+    def as_dict(self):
+        """Return the configuration as a dict"""
+        dictionary = {}
+        for section in self.parser.sections():
+            dictionary[section] = {}
+            for option in self.parser.options(section):
+                dictionary[section][option] = self.parser.get(section, option)
+        return dictionary
+
     def sections(self):
         """Return a list of all sections."""
         return self.parser.sections()
