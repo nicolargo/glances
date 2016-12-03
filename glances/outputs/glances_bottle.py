@@ -41,7 +41,10 @@ class GlancesBottle(object):
 
     """This class manages the Bottle Web server."""
 
-    def __init__(self, args=None):
+    def __init__(self, config=None, args=None):
+        # Init config
+        self.config = config
+
         # Init args
         self.args = args
 
@@ -91,6 +94,8 @@ class GlancesBottle(object):
         self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
 
         # REST API
+        self._app.route('/api/2/config', method="GET", callback=self._api_config)
+        self._app.route('/api/2/config/<item>', method="GET", callback=self._api_config_item)
         self._app.route('/api/2/args', method="GET", callback=self._api_args)
         self._app.route('/api/2/args/<item>', method="GET", callback=self._api_args_item)
         self._app.route('/api/2/help', method="GET", callback=self._api_help)
@@ -419,6 +424,43 @@ class GlancesBottle(object):
         """
         return self._api_itemvalue(plugin, item, value)
 
+    def _api_config(self):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of the Glances configuration file
+        HTTP/200 if OK
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        try:
+            # Get the JSON value of the config' dict
+            args_json = json.dumps(self.config.as_dict())
+        except Exception as e:
+            abort(404, "Cannot get config (%s)" % str(e))
+        return args_json
+
+    def _api_config_item(self, item):
+        """Glances API RESTFul implementation.
+
+        Return the JSON representation of the Glances configuration item
+        HTTP/200 if OK
+        HTTP/400 if item is not found
+        HTTP/404 if others error
+        """
+        response.content_type = 'application/json'
+
+        config_dict = self.config.as_dict()
+        if item not in config_dict:
+            abort(400, "Unknown configuration item %s" % item)
+
+        try:
+            # Get the JSON value of the config' dict
+            args_json = json.dumps(config_dict[item])
+        except Exception as e:
+            abort(404, "Cannot get config item (%s)" % str(e))
+        return args_json
+
     def _api_args(self):
         """Glances API RESTFul implementation.
 
@@ -448,7 +490,7 @@ class GlancesBottle(object):
         response.content_type = 'application/json'
 
         if item not in self.args:
-            abort(400, "Unknown item %s" % item)
+            abort(400, "Unknown argument item %s" % item)
 
         try:
             # Get the JSON value of the args' dict
