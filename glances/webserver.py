@@ -41,7 +41,7 @@ class GlancesWebServer(object):
         self.stats.update()
 
         # Init the Bottle Web server
-        self.web = GlancesBottle(args=args)
+        self.web = GlancesBottle(config=config, args=args)
 
     def serve_forever(self):
         """Main loop for the Web server."""
