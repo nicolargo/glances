@@ -284,11 +284,14 @@ Start the client browser (browser mode):\n\
             args.password_prompt = True
             # Prompt username
             if args.server:
-                args.username = self.__get_username(description='Define the Glances server username: ')
+                args.username = self.__get_username(
+                    description='Define the Glances server username: ')
             elif args.webserver:
-                args.username = self.__get_username(description='Define the Glances webserver username: ')
+                args.username = self.__get_username(
+                    description='Define the Glances webserver username: ')
             elif args.client:
-                args.username = self.__get_username(description='Enter the Glances server username: ')
+                args.username = self.__get_username(
+                    description='Enter the Glances server username: ')
         else:
             # Default user name is 'glances'
             args.username = self.username
@@ -297,17 +300,20 @@ Start the client browser (browser mode):\n\
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(
-                    description='Define the Glances server password ({} username): '.format(args.username),
+                    description='Define the Glances server password ({} username): '.format(
+                        args.username),
                     confirm=True,
                     username=args.username)
             elif args.webserver:
                 args.password = self.__get_password(
-                    description='Define the Glances webserver password ({} username): '.format(args.username),
+                    description='Define the Glances webserver password ({} username): '.format(
+                        args.username),
                     confirm=True,
                     username=args.username)
             elif args.client:
                 args.password = self.__get_password(
-                    description='Enter the Glances server password ({} username): '.format(args.username),
+                    description='Enter the Glances server password ({} username): '.format(
+                        args.username),
                     clear=True,
                     username=args.username)
         else:
@@ -344,28 +350,32 @@ Start the client browser (browser mode):\n\
 
         # Export is only available in standalone or client mode (issue #614)
         export_tag = args.export_csv or \
-                     args.export_elasticsearch or \
-                     args.export_statsd or \
-                     args.export_influxdb or \
-                     args.export_cassandra or \
-                     args.export_opentsdb or \
-                     args.export_rabbitmq or \
-                     args.export_couchdb
+            args.export_elasticsearch or \
+            args.export_statsd or \
+            args.export_influxdb or \
+            args.export_cassandra or \
+            args.export_opentsdb or \
+            args.export_rabbitmq or \
+            args.export_couchdb
         if not (self.is_standalone() or self.is_client()) and export_tag:
-            logger.critical("Export is only available in standalone or client mode")
+            logger.critical(
+                "Export is only available in standalone or client mode")
             sys.exit(2)
 
         # Filter is only available in standalone mode
         if args.process_filter is not None and not self.is_standalone():
-            logger.critical("Process filter is only available in standalone mode")
+            logger.critical(
+                "Process filter is only available in standalone mode")
             sys.exit(2)
 
         # Check graph output path
         if args.export_graph and args.path_graph is not None:
             if not os.access(args.path_graph, os.W_OK):
-                logger.critical("Graphs output path {0} do not exist or is not writable".format(args.path_graph))
+                logger.critical(
+                    "Graphs output path {0} do not exist or is not writable".format(args.path_graph))
                 sys.exit(2)
-            logger.debug("Graphs output path is set to {0}".format(args.path_graph))
+            logger.debug(
+                "Graphs output path is set to {0}".format(args.path_graph))
 
         # For export graph, history is mandatory
         if args.export_graph and args.disable_history:
