@@ -19,7 +19,8 @@
 
 """Manage the Glances standalone session."""
 
-from time import sleep
+import sched
+import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
@@ -81,25 +82,29 @@ class GlancesStandalone(object):
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)
 
+        # Create the schedule instance
+        self.schedule = sched.scheduler(
+            timefunc=time.time, delayfunc=time.sleep)
+
     @property
     def quiet(self):
         return self._quiet
 
     def __serve_forever(self):
         """Main loop for the CLI."""
-        while True:
-            # Update system informations
-            self.stats.update()
+        # Reschedule the function inside itself
+        self.schedule.enter(self.refresh_time, priority=0,
+                            action=self.__serve_forever, argument=())
 
-            if not self.quiet:
-                # Update the screen
-                self.screen.update(self.stats)
-            else:
-                # Wait...
-                sleep(self.refresh_time)
+        # Update system informations
+        self.stats.update()
 
-            # Export stats using export modules
-            self.stats.export(self.stats)
+        # Update the screen
+        if not self.quiet:
+            self.screen.update(self.stats)
+
+        # Export stats using export modules
+        self.stats.export(self.stats)
 
     def serve_forever(self):
         """Wrapper to the serve_forever function.
@@ -107,8 +112,9 @@ class GlancesStandalone(object):
         This function will restore the terminal to a sane state
         before re-raising the exception and generating a traceback.
         """
+        self.__serve_forever()
         try:
-            return self.__serve_forever()
+            self.schedule.run()
         finally:
             self.end()
 
