@@ -22,6 +22,7 @@
 import base64
 import operator
 
+from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -72,6 +73,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update network stats using the input method.
@@ -90,7 +92,9 @@ class Plugin(GlancesPlugin):
             except UnicodeDecodeError:
                 return self.stats
 
-            # New in PsUtil 3.0: optionaly import the interface's status (issue #765)
+            # New in PsUtil 3.0
+            # - import the interface's status (issue #765)
+            # - import the interface's speed (issue #718)
             netstatus = {}
             try:
                 netstatus = psutil.net_if_stats()
@@ -136,11 +140,19 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         # Optional stats (only compliant with PsUtil 3.0+)
+                        # Interface status
                         try:
                             netstat['is_up'] = netstatus[net].isup
                         except (KeyError, AttributeError):
                             pass
-                        # Set the key
+                        # Interface speed in Mbps, convert it to bps
+                        # Can be always 0 on some OS
+                        try:
+                            netstat['speed'] = netstatus[net].speed * 1048576
+                        except (KeyError, AttributeError):
+                            pass
+
+                        # Finaly, set the key
                         netstat['key'] = self.get_key()
                         self.stats.append(netstat)
 
@@ -212,12 +224,6 @@ class Plugin(GlancesPlugin):
                 # Save stats to compute next bitrate
                 self.network_old = network_new
 
-        # Update the history list
-        self.update_stats_history(self.get_key())
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -229,10 +235,25 @@ class Plugin(GlancesPlugin):
         # Alert
         for i in self.stats:
             ifrealname = i['interface_name'].split(':')[0]
-            self.views[i[self.get_key()]]['rx']['decoration'] = self.get_alert(int(i['rx'] // i['time_since_update'] * 8),
-                                                                               header=ifrealname + '_rx')
-            self.views[i[self.get_key()]]['tx']['decoration'] = self.get_alert(int(i['tx'] // i['time_since_update'] * 8),
-                                                                               header=ifrealname + '_tx')
+            # Convert rate in bps ( to be able to compare to interface speed)
+            bps_rx = int(i['rx'] // i['time_since_update'] * 8)
+            bps_tx = int(i['tx'] // i['time_since_update'] * 8)
+            # Decorate the bitrate with the configuration file thresolds
+            alert_rx = self.get_alert(bps_rx, header=ifrealname + '_rx')
+            alert_tx = self.get_alert(bps_tx, header=ifrealname + '_tx')
+            # If nothing is define in the configuration file...
+            # ... then use the interface speed (not available on all systems)
+            if alert_rx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
+                alert_rx = self.get_alert(current=bps_rx,
+                                          maximum=i['speed'],
+                                          header='rx')
+            if alert_tx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
+                alert_tx = self.get_alert(current=bps_tx,
+                                          maximum=i['speed'],
+                                          header='tx')
+            # then decorates
+            self.views[i[self.get_key()]]['rx']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['tx']['decoration'] = alert_tx
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -240,7 +261,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_network:
+        if not self.stats or self.is_disable():
             return ret
 
         # Max size for the interface name

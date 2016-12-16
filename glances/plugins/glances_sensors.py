@@ -78,6 +78,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update sensors stats using the input method."""
@@ -130,9 +131,6 @@ class Plugin(GlancesPlugin):
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
 
             pass
-
-        # Update the view
-        self.update_views()
 
         return self.stats
 
@@ -262,8 +260,8 @@ class GlancesGrabSensors(object):
                         try:
                             sensors_current['label'] = feature.label
                             sensors_current['value'] = int(feature.get_value())
-                        except SensorsError as e:
-                            logger.debug("Cannot grab sensor stat(%s)" % e)
+                        except Exception as e:
+                            logger.debug("Cannot grab sensor stat (%s)" % e)
                         else:
                             self.sensors_list.append(sensors_current)
 

@@ -21,6 +21,7 @@
 
 import json
 import socket
+import threading
 
 from glances.compat import Fault, ProtocolError, ServerProxy
 from glances.autodiscover import GlancesAutoDiscoverServer
@@ -90,144 +91,150 @@ class GlancesClientBrowser(object):
         else:
             return 'http://{}:{}'.format(server['ip'], server['port'])
 
+    def __update_stats(self, server):
+        """
+        Update stats for the given server (picked from the server list)
+        """
+        # Get the server URI
+        uri = self.__get_uri(server)
+
+        # Try to connect to the server
+        t = GlancesClientTransport()
+        t.set_timeout(3)
+
+        # Get common stats
+        try:
+            s = ServerProxy(uri, transport=t)
+        except Exception as e:
+            logger.warning(
+                "Client browser couldn't create socket {}: {}".format(uri, e))
+        else:
+            # Mandatory stats
+            try:
+                # CPU%
+                cpu_percent = 100 - json.loads(s.getCpu())['idle']
+                server['cpu_percent'] = '{:.1f}'.format(cpu_percent)
+                # MEM%
+                server['mem_percent'] = json.loads(s.getMem())['percent']
+                # OS (Human Readable name)
+                server['hr_name'] = json.loads(s.getSystem())['hr_name']
+            except (socket.error, Fault, KeyError) as e:
+                logger.debug(
+                    "Error while grabbing stats form {}: {}".format(uri, e))
+                server['status'] = 'OFFLINE'
+            except ProtocolError as e:
+                if e.errcode == 401:
+                    # Error 401 (Authentication failed)
+                    # Password is not the good one...
+                    server['password'] = None
+                    server['status'] = 'PROTECTED'
+                else:
+                    server['status'] = 'OFFLINE'
+                logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
+            else:
+                # Status
+                server['status'] = 'ONLINE'
+
+                # Optional stats (load is not available on Windows OS)
+                try:
+                    # LOAD
+                    load_min5 = json.loads(s.getLoad())['min5']
+                    server['load_min5'] = '{:.2f}'.format(load_min5)
+                except Exception as e:
+                    logger.warning(
+                        "Error while grabbing stats form {}: {}".format(uri, e))
+
+        return server
+
+    def __display_server(self, server):
+        """
+        Connect and display the given server
+        """
+        # Display the Glances client for the selected server
+        logger.debug("Selected server: {}".format(server))
+
+        # Connection can take time
+        # Display a popup
+        self.screen.display_popup(
+            'Connect to {}:{}'.format(server['name'], server['port']), duration=1)
+
+        # A password is needed to access to the server's stats
+        if server['password'] is None:
+            # First of all, check if a password is available in the [passwords] section
+            clear_password = self.password.get_password(server['name'])
+            if (clear_password is None or self.get_servers_list()
+                    [self.screen.active_server]['status'] == 'PROTECTED'):
+                # Else, the password should be enter by the user
+                # Display a popup to enter password
+                clear_password = self.screen.display_popup(
+                    'Password needed for {}: '.format(server['name']), is_input=True)
+            # Store the password for the selected server
+            if clear_password is not None:
+                self.set_in_selected('password', self.password.sha256_hash(clear_password))
+
+        # Display the Glance client on the selected server
+        logger.info("Connect Glances client to the {} server".format(server['key']))
+
+        # Init the client
+        args_server = self.args
+
+        # Overwrite connection setting
+        args_server.client = server['ip']
+        args_server.port = server['port']
+        args_server.username = server['username']
+        args_server.password = server['password']
+        client = GlancesClient(config=self.config, args=args_server, return_to_browser=True)
+
+        # Test if client and server are in the same major version
+        if not client.login():
+            self.screen.display_popup(
+                "Sorry, cannot connect to '{}'\n"
+                "See 'glances.log' for more details".format(server['name']))
+
+            # Set the ONLINE status for the selected server
+            self.set_in_selected('status', 'OFFLINE')
+        else:
+            # Start the client loop
+            # Return connection type: 'glances' or 'snmp'
+            connection_type = client.serve_forever()
+
+            try:
+                logger.debug("Disconnect Glances client from the {} server".format(server['key']))
+            except IndexError:
+                # Server did not exist anymore
+                pass
+            else:
+                # Set the ONLINE status for the selected server
+                if connection_type == 'snmp':
+                    self.set_in_selected('status', 'SNMP')
+                else:
+                    self.set_in_selected('status', 'ONLINE')
+
+        # Return to the browser (no server selected)
+        self.screen.active_server = None
+
     def __serve_forever(self):
         """Main client loop."""
-        while True:
-            # No need to update the server list
-            # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
-            # Or define staticaly in the configuration file (module static_list.py)
-            # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
-            # logger.debug(self.get_servers_list())
-            try:
-                for v in self.get_servers_list():
-                    # Do not retreive stats for statics server
-                    # Why ? Because for each offline servers, the timeout will be reached
-                    # So ? The curse interface freezes
-                    if v['type'] == 'STATIC' and v['status'] in ['UNKNOWN', 'SNMP', 'OFFLINE']:
-                        continue
+        # No need to update the server list
+        # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
+        # Or define staticaly in the configuration file (module static_list.py)
+        # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
 
-                    # Get the server URI
-                    uri = self.__get_uri(v)
+        logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
+        for v in self.get_servers_list():
+            thread = threading.Thread(target=self.__update_stats, args=[v])
+            thread.start()
 
-                    # Try to connect to the server
-                    t = GlancesClientTransport()
-                    t.set_timeout(3)
+        # Update the screen (list or Glances client)
+        if self.screen.active_server is None:
+            #  Display the Glances browser
+            self.screen.update(self.get_servers_list())
+        else:
+            # Display the active server
+            self.__display_server(self.get_servers_list()[self.screen.active_server])
 
-                    # Get common stats
-                    try:
-                        s = ServerProxy(uri, transport=t)
-                    except Exception as e:
-                        logger.warning(
-                            "Client browser couldn't create socket {}: {}".format(uri, e))
-                    else:
-                        # Mandatory stats
-                        try:
-                            # CPU%
-                            cpu_percent = 100 - json.loads(s.getCpu())['idle']
-                            v['cpu_percent'] = '{:.1f}'.format(cpu_percent)
-                            # MEM%
-                            v['mem_percent'] = json.loads(s.getMem())['percent']
-                            # OS (Human Readable name)
-                            v['hr_name'] = json.loads(s.getSystem())['hr_name']
-                        except (socket.error, Fault, KeyError) as e:
-                            logger.debug(
-                                "Error while grabbing stats form {}: {}".format(uri, e))
-                            v['status'] = 'OFFLINE'
-                        except ProtocolError as e:
-                            if e.errcode == 401:
-                                # Error 401 (Authentication failed)
-                                # Password is not the good one...
-                                v['password'] = None
-                                v['status'] = 'PROTECTED'
-                            else:
-                                v['status'] = 'OFFLINE'
-                            logger.debug("Cannot grab stats from {} ({} {})".format(uri, e.errcode, e.errmsg))
-                        else:
-                            # Status
-                            v['status'] = 'ONLINE'
-
-                            # Optional stats (load is not available on Windows OS)
-                            try:
-                                # LOAD
-                                load_min5 = json.loads(s.getLoad())['min5']
-                                v['load_min5'] = '{:.2f}'.format(load_min5)
-                            except Exception as e:
-                                logger.warning(
-                                    "Error while grabbing stats form {}: {}".format(uri, e))
-            # List can change size during iteration...
-            except RuntimeError:
-                logger.debug(
-                    "Server list dictionnary change inside the loop (wait next update)")
-
-            # Update the screen (list or Glances client)
-            if self.screen.active_server is None:
-                #  Display the Glances browser
-                self.screen.update(self.get_servers_list())
-            else:
-                # Display the Glances client for the selected server
-                logger.debug("Selected server: {}".format(self.get_servers_list()[self.screen.active_server]))
-
-                # Connection can take time
-                # Display a popup
-                self.screen.display_popup(
-                    'Connect to {}:{}'.format(v['name'], v['port']), duration=1)
-
-                # A password is needed to access to the server's stats
-                if self.get_servers_list()[self.screen.active_server]['password'] is None:
-                    # First of all, check if a password is available in the [passwords] section
-                    clear_password = self.password.get_password(v['name'])
-                    if (clear_password is None or self.get_servers_list()
-                            [self.screen.active_server]['status'] == 'PROTECTED'):
-                        # Else, the password should be enter by the user
-                        # Display a popup to enter password
-                        clear_password = self.screen.display_popup(
-                            'Password needed for {}: '.format(v['name']), is_input=True)
-                    # Store the password for the selected server
-                    if clear_password is not None:
-                        self.set_in_selected('password', self.password.sha256_hash(clear_password))
-
-                # Display the Glance client on the selected server
-                logger.info("Connect Glances client to the {} server".format(
-                    self.get_servers_list()[self.screen.active_server]['key']))
-
-                # Init the client
-                args_server = self.args
-
-                # Overwrite connection setting
-                args_server.client = self.get_servers_list()[self.screen.active_server]['ip']
-                args_server.port = self.get_servers_list()[self.screen.active_server]['port']
-                args_server.username = self.get_servers_list()[self.screen.active_server]['username']
-                args_server.password = self.get_servers_list()[self.screen.active_server]['password']
-                client = GlancesClient(config=self.config, args=args_server, return_to_browser=True)
-
-                # Test if client and server are in the same major version
-                if not client.login():
-                    self.screen.display_popup(
-                        "Sorry, cannot connect to '{}'\n"
-                        "See 'glances.log' for more details".format(v['name']))
-
-                    # Set the ONLINE status for the selected server
-                    self.set_in_selected('status', 'OFFLINE')
-                else:
-                    # Start the client loop
-                    # Return connection type: 'glances' or 'snmp'
-                    connection_type = client.serve_forever()
-
-                    try:
-                        logger.debug("Disconnect Glances client from the {} server".format(
-                            self.get_servers_list()[self.screen.active_server]['key']))
-                    except IndexError:
-                        # Server did not exist anymore
-                        pass
-                    else:
-                        # Set the ONLINE status for the selected server
-                        if connection_type == 'snmp':
-                            self.set_in_selected('status', 'SNMP')
-                        else:
-                            self.set_in_selected('status', 'ONLINE')
-
-                # Return to the browser (no server selected)
-                self.screen.active_server = None
+        # Loop
+        self.__serve_forever()
 
     def serve_forever(self):
         """Wrapper to the serve_forever function.

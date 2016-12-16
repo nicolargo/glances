@@ -84,9 +84,11 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update CPU stats using the input method."""
+
         # Reset stats
         self.reset()
 
@@ -95,12 +97,6 @@ class Plugin(GlancesPlugin):
             self.update_local()
         elif self.input_method == 'snmp':
             self.update_snmp()
-
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
 
         return self.stats
 
@@ -140,7 +136,8 @@ class Plugin(GlancesPlugin):
                 self.cpu_stats_old = cpu_stats
             else:
                 for stat in cpu_stats._fields:
-                    self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
+                    if getattr(cpu_stats, stat) is not None:
+                        self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
 
                 self.stats['time_since_update'] = time_since_update
 
@@ -223,7 +220,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and plugin not disable
-        if not self.stats or args.disable_cpu:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

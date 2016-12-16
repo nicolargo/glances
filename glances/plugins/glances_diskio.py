@@ -65,6 +65,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update disk I/O stats using the input method."""
@@ -141,12 +142,6 @@ class Plugin(GlancesPlugin):
             # No standard way for the moment...
             pass
 
-        # Update the history list
-        self.update_stats_history('disk_name')
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -169,7 +164,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_diskio:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

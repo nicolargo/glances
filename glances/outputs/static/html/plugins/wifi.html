@@ -1,0 +1,10 @@
+<div class="table-row">
+    <div class="table-cell text-left title">WIFI</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">dBm</div>
+</div>
+<div class="table-row" ng-repeat="hotspot in statsWifi.hotspots | orderBy: 'ssid'">
+    <div class="table-cell text-left">{{ hotspot.ssid|limitTo:20 }} <span ng-if="hotspot.encrypted">{{ hotspot.encryption_type }}</span></div>
+    <div class="table-cell"></div>
+    <div class="table-cell" ng-class="statsWifi.getDecoration(hotspot, 'signal')">{{ hotspot.signal }}</div>
+</div>

@@ -19,7 +19,6 @@
 
 import operator
 import os
-import re
 
 from glances.compat import iteritems, itervalues, listitems
 from glances.globals import BSD, LINUX, OSX, WINDOWS
@@ -70,7 +69,7 @@ class GlancesProcesses(object):
         self._sort_key = 'cpu_percent'
         self.allprocesslist = []
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.reset_processcount()
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
@@ -95,6 +94,13 @@ class GlancesProcesses(object):
         self._max_values = {}
         self.reset_max_values()
 
+    def reset_processcount(self):
+        self.processcount = {'total': 0,
+                             'running': 0,
+                             'sleeping': 0,
+                             'thread': 0,
+                             'pid_max': None}
+
     def enable(self):
         """Enable process stats."""
         self.disable_tag = False
@@ -112,6 +118,37 @@ class GlancesProcesses(object):
     def disable_extended(self):
         """Disable extended process stats."""
         self.disable_extended_tag = True
+
+    @property
+    def pid_max(self):
+        """
+        Get the maximum PID value.
+
+        On Linux, the value is read from the `/proc/sys/kernel/pid_max` file.
+
+        From `man 5 proc`:
+        The default value for this file, 32768, results in the same range of
+        PIDs as on earlier kernels. On 32-bit platfroms, 32768 is the maximum
+        value for pid_max. On 64-bit systems, pid_max can be set to any value
+        up to 2^22 (PID_MAX_LIMIT, approximately 4 million).
+
+        If the file is unreadable or not available for whatever reason,
+        returns None.
+
+        Some other OSes:
+        - On FreeBSD and macOS the maximum is 99999.
+        - On OpenBSD >= 6.0 the maximum is 99999 (was 32766).
+        - On NetBSD the maximum is 30000.
+
+        :returns: int or None
+        """
+        if LINUX:
+            # XXX: waiting for https://github.com/giampaolo/psutil/issues/720
+            try:
+                with open('/proc/sys/kernel/pid_max', 'rb') as f:
+                    return int(f.read())
+            except (OSError, IOError):
+                return None
 
     @property
     def max_processes(self):
@@ -188,20 +225,35 @@ class GlancesProcesses(object):
 
     def __get_mandatory_stats(self, proc, procstat):
         """
-        Get mandatory_stats: need for the sorting/filter step.
+        Get mandatory_stats: for all processes.
+        Needed for the sorting/filter step.
 
-        => cpu_percent, memory_percent, io_counters, name, cmdline
+        Stats grabbed inside this method:
+        * 'name', 'cpu_times', 'status', 'ppid'
+        * 'username', 'cpu_percent', 'memory_percent'
         """
         procstat['mandatory_stats'] = True
 
-        # Process CPU, MEM percent and name
+        # Name, cpu_times, status and ppid stats are in the same /proc file
+        # Optimisation fir issue #958
         try:
             procstat.update(proc.as_dict(
-                attrs=['username', 'cpu_percent', 'memory_percent',
-                       'name', 'cpu_times'], ad_value=''))
+                attrs=['name', 'cpu_times', 'status', 'ppid'],
+                ad_value=''))
         except psutil.NoSuchProcess:
-            # Try/catch for issue #432
+            # Try/catch for issue #432 (process no longer exist)
             return None
+        else:
+            procstat['status'] = str(procstat['status'])[:1].upper()
+
+        try:
+            procstat.update(proc.as_dict(
+                attrs=['username', 'cpu_percent', 'memory_percent'],
+                ad_value=''))
+        except psutil.NoSuchProcess:
+            # Try/catch for issue #432 (process no longer exist)
+            return None
+
         if procstat['cpu_percent'] == '' or procstat['memory_percent'] == '':
             # Do not display process if we cannot get the basic
             # cpu_percent or memory_percent stats
@@ -260,35 +312,19 @@ class GlancesProcesses(object):
 
     def __get_standard_stats(self, proc, procstat):
         """
-        Get standard_stats: for all the displayed processes.
+        Get standard_stats: only for displayed processes.
 
-        => username, status, memory_info, cpu_times
+        Stats grabbed inside this method:
+        * nice and memory_info
         """
         procstat['standard_stats'] = True
 
-        # Process username (cached with internal cache)
-        try:
-            self.username_cache[procstat['pid']]
-        except KeyError:
-            try:
-                self.username_cache[procstat['pid']] = proc.username()
-            except psutil.NoSuchProcess:
-                self.username_cache[procstat['pid']] = "?"
-            except (KeyError, psutil.AccessDenied):
-                try:
-                    self.username_cache[procstat['pid']] = proc.uids().real
-                except (KeyError, AttributeError, psutil.AccessDenied):
-                    self.username_cache[procstat['pid']] = "?"
-        procstat['username'] = self.username_cache[procstat['pid']]
-
-        # Process status, nice, memory_info, cpu_times and ppid (issue #926)
+        # Process nice and memory_info (issue #926)
         try:
             procstat.update(
-                proc.as_dict(attrs=['status', 'nice', 'memory_info', 'cpu_times', 'ppid']))
+                proc.as_dict(attrs=['nice', 'memory_info']))
         except psutil.NoSuchProcess:
             pass
-        else:
-            procstat['status'] = str(procstat['status'])[:1].upper()
 
         return procstat
 
@@ -389,7 +425,7 @@ class GlancesProcesses(object):
                             mandatory_stats=True,
                             standard_stats=True,
                             extended_stats=False):
-        """Get stats of running processes."""
+        """Get stats of a running processes."""
         # Process ID (always)
         procstat = proc.as_dict(attrs=['pid'])
 
@@ -408,7 +444,7 @@ class GlancesProcesses(object):
         """Update the processes stats."""
         # Reset the stats
         self.processlist = []
-        self.processcount = {'total': 0, 'running': 0, 'sleeping': 0, 'thread': 0}
+        self.reset_processcount()
 
         # Do not process if disable tag is set
         if self.disable_tag:
@@ -419,6 +455,9 @@ class GlancesProcesses(object):
 
         # Reset the max dict
         self.reset_max_values()
+
+        # Update the maximum process ID (pid) number
+        self.processcount['pid_max'] = self.pid_max
 
         # Build an internal dict with only mandatories stats (sort keys)
         processdict = {}

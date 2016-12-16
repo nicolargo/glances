@@ -62,11 +62,15 @@ body {
 }
 .ok, .status, .process {
     color: #3E7B04;
-    font-weight: bold;
+    /*font-weight: bold;*/
 }
 .ok_log {
     background-color: #3E7B04;
     color: white;
+    /*font-weight: bold;*/
+}
+.max {
+    color: #3E7B04;
     font-weight: bold;
 }
 .careful {

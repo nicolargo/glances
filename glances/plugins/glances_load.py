@@ -74,6 +74,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update load stats."""
@@ -108,12 +109,6 @@ class Plugin(GlancesPlugin):
 
             self.stats['cpucore'] = self.nb_log_core
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -137,7 +132,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist, not empty (issue #871) and plugin not disabled
-        if not self.stats or (self.stats == {}) or args.disable_load:
+        if not self.stats or (self.stats == {}) or self.is_disable():
             return ret
 
         # Build the string message

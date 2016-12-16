@@ -21,7 +21,6 @@
 
 from glances.compat import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
-from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
@@ -48,6 +47,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the AMP list."""
@@ -97,7 +97,7 @@ class Plugin(GlancesPlugin):
         # Only process if stats exist and display plugin enable...
         ret = []
 
-        if not self.stats or args.disable_process or args.disable_amps:
+        if not self.stats or args.disable_process or self.is_disable():
             return ret
 
         # Build the string message
