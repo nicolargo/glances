@@ -43,7 +43,7 @@ class GlancesStats(object):
         self.load_modules(self.args)
 
         # Load the limits (for plugins)
-        self.load_limits(config)
+        self.load_limits(self.config)
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -72,11 +72,13 @@ class GlancesStats(object):
 
         # Init the plugins dict
         self._plugins = collections.defaultdict(dict)
+
         # Load the plugins
         self.load_plugins(args=args)
 
         # Init the export modules dict
         self._exports = collections.defaultdict(dict)
+
         # Load the export modules
         self.load_exports(args=args)
 
@@ -133,7 +135,7 @@ class GlancesStats(object):
 
     def getAllPlugins(self):
         """Return the plugins list."""
-        return [p for p in self._plugins]
+        return [p for p in self._plugins if self._plugins[p].is_enable()]
 
     def getExportList(self):
         """Return the exports modules list."""
@@ -150,8 +152,16 @@ class GlancesStats(object):
         # For standalone and server modes
         # For each plugins, call the update method
         for p in self._plugins:
-            # logger.debug("Update %s stats" % p)
+            if self._plugins[p].is_disable():
+                # If current plugin is disable
+                # then continue to next plugin
+                continue
+            # Update the stats...
             self._plugins[p].update()
+            # ... the history
+            self._plugins[p].update_stats_history()
+            # ... and the views
+            self._plugins[p].update_views()
 
     def export(self, input_stats=None):
         """Export all the stats.

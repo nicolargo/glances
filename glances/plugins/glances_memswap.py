@@ -64,6 +64,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update swap memory stats using the input method."""
@@ -131,12 +132,6 @@ class Plugin(GlancesPlugin):
                 self.stats['percent'] = float(
                     (self.stats['total'] - self.stats['free']) / self.stats['total'] * 100)
 
-        # Update the history list
-        self.update_stats_history()
-
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -154,7 +149,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and plugin not disabled
-        if not self.stats or args.disable_swap:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

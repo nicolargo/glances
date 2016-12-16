@@ -26,6 +26,7 @@ Legend:
    load
    memory
    network
+   wifi
    ports
    disk
    fs

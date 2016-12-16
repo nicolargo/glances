@@ -12,7 +12,7 @@ glancesApp.service('GlancesPluginIrq', function() {
 
             var irq = {
                 'irq_line': IrqData['irq_line'],
-		'irq_rate': IrqData['irq_rate']
+                'irq_rate': IrqData['irq_rate']
             };
 
             this.irqs.push(irq);

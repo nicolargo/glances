@@ -24,7 +24,6 @@ import sys
 import multiprocessing
 from io import open
 
-from glances import __appname__
 from glances.compat import ConfigParser, NoOptionError
 from glances.globals import BSD, LINUX, OSX, WINDOWS, sys_prefix
 from glances.logger import logger
@@ -71,22 +70,18 @@ class Config(object):
             paths.append(
                 os.path.join(os.environ.get('XDG_CONFIG_HOME') or
                              os.path.expanduser('~/.config'),
-                             __appname__, self.config_filename))
+                             'glances', self.config_filename))
             if BSD:
-                paths.append(
-                    os.path.join(sys.prefix, 'etc', __appname__, self.config_filename))
+                paths.append(os.path.join(sys.prefix, 'etc', 'glances', self.config_filename))
             else:
-                paths.append(
-                    os.path.join('/etc', __appname__, self.config_filename))
+                paths.append(os.path.join('/etc/glances', self.config_filename))
         elif OSX:
             paths.append(
-                os.path.join(os.path.expanduser('~/Library/Application Support/'),
-                             __appname__, self.config_filename))
-            paths.append(
-                os.path.join(sys_prefix, 'etc', __appname__, self.config_filename))
+                os.path.join(os.path.expanduser('~/Library/Application Support/glances'),
+                             self.config_filename))
+            paths.append(os.path.join(sys_prefix, 'etc', 'glances', self.config_filename))
         elif WINDOWS:
-            paths.append(
-                os.path.join(os.environ.get('APPDATA'), __appname__, self.config_filename))
+            paths.append(os.path.join(os.environ.get('APPDATA'), 'glances', self.config_filename))
 
         return paths
 
@@ -172,6 +167,16 @@ class Config(object):
         self.set_default('memswap', 'warning', '70')
         self.set_default('memswap', 'critical', '90')
 
+        # NETWORK
+        if not self.parser.has_section('network'):
+            self.parser.add_section('network')
+        self.set_default('network', 'rx_careful', '70')
+        self.set_default('network', 'rx_warning', '80')
+        self.set_default('network', 'rx_critical', '90')
+        self.set_default('network', 'tx_careful', '70')
+        self.set_default('network', 'tx_warning', '80')
+        self.set_default('network', 'tx_critical', '90')
+
         # FS
         if not self.parser.has_section('fs'):
             self.parser.add_section('fs')
@@ -207,6 +212,15 @@ class Config(object):
         """Return the loaded configuration file."""
         return self._loaded_config_file
 
+    def as_dict(self):
+        """Return the configuration as a dict"""
+        dictionary = {}
+        for section in self.parser.sections():
+            dictionary[section] = {}
+            for option in self.parser.options(section):
+                dictionary[section][option] = self.parser.get(section, option)
+        return dictionary
+
     def sections(self):
         """Return a list of all sections."""
         return self.parser.sections()
@@ -230,6 +244,13 @@ class Config(object):
             return self.parser.get(section, option)
         except NoOptionError:
             return default
+
+    def get_int_value(self, section, option, default=0):
+        """Get the int value of an option, if it exists."""
+        try:
+            return self.parser.getint(section, option)
+        except NoOptionError:
+            return int(default)
 
     def get_float_value(self, section, option, default=0.0):
         """Get the float value of an option, if it exists."""

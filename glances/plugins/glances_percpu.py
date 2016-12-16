@@ -49,6 +49,8 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = []
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update per-CPU stats using the input method."""
         # Reset stats
@@ -68,10 +70,6 @@ class Plugin(GlancesPlugin):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
-
-        # Only process if plugin not disable
-        if args.disable_cpu:
-            return ret
 
         # No per CPU stat ? Exit...
         if not self.stats:

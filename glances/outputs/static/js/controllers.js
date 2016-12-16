@@ -43,6 +43,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsSystem = GlancesStats.getPlugin('system');
             $scope.statsUptime = GlancesStats.getPlugin('uptime');
             $scope.statsPorts = GlancesStats.getPlugin('ports');
+            $scope.statsWifi = GlancesStats.getPlugin('wifi');
 
             $rootScope.title = $scope.statsSystem.hostname + ' - Glances';
 
@@ -112,7 +113,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.Q:
                 // Q => Show/hide IRQ
-                $scope.arguments.disable_irq = !$scope.arguments.disable_irq;
+                $scope.arguments.enable_irq = !$scope.arguments.enable_irq;
                 break;
             case !$event.shiftKey && $event.keyCode == keycodes.f:
                 // f => Show/hide filesystem stats
@@ -152,7 +153,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                break;
             case !$event.shiftKey && $event.keyCode == keycodes.l:
                 // l => Show/hide alert logs
-                $scope.arguments.disable_log = !$scope.arguments.disable_log;
+                $scope.arguments.disable_alert = !$scope.arguments.disable_alert;
                break;
             case $event.shiftKey && $event.keyCode == keycodes.ONE:
                // 1 => Global CPU or per-CPU stats
@@ -182,7 +183,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;
                 $scope.arguments.disable_mem = !$scope.arguments.disable_mem;
-                $scope.arguments.disable_swap = !$scope.arguments.disable_swap;
+                $scope.arguments.disable_memswap = !$scope.arguments.disable_memswap;
                 $scope.arguments.disable_load = !$scope.arguments.disable_load;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.i:
@@ -192,6 +193,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             case $event.shiftKey && $event.keyCode == keycodes.p:
                 // I => Enable/disable ports module
                 $scope.arguments.disable_ports = !$scope.arguments.disable_ports;
+                break;
+            case $event.shiftKey && $event.keyCode == keycodes.w:
+                // 'W' > Enable/Disable Wifi plugin
+                $scope.arguments.disable_wifi = !$scope.arguments.disable_wifi;
                 break;
         }
     };

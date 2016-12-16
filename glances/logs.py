@@ -147,7 +147,7 @@ class GlancesLogs(object):
                 1,  # COUNT
                 [],  # TOP 3 PROCESS LIST
                 proc_desc,  # MONITORED PROCESSES DESC
-                'cpu_percent']  # TOP PROCESS SORTKEY
+                glances_processes.sort_key]  # TOP PROCESS SORTKEY
 
             # Add the item to the list
             self.logs_list.insert(0, item)

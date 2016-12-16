@@ -22,7 +22,7 @@
 import threading
 from json import loads
 
-from glances.compat import iterkeys, urlopen, URLError, queue
+from glances.compat import iterkeys, urlopen, queue
 from glances.globals import BSD
 from glances.logger import logger
 from glances.timer import Timer
@@ -75,6 +75,7 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update IP stats using the input method.
@@ -104,9 +105,6 @@ class Plugin(GlancesPlugin):
             # Not implemented yet
             pass
 
-        # Update the view
-        self.update_views()
-
         return self.stats
 
     def update_views(self):
@@ -125,7 +123,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_ip:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

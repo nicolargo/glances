@@ -68,7 +68,8 @@ class Export(GlancesExport):
         plugins = stats.getAllPlugins()
 
         # Init data with timestamp (issue#708)
-        csv_header = ['timestamp']
+        if self.first_line:
+            csv_header = ['timestamp']
         csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
         # Loop over available plugin

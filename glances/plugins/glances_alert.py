@@ -60,7 +60,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if display plugin enable...
-        if args.disable_log:
+        if not self.stats and self.is_disable():
             return ret
 
         # Build the string message

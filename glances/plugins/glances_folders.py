@@ -52,6 +52,8 @@ class Plugin(GlancesPlugin):
         """Load the foldered list from the config file, if it exists."""
         self.glances_folders = glancesFolderList(config)
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the foldered list."""
         # Reset the list
@@ -96,7 +98,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_folder:
+        if not self.stats or self.is_disable():
             return ret
 
         # Build the string message

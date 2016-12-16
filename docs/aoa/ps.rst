@@ -52,23 +52,25 @@ Columns display
 ``VIRT``                  Virtual Memory Size
 
                           The total amount of virtual memory used by the
-                          process
+                          process. It includes all code, data and shared
+                          libraries plus pages that have been swapped out
+                          and pages that have been mapped but not used.
 ``RES``                   Resident Memory Size
 
                           The non-swapped physical memory a process is
-                          using
+                          using (what's currently in the physical memory). 
 ``PID``                   Process ID
 ``USER``                  User ID
 ``NI``                    Nice level of the process
 ``S``                     Process status
 
                           The status of the process:
-
-                          - ``R``: running
-                          - ``S``: sleeping (may be interrupted)
-                          - ``D``: disk sleep (may not be interrupted)
-                          - ``T``: traced/stopped
-                          - ``Z``: zombie
+                          - ``R``: running or runnable (on run queue)
+                          - ``S``: interruptible sleep (waiting for an event)
+                          - ``D``: uninterruptible sleep (usually IO)
+                          - ``Z``: defunct ("zombie") process
+                          - ``T``: traced/stopped by job control signal
+                          - ``X``: dead (should never be seen)
 
 ``TIME+``                 Cumulative CPU time used by the process
 ``R/s``                   Per process I/O read rate in B/s
