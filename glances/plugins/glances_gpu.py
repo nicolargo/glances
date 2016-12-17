@@ -71,6 +71,7 @@ class Plugin(GlancesPlugin):
 
         return self.nvml_ready
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the GPU stats"""
@@ -81,13 +82,13 @@ class Plugin(GlancesPlugin):
             return self.stats
 
         if self.input_method == 'local':
-            self.stats = self.get_stats()
+            self.stats = self.get_device_stats()
         elif self.input_method == 'snmp':
             # not available
             pass
 
         # Update the view
-        self.update_views()
+        # self.update_views()
 
         return self.stats
 
@@ -101,9 +102,10 @@ class Plugin(GlancesPlugin):
         """
         return [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(0, pynvml.nvmlDeviceGetCount())]
 
-    def get_stats(self):
+    def get_device_stats(self):
         """Get GPU stats"""
         stats = []
+
         for index, device_handle in enumerate(self.device_handles):
             device_stats = {}
             device_stats['key'] = index

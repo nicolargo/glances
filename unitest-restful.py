@@ -95,7 +95,7 @@ class TestGlances(unittest.TestCase):
                 self.assertIsInstance(req.json(), text_type)
             elif p in ('fs', 'percpu', 'sensors', 'alert', 'processlist', 'diskio',
                        'hddtemp', 'batpercent', 'network', 'folders', 'amps', 'ports',
-                       'irq', 'wifi'):
+                       'irq', 'wifi', 'gpu'):
                 self.assertIsInstance(req.json(), list)
             elif p in ('psutilversion', 'help'):
                 pass
