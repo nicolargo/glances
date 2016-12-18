@@ -112,9 +112,8 @@ class Export(GlancesExport):
             session.set_keyspace(self.keyspace)
 
         logger.info(
-            "Stats will be exported to Cassandra cluster {0} ({1}) in keyspace {2}".format(cluster.metadata.cluster_name,
-                                                                                           cluster.metadata.all_hosts(),
-                                                                                           self.keyspace))
+            "Stats will be exported to Cassandra cluster {} ({}) in keyspace {}".format(
+                cluster.metadata.cluster_name, cluster.metadata.all_hosts(), self.keyspace))
 
         # Table
         try:
