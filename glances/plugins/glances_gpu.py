@@ -108,11 +108,16 @@ class Plugin(GlancesPlugin):
 
         for index, device_handle in enumerate(self.device_handles):
             device_stats = {}
+            # Dictionnary key is the GPU_ID
+            device_stats['key'] = self.get_key()
+            # GPU id (for multiple GPU, start at 0)
             device_stats['gpu_id'] = index
+            # GPU name
             device_stats['name'] = self.get_device_name(device_handle)
+            # Memory consumption in % (not available on all GPU)
             device_stats['memory_percent'] = self.get_memory_percent(device_handle)
+            # Processor consumption in %
             device_stats['processor_percent'] = self.get_processor_percent(device_handle)
-
             stats.append(device_stats)
 
         return stats
