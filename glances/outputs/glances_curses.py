@@ -744,10 +744,10 @@ class _GlancesCurses(object):
         # Generate history graph
         if self.graph_tag and self.args.export_graph:
             self.display_popup(
-                'Generate graphs history in {0}\nPlease wait...'.format(
+                'Generate graphs history in {}\nPlease wait...'.format(
                     self.glances_graph.get_output_folder()))
             self.display_popup(
-                'Generate graphs history in {0}\nDone: {1} graphs generated'.format(
+                'Generate graphs history in {}\nDone: {} graphs generated'.format(
                     self.glances_graph.get_output_folder(),
                     self.glances_graph.generate_graph(stats)))
         elif self.reset_history_tag and self.args.export_graph:

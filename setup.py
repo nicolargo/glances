@@ -62,7 +62,7 @@ class tests(Command):
 glances_version = get_version()
 
 if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances {0} require at least Python 2.7 or 3.3 to run.'.format(glances_version))
+    print('Glances {} require at least Python 2.7 or 3.3 to run.'.format(glances_version))
     print('Please install Glances 2.6.2 on your system.')
     sys.exit(1)
 

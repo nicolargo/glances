@@ -265,7 +265,7 @@ class Plugin(GlancesPlugin):
             cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
             # all_stats do not have CPU information
-            logger.debug("Can not grab CPU usage for container {0} ({1})".format(container_id, e))
+            logger.debug("Cannot grab CPU usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
         else:
             # Previous CPU stats stored in the cpu_old variable
@@ -336,7 +336,7 @@ class Plugin(GlancesPlugin):
             netcounters = all_stats["networks"]
         except KeyError as e:
             # all_stats do not have NETWORK information
-            logger.debug("Can not grab NET usage for container {0} ({1})".format(container_id, e))
+            logger.debug("Cannot grab NET usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
             # No fallback available...
             return network_new
@@ -360,14 +360,14 @@ class Plugin(GlancesPlugin):
             # XML/RPC API, which would otherwise be overly difficult work
             # for users of the API
             try:
-                network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{0}'.format(container_id))
+                network_new['time_since_update'] = getTimeSinceLastUpdate('docker_net_{}'.format(container_id))
                 network_new['rx'] = netcounters["eth0"]["rx_bytes"] - self.netcounters_old[container_id]["eth0"]["rx_bytes"]
                 network_new['tx'] = netcounters["eth0"]["tx_bytes"] - self.netcounters_old[container_id]["eth0"]["tx_bytes"]
                 network_new['cumulative_rx'] = netcounters["eth0"]["rx_bytes"]
                 network_new['cumulative_tx'] = netcounters["eth0"]["tx_bytes"]
             except KeyError as e:
                 # all_stats do not have INTERFACE information
-                logger.debug("Can not grab network interface usage for container {0} ({1})".format(container_id, e))
+                logger.debug("Cannot grab network interface usage for container {} ({})".format(container_id, e))
                 logger.debug(all_stats)
 
             # Save stats to compute next bitrate
@@ -394,7 +394,7 @@ class Plugin(GlancesPlugin):
             iocounters = all_stats["blkio_stats"]
         except KeyError as e:
             # all_stats do not have io information
-            logger.debug("Can not grab block IO usage for container {0} ({1})".format(container_id, e))
+            logger.debug("Cannot grab block IO usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
             # No fallback available...
             return io_new
