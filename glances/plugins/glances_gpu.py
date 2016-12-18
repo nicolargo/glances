@@ -108,7 +108,7 @@ class Plugin(GlancesPlugin):
 
         for index, device_handle in enumerate(self.device_handles):
             device_stats = {}
-            device_stats['key'] = index
+            device_stats['gpu_id'] = index
             device_stats['name'] = self.get_device_name(device_handle)
             device_stats['memory_percent'] = self.get_memory_percent(device_handle)
             device_stats['processor_percent'] = self.get_processor_percent(device_handle)
