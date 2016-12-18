@@ -186,7 +186,7 @@ class PublicIpAddress(object):
         try:
             response = urlopen(url, timeout=self.timeout).read().decode('utf-8')
         except Exception as e:
-            logger.debug("IP plugin - Can not open URL {0} ({1})".format(url, e))
+            logger.debug("IP plugin - Cannot open URL {} ({})".format(url, e))
             queue_target.put(None)
         else:
             # Request depend on service

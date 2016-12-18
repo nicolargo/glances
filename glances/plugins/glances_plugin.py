@@ -114,14 +114,14 @@ class GlancesPlugin(object):
         """Init the stats history (dict of GlancesAttribute)."""
         if self._history_enable():
             init_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Stats history activated for plugin {0} (items: {1})".format(self.plugin_name, init_list))
+            logger.debug("Stats history activated for plugin {} (items: {})".format(self.plugin_name, init_list))
         return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
         if self._history_enable():
             reset_list = [a['name'] for a in self.get_items_history_list()]
-            logger.debug("Reset history for plugin {0} (items: {1})".format(self.plugin_name, reset_list))
+            logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
             self.stats_history.reset()
 
     def update_stats_history(self):
@@ -202,7 +202,7 @@ class GlancesPlugin(object):
             try:
                 return self._json_dumps({item: s[item]})
             except KeyError as e:
-                logger.error("Cannot get item history {0} ({1})".format(item, e))
+                logger.error("Cannot get item history {} ({})".format(item, e))
                 return None
         elif isinstance(s, list):
             try:
@@ -210,7 +210,7 @@ class GlancesPlugin(object):
                 # http://stackoverflow.com/questions/4573875/python-get-index-of-dictionary-item-in-list
                 return self._json_dumps({item: map(itemgetter(item), s)})
             except (KeyError, ValueError) as e:
-                logger.error("Cannot get item history {0} ({1})".format(item, e))
+                logger.error("Cannot get item history {} ({})".format(item, e))
                 return None
         else:
             return None
@@ -429,7 +429,7 @@ class GlancesPlugin(object):
         # Read the global section
         if config.has_section('global'):
             self._limits['history_size'] = config.get_float_value('global', 'history_size', default=28800)
-            logger.debug("Load configuration key: {0} = {1}".format('history_size', self._limits['history_size']))
+            logger.debug("Load configuration key: {} = {}".format('history_size', self._limits['history_size']))
 
         # Read the plugin specific section
         if config.has_section(self.plugin_name):

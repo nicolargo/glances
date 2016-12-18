@@ -50,11 +50,11 @@ class Plugin(GlancesPlugin):
         pass
 
     def generate_view_data(self):
-        self.view_data['version'] = '{0} {1}'.format('Glances', __version__)
-        self.view_data['psutil_version'] = ' with PSutil {0}'.format(psutil_version)
+        self.view_data['version'] = '{} {}'.format('Glances', __version__)
+        self.view_data['psutil_version'] = ' with PSutil {}'.format(psutil_version)
 
         try:
-            self.view_data['configuration_file'] = 'Configuration file: {0}'.format(self.config.loaded_config_file)
+            self.view_data['configuration_file'] = 'Configuration file: {}'.format(self.config.loaded_config_file)
         except AttributeError:
             pass
 
