@@ -113,6 +113,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_folders', help='disable folder module')
         parser.add_argument('--disable-fs', action='store_true', default=False,
                             dest='disable_fs', help='disable filesystem module')
+        parser.add_argument('--disable-gpu', action='store_true', default=False,
+                            dest='disable_gpu', help='disable GPU module')
         parser.add_argument('--disable-hddtemp', action='store_true', default=False,
                             dest='disable_hddtemp', help='disable HD temperature module')
         parser.add_argument('--disable-ip', action='store_true', default=False,
