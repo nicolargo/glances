@@ -66,6 +66,7 @@ class _GlancesCurses(object):
         'D': {'switch': 'disable_docker'},
         'e': {'switch': 'enable_process_extended'},
         'F': {'switch': 'fs_free_space'},
+        'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
         'I': {'switch': 'disable_ip'},
         'l': {'switch': 'disable_alert'},
@@ -470,6 +471,7 @@ class _GlancesCurses(object):
             ret["cpu"] = stats.get_plugin('percpu').get_stats_display(args=self.args)
         else:
             ret["cpu"] = stats.get_plugin('cpu').get_stats_display(args=self.args)
+        ret["gpu"] = stats.get_plugin('gpu').get_stats_display(args=self.args)
         ret["load"] = stats.get_plugin('load').get_stats_display(args=self.args)
         ret["mem"] = stats.get_plugin('mem').get_stats_display(args=self.args)
         ret["memswap"] = stats.get_plugin('memswap').get_stats_display(args=self.args)
@@ -591,9 +593,9 @@ class _GlancesCurses(object):
         self.new_column()
         self.display_plugin(__stat_display["uptime"])
 
-        # ========================================================
-        # Display second line (<SUMMARY>+CPU|PERCPU+LOAD+MEM+SWAP)
-        # ========================================================
+        # ==============================================================
+        # Display second line (<SUMMARY>+CPU|PERCPU+<GPU>+LOAD+MEM+SWAP)
+        # ==============================================================
         self.init_column()
         self.new_line()
 
@@ -606,6 +608,10 @@ class _GlancesCurses(object):
             cpu_width = 0
         else:
             cpu_width = self.get_stats_display_width(__stat_display["cpu"])
+        if self.args.disable_gpu:
+            gpu_width = 0
+        else:
+            gpu_width = self.get_stats_display_width(__stat_display["gpu"])
         if self.args.disable_mem:
             mem_width = 0
         else:
@@ -620,11 +626,12 @@ class _GlancesCurses(object):
             load_width = self.get_stats_display_width(__stat_display["load"])
 
         # Size of plugins but quicklook
-        stats_width = cpu_width + mem_width + swap_width + load_width
+        stats_width = cpu_width + gpu_width + mem_width + swap_width + load_width
 
         # Number of plugin but quicklook
         stats_number = (
             int(not self.args.disable_cpu and __stat_display["cpu"]['msgdict'] != []) +
+            int(not self.args.disable_gpu and __stat_display["gpu"]['msgdict'] != []) +
             int(not self.args.disable_mem and __stat_display["mem"]['msgdict'] != []) +
             int(not self.args.disable_memswap and __stat_display["memswap"]['msgdict'] != []) +
             int(not self.args.disable_load and __stat_display["load"]['msgdict'] != []))
@@ -660,7 +667,7 @@ class _GlancesCurses(object):
                     mem_width = 0
                 else:
                     mem_width = self.get_stats_display_width(__stat_display["mem"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
+                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
                 self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
             # No space again ? Remove optionnal CPU stats
             if self.space_between_column < 3:
@@ -669,13 +676,15 @@ class _GlancesCurses(object):
                     cpu_width = 0
                 else:
                     cpu_width = self.get_stats_display_width(__stat_display["cpu"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + mem_width + swap_width + load_width
+                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
                 self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
         else:
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
         self.display_plugin(__stat_display["cpu"], display_optional=display_optional_cpu)
+        self.new_column()
+        self.display_plugin(__stat_display["gpu"])
         self.new_column()
         self.display_plugin(__stat_display["mem"], display_optional=display_optional_mem)
         self.new_column()
