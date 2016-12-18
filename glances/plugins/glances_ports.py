@@ -209,7 +209,7 @@ class ThreadScanner(threading.Thread):
         try:
             ip = socket.gethostbyname(hostname)
         except Exception as e:
-            logger.debug("{0}: Can not convert {1} to IP address ({2})".format(self.plugin_name, hostname, e))
+            logger.debug("{}: Cannot convert {} to IP address ({})".format(self.plugin_name, hostname, e))
         return ip
 
     def _port_scan_icmp(self, port):
@@ -230,7 +230,7 @@ class ThreadScanner(threading.Thread):
             else:
                 port['status'] = False
         except Exception as e:
-            logger.debug("{0}: Error while pinging host ({2})".format(self.plugin_name, port['host'], e))
+            logger.debug("{}: Error while pinging host {} ({})".format(self.plugin_name, port['host'], e))
 
         return ret
 
@@ -243,7 +243,7 @@ class ThreadScanner(threading.Thread):
             socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
-            logger.debug("{0}: Error while creating scanning socket".format(self.plugin_name))
+            logger.debug("{}: Error while creating scanning socket".format(self.plugin_name))
 
         # Scan port
         ip = self._resolv_name(port['host'])
@@ -251,7 +251,7 @@ class ThreadScanner(threading.Thread):
         try:
             ret = _socket.connect_ex((ip, int(port['port'])))
         except Exception as e:
-            logger.debug("{0}: Error while scanning port {1} ({2})".format(self.plugin_name, port, e))
+            logger.debug("0}: Error while scanning port {} ({})".format(self.plugin_name, port, e))
         else:
             if ret == 0:
                 port['status'] = counter.get()
