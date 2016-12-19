@@ -154,7 +154,7 @@ class Plugin(GlancesPlugin):
             if gpu_stats['mem'] is None:
                 msg = '{:>8}'.format('N/A')
             else:
-                msg = '{:>7d%}'.format(int(gpu_stats['mem']))
+                msg = '{:>7d}%'.format(int(gpu_stats['mem']))
             ret.append(self.curse_add_line(
                 msg, self.get_views(item=gpu_stats[self.get_key()],
                                     key='mem',
