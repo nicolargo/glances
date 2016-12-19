@@ -171,7 +171,7 @@ class Plugin(GlancesPlugin):
                 # GPU ID + PROC + MEM
                 msg = '{}: {:>3}% mem: {:>3}%'.format(gpu_stats['gpu_id'],
                                                       gpu_stats['proc'],
-                                                      gpu_stats['proc'],)
+                                                      gpu_stats['mem'],)
                 ret.append(self.curse_add_line(msg))
 
         return ret
