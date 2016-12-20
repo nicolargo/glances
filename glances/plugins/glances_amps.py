@@ -64,8 +64,7 @@ class Plugin(GlancesPlugin):
                                    'timer': v.time_until_refresh(),
                                    'count': v.count(),
                                    'countmin': v.count_min(),
-                                   'countmax': v.count_max(),
-                                   })
+                                   'countmax': v.count_max()})
         else:
             # Not available in SNMP mode
             pass
