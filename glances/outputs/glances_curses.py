@@ -87,8 +87,7 @@ class _GlancesCurses(object):
         'm': {'auto_sort': False, 'sort_key': 'memory_percent'},
         'p': {'auto_sort': False, 'sort_key': 'name'},
         't': {'auto_sort': False, 'sort_key': 'cpu_times'},
-        'u': {'auto_sort': False, 'sort_key': 'username'},
-        'c': {'auto_sort': False, 'sort_key': 'cpu_percent'}
+        'u': {'auto_sort': False, 'sort_key': 'username'}
     }
 
     def __init__(self, config=None, args=None):
