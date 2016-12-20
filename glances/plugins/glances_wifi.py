@@ -19,11 +19,9 @@
 
 """Wifi plugin."""
 
-import base64
 import operator
 
 from glances.logger import logger
-from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
