@@ -28,7 +28,7 @@ import psutil
 cpuinfo_tag = False
 try:
     from cpuinfo import cpuinfo
-except:
+except ImportError:
     # Correct issue #754
     # Waiting for a correction on the upstream Cpuinfo lib
     pass
