@@ -93,7 +93,7 @@ class FolderList(object):
             for i in ['careful', 'warning', 'critical']:
                 try:
                     value[i] = self.config.get_value(section, key + i)
-                except:
+                except Exception:
                     value[i] = None
                     logger.debug("No {} threshold for folder {}".format(i, value["path"]))
 
