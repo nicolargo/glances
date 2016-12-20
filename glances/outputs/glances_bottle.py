@@ -27,7 +27,6 @@ from io import open
 import webbrowser
 
 from glances.timer import Timer
-from glances.globals import WINDOWS
 from glances.logger import logger
 
 try:
@@ -134,9 +133,7 @@ class GlancesBottle(object):
             # Try to open the Glances Web UI in the default Web browser if:
             # 1) --open-web-browser option is used
             # 2) Glances standalone mode is running on Windows OS
-            webbrowser.open(bindurl,
-                            new=2,
-                            autoraise=1)
+            webbrowser.open(bindurl, new=2, autoraise=1)
         self._app.run(host=self.args.bind_address, port=self.args.port, quiet=not self.args.debug)
 
     def end(self):

@@ -20,6 +20,7 @@
 """Cassandra/Scylla interface class."""
 
 import sys
+from datetime import datetime
 from numbers import Number
 
 from glances.compat import NoOptionError, NoSectionError
@@ -29,7 +30,6 @@ from glances.exports.glances_export import GlancesExport
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
 from cassandra import InvalidRequest
-from datetime import datetime
 
 
 class Export(GlancesExport):
