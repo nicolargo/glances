@@ -38,7 +38,7 @@ class GlancesPasswordList(GlancesPassword):
 
     def load(self, config):
         """Load the password from the configuration file."""
-        password_dict = []
+        password_dict = {}
 
         if config is None:
             logger.warning("No configuration file available. Cannot load password list.")
