@@ -141,7 +141,10 @@ class Plugin(GlancesPlugin):
             # GPU CPU
             msg = '{:8}'.format('proc:')
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7d}%'.format(int(gpu_stats['proc']))
+            if gpu_stats['proc'] is None:
+                msg = '{:>8}'.format('N/A')
+            else:
+                msg = '{:>7d}%'.format(int(gpu_stats['proc']))
             ret.append(self.curse_add_line(
                 msg, self.get_views(item=gpu_stats[self.get_key()],
                                     key='proc',
