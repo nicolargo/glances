@@ -27,7 +27,7 @@ from glances.timer import Timer
 try:
     import pystache
 except ImportError:
-    logger.warning("PyStache lib not installed (action script with mustache will not work)")
+    logger.debug("Pystache library not found (action scripts won't work)")
     pystache_tag = False
 else:
     pystache_tag = True
