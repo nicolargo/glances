@@ -188,7 +188,7 @@ class Plugin(GlancesPlugin):
             hotspotname = i['ssid']
             # Add the encryption type (if it is available)
             if i['encrypted']:
-                hotspotname = hotspotname + ' {}'.format(i['encryption_type'])
+                hotspotname += ' {}'.format(i['encryption_type'])
             # Cut hotspotname if it is too long
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
