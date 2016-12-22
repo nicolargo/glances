@@ -36,8 +36,7 @@ if not WINDOWS:
         import curses.panel
         from curses.textpad import Textbox
     except ImportError:
-        logger.critical(
-            "Curses module not found. Glances cannot start in standalone mode.")
+        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -140,7 +139,7 @@ class _GlancesCurses(object):
         self._init_history()
 
     def load_config(self, config):
-        '''Load the outputs section of the configuration file'''
+        """Load the outputs section of the configuration file."""
         # Load the theme
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
@@ -148,11 +147,11 @@ class _GlancesCurses(object):
             logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
 
     def is_theme(self, name):
-        '''Return True if the theme *name* should be used'''
+        """Return True if the theme *name* should be used."""
         return getattr(self.args, 'theme_' + name) or self.theme['name'] == name
 
     def _init_history(self):
-        '''Init the history option'''
+        """Init the history option."""
 
         self.reset_history_tag = False
         self.graph_tag = False
@@ -166,7 +165,7 @@ class _GlancesCurses(object):
                 logger.error('Export graphs disabled')
 
     def _init_cursor(self):
-        '''Init cursors'''
+        """Init cursors."""
 
         if hasattr(curses, 'noecho'):
             curses.noecho()
@@ -175,7 +174,7 @@ class _GlancesCurses(object):
         self.set_cursor(0)
 
     def _init_colors(self):
-        '''Init the Curses color layout'''
+        """Init the Curses color layout."""
 
         # Set curses options
         if hasattr(curses, 'start_color'):
