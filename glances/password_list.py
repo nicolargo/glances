@@ -70,7 +70,6 @@ class GlancesPasswordList(GlancesPassword):
                     return self._password_dict['default']
                 except (KeyError, TypeError):
                     return None
-                return None
 
     def set_password(self, host, password):
         """Set a password for a specific host."""
