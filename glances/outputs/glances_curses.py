@@ -775,12 +775,11 @@ class _GlancesCurses(object):
         # Only in standalone mode (cs_status is None)
         if self.edit_filter and cs_status is None:
             new_filter = self.display_popup(
-                'Process filter pattern: \n' +
-                '\n' +
+                'Process filter pattern: \n\n' +
                 'Examples:\n' +
                 '- python\n' +
                 '- .*python.*\n' +
-                '- \/usr\/lib.*' +
+                '- \/usr\/lib.*\n' +
                 '- name:.*nautilus.*\n' +
                 '- cmdline:.*glances.*\n' +
                 '- username:nicolargo\n' +
@@ -788,7 +787,7 @@ class _GlancesCurses(object):
                 is_input=True,
                 input_value=glances_processes.process_filter_input)
             glances_processes.process_filter = new_filter
-        elif self.edit_filter and cs_status != 'None':
+        elif self.edit_filter and cs_status is not None:
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 

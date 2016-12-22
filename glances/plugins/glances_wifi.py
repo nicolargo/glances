@@ -30,7 +30,7 @@ import psutil
 try:
     from wifi.scan import Cell
     from wifi.exceptions import InterfaceError
-except ImportError as e:
+except ImportError:
     logger.debug("Wifi library not found. Glances cannot grab Wifi info.")
     wifi_tag = False
 else:
