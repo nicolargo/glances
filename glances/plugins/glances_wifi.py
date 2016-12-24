@@ -19,11 +19,9 @@
 
 """Wifi plugin."""
 
-import base64
 import operator
 
 from glances.logger import logger
-from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -32,7 +30,7 @@ import psutil
 try:
     from wifi.scan import Cell
     from wifi.exceptions import InterfaceError
-except ImportError as e:
+except ImportError:
     logger.debug("Wifi library not found. Glances cannot grab Wifi info.")
     wifi_tag = False
 else:
@@ -190,7 +188,7 @@ class Plugin(GlancesPlugin):
             hotspotname = i['ssid']
             # Add the encryption type (if it is available)
             if i['encrypted']:
-                hotspotname = hotspotname + ' {}'.format(i['encryption_type'])
+                hotspotname += ' {}'.format(i['encryption_type'])
             # Cut hotspotname if it is too long
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]

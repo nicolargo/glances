@@ -20,6 +20,7 @@
 """Cassandra/Scylla interface class."""
 
 import sys
+from datetime import datetime
 from numbers import Number
 
 from glances.compat import NoOptionError, NoSectionError
@@ -29,7 +30,6 @@ from glances.exports.glances_export import GlancesExport
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
 from cassandra import InvalidRequest
-from datetime import datetime
 
 
 class Export(GlancesExport):
@@ -118,7 +118,7 @@ class Export(GlancesExport):
         # Table
         try:
             session.execute("CREATE TABLE %s (plugin text, time timeuuid, stat map<text,float>, PRIMARY KEY (plugin, time)) WITH CLUSTERING ORDER BY (time DESC)" % self.table)
-        except:
+        except Exception:
             logger.debug("Cassandra table %s already exist" % self.table)
 
         return cluster, session

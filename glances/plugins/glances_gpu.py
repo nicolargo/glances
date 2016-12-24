@@ -141,7 +141,10 @@ class Plugin(GlancesPlugin):
             # GPU CPU
             msg = '{:8}'.format('proc:')
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7d}%'.format(int(gpu_stats['proc']))
+            if gpu_stats['proc'] is None:
+                msg = '{:>8}'.format('N/A')
+            else:
+                msg = '{:>7d}%'.format(int(gpu_stats['proc']))
             ret.append(self.curse_add_line(
                 msg, self.get_views(item=gpu_stats[self.get_key()],
                                     key='proc',
@@ -180,7 +183,7 @@ class Plugin(GlancesPlugin):
         """
         Returns a list of NVML device handles, one per device.  Can throw NVMLError.
         """
-        return [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(0, pynvml.nvmlDeviceGetCount())]
+        return [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
 
     def get_device_stats(self):
         """Get GPU stats"""
@@ -212,13 +215,10 @@ class Plugin(GlancesPlugin):
     def get_mem(self, device_handle):
         """Get GPU device memory consumption in percent"""
         try:
-            return pynvml.nvmlDeviceGetUtilizationRates(device_handle).memory
+            memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
+            return memory_info.used * 100 / memory_info.total
         except pynvml.NVMLError:
-            try:
-                memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
-                return memory_info.used * 100 / memory_info.total
-            except pynvml.NVMLError:
-                return None
+            return None
 
     def get_proc(self, device_handle):
         """Get GPU device CPU consumption in percent"""

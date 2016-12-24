@@ -19,11 +19,14 @@
 
 """Custom logger class."""
 
-import logging
 import os
 import tempfile
 import json
-from logging.config import dictConfig
+
+import logging
+import logging.config
+
+LOG_FILENAME = os.path.join(tempfile.gettempdir(), 'glances.log')
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -48,8 +51,7 @@ LOGGING_CFG = {
         "file": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "standard",
-            'filename': os.path.join(tempfile.gettempdir(), 'glances.log')
+            "formatter": "standard"
         },
         "console": {
             "level": "CRITICAL",
@@ -88,14 +90,13 @@ LOGGING_CFG = {
 
 def tempfile_name():
     """Return the tempfile name (full path)."""
-    ret = os.path.join(tempfile.gettempdir(), 'glances.log')
-    if os.access(ret, os.F_OK) and not os.access(ret, os.W_OK):
-        print("WARNING: Couldn't write to log file {} (Permission denied)".format(ret))
-        ret = tempfile.mkstemp(prefix='glances', suffix='.log', text=True)
-        print("Create a new log file: {}".format(ret[1]))
+    if os.access(LOG_FILENAME, os.F_OK) and not os.access(LOG_FILENAME, os.W_OK):
+        print("WARNING: Couldn't write to '{}' (Permission denied)".format(LOG_FILENAME))
+        ret = tempfile.mkstemp(prefix='glances-', suffix='.log', text=True)
+        print("Create log file at '{}'".format(ret[1]))
         return ret[1]
 
-    return ret
+    return LOG_FILENAME
 
 
 def glances_logger(env_key='LOG_CFG'):
@@ -111,7 +112,7 @@ def glances_logger(env_key='LOG_CFG'):
     # Overwrite the default logger file
     LOGGING_CFG['handlers']['file']['filename'] = tempfile_name()
 
-    # By default, use the LOGGING_CFG lgger configuration
+    # By default, use the LOGGING_CFG logger configuration
     config = LOGGING_CFG
 
     # Check if a specific configuration is available
@@ -122,8 +123,9 @@ def glances_logger(env_key='LOG_CFG'):
             config = json.load(f)
 
     # Load the configuration
-    dictConfig(config)
+    logging.config.dictConfig(config)
 
     return _logger
+
 
 logger = glances_logger()

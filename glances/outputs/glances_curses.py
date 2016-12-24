@@ -36,8 +36,7 @@ if not WINDOWS:
         import curses.panel
         from curses.textpad import Textbox
     except ImportError:
-        logger.critical(
-            "Curses module not found. Glances cannot start in standalone mode.")
+        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
 else:
     from glances.outputs.glances_colorconsole import WCurseLight
@@ -87,8 +86,7 @@ class _GlancesCurses(object):
         'm': {'auto_sort': False, 'sort_key': 'memory_percent'},
         'p': {'auto_sort': False, 'sort_key': 'name'},
         't': {'auto_sort': False, 'sort_key': 'cpu_times'},
-        'u': {'auto_sort': False, 'sort_key': 'username'},
-        'c': {'auto_sort': False, 'sort_key': 'cpu_percent'}
+        'u': {'auto_sort': False, 'sort_key': 'username'}
     }
 
     def __init__(self, config=None, args=None):
@@ -141,7 +139,7 @@ class _GlancesCurses(object):
         self._init_history()
 
     def load_config(self, config):
-        '''Load the outputs section of the configuration file'''
+        """Load the outputs section of the configuration file."""
         # Load the theme
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
@@ -149,11 +147,11 @@ class _GlancesCurses(object):
             logger.debug('Theme for the curse interface: {}'.format(self.theme['name']))
 
     def is_theme(self, name):
-        '''Return True if the theme *name* should be used'''
+        """Return True if the theme *name* should be used."""
         return getattr(self.args, 'theme_' + name) or self.theme['name'] == name
 
     def _init_history(self):
-        '''Init the history option'''
+        """Init the history option."""
 
         self.reset_history_tag = False
         self.graph_tag = False
@@ -167,7 +165,7 @@ class _GlancesCurses(object):
                 logger.error('Export graphs disabled')
 
     def _init_cursor(self):
-        '''Init cursors'''
+        """Init cursors."""
 
         if hasattr(curses, 'noecho'):
             curses.noecho()
@@ -176,7 +174,7 @@ class _GlancesCurses(object):
         self.set_cursor(0)
 
     def _init_colors(self):
-        '''Init the Curses color layout'''
+        """Init the Curses color layout."""
 
         # Set curses options
         if hasattr(curses, 'start_color'):
@@ -776,12 +774,11 @@ class _GlancesCurses(object):
         # Only in standalone mode (cs_status is None)
         if self.edit_filter and cs_status is None:
             new_filter = self.display_popup(
-                'Process filter pattern: \n' +
-                '\n' +
+                'Process filter pattern: \n\n' +
                 'Examples:\n' +
                 '- python\n' +
                 '- .*python.*\n' +
-                '- \/usr\/lib.*' +
+                '- \/usr\/lib.*\n' +
                 '- name:.*nautilus.*\n' +
                 '- cmdline:.*glances.*\n' +
                 '- username:nicolargo\n' +
@@ -789,7 +786,7 @@ class _GlancesCurses(object):
                 is_input=True,
                 input_value=glances_processes.process_filter_input)
             glances_processes.process_filter = new_filter
-        elif self.edit_filter and cs_status != 'None':
+        elif self.edit_filter and cs_status is not None:
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 

@@ -251,7 +251,7 @@ class ThreadScanner(threading.Thread):
         try:
             ret = _socket.connect_ex((ip, int(port['port'])))
         except Exception as e:
-            logger.debug("0}: Error while scanning port {} ({})".format(self.plugin_name, port, e))
+            logger.debug("{}: Error while scanning port {} ({})".format(self.plugin_name, port, e))
         else:
             if ret == 0:
                 port['status'] = counter.get()
