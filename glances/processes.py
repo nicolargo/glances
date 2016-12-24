@@ -265,9 +265,7 @@ class GlancesProcesses(object):
                 self.set_max_values(k, procstat[k])
 
         # Process command line (cached with internal cache)
-        try:
-            self.cmdline_cache[procstat['pid']]
-        except KeyError:
+        if procstat['pid'] not in self.cmdline_cache:
             # Patch for issue #391
             try:
                 self.cmdline_cache[procstat['pid']] = proc.cmdline()
