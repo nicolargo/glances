@@ -475,9 +475,9 @@ class GlancesProcesses(object):
             # ignore the 'kernel_task' process on OS X
             # waiting for upstream patch from psutil
             if (s is None or
-               BSD and s['name'] == 'idle' or
-               WINDOWS and s['name'] == 'System Idle Process' or
-               OSX and s['name'] == 'kernel_task'):
+                    BSD and s['name'] == 'idle' or
+                    WINDOWS and s['name'] == 'System Idle Process' or
+                    OSX and s['name'] == 'kernel_task'):
                 continue
             # Continue to the next process if it has to be filtered
             if self._filter.is_filtered(s):

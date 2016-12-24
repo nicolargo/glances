@@ -1,25 +1,30 @@
 #!/usr/bin/env python
 
 import glob
-import sys
+import os
 import re
+import sys
+from io import open
 
 from setuptools import setup, Command
+
+
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
+    print('Glances requires at least Python 2.7 or 3.3 to run.')
+    sys.exit(1)
 
 
 # Global functions
 ##################
 
-def get_version():
-    """Get version inside the __init__.py file"""
-    init_file = open("glances/__init__.py").read()
-    reg_version = r"^__version__ = ['\"]([^'\"]*)['\"]"
-    find_version = re.search(reg_version, init_file, re.M)
-    if find_version:
-        return find_version.group(1)
-    else:
-        print("Can not retreive Glances version in the glances/__init__.py file.")
-        sys.exit(1)
+with open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
+    version = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
+
+if not version:
+    raise RuntimeError('Cannot find Glances version information.')
+
+with open('README.rst', encoding='utf-8') as f:
+    long_description = f.read()
 
 
 def get_data_files():
@@ -56,23 +61,14 @@ class tests(Command):
                 raise SystemExit(ret)
         raise SystemExit(0)
 
-# Global vars
-#############
-
-glances_version = get_version()
-
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances {} require at least Python 2.7 or 3.3 to run.'.format(glances_version))
-    print('Please install Glances 2.6.2 on your system.')
-    sys.exit(1)
 
 # Setup !
 
 setup(
     name='Glances',
-    version=glances_version,
+    version=version,
     description="A cross-platform curses-based monitoring tool",
-    long_description=open('README.rst').read(),
+    long_description=long_description,
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',

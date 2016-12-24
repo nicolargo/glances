@@ -158,7 +158,7 @@ class Plugin(GlancesPlugin):
             # First time, try to connect to the server
             try:
                 self.docker_client = self.connect()
-            except:
+            except Exception:
                 docker_tag = False
             else:
                 if self.docker_client is None:

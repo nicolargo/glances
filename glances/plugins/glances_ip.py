@@ -173,9 +173,9 @@ class PublicIpAddress(object):
             t.daemon = True
             t.start()
 
-        t = Timer(self.timeout)
+        timer = Timer(self.timeout)
         ip = None
-        while not t.finished() and ip is None:
+        while not timer.finished() and ip is None:
             if q.qsize() > 0:
                 ip = q.get()
 
