@@ -29,7 +29,7 @@ from glances.logs import glances_logs
 from glances.processes import glances_processes
 from glances.timer import Timer
 
-# Import curses lib for "normal" operating system and consolelog for Windows
+# Import curses library for "normal" operating system
 if not WINDOWS:
     try:
         import curses
@@ -38,9 +38,6 @@ if not WINDOWS:
     except ImportError:
         logger.critical("Curses module not found. Glances cannot start in standalone mode.")
         sys.exit(1)
-else:
-    from glances.outputs.glances_colorconsole import WCurseLight
-    curses = WCurseLight()
 
 
 class _GlancesCurses(object):

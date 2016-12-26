@@ -5,12 +5,10 @@ Glances Version 2
 Version 2.8
 ===========
 
-Deprecated:
-
-    * Deprecate Windows Curse UI: automaticaly open Web Browser for the standalone mode (issue #946)
-
 Changes:
 
+    * The curses interface on Windows is no more. The web-based interface is now
+      the default. (issue #946)
     * IRQ plugin off by default. '--disable-irq' option replaced by '--enable-irq'.
 
 Enhancements and new features:
