@@ -37,12 +37,6 @@ def get_data_files():
     return data_files
 
 
-def get_requires():
-    requires = ['psutil>=2.0.0']
-
-    return requires
-
-
 class tests(Command):
     user_options = []
 
@@ -74,7 +68,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license="LGPL",
     keywords="cli curses monitoring system",
-    install_requires=get_requires(),
+    install_requires=['psutil>=2.0.0'],
     extras_require={
         'WEB': ['bottle', 'requests'],
         'SENSORS': ['py3sensors'],
