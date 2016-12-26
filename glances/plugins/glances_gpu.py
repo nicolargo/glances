@@ -210,13 +210,13 @@ class Plugin(GlancesPlugin):
         try:
             return pynvml.nvmlDeviceGetName(device_handle)
         except pynvml.NVMlError:
-            return "NVIDIA GPU"
+            return "NVIDIA"
 
     def get_mem(self, device_handle):
         """Get GPU device memory consumption in percent"""
         try:
             memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
-            return memory_info.used * 100 / memory_info.total
+            return memory_info.used * 100.0 / memory_info.total
         except pynvml.NVMLError:
             return None
 
