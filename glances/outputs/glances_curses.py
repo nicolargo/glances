@@ -109,6 +109,9 @@ class _GlancesCurses(object):
         # - Init the theme (default is black)
         self.theme = {'name': 'black'}
 
+        # Load configuration file
+        self.load_config(config)
+
         # Init cursor
         self._init_cursor()
 

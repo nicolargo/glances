@@ -56,6 +56,9 @@ class GlancesBottle(object):
         # since last update is passed (will retrieve old cached info instead)
         self.timer = Timer(0)
 
+        # Load configuration file
+        self.load_config(config)
+
         # Init Bottle
         self._app = Bottle()
         # Enable CORS (issue #479)
@@ -68,6 +71,14 @@ class GlancesBottle(object):
 
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
+
+    def load_config(self, config):
+        """Load the outputs section of the configuration file."""
+        # Limit the number of processes to display in the WebUI
+        if config is not None and config.has_section('outputs'):
+            logger.debug('Read number of processes to display in the WebUI')
+            n = config.get_value('outputs', 'max_processes_display', default=None)
+            logger.debug('Number of processes to display in the WebUI: {}'.format(n))
 
     def __update__(self):
         # Never update more than 1 time per cached_time
