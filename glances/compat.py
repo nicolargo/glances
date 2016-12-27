@@ -106,6 +106,8 @@ else:
     def to_ascii(s):
         """Convert the unicode 's' to a ASCII string
         Usefull to remove accent (diacritics)"""
+        if isinstance(s, binary_type):
+            return s
         return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore')
 
     def listitems(d):
