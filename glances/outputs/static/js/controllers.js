@@ -1,4 +1,4 @@
-glancesApp.controller('statsController', function ($scope, $rootScope, $interval, GlancesStats, help, arguments, favicoService) {
+glancesApp.controller('statsController', function ($scope, $rootScope, $interval, GlancesStats, help, config, arguments, favicoService) {
     $scope.help = help;
     $scope.arguments = arguments;
 
