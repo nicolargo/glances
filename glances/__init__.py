@@ -26,11 +26,6 @@ import platform
 import signal
 import sys
 
-# Global name
-__version__ = '2.8_DEVELOP'
-__author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
-__license__ = 'LGPL'
-
 # Import psutil
 try:
     from psutil import __version__ as psutil_version
@@ -39,10 +34,15 @@ except ImportError:
     sys.exit(1)
 
 # Import Glances libs
-# Note: others Glances libs will be imported optionally
+# Note: other Glances libs will be imported optionally
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.globals import WINDOWS
+
+# Global name
+__version__ = '2.8_DEVELOP'
+__author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
+__license__ = 'LGPL'
 
 # Check locale
 try:
