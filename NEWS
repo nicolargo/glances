@@ -9,6 +9,8 @@ Changes:
 
     * The curses interface on Windows is no more. The web-based interface is now
       the default. (issue #946)
+    * The name of the log file now contains the name of the current user logged in,
+      i.e., 'glances-USERNAME.log'.
     * IRQ plugin off by default. '--disable-irq' option replaced by '--enable-irq'.
 
 Enhancements and new features:
