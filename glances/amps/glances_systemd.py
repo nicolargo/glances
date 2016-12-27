@@ -48,7 +48,7 @@ systemctl_cmd=/usr/bin/systemctl --plain
 from subprocess import check_output
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.compat import iteritems, to_ascii
 from glances.amps.glances_amp import GlancesAmp
 
 
@@ -76,7 +76,7 @@ class Amp(GlancesAmp):
         else:
             status = {}
             # For each line
-            for r in res.split('\n')[1:-8]:
+            for r in to_ascii(res).split('\n')[1:-8]:
                 # Split per space .*
                 l = r.split()
                 if len(l) > 3:
