@@ -1,5 +1,5 @@
 glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin) {
-    var _stats = [], _views = [], _limits = [];
+    var _stats = [], _views = [], _limits = [], _config = {};
 
     var _plugins = {
         'alert': 'GlancesPluginAlert',
@@ -69,6 +69,14 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         });
     };
 
+    this.getConfig = function() {
+        return $http.get('/api/2/config').then(function (response) {
+            _config = response.data;
+
+            return _config;
+        });
+    };
+
     this.getArguments = function() {
         return $http.get('/api/2/args').then(function (response) {
             return response.data;
@@ -83,7 +91,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         }
 
         plugin = $injector.get(plugin);
-        plugin.setData(_stats, _views);
+        plugin.setData(_stats, _views, _config);
 
         return plugin;
     };

@@ -13,7 +13,7 @@
         <div sortable-th sorter="sorter" column="io_write" class="table-cell hidden-xs hidden-sm" ng-show="statsProcessList.ioReadWritePresent">IOW/s</div>
         <div sortable-th sorter="sorter" column="name" class="table-cell text-left">Command</div>
     </div>
-    <div class="table-row" ng-repeat="process in statsProcessList.processes | orderBy:sorter.column:sorter.isReverseColumn(sorter.column)">
+    <div class="table-row" ng-repeat="process in statsProcessList.processes | orderBy:sorter.column:sorter.isReverseColumn(sorter.column) | limitTo: statsProcessList.getLimit()">
         <div class="table-cell" ng-class="statsProcessList.getCpuPercentAlert(process)">{{process.cpu_percent | number:1}}</div>
         <div class="table-cell" ng-class="statsProcessList.getMemoryPercentAlert(process)">{{process.memory_percent | number:1}}</div>
         <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes}}</div>
