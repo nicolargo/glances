@@ -8,6 +8,9 @@ var glancesApp = angular.module('glancesApp', ['ngRoute'])
             help: function(GlancesStats) {
                 return GlancesStats.getHelp();
             },
+            config: function(GlancesStats) {
+                return GlancesStats.getConfig();
+            },
             arguments: function(GlancesStats, $route) {
                 return GlancesStats.getArguments().then(function(arguments) {
                     var refreshTimeRoute = parseInt($route.current.params.refresh_time);
