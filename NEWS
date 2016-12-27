@@ -13,6 +13,7 @@ Changes:
 
 Enhancements and new features:
 
+    * WebUI CPU consumption optimization (issue #836) 
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
     * Add hotspot Wifi informations (issue #937)
