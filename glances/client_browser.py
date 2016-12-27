@@ -26,7 +26,7 @@ import threading
 from glances.compat import Fault, ProtocolError, ServerProxy
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.logger import logger
+from glances.logger import logger, LOG_FILENAME
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
@@ -189,7 +189,7 @@ class GlancesClientBrowser(object):
         if not client.login():
             self.screen.display_popup(
                 "Sorry, cannot connect to '{}'\n"
-                "See 'glances.log' for more details".format(server['name']))
+                "See '{}' for more details".format(server['name'], LOG_FILENAME))
 
             # Set the ONLINE status for the selected server
             self.set_in_selected('status', 'OFFLINE')
