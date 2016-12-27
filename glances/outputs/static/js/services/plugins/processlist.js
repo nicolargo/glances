@@ -1,11 +1,13 @@
 glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) {
     var _pluginName = "processlist";
-    var _ioReadWritePresent = false;
+    var _maxProcessesToDisplay = undefined;
     this.processes = [];
+    this.ioReadWritePresent = false;
 
-    this.setData = function(data, views) {
+    this.setData = function(data, views, config) {
         this.processes = [];
         this.ioReadWritePresent = false;
+        _maxProcessesToDisplay = config.outputs !== undefined ? config.outputs.max_processes_display : undefined;;
 
         for (var i = 0; i < data[_pluginName].length; i++) {
             var process = data[_pluginName][i];
@@ -50,5 +52,9 @@ glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) 
 
     this.getMemoryPercentAlert = function(process) {
         return GlancesPlugin.getAlert(_pluginName, 'processlist_mem_', process.cpu_percent);
+    };
+
+    this.getLimit = function() {
+        return _maxProcessesToDisplay;
     };
 });
