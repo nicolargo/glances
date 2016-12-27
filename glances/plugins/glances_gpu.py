@@ -83,8 +83,8 @@ class Plugin(GlancesPlugin):
 
         # !!! JUST FOR TEST
         # self.stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 30, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 70, "proc": 80, "gpu_id": 1, "name": "GeForce GTX 560 Ti"}]
+        self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
+                      {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"}]
         # !!! TO BE REMOVED
 
         if not self.nvml_ready:
@@ -144,7 +144,7 @@ class Plugin(GlancesPlugin):
             if gpu_stats['proc'] is None:
                 msg = '{:>8}'.format('N/A')
             else:
-                msg = '{:>7d}%'.format(int(gpu_stats['proc']))
+                msg = '{:>7.0f}%'.format(gpu_stats['proc'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(item=gpu_stats[self.get_key()],
                                     key='proc',
@@ -157,7 +157,7 @@ class Plugin(GlancesPlugin):
             if gpu_stats['mem'] is None:
                 msg = '{:>8}'.format('N/A')
             else:
-                msg = '{:>7d}%'.format(int(gpu_stats['mem']))
+                msg = '{:>7.0f}%'.format(gpu_stats['mem'])
             ret.append(self.curse_add_line(
                 msg, self.get_views(item=gpu_stats[self.get_key()],
                                     key='mem',
@@ -172,9 +172,9 @@ class Plugin(GlancesPlugin):
                 # New line
                 ret.append(self.curse_new_line())
                 # GPU ID + PROC + MEM
-                msg = '{}: {:>3}% mem: {:>3}%'.format(gpu_stats['gpu_id'],
-                                                      gpu_stats['proc'],
-                                                      gpu_stats['mem'],)
+                msg = '{}: {:>3.0f}% mem: {:>3.0f}%'.format(gpu_stats['gpu_id'],
+                                                            gpu_stats['proc'],
+                                                            gpu_stats['mem'],)
                 ret.append(self.curse_add_line(msg))
 
         return ret
