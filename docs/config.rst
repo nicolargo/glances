@@ -101,15 +101,12 @@ Glances logs all of its internal messages to a log file.
 ``DEBUG`` messages can been logged using the ``-d`` option on the command
 line.
 
-By default, the ``glances.log`` file is under the temporary directory:
+By default, the ``glances-USERNAME.log`` file is under the temporary directory:
 
 ===================== ==================================================
 ``Linux, *BSD, OS X`` /tmp
 ``Windows``           %APPDATA%\\Local\\temp
 ===================== ==================================================
-
-If ``glances.log`` is not writable, a new file will be created and
-returned to the user console.
 
 If you want to use another system path or change the log message, you can use
 your own logger configuration. First of all you have to create a glances.json

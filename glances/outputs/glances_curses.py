@@ -236,7 +236,7 @@ class _GlancesCurses(object):
                 self.filter_color = curses.color_pair(10) | A_BOLD
 
             self.no_color = curses.color_pair(1)
-            self.default_color = curses.color_pair(3)
+            self.default_color = curses.color_pair(3) | A_BOLD
             self.nice_color = curses.color_pair(9)
             self.cpu_time_color = curses.color_pair(9)
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
