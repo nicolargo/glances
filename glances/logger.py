@@ -20,13 +20,14 @@
 """Custom logger class."""
 
 import os
-import tempfile
 import json
+import getpass
+import tempfile
 
 import logging
 import logging.config
 
-LOG_FILENAME = os.path.join(tempfile.gettempdir(), 'glances.log')
+LOG_FILENAME = os.path.join(tempfile.gettempdir(), 'glances-{}.log'.format(getpass.getuser()))
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -51,7 +52,8 @@ LOGGING_CFG = {
         "file": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "standard"
+            "formatter": "standard",
+            "filename": LOG_FILENAME
         },
         "console": {
             "level": "CRITICAL",
@@ -88,17 +90,6 @@ LOGGING_CFG = {
 }
 
 
-def tempfile_name():
-    """Return the tempfile name (full path)."""
-    if os.access(LOG_FILENAME, os.F_OK) and not os.access(LOG_FILENAME, os.W_OK):
-        print("WARNING: Couldn't write to '{}' (Permission denied)".format(LOG_FILENAME))
-        ret = tempfile.mkstemp(prefix='glances-', suffix='.log', text=True)
-        print("Create log file at '{}'".format(ret[1]))
-        return ret[1]
-
-    return LOG_FILENAME
-
-
 def glances_logger(env_key='LOG_CFG'):
     """Build and return the logger.
 
@@ -108,9 +99,6 @@ def glances_logger(env_key='LOG_CFG'):
     :return: logger -- Logger instance
     """
     _logger = logging.getLogger()
-
-    # Overwrite the default logger file
-    LOGGING_CFG['handlers']['file']['filename'] = tempfile_name()
 
     # By default, use the LOGGING_CFG logger configuration
     config = LOGGING_CFG
