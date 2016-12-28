@@ -67,6 +67,41 @@ class GlancesExport(object):
                 'docker',
                 'uptime']
 
+    def load_conf(self, section, mandatories=['host', 'port'], options=[]):
+        """Load the export <section> configuration in the Glances configuration file.
+
+        :param section: name of the export section to load
+        :param mandatories: a list of mandatories parameters to load
+        :param options: a list of optionnals parameters to load
+
+        :returns: Boolean -- True if section is found
+        """
+        if self.config is None:
+            return False
+
+        # By default read the mandatory host:port items
+        try:
+            for opt in mandatories:
+                setattr(self, opt, self.config.get_value(section, opt))
+        except NoSectionError:
+            logger.critical("No {} configuration found".format(section))
+            return False
+        except NoOptionError as e:
+            logger.critical("Error in the {} configuration ({})".format(section, e))
+            return False
+
+        # Load options
+        for opt in options:
+            try:
+                setattr(self, opt, self.config.get_value(section, opt))
+            except NoOptionError:
+                pass
+
+        logger.debug("Load {} from the Glances configuration file".format(section))
+        logger.debug("{} parameters: {}".format(section, {opt:getattr(self, opt) for opt in mandatories + options}))
+
+        return True
+
     def get_item_key(self, item):
         """Return the value of the item 'key'."""
         try:

@@ -47,45 +47,16 @@ class Export(GlancesExport):
         self.keyspace = None
         self.replication_factor = 2
         self.table = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('cassandra',
+                                            mandatories=['host', 'port', 'keyspace'],
+                                            options=['protocol_version',
+                                                     'replication_factor',
+                                                     'table'])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the Cassandra client
         self.cluster, self.session = self.init()
-
-    def load_conf(self, section="cassandra"):
-        """Load the Cassandra configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-            self.keyspace = self.config.get_value(section, 'keyspace')
-        except NoSectionError:
-            logger.critical("No Cassandra configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the Cassandra configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load Cassandra from the Glances configuration file")
-
-        # Optionals keys
-        try:
-            self.protocol_version = self.config.get_value(section, 'protocol_version')
-        except NoOptionError:
-            pass
-        try:
-            self.replication_factor = self.config.get_value(section, 'replication_factor')
-        except NoOptionError:
-            pass
-        try:
-            self.table = self.config.get_value(section, 'table')
-        except NoOptionError:
-            self.table = self.host
-
-        return True
 
     def init(self):
         """Init the connection to the InfluxDB server."""

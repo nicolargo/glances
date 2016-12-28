@@ -44,38 +44,14 @@ class Export(GlancesExport):
         self.user = None
         self.password = None
         self.db = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('couchdb',
+                                            mandatories=['host', 'port', 'db'],
+                                            options=['user', 'password'])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the CouchDB client
         self.client = self.init()
-
-    def load_conf(self, section="couchdb"):
-        """Load the CouchDB configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-            self.db = self.config.get_value(section, 'db')
-        except NoSectionError:
-            logger.critical("No CouchDB configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the CouchDB configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load CouchDB from the Glances configuration file")
-
-        # user and password are optional
-        try:
-            self.user = self.config.get_value(section, 'user')
-            self.password = self.config.get_value(section, 'password')
-        except NoOptionError:
-            pass
-
-        return True
 
     def init(self):
         """Init the connection to the CouchDB server."""
