@@ -472,6 +472,9 @@ class _GlancesCurses(object):
             if p in ['network', 'wifi', 'irq', 'fs', 'folders']:
                 ret[p] = stats.get_plugin(p).get_stats_display(
                     args=self.args, max_width=plugin_max_width)
+            elif p in ['quicklook']:
+                # Grab later because we need plugin size
+                continue
             else:
                 # system, uptime, cpu, percpu, gpu, load, mem, memswap, ip,
                 # ... diskio, raid, sensors, ports, now, docker, processcount,
@@ -501,10 +504,6 @@ class _GlancesCurses(object):
         # Init the internal line/column for Glances Curses
         self.init_line_column()
 
-        # Get the screen size
-        screen_x = self.screen.getmaxyx()[1]
-        screen_y = self.screen.getmaxyx()[0]
-
         # No processes list in SNMP mode
         if cs_status == 'SNMP':
             # so... more space for others plugins
@@ -520,7 +519,7 @@ class _GlancesCurses(object):
         __stat_display = self.__get_stat_display(stats, plugin_max_width)
 
         # Adapt number of processes to the available space
-        max_processes_displayed = screen_y - 11 - \
+        max_processes_displayed = self.screen.getmaxyx()[0] - 11 - \
             self.get_stats_display_height(__stat_display["alert"]) - \
             self.get_stats_display_height(__stat_display["docker"])
         try:
@@ -549,181 +548,25 @@ class _GlancesCurses(object):
             # ... and exit
             return False
 
-        # ==================================
-        # Display first line (system+uptime)
-        # ==================================
-        # Space between column
-        self.space_between_column = 0
-        self.new_line()
-        l_uptime = self.get_stats_display_width(__stat_display["system"]) \
-            + self.space_between_column \
-            + self.get_stats_display_width(__stat_display["ip"]) + 3 \
-            + self.get_stats_display_width(__stat_display["uptime"])
-        self.display_plugin(
-            __stat_display["system"],
-            display_optional=(screen_x >= l_uptime))
-        self.new_column()
-        self.display_plugin(__stat_display["ip"])
-        # Space between column
-        self.space_between_column = 3
-        self.new_column()
-        self.display_plugin(__stat_display["uptime"])
+        # =====================================
+        # Display first line (system+ip+uptime)
+        # =====================================
+        self.__display_firstline(__stat_display)
 
         # ==============================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+<GPU>+LOAD+MEM+SWAP)
         # ==============================================================
-        self.init_column()
-        self.new_line()
-
-        # Init quicklook
-        __stat_display["quicklook"] = {'msgdict': []}
-        quicklook_width = 0
-
-        # Get stats for CPU, MEM, SWAP and LOAD (if needed)
-        if self.args.disable_cpu:
-            cpu_width = 0
-        else:
-            cpu_width = self.get_stats_display_width(__stat_display["cpu"])
-        if self.args.disable_gpu:
-            gpu_width = 0
-        else:
-            gpu_width = self.get_stats_display_width(__stat_display["gpu"])
-        if self.args.disable_mem:
-            mem_width = 0
-        else:
-            mem_width = self.get_stats_display_width(__stat_display["mem"])
-        if self.args.disable_memswap:
-            swap_width = 0
-        else:
-            swap_width = self.get_stats_display_width(__stat_display["memswap"])
-        if self.args.disable_load:
-            load_width = 0
-        else:
-            load_width = self.get_stats_display_width(__stat_display["load"])
-
-        # Size of plugins but quicklook
-        stats_width = cpu_width + gpu_width + mem_width + swap_width + load_width
-
-        # Number of plugin but quicklook
-        stats_number = (
-            int(not self.args.disable_cpu and __stat_display["cpu"]['msgdict'] != []) +
-            int(not self.args.disable_gpu and __stat_display["gpu"]['msgdict'] != []) +
-            int(not self.args.disable_mem and __stat_display["mem"]['msgdict'] != []) +
-            int(not self.args.disable_memswap and __stat_display["memswap"]['msgdict'] != []) +
-            int(not self.args.disable_load and __stat_display["load"]['msgdict'] != []))
-
-        if not self.args.disable_quicklook:
-            # Quick look is in the place !
-            if self.args.full_quicklook:
-                quicklook_width = screen_x - (stats_width + 8 + stats_number * self.space_between_column)
-            else:
-                quicklook_width = min(screen_x - (stats_width + 8 + stats_number * self.space_between_column), 79)
-            try:
-                __stat_display["quicklook"] = stats.get_plugin(
-                    'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
-            except AttributeError as e:
-                logger.debug("Quicklook plugin not available (%s)" % e)
-            else:
-                quicklook_width = self.get_stats_display_width(__stat_display["quicklook"])
-                stats_width += quicklook_width + 1
-            self.space_between_column = 1
-            self.display_plugin(__stat_display["quicklook"])
-            self.new_column()
-
-        # Compute spaces between plugins
-        # Note: Only one space between Quicklook and others
-        display_optional_cpu = True
-        display_optional_mem = True
-        if stats_number > 1:
-            self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
-            # No space ? Remove optionnal MEM stats
-            if self.space_between_column < 3:
-                display_optional_mem = False
-                if self.args.disable_mem:
-                    mem_width = 0
-                else:
-                    mem_width = self.get_stats_display_width(__stat_display["mem"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
-                self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
-            # No space again ? Remove optionnal CPU stats
-            if self.space_between_column < 3:
-                display_optional_cpu = False
-                if self.args.disable_cpu:
-                    cpu_width = 0
-                else:
-                    cpu_width = self.get_stats_display_width(__stat_display["cpu"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
-                self.space_between_column = max(1, int((screen_x - stats_width) / (stats_number - 1)))
-        else:
-            self.space_between_column = 0
-
-        # Display CPU, MEM, SWAP and LOAD
-        self.display_plugin(__stat_display["cpu"], display_optional=display_optional_cpu)
-        self.new_column()
-        self.display_plugin(__stat_display["gpu"])
-        self.new_column()
-        self.display_plugin(__stat_display["mem"], display_optional=display_optional_mem)
-        self.new_column()
-        self.display_plugin(__stat_display["memswap"])
-        self.new_column()
-        self.display_plugin(__stat_display["load"])
-
-        # Space between column
-        self.space_between_column = 3
-
-        # Backup line position
-        self.saved_line = self.next_line
+        self.__display_secondline(__stat_display, stats)
 
         # ==================================================================
         # Display left sidebar (NETWORK+PORTS+DISKIO+FS+SENSORS+Current time)
         # ==================================================================
-        self.init_column()
-        if not (self.args.disable_network and
-                self.args.disable_wifi and
-                self.args.disable_ports and
-                self.args.disable_diskio and
-                self.args.disable_fs and
-                self.args.enable_irq and
-                self.args.disable_folders and
-                self.args.disable_raid and
-                self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            for s in (__stat_display["network"],
-                      __stat_display["wifi"],
-                      __stat_display["ports"],
-                      __stat_display["diskio"],
-                      __stat_display["fs"],
-                      __stat_display["irq"],
-                      __stat_display["folders"],
-                      __stat_display["raid"],
-                      __stat_display["sensors"],
-                      __stat_display["now"]):
-                self.new_line()
-                self.display_plugin(s)
+        self.__display_left(__stat_display)
 
         # ====================================
         # Display right stats (process and co)
         # ====================================
-        # If space available...
-        if screen_x > 52:
-            # Restore line position
-            self.next_line = self.saved_line
-
-            # Display right sidebar
-            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
-            self.new_column()
-            self.new_line()
-            self.display_plugin(__stat_display["docker"])
-            self.new_line()
-            self.display_plugin(__stat_display["processcount"])
-            self.new_line()
-            self.display_plugin(__stat_display["amps"])
-            self.new_line()
-            self.display_plugin(__stat_display["processlist"],
-                                display_optional=(screen_x > 102),
-                                display_additional=(not OSX),
-                                max_y=(screen_y - self.get_stats_display_height(__stat_display["alert"]) - 2))
-            self.new_line()
-            self.display_plugin(__stat_display["alert"])
+        self.__display_right(__stat_display)
 
         # History option
         # Generate history graph
@@ -769,6 +612,190 @@ class _GlancesCurses(object):
         self.edit_filter = False
 
         return True
+
+    def __display_firstline(self, stat_display):
+        """Display the first line in the Curses interface.
+
+        system + ip + uptime
+        """
+        # Space between column
+        self.space_between_column = 0
+        self.new_line()
+        l_uptime = self.get_stats_display_width(stat_display["system"]) \
+            + self.space_between_column \
+            + self.get_stats_display_width(stat_display["ip"]) + 3 \
+            + self.get_stats_display_width(stat_display["uptime"])
+        self.display_plugin(
+            stat_display["system"],
+            display_optional=(self.screen.getmaxyx()[1] >= l_uptime))
+        self.new_column()
+        self.display_plugin(stat_display["ip"])
+        # Space between column
+        self.space_between_column = 3
+        self.new_column()
+        self.display_plugin(stat_display["uptime"])
+
+    def __display_secondline(self, stat_display, stats):
+        """Display the second line in the Curses interface.
+
+        <QUICKLOOK> + CPU|PERCPU + <GPU> + MEM + SWAP + LOAD
+        """
+        self.init_column()
+        self.new_line()
+
+        # Init quicklook
+        stat_display["quicklook"] = {'msgdict': []}
+        quicklook_width = 0
+
+        # Get stats for CPU, MEM, SWAP and LOAD (if needed)
+        if self.args.disable_cpu:
+            cpu_width = 0
+        else:
+            cpu_width = self.get_stats_display_width(stat_display["cpu"])
+        if self.args.disable_gpu:
+            gpu_width = 0
+        else:
+            gpu_width = self.get_stats_display_width(stat_display["gpu"])
+        if self.args.disable_mem:
+            mem_width = 0
+        else:
+            mem_width = self.get_stats_display_width(stat_display["mem"])
+        if self.args.disable_memswap:
+            swap_width = 0
+        else:
+            swap_width = self.get_stats_display_width(stat_display["memswap"])
+        if self.args.disable_load:
+            load_width = 0
+        else:
+            load_width = self.get_stats_display_width(stat_display["load"])
+
+        # Size of plugins but quicklook
+        stats_width = cpu_width + gpu_width + mem_width + swap_width + load_width
+
+        # Number of plugin but quicklook
+        stats_number = (
+            int(not self.args.disable_cpu and stat_display["cpu"]['msgdict'] != []) +
+            int(not self.args.disable_gpu and stat_display["gpu"]['msgdict'] != []) +
+            int(not self.args.disable_mem and stat_display["mem"]['msgdict'] != []) +
+            int(not self.args.disable_memswap and stat_display["memswap"]['msgdict'] != []) +
+            int(not self.args.disable_load and stat_display["load"]['msgdict'] != []))
+
+        if not self.args.disable_quicklook:
+            # Quick look is in the place !
+            if self.args.full_quicklook:
+                quicklook_width = self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
+            else:
+                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column), 79)
+            try:
+                stat_display["quicklook"] = stats.get_plugin(
+                    'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
+            except AttributeError as e:
+                logger.debug("Quicklook plugin not available (%s)" % e)
+            else:
+                quicklook_width = self.get_stats_display_width(stat_display["quicklook"])
+                stats_width += quicklook_width + 1
+            self.space_between_column = 1
+            self.display_plugin(stat_display["quicklook"])
+            self.new_column()
+
+        # Compute spaces between plugins
+        # Note: Only one space between Quicklook and others
+        display_optional_cpu = True
+        display_optional_mem = True
+        if stats_number > 1:
+            self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+            # No space ? Remove optionnal MEM stats
+            if self.space_between_column < 3:
+                display_optional_mem = False
+                if self.args.disable_mem:
+                    mem_width = 0
+                else:
+                    mem_width = self.get_stats_display_width(stat_display["mem"], without_option=True)
+                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
+                self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+            # No space again ? Remove optionnal CPU stats
+            if self.space_between_column < 3:
+                display_optional_cpu = False
+                if self.args.disable_cpu:
+                    cpu_width = 0
+                else:
+                    cpu_width = self.get_stats_display_width(stat_display["cpu"], without_option=True)
+                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
+                self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+        else:
+            self.space_between_column = 0
+
+        # Display CPU, MEM, SWAP and LOAD
+        self.display_plugin(stat_display["cpu"], display_optional=display_optional_cpu)
+        self.new_column()
+        self.display_plugin(stat_display["gpu"])
+        self.new_column()
+        self.display_plugin(stat_display["mem"], display_optional=display_optional_mem)
+        self.new_column()
+        self.display_plugin(stat_display["memswap"])
+        self.new_column()
+        self.display_plugin(stat_display["load"])
+
+        # Space between column
+        self.space_between_column = 3
+
+        # Backup line position
+        self.saved_line = self.next_line
+
+    def __display_left(self, stat_display):
+        """Display the left sidebar in the Curses interface.
+
+        network+wifi+ports+diskio+fs+irq+folders+raid+sensors+now
+        """
+        self.init_column()
+        if not (self.args.disable_network and
+                self.args.disable_wifi and
+                self.args.disable_ports and
+                self.args.disable_diskio and
+                self.args.disable_fs and
+                self.args.enable_irq and
+                self.args.disable_folders and
+                self.args.disable_raid and
+                self.args.disable_sensors) and not self.args.disable_left_sidebar:
+            for s in (stat_display["network"],
+                      stat_display["wifi"],
+                      stat_display["ports"],
+                      stat_display["diskio"],
+                      stat_display["fs"],
+                      stat_display["irq"],
+                      stat_display["folders"],
+                      stat_display["raid"],
+                      stat_display["sensors"],
+                      stat_display["now"]):
+                self.new_line()
+                self.display_plugin(s)
+
+    def __display_right(self, stat_display):
+        """Display the right sidebar in the Curses interface.
+
+        docker + processcount + amps + processlist + alert
+        """
+        # If space available...
+        if self.screen.getmaxyx()[1] > 52:
+            # Restore line position
+            self.next_line = self.saved_line
+
+            # Display right sidebar
+            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
+            self.new_column()
+            self.new_line()
+            self.display_plugin(stat_display["docker"])
+            self.new_line()
+            self.display_plugin(stat_display["processcount"])
+            self.new_line()
+            self.display_plugin(stat_display["amps"])
+            self.new_line()
+            self.display_plugin(stat_display["processlist"],
+                                display_optional=(self.screen.getmaxyx()[1] > 102),
+                                display_additional=(not OSX),
+                                max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display["alert"]) - 2))
+            self.new_line()
+            self.display_plugin(stat_display["alert"])
 
     def display_popup(self, message,
                       size_x=None, size_y=None,
