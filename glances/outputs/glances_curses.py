@@ -687,24 +687,13 @@ class _GlancesCurses(object):
             plugin_display_optional[p] = True
         if stats_number > 1:
             self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
-            # No space ? Remove optionnal MEM stats
-            if self.space_between_column < 3:
-                plugin_display_optional['mem'] = False
-                if self.args.disable_mem:
-                    plugin_widths['mem'] = 0
-                else:
-                    plugin_widths['mem'] = self.get_stats_display_width(stat_display["mem"], without_option=True)
-                stats_width = sum(itervalues(plugin_widths)) + 1
-                self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
-            # No space again ? Remove optionnal CPU stats
-            if self.space_between_column < 3:
-                plugin_display_optional['cpu'] = False
-                if self.args.disable_cpu:
-                    plugin_widths['cpu'] = 0
-                else:
-                    plugin_widths['cpu'] = self.get_stats_display_width(stat_display["cpu"], without_option=True)
-                stats_width = sum(itervalues(plugin_widths)) + 1
-                self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+            for p in ['mem', 'cpu']:
+                # No space ? Remove optional stats
+                if self.space_between_column < 3:
+                    plugin_display_optional[p] = False
+                    plugin_widths[p] = self.get_stats_display_width(stat_display[p], without_option=True) if hasattr(self.args, 'disable_' + p) else 0
+                    stats_width = sum(itervalues(plugin_widths)) + 1
+                    self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
         else:
             self.space_between_column = 0
 
