@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -41,31 +41,14 @@ class Export(GlancesExport):
         self.host = None
         self.port = None
         self.index = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('elasticsearch',
+                                            mandatories=['host', 'port', 'index'],
+                                            options=[])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the ES client
         self.client = self.init()
-
-    def load_conf(self, section="elasticsearch"):
-        """Load the ES configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-            self.index = self.config.get_value(section, 'index')
-        except NoSectionError:
-            logger.critical("No ElasticSearch configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the ElasticSearch configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load ElasticSearch from the Glances configuration file")
-
-        return True
 
     def init(self):
         """Init the connection to the ES server."""

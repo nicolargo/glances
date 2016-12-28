@@ -43,29 +43,14 @@ class Export(GlancesExport):
         self.riemann_host = None
         self.riemann_port = None
         self.hostname = socket.gethostname()
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('riemann',
+                                            mandatories=['host', 'port'],
+                                            options=[])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the Riemann client
         self.client = self.init()
-
-    def load_conf(self, section="riemann"):
-        """Load the Riemann configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.riemann_host = self.config.get_value(section, 'host')
-            self.riemann_port = int(self.config.get_value(section, 'port'))
-        except NoSectionError:
-            logger.critical("No riemann configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the Riemann configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load Riemann from the Glances configuration file")
-        return True
 
     def init(self):
         """Init the connection to the Riemann server."""

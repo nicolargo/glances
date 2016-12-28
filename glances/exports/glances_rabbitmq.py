@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -47,32 +47,16 @@ class Export(GlancesExport):
         self.rabbitmq_password = None
         self.rabbitmq_queue = None
         self.hostname = socket.gethostname()
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('rabbitmq',
+                                            mandatories=['host', 'port',
+                                                         'user', 'password',
+                                                         'queue'],
+                                            options=[])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the rabbitmq client
         self.client = self.init()
-
-    def load_conf(self, section="rabbitmq"):
-        """Load the rabbitmq configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.rabbitmq_host = self.config.get_value(section, 'host')
-            self.rabbitmq_port = self.config.get_value(section, 'port')
-            self.rabbitmq_user = self.config.get_value(section, 'user')
-            self.rabbitmq_password = self.config.get_value(section, 'password')
-            self.rabbitmq_queue = self.config.get_value(section, 'queue')
-        except NoSectionError:
-            logger.critical("No rabbitmq configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the RabbitM configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load RabbitMQ from the Glances configuration file")
-        return True
 
     def init(self):
         """Init the connection to the rabbitmq server."""

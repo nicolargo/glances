@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -41,7 +41,9 @@ class Export(GlancesExport):
         self.host = None
         self.port = None
         self.prefix = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('statsd',
+                                            mandatories=['host', 'port'],
+                                            options=['prefix'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -50,38 +52,14 @@ class Export(GlancesExport):
             self.prefix = 'glances'
 
         # Init the Statsd client
-        self.client = StatsClient(self.host,
-                                  int(self.port),
-                                  prefix=self.prefix)
-
-    def load_conf(self, section="statsd"):
-        """Load the Statsd configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-        except NoSectionError:
-            logger.critical("No Statsd configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the Statsd configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load Statsd from the Glances configuration file")
-        # Prefix is optional
-        try:
-            self.prefix = self.config.get_value(section, 'prefix')
-        except NoOptionError:
-            pass
-        return True
+        self.client = self.init()
 
     def init(self, prefix='glances'):
         """Init the connection to the Statsd server."""
         if not self.export_enable:
             return None
         return StatsClient(self.host,
-                           self.port,
+                           int(self.port),
                            prefix=prefix)
 
     def export(self, name, columns, points):

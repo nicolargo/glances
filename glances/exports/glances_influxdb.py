@@ -51,45 +51,16 @@ class Export(GlancesExport):
         self.db = None
         self.prefix = None
         self.tags = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('influxdb',
+                                            mandatories=['host', 'port',
+                                                         'user', 'password',
+                                                         'db'],
+                                            options=['prefix', 'tags'])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the InfluxDB client
         self.client = self.init()
-
-    def load_conf(self, section="influxdb"):
-        """Load the InfluxDb configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-            self.user = self.config.get_value(section, 'user')
-            self.password = self.config.get_value(section, 'password')
-            self.db = self.config.get_value(section, 'db')
-        except NoSectionError:
-            logger.critical("No InfluxDB configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the InfluxDB configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load InfluxDB from the Glances configuration file")
-
-        # Prefix is optional
-        try:
-            self.prefix = self.config.get_value(section, 'prefix')
-        except NoOptionError:
-            pass
-
-        # Tags are optional, comma separated key:value pairs.
-        try:
-            self.tags = self.config.get_value(section, 'tags')
-        except NoOptionError:
-            pass
-
-        return True
 
     def init(self):
         """Init the connection to the InfluxDB server."""

@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -42,7 +42,9 @@ class Export(GlancesExport):
         self.port = None
         self.prefix = None
         self.tags = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('opentsdb',
+                                            mandatories=['host', 'port'],
+                                            options=['prefix', 'tags'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -52,36 +54,6 @@ class Export(GlancesExport):
 
         # Init the OpenTSDB client
         self.client = self.init()
-
-    def load_conf(self, section="opentsdb"):
-        """Load the OpenTSDB configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-        except NoSectionError:
-            logger.critical("No OpenTSDB configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the OpenTSDB configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load OpenTSDB from the Glances configuration file")
-
-        # Prefix is optional
-        try:
-            self.prefix = self.config.get_value(section, 'prefix')
-        except NoOptionError:
-            pass
-
-        # Tags are optional, comma separated key:value pairs.
-        try:
-            self.tags = self.config.get_value(section, 'tags')
-        except NoOptionError:
-            pass
-
-        return True
 
     def init(self):
         """Init the connection to the OpenTSDB server."""

@@ -40,32 +40,15 @@ class Export(GlancesExport):
         # Load the ZeroMQ configuration file section ([export_zeromq])
         self.host = None
         self.port = None
-        self.export_enable = self.load_conf()
+        self.export_enable = self.load_conf('zeromq',
+                                            mandatories=['host', 'port', 'prefix'],
+                                            options=[])
         if not self.export_enable:
             sys.exit(2)
 
         # Init the ZeroMQ context
         self.context = None
         self.client = self.init()
-
-    def load_conf(self, section="zeromq"):
-        """Load the ZeroMQ configuration in the Glances configuration file."""
-        if self.config is None:
-            return False
-        try:
-            self.host = self.config.get_value(section, 'host')
-            self.port = self.config.get_value(section, 'port')
-            self.prefix = str(self.config.get_value(section, 'prefix'))
-        except NoSectionError:
-            logger.critical("No ZeroMQ configuration found")
-            return False
-        except NoOptionError as e:
-            logger.critical("Error in the ZeroMQ configuration (%s)" % e)
-            return False
-        else:
-            logger.debug("Load ZeroMQ from the Glances configuration file")
-
-        return True
 
     def init(self):
         """Init the connection to the CouchDB server."""
