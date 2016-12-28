@@ -438,17 +438,17 @@ class _GlancesCurses(object):
         curses.endwin()
 
     def init_line_column(self):
-        """Init the line and column position for the curses inteface."""
+        """Init the line and column position for the curses interface."""
         self.init_line()
         self.init_column()
 
     def init_line(self):
-        """Init the line position for the curses inteface."""
+        """Init the line position for the curses interface."""
         self.line = 0
         self.next_line = 0
 
     def init_column(self):
-        """Init the column position for the curses inteface."""
+        """Init the column position for the curses interface."""
         self.column = 0
         self.next_column = 0
 
@@ -461,49 +461,27 @@ class _GlancesCurses(object):
         self.column = self.next_column
 
     def __get_stat_display(self, stats, plugin_max_width):
+        """Return a dict of dict with all the stats display
+        * key: plugin name
+        * value: dict returned by the get_stats_display Plugin method
+
+        :returns: dict of dict
+        """
         ret = {}
-        ret["system"] = stats.get_plugin(
-            'system').get_stats_display(args=self.args)
-        ret["uptime"] = stats.get_plugin('uptime').get_stats_display()
+        for p in stats.getAllPlugins():
+            if p in ['network', 'wifi', 'irq', 'fs', 'folders']:
+                ret[p] = stats.get_plugin(p).get_stats_display(
+                    args=self.args, max_width=plugin_max_width)
+            else:
+                # system, uptime, cpu, percpu, gpu, load, mem, memswap, ip,
+                # ... diskio, raid, sensors, ports, now, docker, processcount,
+                # ... amps, alert
+                try:
+                    ret[p] = stats.get_plugin(p).get_stats_display(args=self.args)
+                except AttributeError:
+                    ret[p] = None
         if self.args.percpu:
-            ret["cpu"] = stats.get_plugin('percpu').get_stats_display(args=self.args)
-        else:
-            ret["cpu"] = stats.get_plugin('cpu').get_stats_display(args=self.args)
-        ret["gpu"] = stats.get_plugin('gpu').get_stats_display(args=self.args)
-        ret["load"] = stats.get_plugin('load').get_stats_display(args=self.args)
-        ret["mem"] = stats.get_plugin('mem').get_stats_display(args=self.args)
-        ret["memswap"] = stats.get_plugin('memswap').get_stats_display(args=self.args)
-        ret["network"] = stats.get_plugin('network').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        ret["wifi"] = stats.get_plugin('wifi').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        ret["irq"] = stats.get_plugin('irq').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        try:
-            ret["ip"] = stats.get_plugin('ip').get_stats_display(args=self.args)
-        except AttributeError:
-            ret["ip"] = None
-        ret["diskio"] = stats.get_plugin(
-            'diskio').get_stats_display(args=self.args)
-        ret["fs"] = stats.get_plugin('fs').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        ret["folders"] = stats.get_plugin('folders').get_stats_display(
-            args=self.args, max_width=plugin_max_width)
-        ret["raid"] = stats.get_plugin('raid').get_stats_display(
-            args=self.args)
-        ret["sensors"] = stats.get_plugin(
-            'sensors').get_stats_display(args=self.args)
-        ret["ports"] = stats.get_plugin(
-            'ports').get_stats_display(args=self.args)
-        ret["now"] = stats.get_plugin('now').get_stats_display()
-        ret["docker"] = stats.get_plugin('docker').get_stats_display(
-            args=self.args)
-        ret["processcount"] = stats.get_plugin(
-            'processcount').get_stats_display(args=self.args)
-        ret["amps"] = stats.get_plugin(
-            'amps').get_stats_display(args=self.args)
-        ret["alert"] = stats.get_plugin(
-            'alert').get_stats_display(args=self.args)
+            ret['cpu'] = ret['percpu']
         return ret
 
     def display(self, stats, cs_status=None):
