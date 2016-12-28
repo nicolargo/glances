@@ -22,7 +22,7 @@
 import re
 import sys
 
-from glances.compat import u
+from glances.compat import u, itervalues
 from glances.globals import OSX, WINDOWS
 from glances.logger import logger
 from glances.logs import glances_logs
@@ -644,33 +644,15 @@ class _GlancesCurses(object):
         self.new_line()
 
         # Init quicklook
-        stat_display["quicklook"] = {'msgdict': []}
-        quicklook_width = 0
+        stat_display['quicklook'] = {'msgdict': []}
 
-        # Get stats for CPU, MEM, SWAP and LOAD (if needed)
-        if self.args.disable_cpu:
-            cpu_width = 0
-        else:
-            cpu_width = self.get_stats_display_width(stat_display["cpu"])
-        if self.args.disable_gpu:
-            gpu_width = 0
-        else:
-            gpu_width = self.get_stats_display_width(stat_display["gpu"])
-        if self.args.disable_mem:
-            mem_width = 0
-        else:
-            mem_width = self.get_stats_display_width(stat_display["mem"])
-        if self.args.disable_memswap:
-            swap_width = 0
-        else:
-            swap_width = self.get_stats_display_width(stat_display["memswap"])
-        if self.args.disable_load:
-            load_width = 0
-        else:
-            load_width = self.get_stats_display_width(stat_display["load"])
+        # Dict for plugins width
+        plugin_widths = {'quicklook': 0}
+        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
+            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) else 0
 
-        # Size of plugins but quicklook
-        stats_width = cpu_width + gpu_width + mem_width + swap_width + load_width
+        # Width of all plugins
+        stats_width = sum(itervalues(plugin_widths))
 
         # Number of plugin but quicklook
         stats_number = (
@@ -692,49 +674,46 @@ class _GlancesCurses(object):
             except AttributeError as e:
                 logger.debug("Quicklook plugin not available (%s)" % e)
             else:
-                quicklook_width = self.get_stats_display_width(stat_display["quicklook"])
-                stats_width += quicklook_width + 1
+                plugin_widths['quicklook'] = self.get_stats_display_width(stat_display["quicklook"])
+                stats_width = sum(itervalues(plugin_widths)) + 1
             self.space_between_column = 1
             self.display_plugin(stat_display["quicklook"])
             self.new_column()
 
         # Compute spaces between plugins
         # Note: Only one space between Quicklook and others
-        display_optional_cpu = True
-        display_optional_mem = True
+        plugin_display_optional = {}
+        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
+            plugin_display_optional[p] = True
         if stats_number > 1:
             self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
             # No space ? Remove optionnal MEM stats
             if self.space_between_column < 3:
-                display_optional_mem = False
+                plugin_display_optional['mem'] = False
                 if self.args.disable_mem:
-                    mem_width = 0
+                    plugin_widths['mem'] = 0
                 else:
-                    mem_width = self.get_stats_display_width(stat_display["mem"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
+                    plugin_widths['mem'] = self.get_stats_display_width(stat_display["mem"], without_option=True)
+                stats_width = sum(itervalues(plugin_widths)) + 1
                 self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
             # No space again ? Remove optionnal CPU stats
             if self.space_between_column < 3:
-                display_optional_cpu = False
+                plugin_display_optional['cpu'] = False
                 if self.args.disable_cpu:
-                    cpu_width = 0
+                    plugin_widths['cpu'] = 0
                 else:
-                    cpu_width = self.get_stats_display_width(stat_display["cpu"], without_option=True)
-                stats_width = quicklook_width + 1 + cpu_width + gpu_width + mem_width + swap_width + load_width
+                    plugin_widths['cpu'] = self.get_stats_display_width(stat_display["cpu"], without_option=True)
+                stats_width = sum(itervalues(plugin_widths)) + 1
                 self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
         else:
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        self.display_plugin(stat_display["cpu"], display_optional=display_optional_cpu)
-        self.new_column()
-        self.display_plugin(stat_display["gpu"])
-        self.new_column()
-        self.display_plugin(stat_display["mem"], display_optional=display_optional_mem)
-        self.new_column()
-        self.display_plugin(stat_display["memswap"])
-        self.new_column()
-        self.display_plugin(stat_display["load"])
+        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
+            self.display_plugin(stat_display[p], display_optional=plugin_display_optional[p])
+            if p is not 'load':
+                # Skip last column
+                self.new_column()
 
         # Space between column
         self.space_between_column = 3
