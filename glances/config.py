@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2015 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2016 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -104,108 +104,75 @@ class Config(object):
         # Quicklook
         if not self.parser.has_section('quicklook'):
             self.parser.add_section('quicklook')
-        self.set_default('quicklook', 'cpu_careful', '50')
-        self.set_default('quicklook', 'cpu_warning', '70')
-        self.set_default('quicklook', 'cpu_critical', '90')
-        self.set_default('quicklook', 'mem_careful', '50')
-        self.set_default('quicklook', 'mem_warning', '70')
-        self.set_default('quicklook', 'mem_critical', '90')
-        self.set_default('quicklook', 'swap_careful', '50')
-        self.set_default('quicklook', 'swap_warning', '70')
-        self.set_default('quicklook', 'swap_critical', '90')
+        self.set_default_cwc('quicklook', 'cpu')
+        self.set_default_cwc('quicklook', 'mem')
+        self.set_default_cwc('quicklook', 'swap')
 
         # CPU
         if not self.parser.has_section('cpu'):
             self.parser.add_section('cpu')
-        self.set_default('cpu', 'user_careful', '50')
-        self.set_default('cpu', 'user_warning', '70')
-        self.set_default('cpu', 'user_critical', '90')
-        self.set_default('cpu', 'system_careful', '50')
-        self.set_default('cpu', 'system_warning', '70')
-        self.set_default('cpu', 'system_critical', '90')
-        self.set_default('cpu', 'steal_careful', '50')
-        self.set_default('cpu', 'steal_warning', '70')
-        self.set_default('cpu', 'steal_critical', '90')
+        self.set_default_cwc('cpu', 'user')
+        self.set_default_cwc('cpu', 'system')
+        self.set_default_cwc('cpu', 'steal')
         # By default I/O wait should be lower than 1/number of CPU cores
         iowait_bottleneck = (1.0 / multiprocessing.cpu_count()) * 100.0
-        self.set_default('cpu', 'iowait_careful', str(iowait_bottleneck - (iowait_bottleneck * 0.20)))
-        self.set_default('cpu', 'iowait_warning', str(iowait_bottleneck - (iowait_bottleneck * 0.10)))
-        self.set_default('cpu', 'iowait_critical', str(iowait_bottleneck))
+        self.set_default_cwc('cpu', 'iowait',
+                             [str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
+                              str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
+                              str(iowait_bottleneck)])
         ctx_switches_bottleneck = 56000 / multiprocessing.cpu_count()
-        self.set_default('cpu', 'ctx_switches_careful', str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)))
-        self.set_default('cpu', 'ctx_switches_warning', str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)))
-        self.set_default('cpu', 'ctx_switches_critical', str(ctx_switches_bottleneck))
+        self.set_default_cwc('cpu', 'ctx_switches',
+                             [str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)),
+                              str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)),
+                              str(ctx_switches_bottleneck)])
 
         # Per-CPU
         if not self.parser.has_section('percpu'):
             self.parser.add_section('percpu')
-        self.set_default('percpu', 'user_careful', '50')
-        self.set_default('percpu', 'user_warning', '70')
-        self.set_default('percpu', 'user_critical', '90')
-        self.set_default('percpu', 'system_careful', '50')
-        self.set_default('percpu', 'system_warning', '70')
-        self.set_default('percpu', 'system_critical', '90')
+        self.set_default_cwc('percpu', 'user')
+        self.set_default_cwc('percpu', 'system')
 
         # Load
         if not self.parser.has_section('load'):
             self.parser.add_section('load')
-        self.set_default('load', 'careful', '0.7')
-        self.set_default('load', 'warning', '1.0')
-        self.set_default('load', 'critical', '5.0')
+        self.set_default_cwc('load', cwc=['0.7', '1.0', '5.0'])
 
         # Mem
         if not self.parser.has_section('mem'):
             self.parser.add_section('mem')
-        self.set_default('mem', 'careful', '50')
-        self.set_default('mem', 'warning', '70')
-        self.set_default('mem', 'critical', '90')
+        self.set_default_cwc('mem')
 
         # Swap
         if not self.parser.has_section('memswap'):
             self.parser.add_section('memswap')
-        self.set_default('memswap', 'careful', '50')
-        self.set_default('memswap', 'warning', '70')
-        self.set_default('memswap', 'critical', '90')
+        self.set_default_cwc('memswap')
 
         # NETWORK
         if not self.parser.has_section('network'):
             self.parser.add_section('network')
-        self.set_default('network', 'rx_careful', '70')
-        self.set_default('network', 'rx_warning', '80')
-        self.set_default('network', 'rx_critical', '90')
-        self.set_default('network', 'tx_careful', '70')
-        self.set_default('network', 'tx_warning', '80')
-        self.set_default('network', 'tx_critical', '90')
+        self.set_default_cwc('network', 'rx')
+        self.set_default_cwc('network', 'tx')
 
         # FS
         if not self.parser.has_section('fs'):
             self.parser.add_section('fs')
-        self.set_default('fs', 'careful', '50')
-        self.set_default('fs', 'warning', '70')
-        self.set_default('fs', 'critical', '90')
+        self.set_default_cwc('fs')
 
         # Sensors
         if not self.parser.has_section('sensors'):
             self.parser.add_section('sensors')
-        self.set_default('sensors', 'temperature_core_careful', '60')
-        self.set_default('sensors', 'temperature_core_warning', '70')
-        self.set_default('sensors', 'temperature_core_critical', '80')
-        self.set_default('sensors', 'temperature_hdd_careful', '45')
-        self.set_default('sensors', 'temperature_hdd_warning', '52')
-        self.set_default('sensors', 'temperature_hdd_critical', '60')
-        self.set_default('sensors', 'battery_careful', '80')
-        self.set_default('sensors', 'battery_warning', '90')
-        self.set_default('sensors', 'battery_critical', '95')
+        self.set_default_cwc('sensors', 'temperature_core',
+                             cwc=['60', '70', '80'])
+        self.set_default_cwc('sensors', 'temperature_hdd',
+                          cwc=['45', '52', '60'])
+        self.set_default_cwc('sensors', 'battery',
+                        cwc=['80', '90', '95'])
 
         # Process list
         if not self.parser.has_section('processlist'):
             self.parser.add_section('processlist')
-        self.set_default('processlist', 'cpu_careful', '50')
-        self.set_default('processlist', 'cpu_warning', '70')
-        self.set_default('processlist', 'cpu_critical', '90')
-        self.set_default('processlist', 'mem_careful', '50')
-        self.set_default('processlist', 'mem_warning', '70')
-        self.set_default('processlist', 'mem_critical', '90')
+        self.set_default_cwc('processlist', 'cpu')
+        self.set_default_cwc('processlist', 'mem')
 
     @property
     def loaded_config_file(self):
@@ -232,6 +199,18 @@ class Config(object):
     def has_section(self, section):
         """Return info about the existence of a section."""
         return self.parser.has_section(section)
+
+    def set_default_cwc(self, section,
+                        option_header=None,
+                        cwc=['50', '70', '90']):
+        """Set default values for careful, warning and critical."""
+        if option_header is None:
+            header = ''
+        else:
+            header = option_header + '_'
+        self.set_default(section, header + 'careful', cwc[0])
+        self.set_default(section, header + 'warning', cwc[1])
+        self.set_default(section, header + 'critical', cwc[2])
 
     def set_default(self, section, option, default):
         """If the option did not exist, create a default value."""
