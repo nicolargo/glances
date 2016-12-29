@@ -23,6 +23,7 @@ Legend:
    header
    quicklook
    cpu
+   gpu
    load
    memory
    network
