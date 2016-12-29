@@ -60,7 +60,6 @@ class _GlancesCurses(object):
         'b': {'switch': 'byte'},
         'B': {'switch': 'diskio_iops'},
         'D': {'switch': 'disable_docker'},
-        'e': {'switch': 'enable_process_extended'},
         'F': {'switch': 'fs_free_space'},
         'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
@@ -361,6 +360,13 @@ class _GlancesCurses(object):
                 self.disable_top()
             else:
                 self.enable_top()
+        elif self.pressedkey == ord('e'):
+            # 'e' > Enable/Disable process extended
+            self.args.enable_process_extended = not self.args.enable_process_extended
+            if not self.args.enable_process_extended:
+                glances_processes.disable_extended()
+            else:
+                glances_processes.enable_extended()
         elif self.pressedkey == ord('E'):
             # 'E' > Erase the process filter
             glances_processes.process_filter = None
@@ -384,12 +390,6 @@ class _GlancesCurses(object):
                 glances_processes.disable()
             else:
                 glances_processes.enable()
-
-        # Change the curse interface according to the current configuration
-        if not self.args.enable_process_extended:
-            glances_processes.disable_extended()
-        else:
-            glances_processes.enable_extended()
 
         # Return the key code
         return self.pressedkey

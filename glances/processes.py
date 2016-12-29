@@ -335,46 +335,18 @@ class GlancesProcesses(object):
         procstat['extended_stats'] = True
 
         # CPU affinity (Windows and Linux only)
-        try:
-            procstat.update(proc.as_dict(attrs=['cpu_affinity']))
-        except psutil.NoSuchProcess:
-            pass
-        except AttributeError:
-            procstat['cpu_affinity'] = None
+        # Number of context switch
+        # Number of file descriptors (Unix only)
+        # Threads number
         # Memory extended
-        try:
-            procstat.update(proc.as_dict(attrs=['memory_full_info']))
-        except psutil.NoSuchProcess:
-            pass
-        except AttributeError:
-            # Fallback to standard memory_info stats
+        for s in ['cpu_affinity', 'num_ctx_switches', 'num_fds',
+                  'num_threads', 'memory_full_info']:
             try:
-                procstat.update(proc.as_dict(attrs=['memory_info']))
+                procstat.update(proc.as_dict(attrs=[s]))
             except psutil.NoSuchProcess:
                 pass
             except AttributeError:
-                procstat['memory_info'] = None
-        # Number of context switch
-        try:
-            procstat.update(proc.as_dict(attrs=['num_ctx_switches']))
-        except psutil.NoSuchProcess:
-            pass
-        except AttributeError:
-            procstat['num_ctx_switches'] = None
-        # Number of file descriptors (Unix only)
-        try:
-            procstat.update(proc.as_dict(attrs=['num_fds']))
-        except psutil.NoSuchProcess:
-            pass
-        except AttributeError:
-            procstat['num_fds'] = None
-        # Threads number
-        try:
-            procstat.update(proc.as_dict(attrs=['num_threads']))
-        except psutil.NoSuchProcess:
-            pass
-        except AttributeError:
-            procstat['num_threads'] = None
+                procstat[s] = None
 
         # Number of handles (Windows only)
         if WINDOWS:
