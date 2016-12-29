@@ -123,6 +123,10 @@ Command-Line Options
 
     disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
 
+.. option:: -6, --meangpu
+
+    start Glances in mean GPU mode
+
 .. option:: --enable-history
 
     enable the history mode (matplotlib lib needed)

@@ -15,6 +15,7 @@ Changes:
 
 Enhancements and new features:
 
+    * GPU monitoring (limited to NVidia) (issue #170)
     * WebUI CPU consumption optimization (issue #836)
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)

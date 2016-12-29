@@ -54,6 +54,7 @@ class _GlancesCurses(object):
         '3': {'switch': 'disable_quicklook'},
         '4': {'switch': 'full_quicklook'},
         '5': {'switch': 'disable_top'},
+        '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
         'd': {'switch': 'disable_diskio'},
         'A': {'switch': 'disable_amps'},

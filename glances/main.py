@@ -151,6 +151,8 @@ Start the client browser (browser mode):\n\
         parser.add_argument('-5', '--disable-top', action='store_true',
                             default=False, dest='disable_top',
                             help='disable top menu (QL, CPU, MEM, SWAP and LOAD)')
+        parser.add_argument('-6', '--meangpu', action='store_true', default=False,
+                            dest='meangpu', help='start Glances in mean GPU mode')
         parser.add_argument('--disable-history', action='store_true', default=False,
                             dest='disable_history', help='disable stats history')
         parser.add_argument('--disable-bold', action='store_true', default=False,
