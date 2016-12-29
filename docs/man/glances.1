@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Nov 21, 2016" "2.8_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Dec 29, 2016" "2.8_DEVELOP" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -59,7 +59,7 @@ show program\(aqs version number and exit
 .INDENT 0.0
 .TP
 .B \-d, \-\-debug
-enable debug mode. The debugging output is saved to /tmp/glances.log.
+enable debug mode. The debugging output is saved to /tmp/glances\-USERNAME.log.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -191,6 +191,11 @@ disable all but quick look and load
 .TP
 .B \-5, \-\-disable\-top
 disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-6, \-\-meangpu
+start Glances in mean GPU mode
 .UNINDENT
 .INDENT 0.0
 .TP
