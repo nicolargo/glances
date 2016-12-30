@@ -10,6 +10,11 @@ Furthermore a configuration file is needed to access more settings.
 Location
 --------
 
+A template is available in the /usr/local/share/doc/glances folder
+(on GNU/Linux OS) or directly in the Github:
+
+https://raw.githubusercontent.com/nicolargo/glances/master/conf/glances.conf
+
 You can put the ``glances.conf`` file in the following locations:
 
 =========== ============================================================
