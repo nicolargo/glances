@@ -52,8 +52,6 @@ class _GlancesCurses(object):
         '1': {'switch': 'percpu'},
         '2': {'switch': 'disable_left_sidebar'},
         '3': {'switch': 'disable_quicklook'},
-        '4': {'switch': 'full_quicklook'},
-        '5': {'switch': 'disable_top'},
         '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
         'd': {'switch': 'disable_diskio'},
@@ -352,11 +350,13 @@ class _GlancesCurses(object):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('4'):
+            self.args.full_quicklook = not self.args.full_quicklook
             if self.args.full_quicklook:
                 self.enable_fullquicklook()
             else:
                 self.disable_fullquicklook()
         elif self.pressedkey == ord('5'):
+            self.args.disable_top = not self.args.disable_top
             if self.args.disable_top:
                 self.disable_top()
             else:
@@ -650,7 +650,7 @@ class _GlancesCurses(object):
         # Dict for plugins width
         plugin_widths = {'quicklook': 0}
         for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
-            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) else 0
+            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) and p in stat_display else 0
 
         # Width of all plugins
         stats_width = sum(itervalues(plugin_widths))
@@ -700,7 +700,9 @@ class _GlancesCurses(object):
 
         # Display CPU, MEM, SWAP and LOAD
         for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
-            self.display_plugin(stat_display[p], display_optional=plugin_display_optional[p])
+            if p in stat_display:
+                self.display_plugin(stat_display[p],
+                                    display_optional=plugin_display_optional[p])
             if p is not 'load':
                 # Skip last column
                 self.new_column()
