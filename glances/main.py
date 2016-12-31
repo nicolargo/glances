@@ -127,6 +127,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_memswap', help='disable memory swap module')
         parser.add_argument('--disable-network', action='store_true', default=False,
                             dest='disable_network', help='disable network module')
+        parser.add_argument('--disable-now', action='store_true', default=False,
+                            dest='disable_now', help='disable current time module')
         parser.add_argument('--disable-ports', action='store_true', default=False,
                             dest='disable_ports', help='disable ports scanner module')
         parser.add_argument('--disable-process', action='store_true', default=False,
