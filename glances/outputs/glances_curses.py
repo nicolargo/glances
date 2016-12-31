@@ -66,6 +66,7 @@ class _GlancesCurses(object):
         'l': {'switch': 'disable_alert'},
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
+        'N': {'switch': 'disable_now'},
         'P': {'switch': 'disable_ports'},
         'Q': {'switch': 'enable_irq'},
         'R': {'switch': 'disable_raid'},
@@ -721,27 +722,12 @@ class _GlancesCurses(object):
         network+wifi+ports+diskio+fs+irq+folders+raid+sensors+now
         """
         self.init_column()
-        if not (self.args.disable_network and
-                self.args.disable_wifi and
-                self.args.disable_ports and
-                self.args.disable_diskio and
-                self.args.disable_fs and
-                self.args.enable_irq and
-                self.args.disable_folders and
-                self.args.disable_raid and
-                self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            for s in (stat_display["network"],
-                      stat_display["wifi"],
-                      stat_display["ports"],
-                      stat_display["diskio"],
-                      stat_display["fs"],
-                      stat_display["irq"],
-                      stat_display["folders"],
-                      stat_display["raid"],
-                      stat_display["sensors"],
-                      stat_display["now"]):
-                self.new_line()
-                self.display_plugin(s)
+        if not self.args.disable_left_sidebar:
+            for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
+                      'folders', 'raid', 'sensors', 'now']:
+                if hasattr(self.args, 'disable_' + s) and s in stat_display:
+                    self.new_line()
+                    self.display_plugin(stat_display[s])
 
     def __display_right(self, stat_display):
         """Display the right sidebar in the Curses interface.
