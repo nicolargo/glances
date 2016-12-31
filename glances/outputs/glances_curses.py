@@ -52,8 +52,6 @@ class _GlancesCurses(object):
         '1': {'switch': 'percpu'},
         '2': {'switch': 'disable_left_sidebar'},
         '3': {'switch': 'disable_quicklook'},
-        '4': {'switch': 'full_quicklook'},
-        '5': {'switch': 'disable_top'},
         '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
         'd': {'switch': 'disable_diskio'},
@@ -68,9 +66,9 @@ class _GlancesCurses(object):
         'l': {'switch': 'disable_alert'},
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
+        'N': {'switch': 'disable_now'},
         'P': {'switch': 'disable_ports'},
         'Q': {'switch': 'enable_irq'},
-        'r': {'switch': 'reset_history_tag'},
         'R': {'switch': 'disable_raid'},
         's': {'switch': 'disable_sensors'},
         'T': {'switch': 'network_sum'},
@@ -352,11 +350,13 @@ class _GlancesCurses(object):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('4'):
+            self.args.full_quicklook = not self.args.full_quicklook
             if self.args.full_quicklook:
                 self.enable_fullquicklook()
             else:
                 self.disable_fullquicklook()
         elif self.pressedkey == ord('5'):
+            self.args.disable_top = not self.args.disable_top
             if self.args.disable_top:
                 self.disable_top()
             else:
@@ -378,6 +378,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('g'):
             # 'g' > Generate graph from history
             self.graph_tag = not self.graph_tag
+        elif self.pressedkey == ord('r'):
+            # 'r' > Reset graph history
+            self.reset_history_tag = not self.reset_history_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
@@ -650,7 +653,7 @@ class _GlancesCurses(object):
         # Dict for plugins width
         plugin_widths = {'quicklook': 0}
         for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
-            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) else 0
+            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) and p in stat_display else 0
 
         # Width of all plugins
         stats_width = sum(itervalues(plugin_widths))
@@ -700,7 +703,9 @@ class _GlancesCurses(object):
 
         # Display CPU, MEM, SWAP and LOAD
         for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
-            self.display_plugin(stat_display[p], display_optional=plugin_display_optional[p])
+            if p in stat_display:
+                self.display_plugin(stat_display[p],
+                                    display_optional=plugin_display_optional[p])
             if p is not 'load':
                 # Skip last column
                 self.new_column()
@@ -717,27 +722,12 @@ class _GlancesCurses(object):
         network+wifi+ports+diskio+fs+irq+folders+raid+sensors+now
         """
         self.init_column()
-        if not (self.args.disable_network and
-                self.args.disable_wifi and
-                self.args.disable_ports and
-                self.args.disable_diskio and
-                self.args.disable_fs and
-                self.args.enable_irq and
-                self.args.disable_folders and
-                self.args.disable_raid and
-                self.args.disable_sensors) and not self.args.disable_left_sidebar:
-            for s in (stat_display["network"],
-                      stat_display["wifi"],
-                      stat_display["ports"],
-                      stat_display["diskio"],
-                      stat_display["fs"],
-                      stat_display["irq"],
-                      stat_display["folders"],
-                      stat_display["raid"],
-                      stat_display["sensors"],
-                      stat_display["now"]):
-                self.new_line()
-                self.display_plugin(s)
+        if not self.args.disable_left_sidebar:
+            for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
+                      'folders', 'raid', 'sensors', 'now']:
+                if hasattr(self.args, 'disable_' + s) and s in stat_display:
+                    self.new_line()
+                    self.display_plugin(stat_display[s])
 
     def __display_right(self, stat_display):
         """Display the right sidebar in the Curses interface.
