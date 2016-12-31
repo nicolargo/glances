@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Dec 29, 2016" "2.8_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Dec 31, 2016" "2.8_DEVELOP" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -135,6 +135,11 @@ disable memory swap module
 .TP
 .B \-\-disable\-network
 disable network module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-disable\-now
+disable current time module
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -512,6 +517,9 @@ Reset processes summary min/max
 .TP
 .B \fBn\fP
 Show/hide network stats
+.TP
+.B \fBN\fP
+Show/hide current time
 .TP
 .B \fBp\fP
 Sort processes by name

@@ -78,6 +78,10 @@ Command-Line Options
 
     disable network module
 
+.. option:: --disable-now
+
+    disable current time module
+
 .. option:: --disable-ports
 
     disable Ports module
@@ -392,6 +396,9 @@ The following commands (key pressed) are supported while in Glances:
 
 ``n``
     Show/hide network stats
+
+``N``
+    Show/hide current time
 
 ``p``
     Sort processes by name
