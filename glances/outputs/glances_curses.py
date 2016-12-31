@@ -68,7 +68,6 @@ class _GlancesCurses(object):
         'n': {'switch': 'disable_network'},
         'P': {'switch': 'disable_ports'},
         'Q': {'switch': 'enable_irq'},
-        'r': {'switch': 'reset_history_tag'},
         'R': {'switch': 'disable_raid'},
         's': {'switch': 'disable_sensors'},
         'T': {'switch': 'network_sum'},
@@ -378,6 +377,9 @@ class _GlancesCurses(object):
         elif self.pressedkey == ord('g'):
             # 'g' > Generate graph from history
             self.graph_tag = not self.graph_tag
+        elif self.pressedkey == ord('r'):
+            # 'r' > Reset graph history
+            self.reset_history_tag = not self.reset_history_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
