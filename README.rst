@@ -10,6 +10,8 @@ Glances - An eye on your system
     :alt: Github stars
 .. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
     :target: https://travis-ci.org/nicolargo/glances
+.. image:: https://coveralls.io/repos/nicolargo/glances/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/nicolargo/glances?branch=master
 .. image:: https://circleci.com/gh/nicolargo/glances/tree/develop.svg?style=svg
     :target: https://circleci.com/gh/nicolargo/glances/tree/develop
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
