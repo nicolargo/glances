@@ -22,14 +22,18 @@ features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install bottle requests batinfo py3sensors zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir couchdb pyzmq wifi
+    curl -o /tmp/optional-requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/optional-requirements.txt
+    pip install -r /tmp/optional-requirements.txt
 
 To upgrade Glances and all its dependencies to the latests versions:
 
 .. code-block:: console
 
-    pip install --upgrade bottle requests batinfo py3sensors zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra scandir couchdb pyzmq wifi
     pip install --upgrade glances
+    curl -o /tmp/requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/requirements.txt
+    pip install --upgrade /tmp/requirements.txt
+    curl -o /tmp/optional-requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/optional-requirements.txt
+    pip install --upgrade /tmp/optional-requirements.txt
 
 For additionnal installation methods, read the official `README`_ file.
 
