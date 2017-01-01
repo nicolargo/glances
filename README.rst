@@ -28,30 +28,36 @@ Requirements
 ============
 
 - ``python 2.7,>=3.3`` (tested with version 2.7, 3.3, 3.4, 3.5)
-- ``psutil>=2.0.0``
+- ``psutil>=2.0.0`` (better with latest version)
 - ``setuptools``
 
 Optional dependencies:
 
-- ``bottle`` (for Web server mode)
-- ``py3sensors`` (for hardware monitoring support) [Linux-only]
-- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``batinfo`` (for battery monitoring support) [Linux-only]
+- ``bernhard`` (for the Riemann export module)
+- ``bottle`` (for Web server mode)
+- ``cassandra-driver`` (for the Cassandra export module)
+- ``couchdb`` (for the CouchDB export module)
+- ``docker-py`` (for the Docker monitoring support) [Linux-only]
+- ``elasticsearch`` (for the Elastic Search export module)
+- ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
+- ``influxdb`` (for the InfluxDB export module)
+- ``matplotlib`` (for graphical/chart support)
+- ``netifaces`` (for the IP plugin)
+- ``nvidia-ml-py`` (for the GPU plugin)
+- ``pika`` (for the RabbitMQ/ActiveMQ export module)
+- ``potsdb`` (for the OpenTSDB export module)
+- ``py3sensors`` (for hardware monitoring support) [Linux-only]
+- ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
-- ``zeroconf`` (for the autodiscover mode)
-- ``netifaces`` (for the IP plugin)
-- ``influxdb`` (for the InfluxDB export module)
-- ``cassandra-driver`` (for the Cassandra export module)
-- ``statsd`` (for the StatsD export module)
 - ``pystache`` (for the action script feature)
-- ``docker-py`` (for the Docker monitoring support) [Linux-only]
-- ``matplotlib`` (for graphical/chart support)
-- ``pika`` (for the RabbitMQ/ActiveMQ export module)
-- ``bernhard`` (for the Riemann export module)
-- ``py-cpuinfo`` (for the Quicklook CPU info module)
+- ``pyzmq`` (for the ZeroMQ export module)
+- ``requests`` (for the Ports plugin)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+- ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
+- ``zeroconf`` (for the autodiscover mode)
 
 *Note for Python 2.6 users*
 
@@ -110,14 +116,18 @@ features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra-driver scandir pyzmq
+    curl -o /tmp/optional-requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/optional-requirements.txt
+    pip install -r /tmp/optional-requirements.txt
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
     pip install --upgrade glances
-    pip install --upgrade bottle requests batinfo https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.tar.gz zeroconf netifaces pymdstat influxdb elasticsearch potsdb statsd pystache docker-py pysnmp pika py-cpuinfo bernhard cassandra-driver scandir pyzmq
+    curl -o /tmp/requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/requirements.txt
+    pip install --upgrade /tmp/requirements.txt
+    curl -o /tmp/optional-requirements.txt https://raw.githubusercontent.com/nicolargo/glances/master/optional-requirements.txt
+    pip install --upgrade /tmp/optional-requirements.txt
 
 If you need to install Glances in a specific user location, use:
 

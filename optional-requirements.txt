@@ -5,7 +5,9 @@ cassandra-driver
 couchdb
 docker-py
 elasticsearch
+hddtemp
 influxdb
+matplotlib
 netifaces
 nvidia-ml-py
 pika
@@ -18,4 +20,5 @@ pyzmq
 requests
 scandir
 statsd
+wifi
 zeroconf
