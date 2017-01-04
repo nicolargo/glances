@@ -180,6 +180,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // 3 => Enable/disable quick look plugin
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.SIX:
+                // 3 => Enable/disable mean gpu
+                $scope.arguments.meangpu = !$scope.arguments.meangpu;
+                break;
             case $event.shiftKey && $event.keyCode == keycodes.FIVE:
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;

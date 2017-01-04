@@ -29,7 +29,7 @@
         <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!arguments.disable_cpu && arguments.percpu">
             <section id="per_cpu" class="plugin" ng-include src="'plugins/per_cpu.html'"></section>
         </div>
-        <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_gpu">
+        <div class="hidden-xs hidden-sm hidden-md col-lg-3" ng-if="!arguments.disable_gpu && statsGpu.gpus.length > 0">
             <section id="gpu" class="plugin" ng-include src="'plugins/gpu.html'"></section>
         </div>
         <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_mem">
