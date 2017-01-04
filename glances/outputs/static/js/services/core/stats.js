@@ -10,6 +10,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
         'ip': 'GlancesPluginIp',
         'fs': 'GlancesPluginFs',
         'folders': 'GlancesPluginFolders',
+        'gpu': 'GlancesPluginGpu',
         'load': 'GlancesPluginLoad',
         'mem': 'GlancesPluginMem',
         'memswap': 'GlancesPluginMemSwap',
