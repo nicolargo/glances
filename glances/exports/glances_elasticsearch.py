@@ -37,10 +37,13 @@ class Export(GlancesExport):
         """Init the ES export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Load the ES configuration file
-        self.host = None
-        self.port = None
+        # Mandatories configuration keys (additional to host and port)
         self.index = None
+
+        # Optionals configuration keys
+        # N/A
+
+        # Load the ES configuration file
         self.export_enable = self.load_conf('elasticsearch',
                                             mandatories=['host', 'port', 'index'],
                                             options=[])

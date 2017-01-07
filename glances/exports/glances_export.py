@@ -35,7 +35,7 @@ class GlancesExport(object):
         """Init the export class."""
         # Export name (= module name without glances_)
         self.export_name = self.__class__.__module__[len('glances_'):]
-        logger.debug("Init export interface %s" % self.export_name)
+        logger.debug("Init export module %s" % self.export_name)
 
         # Init the config & args
         self.config = config
@@ -44,6 +44,10 @@ class GlancesExport(object):
         # By default export is disable
         # Had to be set to True in the __init__ class of child
         self.export_enable = False
+
+        # Mandatory for (most of) the export module
+        self.host = None
+        self.port = None
 
     def exit(self):
         """Close the export module."""

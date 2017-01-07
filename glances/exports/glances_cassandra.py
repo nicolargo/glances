@@ -40,13 +40,15 @@ class Export(GlancesExport):
         """Init the Cassandra export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Load the Cassandra configuration file section
-        self.host = None
-        self.port = None
-        self.protocol_version = 3
+        # Mandatories configuration keys (additional to host and port)
         self.keyspace = None
+
+        # Optionals configuration keys
+        self.protocol_version = 3
         self.replication_factor = 2
         self.table = None
+
+        # Load the Cassandra configuration file section
         self.export_enable = self.load_conf('cassandra',
                                             mandatories=['host', 'port', 'keyspace'],
                                             options=['protocol_version',
