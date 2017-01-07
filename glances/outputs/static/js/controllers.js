@@ -28,6 +28,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
             $scope.statsDocker = GlancesStats.getPlugin('docker');
             $scope.statsFs = GlancesStats.getPlugin('fs');
             $scope.statsFolders = GlancesStats.getPlugin('folders');
+            $scope.statsGpu = GlancesStats.getPlugin('gpu');
             $scope.statsIp = GlancesStats.getPlugin('ip');
             $scope.statsLoad = GlancesStats.getPlugin('load');
             $scope.statsMem = GlancesStats.getPlugin('mem');
@@ -179,12 +180,17 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // 3 => Enable/disable quick look plugin
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.SIX:
+                // 6 => Enable/disable mean gpu
+                $scope.arguments.meangpu = !$scope.arguments.meangpu;
+                break;
             case $event.shiftKey && $event.keyCode == keycodes.FIVE:
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;
                 $scope.arguments.disable_mem = !$scope.arguments.disable_mem;
                 $scope.arguments.disable_memswap = !$scope.arguments.disable_memswap;
                 $scope.arguments.disable_load = !$scope.arguments.disable_load;
+                $scope.arguments.disable_gpu = !$scope.arguments.disable_gpu;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.i:
                 // I => Show/hide IP module

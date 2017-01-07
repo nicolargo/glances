@@ -145,6 +145,13 @@ body {
     text-overflow: ellipsis;
 }
 
+#gpu .gpu-name {
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
+}
+
 /* Loading page */
 
 #loading-page .glances-logo {
