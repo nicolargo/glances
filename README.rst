@@ -2,7 +2,6 @@
 Glances - An eye on your system
 ===============================
 
-
 .. image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
 
@@ -23,10 +22,25 @@ Glances - An eye on your system
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
-**Glances** is a cross-platform curses-based system monitoring tool
-written in Python.
+Summary
+=======
 
-.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/screencast.gif
+**Glances** is a cross-platform monitoring tool which aims to present a maximum
+of information in a minimum of space through a curses or Web based interface.
+It can adapt dynamically the displayed information depending on the user
+interface size.
+
+.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
+
+It can also work in client/server mode. Remote monitoring could be done via
+terminal, Web interface or API (XMLRPC and RESTful). Stats can also be exported
+to files or external time/value databases.
+
+.. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
+
+Glances is written in Python and uses libraries to grab information from your
+system. It is based on an open architecture where developers can add news
+plugins or exports modules.
 
 Requirements
 ============
