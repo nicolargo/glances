@@ -37,11 +37,14 @@ class Export(GlancesExport):
         """Init the OpenTSDB export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Load the InfluxDB configuration file
-        self.host = None
-        self.port = None
+        # Mandatories configuration keys (additional to host and port)
+        # N/A
+
+        # Optionals configuration keys
         self.prefix = None
         self.tags = None
+
+        # Load the InfluxDB configuration file
         self.export_enable = self.load_conf('opentsdb',
                                             mandatories=['host', 'port'],
                                             options=['prefix', 'tags'])
