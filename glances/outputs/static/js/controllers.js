@@ -181,7 +181,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.SIX:
-                // 3 => Enable/disable mean gpu
+                // 6 => Enable/disable mean gpu
                 $scope.arguments.meangpu = !$scope.arguments.meangpu;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.FIVE:
@@ -190,6 +190,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 $scope.arguments.disable_mem = !$scope.arguments.disable_mem;
                 $scope.arguments.disable_memswap = !$scope.arguments.disable_memswap;
                 $scope.arguments.disable_load = !$scope.arguments.disable_load;
+                $scope.arguments.disable_gpu = !$scope.arguments.disable_gpu;
                 break;
             case $event.shiftKey && $event.keyCode == keycodes.i:
                 // I => Show/hide IP module
