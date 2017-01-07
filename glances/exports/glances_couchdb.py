@@ -38,12 +38,14 @@ class Export(GlancesExport):
         """Init the CouchDB export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Load the Couchdb configuration file section ([export_couchdb])
-        self.host = None
-        self.port = None
+        # Mandatories configuration keys (additional to host and port)
+        self.db = None
+
+        # Optionals configuration keys
         self.user = None
         self.password = None
-        self.db = None
+
+        # Load the Cassandra configuration file section
         self.export_enable = self.load_conf('couchdb',
                                             mandatories=['host', 'port', 'db'],
                                             options=['user', 'password'])
