@@ -30,7 +30,7 @@ with open('README.rst', encoding='utf-8') as f:
 def get_data_files():
     data_files = [
         ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
-                               'conf/glances.conf']),
+                               'CONTRIBUTING.md', 'conf/glances.conf']),
         ('share/man/man1', ['docs/man/glances.1'])
     ]
 
@@ -70,19 +70,20 @@ setup(
     keywords="cli curses monitoring system",
     install_requires=['psutil>=2.0.0'],
     extras_require={
-        'WEB': ['bottle', 'requests'],
-        'SENSORS': ['py3sensors'],
+        'ACTION': ['pystache'],
         'BATINFO': ['batinfo'],
-        'SNMP': ['pysnmp'],
-        'CHART': ['matplotlib'],
         'BROWSER': ['zeroconf>=0.17'],
+        'CPUINFO': ['py-cpuinfo'],
+        'CHART': ['matplotlib'],
+        'DOCKER': ['docker-py'],
+        'EXPORT': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch', 'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
+        'FOLDERS': ['scandir'],
+        'GPU': ['nvidia-ml-py']
         'IP': ['netifaces'],
         'RAID': ['pymdstat'],
-        'DOCKER': ['docker-py'],
-        'EXPORT': ['influxdb>=1.0.0', 'elasticsearch', 'potsdb' 'statsd', 'pika', 'bernhard', 'cassandra-driver'],
-        'ACTION': ['pystache'],
-        'CPUINFO': ['py-cpuinfo'],
-        'FOLDERS': ['scandir'],
+        'SENSORS': ['py3sensors'],
+        'SNMP': ['pysnmp'],
+        'WEB': ['bottle', 'requests'],
         'WIFI': ['wifi']
     },
     packages=['glances'],
@@ -94,6 +95,8 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console :: Curses',
+        'Environment :: Web Environment',
+        'Framework :: Bottle',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: System Administrators',
@@ -104,6 +107,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.5',
+        'Topic :: System :: Monitoring'
     ]
 )
