@@ -18,7 +18,7 @@ the preferred channel for [bug reports](#bug-reports), [features requests](#feat
 and [submitting pull requests](#pull-requests), but please respect the following
 restrictions:
 
-* Please **do not** use the issue tracker for personal support requests. A official Q&A exist. [Use it](https://groups.google.com/forum/?hl=en#!forum/glances-users)! 
+* Please **do not** use the issue tracker for personal support requests. A official Q&A exist. [Use it](https://groups.google.com/forum/?hl=en#!forum/glances-users)!
 
 * Please **do not** derail or troll issues. Keep the discussion on topic and
   respect the opinions of others.
@@ -86,12 +86,13 @@ project's developers might not want to merge into the project.
 
 First of all, all pull request should be done on the `develop` branch.
 
-Glances uses PEP8 compatible code, so use a PEP validator before submitting 
-your pull request. Also uses the unitaries tests scripts (unitest.py).
+Glances uses PEP8 compatible code, so use a PEP validator before submitting
+your pull request. Also uses the unitaries tests scripts (unitest-all.py).
 
 Similarly, when contributing to Glances's documentation, you should edit the
 documentation source files in
-[the `/doc/` and `/man/` directories of the `develop` branch](https://github.com/nicolargo/glances/tree/develop/docs).
+[the `/doc/` and `/man/` directories of the `develop` branch](https://github.com/nicolargo/glances/tree/develop/docs) and generate
+the documentation outputs files by reading the [README](https://github.com/nicolargo/glances/tree/develop/docs/README.txt) file.
 
 Adhering to the following process is the best way to get your work
 included in the project:
