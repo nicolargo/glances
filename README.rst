@@ -5,17 +5,21 @@ Glances - An eye on your system
 
 .. image:: https://img.shields.io/pypi/v/glances.svg
     :target: https://pypi.python.org/pypi/Glances
+
 .. image:: https://img.shields.io/github/stars/nicolargo/glances.svg
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
-.. image:: https://travis-ci.org/nicolargo/glances.svg?branch=master
+
+.. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20OSX
     :target: https://travis-ci.org/nicolargo/glances
-.. image:: https://circleci.com/gh/nicolargo/glances/tree/develop.svg?style=svg
-    :target: https://circleci.com/gh/nicolargo/glances/tree/develop
+    :alt: Linux tests (Travis)
+
+.. image:: https://img.shields.io/appveyor/ci/nicolargo/glances/master.svg?maxAge=3600&label=Windows
+    :target: https://ci.appveyor.com/project/nicolargo/glances
+    :alt: Windows tests (Appveyor)
+
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/
-.. image:: https://api.flattr.com/button/flattr-badge-large.png
-    :target: https://flattr.com/thing/484466/nicolargoglances-on-GitHub
 
 Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 
