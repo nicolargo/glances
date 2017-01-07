@@ -184,6 +184,10 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
                 // 6 => Enable/disable mean gpu
                 $scope.arguments.meangpu = !$scope.arguments.meangpu;
                 break;
+            case $event.shiftKey && $event.keyCode == keycodes.g:
+                // G => Enable/disable gpu
+                $scope.arguments.disable_gpu = !$scope.arguments.disable_gpu;
+                break;
             case $event.shiftKey && $event.keyCode == keycodes.FIVE:
                 $scope.arguments.disable_quicklook = !$scope.arguments.disable_quicklook;
                 $scope.arguments.disable_cpu = !$scope.arguments.disable_cpu;
