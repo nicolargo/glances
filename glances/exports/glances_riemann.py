@@ -39,15 +39,21 @@ class Export(GlancesExport):
         """Init the Riemann export IF."""
         super(Export, self).__init__(config=config, args=args)
 
+        # Mandatories configuration keys (additional to host and port)
+        # N/A
+
+        # Optionals configuration keys
+        # N/A
+
         # Load the Riemann configuration
-        self.riemann_host = None
-        self.riemann_port = None
-        self.hostname = socket.gethostname()
         self.export_enable = self.load_conf('riemann',
                                             mandatories=['host', 'port'],
                                             options=[])
         if not self.export_enable:
             sys.exit(2)
+
+        # Get the current hostname
+        self.hostname = socket.gethostname()
 
         # Init the Riemann client
         self.client = self.init()
@@ -57,7 +63,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
         try:
-            client = bernhard.Client(host=self.riemann_host, port=self.riemann_port)
+            client = bernhard.Client(host=self.host, port=self.port)
             return client
         except Exception as e:
             logger.critical("Connection to Riemann failed : %s " % e)
