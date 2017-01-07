@@ -78,7 +78,7 @@ setup(
         'DOCKER': ['docker-py'],
         'EXPORT': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch', 'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
         'FOLDERS': ['scandir'],
-        'GPU': ['nvidia-ml-py']
+        'GPU': ['nvidia-ml-py'],
         'IP': ['netifaces'],
         'RAID': ['pymdstat'],
         'SENSORS': ['py3sensors'],
