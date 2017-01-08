@@ -15,13 +15,13 @@ A template is available in the /usr/local/share/doc/glances folder
 
 https://raw.githubusercontent.com/nicolargo/glances/master/conf/glances.conf
 
-You can put the ``glances.conf`` file in the following locations:
+You can put your own ``glances.conf`` file in the following locations:
 
 =========== ============================================================
-``Linux``   ~/.config/glances, /etc/glances
-``*BSD``    ~/.config/glances, /usr/local/etc/glances
-``OS X``    ~/Library/Application Support/glances, /usr/local/etc/glances
-``Windows`` %APPDATA%\glances
+``Linux``   ~/.config/glances ($XDG_CONFIG_HOME environment variable) or /etc/glances
+``*BSD``    ~/.config/glances or /usr/local/etc/glances
+``OS X``    ~/Library/Application Support/glances or /usr/local/etc/glances
+``Windows`` %APPDATA%\\glances
 =========== ============================================================
 
 On Windows XP, the ``%APPDATA%`` path is:
