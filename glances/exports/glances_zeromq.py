@@ -21,12 +21,13 @@
 
 import sys
 import json
-import zmq
-from zmq.utils.strtypes import asbytes
 
-from glances.compat import NoOptionError, NoSectionError, b
+from glances.compat import b
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+
+import zmq
+from zmq.utils.strtypes import asbytes
 
 
 class Export(GlancesExport):

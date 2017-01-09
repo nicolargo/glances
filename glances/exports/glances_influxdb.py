@@ -21,7 +21,6 @@
 
 import sys
 
-from glances.compat import NoOptionError, NoSectionError
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
