@@ -81,20 +81,14 @@ class FolderList(object):
             key = 'folder_' + str(l) + '_'
 
             # Path is mandatory
-            try:
-                value['path'] = self.config.get_value(section, key + 'path')
-            except Exception as e:
-                logger.error("Cannot read folder list: {}".format(e))
-                continue
+            value['path'] = self.config.get_value(section, key + 'path')
             if value['path'] is None:
                 continue
 
             # Optional conf keys
             for i in ['careful', 'warning', 'critical']:
-                try:
-                    value[i] = self.config.get_value(section, key + i)
-                except Exception:
-                    value[i] = None
+                value[i] = self.config.get_value(section, key + i)
+                if value[i] is None:
                     logger.debug("No {} threshold for folder {}".format(i, value["path"]))
 
             # Add the item to the list
@@ -153,7 +147,7 @@ class FolderList(object):
             # Update folder size
             try:
                 self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
-            except Exception as e:
+            except OSError as e:
                 logger.debug('Cannot get folder size ({}). Error: {}'.format(self.path(i), e))
                 if e.errno == 13:
                     # Permission denied
