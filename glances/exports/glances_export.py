@@ -71,7 +71,7 @@ class GlancesExport(object):
                 'docker',
                 'uptime']
 
-    def load_conf(self, section, mandatories=['host', 'port'], options=[]):
+    def load_conf(self, section, mandatories=['host', 'port'], options=None):
         """Load the export <section> configuration in the Glances configuration file.
 
         :param section: name of the export section to load
@@ -80,6 +80,8 @@ class GlancesExport(object):
 
         :returns: Boolean -- True if section is found
         """
+        options = options or []
+
         if self.config is None:
             return False
 
