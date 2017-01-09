@@ -24,7 +24,6 @@ from datetime import datetime
 
 from glances.compat import range
 from glances.processes import glances_processes, sort_stats
-# from glances.logger import logger
 
 
 class GlancesLogs(object):
@@ -218,5 +217,6 @@ class GlancesLogs(object):
         # The list is now the clean one
         self.logs_list = clean_logs_list
         return self.len()
+
 
 glances_logs = GlancesLogs()
