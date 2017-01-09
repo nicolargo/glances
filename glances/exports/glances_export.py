@@ -23,7 +23,7 @@ I am your father...
 ...for all Glances exports IF.
 """
 
-from glances.compat import iteritems, iterkeys
+from glances.compat import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
 
 
