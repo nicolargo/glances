@@ -337,8 +337,9 @@ If you have any question (after RTFM!), please post it on the official Q&A `foru
 Gateway to other services
 =========================
 
-Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``Cassandra``,
-``OpenTSDB``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ`` and  ``Riemann`` server.
+Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``Cassandra``, ``CouchDB``,
+``OpenTSDB``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ/ActiveMQ``, ``ZeroMQ``,
+and  ``Riemann`` server.
 
 How to contribute ?
 ===================
