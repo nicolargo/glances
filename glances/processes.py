@@ -345,7 +345,8 @@ class GlancesProcesses(object):
                 procstat.update(proc.as_dict(attrs=[s]))
             except psutil.NoSuchProcess:
                 pass
-            except AttributeError:
+            # XXX: psutil>=4.3.1 raises ValueError while <4.3.1 raises AttributeError
+            except (ValueError, AttributeError):
                 procstat[s] = None
 
         # Number of handles (Windows only)
