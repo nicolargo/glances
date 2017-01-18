@@ -21,7 +21,7 @@ import operator
 import os
 
 from glances.compat import iteritems, itervalues, listitems
-from glances.globals import BSD, LINUX, OSX, WINDOWS
+from glances.globals import BSD, LINUX, OSX, SUNOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.processes_tree import ProcessTreeNode
 from glances.filter import GlancesFilter
@@ -278,8 +278,8 @@ class GlancesProcesses(object):
         # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
         # If io_tag = 0 > Access denied (display "?")
         # If io_tag = 1 > No access denied (display the IO rate)
-        # Note Disk IO stat not available on Mac OS
-        if not OSX:
+        # Availability: all platforms except macOS and Illumos/Solaris
+        if not (OSX or SUNOS):
             try:
                 # Get the process IO counters
                 proc_io = proc.io_counters()
