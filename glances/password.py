@@ -27,7 +27,7 @@ import uuid
 from io import open
 
 from glances.compat import b, input
-from glances.globals import BSD, LINUX, OSX, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.logger import logger
 
 
@@ -44,13 +44,13 @@ class GlancesPassword(object):
     def get_password_path(self):
         r"""Get the path where the password file will be stored.
 
-        * Linux and BSD: ~/.config/glances
-        * OS X: ~/Library/glances
+        * Linux and *BSD: ~/.config/glances
+        * macOS: ~/Library/glances
         * Windows: %APPDATA%\glances
         """
         if LINUX or BSD:
             app_path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
-        elif OSX:
+        elif MACOS:
             app_path = os.path.join(os.environ.get('HOME'), 'Library')
         elif WINDOWS:
             app_path = os.environ.get('APPDATA')

@@ -23,7 +23,7 @@ import re
 import sys
 
 from glances.compat import u, itervalues
-from glances.globals import OSX, WINDOWS
+from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
 from glances.logs import glances_logs
 from glances.processes import glances_processes
@@ -751,7 +751,7 @@ class _GlancesCurses(object):
             self.new_line()
             self.display_plugin(stat_display["processlist"],
                                 display_optional=(self.screen.getmaxyx()[1] > 102),
-                                display_additional=(not OSX),
+                                display_additional=(not MACOS),
                                 max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display["alert"]) - 2))
             self.new_line()
             self.display_plugin(stat_display["alert"])

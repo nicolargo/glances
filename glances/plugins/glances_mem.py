@@ -99,7 +99,7 @@ class Plugin(GlancesPlugin):
             # inactive: (UNIX): memory that is marked as not used.
             # buffers: (Linux, BSD): cache for things like file system metadata.
             # cached: (Linux, BSD): cache for various things.
-            # wired: (BSD, OSX): memory that is marked to always stay in RAM. It is never moved to disk.
+            # wired: (BSD, macOS): memory that is marked to always stay in RAM. It is never moved to disk.
             # shared: (BSD): memory that may be simultaneously accessed by multiple processes.
             self.reset()
             for mem in ['total', 'available', 'percent', 'used', 'free',

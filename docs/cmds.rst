@@ -323,7 +323,7 @@ The following commands (key pressed) are supported while in Glances:
 ``ENTER``
     Set the process filter
 
-    **Note**: on OS X, please use ``CTRL-H`` to delete
+    **Note**: on macOS, please use ``CTRL-H`` to delete
     filter.
 
     Filter is a regular expression pattern:

@@ -26,7 +26,7 @@ import sys
 # Note: Somes libs depends of OS
 BSD = sys.platform.find('bsd') != -1
 LINUX = sys.platform.startswith('linux')
-OSX = sys.platform.startswith('darwin')
+MACOS = sys.platform.startswith('darwin')
 SUNOS = sys.platform.startswith('sunos')
 WINDOWS = sys.platform.startswith('win')
 

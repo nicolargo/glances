@@ -287,7 +287,7 @@ class Plugin(GlancesPlugin):
             except (OverflowError, TypeError) as e:
                 # Catch OverflowError on some Amazon EC2 server
                 # See https://github.com/nicolargo/glances/issues/87
-                # Also catch TypeError on Mac OS X
+                # Also catch TypeError on macOS
                 # See: https://github.com/nicolargo/glances/issues/622
                 logger.debug("Cannot get TIME+ ({})".format(e))
                 self.tag_proc_time = False
