@@ -328,67 +328,50 @@ class GlancesProcesses(object):
 
     def __get_extended_stats(self, proc, procstat):
         """
-        Get extended_stats: only for top processes (see issue #403).
+        Get extended stats, only for top processes (see issue #403).
 
-        => connections (UDP/TCP), memory_swap...
+        - cpu_affinity (Linux, Windows, FreeBSD)
+        - ionice (Linux and Windows > Vista)
+        - memory_full_info (Linux)
+        - num_ctx_switches (not available on Illumos/Solaris)
+        - num_fds (Unix-like)
+        - num_handles (Windows)
+        - num_threads (not available on *BSD)
+        - memory_maps (only swap, Linux)
+          https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
+        - connections (TCP and UDP)
         """
         procstat['extended_stats'] = True
 
-        # CPU affinity (Windows and Linux only)
-        # Number of context switch
-        # Number of file descriptors (Unix only)
-        # Threads number
-        # Memory extended
-        for s in ['cpu_affinity', 'num_ctx_switches', 'num_fds',
-                  'num_threads', 'memory_full_info']:
+        for stat in ['cpu_affinity', 'ionice', 'memory_full_info',
+                     'num_ctx_switches', 'num_fds', 'num_handles',
+                     'num_threads']:
             try:
-                procstat.update(proc.as_dict(attrs=[s]))
+                procstat.update(proc.as_dict(attrs=[stat]))
             except psutil.NoSuchProcess:
                 pass
             # XXX: psutil>=4.3.1 raises ValueError while <4.3.1 raises AttributeError
             except (ValueError, AttributeError):
-                procstat[s] = None
+                procstat[stat] = None
 
-        # Number of handles (Windows only)
-        if WINDOWS:
-            try:
-                procstat.update(proc.as_dict(attrs=['num_handles']))
-            except psutil.NoSuchProcess:
-                pass
-        else:
-            procstat['num_handles'] = None
-
-        # SWAP memory (Only on Linux based OS)
-        # http://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
         if LINUX:
             try:
-                procstat['memory_swap'] = sum(
-                    [v.swap for v in proc.memory_maps()])
+                procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
             except psutil.NoSuchProcess:
                 pass
-            except psutil.AccessDenied:
-                procstat['memory_swap'] = None
-            except Exception:
-                # Add a dirty except to handle the PsUtil issue #413
+            except (psutil.AccessDenied, TypeError, NotImplementedError):
+                # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+                # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+                # is not enabled (see psutil #533/glances #413).
+                # XXX: Remove TypeError once we'll drop psutil < 3.0.0.
                 procstat['memory_swap'] = None
 
-        # Process network connections (TCP and UDP)
         try:
             procstat['tcp'] = len(proc.connections(kind="tcp"))
             procstat['udp'] = len(proc.connections(kind="udp"))
-        except Exception:
+        except psutil.AccessDenied:
             procstat['tcp'] = None
             procstat['udp'] = None
-
-        # IO Nice
-        # http://pythonhosted.org/psutil/#psutil.Process.ionice
-        if LINUX or WINDOWS:
-            try:
-                procstat.update(proc.as_dict(attrs=['ionice']))
-            except psutil.NoSuchProcess:
-                pass
-        else:
-            procstat['ionice'] = None
 
         return procstat
 
