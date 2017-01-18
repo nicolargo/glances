@@ -26,5 +26,5 @@ exclude_lines =
     except ImportError:
     raise NotImplementedError
     if WINDOWS
-    if OSX
+    if MACOS
     if BSD

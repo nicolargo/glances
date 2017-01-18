@@ -20,7 +20,7 @@ You can put your own ``glances.conf`` file in the following locations:
 =========== ============================================================
 ``Linux``   ~/.config/glances ($XDG_CONFIG_HOME environment variable) or /etc/glances
 ``*BSD``    ~/.config/glances or /usr/local/etc/glances
-``OS X``    ~/Library/Application Support/glances or /usr/local/etc/glances
+``macOS``   ~/Library/Application Support/glances or /usr/local/etc/glances
 ``Windows`` %APPDATA%\\glances
 =========== ============================================================
 
@@ -108,10 +108,10 @@ line.
 
 By default, the ``glances-USERNAME.log`` file is under the temporary directory:
 
-===================== ==================================================
-``Linux, *BSD, OS X`` /tmp
-``Windows``           %APPDATA%\\Local\\temp
-===================== ==================================================
+====================== ==================================================
+``Linux, *BSD, macOS`` /tmp
+``Windows``            %APPDATA%\\Local\\temp
+====================== ==================================================
 
 If you want to use another system path or change the log message, you can use
 your own logger configuration. First of all you have to create a glances.json

@@ -25,7 +25,7 @@ import multiprocessing
 from io import open
 
 from glances.compat import ConfigParser, NoOptionError
-from glances.globals import BSD, LINUX, OSX, WINDOWS, sys_prefix
+from glances.globals import BSD, LINUX, MACOS, WINDOWS, sys_prefix
 from glances.logger import logger
 
 
@@ -52,8 +52,8 @@ class Config(object):
 
         * custom path: /path/to/glances
         * Linux: ~/.config/glances, /etc/glances
-        * BSD: ~/.config/glances, /usr/local/etc/glances
-        * OS X: ~/Library/Application Support/glances, /usr/local/etc/glances
+        * *BSD: ~/.config/glances, /usr/local/etc/glances
+        * macOS: ~/Library/Application Support/glances, /usr/local/etc/glances
         * Windows: %APPDATA%\glances
 
         The config file will be searched in the following order of priority:
@@ -75,7 +75,7 @@ class Config(object):
                 paths.append(os.path.join(sys.prefix, 'etc', 'glances', self.config_filename))
             else:
                 paths.append(os.path.join('/etc/glances', self.config_filename))
-        elif OSX:
+        elif MACOS:
             paths.append(
                 os.path.join(os.path.expanduser('~/Library/Application Support/glances'),
                              self.config_filename))

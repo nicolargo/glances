@@ -33,7 +33,7 @@ else:
     outdated_tag = True
 
 from glances import __version__
-from glances.globals import BSD, LINUX, OSX, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.logger import logger
 
 
@@ -156,7 +156,7 @@ class Outdated(object):
             return os.path.join(os.environ.get('XDG_CONFIG_HOME') or
                                 os.path.expanduser('~/.config'),
                                 'glances')
-        elif OSX:
+        elif MACOS:
             return os.path.expanduser('~/Library/Application Support/glances')
         elif WINDOWS:
             return os.path.join(os.environ.get('APPDATA'), 'glances')

@@ -9,7 +9,7 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
-.. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20OSX
+.. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
     :alt: Linux tests (Travis)
 
@@ -226,10 +226,10 @@ To install Glances from ports:
     # cd /usr/ports/sysutils/py-glances/
     # make install clean
 
-OS X
-----
+macOS
+-----
 
-OS X users can install Glances using ``Homebrew`` or ``MacPorts``.
+macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
 Homebrew
 ````````
