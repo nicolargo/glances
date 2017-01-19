@@ -133,9 +133,13 @@ class GlancesStats(object):
         logger.debug("Available exports modules list: {}".format(self.getExportList()))
         return True
 
-    def getAllPlugins(self):
-        """Return the plugins list."""
-        return [p for p in self._plugins if self._plugins[p].is_enable()]
+    def getAllPlugins(self, enable=True):
+        """Return the enable plugins list.
+        if enable is False, return the list of all the plugins"""
+        if enable:
+            return [p for p in self._plugins if self._plugins[p].is_enable()]
+        else:
+            return [p for p in self._plugins]            
 
     def getExportList(self):
         """Return the exports modules list."""

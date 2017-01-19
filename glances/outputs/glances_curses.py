@@ -472,7 +472,7 @@ class _GlancesCurses(object):
         :returns: dict of dict
         """
         ret = {}
-        for p in stats.getAllPlugins():
+        for p in stats.getAllPlugins(enable=False):
             if p in ['network', 'wifi', 'irq', 'fs', 'folders']:
                 ret[p] = stats.get_plugin(p).get_stats_display(
                     args=self.args, max_width=plugin_max_width)
