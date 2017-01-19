@@ -21,7 +21,7 @@ import operator
 import os
 
 from glances.compat import iteritems, itervalues, listitems
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.processes_tree import ProcessTreeNode
 from glances.filter import GlancesFilter
@@ -279,32 +279,29 @@ class GlancesProcesses(object):
         # If io_tag = 0 > Access denied (display "?")
         # If io_tag = 1 > No access denied (display the IO rate)
         # Availability: all platforms except macOS and Illumos/Solaris
-        if not (MACOS or SUNOS):
+        try:
+            # Get the process IO counters
+            proc_io = proc.io_counters()
+            io_new = [proc_io.read_bytes, proc_io.write_bytes]
+        except (psutil.AccessDenied, psutil.NoSuchProcess, NotImplementedError, AttributeError):
+            # Access denied to process IO (no root account)
+            # NoSuchProcess (process die between first and second grab)
+            # Put 0 in all values (for sort) and io_tag = 0 (for display)
+            procstat['io_counters'] = [0, 0] + [0, 0]
+            io_tag = 0
+        else:
+            # For IO rate computation
+            # Append saved IO r/w bytes
             try:
-                # Get the process IO counters
-                proc_io = proc.io_counters()
-                io_new = [proc_io.read_bytes, proc_io.write_bytes]
-            except (psutil.AccessDenied, psutil.NoSuchProcess, NotImplementedError):
-                # Access denied to process IO (no root account)
-                # NoSuchProcess (process die between first and second grab)
-                # Put 0 in all values (for sort) and io_tag = 0 (for
-                # display)
-                procstat['io_counters'] = [0, 0] + [0, 0]
-                io_tag = 0
-            else:
-                # For IO rate computation
-                # Append saved IO r/w bytes
-                try:
-                    procstat['io_counters'] = io_new + \
-                        self.io_old[procstat['pid']]
-                except KeyError:
-                    procstat['io_counters'] = io_new + [0, 0]
-                # then save the IO r/w bytes
-                self.io_old[procstat['pid']] = io_new
-                io_tag = 1
+                procstat['io_counters'] = io_new + self.io_old[procstat['pid']]
+            except KeyError:
+                procstat['io_counters'] = io_new + [0, 0]
+            # then save the IO r/w bytes
+            self.io_old[procstat['pid']] = io_new
+            io_tag = 1
 
-            # Append the IO tag (for display)
-            procstat['io_counters'] += [io_tag]
+        # Append the IO tag (for display)
+        procstat['io_counters'] += [io_tag]
 
         return procstat
 
