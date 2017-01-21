@@ -3,7 +3,7 @@ bernhard
 bottle
 cassandra-driver
 couchdb
-docker-py
+docker>=2.0.2
 elasticsearch
 hddtemp
 influxdb
