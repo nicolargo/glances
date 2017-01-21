@@ -74,7 +74,7 @@ setup(
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    license="LGPL",
+    license='LGPLv3',
     keywords="cli curses monitoring system",
     install_requires=get_install_requires(),
     extras_require={
