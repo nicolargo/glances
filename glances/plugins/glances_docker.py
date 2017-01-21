@@ -93,18 +93,43 @@ class Plugin(GlancesPlugin):
             logger.debug("Docker export error {}".format(e))
         return ret
 
-    def connect(self, version=None):
-        """Connect to the Docker server."""
+    def __connect_old(self, version):
+        """Connect to the Docker server with the 'old school' method"""
+        # Glances is compatible with both API 2.0 and <2.0
+        # (thanks to the @bacondropped patch)
+        if hasattr(docker, 'APIClient'):
+            # Correct issue #1000 for API 2.0
+            init_docker = docker.APIClient
+        elif hasattr(docker, 'Client'):
+            # < API 2.0
+            init_docker = docker.Client
+        else:
+            # Can not found init method (new API version ?)
+            logger.error("Can not found any way to init the Docker API")
+            return None
         # Init connection to the Docker API
         try:
             if version is None:
-                ret = docker.Client(base_url='unix://var/run/docker.sock')
+                ret = init_docker(base_url='unix://var/run/docker.sock')
             else:
-                ret = docker.Client(base_url='unix://var/run/docker.sock',
-                                    version=version)
+                ret = init_docker(base_url='unix://var/run/docker.sock',
+                                  version=version)
         except NameError:
             # docker lib not found
             return None
+
+        return ret
+
+    def connect(self, version=None):
+        """Connect to the Docker server."""
+        if hasattr(docker, 'from_env') and version is not None:
+            # Connect to Docker using the default socket or
+            # the configuration in your environment
+            ret = docker.from_env()
+        else:
+            ret = self.__connect_old(version=version)
+
+        # Check the server connection with the version() method
         try:
             ret.version()
         except requests.exceptions.ConnectionError as e:

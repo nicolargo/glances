@@ -17,6 +17,7 @@ Enhancements and new features:
 
     * GPU monitoring (limited to NVidia) (issue #170)
     * WebUI CPU consumption optimization (issue #836)
+    * Not compatible with the new Docker API 2.0 (Docker 1.13) (issue #1000)
     * Add ZeroMQ exporter (issue #939)
     * Add CouchDB exporter (issue #928)
     * Add hotspot Wifi informations (issue #937)
