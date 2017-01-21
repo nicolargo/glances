@@ -346,7 +346,7 @@ Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 License
 =======
 
-LGPL. See ``COPYING`` for more details.
+LGPLv3. See ``COPYING`` for more details.
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
