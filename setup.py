@@ -75,7 +75,7 @@ setup(
         'BROWSER': ['zeroconf>=0.17'],
         'CPUINFO': ['py-cpuinfo'],
         'CHART': ['matplotlib'],
-        'DOCKER': ['docker-py'],
+        'DOCKER': ['docker>=2.0.2'],
         'EXPORT': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch', 'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
         'FOLDERS': ['scandir'],
         'GPU': ['nvidia-ml-py'],
