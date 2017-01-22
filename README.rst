@@ -55,7 +55,7 @@ Optional dependencies:
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker-py`` (for the Docker monitoring support) [Linux-only]
+- ``docker`` (for the Docker monitoring support) [Linux-only]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
@@ -133,14 +133,14 @@ features (like the Web interface, exports modules, sensors...):
 
 .. code-block:: console
 
-    pip install glances[ACTION,BATINFO,BROWSER,CPUINFO,CHART,DOCKER,EXPORT,FOLDERS,GPU,IP,RAID,SNMP,WEB,WIFI]
+    pip install glances[action,batinfo,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
 
 To upgrade Glances to the latest version:
 
 .. code-block:: console
 
     pip install --upgrade glances
-    pip install --upgrade glances[ACTION,BATINFO,BROWSER,CPUINFO,CHART,DOCKER,EXPORT,FOLDERS,GPU,IP,RAID,SNMP,WEB,WIFI]
+    pip install --upgrade glances[...]
 
 If you need to install Glances in a specific user location, use:
 
