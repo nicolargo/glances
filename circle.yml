@@ -6,4 +6,5 @@ dependencies:
   override:
     - pip install tox tox-pyenv
   pre:
+    - pip install -U pip setuptools
     - pip install psutil
