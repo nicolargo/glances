@@ -37,6 +37,14 @@ def get_data_files():
     return data_files
 
 
+def get_install_requires():
+    requires = ['psutil>=2.0.0']
+    if sys.platform.startswith('win'):
+        requires.append('bottle')
+
+    return requires
+
+
 class tests(Command):
     user_options = []
 
@@ -66,9 +74,9 @@ setup(
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    license="LGPL",
+    license='LGPLv3',
     keywords="cli curses monitoring system",
-    install_requires=['psutil>=2.0.0'],
+    install_requires=get_install_requires(),
     extras_require={
         'ACTION': ['pystache'],
         'BATINFO': ['batinfo'],
@@ -108,6 +116,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: System :: Monitoring'
     ]
 )

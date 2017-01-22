@@ -25,29 +25,28 @@ Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
 Summary
 =======
 
-**Glances** is a cross-platform monitoring tool which aims to present a maximum
-of information in a minimum of space through a curses or Web based interface.
-It can adapt dynamically the displayed information depending on the user
-interface size.
+**Glances** is a cross-platform monitoring tool which aims to present a
+maximum of information in a minimum of space through a curses or Web
+based interface. It can adapt dynamically the displayed information
+depending on the user interface size.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
-It can also work in client/server mode. Remote monitoring could be done via
-terminal, Web interface or API (XMLRPC and RESTful). Stats can also be exported
-to files or external time/value databases.
+It can also work in client/server mode. Remote monitoring could be done
+via terminal, Web interface or API (XML-RPC and RESTful). Stats can also
+be exported to files or external time/value databases.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-responsive-webdesign.png
 
-Glances is written in Python and uses libraries to grab information from your
-system. It is based on an open architecture where developers can add news
-plugins or exports modules.
+Glances is written in Python and uses libraries to grab information from
+your system. It is based on an open architecture where developers can
+add new plugins or exports modules.
 
 Requirements
 ============
 
-- ``python 2.7,>=3.3`` (tested with version 2.7, 3.3, 3.4, 3.5)
+- ``python 2.7,>=3.3``
 - ``psutil>=2.0.0`` (better with latest version)
-- ``setuptools``
 
 Optional dependencies:
 
@@ -127,7 +126,7 @@ To install, simply use ``pip``:
 *Note*: Python headers are required to install `psutil`_. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 For Fedora/CentOS/RHEL install first *python-devel* package. For Windows,
-just install PsUtil from the binary installation file.
+just install psutil from the binary installation file.
 
 You can also install the following libraries in order to use optional
 features (like the Web interface, exports modules, sensors...):
@@ -157,7 +156,9 @@ If you need to install Glances in a specific user location, use:
 Docker: the funny way
 ---------------------
 
-A Glances container is available. It will include the latest development HEAD version. You can use it to monitor your server and all your others containers !
+A Glances container is available. It will include the latest development
+HEAD version. You can use it to monitor your server and all your others
+containers !
 
 Get the Glances container:
 
@@ -171,8 +172,8 @@ Run the container in *console mode*:
 
     docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
-Additionally, If you want to use your own glances.conf file, you can create your
-own Dockerfile:
+Additionally, if you want to use your own glances.conf file, you can
+create your own Dockerfile:
 
 .. code-block:: console
 
@@ -180,7 +181,8 @@ own Dockerfile:
     COPY glances.conf /glances/conf/glances.conf
     CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
-Alternatively, you can specify something along the same lines with docker run options:
+Alternatively, you can specify something along the same lines with
+docker run options:
 
 .. code-block:: console
 
@@ -188,7 +190,8 @@ Alternatively, you can specify something along the same lines with docker run op
 
 Where ./glances.conf is a local directory containing your glances.conf file.
 
-Run the container in *Web server mode* (notice the GLANCES_OPT environment variable setting parameters for the glances startup command) :
+Run the container in *Web server mode* (notice the `GLANCES_OPT` environment
+variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
@@ -197,18 +200,9 @@ Run the container in *Web server mode* (notice the GLANCES_OPT environment varia
 GNU/Linux
 ---------
 
-At the moment, packages exist for the following GNU/Linux distributions:
-
-- Arch Linux
-- Debian
-- Fedora/CentOS/RHEL
-- Gentoo
-- Slackware (SlackBuild)
-- Ubuntu
-- Void Linux
-
-So you should be able to install it using your favorite package manager.
-Be aware that the Glances version can not be the latest one using this method.
+`Glances` is available on many Linux distributions, so you should be
+able to install it using your favorite package manager. Be aware that
+Glances may not be the latest one using this method.
 
 FreeBSD
 -------
@@ -256,13 +250,6 @@ then just:
 
     $ pip install glances
 
-You can also install the following libraries in order to use optional
-features (like the Web interface, exports modules, sensors...):
-
-.. code-block:: console
-
-    pip install bottle requests zeroconf netifaces influxdb elasticsearch potsdb statsd pystache pysnmp pika py-cpuinfo bernhard cassandra scandir
-
 Source
 ------
 
@@ -274,13 +261,13 @@ To install Glances from source:
     $ cd glances-*
     # python setup.py install
 
-*Note*: Python headers are required to install psutil. For example,
-on Debian/Ubuntu you need to install first the *python-dev* package.
+*Note*: Python headers are required to install psutil.
 
 Chef
 ----
 
-An awesome ``Chef`` cookbook is available to monitor your infrastructure: https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
+An awesome ``Chef`` cookbook is available to monitor your infrastructure:
+https://supermarket.chef.io/cookbooks/glances (thanks to Antoine Rouyer)
 
 Puppet
 ------
@@ -359,7 +346,7 @@ Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 License
 =======
 
-LGPL. See ``COPYING`` for more details.
+LGPLv3. See ``COPYING`` for more details.
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
