@@ -5,7 +5,9 @@ Glances Version 2
 Version 2.8.1
 =============
 
-...
+Bugs corrected:
+
+    * Autodiscover error while binding on IPv6 addresses (issue #1002)
 
 Version 2.8
 ===========
