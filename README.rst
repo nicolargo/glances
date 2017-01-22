@@ -134,6 +134,7 @@ features (like the Web interface, exports modules, sensors...):
 .. code-block:: console
 
     pip install glances[action,batinfo,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
+    pip install https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.zip
 
 To upgrade Glances to the latest version:
 

@@ -90,7 +90,6 @@ setup(
         'gpu': ['nvidia-ml-py'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
-        'sensors': ['https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.zip'],
         'snmp': ['pysnmp'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
