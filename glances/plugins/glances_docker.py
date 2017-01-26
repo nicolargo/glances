@@ -29,6 +29,8 @@ from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
+from glances.globals import WINDOWS
+
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
 try:
@@ -109,10 +111,14 @@ class Plugin(GlancesPlugin):
             return None
         # Init connection to the Docker API
         try:
-            if version is None:
-                ret = init_docker(base_url='unix://var/run/docker.sock')
+            if WINDOWS:
+                url = 'npipe:////./pipe/docker_engine'
             else:
-                ret = init_docker(base_url='unix://var/run/docker.sock',
+                url = 'unix://var/run/docker.sock'
+            if version is None:
+                ret = init_docker(base_url=url)
+            else:
+                ret = init_docker(base_url=url,
                                   version=version)
         except NameError:
             # docker lib not found
