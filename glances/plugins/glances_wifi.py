@@ -103,6 +103,10 @@ class Plugin(GlancesPlugin):
                 except InterfaceError:
                     # Not a Wifi interface
                     pass
+                except Exception as e:
+                    # Other error
+                    logger.debug("WIFI plugin: Can not grab cellule stats ({})".format(e))
+                    pass
                 else:
                     for wifi_cell in wifi_cells:
                         hotspot = {
