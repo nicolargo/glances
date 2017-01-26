@@ -1,1 +1,1 @@
-&nbsp;-&nbsp;<span class="title">IP</span>&nbsp;<span>{{ statsIp.address }}/{{ statsIp.maskCidr }}</span>&nbsp;<span class="title">Pub</span>&nbsp;<span>{{ statsIp.publicAddress }}</span>
+&nbsp;-&nbsp;<span class="title">IP</span>&nbsp;<span>{{ statsIp.address }}/{{ statsIp.maskCidr }}</span>&nbsp;<span ng-if="statsIp.publicAddress" class="title">Pub</span>&nbsp;<span>{{ statsIp.publicAddress }}</span>
