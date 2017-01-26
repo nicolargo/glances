@@ -10,7 +10,7 @@ dynamically (bit/s, kbit/s, Mbit/s, etc).
 
 If the interface speed is detected (not on all systems), the defaults
 thresholds are applied (70% for careful, 80% warning and 90% critical).
-It is possible to define this percents thresholds form the configuration
+It is possible to define this percents thresholds from the configuration
 file. It is also possible to define per interface bit rate thresholds.
 In this case thresholds values are define in bps.
 
