@@ -201,6 +201,24 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is list, msg='IRQ stats is not a list')
         print('INFO: IRQ stats: %s' % stats_grab)
 
+    @unittest.skipIf(not LINUX, "GPU available only on Linux")
+    def test_013_gpu(self):
+        """Check GPU plugin."""
+        print('INFO: [TEST_014] Check GPU stats')
+        stats_grab = stats.get_plugin('gpu').get_raw()
+        self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
+        print('INFO: GPU stats: %s' % stats_grab)
+
+    def test_095_methods(self):
+        """Test mandatories methods"""
+        print('INFO: [TEST_095] Mandatories methods')
+        mandatories_methods = ['reset', 'update']
+        plugins_list = stats.getAllPlugins()
+        for plugin in plugins_list:
+            for method in mandatories_methods:
+                self.assertTrue(hasattr(stats.get_plugin(plugin), method),
+                                msg='{} has no method {}()'.format(plugin, method))
+
     def test_096_views(self):
         """Test get_views method"""
         print('INFO: [TEST_096] Test views')

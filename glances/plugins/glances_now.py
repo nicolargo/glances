@@ -39,6 +39,10 @@ class Plugin(GlancesPlugin):
         # Set the message position
         self.align = 'bottom'
 
+    def reset(self):
+        """Reset/init the stats."""
+        self.stats = ''
+
     def update(self):
         """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
