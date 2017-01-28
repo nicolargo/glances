@@ -400,33 +400,24 @@ class _GlancesCurses(object):
 
     def disable_top(self):
         """Disable the top panel"""
-        self.args.disable_quicklook = True
-        self.args.disable_cpu = True
-        self.args.disable_mem = True
-        self.args.disable_memswap = True
-        self.args.disable_load = True
+        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']:
+            setattr(self.args, 'disable_' + p, True)
 
     def enable_top(self):
         """Enable the top panel"""
-        self.args.disable_quicklook = False
-        self.args.disable_cpu = False
-        self.args.disable_mem = False
-        self.args.disable_memswap = False
-        self.args.disable_load = False
+        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']:
+            setattr(self.args, 'disable_' + p, False)
 
     def disable_fullquicklook(self):
         """Disable the full quicklook mode"""
-        self.args.disable_quicklook = False
-        self.args.disable_cpu = False
-        self.args.disable_mem = False
-        self.args.disable_memswap = False
+        for p in ['quicklook', 'cpu', 'gpu', 'mem', 'memswap']:
+            setattr(self.args, 'disable_' + p, False)
 
     def enable_fullquicklook(self):
         """Disable the full quicklook mode"""
         self.args.disable_quicklook = False
-        self.args.disable_cpu = True
-        self.args.disable_mem = True
-        self.args.disable_memswap = True
+        for p in ['cpu', 'gpu', 'mem', 'memswap']:
+            setattr(self.args, 'disable_' + p, True)
 
     def end(self):
         """Shutdown the curses window."""
