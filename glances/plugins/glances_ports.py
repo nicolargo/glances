@@ -62,6 +62,10 @@ class Plugin(GlancesPlugin):
         # Call the father class
         super(Plugin, self).exit()
 
+    def reset(self):
+        """Reset/init the stats."""
+        self.stats = []
+
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the ports list."""
