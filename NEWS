@@ -8,6 +8,7 @@ Version 2.8.1
 Bugs corrected:
 
     * Autodiscover error while binding on IPv6 addresses (issue #1002)
+    * GPU plugin is display when hitting '4' or '5' shortkeys (issue #1012)
 
 Version 2.8
 ===========
