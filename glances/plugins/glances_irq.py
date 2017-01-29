@@ -94,6 +94,7 @@ class Plugin(GlancesPlugin):
         if not LINUX or not self.stats or not self.args.enable_irq:
             return ret
 
+
         if max_width is not None and max_width >= 23:
             irq_max_width = max_width - 14
         else:
@@ -173,12 +174,18 @@ class GlancesIRQ(object):
         Return the IRQ sum number
 
         IRQ line samples:
-        1:      44487        341         44         72   IO-APIC   1-edge      i8042
+        1:     44487        341         44         72   IO-APIC   1-edge      i8042
         LOC:   33549868   22394684   32474570   21855077   Local timer interrupts
+        FIQ:   usb_fiq
         """
         splitted_line = line.split()
-        # sum interrupts on all CPUs
-        return sum(map(int, splitted_line[1:(self.cpu_number + 1)]))
+        # Correct issue #1007 on some conf (Raspberry Pi with Raspbian)
+        if len(splitted_line) < self.cpu_number + 1:
+            ret = 0
+        else:
+            # sum interrupts on all CPUs
+            ret = sum(map(int, splitted_line[1:(self.cpu_number + 1)]))
+        return ret
 
     def __update(self):
         """
