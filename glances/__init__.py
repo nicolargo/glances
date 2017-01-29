@@ -27,9 +27,9 @@ import signal
 import sys
 
 # Global name
-__version__ = '2.8'
+__version__ = '2.8.1_DEVELOP'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
-__license__ = 'LGPL'
+__license__ = 'LGPLv3'
 
 # Import psutil
 try:

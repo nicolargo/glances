@@ -37,6 +37,14 @@ def get_data_files():
     return data_files
 
 
+def get_install_requires():
+    requires = ['psutil>=2.0.0']
+    if sys.platform.startswith('win'):
+        requires.append('bottle')
+
+    return requires
+
+
 class tests(Command):
     user_options = []
 
@@ -66,25 +74,25 @@ setup(
     author='Nicolas Hennion',
     author_email='nicolas@nicolargo.com',
     url='https://github.com/nicolargo/glances',
-    license="LGPL",
+    license='LGPLv3',
     keywords="cli curses monitoring system",
-    install_requires=['psutil>=2.0.0'],
+    install_requires=get_install_requires(),
     extras_require={
-        'ACTION': ['pystache'],
-        'BATINFO': ['batinfo'],
-        'BROWSER': ['zeroconf>=0.17'],
-        'CPUINFO': ['py-cpuinfo'],
-        'CHART': ['matplotlib'],
-        'DOCKER': ['docker-py'],
-        'EXPORT': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch', 'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
-        'FOLDERS': ['scandir'],
-        'GPU': ['nvidia-ml-py'],
-        'IP': ['netifaces'],
-        'RAID': ['pymdstat'],
-        'SENSORS': ['py3sensors'],
-        'SNMP': ['pysnmp'],
-        'WEB': ['bottle', 'requests'],
-        'WIFI': ['wifi']
+        'action': ['pystache'],
+        'batinfo': ['batinfo'],
+        'browser': ['zeroconf>=0.17'],
+        'cpuinfo': ['py-cpuinfo'],
+        'chart': ['matplotlib'],
+        'docker': ['docker>=2.0.0'],
+        'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
+                   'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
+        'folders:python_version<"3.5"': ['scandir'],
+        'gpu': ['nvidia-ml-py'],
+        'ip': ['netifaces'],
+        'raid': ['pymdstat'],
+        'snmp': ['pysnmp'],
+        'web': ['bottle', 'requests'],
+        'wifi': ['wifi']
     },
     packages=['glances'],
     include_package_data=True,
@@ -108,6 +116,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: System :: Monitoring'
     ]
 )

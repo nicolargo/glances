@@ -3,9 +3,8 @@ bernhard
 bottle
 cassandra-driver
 couchdb
-docker>=2.0.2
+docker
 elasticsearch
-hddtemp
 influxdb
 matplotlib
 netifaces
@@ -18,7 +17,8 @@ pysnmp
 pystache
 pyzmq
 requests
-scandir
+scandir; python_version < "3.5"
 statsd
 wifi
 zeroconf
+https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.zip
