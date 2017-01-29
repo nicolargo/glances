@@ -716,7 +716,8 @@ class _GlancesCurses(object):
         if not self.args.disable_left_sidebar:
             for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
                       'folders', 'raid', 'sensors', 'now']:
-                if hasattr(self.args, 'disable_' + s) and s in stat_display:
+                if (hasattr(self.args, 'enable_' + s) or
+                    hasattr(self.args, 'disable_' + s)) and s in stat_display:
                     self.new_line()
                     self.display_plugin(stat_display[s])
 
