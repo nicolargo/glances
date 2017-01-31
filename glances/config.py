@@ -25,8 +25,62 @@ import multiprocessing
 from io import open
 
 from glances.compat import ConfigParser, NoOptionError
-from glances.globals import BSD, LINUX, MACOS, WINDOWS, sys_prefix
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
 from glances.logger import logger
+
+
+def user_config_dir():
+    r"""Return the per-user config dir (full path).
+
+    - Linux, *BSD, SunOS: ~/.config/glances
+    - macOS: ~/Library/Application Support/glances
+    - Windows: %APPDATA%\glances
+    """
+    if WINDOWS:
+        path = os.environ.get('APPDATA')
+    elif MACOS:
+        path = os.path.expanduser('~/Library/Application Support')
+    else:
+        path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    path = os.path.join(path, 'glances')
+
+    return path
+
+
+def user_cache_dir():
+    r"""Return the per-user cache dir (full path).
+
+    - Linux, *BSD, SunOS: ~/.cache/glances
+    - macOS: ~/Library/Caches/glances
+    - Windows: %LOCALAPPDATA%\glances\cache
+    """
+    if WINDOWS:
+        path = os.path.join(os.environ.get('LOCALAPPDATA'), 'glances', 'cache')
+    elif MACOS:
+        path = os.path.expanduser('~/Library/Caches/glances')
+    else:
+        path = os.path.join(os.environ.get('XDG_CACHE_HOME') or os.path.expanduser('~/.cache'),
+                            'glances')
+
+    return path
+
+
+def system_config_dir():
+    r"""Return the system-wide config dir (full path).
+
+    - Linux, SunOS: /etc/glances
+    - *BSD, macOS: /usr/local/etc/glances
+    - Windows: %APPDATA%\glances
+    """
+    if LINUX or SUNOS:
+        path = '/etc'
+    elif BSD or MACOS:
+        path = '/usr/local/etc'
+    else:
+        path = os.environ.get('APPDATA')
+    path = os.path.join(path, 'glances')
+
+    return path
 
 
 class Config(object):
@@ -51,7 +105,7 @@ class Config(object):
         The list is built taking into account of the OS, priority and location.
 
         * custom path: /path/to/glances
-        * Linux: ~/.config/glances, /etc/glances
+        * Linux, SunOS: ~/.config/glances, /etc/glances
         * *BSD: ~/.config/glances, /usr/local/etc/glances
         * macOS: ~/Library/Application Support/glances, /usr/local/etc/glances
         * Windows: %APPDATA%\glances
@@ -66,22 +120,8 @@ class Config(object):
         if self.config_dir:
             paths.append(self.config_dir)
 
-        if LINUX or BSD:
-            paths.append(
-                os.path.join(os.environ.get('XDG_CONFIG_HOME') or
-                             os.path.expanduser('~/.config'),
-                             'glances', self.config_filename))
-            if BSD:
-                paths.append(os.path.join(sys.prefix, 'etc', 'glances', self.config_filename))
-            else:
-                paths.append(os.path.join('/etc/glances', self.config_filename))
-        elif MACOS:
-            paths.append(
-                os.path.join(os.path.expanduser('~/Library/Application Support/glances'),
-                             self.config_filename))
-            paths.append(os.path.join(sys_prefix, 'etc', 'glances', self.config_filename))
-        elif WINDOWS:
-            paths.append(os.path.join(os.environ.get('APPDATA'), 'glances', self.config_filename))
+        paths.append(os.path.join(user_config_dir(), self.config_filename))
+        paths.append(os.path.join(system_config_dir(), self.config_filename))
 
         return paths
 

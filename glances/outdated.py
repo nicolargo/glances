@@ -33,7 +33,8 @@ else:
     outdated_tag = True
 
 from glances import __version__
-from glances.globals import BSD, LINUX, MACOS, WINDOWS
+from glances.config import user_cache_dir
+from glances.globals import safe_makedirs
 from glances.logger import logger
 
 
@@ -51,6 +52,8 @@ class Outdated(object):
         """Init the Outdated class"""
         self.args = args
         self.config = config
+        self.cache_dir = user_cache_dir()
+        self.cache_file = os.path.join(self.cache_dir, 'glances-version.db')
 
         # Set default value...
         self.data = {
@@ -126,10 +129,10 @@ class Outdated(object):
         # If the cached file exist, read-it
         cached_data = {}
         try:
-            with open(os.path.join(self._cache_path(), 'glances-version.db'), 'rb') as f:
+            with open(self.cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
         except Exception as e:
-            logger.debug("Cannot read the version cache file ({})".format(e))
+            logger.debug("Cannot read the version cache file: {}".format(e))
         else:
             logger.debug("Read the version cache file")
             if cached_data['installed_version'] != self.installed_version() or \
@@ -141,25 +144,13 @@ class Outdated(object):
         return cached_data
 
     def _save_cache(self):
-        """Save data to a file"""
-        # If the cached file exist, read-it
-        try:
-            with open(os.path.join(self._cache_path(), 'glances-version.db'), 'wb') as f:
-                pickle.dump(self.data, f)
-        except IOError:
-            return False
-        return True
+        """Save data to the cache file."""
+        # Create the cache directory
+        safe_makedirs(self.cache_dir)
 
-    def _cache_path(self):
-        """Return the cached file path"""
-        if LINUX or BSD:
-            return os.path.join(os.environ.get('XDG_CONFIG_HOME') or
-                                os.path.expanduser('~/.config'),
-                                'glances')
-        elif MACOS:
-            return os.path.expanduser('~/Library/Application Support/glances')
-        elif WINDOWS:
-            return os.path.join(os.environ.get('APPDATA'), 'glances')
+        # Create/overwrite the cache file
+        with open(self.cache_file, 'wb') as f:
+            pickle.dump(self.data, f)
 
     def _update_pypi_version(self):
         """Get the latest Pypi version (as a string) via the Restful JSON API"""
