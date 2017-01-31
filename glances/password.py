@@ -27,7 +27,8 @@ import uuid
 from io import open
 
 from glances.compat import b, input
-from glances.globals import BSD, LINUX, MACOS, WINDOWS
+from glances.config import user_config_dir
+from glances.globals import safe_makedirs
 from glances.logger import logger
 
 
@@ -37,30 +38,9 @@ class GlancesPassword(object):
 
     def __init__(self, username='glances'):
         self.username = username
-        self.password_path = self.get_password_path()
+        self.password_dir = user_config_dir()
         self.password_filename = self.username + '.pwd'
-        self.password_filepath = os.path.join(self.password_path, self.password_filename)
-
-    def get_password_path(self):
-        r"""Get the path where the password file will be stored.
-
-        * Linux and *BSD: ~/.config/glances
-        * macOS: ~/Library/glances
-        * Windows: %APPDATA%\glances
-        """
-        if LINUX or BSD:
-            app_path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
-        elif MACOS:
-            app_path = os.path.join(os.environ.get('HOME'), 'Library')
-        elif WINDOWS:
-            app_path = os.environ.get('APPDATA')
-        else:
-            app_path = '.'
-
-        # Append the Glances folder
-        app_path = os.path.join(app_path, 'glances')
-
-        return app_path
+        self.password_file = os.path.join(self.password_dir, self.password_filename)
 
     def sha256_hash(self, plain_password):
         """Return the SHA-256 of the given password."""
@@ -98,9 +78,9 @@ class GlancesPassword(object):
             2) the password is hashed with SHA-256 (only SHA string transit
                through the network)
         """
-        if os.path.exists(self.password_filepath) and not clear:
+        if os.path.exists(self.password_file) and not clear:
             # If the password file exist then use it
-            logger.info("Read password from file {}".format(self.password_filepath))
+            logger.info("Read password from file {}".format(self.password_file))
             password = self.load_password()
         else:
             # password_sha256 is the plain SHA-256 password
@@ -131,23 +111,17 @@ class GlancesPassword(object):
 
     def save_password(self, hashed_password):
         """Save the hashed password to the Glances folder."""
-        # Check if the Glances folder already exists
-        if not os.path.exists(self.password_path):
-            # Create the Glances folder
-            try:
-                os.makedirs(self.password_path)
-            except OSError as e:
-                logger.error("Cannot create Glances directory: {}".format(e))
-                return
+        # Create the glances directory
+        safe_makedirs(self.password_dir)
 
         # Create/overwrite the password file
-        with open(self.password_filepath, 'wb') as file_pwd:
+        with open(self.password_file, 'wb') as file_pwd:
             file_pwd.write(b(hashed_password))
 
     def load_password(self):
         """Load the hashed password from the Glances folder."""
         # Read the password file, if it exists
-        with open(self.password_filepath, 'r') as file_pwd:
+        with open(self.password_file, 'r') as file_pwd:
             hashed_password = file_pwd.read()
 
         return hashed_password
