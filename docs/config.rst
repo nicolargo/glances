@@ -10,19 +10,18 @@ Furthermore a configuration file is needed to access more settings.
 Location
 --------
 
-A template is available in the /usr/local/share/doc/glances folder
-(on GNU/Linux OS) or directly in the Github:
-
-https://raw.githubusercontent.com/nicolargo/glances/master/conf/glances.conf
+.. note::
+    A template is available in the ``/usr{,/local}/share/doc/glances``
+    (Unix-like) directory or directly on `GitHub`_.
 
 You can put your own ``glances.conf`` file in the following locations:
 
-=========== ============================================================
-``Linux``   ~/.config/glances ($XDG_CONFIG_HOME environment variable) or /etc/glances
-``*BSD``    ~/.config/glances or /usr/local/etc/glances
-``macOS``   ~/Library/Application Support/glances or /usr/local/etc/glances
-``Windows`` %APPDATA%\\glances
-=========== ============================================================
+==================== =============================================================
+``Linux``, ``SunOS`` ~/.config/glances, /etc/glances
+``*BSD``             ~/.config/glances, /usr/local/etc/glances
+``macOS``            ~/Library/Application Support/glances, /usr/local/etc/glances
+``Windows``          %APPDATA%\\glances
+==================== =============================================================
 
 On Windows XP, the ``%APPDATA%`` path is:
 
@@ -49,11 +48,11 @@ A first section (called global) is available:
 .. code-block:: ini
 
     [global]
-    # Does Glances should check if a newer version is available on Pypi ?
+    # Does Glances should check if a newer version is available on PyPI?
     check_update=true
 
-Each plugin, export module and application monitoring process (AMP) can have a
-section. Below an example for the CPU plugin:
+Each plugin, export module and application monitoring process (AMP) can
+have a section. Below an example for the CPU plugin:
 
 .. code-block:: ini
 
@@ -86,7 +85,7 @@ an InfluxDB export module:
     prefix=localhost
     #tags=foo:bar,spam:eggs
 
-or a NGinx AMP:
+or a Nginx AMP:
 
 .. code-block:: ini
 
@@ -108,14 +107,15 @@ line.
 
 By default, the ``glances-USERNAME.log`` file is under the temporary directory:
 
-====================== ==================================================
-``Linux, *BSD, macOS`` /tmp
-``Windows``            %APPDATA%\\Local\\temp
-====================== ==================================================
+=========== ======================
+``*nix``    /tmp
+``Windows`` %APPDATA%\\Local\\temp
+=========== ======================
 
-If you want to use another system path or change the log message, you can use
-your own logger configuration. First of all you have to create a glances.json
-file with (for example) the following content (JSON format):
+If you want to use another system path or change the log message, you
+can use your own logger configuration. First of all, you have to create
+a ``glances.json`` file with, for example, the following content (JSON
+format):
 
 .. code-block:: json
 
@@ -184,4 +184,8 @@ and start Glances using the following command line:
 
     LOG_CFG=<path>/glances.json glances
 
-Note: Replace <path> by the folder where your glances.json file is hosted.
+.. note::
+    Replace ``<path>`` by the folder where your ``glances.json`` file
+    is hosted.
+
+.. _GitHub: https://raw.githubusercontent.com/nicolargo/glances/master/conf/glances.conf
