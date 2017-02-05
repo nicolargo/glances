@@ -5,6 +5,10 @@ Glances Version 2
 Version 2.8.1
 =============
 
+Changes:
+    * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
+
+
 Bugs corrected:
 
     * Autodiscover error while binding on IPv6 addresses (issue #1002)

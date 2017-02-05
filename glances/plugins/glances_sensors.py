@@ -19,14 +19,10 @@
 
 """Sensors plugin."""
 
-# Sensors library (optional; Linux-only)
-# Py3Sensors: https://bitbucket.org/gleb_zhulik/py3sensors
-try:
-    import sensors
-except ImportError:
-    pass
+from psutil import sensors_temperatures
 
 from glances.logger import logger
+from glances.compat import iteritems
 from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -228,7 +224,7 @@ class GlancesGrabSensors(object):
     def __init__(self):
         """Init sensors stats."""
         try:
-            sensors.init()
+            sensors_temperatures()
         except Exception:
             self.initok = False
         else:
@@ -246,24 +242,25 @@ class GlancesGrabSensors(object):
         # Reset the list
         self.reset()
 
-        if self.initok:
-            for chip in sensors.iter_detected_chips():
-                for feature in chip:
-                    sensors_current = {}
-                    if feature.name.startswith(b'temp'):
-                        # Temperature sensor
-                        sensors_current['unit'] = SENSOR_TEMP_UNIT
-                    elif feature.name.startswith(b'fan'):
-                        # Fan speed sensor
-                        sensors_current['unit'] = SENSOR_FAN_UNIT
-                    if sensors_current:
-                        try:
-                            sensors_current['label'] = feature.label
-                            sensors_current['value'] = int(feature.get_value())
-                        except Exception as e:
-                            logger.debug("Cannot grab sensor stat (%s)" % e)
-                        else:
-                            self.sensors_list.append(sensors_current)
+        if not self.initok:
+            return self.sensors_list
+
+        # Temperature sensor
+        for chipname, chip in iteritems(sensors_temperatures()):
+            i = 1
+            for feature in chip:
+                sensors_current = {}
+                # Sensor name
+                if feature.label == '':
+                    sensors_current['label'] = chipname + ' ' + str(i)
+                else:
+                    sensors_current['label'] = feature.label
+                # Temperature and unit
+                sensors_current['value'] = int(feature.current)
+                sensors_current['unit'] = SENSOR_TEMP_UNIT
+                # Add sensor to the list
+                self.sensors_list.append(sensors_current)
+                i += 1
 
         return self.sensors_list
 
