@@ -150,22 +150,19 @@ class GlancesExport(object):
             return False
 
         # Get all the stats & limits
-        all_stats = stats.getAllExports()
-        all_limits = stats.getAllLimits()
-        # Get the plugins list
-        plugins = stats.getAllPlugins()
+        all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export())
+        all_limits = stats.getAllLimitsAsDict(plugin_list=self.plugins_to_export())
 
-        # Loop over available plugins
-        for i, plugin in enumerate(plugins):
-            if plugin in self.plugins_to_export():
-                if isinstance(all_stats[i], dict):
-                    all_stats[i].update(all_limits[i])
-                elif isinstance(all_stats[i], list):
-                    all_stats[i] += all_limits[i]
-                else:
-                    continue
-                export_names, export_values = self.__build_export(all_stats[i])
-                self.export(plugin, export_names, export_values)
+        # Loop over plugins to export
+        for plugin in self.plugins_to_export():
+            if isinstance(all_stats[plugin], dict):
+                all_stats[plugin].update(all_limits[plugin])
+            elif isinstance(all_stats[plugin], list):
+                all_stats[plugin] += all_limits[plugin]
+            else:
+                continue
+            export_names, export_values = self.__build_export(all_stats[plugin])
+            self.export(plugin, export_names, export_values)
 
         return True
 
