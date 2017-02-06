@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
 
         Export uptime in seconds.
         """
-        return {'seconds': self.uptime.seconds}
+        return {'seconds': self.uptime.second}
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
