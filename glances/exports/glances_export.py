@@ -177,7 +177,7 @@ class GlancesExport(object):
         if isinstance(stats, dict):
             # Stats is a dict
             # Is there a key ?
-            if 'key' in iterkeys(stats):
+            if 'key' in iterkeys(stats) and stats['key'] in iterkeys(stats):
                 pre_key = '{}.'.format(stats[stats['key']])
             else:
                 pre_key = ''
