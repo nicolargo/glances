@@ -87,7 +87,7 @@ setup(
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'influxdb>=1.0.0', 'pika', 'potsdb', 'pyzmq', 'statsd'],
         'folders:python_version<"3.5"': ['scandir'],
-        'gpu': ['nvidia-ml-py'],
+        'gpu:python_version=="2.7"': ['nvidia-ml-py'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
         'snmp': ['pysnmp'],
