@@ -47,7 +47,7 @@ class Plugin(GlancesPlugin):
         self.align = 'right'
 
         # Init the stats
-        self.uptime = datetime.now()
+        self.uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
         self.reset()
 
     def reset(self):
@@ -59,7 +59,7 @@ class Plugin(GlancesPlugin):
 
         Export uptime in seconds.
         """
-        return {'seconds': self.uptime.second}
+        return {'seconds': self.uptime.seconds}
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
