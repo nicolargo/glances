@@ -7,6 +7,7 @@ Version 2.x
 
 Bugs corrected:
 
+    * Unable to launch Glances on Windows (issue #1021)
 
 Version 2.8.2
 =============
