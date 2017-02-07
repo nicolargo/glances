@@ -2,11 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.X
+Version 2.8.2
 =============
 
 Bugs corrected:
 
+    * InfluxDB export in 2.8.1 is broken (issue #1026)
 
 Version 2.8.1
 =============
