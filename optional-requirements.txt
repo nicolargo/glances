@@ -8,7 +8,7 @@ elasticsearch
 influxdb
 matplotlib
 netifaces
-nvidia-ml-py
+nvidia-ml-py; python_version == "2.7"
 pika
 potsdb
 py-cpuinfo

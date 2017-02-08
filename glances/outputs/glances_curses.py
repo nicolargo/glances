@@ -717,7 +717,7 @@ class _GlancesCurses(object):
             for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
                       'folders', 'raid', 'sensors', 'now']:
                 if (hasattr(self.args, 'enable_' + s) or
-                    hasattr(self.args, 'disable_' + s)) and s in stat_display:
+                   hasattr(self.args, 'disable_' + s)) and s in stat_display:
                     self.new_line()
                     self.display_plugin(stat_display[s])
 

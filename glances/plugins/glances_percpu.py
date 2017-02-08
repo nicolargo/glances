@@ -84,7 +84,11 @@ class Plugin(GlancesPlugin):
 
         # Total per-CPU usage
         for cpu in self.stats:
-            msg = '{:>6}%'.format(cpu['total'])
+            try:
+                msg = '{:>6}%'.format(cpu['total'])
+            except TypeError:
+                # TypeError: string indices must be integers (issue #1027)
+                msg = '{:>6}%'.format('?')
             ret.append(self.curse_add_line(msg))
 
         # Stats per-CPU
@@ -96,7 +100,11 @@ class Plugin(GlancesPlugin):
             msg = '{:8}'.format(stat + ':')
             ret.append(self.curse_add_line(msg))
             for cpu in self.stats:
-                msg = '{:>6}%'.format(cpu[stat])
+                try:
+                    msg = '{:>6}%'.format(cpu[stat])
+                except TypeError:
+                    # TypeError: string indices must be integers (issue #1027)
+                    msg = '{:>6}%'.format('?')
                 ret.append(self.curse_add_line(msg,
                                                self.get_alert(cpu[stat], header=stat)))
 

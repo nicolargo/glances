@@ -2,19 +2,38 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.8.1
+Version 2.x
 =============
-
-Changes:
-    * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
-
 
 Bugs corrected:
 
+    * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
+    * Unable to launch Glances on Windows (issue #1021)
+
+Version 2.8.2
+=============
+
+Bugs corrected:
+
+    * InfluxDB export in 2.8.1 is broken (issue #1026)
+
+Version 2.8.1
+=============
+
+Enhancements and new features:
+
+    * Enable docker plugin on Windows (issue #1009) - Thanks to @fraoustin
+
+Bugs corrected:
+
+    * Glances export issue with CPU and SENSORS (issue #1024)
+    * Can't export data to a CSV file in Client/Server mode (issue #1023)
     * Autodiscover error while binding on IPv6 addresses (issue #1002)
     * GPU plugin is display when hitting '4' or '5' shortkeys (issue #1012)
     * Interrupts and usb_fiq (issue #1007)
+    * Docker image does not work in web server mode! (issue #1017)
     * IRQ plugin is not display anymore (issue #1013)
+    * Autodiscover error while binding on IPv6 addresses (issue #1002)
 
 Version 2.8
 ===========
@@ -44,8 +63,8 @@ Enhancements and new features:
     * System uptime in export (issue #890)
     * Refactor the --disable-* options (issue #948)
     * PID column too small if kernel.pid_max is > 99999 (issue #959)
-
 Bugs corrected:
+
 
     * Glances RAID plugin Traceback (issue #927)
     * Default AMP crashes when 'command' given (issue #933)

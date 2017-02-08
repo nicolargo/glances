@@ -97,7 +97,8 @@ To start the central client, use the following option:
     client$ glances --browser
 
 .. note::
-Use ``--disable-autodiscover`` to disable the auto discovery mode.
+
+    Use ``--disable-autodiscover`` to disable the auto discovery mode.
 
 SNMP
 ^^^^
