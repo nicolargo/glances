@@ -11,6 +11,7 @@ to providing stats to multiple services (see list below).
 
    csv
    cassandra
+   couchdb
    elastic
    influxdb
    opentsdb

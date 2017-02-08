@@ -61,7 +61,7 @@ Optional dependencies:
 - ``influxdb`` (for the InfluxDB export module)
 - ``matplotlib`` (for graphical/chart support)
 - ``netifaces`` (for the IP plugin)
-- ``nvidia-ml-py`` (for the GPU plugin)
+- ``nvidia-ml-py`` (for the GPU plugin) [Python 2-only]
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)

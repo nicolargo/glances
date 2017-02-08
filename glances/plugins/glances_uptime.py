@@ -47,7 +47,7 @@ class Plugin(GlancesPlugin):
         self.align = 'right'
 
         # Init the stats
-        self.uptime = datetime.now()
+        self.uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
         self.reset()
 
     def reset(self):
