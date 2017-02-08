@@ -21,4 +21,3 @@ scandir; python_version < "3.5"
 statsd
 wifi
 zeroconf
-https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.zip

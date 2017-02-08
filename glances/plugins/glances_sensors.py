@@ -19,7 +19,7 @@
 
 """Sensors plugin."""
 
-from psutil import sensors_temperatures
+import psutil
 
 from glances.logger import logger
 from glances.compat import iteritems
@@ -219,13 +219,14 @@ class Plugin(GlancesPlugin):
 
 class GlancesGrabSensors(object):
 
-    """Get sensors stats using the py3sensors library."""
+    """Get sensors stats."""
 
     def __init__(self):
         """Init sensors stats."""
         try:
-            sensors_temperatures()
-        except Exception:
+            # XXX: psutil>=5.1.0 is required
+            self.stemps = psutil.sensors_temperatures()
+        except AttributeError:
             self.initok = False
         else:
             self.initok = True
@@ -246,7 +247,7 @@ class GlancesGrabSensors(object):
             return self.sensors_list
 
         # Temperature sensor
-        for chipname, chip in iteritems(sensors_temperatures()):
+        for chipname, chip in iteritems(self.stemps):
             i = 1
             for feature in chip:
                 sensors_current = {}
