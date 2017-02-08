@@ -129,10 +129,15 @@ class Plugin(GlancesPlugin):
                     else:
                         msg = '{:4} '.format(cpu['cpu_number'])
                     ret.extend(self._msg_create_line(msg, bar, key))
+                    ret.append(self.curse_new_line())
             else:
                 bar.percent = self.stats[key]
                 msg = '{:4} '.format(key.upper())
                 ret.extend(self._msg_create_line(msg, bar, key))
+                ret.append(self.curse_new_line())
+
+        # Remove the last new line
+        ret.pop()
 
         # Return the message with decoration
         return ret
@@ -146,7 +151,6 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(str(bar), self.get_views(key=key, option='decoration')))
         ret.append(self.curse_add_line(bar.post_char, decoration='BOLD'))
         ret.append(self.curse_add_line('  '))
-        ret.append(self.curse_new_line())
 
         return ret
 
