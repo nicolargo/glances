@@ -5,9 +5,13 @@ Glances Version 2
 Version 2.x
 =============
 
-Bugs corrected:
+Enhancements and new features:
 
     * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
+    => Remove Py3Sensors and Batinfo dependencies
+
+Bugs corrected:
+
     * Unable to launch Glances on Windows (issue #1021)
 
 Version 2.8.2
