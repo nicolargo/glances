@@ -50,7 +50,6 @@ Requirements
 
 Optional dependencies:
 
-- ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``bernhard`` (for the Riemann export module)
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
@@ -64,7 +63,6 @@ Optional dependencies:
 - ``nvidia-ml-py`` (for the GPU plugin) [Python 2-only]
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
-- ``py3sensors`` (for hardware monitoring support) [Linux-only]
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
@@ -132,12 +130,11 @@ just install psutil from the binary installation file.
 to install the *wireless-tools* package on your system.
 
 You can also install the following libraries in order to use optional
-features (like the Web interface, exports modules, sensors...):
+features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install glances[action,batinfo,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
-    pip install https://bitbucket.org/gleb_zhulik/py3sensors/get/tip.zip
+    pip install glances[action,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
 
 To upgrade Glances to the latest version:
 
