@@ -5,6 +5,11 @@ Glances Version 2
 Version 2.x
 =============
 
+Enhancements and new features:
+
+    * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
+    => Remove Py3Sensors and Batinfo dependencies
+
 Bugs corrected:
 
     * Unable to launch Glances on Windows (issue #1021)
@@ -62,8 +67,8 @@ Enhancements and new features:
     * System uptime in export (issue #890)
     * Refactor the --disable-* options (issue #948)
     * PID column too small if kernel.pid_max is > 99999 (issue #959)
-
 Bugs corrected:
+
 
     * Glances RAID plugin Traceback (issue #927)
     * Default AMP crashes when 'command' given (issue #933)
