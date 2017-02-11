@@ -50,7 +50,6 @@ Requirements
 
 Optional dependencies:
 
-- ``batinfo`` (for battery monitoring support) [Linux-only]
 - ``bernhard`` (for the Riemann export module)
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
@@ -135,7 +134,7 @@ features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install glances[action,batinfo,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
+    pip install glances[action,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
 
 To upgrade Glances to the latest version:
 

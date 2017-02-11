@@ -79,7 +79,6 @@ setup(
     install_requires=get_install_requires(),
     extras_require={
         'action': ['pystache'],
-        'batinfo': ['batinfo'],
         'browser': ['zeroconf>=0.17'],
         'cpuinfo': ['py-cpuinfo'],
         'chart': ['matplotlib'],
