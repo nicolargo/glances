@@ -147,11 +147,12 @@ class ThreadAwsEc2Grabber(threading.Thread):
         for k, v in iteritems(self.AWS_EC2_API_METADATA):
             r_url = '{}/{}'.format(self.AWS_EC2_API_URL, v)
             try:
-                r = requests.get(r_url)[1]
+                r = requests.get(r_url)
             except Exception as e:
                 logger.debug('Can not connect to the AWS EC2 API {}'.format(r_url, e))
             else:
-                self._stats[k] = r
+                if r.ok:
+                    self._stats[k] = r.content
 
     @property
     def stats(self):
