@@ -103,6 +103,8 @@ Start the client browser (browser mode):\n\
                             dest='disable_alert', help='disable alert module')
         parser.add_argument('--disable-amps', action='store_true', default=False,
                             dest='disable_amps', help='disable applications monitoring process (AMP) module')
+        parser.add_argument('--disable-cloud', action='store_true', default=False,
+                            dest='disable_cloud', help='disable Cloud module')
         parser.add_argument('--disable-cpu', action='store_true', default=False,
                             dest='disable_cpu', help='disable CPU module')
         parser.add_argument('--disable-diskio', action='store_true', default=False,

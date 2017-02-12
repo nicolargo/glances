@@ -9,6 +9,7 @@ Enhancements and new features:
 
     * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
     => Remove Py3Sensors and Batinfo dependencies
+    * Add a "Cloud" plugin to grab stats inside the AWS EC2 API (issue #1029) 
 
 Bugs corrected:
 
