@@ -54,11 +54,12 @@ class _GlancesCurses(object):
         '3': {'switch': 'disable_quicklook'},
         '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
-        'd': {'switch': 'disable_diskio'},
         'A': {'switch': 'disable_amps'},
         'b': {'switch': 'byte'},
         'B': {'switch': 'diskio_iops'},
+        'C': {'switch': 'disable_cloud'},
         'D': {'switch': 'disable_docker'},
+        'd': {'switch': 'disable_diskio'},
         'F': {'switch': 'fs_free_space'},
         'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
@@ -545,6 +546,7 @@ class _GlancesCurses(object):
 
         # =====================================
         # Display first line (system+ip+uptime)
+        # Optionnaly: Cloud on second line
         # =====================================
         self.__display_firstline(__stat_display)
 
@@ -628,7 +630,11 @@ class _GlancesCurses(object):
         # Space between column
         self.space_between_column = 3
         self.new_column()
-        self.display_plugin(stat_display["uptime"])
+        self.display_plugin(stat_display["uptime"],
+                            add_space=self.get_stats_display_width(stat_display["cloud"]) == 0)
+        self.init_column()
+        self.new_line()
+        self.display_plugin(stat_display["cloud"])
 
     def __display_secondline(self, stat_display, stats):
         """Display the second line in the Curses interface.
@@ -829,7 +835,8 @@ class _GlancesCurses(object):
     def display_plugin(self, plugin_stats,
                        display_optional=True,
                        display_additional=True,
-                       max_y=65535):
+                       max_y=65535,
+                       add_space=True):
         """Display the plugin_stats on the screen.
 
         If display_optional=True display the optional stats
@@ -912,6 +919,10 @@ class _GlancesCurses(object):
         self.next_column = max(
             self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
+
+        if not add_space and self.next_line > 0:
+            # Do not have empty line after
+            self.next_line -= 1
 
     def erase(self):
         """Erase the content of the screen."""
