@@ -282,6 +282,10 @@ Start the client browser (browser mode):\n\
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
 
+        # By default Windows is started in Web mode
+        if WINDOWS:
+            args.webserver = True
+
         # In web server mode
         if args.webserver:
             args.process_short_name = True
@@ -365,13 +369,22 @@ Start the client browser (browser mode):\n\
             args.export_opentsdb or \
             args.export_rabbitmq or \
             args.export_couchdb
-        if not (self.is_standalone() or self.is_client()) and export_tag:
+        if WINDOWS and export_tag:
+            # On Windows, export is possible but only in quiet mode
+            # See issue #1038
+            logger.info(
+                "On Windows OS, export disable the Web Interface")
+            self.args.quiet = True
+            self.args.webserver = False
+        elif not (self.is_standalone() or self.is_client()) \
+                and export_tag:
             logger.critical(
                 "Export is only available in standalone or client mode")
             sys.exit(2)
 
         # Filter is only available in standalone mode
-        if args.process_filter is not None and not self.is_standalone():
+        if args.process_filter is not None \
+           and not self.is_standalone():
             logger.critical(
                 "Process filter is only available in standalone mode")
             sys.exit(2)
@@ -414,23 +427,30 @@ Start the client browser (browser mode):\n\
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.args.client and not self.args.browser and not self.args.server and not self.args.webserver
+        return not self.args.client \
+            and not self.args.browser \
+            and not self.args.server \
+            and not self.args.webserver
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return (self.args.client or self.args.browser) and not self.args.server
+        return (self.args.client or self.args.browser) \
+            and not self.args.server
 
     def is_client_browser(self):
         """Return True if Glances is running in client browser mode."""
-        return self.args.browser and not self.args.server
+        return self.args.browser \
+            and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
-        return not self.args.client and self.args.server
+        return not self.args.client \
+            and self.args.server
 
     def is_webserver(self):
         """Return True if Glances is running in Web server mode."""
-        return not self.args.client and self.args.webserver
+        return not self.args.client \
+            and self.args.webserver
 
     def get_config(self):
         """Return configuration file object."""
