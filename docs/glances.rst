@@ -29,29 +29,35 @@ OPTIONS
 FILES
 -----
 
+System Configuration
+~~~~~~~~~~~~~~~~~~~~
+
 /etc/glances/glances.conf
 
-    (Linux, SunOS) System configuration file
+    Linux, SunOS
 
 /usr/local/etc/glances/glances.conf
 
-    (\*BSD, macOS) System configuration file
+    \*BSD, macOS
 
 %APPDATA%\\glances\\glances.conf
 
-    (Windows) System configuration file
+    Windows
+
+User Configuration
+~~~~~~~~~~~~~~~~~~~~
 
 $HOME/.config/glances.conf
 
-    (Linux, \*BSD, SunOS) User configuration file
+    Linux, \*BSD, SunOS
 
 ~/Library/Application Support/glances/glances.conf
 
-    (macOS) User configuration file
+    macOS
 
 %APPDATA%\\glances\\glances.conf
 
-    (Windows) User configuration file
+    Windows
 
 EXAMPLES
 --------
