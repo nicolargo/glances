@@ -47,7 +47,7 @@ System Configuration
 User Configuration
 ~~~~~~~~~~~~~~~~~~~~
 
-$HOME/.config/glances/glances.conf
+$XDG_CONFIG_HOME/glances/glances.conf $HOME/.config/glances/glances.conf
 
     Linux, \*BSD, SunOS
 
