@@ -26,6 +26,33 @@ OPTIONS
 
 .. include:: cmds.rst
 
+FILES
+-----
+
+/etc/glances/glances.conf
+
+    (Linux, SunOS) System configuration file
+
+/usr/local/etc/glances/glances.conf
+
+    (\*BSD, macOS) System configuration file
+
+%APPDATA%\\glances\\glances.conf
+
+    (Windows) System configuration file
+
+$HOME/.config/glances.conf
+
+    (Linux, \*BSD, SunOS) User configuration file
+
+~/Library/Application Support/glances/glances.conf
+
+    (macOS) User configuration file
+
+%APPDATA%\\glances\\glances.conf
+
+    (Windows) User configuration file
+
 EXAMPLES
 --------
 
