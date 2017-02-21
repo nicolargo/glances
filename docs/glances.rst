@@ -26,6 +26,39 @@ OPTIONS
 
 .. include:: cmds.rst
 
+FILES
+-----
+
+System Configuration
+~~~~~~~~~~~~~~~~~~~~
+
+/etc/glances/glances.conf
+
+    Linux, SunOS
+
+/usr/local/etc/glances/glances.conf
+
+    \*BSD, macOS
+
+%APPDATA%\\glances\\glances.conf
+
+    Windows
+
+User Configuration
+~~~~~~~~~~~~~~~~~~~~
+
+$XDG_CONFIG_HOME/glances/glances.conf $HOME/.config/glances/glances.conf
+
+    Linux, \*BSD, SunOS
+
+~/Library/Application Support/glances/glances.conf
+
+    macOS
+
+%APPDATA%\\glances\\glances.conf
+
+    Windows
+
 EXAMPLES
 --------
 

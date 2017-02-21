@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Feb 07, 2017" "2.8.2" "Glances"
+.TH "GLANCES" "1" "February 21, 2017" "2.8.2" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -602,6 +602,51 @@ Down in the servers list
 .TP
 .B \fBq|ESC\fP
 Quit Glances
+.UNINDENT
+.SH FILES
+.SS System Configuration
+.sp
+/etc/glances/glances.conf
+.INDENT 0.0
+.INDENT 3.5
+Linux, SunOS
+.UNINDENT
+.UNINDENT
+.sp
+/usr/local/etc/glances/glances.conf
+.INDENT 0.0
+.INDENT 3.5
+*BSD, macOS
+.UNINDENT
+.UNINDENT
+.sp
+%APPDATA%\eglances\eglances.conf
+.INDENT 0.0
+.INDENT 3.5
+Windows
+.UNINDENT
+.UNINDENT
+.SS User Configuration
+.sp
+$XDG_CONFIG_HOME/glances/glances.conf $HOME/.config/glances/glances.conf
+.INDENT 0.0
+.INDENT 3.5
+Linux, *BSD, SunOS
+.UNINDENT
+.UNINDENT
+.sp
+~/Library/Application Support/glances/glances.conf
+.INDENT 0.0
+.INDENT 3.5
+macOS
+.UNINDENT
+.UNINDENT
+.sp
+%APPDATA%\eglances\eglances.conf
+.INDENT 0.0
+.INDENT 3.5
+Windows
+.UNINDENT
 .UNINDENT
 .SH EXAMPLES
 .sp
