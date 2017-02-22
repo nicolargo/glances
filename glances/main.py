@@ -49,35 +49,34 @@ class GlancesMain(object):
     username = "glances"
     password = ""
 
-    # Exemple of use
-    example_of_use = "\
-Examples of use:\n\
-\n\
-Monitor local machine (standalone mode):\n\
-  $ glances\n\
-\n\
-Monitor local machine with the Web interface (Web UI):\n\
-  $ glances -w\n\
-  Glances web server started on http://0.0.0.0:61208/\n\
-\n\
-Monitor local machine and export stats to a CSV file (standalone mode):\n\
-  $ glances --export-csv /tmp/glances.csv\n\
-\n\
-Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):\n\
-  $ glances -t 5 --export-influxdb\n\
-\n\
-Start a Glances server (server mode):\n\
-  $ glances -s\n\
-\n\
-Connect Glances to a Glances server (client mode):\n\
-  $ glances -c <ip_server>\n\
-\n\
-Connect Glances to a Glances server and export stats to a StatsD server (client mode):\n\
-  $ glances -c <ip_server> --export-statsd\n\
-\n\
-Start the client browser (browser mode):\n\
-  $ glances --browser\n\
-    "
+    # Examples of use
+    example_of_use = """
+Examples of use:
+  Monitor local machine (standalone mode):
+    $ glances
+
+  Monitor local machine with the Web interface (Web UI):
+    $ glances -w
+    Glances web server started on http://0.0.0.0:61208/
+
+  Monitor local machine and export stats to a CSV file (standalone mode):
+    $ glances --export-csv /tmp/glances.csv
+
+  Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
+    $ glances -t 5 --export-influxdb
+
+  Start a Glances server (server mode):
+    $ glances -s
+
+  Connect Glances to a Glances server (client mode):
+    $ glances -c <ip_server>
+
+  Connect Glances to a Glances server and export stats to a StatsD server (client mode):
+    $ glances -c <ip_server> --export-statsd
+
+  Start the client browser (browser mode):
+    $ glances --browser
+"""
 
     def __init__(self):
         """Manage the command line arguments."""
