@@ -135,8 +135,8 @@ class Outdated(object):
             logger.debug("Cannot read the version cache file: {}".format(e))
         else:
             logger.debug("Read the version cache file")
-            if cached_data['installed_version'] != self.installed_version() or \
-               datetime.now() - cached_data['refresh_date'] > self.max_refresh_date:
+            if (cached_data['installed_version'] != self.installed_version() or
+                    datetime.now() - cached_data['refresh_date'] > self.max_refresh_date):
                 # Reset the cache if:
                 # - the installed version is different
                 # - the refresh_date is > max_refresh_date

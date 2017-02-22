@@ -363,30 +363,28 @@ Start the client browser (browser mode):\n\
         self.args = args
 
         # Export is only available in standalone or client mode (issue #614)
-        export_tag = args.export_csv or \
-            args.export_elasticsearch or \
-            args.export_statsd or \
-            args.export_influxdb or \
-            args.export_cassandra or \
-            args.export_opentsdb or \
-            args.export_rabbitmq or \
+        export_tag = (
+            args.export_csv or
+            args.export_elasticsearch or
+            args.export_statsd or
+            args.export_influxdb or
+            args.export_cassandra or
+            args.export_opentsdb or
+            args.export_rabbitmq or
             args.export_couchdb
+        )
         if WINDOWS and export_tag:
             # On Windows, export is possible but only in quiet mode
             # See issue #1038
-            logger.info(
-                "On Windows OS, export disable the Web Interface")
+            logger.info("On Windows OS, export disable the Web interface")
             self.args.quiet = True
             self.args.webserver = False
-        elif not (self.is_standalone() or self.is_client()) \
-                and export_tag:
-            logger.critical(
-                "Export is only available in standalone or client mode")
+        elif not (self.is_standalone() or self.is_client()) and export_tag:
+            logger.critical("Export is only available in standalone or client mode")
             sys.exit(2)
 
         # Filter is only available in standalone mode
-        if args.process_filter is not None \
-           and not self.is_standalone():
+        if args.process_filter is not None and not self.is_standalone():
             logger.critical(
                 "Process filter is only available in standalone mode")
             sys.exit(2)
@@ -394,8 +392,7 @@ Start the client browser (browser mode):\n\
         # Check graph output path
         if args.export_graph and args.path_graph is not None:
             if not os.access(args.path_graph, os.W_OK):
-                logger.critical(
-                    "Graphs output path {} doesn't exist or is not writable".format(args.path_graph))
+                logger.critical("Graphs output path {} doesn't exist or is not writable".format(args.path_graph))
                 sys.exit(2)
             logger.debug(
                 "Graphs output path is set to {}".format(args.path_graph))
@@ -429,30 +426,26 @@ Start the client browser (browser mode):\n\
 
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
-        return not self.args.client \
-            and not self.args.browser \
-            and not self.args.server \
-            and not self.args.webserver
+        return (not self.args.client and
+                not self.args.browser and
+                not self.args.server and
+                not self.args.webserver)
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return (self.args.client or self.args.browser) \
-            and not self.args.server
+        return (self.args.client or self.args.browser) and not self.args.server
 
     def is_client_browser(self):
         """Return True if Glances is running in client browser mode."""
-        return self.args.browser \
-            and not self.args.server
+        return self.args.browser and not self.args.server
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
-        return not self.args.client \
-            and self.args.server
+        return not self.args.client and self.args.server
 
     def is_webserver(self):
         """Return True if Glances is running in Web server mode."""
-        return not self.args.client \
-            and self.args.webserver
+        return not self.args.client and self.args.webserver
 
     def get_config(self):
         """Return configuration file object."""

@@ -124,8 +124,8 @@ class GlancesClient(object):
                 self.stats.set_plugins(json.loads(self.client.getAllPlugins()))
                 logger.debug("Client version: {} / Server version: {}".format(__version__, client_version))
             else:
-                self.log_and_exit("Client and server not compatible: \
-                                   Client version: {} / Server version: {}".format(__version__, client_version))
+                self.log_and_exit(('Client and server not compatible: '
+                                   'Client version: {} / Server version: {}'.format(__version__, client_version)))
                 return False
 
         return True

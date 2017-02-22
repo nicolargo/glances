@@ -100,9 +100,9 @@ class Plugin(GlancesPlugin):
             return 'CAREFUL'
         elif port['status'] == 0:
             return 'CRITICAL'
-        elif isinstance(port['status'], (float, int)) and \
-                port['rtt_warning'] is not None and \
-                port['status'] > port['rtt_warning']:
+        elif (isinstance(port['status'], (float, int)) and
+              port['rtt_warning'] is not None and
+              port['status'] > port['rtt_warning']):
             return 'WARNING'
 
         return 'OK'
