@@ -26,6 +26,11 @@ OPTIONS
 
 .. include:: cmds.rst
 
+CONFIGURATION
+-------------
+
+.. include:: config.rst
+
 EXAMPLES
 --------
 
