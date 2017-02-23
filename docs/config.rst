@@ -23,17 +23,8 @@ You can put your own ``glances.conf`` file in the following locations:
 ``Windows``          %APPDATA%\\glances
 ==================== =============================================================
 
-On Windows XP, the ``%APPDATA%`` path is:
-
-::
-
-    C:\Documents and Settings\<User>\Application Data
-
-Since Windows Vista and newer versions:
-
-::
-
-    C:\Users\<User>\AppData\Roaming
+* On Windows XP, ``%APPDATA%`` is: ``C:\Documents and Settings\<USERNAME>\Application Data``.
+* On Windows Vista and later: ``C:\Users\<USERNAME>\AppData\Roaming``.
 
 User-specific options override system-wide options and options given on
 the command line override either.
@@ -107,10 +98,13 @@ line.
 
 By default, the ``glances-USERNAME.log`` file is under the temporary directory:
 
-=========== ======================
+=========== ======
 ``*nix``    /tmp
-``Windows`` %APPDATA%\\Local\\temp
-=========== ======================
+``Windows`` %TEMP%
+=========== ======
+
+* On Windows XP, ``%TEMP%`` is: ``C:\Documents and Settings\<USERNAME>\Local Settings\Temp``.
+* On Windows Vista and later: ``C:\Users\<USERNAME>\AppData\Local\Temp``.
 
 If you want to use another system path or change the log message, you
 can use your own logger configuration. First of all, you have to create
