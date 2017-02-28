@@ -109,8 +109,9 @@ class Plugin(GlancesPlugin):
         if 'ami-id' in self.stats and 'region' in self.stats:
             msg = 'AWS EC2'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' instance {} ({})'.format(self.stats['ami-id'],
-                                             self.stats['region'])
+            msg = ' {} instance {} ({})'.format(self.stats['instance-type'],
+                                                self.stats['instance-id'],
+                                                self.stats['region'])
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
@@ -129,6 +130,8 @@ class ThreadAwsEc2Grabber(threading.Thread):
     # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
     AWS_EC2_API_URL = 'http://169.254.169.254/latest/meta-data'
     AWS_EC2_API_METADATA = {'ami-id': 'ami-id',
+                            'instance-id': 'instance-id',
+                            'instance-type': 'instance-type',
                             'region': 'placement/availability-zone'}
 
     def __init__(self):
