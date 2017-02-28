@@ -42,6 +42,7 @@ def user_config_dir():
         path = os.path.expanduser('~/Library/Application Support')
     else:
         path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    path = os.path.join(path, 'glances')
 
     return path
 
@@ -51,10 +52,11 @@ def user_cache_dir():
 
     - Linux, *BSD, SunOS: ~/.cache/glances
     - macOS: ~/Library/Caches/glances
-    - Windows: %LOCALAPPDATA%\glances\cache
+    - Windows: {%LOCALAPPDATA%,%APPDATA%}\glances\cache
     """
-    if WINDOWS and os.environ.get('LOCALAPPDATA') is not None:
-        path = os.path.join(os.environ.get('LOCALAPPDATA'), 'glances', 'cache')
+    if WINDOWS:
+        path = os.path.join(os.environ.get('LOCALAPPDATA') or os.environ.get('APPDATA'),
+                            'glances', 'cache')
     elif MACOS:
         path = os.path.expanduser('~/Library/Caches/glances')
     else:
@@ -77,6 +79,7 @@ def system_config_dir():
         path = '/usr/local/etc'
     else:
         path = os.environ.get('APPDATA')
+    path = os.path.join(path, 'glances')
 
     return path
 
@@ -118,10 +121,8 @@ class Config(object):
         if self.config_dir:
             paths.append(self.config_dir)
 
-        if user_config_dir() is not None:
-            paths.append(os.path.join(user_config_dir(), self.config_filename))
-        if system_config_dir() is not None:
-            paths.append(os.path.join(system_config_dir(), self.config_filename))
+        paths.append(os.path.join(user_config_dir(), self.config_filename))
+        paths.append(os.path.join(system_config_dir(), self.config_filename))
 
         return paths
 
