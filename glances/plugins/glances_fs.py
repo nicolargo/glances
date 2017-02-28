@@ -229,8 +229,7 @@ class Plugin(GlancesPlugin):
                 mnt_point = i['mnt_point'][-fsname_max_width + 1:]
             elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
-                mnt_point = i['mnt_point'] + \
-                    ' (' + i['device_name'].split('/')[-1] + ')'
+                mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
             elif len(i['mnt_point']) > fsname_max_width:
                 # Cut mount point name if it is too long
                 mnt_point = '_' + i['mnt_point'][-fsname_max_width + 1:]

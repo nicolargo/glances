@@ -515,9 +515,11 @@ class _GlancesCurses(object):
         __stat_display = self.__get_stat_display(stats, plugin_max_width)
 
         # Adapt number of processes to the available space
-        max_processes_displayed = self.screen.getmaxyx()[0] - 11 - \
-            self.get_stats_display_height(__stat_display["alert"]) - \
+        max_processes_displayed = (
+            self.screen.getmaxyx()[0] - 11 -
+            self.get_stats_display_height(__stat_display["alert"]) -
             self.get_stats_display_height(__stat_display["docker"])
+        )
         try:
             if self.args.enable_process_extended and not self.args.process_tree:
                 max_processes_displayed -= 4
@@ -618,10 +620,10 @@ class _GlancesCurses(object):
         # Space between column
         self.space_between_column = 0
         self.new_line()
-        l_uptime = self.get_stats_display_width(stat_display["system"]) \
-            + self.space_between_column \
-            + self.get_stats_display_width(stat_display["ip"]) + 3 \
-            + self.get_stats_display_width(stat_display["uptime"])
+        l_uptime = (self.get_stats_display_width(stat_display["system"]) +
+                    self.space_between_column +
+                    self.get_stats_display_width(stat_display["ip"]) + 3 +
+                    self.get_stats_display_width(stat_display["uptime"]))
         self.display_plugin(
             stat_display["system"],
             display_optional=(self.screen.getmaxyx()[1] >= l_uptime))
@@ -722,8 +724,8 @@ class _GlancesCurses(object):
         if not self.args.disable_left_sidebar:
             for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
                       'folders', 'raid', 'sensors', 'now']:
-                if (hasattr(self.args, 'enable_' + s) or
-                   hasattr(self.args, 'disable_' + s)) and s in stat_display:
+                if ((hasattr(self.args, 'enable_' + s) or
+                     hasattr(self.args, 'disable_' + s)) and s in stat_display):
                     self.new_line()
                     self.display_plugin(stat_display[s])
 
