@@ -32,7 +32,7 @@ else:
 
 import threading
 
-from glances.compat import iteritems
+from glances.compat import iteritems, to_ascii
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 
@@ -107,9 +107,9 @@ class Plugin(GlancesPlugin):
         if 'ami-id' in self.stats and 'region' in self.stats:
             msg = 'AWS EC2'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' {} instance {} ({})'.format(self.stats['instance-type'],
-                                                self.stats['instance-id'],
-                                                self.stats['region'])
+            msg = ' {} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
+                                                to_ascii(self.stats['instance-id']),
+                                                to_ascii(self.stats['region']))
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
