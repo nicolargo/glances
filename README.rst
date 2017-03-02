@@ -68,7 +68,7 @@ Optional dependencies:
 - ``pysnmp`` (for SNMP support)
 - ``pystache`` (for the action script feature)
 - ``pyzmq`` (for the ZeroMQ export module)
-- ``requests`` (for the Ports plugin)
+- ``requests`` (for the Ports and Cloud plugins)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
@@ -134,7 +134,7 @@ features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install glances[action,browser,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
+    pip install glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
 
 To upgrade Glances to the latest version:
 
