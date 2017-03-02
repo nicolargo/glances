@@ -80,6 +80,7 @@ setup(
     extras_require={
         'action': ['pystache'],
         'browser': ['zeroconf>=0.17'],
+        'cloud': ['requests'],
         'cpuinfo': ['py-cpuinfo'],
         'chart': ['matplotlib'],
         'docker': ['docker>=2.0.0'],
