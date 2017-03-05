@@ -92,6 +92,10 @@ class Plugin(GlancesPlugin):
         # Update the stats
         if self.input_method == 'local':
             self.stats = self.aws_ec2.stats
+            # self.stats = {'ami-id': 'ami-id',
+            #                         'instance-id': 'instance-id',
+            #                         'instance-type': 'instance-type',
+            #                         'region': 'placement/availability-zone'}
 
         return self.stats
 
