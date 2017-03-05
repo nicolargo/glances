@@ -11,9 +11,15 @@ glancesApp.service('GlancesPluginFs', function() {
         for (var i = 0; i < data.length; i++) {
             var fsData = data[i];
 
+            var shortMountPoint = fsData['mnt_point'];
+            if (shortMountPoint.length > 9) {
+              shortMountPoint = '_' + fsData['mnt_point'].slice(-8);
+            }
+
             var fs = {
                 'name': fsData['device_name'],
                 'mountPoint': fsData['mnt_point'],
+                'shortMountPoint': shortMountPoint,
                 'percent': fsData['percent'],
                 'size': fsData['size'],
                 'used': fsData['used'],
