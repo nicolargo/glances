@@ -5,7 +5,6 @@ glancesApp.service('GlancesPluginCloud', function() {
 
     this.setData = function(data, views) {
         data = data[_pluginName];
-        data = {"region": "R", "instance-type": "IT", "ami-id": "AMI", "instance-id": "IID"};
 
         if (data['ami-id'] !== undefined) {
           _provider = 'AWS EC2';
