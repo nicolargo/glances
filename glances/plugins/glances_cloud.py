@@ -155,6 +155,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
                 r = requests.get(r_url)
             except Exception as e:
                 logger.debug('Can not connect to the AWS EC2 API {}'.format(r_url, e))
+                break
             else:
                 if r.ok:
                     self._stats[k] = r.content
