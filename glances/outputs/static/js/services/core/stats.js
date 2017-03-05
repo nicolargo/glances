@@ -3,6 +3,7 @@ glancesApp.service('GlancesStats', function($http, $injector, $q, GlancesPlugin)
 
     var _plugins = {
         'alert': 'GlancesPluginAlert',
+        'cloud': 'GlancesPluginCloud',
         'cpu': 'GlancesPluginCpu',
         'diskio': 'GlancesPluginDiskio',
         'irq'   : 'GlancesPluginIrq',

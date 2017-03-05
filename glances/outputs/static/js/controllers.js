@@ -22,6 +22,7 @@ glancesApp.controller('statsController', function ($scope, $rootScope, $interval
         GlancesStats.getData().then(function (data) {
 
             $scope.statsAlert = GlancesStats.getPlugin('alert');
+            $scope.statsCloud = GlancesStats.getPlugin('cloud');
             $scope.statsCpu = GlancesStats.getPlugin('cpu');
             $scope.statsDiskio = GlancesStats.getPlugin('diskio');
             $scope.statsIrq = GlancesStats.getPlugin('irq');
