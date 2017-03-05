@@ -152,9 +152,13 @@ class ThreadAwsEc2Grabber(threading.Thread):
         for k, v in iteritems(self.AWS_EC2_API_METADATA):
             r_url = '{}/{}'.format(self.AWS_EC2_API_URL, v)
             try:
-                r = requests.get(r_url)
+                # Local request, a timeout of 3 seconds is OK
+                r = requests.get(r_url, timeout=3)
+            except requests.exceptions.ConnectTimeout:
+                logger.debug('cloud plugin - Connection to {} timed out'.format(r_url))
+                break
             except Exception as e:
-                logger.debug('Can not connect to the AWS EC2 API {}'.format(r_url, e))
+                logger.debug('cloud plugin - Can not connect to the AWS EC2 API {}'.format(r_url, e))
                 break
             else:
                 if r.ok:

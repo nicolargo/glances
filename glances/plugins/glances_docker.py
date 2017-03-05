@@ -92,7 +92,7 @@ class Plugin(GlancesPlugin):
         try:
             ret = self.stats['containers']
         except KeyError as e:
-            logger.debug("Docker export error {}".format(e))
+            logger.debug("docker plugin - Docker export error {}".format(e))
         return ret
 
     def __connect_old(self, version):
@@ -107,7 +107,7 @@ class Plugin(GlancesPlugin):
             init_docker = docker.Client
         else:
             # Can not found init method (new API version ?)
-            logger.error("Can not found any way to init the Docker API")
+            logger.error("docker plugin - Can not found any way to init the Docker API")
             return None
         # Init connection to the Docker API
         try:
@@ -138,36 +138,39 @@ class Plugin(GlancesPlugin):
         # Check the server connection with the version() method
         try:
             ret.version()
+        except requests.exceptions.ConnectTimeout:
+            logger.debug('docker plugin - Connection to {} timed out'.format(r_url))
+            break
         except requests.exceptions.ConnectionError as e:
             # Connexion error (Docker not detected)
             # Let this message in debug mode
-            logger.debug("Can't connect to the Docker server (%s)" % e)
+            logger.debug("docker plugin - Can't connect to the Docker server (%s)" % e)
             return None
         except docker.errors.APIError as e:
             if version is None:
                 # API error (Version mismatch ?)
-                logger.debug("Docker API error (%s)" % e)
+                logger.debug("docker plugin - Docker API error (%s)" % e)
                 # Try the connection with the server version
                 version = re.search('(?:server API version|server)\:\ (.*)\)\".*\)', str(e))
                 if version:
-                    logger.debug("Try connection with Docker API version %s" % version.group(1))
+                    logger.debug("docker plugin - Try connection with Docker API version %s" % version.group(1))
                     ret = self.connect(version=version.group(1))
                 else:
-                    logger.debug("Can not retreive Docker server version")
+                    logger.debug("docker plugin - Can not retreive Docker server version")
                     ret = None
             else:
                 # API error
-                logger.error("Docker API error (%s)" % e)
+                logger.error("docker plugin - Docker API error (%s)" % e)
                 ret = None
         except Exception as e:
             # Others exceptions...
             # Connexion error (Docker not detected)
-            logger.error("Can't connect to the Docker server (%s)" % e)
+            logger.error("docker plugin - Can't connect to the Docker server (%s)" % e)
             ret = None
 
         # Log an info if Docker plugin is disabled
         if ret is None:
-            logger.debug("Docker plugin is disable because an error has been detected")
+            logger.debug("docker plugin - Docker plugin is disable because an error has been detected")
 
         return ret
 
@@ -296,7 +299,7 @@ class Plugin(GlancesPlugin):
             cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
             # all_stats do not have CPU information
-            logger.debug("Cannot grab CPU usage for container {} ({})".format(container_id, e))
+            logger.debug("docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
         else:
             # Previous CPU stats stored in the cpu_old variable
@@ -344,7 +347,7 @@ class Plugin(GlancesPlugin):
             ret['max_usage'] = all_stats['memory_stats']['max_usage']
         except (KeyError, TypeError) as e:
             # all_stats do not have MEM information
-            logger.debug("Cannot grab MEM usage for container {} ({})".format(container_id, e))
+            logger.debug("docker plugin - Cannot grab MEM usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
         # Return the stats
         return ret
@@ -367,7 +370,7 @@ class Plugin(GlancesPlugin):
             netcounters = all_stats["networks"]
         except KeyError as e:
             # all_stats do not have NETWORK information
-            logger.debug("Cannot grab NET usage for container {} ({})".format(container_id, e))
+            logger.debug("docker plugin - Cannot grab NET usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
             # No fallback available...
             return network_new
@@ -398,7 +401,7 @@ class Plugin(GlancesPlugin):
                 network_new['cumulative_tx'] = netcounters["eth0"]["tx_bytes"]
             except KeyError as e:
                 # all_stats do not have INTERFACE information
-                logger.debug("Cannot grab network interface usage for container {} ({})".format(container_id, e))
+                logger.debug("docker plugin - Cannot grab network interface usage for container {} ({})".format(container_id, e))
                 logger.debug(all_stats)
 
             # Save stats to compute next bitrate
@@ -425,7 +428,7 @@ class Plugin(GlancesPlugin):
             iocounters = all_stats["blkio_stats"]
         except KeyError as e:
             # all_stats do not have io information
-            logger.debug("Cannot grab block IO usage for container {} ({})".format(container_id, e))
+            logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
             # No fallback available...
             return io_new
@@ -456,7 +459,7 @@ class Plugin(GlancesPlugin):
                 iow_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
             except (IndexError, KeyError) as e:
                 # all_stats do not have io information
-                logger.debug("Cannot grab block IO usage for container {} ({})".format(container_id, e))
+                logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
             else:
                 io_new['time_since_update'] = getTimeSinceLastUpdate('docker_io_{}'.format(container_id))
                 io_new['ior'] = ior - ior_old
