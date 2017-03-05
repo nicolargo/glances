@@ -223,13 +223,24 @@ class GlancesGrabSensors(object):
 
     def __init__(self):
         """Init sensors stats."""
+        # Temperatures
         try:
-            # XXX: psutil>=5.1.0 is required
+            # psutil>=5.1.0 is required
             self.stemps = psutil.sensors_temperatures()
         except AttributeError:
+            logger.warning("PsUtil 5.1.0 or higher is needed to grab temperatures sensors")
             self.initok = False
+            self.stemps = {}
         else:
             self.initok = True
+
+        # Fans
+        try:
+            # psutil>=5.2.0 is required
+            self.sfans = psutil.sensors_fans()
+        except AttributeError:
+            logger.warning("PsUtil 5.2.0 or higher is needed to grab fans sensors")
+            self.sfans = {}
 
         # Init the stats
         self.reset()
@@ -246,8 +257,28 @@ class GlancesGrabSensors(object):
         if not self.initok:
             return self.sensors_list
 
-        # Temperature sensor
-        for chipname, chip in iteritems(self.stemps):
+        # Temperatures sensors
+        self.sensors_list.extend(self.build_sensors_list(SENSOR_TEMP_UNIT))
+
+        # Fans sensors
+        self.sensors_list.extend(self.build_sensors_list(SENSOR_FAN_UNIT))
+
+        return self.sensors_list
+
+    def build_sensors_list(self, type):
+        """Build the sensors list depending of the type.
+
+        type: SENSOR_TEMP_UNIT or SENSOR_FAN_UNIT
+
+        output: a list"""
+        ret = []
+        if type == SENSOR_TEMP_UNIT:
+            input_list = self.stemps
+        elif type == SENSOR_FAN_UNIT:
+            input_list = self.sfans
+        else:
+            return ret
+        for chipname, chip in iteritems(input_list):
             i = 1
             for feature in chip:
                 sensors_current = {}
@@ -256,14 +287,13 @@ class GlancesGrabSensors(object):
                     sensors_current['label'] = chipname + ' ' + str(i)
                 else:
                     sensors_current['label'] = feature.label
-                # Temperature and unit
+                # Fan speed and unit
                 sensors_current['value'] = int(feature.current)
-                sensors_current['unit'] = SENSOR_TEMP_UNIT
+                sensors_current['unit'] = type
                 # Add sensor to the list
-                self.sensors_list.append(sensors_current)
+                ret.append(sensors_current)
                 i += 1
-
-        return self.sensors_list
+        return ret
 
     def get(self, sensor_type='temperature_core'):
         """Get sensors list."""
