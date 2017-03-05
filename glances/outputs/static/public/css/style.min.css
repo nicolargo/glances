@@ -20,6 +20,10 @@ body {
     text-align: right;
 }
 
+.top-plugin {
+    margin-bottom: 20px;
+}
+
 .plugin {
     margin-bottom: 20px;
 }
