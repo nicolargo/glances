@@ -6,16 +6,25 @@
 <div ng-show="arguments.help_tag" class="container-fluid" ng-include src="'help.html'"></div>
 
 <div ng-show="dataLoaded && !arguments.help_tag" class="container-fluid">
-    <div class="row">
-        <div class="col-sm-24">
-            <div class="pull-left">
-                <section id="system" class="plugin" ng-include src="'plugins/system.html'"></section>
+    <div class="top-plugin">
+        <div class="row">
+            <div class="col-sm-24">
+                <div class="pull-left">
+                    <section id="system" ng-include src="'plugins/system.html'"></section>
+                </div>
+                <div class="pull-left">
+                    <section id="ip" ng-if="statsIp.address != undefined && !arguments.disable_ip" ng-include src="'plugins/ip.html'"></section>
+                </div>
+                <div class="pull-right">
+                    <section id="uptime" ng-include src="'plugins/uptime.html'"></section>
+                </div>
             </div>
-            <div class="pull-left">
-                <section id="ip" class="plugin" ng-if="statsIp.address != undefined && !arguments.disable_ip" ng-include src="'plugins/ip.html'"></section>
-            </div>
-            <div class="pull-right">
-                <section id="uptime" class="plugin" ng-include src="'plugins/uptime.html'"></section>
+        </div>
+        <div class="row"  ng-if="statsCloud.getProvider()">
+            <div class="col-sm-24">
+                <div class="pull-left">
+                    <section id="cloud" ng-include src="'plugins/cloud.html'"></section>
+                </div>
             </div>
         </div>
     </div>
