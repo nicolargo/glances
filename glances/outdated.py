@@ -161,7 +161,7 @@ class Outdated(object):
         self.data[u'refresh_date'] = datetime.now()
 
         try:
-            res = requests.get(self.PYPI_API_URL)
+            res = requests.get(self.PYPI_API_URL, timeout=3)
         except Exception as e:
             logger.debug("Cannot get the Glances version from the PyPI RESTful API ({})".format(e))
         else:
