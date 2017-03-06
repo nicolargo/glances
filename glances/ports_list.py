@@ -68,7 +68,10 @@ class GlancesPortsList(object):
             default_gateway = config.get_value(self._section, 'port_default_gateway', default='False')
             if default_gateway.lower().startswith('true') and netifaces_tag:
                 new_port = {}
-                new_port['host'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
+                try:
+                    new_port['host'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
+                except KeyError:
+                    new_port['host'] = None
                 # ICMP
                 new_port['port'] = 0
                 new_port['description'] = 'DefaultGateway'
