@@ -158,7 +158,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
                 logger.debug('cloud plugin - Connection to {} timed out'.format(r_url))
                 break
             except Exception as e:
-                logger.debug('cloud plugin - Can not connect to the AWS EC2 API {}'.format(r_url, e))
+                logger.debug('cloud plugin - Cannot connect to the AWS EC2 API {}: {}'.format(r_url, e))
                 break
             else:
                 if r.ok:
