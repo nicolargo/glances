@@ -138,9 +138,6 @@ class Plugin(GlancesPlugin):
         # Check the server connection with the version() method
         try:
             ret.version()
-        except requests.exceptions.ConnectTimeout:
-            logger.debug('docker plugin - Connection to {} timed out'.format(r_url))
-            break
         except requests.exceptions.ConnectionError as e:
             # Connexion error (Docker not detected)
             # Let this message in debug mode
