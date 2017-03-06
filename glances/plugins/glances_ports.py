@@ -118,7 +118,9 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for p in self.stats:
-            if p['status'] is None:
+            if p['host'] is None:
+                status = 'None'
+            elif p['status'] is None:
                 status = 'Scanning'
             elif isinstance(p['status'], bool_type) and p['status'] is True:
                 status = 'Open'
