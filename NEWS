@@ -17,6 +17,7 @@ Bugs corrected:
     * Glances --export-influxdb starts Webserver (issue #1038)
     * Cut mount point name if it is too long (issue #1045)
     * TypeError: string indices must be integers in per cpu (issue #1027)
+    * Glances crash on RPi 1 running ArchLinuxARM (issue #1046)
 
 Version 2.8.2
 =============
