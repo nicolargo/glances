@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Feb 12, 2017" "2.8.3_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Mar 09, 2017" "2.8.3" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -602,6 +602,264 @@ Down in the servers list
 .TP
 .B \fBq|ESC\fP
 Quit Glances
+.UNINDENT
+.SH CONFIGURATION
+.sp
+No configuration file is mandatory to use Glances.
+.sp
+Furthermore a configuration file is needed to access more settings.
+.SH LOCATION
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+A template is available in the \fB/usr{,/local}/share/doc/glances\fP
+(Unix\-like) directory or directly on \fI\%GitHub\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+You can put your own \fBglances.conf\fP file in the following locations:
+.TS
+center;
+|l|l|.
+_
+T{
+\fBLinux\fP, \fBSunOS\fP
+T}	T{
+~/.config/glances, /etc/glances
+T}
+_
+T{
+\fB*BSD\fP
+T}	T{
+~/.config/glances, /usr/local/etc/glances
+T}
+_
+T{
+\fBmacOS\fP
+T}	T{
+~/Library/Application Support/glances, /usr/local/etc/glances
+T}
+_
+T{
+\fBWindows\fP
+T}	T{
+%APPDATA%\eglances
+T}
+_
+.TE
+.INDENT 0.0
+.IP \(bu 2
+On Windows XP, \fB%APPDATA%\fP is: \fBC:\eDocuments and Settings\e<USERNAME>\eApplication Data\fP\&.
+.IP \(bu 2
+On Windows Vista and later: \fBC:\eUsers\e<USERNAME>\eAppData\eRoaming\fP\&.
+.UNINDENT
+.sp
+User\-specific options override system\-wide options and options given on
+the command line override either.
+.SH SYNTAX
+.sp
+Glances reads configuration files in the \fIini\fP syntax.
+.sp
+A first section (called global) is available:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[global]
+# Does Glances should check if a newer version is available on PyPI?
+check_update=true
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Each plugin, export module and application monitoring process (AMP) can
+have a section. Below an example for the CPU plugin:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[cpu]
+user_careful=50
+user_warning=70
+user_critical=90
+iowait_careful=50
+iowait_warning=70
+iowait_critical=90
+system_careful=50
+system_warning=70
+system_critical=90
+steal_careful=50
+steal_warning=70
+steal_critical=90
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+an InfluxDB export module:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[influxdb]
+# Configuration for the \-\-export\-influxdb option
+# https://influxdb.com/
+host=localhost
+port=8086
+user=root
+password=root
+db=glances
+prefix=localhost
+#tags=foo:bar,spam:eggs
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+or a Nginx AMP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[amp_nginx]
+# Nginx status page should be enable (https://easyengine.io/tutorials/nginx/status\-page/)
+enable=true
+regex=\e/usr\e/sbin\e/nginx
+refresh=60
+one_line=false
+status_url=http://localhost/nginx_status
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH LOGGING
+.sp
+Glances logs all of its internal messages to a log file.
+.sp
+\fBDEBUG\fP messages can been logged using the \fB\-d\fP option on the command
+line.
+.sp
+By default, the \fBglances\-USERNAME.log\fP file is under the temporary directory:
+.TS
+center;
+|l|l|.
+_
+T{
+\fB*nix\fP
+T}	T{
+/tmp
+T}
+_
+T{
+\fBWindows\fP
+T}	T{
+%TEMP%
+T}
+_
+.TE
+.INDENT 0.0
+.IP \(bu 2
+On Windows XP, \fB%TEMP%\fP is: \fBC:\eDocuments and Settings\e<USERNAME>\eLocal Settings\eTemp\fP\&.
+.IP \(bu 2
+On Windows Vista and later: \fBC:\eUsers\e<USERNAME>\eAppData\eLocal\eTemp\fP\&.
+.UNINDENT
+.sp
+If you want to use another system path or change the log message, you
+can use your own logger configuration. First of all, you have to create
+a \fBglances.json\fP file with, for example, the following content (JSON
+format):
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+    "version": 1,
+    "disable_existing_loggers": "False",
+    "root": {
+        "level": "INFO",
+        "handlers": ["file", "console"]
+    },
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s \-\- %(levelname)s \-\- %(message)s"
+        },
+        "short": {
+            "format": "%(levelname)s: %(message)s"
+        },
+        "free": {
+            "format": "%(message)s"
+        }
+    },
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "/var/tmp/glances.log"
+        },
+        "console": {
+            "level": "CRITICAL",
+            "class": "logging.StreamHandler",
+            "formatter": "free"
+        }
+    },
+    "loggers": {
+        "debug": {
+            "handlers": ["file", "console"],
+            "level": "DEBUG"
+        },
+        "verbose": {
+            "handlers": ["file", "console"],
+            "level": "INFO"
+        },
+        "standard": {
+            "handlers": ["file"],
+            "level": "INFO"
+        },
+        "requests": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
+        },
+        "elasticsearch": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
+        },
+        "elasticsearch.trace": {
+            "handlers": ["file", "console"],
+            "level": "ERROR"
+        }
+    }
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+and start Glances using the following command line:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+LOG_CFG=<path>/glances.json glances
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Replace \fB<path>\fP by the folder where your \fBglances.json\fP file
+is hosted.
+.UNINDENT
 .UNINDENT
 .SH EXAMPLES
 .sp
