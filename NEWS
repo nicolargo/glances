@@ -2,10 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version XXXXX
+Version 2.8.3
 =============
 
+Bugs corrected:
 
+    * Correct issue on Travis CI test
 
 Version 2.8.3
 =============
