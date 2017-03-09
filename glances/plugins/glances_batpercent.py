@@ -111,7 +111,7 @@ class GlancesGrabBat(object):
                 'label': 'Battery',
                 'value': self.battery_percent,
                 'unit': '%'}]
-        elif psutil_tag:
+        elif psutil_tag and hasattr(self.bat.sensors_battery(), 'percent'):
             # Use the PSUtil 5.2.0 or higher lib to grab the stats
             # Give directly the battery percent
             self.bat_list = [{
