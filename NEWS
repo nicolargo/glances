@@ -2,10 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.9.0
+Version 2.8.5
 =============
 
+Bugs corrected:
 
+    * Cloud plugin error: Name 'requests' is not defined (issue #1047)
 
 Version 2.8.4
 =============
