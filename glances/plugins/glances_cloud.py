@@ -154,9 +154,6 @@ class ThreadAwsEc2Grabber(threading.Thread):
             try:
                 # Local request, a timeout of 3 seconds is OK
                 r = requests.get(r_url, timeout=3)
-            except requests.exceptions.ConnectTimeout:
-                logger.debug('cloud plugin - Connection to {} timed out'.format(r_url))
-                break
             except Exception as e:
                 logger.debug('cloud plugin - Cannot connect to the AWS EC2 API {}: {}'.format(r_url, e))
                 break
