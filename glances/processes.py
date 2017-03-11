@@ -29,6 +29,12 @@ from glances.logger import logger
 
 import psutil
 
+# Workaround for old PsUtil version
+if hasattr(psutil, 'WindowsError'):
+    PsUtilWindowsError = psutil.WindowsError
+else:
+    PsUtilWindowsError = None
+
 
 def is_kernel_thread(proc):
     """Return True if proc is a kernel thread, False instead."""
@@ -269,7 +275,7 @@ class GlancesProcesses(object):
             # Patch for issue #391
             try:
                 self.cmdline_cache[procstat['pid']] = proc.cmdline()
-            except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess, psutil.WindowsError):
+            except (AttributeError, UnicodeDecodeError, psutil.AccessDenied, psutil.NoSuchProcess, PsUtilWindowsError):
                 self.cmdline_cache[procstat['pid']] = ""
         procstat['cmdline'] = self.cmdline_cache[procstat['pid']]
 
