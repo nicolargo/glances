@@ -27,7 +27,7 @@ import signal
 import sys
 
 # Global name
-__version__ = '2.9.0_DEVELOP'
+__version__ = '2.8.6'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -70,11 +70,11 @@ def __signal_handler(signal, frame):
 
 def end():
     """Stop Glances."""
-    if core.is_standalone():
+    if core.is_standalone() and not WINDOWS:
         # Stop the standalone (CLI)
         standalone.end()
         logger.info("Stop Glances (with CTRL-C)")
-    elif core.is_client():
+    elif core.is_client() and not WINDOWS:
         # Stop the client
         client.end()
         logger.info("Stop Glances client (with CTRL-C)")
@@ -82,7 +82,7 @@ def end():
         # Stop the server
         server.end()
         logger.info("Stop Glances server (with CTRL-C)")
-    elif core.is_webserver() or core.is_standalone():
+    elif core.is_webserver():
         # Stop the Web server
         webserver.end()
         logger.info("Stop Glances web server(with CTRL-C)")
@@ -221,7 +221,7 @@ def main():
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if core.is_standalone():
+    if core.is_standalone()and not WINDOWS:
         start_standalone(config=config, args=args)
     elif core.is_client() and not WINDOWS:
         if core.is_client_browser():
@@ -232,7 +232,4 @@ def main():
         start_server(config=config, args=args)
     elif core.is_webserver():
         # Web server mode replace the standalone mode on Windows OS
-        # In this case, try to start the web browser mode automaticaly
-        if WINDOWS:
-            args.open_web_browser = True
         start_webserver(config=config, args=args)
