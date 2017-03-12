@@ -9,9 +9,10 @@ Ports
 
 This plugin aims at providing a list of hosts/port to scan.
 
-You can define ICMP or TCP ports scan.
+You can define ``ICMP`` or ``TCP`` ports scan.
 
-The list should be define in the ``[ports]`` section of the Glances configuration file.
+The list should be defined in the ``[ports]`` section of the Glances
+configuration file.
 
 .. code-block:: ini
 
