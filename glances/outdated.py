@@ -25,28 +25,22 @@ import threading
 import json
 import pickle
 import os
-try:
-    import requests
-except ImportError:
-    outdated_tag = False
-else:
-    outdated_tag = True
 
 from glances import __version__
+from glances.compat import nativestr, urlopen, HTTPError, URLError
 from glances.config import user_cache_dir
 from glances.globals import safe_makedirs
 from glances.logger import logger
+
+PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
 
 
 class Outdated(object):
 
     """
     This class aims at providing methods to warn the user when a new Glances
-    version is available on the Pypi repository (https://pypi.python.org/pypi/Glances/).
+    version is available on the PyPI repository (https://pypi.python.org/pypi/Glances/).
     """
-
-    PYPI_API_URL = 'https://pypi.python.org/pypi/Glances/json'
-    max_refresh_date = timedelta(days=7)
 
     def __init__(self, args, config):
         """Init the Outdated class"""
@@ -91,11 +85,11 @@ class Outdated(object):
         return self.data['refresh_date']
 
     def get_pypi_version(self):
-        """Wrapper to get the latest Pypi version (async)
+        """Wrapper to get the latest PyPI version (async)
         The data are stored in a cached file
         Only update online once a week
         """
-        if not outdated_tag or self.args.disable_check_update:
+        if self.args.disable_check_update:
             return
 
         # If the cached file exist, read-it
@@ -109,16 +103,12 @@ class Outdated(object):
         else:
             # Update not needed
             self.data['latest_version'] = cached_data['latest_version']
-            logger.debug("Get the Glances version from the cache file")
+            logger.debug("Get Glances version from cache file")
 
     def is_outdated(self):
         """Return True if a new version is available"""
         if self.args.disable_check_update:
             # Check is disabled by configuration
-            return False
-
-        if not outdated_tag:
-            logger.debug("Python Request lib is not installed. Can not get last Glances version on Pypi.")
             return False
 
         logger.debug("Check Glances version (installed: {} / latest: {})".format(self.installed_version(), self.latest_version()))
@@ -127,16 +117,17 @@ class Outdated(object):
     def _load_cache(self):
         """Load cache file and return cached data"""
         # If the cached file exist, read-it
+        max_refresh_date = timedelta(days=7)
         cached_data = {}
         try:
             with open(self.cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
         except Exception as e:
-            logger.debug("Cannot read the version cache file: {}".format(e))
+            logger.debug("Cannot read version from cache file: {}".format(e))
         else:
-            logger.debug("Read the version cache file")
+            logger.debug("Read version from cache file")
             if (cached_data['installed_version'] != self.installed_version() or
-                    datetime.now() - cached_data['refresh_date'] > self.max_refresh_date):
+                    datetime.now() - cached_data['refresh_date'] > max_refresh_date):
                 # Reset the cache if:
                 # - the installed version is different
                 # - the refresh_date is > max_refresh_date
@@ -153,27 +144,22 @@ class Outdated(object):
             pickle.dump(self.data, f)
 
     def _update_pypi_version(self):
-        """Get the latest Pypi version (as a string) via the Restful JSON API"""
-        # Get the Nginx status
-        logger.debug("Get latest Glances version from the PyPI RESTful API ({})".format(self.PYPI_API_URL))
+        """Get the latest PyPI version (as a string) via the RESTful JSON API"""
+        logger.debug("Get latest Glances version from the PyPI RESTful API ({})".format(PYPI_API_URL))
 
         # Update the current time
         self.data[u'refresh_date'] = datetime.now()
 
         try:
-            res = requests.get(self.PYPI_API_URL, timeout=3)
-        except Exception as e:
-            logger.debug("Cannot get the Glances version from the PyPI RESTful API ({})".format(e))
+            res = urlopen(PYPI_API_URL, timeout=3).read()
+        except (HTTPError, URLError) as e:
+            logger.debug("Cannot get Glances version from the PyPI RESTful API ({})".format(e))
         else:
-            if res.ok:
-                # Update data
-                self.data[u'latest_version'] = json.loads(res.text)['info']['version']
-                logger.debug("Save Glances version to the cache file")
-            else:
-                logger.debug("Cannot get the Glances version from the PyPI RESTful API ({})".format(res.reason))
+            self.data[u'latest_version'] = json.loads(nativestr(res))['info']['version']
+            logger.debug("Save Glances version to the cache file")
 
         # Save result to the cache file
-        # Note: also saved if the Glances Pypi version can not be grabed
+        # Note: also saved if the Glances PyPI version cannot be grabbed
         self._save_cache()
 
         return self.data
