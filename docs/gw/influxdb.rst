@@ -23,9 +23,9 @@ and run Glances with:
 
     $ glances --export-influxdb
 
-Glances generates a lot of column (for example if you have many running Docker
-containers). You should use the *tsm1* engine in the InfluxDB configuration
-file (no limit on column number).
+Glances generates a lot of columns, e.g., if you have many running
+Docker containers, so you should use the ``tsm1`` engine in the InfluxDB
+configuration file (no limit on columns number).
 
 Grafana
 -------

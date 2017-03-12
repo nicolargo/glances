@@ -3,7 +3,7 @@
 Elasticsearch
 =============
 
-You can export statistics to an ``elasticsearch`` server. The connection
+You can export statistics to an ``Elasticsearch`` server. The connection
 should be defined in the Glances configuration file as following:
 
 .. code-block:: ini

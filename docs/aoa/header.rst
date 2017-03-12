@@ -11,8 +11,8 @@ Additionally, on GNU/Linux, it also shows the kernel version.
 
 In client mode, the server connection status is also displayed.
 
-If you are hosted on an AWS EC2 instance, some additional information
-can be displayed (AMI-ID, region).  
+If you are hosted on an ``AWS EC2`` instance, some additional
+information can be displayed (AMI-ID, region).
 
 **Connected**:
 

@@ -1,18 +1,23 @@
 .. _wifi:
 
-Wifi
+Wi-Fi
 =====
 
 *Availability: Linux*
 
 .. image:: ../_static/wifi.png
 
-Glances displays the Wifi hotspots' name and signal quality.
-If Glances is ran as root, then all the available hotspots are displayed.
+Glances displays the Wi-Fi hotspot names and signal quality. If Glances
+is ran as root, then all the available hotspots are displayed.
 
-In the configuration file, you can define signal quality thresholds.
-"Poor" quality is between -100 and -85dBm, "Good" quality between -85
-and -60dBm, and "Excellent" between -60 and -40dBm.
+.. note::
+    You need to install the ``wireless-tools`` package on your system.
+
+In the configuration file, you can define signal quality thresholds:
+
+- ``"Poor"`` quality is between -100 and -85dBm
+- ``"Good"`` quality between -85 and -60dBm
+- ``"Excellent"`` between -60 and -40dBm
 
 It's also possible to disable the scan on a specific interface from the
 configuration file (``[wifi]`` section). For example, if you want to
@@ -27,5 +32,5 @@ hide the loopback interface (lo) and all the virtual docker interfaces:
     warning=-75
     critical=-85
 
-You can disable this plugin using the --disable-wifi option or by heating
-the 'W' from the user interface.
+You can disable this plugin using the ``--disable-wifi`` option or by
+hitting the ``W`` key from the user interface.
