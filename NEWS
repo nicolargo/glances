@@ -12,21 +12,21 @@ Version 2.8.8
 Bugs corrected:
 
     * Drop requests to check for outdated Glances version
-    * Windows OS - Global name standalone not defined again&again (#1030)
+    *  Glances cannot load "Powersupply" (issue #1051)
 
 Version 2.8.7
 =============
 
 Bugs corrected:
 
-    * Windows OS - Global name standalone not defined again (#1030)
+    * Windows OS - Global name standalone not defined again (issue #1030)
 
 Version 2.8.6
 =============
 
 Bugs corrected:
 
-    * Windows OS - Global name standalone not defined (#1030)
+    * Windows OS - Global name standalone not defined (issue #1030)
 
 Version 2.8.5
 =============
