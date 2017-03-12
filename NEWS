@@ -2,10 +2,12 @@
 Glances Version 2
 ==============================================================================
 
-Version 2.9.0
+Version 2.8.7
 =============
 
+Bugs corrected:
 
+    * Windows OS - Global name standalone not defined again (#1030)
 
 Version 2.8.6
 =============
