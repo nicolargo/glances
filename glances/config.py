@@ -42,7 +42,10 @@ def user_config_dir():
         path = os.path.expanduser('~/Library/Application Support')
     else:
         path = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
-    path = os.path.join(path, 'glances')
+    if path is None:
+        path = ''
+    else:
+        path = os.path.join(path, 'glances')
 
     return path
 
@@ -79,7 +82,10 @@ def system_config_dir():
         path = '/usr/local/etc'
     else:
         path = os.environ.get('APPDATA')
-    path = os.path.join(path, 'glances')
+    if path is None:
+        path = ''
+    else:
+        path = os.path.join(path, 'glances')
 
     return path
 

@@ -27,7 +27,7 @@ import signal
 import sys
 
 # Global name
-__version__ = '2.9.0_DEVELOP'
+__version__ = '2.8.7'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -221,7 +221,7 @@ def main():
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if core.is_standalone()and not WINDOWS:
+    if core.is_standalone() and not WINDOWS:
         start_standalone(config=config, args=args)
     elif core.is_client() and not WINDOWS:
         if core.is_client_browser():
