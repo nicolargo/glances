@@ -1,0 +1,24 @@
+<div ng-show="!vm.dataLoaded" class="container-fluid" id="loading-page">
+    <div class="glances-logo"></div>
+    <div class="loader">Loading...</div>
+</div>
+
+<div ng-show="vm.arguments.help_tag" class="container-fluid" ng-include src="'help.html'"></div>
+
+<div ng-show="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
+    <div class="top-plugin">
+        <div class="row">
+            <div class="col-sm-24">
+                <div class="pull-left">
+                    <glances-plugin-system stats="vm.stats"></glances-plugin-system>
+                </div>
+                <div class="pull-left">
+                  <glances-plugin-ip stats="vm.stats" arguments="vm.arguments"></glances-plugin-ip>
+              </div>
+              <div class="pull-right">
+                <glances-plugin-uptime stats="vm.stats"></glances-plugin-uptime>
+            </div>
+        </div>
+    </div>
+
+</div>

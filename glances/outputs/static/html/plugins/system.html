@@ -1,4 +1,0 @@
-<span ng-if="is_disconnected" class="critical">Disconnected from</span>
-<span class="title">{{ statsSystem.hostname }}</span>
-<span ng-show="statsSystem.isLinux()" class="hidden-xs hidden-sm">({{ statsSystem.humanReadableName }} / {{ statsSystem.os.name }} {{ statsSystem.os.version }})</span>
-<span ng-show="!statsSystem.isLinux()" class="hidden-xs hidden-sm">({{ statsSystem.os.name }} {{ statsSystem.os.version }} {{ statsSystem.platform }})</span>
