@@ -1,0 +1,34 @@
+'use strict';
+
+function GlancesPluginLoadController() {
+    var vm = this;
+    var _view = {};
+
+    this.cpucore = null;
+    this.min1 = null;
+    this.min5 = null;
+    this.min15 = null;
+
+    vm.$onChanges = function (changes) {
+      var stats = changes.stats.currentValue;
+      if (stats === undefined || stats.stats === undefined) {
+        return;
+      }
+
+      var data = stats.stats['load'];
+      _view = stats.view['load'];
+
+      vm.cpucore = data['cpucore'];
+      vm.min1 = data['min1'];
+      vm.min5 = data['min5'];
+      vm.min15 = data['min15'];
+    };
+
+    this.getDecoration = function(value) {
+    if(_view[value] == undefined) {
+        return;
+    }
+
+    return _view[value].decoration.toLowerCase();
+};
+}
