@@ -3,14 +3,20 @@
 IRQ
 ===
 
+*Availability: Linux*
+
 .. image:: ../_static/irq.png
 
-Glances displays the top 5 interrupts rate. This plugin is only available on
-GNU/Linux machine (stats are grabbed from the /proc/interrupts file).
+Glances displays the top ``5`` interrupts rate.
 
-Note: /proc/interrupts file did not exist inside OpenVZ containers.
+This plugin is only available on GNU/Linux (stats are grabbed from the
+``/proc/interrupts`` file).
 
-How to read the informations:
+.. note::
+    ``/proc/interrupts`` file doesn't exist inside OpenVZ containers.
 
-* The first Column is the IRQ number / name
-* The Second column says how many times the CPU core has been interrupted during the last second
+How to read the information:
+
+- The first column is the IRQ number / name
+- The second column says how many times the CPU has been interrupted
+  during the last second

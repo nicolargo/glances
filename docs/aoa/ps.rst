@@ -52,22 +52,25 @@ Columns display
 ``VIRT``                  Virtual Memory Size
 
                           The total amount of virtual memory used by the
-                          process. It includes all code, data and shared
+                          process.
+
+                          It includes all code, data and shared
                           libraries plus pages that have been swapped out
                           and pages that have been mapped but not used.
 ``RES``                   Resident Memory Size
 
                           The non-swapped physical memory a process is
-                          using (what's currently in the physical memory). 
+                          using (what's currently in the physical memory).
 ``PID``                   Process ID
 ``USER``                  User ID
 ``NI``                    Nice level of the process
 ``S``                     Process status
 
                           The status of the process:
+
                           - ``R``: running or runnable (on run queue)
                           - ``S``: interruptible sleep (waiting for an event)
-                          - ``D``: uninterruptible sleep (usually IO)
+                          - ``D``: uninterruptible sleep (usually I/O)
                           - ``Z``: defunct ("zombie") process
                           - ``T``: traced/stopped by job control signal
                           - ``X``: dead (should never be seen)
@@ -88,10 +91,12 @@ It's possible to filter the processes list using the ``ENTER`` key.
 
 Filter syntax is the following (examples):
 
-- python > Filter processes name or command line starting with *python* (regexp)
-- .*python.* > Filter processes name or command line containing *python* (regexp)
-- username:nicolargo > Processes of nicolargo user (key:regexp)
-- cmdline:\/usr\/bin.* > Processes starting by */usr/bin*
+- ``python``: Filter processes name or command line starting with
+  *python* (regexp)
+- ``.*python.*``: Filter processes name or command line containing
+  *python* (regexp)
+- ``username:nicolargo``: Processes of nicolargo user (key:regexp)
+- ``cmdline:\/usr\/bin.*``: Processes starting by */usr/bin*
 
 Extended info
 -------------

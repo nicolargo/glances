@@ -22,14 +22,15 @@ and run Glances with:
 
     $ glances --export-couchdb
 
-Documents are stored in native JSON format. Glances adds "type" and "time" entries.
+Documents are stored in native ``JSON`` format. Glances adds ``"type"``
+and ``"time"`` entries:
 
-- type: plugin name
-- time: timestamp  (format: "2016-09-24T16:39:08.524828Z")
+- ``type``: plugin name
+- ``time``: timestamp  (format: "2016-09-24T16:39:08.524828Z")
 
 Example of Couch Document for the load stats:
 
-.. code-block:: console
+.. code-block:: json
 
     {
        "_id": "36cbbad81453c53ef08804cb2612d5b6",
@@ -46,4 +47,4 @@ Example of Couch Document for the load stats:
        "load_careful": 0.7
     }
 
-You can view the result using the CouchDB utils URL (http://127.0.0.1:5984/_utils/database.html?glances).
+You can view the result using the CouchDB utils URL: http://127.0.0.1:5984/_utils/database.html?glances.

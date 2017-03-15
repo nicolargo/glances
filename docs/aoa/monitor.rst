@@ -3,6 +3,6 @@
 Monitored Processes List
 ========================
 
-The monitored processes list is deprecated.
-
-Please use the Application Monitoring Process (AMP).
+.. warning::
+    The monitored processes list feature has been removed. Use the new
+    Application Monitoring Process (AMP) instead.

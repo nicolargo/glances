@@ -7,10 +7,8 @@ Sensors
 
 .. image:: ../_static/sensors.png
 
-Glances can displays the sensors information using ``PsUtil`` and ``hddtemp``.
-
-As of ``lm-sensors``, a filter is being applied in order to display
-temperature and fan speed only.
+Glances can displays the sensors information using ``psutil`` and/or
+``hddtemp``.
 
 There is no alert on this information.
 
