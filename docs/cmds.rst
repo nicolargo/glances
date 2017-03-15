@@ -196,7 +196,7 @@ Command-Line Options
 
 .. option:: -c CLIENT, --client CLIENT
 
-    connect to a Glances server by IPv4/IPv6 address or hostname
+    connect to a Glances server by IPv4/IPv6 address, hostname or hostname:port
 
 .. option:: -s, --server
 
