@@ -223,6 +223,13 @@ class GlancesClient(object):
 
     def serve_forever(self):
         """Main client loop."""
+
+        # Test if client and server are in the same major version
+        if not self.login():
+            logger.critical("The server version is not compatible with the client")
+            self.end()
+            return self.client_mode
+
         exitkey = False
         try:
             while True and not exitkey:

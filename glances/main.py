@@ -406,21 +406,6 @@ Examples of use:
 
         return args
 
-    def __get_username(self, description=''):
-        """Read a username from the command line.
-        """
-        return input(description)
-
-    def __get_password(self, description='', confirm=False, clear=False, username='glances'):
-        """Read a password from the command line.
-
-        - if confirm = True, with confirmation
-        - if clear = True, plain (clear password)
-        """
-        from glances.password import GlancesPassword
-        password = GlancesPassword(username=username)
-        return password.get_password(description, confirm, clear)
-
     def is_standalone(self):
         """Return True if Glances is running in standalone mode."""
         return (not self.args.client and
@@ -451,3 +436,22 @@ Examples of use:
     def get_args(self):
         """Return the arguments."""
         return self.args
+
+    def get_mode(self):
+        """Return the mode."""
+        return self.mode
+
+    def __get_username(self, description=''):
+        """Read an username from the command line.
+        """
+        return input(description)
+
+    def __get_password(self, description='', confirm=False, clear=False, username='glances'):
+        """Read a password from the command line.
+
+        - if confirm = True, with confirmation
+        - if clear = True, plain (clear password)
+        """
+        from glances.password import GlancesPassword
+        password = GlancesPassword(username=username)
+        return password.get_password(description, confirm, clear)
