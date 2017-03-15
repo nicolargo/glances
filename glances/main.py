@@ -277,7 +277,8 @@ Examples of use:
             else:
                 args.port = self.server_port
         # Port in the -c URI #996
-        args.client, args.port = (x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port)))
+        if args.client is not None:
+            args.client, args.port = (x if x else y for (x, y) in zip(args.client.partition(':')[::2], (args.client, args.port)))
 
         # Autodiscover
         if args.disable_autodiscover:
