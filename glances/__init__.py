@@ -70,130 +70,40 @@ def __signal_handler(signal, frame):
 
 def end():
     """Stop Glances."""
-    if core.is_standalone() and not WINDOWS:
-        # Stop the standalone (CLI)
-        standalone.end()
-        logger.info("Stop Glances (with CTRL-C)")
-    elif core.is_client() and not WINDOWS:
-        # Stop the client
-        client.end()
-        logger.info("Stop Glances client (with CTRL-C)")
-    elif core.is_server():
-        # Stop the server
-        server.end()
-        logger.info("Stop Glances server (with CTRL-C)")
-    elif core.is_webserver():
-        # Stop the Web server
-        webserver.end()
-        logger.info("Stop Glances web server(with CTRL-C)")
+    mode.end()
+    logger.info("Glances stopped with CTRL-C")
 
     # The end...
     sys.exit(0)
 
 
-def start_standalone(config, args):
-    """Start the standalone mode"""
-    logger.info("Start standalone mode")
+def start(config, args):
+    """Start Glances"""
 
-    # Share global var
-    global standalone
+    # Load mode
+    global mode
 
-    # Import the Glances standalone module
-    from glances.standalone import GlancesStandalone
+    if core.is_standalone() and not WINDOWS:
+        from glances.standalone import GlancesStandalone as GlancesMode
+    elif core.is_client() and not WINDOWS:
+        if core.is_client_browser():
+            from glances.client_browser import GlancesClientBrowser as GlancesMode
+        else:
+            from glances.client import GlancesClient as GlancesMode
+    elif core.is_server():
+        from glances.server import GlancesServer as GlancesMode
+    elif core.is_webserver():
+        from glances.webserver import GlancesWebServer as GlancesMode
 
-    # Init the standalone mode
-    standalone = GlancesStandalone(config=config, args=args)
+    # Init the mode
+    logger.info("Start {} mode".format(GlancesMode.__name__))
+    mode = GlancesMode(config=config, args=args)
 
-    # Start the standalone (CLI) loop
-    standalone.serve_forever()
+    # Start the main loop
+    mode.serve_forever()
 
-
-def start_clientbrowser(config, args):
-    """Start the browser client mode"""
-    logger.info("Start client mode (browser)")
-
-    # Share global var
-    global client
-
-    # Import the Glances client browser module
-    from glances.client_browser import GlancesClientBrowser
-
-    # Init the client
-    client = GlancesClientBrowser(config=config, args=args)
-
-    # Start the client loop
-    client.serve_forever()
-
-    # Shutdown the client
-    client.end()
-
-
-def start_client(config, args):
-    """Start the client mode"""
-    logger.info("Start client mode")
-
-    # Share global var
-    global client
-
-    # Import the Glances client browser module
-    from glances.client import GlancesClient
-
-    # Init the client
-    client = GlancesClient(config=config, args=args)
-
-    # Test if client and server are in the same major version
-    if not client.login():
-        logger.critical("The server version is not compatible with the client")
-        sys.exit(2)
-
-    # Start the client loop
-    client.serve_forever()
-
-    # Shutdown the client
-    client.end()
-
-
-def start_server(config, args):
-    """Start the server mode"""
-    logger.info("Start server mode")
-
-    # Share global var
-    global server
-
-    # Import the Glances server module
-    from glances.server import GlancesServer
-
-    server = GlancesServer(cached_time=args.cached_time,
-                           config=config,
-                           args=args)
-    print('Glances server is running on {}:{}'.format(args.bind_address, args.port))
-
-    # Set the server login/password (if -P/--password tag)
-    if args.password != "":
-        server.add_user(args.username, args.password)
-
-    # Start the server loop
-    server.serve_forever()
-
-    # Shutdown the server?
-    server.server_close()
-
-
-def start_webserver(config, args):
-    """Start the Web server mode"""
-    logger.info("Start web server mode")
-
-    # Share global var
-    global webserver
-
-    # Import the Glances web server module
-    from glances.webserver import GlancesWebServer
-
-    # Init the web server mode
-    webserver = GlancesWebServer(config=config, args=args)
-
-    # Start the web server loop
-    webserver.serve_forever()
+    # Shutdown
+    mode.end()
 
 
 def main():
@@ -221,15 +131,4 @@ def main():
     signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
-    if core.is_standalone() and not WINDOWS:
-        start_standalone(config=config, args=args)
-    elif core.is_client() and not WINDOWS:
-        if core.is_client_browser():
-            start_clientbrowser(config=config, args=args)
-        else:
-            start_client(config=config, args=args)
-    elif core.is_server():
-        start_server(config=config, args=args)
-    elif core.is_webserver():
-        # Web server mode replace the standalone mode on Windows OS
-        start_webserver(config=config, args=args)
+    start(config=config, args=args)
