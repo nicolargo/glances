@@ -31,7 +31,7 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     import queue
     from configparser import ConfigParser, NoOptionError, NoSectionError
-    from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport
+    from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from urllib.request import urlopen
     from urllib.error import HTTPError, URLError
@@ -88,7 +88,7 @@ else:
     from itertools import imap as map
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, NoSectionError
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-    from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport
+    from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport, Server
     from urllib2 import urlopen, HTTPError, URLError
 
     input = raw_input

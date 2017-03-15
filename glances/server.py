@@ -25,7 +25,7 @@ import sys
 from base64 import b64decode
 
 from glances import __version__
-from glances.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+from glances.compat import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer, Server
 from glances.autodiscover import GlancesAutoDiscoverClient
 from glances.logger import logger
 from glances.stats_server import GlancesStatsServer
@@ -100,9 +100,13 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
     """Init a SimpleXMLRPCServer instance (IPv6-ready)."""
 
+    finished = False
+
     def __init__(self, bind_address, bind_port=61209,
                  requestHandler=GlancesXMLRPCHandler):
 
+        self.bind_address = bind_address
+        self.bind_port = bind_port
         try:
             self.address_family = socket.getaddrinfo(bind_address, bind_port)[0][0]
         except socket.error as e:
@@ -111,13 +115,23 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
 
         super(GlancesXMLRPCServer, self).__init__((bind_address, bind_port), requestHandler)
 
+    def end(self):
+        """Stop the server"""
+        self.server_close()
+        self.finished = True
+
+    def serve_forever(self):
+        """Main loop"""
+        while not self.finished:
+            self.handle_request()
+            logger.info(self.finished)
+
 
 class GlancesInstance(object):
 
     """All the methods of this class are published as XML-RPC methods."""
 
     def __init__(self,
-                 cached_time=1,
                  config=None,
                  args=None):
         # Init stats
@@ -130,7 +144,7 @@ class GlancesInstance(object):
         # i.e. XML/RPC calls will not retrieve updated info until the time
         # since last update is passed (will retrieve old cached info instead)
         self.timer = Timer(0)
-        self.cached_time = cached_time
+        self.cached_time = args.cached_time
 
     def __update__(self):
         # Never update more than 1 time per cached_time
@@ -186,7 +200,6 @@ class GlancesServer(object):
 
     def __init__(self,
                  requestHandler=GlancesXMLRPCHandler,
-                 cached_time=1,
                  config=None,
                  args=None):
         # Args
@@ -198,6 +211,8 @@ class GlancesServer(object):
         except Exception as e:
             logger.critical("Cannot start Glances server: {}".format(e))
             sys.exit(2)
+        else:
+            print('Glances XML-RPC server is running on {}:{}'.format(args.bind_address, args.port))
 
         # The users dict
         # username / password couple
@@ -207,7 +222,7 @@ class GlancesServer(object):
 
         # Register functions
         self.server.register_introspection_functions()
-        self.server.register_instance(GlancesInstance(cached_time, config, args))
+        self.server.register_instance(GlancesInstance(config, args))
 
         if not self.args.disable_autodiscover:
             # Note: The Zeroconf service name will be based on the hostname
@@ -223,14 +238,14 @@ class GlancesServer(object):
 
     def serve_forever(self):
         """Call the main loop."""
+        # Set the server login/password (if -P/--password tag)
+        if self.args.password != "":
+            self.add_user(self.args.username, self.args.password)
+        # Serve forever
         self.server.serve_forever()
-
-    def server_close(self):
-        """Close the Glances server session."""
-        self.server.server_close()
 
     def end(self):
         """End of the Glances server session."""
         if not self.args.disable_autodiscover:
             self.autodiscover_client.close()
-        self.server_close()
+        self.server.end()
