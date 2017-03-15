@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Mar 12, 2017" "2.8.8" "Glances"
+.TH "GLANCES" "1" "Mar 15, 2017" "2.9.0_DEVELOP" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -59,7 +59,7 @@ show program\(aqs version number and exit
 .INDENT 0.0
 .TP
 .B \-d, \-\-debug
-enable debug mode. The debugging output is saved to /tmp/glances\-USERNAME.log.
+enable debug mode
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -179,8 +179,7 @@ start Glances in per CPU mode
 .INDENT 0.0
 .TP
 .B \-2, \-\-disable\-left\-sidebar
-disable network, disk I/O, FS and sensors modules (py3sensors lib
-needed)
+disable network, disk I/O, FS and sensors modules
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -285,7 +284,7 @@ export stats to a ZeroMQ server (zmq lib needed)
 .INDENT 0.0
 .TP
 .B \-c CLIENT, \-\-client CLIENT
-connect to a Glances server by IPv4/IPv6 address or hostname
+connect to a Glances server by IPv4/IPv6 address, hostname or hostname:port
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -440,8 +439,12 @@ The following commands (key pressed) are supported while in Glances:
 .B \fBENTER\fP
 Set the process filter
 .sp
-\fBNote\fP: on macOS, please use \fBCTRL\-H\fP to delete
-filter.
+\fBNOTE:\fP
+.INDENT 7.0
+.INDENT 3.5
+On macOS please use \fBCTRL\-H\fP to delete filter.
+.UNINDENT
+.UNINDENT
 .sp
 Filter is a regular expression pattern:
 .INDENT 7.0
@@ -582,6 +585,9 @@ Enable/disable all but quick look and load module
 .TP
 .B \fB5\fP
 Enable/disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
+.TP
+.B \fB6\fP
+Enable/disable mean GPU mode
 .TP
 .B \fB/\fP
 Switch between process command line or command name

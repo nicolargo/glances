@@ -5,6 +5,9 @@ Glances Version 2
 Version 2.9.0
 =============
 
+Enhancements and new features:
+
+    * Port in the -c URI (-c hostname:port) (issue #996)
 
 Version 2.8.8
 =============
