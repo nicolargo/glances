@@ -247,6 +247,27 @@ then just:
 
     $ pip install glances
 
+Android
+-------
+
+You need a rooted device and the `Termux`_ application (available on the
+Google Store).
+
+Start Termux on your device and enter:
+
+.. code-block:: console
+
+    $ apt update
+    $ apt upgrade
+    $ apt install clang python python-dev
+    $ pip install glances
+
+And start Glances:
+
+.. code-block:: console
+
+    $ glances
+
 Source
 ------
 
@@ -350,6 +371,7 @@ LGPLv3. See ``COPYING`` for more details.
 .. _@nicolargo: https://twitter.com/nicolargo
 .. _@glances_system: https://twitter.com/glances_system
 .. _Python: https://www.python.org/getit/
+.. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
