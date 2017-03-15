@@ -9,6 +9,10 @@ Enhancements and new features:
 
     * Port in the -c URI (-c hostname:port) (issue #996)
 
+Bugs corrected:
+
+    * Glances v2.8.7 issues with Curses UI on Android (issue #1053)
+
 Version 2.8.8
 =============
 
@@ -114,8 +118,8 @@ Enhancements and new features:
     * System uptime in export (issue #890)
     * Refactor the --disable-* options (issue #948)
     * PID column too small if kernel.pid_max is > 99999 (issue #959)
-Bugs corrected:
 
+Bugs corrected:
 
     * Glances RAID plugin Traceback (issue #927)
     * Default AMP crashes when 'command' given (issue #933)

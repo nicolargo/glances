@@ -95,5 +95,5 @@ class Bar(object):
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
         if self.__with_text:
-            ret = '{}{:>5}%'.format(ret, self.percent)
+            ret = '{}{:5.1f}%'.format(ret, self.percent)
         return ret
