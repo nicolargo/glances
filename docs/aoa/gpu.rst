@@ -3,23 +3,26 @@
 GPU
 ===
 
-The GPU plugin is **only** compatible with NVIDIA GPU. You also need to
-install the Python `pynvml`_ library on our system.
+The GPU plugin is **only** compatible with ``NVIDIA`` GPUs.
 
-The GPU stats are shown as a percentage or value and for the configured
+.. note::
+    You need to install the `nvidia-ml-py`_ library on your system.
+
+The GPU stats are shown as a percentage of value and for the configured
 refresh time. The total GPU usage is displayed on the first line, the
 memory consumption on the second one.
 
 .. image:: ../_static/gpu.png
 
-If you click on the ``6`` short key, the per GPU view is displayed:
+If you click on the ``6`` short key, the per-GPU view is displayed:
 
 .. image:: ../_static/pergpu.png
 
-Note: you can also start Glances with the --meangpu option to display the
-first view by default.
+.. note::
+    You can also start Glances with the ``--meangpu`` option to display
+    the first view by default.
 
-You can change the thresolds limits in the configuration file:
+You can change the threshold limits in the configuration file:
 
 .. code-block:: ini
 
@@ -35,13 +38,13 @@ You can change the thresolds limits in the configuration file:
 
 Legend:
 
-================= ============
-GPU (PROC/MEM)    Status
-================= ============
-``<50%``          ``OK``
-``>50%``          ``CAREFUL``
-``>70%``          ``WARNING``
-``>90%``          ``CRITICAL``
-================= ============
+============== ============
+GPU (PROC/MEM) Status
+============== ============
+``<50%``       ``OK``
+``>50%``       ``CAREFUL``
+``>70%``       ``WARNING``
+``>90%``       ``CRITICAL``
+============== ============
 
-.. _pynvml: https://pypi.python.org/pypi/nvidia-ml-py
+.. _nvidia-ml-py: https://pypi.python.org/pypi/nvidia-ml-py

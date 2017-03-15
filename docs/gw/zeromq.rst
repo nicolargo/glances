@@ -15,12 +15,12 @@ following:
     port=5678
     prefix=G
 
-Note: Glances `envelopes`_ the stats before publishing it.
-The message is composed of three frames.
+Glances `envelopes`_ the stats before publishing it. The message is
+composed of three frames:
 
-- first frame containing the prefix configured in the [zeromq] section (as STRING)
-- second frame with the Glances plugin name (as STRING)
-- third frame with the Glances plugin stats (as JSON)
+1. the prefix configured in the [zeromq] section (as STRING)
+2. the Glances plugin name (as STRING)
+3. the Glances plugin stats (as JSON)
 
 Run Glances with:
 

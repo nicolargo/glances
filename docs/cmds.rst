@@ -16,7 +16,7 @@ Command-Line Options
 
 .. option:: -d, --debug
 
-    enable debug mode. The debugging output is saved to /tmp/glances-USERNAME.log.
+    enable debug mode
 
 .. option:: -C CONF_FILE, --config CONF_FILE
 
@@ -112,8 +112,7 @@ Command-Line Options
 
 .. option:: -2, --disable-left-sidebar
 
-    disable network, disk I/O, FS and sensors modules (py3sensors lib
-    needed)
+    disable network, disk I/O, FS and sensors modules
 
 .. option:: -3, --disable-quicklook
 
@@ -323,8 +322,7 @@ The following commands (key pressed) are supported while in Glances:
 ``ENTER``
     Set the process filter
 
-    **Note**: on macOS, please use ``CTRL-H`` to delete
-    filter.
+    .. note:: On macOS please use ``CTRL-H`` to delete filter.
 
     Filter is a regular expression pattern:
 
@@ -462,6 +460,8 @@ The following commands (key pressed) are supported while in Glances:
 ``5``
     Enable/disable top menu (QuickLook, CPU, MEM, SWAP and LOAD)
 
+``6``
+    Enable/disable mean GPU mode
 ``/``
     Switch between process command line or command name
 
