@@ -4,10 +4,10 @@ function GlancesPluginLoadController() {
     var vm = this;
     var _view = {};
 
-    this.cpucore = null;
-    this.min1 = null;
-    this.min5 = null;
-    this.min15 = null;
+    vm.cpucore = null;
+    vm.min1 = null;
+    vm.min5 = null;
+    vm.min15 = null;
 
     vm.$onChanges = function (changes) {
       var stats = changes.stats.currentValue;
@@ -25,7 +25,7 @@ function GlancesPluginLoadController() {
     };
 
     this.getDecoration = function(value) {
-    if(_view[value] == undefined) {
+    if(_view[value] === undefined) {
         return;
     }
 

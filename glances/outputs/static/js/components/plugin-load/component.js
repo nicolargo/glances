@@ -4,7 +4,7 @@ glancesApp.component('glancesPluginLoad', {
     controller: GlancesPluginLoadController,
     controllerAs: 'vm',
     bindings: {
-      stats: '<',
+        stats: '<'
     },
     templateUrl: 'components/plugin-load/view.html'
 });
