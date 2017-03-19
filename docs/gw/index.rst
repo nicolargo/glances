@@ -15,6 +15,7 @@ to providing stats to multiple services (see list below).
    elastic
    influxdb
    opentsdb
+   prometheus
    rabbitmq
    riemann
    statsd
