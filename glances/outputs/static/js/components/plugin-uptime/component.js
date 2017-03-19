@@ -4,7 +4,7 @@ glancesApp.component('glancesPluginUptime', {
     controller: GlancesPluginUptimeController,
     controllerAs: 'vm',
     bindings: {
-      stats: '<',
+        stats: '<'
     },
     templateUrl: 'components/plugin-uptime/view.html'
 });
