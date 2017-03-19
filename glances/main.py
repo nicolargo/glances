@@ -173,22 +173,24 @@ Examples of use:
                             dest='path_graph', help='set the export path for graphs (default is {})'.format(tempfile.gettempdir()))
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help='export stats to a CSV file')
-        parser.add_argument('--export-influxdb', action='store_true', default=False,
-                            dest='export_influxdb', help='export stats to an InfluxDB server (influxdb lib needed)')
         parser.add_argument('--export-cassandra', action='store_true', default=False,
                             dest='export_cassandra', help='export stats to a Cassandra or Scylla server (cassandra lib needed)')
-        parser.add_argument('--export-opentsdb', action='store_true', default=False,
-                            dest='export_opentsdb', help='export stats to an OpenTSDB server (potsdb lib needed)')
-        parser.add_argument('--export-statsd', action='store_true', default=False,
-                            dest='export_statsd', help='export stats to a StatsD server (statsd lib needed)')
+        parser.add_argument('--export-couchdb', action='store_true', default=False,
+                            dest='export_couchdb', help='export stats to a CouchDB server (couch lib needed)')
         parser.add_argument('--export-elasticsearch', action='store_true', default=False,
                             dest='export_elasticsearch', help='export stats to an ElasticSearch server (elasticsearch lib needed)')
+        parser.add_argument('--export-influxdb', action='store_true', default=False,
+                            dest='export_influxdb', help='export stats to an InfluxDB server (influxdb lib needed)')
+        parser.add_argument('--export-opentsdb', action='store_true', default=False,
+                            dest='export_opentsdb', help='export stats to an OpenTSDB server (potsdb lib needed)')
+        parser.add_argument('--export-prometheus', action='store_true', default=False,
+                            dest='export_prometheus', help='export stats to a Prometheus exporter (prometheus_client lib needed)')
         parser.add_argument('--export-rabbitmq', action='store_true', default=False,
                             dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
         parser.add_argument('--export-riemann', action='store_true', default=False,
                             dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
-        parser.add_argument('--export-couchdb', action='store_true', default=False,
-                            dest='export_couchdb', help='export stats to a CouchDB server (couch lib needed)')
+        parser.add_argument('--export-statsd', action='store_true', default=False,
+                            dest='export_statsd', help='export stats to a StatsD server (statsd lib needed)')
         parser.add_argument('--export-zeromq', action='store_true', default=False,
                             dest='export_zeromq', help='export stats to a ZeroMQ server (pyzmq lib needed)')
         # Client/Server option

@@ -25,6 +25,7 @@ from numbers import Number
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
+from glances.compat import iteritems
 
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time

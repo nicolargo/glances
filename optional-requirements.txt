@@ -10,6 +10,7 @@ netifaces
 nvidia-ml-py; python_version == "2.7"
 pika
 potsdb
+prometheus_client
 py-cpuinfo
 pymdstat
 pysnmp
