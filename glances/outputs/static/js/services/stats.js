@@ -1,4 +1,4 @@
-glancesApp.service('GlancesStats', function($http, $q) {
+glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
     var _stats = [], _views = [], _limits = [], _config = {};
 
     this.getData = function() {
@@ -56,5 +56,10 @@ glancesApp.service('GlancesStats', function($http, $q) {
             return response.data;
         });
     };
+
+    // load limits to init GlancePlugin helper
+    this.getAllLimits().then(function(limits) {
+        GlancesPluginHelper.setLimits(limits);
+    });
 
 });

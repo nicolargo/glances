@@ -37,7 +37,7 @@ function GlancesController($interval, GlancesStats) {
     };
 
     vm.refreshData();
-    var refreshTime = 60; // arguments.time
+    var refreshTime = 5; // arguments.time
     $interval(function () {
         vm.refreshData();
     }, refreshTime * 1000); // in milliseconds
