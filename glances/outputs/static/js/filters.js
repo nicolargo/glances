@@ -77,7 +77,7 @@ glancesApp.filter('bits', function($filter) {
     }
 });
 
-glancesApp.filter('leftPad', function($filter) {
+glancesApp.filter('leftPad', function() {
     return function (value, length, chars) {
       length = length || 0;
       chars = chars || ' ';

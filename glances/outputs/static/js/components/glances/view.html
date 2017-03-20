@@ -4,9 +4,9 @@
         <div class="loader">Loading...</div>
     </div>
 
-    <glances-help help="vm.help" ng-show="vm.arguments.help_tag"></glances-help>
+    <glances-help help="vm.help" ng-show="vm.vm.argumentshelp_tag"></glances-help>
 
-    <div ng-show="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
+    <div ng-show="vm.dataLoaded && !vm.vm.argumentshelp_tag" class="container-fluid">
         <div class="top-plugin">
             <div class="row">
                 <div class="col-sm-24">
@@ -31,37 +31,37 @@
         </div>
 
         <div class="row">
-            <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!arguments.disable_quicklook">
-                <glances-plugin-quicklook></glances-plugin-quicklook>
+            <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!vm.argumentsdisable_quicklook">
+                <glances-plugin-quicklook stats="vm.stats" arguments="vm.arguments"></glances-plugin-quicklook>
             </div>
-            <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!arguments.disable_cpu && !arguments.percpu">
+            <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!vm.argumentsdisable_cpu && !vm.argumentspercpu">
                 <glances-plugin-cpu stats="vm.stats"></glances-plugin-cpu>
             </div>
-            <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!arguments.disable_cpu && arguments.percpu">
-                <glances-plugin-per-cpu></glances-plugin-per-cpu>
+            <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.argumentsdisable_cpu && vm.argumentspercpu">
+                <glances-plugin-percpu stats="vm.stats"></glances-plugin-percpu>
             </div>
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
-                 ng-if="!arguments.disable_gpu && statsGpu.gpus.length > 0">
-                <glances-plugin-gpu></glances-plugin-gpu>
+                 ng-if="!vm.argumentsdisable_gpu && statsGpu.gpus.length > 0">
+                <glances-plugin-gpu stats="vm.stats"></glances-plugin-gpu>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_mem">
-                <glances-plugin-mem></glances-plugin-mem>
+            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.argumentsdisable_mem">
+                <glances-plugin-mem stats="vm.stats"></glances-plugin-mem>
             </div>
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
-                 ng-if="!arguments.disable_mem && !(!arguments.disable_gpu && statsGpu.gpus.length > 0)">
-                <glances-plugin-mem-more></glances-plugin-mem-more>
+                 ng-if="!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && statsGpu.gpus.length > 0)">
+                <glances-plugin-mem-more stats="vm.stats"></glances-plugin-mem-more>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_memswap">
-                <glances-plugin-memswap></glances-plugin-memswap>
+            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_memswap">
+                <glances-plugin-memswap stats="vm.stats"></glances-plugin-memswap>
             </div>
-            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!arguments.disable_load">
+            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_load">
                 <glances-plugin-load stats="vm.stats"></glances-plugin-load>
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-6 sidebar" ng-show="!arguments.disable_left_sidebar">
+            <div class="col-sm-6 sidebar" ng-show="!vm.arguments.disable_left_sidebar">
                 <div class="table">
-                    <glances-plugin-network></glances-plugin-network ng-show="!arguments.disable_network">
+                    <glances-plugin-network stats="vm.stats" ng-show="!vm.arguments.disable_network"></glances-plugin-network>
                 </div>
             </div>
             <div class="col-sm-18">

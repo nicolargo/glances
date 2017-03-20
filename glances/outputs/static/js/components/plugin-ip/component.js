@@ -4,7 +4,8 @@ glancesApp.component('glancesPluginIp', {
     controller: GlancesPluginIpController,
     controllerAs: 'vm',
     bindings: {
-        stats: '<'
+        stats: '<',
+        arguments: '<'
     },
     templateUrl: 'components/plugin-ip/view.html'
 });
