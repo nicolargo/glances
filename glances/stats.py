@@ -23,6 +23,7 @@ import collections
 import os
 import sys
 import threading
+import traceback
 
 from glances.globals import exports_path, plugins_path, sys_path
 from glances.logger import logger
@@ -31,6 +32,9 @@ from glances.logger import logger
 class GlancesStats(object):
 
     """This class stores, updates and gives stats."""
+
+    # Script header constant
+    header = "glances_"
 
     def __init__(self, config=None, args=None):
         # Set the config instance
@@ -85,24 +89,36 @@ class GlancesStats(object):
         # Restoring system path
         sys.path = sys_path
 
+    def _load_plugin(self, plugin_script, args=None, config=None):
+        """Load the plugin (script), init it and add to the _plugin dict"""
+        # The key is the plugin name
+        # for example, the file glances_xxx.py
+        # generate self._plugins_list["xxx"] = ...
+        name = plugin_script[len(self.header):-3].lower()
+        try:
+            # Import the plugin
+            plugin = __import__(plugin_script[:-3])
+            # Init and add the plugin to the dictionary
+            if name in ('help', 'amps', 'ports'):
+                self._plugins[name] = plugin.Plugin(args=args, config=config)
+            else:
+                self._plugins[name] = plugin.Plugin(args=args)
+        except Exception as e:
+            # If a plugin can not be log, display a critical message
+            # on the console but do not crash
+            logger.critical("Error while initializing the {} plugin (see complete traceback in the log file)".format(name))
+            logger.error(traceback.format_exc())
+
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
-        header = "glances_"
         for item in os.listdir(plugins_path):
-            if (item.startswith(header) and
+            if (item.startswith(self.header) and
                     item.endswith(".py") and
-                    item != (header + "plugin.py")):
-                # Import the plugin
-                plugin = __import__(os.path.basename(item)[:-3])
-                # Add the plugin to the dictionary
-                # The key is the plugin name
-                # for example, the file glances_xxx.py
-                # generate self._plugins_list["xxx"] = ...
-                plugin_name = os.path.basename(item)[len(header):-3].lower()
-                if plugin_name in ('help', 'amps', 'ports'):
-                    self._plugins[plugin_name] = plugin.Plugin(args=args, config=self.config)
-                else:
-                    self._plugins[plugin_name] = plugin.Plugin(args=args)
+                    item != (self.header + "plugin.py")):
+                # Load the plugin
+                self._load_plugin(os.path.basename(item),
+                                  args=args, config=self.config)
+
         # Log plugins list
         logger.debug("Available plugins list: {}".format(self.getAllPlugins()))
 
