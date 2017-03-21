@@ -18,5 +18,7 @@ function GlancesPluginCloudController() {
             vm.provider = 'AWS EC2';
             vm.instance =  data['instance-type'] + ' instance ' + data['instance-id'] + ' (' + data['region'] + ')';
         }
+
+        data = undefined;
     };
 }

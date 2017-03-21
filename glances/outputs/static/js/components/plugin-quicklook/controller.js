@@ -35,6 +35,8 @@ function GlancesPluginQuicklookController() {
                 'total': cpu.total
             });
         }, this);
+
+        data = undefined;
     };
 
     this.getDecoration = function (value) {

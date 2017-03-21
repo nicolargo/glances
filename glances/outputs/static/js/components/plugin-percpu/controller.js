@@ -26,6 +26,8 @@ function GlancesPluginPercpuController(GlancesPluginHelper) {
                 'steal': cpuData.steal
             });
         }
+
+        data = undefined;
     };
 
     vm.getUserAlert = function(cpu) {

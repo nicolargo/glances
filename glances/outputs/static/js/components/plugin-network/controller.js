@@ -32,5 +32,7 @@ function GlancesPluginNetworkController($filter) {
         }
 
         vm.networks = $filter('orderBy')(vm.networks, 'interfaceName');
+
+        data = undefined;
     };
 }
