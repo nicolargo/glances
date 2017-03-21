@@ -106,7 +106,7 @@ class GlancesStats(object):
         except Exception as e:
             # If a plugin can not be log, display a critical message
             # on the console but do not crash
-            logger.critical("Error while initializing the {} plugin (see complete traceback in the log file)".format(name))
+            logger.critical("Error while initializing the {} plugin ({}})".format(name, e))
             logger.error(traceback.format_exc())
 
     def load_plugins(self, args=None):
