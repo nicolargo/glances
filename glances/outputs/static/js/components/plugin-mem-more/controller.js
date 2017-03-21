@@ -20,5 +20,7 @@ function GlancesPluginMemMoreController() {
         vm.inactive = data['inactive'];
         vm.buffers = data['buffers'];
         vm.cached = data['cached'];
+
+        data = undefined;
     };
 }

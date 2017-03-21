@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginMemController() {
+function GlancesPluginMemswapController() {
     var vm = this;
     var _view = {};
 
@@ -15,8 +15,8 @@ function GlancesPluginMemController() {
             return;
         }
 
-        var data = stats.stats['mem'];
-        _view = stats.view['mem'];
+        var data = stats.stats['memswap'];
+        _view = stats.view['memswap'];
 
         vm.percent = data['percent'];
         vm.total = data['total'];

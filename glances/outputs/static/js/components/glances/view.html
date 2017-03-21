@@ -1,12 +1,12 @@
 <div ng-keydown="vm.onKeyDown($event)" tabindex="0">
-    <div ng-show="!vm.dataLoaded" class="container-fluid" id="loading-page">
+    <div ng-if="!vm.dataLoaded" class="container-fluid" id="loading-page">
         <div class="glances-logo"></div>
         <div class="loader">Loading...</div>
     </div>
 
-    <glances-help help="vm.help" ng-show="vm.vm.argumentshelp_tag"></glances-help>
+    <glances-help help="vm.help" ng-if="vm.arguments.help_tag"></glances-help>
 
-    <div ng-show="vm.dataLoaded && !vm.vm.argumentshelp_tag" class="container-fluid">
+    <div ng-if="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
         <div class="top-plugin">
             <div class="row">
                 <div class="col-sm-24">
@@ -31,17 +31,16 @@
         </div>
 
         <div class="row">
-            <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!vm.argumentsdisable_quicklook">
+            <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!vm.arguments.disable_quicklook">
                 <glances-plugin-quicklook stats="vm.stats" arguments="vm.arguments"></glances-plugin-quicklook>
             </div>
-            <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!vm.argumentsdisable_cpu && !vm.argumentspercpu">
+            <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && !vm.arguments.percpu">
                 <glances-plugin-cpu stats="vm.stats"></glances-plugin-cpu>
             </div>
-            <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.argumentsdisable_cpu && vm.argumentspercpu">
+            <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && vm.arguments.percpu">
                 <glances-plugin-percpu stats="vm.stats"></glances-plugin-percpu>
             </div>
-            <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
-                 ng-if="!vm.argumentsdisable_gpu && statsGpu.gpus.length > 0">
+            <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && statsGpu.gpus.length > 0">
                 <glances-plugin-gpu stats="vm.stats"></glances-plugin-gpu>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.argumentsdisable_mem">
@@ -59,13 +58,30 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-6 sidebar" ng-show="!vm.arguments.disable_left_sidebar">
+            <div class="col-sm-6 sidebar" ng-if="!vm.arguments.disable_left_sidebar">
                 <div class="table">
-                    <glances-plugin-network stats="vm.stats" ng-show="!vm.arguments.disable_network"></glances-plugin-network>
+                    <glances-plugin-network stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
+                    <glances-plugin-wifi stats="vm.stats" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
+                    <glances-plugin-ports stats="vm.stats" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
+                    <glances-plugin-diskio stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
+                    <glances-plugin-fs stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
+                    <glances-plugin-irq stats="vm.stats" arguments="vm.arguments" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
+                    <glances-plugin-folders stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-folders>
+                    <glances-plugin-raid stats="vm.stats" arguments="vm.arguments"></glances-plugin-raid>
+                    <glances-plugin-sensors stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
                 </div>
             </div>
             <div class="col-sm-18">
+                <glances-plugin-docker stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_docker"></glances-plugin-docker>
+                <glances-plugin-alert stats="vm.stats" ng-if="!vm.arguments.disable_alert"></glances-plugin-alert>
 
+                <div ng-show="!vm.arguments.disable_process">
+                    <glances-plugin-processcount stats="vm.stats"></glances-plugin-processcount>
+                    <glances-plugin-amps stats="vm.stats" arguments="vm.arguments" ng-if="!arguments.disable_amps"></glances-plugin-amps>
+                    <glances-plugin-processlist stats="vm.stats" arguments="vm.arguments"></glances-plugin-processlist>
+                </div>
+                <div ng-show="vm.arguments.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
+            </div>
             </div>
         </div>
     </div>

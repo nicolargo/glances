@@ -50,6 +50,8 @@ function GlancesPluginCpuController() {
         if (data.syscalls) {
             vm.syscalls = Math.floor(data.syscalls / data.time_since_update);
         }
+
+        data = undefined;
     };
 
     this.getDecoration = function (value) {

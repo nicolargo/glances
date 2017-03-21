@@ -22,5 +22,7 @@ function GlancesPluginIpController() {
         vm.mask = data.mask;
         vm.maskCidr = data.mask_cidr;
         vm.publicAddress = data.public_address
+
+        data = undefined;
     };
 }

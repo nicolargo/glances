@@ -4,7 +4,7 @@ glancesApp.component('glancesHelp', {
     controller: GlancesHelpController,
     controllerAs: 'vm',
     bindings: {
-      help: '<',
+      help: '<'
     },
     templateUrl: 'components/help/view.html'
 });

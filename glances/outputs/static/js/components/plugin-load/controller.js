@@ -22,6 +22,8 @@ function GlancesPluginLoadController() {
       vm.min1 = data['min1'];
       vm.min5 = data['min5'];
       vm.min15 = data['min15'];
+
+        data = undefined;
     };
 
     this.getDecoration = function(value) {

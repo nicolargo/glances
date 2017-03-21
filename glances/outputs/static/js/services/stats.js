@@ -1,5 +1,4 @@
 glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
-    var _stats = [], _views = [], _limits = [], _config = {};
 
     this.getData = function() {
         return $q.all([
@@ -15,24 +14,18 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
 
     this.getAllStats = function() {
         return $http.get('/api/2/all').then(function (response) {
-            _stats = response.data;
-
             return response.data;
         });
     };
 
     this.getAllLimits = function() {
         return $http.get('/api/2/all/limits').then(function (response) {
-            _limits = response.data;
-
             return response.data;
         });
     };
 
     this.getAllViews = function() {
         return $http.get('/api/2/all/views').then(function (response) {
-            _views = response.data;
-
             return response.data;
         });
     };
@@ -45,9 +38,7 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
 
     this.getConfig = function() {
         return $http.get('/api/2/config').then(function (response) {
-            _config = response.data;
-
-            return _config;
+            return response.data;
         });
     };
 
