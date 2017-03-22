@@ -4,5 +4,5 @@
   <span>{{ vm.running }} run,</span>
   <span>{{ vm.sleeping }} slp,</span>
   <span>{{ vm.stopped }} oth</span>
-  <span> sorted {{ sorter.auto ? 'automatically' : '' }} by {{ sorter.getColumnLabel(sorter.column) }}, flat view</span>
+  <span> sorted {{ vm.sorter.auto ? 'automatically' : '' }} by {{ vm.sorter.getColumnLabel(vm.sorter.column) }}, flat view</span>
 </section>
