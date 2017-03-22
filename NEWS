@@ -14,6 +14,7 @@ Bugs corrected:
 
     * Glances v2.8.7 issues with Curses UI on Android (issue #1053)
     * Fails to start, OSError in sensors_temperatures (issue #1057)
+    * Crashs after long time running the glances --browser (issue #1059)
 
 Version 2.8.8
 =============
