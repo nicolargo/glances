@@ -106,16 +106,16 @@ body {
 }
 
 /* Plugins */
-#processlist .table-cell {
+#processlist-plugin .table-cell {
     padding: 0px 5px 0px 5px;
     white-space: nowrap;
 }
-#containers .table-cell {
+#containers-plugin .table-cell {
     padding: 0px 10px 0px 10px;
     white-space: nowrap;
 }
 
-#quicklook .progress {
+#quicklook-plugin .progress {
     margin-bottom: 0px;
     min-width: 100px;
     background-color: #000;
@@ -123,25 +123,25 @@ body {
     border-radius: 0px;
     text-align: right;
 }
-#quicklook .progress-bar-ok {
+#quicklook-plugin .progress-bar-ok {
     background-color: #3E7B04;
 }
-#quicklook .progress-bar-careful {
+#quicklook-plugin .progress-bar-careful {
     background-color: #295183;
 }
-#quicklook .progress-bar-warning {
+#quicklook-plugin .progress-bar-warning {
     background-color: #5D4062;
 }
-#quicklook .progress-bar-critical {
+#quicklook-plugin .progress-bar-critical {
     background-color: #A30000;
 }
-#quicklook .cpu-name {
+#quicklook-plugin .cpu-name {
     white-space: nowrap;
     overflow: hidden;
     width: 100%;
     text-overflow: ellipsis;
 }
-#amps .process-result {
+#amps-plugin .process-result {
     max-width: 300px;
     overflow: hidden;
     white-space: pre-wrap;
@@ -149,7 +149,7 @@ body {
     text-overflow: ellipsis;
 }
 
-#gpu .gpu-name {
+#gpu-plugin .gpu-name {
     white-space: nowrap;
     overflow: hidden;
     width: 100%;

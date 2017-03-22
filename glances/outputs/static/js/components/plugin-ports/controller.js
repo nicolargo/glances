@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginPortsController($filter) {
+function GlancesPluginPortsController() {
     var vm = this;
 
     vm.ports = [];
