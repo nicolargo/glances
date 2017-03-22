@@ -220,21 +220,19 @@ class GlancesClientBrowser(object):
         # Or define staticaly in the configuration file (module static_list.py)
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
 
-        logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
-        for v in self.get_servers_list():
-            thread = threading.Thread(target=self.__update_stats, args=[v])
-            thread.start()
+        while True:
+            logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
+            for v in self.get_servers_list():
+                thread = threading.Thread(target=self.__update_stats, args=[v])
+                thread.start()
 
-        # Update the screen (list or Glances client)
-        if self.screen.active_server is None:
-            #  Display the Glances browser
-            self.screen.update(self.get_servers_list())
-        else:
-            # Display the active server
-            self.__display_server(self.get_servers_list()[self.screen.active_server])
-
-        # Loop
-        self.__serve_forever()
+            # Update the screen (list or Glances client)
+            if self.screen.active_server is None:
+                #  Display the Glances browser
+                self.screen.update(self.get_servers_list())
+            else:
+                # Display the active server
+                self.__display_server(self.get_servers_list()[self.screen.active_server])
 
     def serve_forever(self):
         """Wrapper to the serve_forever function.
