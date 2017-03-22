@@ -60,11 +60,11 @@
         <div class="row">
             <div class="col-sm-6 sidebar" ng-if="!vm.arguments.disable_left_sidebar">
                 <div class="table">
-                    <glances-plugin-network stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
-                    <glances-plugin-wifi stats="vm.stats" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
-                    <glances-plugin-ports stats="vm.stats" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
-                    <glances-plugin-diskio stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
-                    <glances-plugin-fs stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
+                    <glances-plugin-network id="plugin-network" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
+                    <glances-plugin-wifi id="plugin-wifi" class="plugin table-row-group" stats="vm.stats" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
+                    <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" stats="vm.stats" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
+                    <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
+                    <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
                     <glances-plugin-irq stats="vm.stats" arguments="vm.arguments" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
                     <glances-plugin-folders stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-folders>
                     <glances-plugin-raid stats="vm.stats" arguments="vm.arguments"></glances-plugin-raid>
