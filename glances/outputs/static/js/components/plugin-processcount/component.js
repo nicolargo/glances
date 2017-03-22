@@ -4,7 +4,8 @@ glancesApp.component('glancesPluginProcesscount', {
     controller: GlancesPluginProcesscountController,
     controllerAs: 'vm',
     bindings: {
-        stats: '<'
+        stats: '<',
+        sorter: '<'
     },
     templateUrl: 'components/plugin-processcount/view.html'
 });

@@ -74,13 +74,7 @@
             <div class="col-sm-18">
                 <glances-plugin-docker stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_docker"></glances-plugin-docker>
                 <glances-plugin-alert stats="vm.stats" ng-if="!vm.arguments.disable_alert"></glances-plugin-alert>
-
-                <div ng-show="!vm.arguments.disable_process">
-                    <glances-plugin-processcount stats="vm.stats"></glances-plugin-processcount>
-                    <glances-plugin-amps stats="vm.stats" arguments="vm.arguments" ng-if="!arguments.disable_amps"></glances-plugin-amps>
-                    <glances-plugin-processlist stats="vm.stats" arguments="vm.arguments"></glances-plugin-processlist>
-                </div>
-                <div ng-show="vm.arguments.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
+                <glances-plugin-process stats="vm.stats" arguments="vm.arguments"></glances-plugin-process>
             </div>
             </div>
         </div>
