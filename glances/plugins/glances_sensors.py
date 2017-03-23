@@ -224,7 +224,7 @@ class GlancesGrabSensors(object):
     def __init__(self):
         """Init sensors stats."""
         # Temperatures
-        self.initok = False
+        self.init_temp = False
         self.stemps = {}
         try:
             # psutil>=5.1.0 is required
@@ -235,9 +235,10 @@ class GlancesGrabSensors(object):
             # FreeBSD: If oid 'hw.acpi.battery' not present, Glances wont start #1055
             logger.error("Can not grab temperatures sensors ({})".format(e))
         else:
-            self.initok = True
+            self.init_temp = True
 
         # Fans
+        self.init_fan = False
         self.sfans = {}
         try:
             # psutil>=5.2.0 is required
@@ -246,6 +247,12 @@ class GlancesGrabSensors(object):
             logger.warning("PsUtil 5.2.0 or higher is needed to grab fans sensors")
         except OSError as e:
             logger.error("Can not grab fans sensors ({})".format(e))
+        else:
+            self.init_fan = True
+
+        # !!! Disable Fan: High CPU consumption is PSUtil 5.2.0
+        # Delete the following line when corrected
+        self.init_fan = False
 
         # Init the stats
         self.reset()
@@ -259,7 +266,7 @@ class GlancesGrabSensors(object):
         # Reset the list
         self.reset()
 
-        if not self.initok:
+        if not self.init_temp:
             return self.sensors_list
 
         # Temperatures sensors
@@ -277,10 +284,12 @@ class GlancesGrabSensors(object):
 
         output: a list"""
         ret = []
-        if type == SENSOR_TEMP_UNIT:
+        if type == SENSOR_TEMP_UNIT and self.init_temp:
             input_list = self.stemps
-        elif type == SENSOR_FAN_UNIT:
+            self.stemps = psutil.sensors_temperatures()
+        elif type == SENSOR_FAN_UNIT and self.init_fan:
             input_list = self.sfans
+            self.sfans = psutil.sensors_fans()
         else:
             return ret
         for chipname, chip in iteritems(input_list):
@@ -312,8 +321,3 @@ class GlancesGrabSensors(object):
             logger.debug("Unknown sensor type %s" % sensor_type)
             ret = []
         return ret
-
-    def quit(self):
-        """End of connection."""
-        if self.initok:
-            sensors.cleanup()
