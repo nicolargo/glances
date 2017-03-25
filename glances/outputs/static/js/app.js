@@ -1,4 +1,4 @@
-var glancesApp = angular.module('glancesApp', ['ngRoute'])
+var glancesApp = angular.module('glancesApp', ['ngRoute', 'glances.config'])
 
 .config(function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
@@ -16,8 +16,6 @@ var glancesApp = angular.module('glancesApp', ['ngRoute'])
             }
         }
     });
-
-    $locationProvider.html5Mode(true);
 })
 .run(function($rootScope) {
       $rootScope.title = "Glances";

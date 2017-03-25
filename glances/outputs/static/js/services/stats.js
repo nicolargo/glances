@@ -15,32 +15,32 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
     };
 
     this.getAllStats = function() {
-        return $http.get('/api/2/all').then(function (response) {
+        return $http.get('api/2/all').then(function (response) {
             return response.data;
         });
     };
 
     this.getAllLimits = function() {
-        return $http.get('/api/2/all/limits').then(function (response) {
+        return $http.get('api/2/all/limits').then(function (response) {
             return response.data;
         });
     };
 
     this.getAllViews = function() {
-        return $http.get('/api/2/all/views').then(function (response) {
+        return $http.get('api/2/all/views').then(function (response) {
             return response.data;
         });
     };
 
     this.getHelp = function() {
-        return $http.get('/api/2/help').then(function (response) {
+        return $http.get('api/2/help').then(function (response) {
             return response.data;
         });
     };
 
     this.getConfig = function() {
         if (!_config) {
-            return $http.get('/api/2/config').then(function (response) {
+            return $http.get('api/2/config').then(function (response) {
                 _config = response.data;
 
                 return response.data;
@@ -54,7 +54,7 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
     };
 
     this.getArguments = function() {
-        return $http.get('/api/2/args').then(function (response) {
+        return $http.get('api/2/args').then(function (response) {
             return response.data;
         });
     };

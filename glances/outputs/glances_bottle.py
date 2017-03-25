@@ -30,7 +30,7 @@ from glances.timer import Timer
 from glances.logger import logger
 
 try:
-    from bottle import Bottle, static_file, abort, response, request, auth_basic
+    from bottle import Bottle, static_file, abort, response, request, auth_basic, template, TEMPLATE_PATH
 except ImportError:
     logger.critical('Bottle module not found. Glances cannot start in web server mode.')
     sys.exit(2)
@@ -71,6 +71,9 @@ class GlancesBottle(object):
 
         # Path where the statics files are stored
         self.STATIC_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/public')
+
+        # Paths for templates
+        TEMPLATE_PATH.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/templates'))
 
     def load_config(self, config):
         """Load the outputs section of the configuration file."""
@@ -153,11 +156,15 @@ class GlancesBottle(object):
 
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
+
+        if refresh_time is None:
+            refresh_time = self.args.time
+
         # Update the stat
         self.__update__()
 
         # Display
-        return static_file("index.html", root=self.STATIC_PATH)
+        return template("index.html", refresh_time=refresh_time)
 
     def _resource(self, filepath):
         """Bottle callback for resources files."""
