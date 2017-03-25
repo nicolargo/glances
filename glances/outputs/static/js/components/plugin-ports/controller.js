@@ -14,7 +14,7 @@ function GlancesPluginPortsController() {
         var data = stats.stats['ports'];
 
         vm.ports = [];
-        angular.forEach(ports, function(port) {
+        angular.forEach(data, function(port) {
             vm.ports.push(port);
         }, this);
 

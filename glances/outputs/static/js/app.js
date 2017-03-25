@@ -1,8 +1,8 @@
 var glancesApp = angular.module('glancesApp', ['ngRoute'])
 
 .config(function($routeProvider, $locationProvider) {
-    $routeProvider.when('/:refresh_time?', {
-        templateUrl : 'stats.html',
+    $routeProvider.when('/', {
+        template : '<glances arguments="arguments"></glances>',
         controller : 'statsController',
         resolve: {
             help: function(GlancesStats) {
@@ -11,15 +11,8 @@ var glancesApp = angular.module('glancesApp', ['ngRoute'])
             config: function(GlancesStats) {
                 return GlancesStats.getConfig();
             },
-            arguments: function(GlancesStats, $route) {
-                return GlancesStats.getArguments().then(function(arguments) {
-                    var refreshTimeRoute = parseInt($route.current.params.refresh_time);
-                    if (!isNaN(refreshTimeRoute) && refreshTimeRoute > 1) {
-                        arguments.time = refreshTimeRoute;
-                    }
-
-                    return arguments;
-                });
+            arguments: function(GlancesStats) {
+                return GlancesStats.getArguments();
             }
         }
     });

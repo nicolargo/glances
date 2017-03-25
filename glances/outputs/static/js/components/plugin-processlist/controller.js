@@ -1,11 +1,15 @@
 'use strict';
 
-function GlancesPluginProcesslistController(GlancesPluginHelper, $filter) {
+function GlancesPluginProcesslistController(GlancesPluginHelper, $filter, GlancesStats) {
     var vm = this;
 
     var _maxProcessesToDisplay = undefined;
     vm.processes = [];
     vm.ioReadWritePresent = false;
+
+    GlancesStats.getConfig().then(function(config) {
+        _maxProcessesToDisplay = config.outputs !== undefined ? config.outputs.max_processes_display : undefined;
+    });
 
     vm.$onChanges = function (changes) {
         var stats = changes.stats.currentValue;
@@ -17,7 +21,6 @@ function GlancesPluginProcesslistController(GlancesPluginHelper, $filter) {
 
         vm.processes = [];
         vm.ioReadWritePresent = false;
-        _maxProcessesToDisplay = 10;//config.outputs !== undefined ? config.outputs.max_processes_display : undefined;
 
         for (var i = 0; i < data.length; i++) {
             var process = data[i];
