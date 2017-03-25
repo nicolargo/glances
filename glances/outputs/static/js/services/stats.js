@@ -1,5 +1,7 @@
 glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
 
+    var _config;
+
     this.getData = function() {
         return $q.all([
             this.getAllStats(),
@@ -37,9 +39,18 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
     };
 
     this.getConfig = function() {
-        return $http.get('/api/2/config').then(function (response) {
-            return response.data;
-        });
+        if (!_config) {
+            return $http.get('/api/2/config').then(function (response) {
+                _config = response.data;
+
+                return response.data;
+            });
+        }
+
+        var deferrer = $q.defer();
+        deferrer.resolve(_config);
+
+        return deferrer.promise;
     };
 
     this.getArguments = function() {
