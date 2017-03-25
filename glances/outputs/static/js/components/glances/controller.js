@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesController($interval, GlancesStats) {
+function GlancesController($interval, GlancesStats, REFRESH_TIME) {
     var vm = this;
 
     vm.dataLoaded = false;
@@ -22,8 +22,7 @@ function GlancesController($interval, GlancesStats) {
     };
 
     vm.refreshData();
-    var refreshTime = 5; // arguments.time
     $interval(function () {
         vm.refreshData();
-    }, refreshTime * 1000); // in milliseconds
+    }, REFRESH_TIME * 1000); // in milliseconds
 }
