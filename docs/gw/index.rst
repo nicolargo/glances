@@ -14,6 +14,7 @@ to providing stats to multiple services (see list below).
    couchdb
    elastic
    influxdb
+   kafka
    opentsdb
    prometheus
    rabbitmq
