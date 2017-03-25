@@ -181,6 +181,8 @@ Examples of use:
                             dest='export_elasticsearch', help='export stats to an ElasticSearch server (elasticsearch lib needed)')
         parser.add_argument('--export-influxdb', action='store_true', default=False,
                             dest='export_influxdb', help='export stats to an InfluxDB server (influxdb lib needed)')
+        parser.add_argument('--export-kafka', action='store_true', default=False,
+                            dest='export_kafka', help='export stats to a Kafka server (kafka-python lib needed)')
         parser.add_argument('--export-opentsdb', action='store_true', default=False,
                             dest='export_opentsdb', help='export stats to an OpenTSDB server (potsdb lib needed)')
         parser.add_argument('--export-prometheus', action='store_true', default=False,

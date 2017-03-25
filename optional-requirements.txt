@@ -5,6 +5,7 @@ couchdb
 docker
 elasticsearch
 influxdb
+kafka-python
 matplotlib
 netifaces
 nvidia-ml-py; python_version == "2.7"
