@@ -58,11 +58,13 @@ Optional dependencies:
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
+- ``kafka-python`` (for the Kafka export module)
 - ``matplotlib`` (for graphical/chart support)
 - ``netifaces`` (for the IP plugin)
 - ``nvidia-ml-py`` (for the GPU plugin) [Python 2-only]
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
+- ``prometheus_client`` (for the Prometheus export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
@@ -343,8 +345,8 @@ Gateway to other services
 =========================
 
 Glances can export stats to: ``CSV`` file, ``InfluxDB``, ``Cassandra``, ``CouchDB``,
-``OpenTSDB``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ/ActiveMQ``, ``ZeroMQ``,
-and  ``Riemann`` server.
+``OpenTSDB``, ``Prometheus``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ/ActiveMQ``,
+``ZeroMQ``, ``Kafka`` and ``Riemann`` server.
 
 How to contribute ?
 ===================
