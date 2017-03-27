@@ -369,13 +369,17 @@ Examples of use:
         # Export is only available in standalone or client mode (issue #614)
         export_tag = (
             args.export_csv or
-            args.export_elasticsearch or
-            args.export_statsd or
-            args.export_influxdb or
             args.export_cassandra or
+            args.export_couchdb or
+            args.export_elasticsearch or
+            args.export_influxdb or
+            args.export_kafka or
             args.export_opentsdb or
+            args.export_prometheus or
             args.export_rabbitmq or
-            args.export_couchdb
+            args.export_riemann or
+            args.export_statsd or
+            args.export_zeromq
         )
         if WINDOWS and export_tag:
             # On Windows, export is possible but only in quiet mode
