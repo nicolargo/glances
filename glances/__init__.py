@@ -83,9 +83,9 @@ def start(config, args):
     # Load mode
     global mode
 
-    if core.is_standalone() and not WINDOWS:
+    if core.is_standalone():
         from glances.standalone import GlancesStandalone as GlancesMode
-    elif core.is_client() and not WINDOWS:
+    elif core.is_client():
         if core.is_client_browser():
             from glances.client_browser import GlancesClientBrowser as GlancesMode
         else:

@@ -19,6 +19,13 @@ Bugs corrected:
     * Sensor values don't refresh since psutil backend (issue #1061)
     * glances-version.db Permission denied (issue #1066)
 
+Version 2.8.9
+=============
+
+Bugs corrected:
+
+    * On Windows --export-statsd terminates immediately and does not export (issue #1067)
+
 Version 2.8.8
 =============
 
