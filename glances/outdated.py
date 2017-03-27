@@ -123,7 +123,7 @@ class Outdated(object):
             with open(self.cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
         except Exception as e:
-            logger.debug("Cannot read version from cache file: {}".format(e))
+            logger.debug("Cannot read version from cache file: {} ({})".format(self.cache_file, e))
         else:
             logger.debug("Read version from cache file")
             if (cached_data['installed_version'] != self.installed_version() or
@@ -140,8 +140,11 @@ class Outdated(object):
         safe_makedirs(self.cache_dir)
 
         # Create/overwrite the cache file
-        with open(self.cache_file, 'wb') as f:
-            pickle.dump(self.data, f)
+        try:
+            with open(self.cache_file, 'wb') as f:
+                pickle.dump(self.data, f)
+        except Exception as e:
+            logger.error("Cannot write version to cache file {} ({})".format(self.cache_file, e))
 
     def _update_pypi_version(self):
         """Get the latest PyPI version (as a string) via the RESTful JSON API"""
