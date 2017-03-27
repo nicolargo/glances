@@ -20,27 +20,23 @@
 
 """Glances unitary tests suite."""
 
-import sys
 import time
 import unittest
+
+from glances.main import GlancesMain
+from glances.stats import GlancesStats
+from glances import __version__
+from glances.globals import WINDOWS, LINUX
+from glances.outputs.glances_bars import Bar
 
 # Global variables
 # =================
 
 # Init Glances core
-from glances.main import GlancesMain
 core = GlancesMain()
-if not core.is_standalone():
-    print('ERROR: Glances core should be ran in standalone mode')
-    sys.exit(1)
 
 # Init Glances stats
-from glances.stats import GlancesStats
 stats = GlancesStats()
-
-from glances import __version__
-from glances.globals import WINDOWS, LINUX
-from glances.outputs.glances_bars import Bar
 
 # Unitest class
 # ==============
