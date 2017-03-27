@@ -17,6 +17,7 @@ Bugs corrected:
     * Fails to start, OSError in sensors_temperatures (issue #1057)
     * Crashs after long time running the glances --browser (issue #1059)
     * Sensor values don't refresh since psutil backend (issue #1061)
+    * glances-version.db Permission denied (issue #1066)
 
 Version 2.8.8
 =============
