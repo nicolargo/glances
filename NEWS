@@ -5,7 +5,9 @@ Glances Version 2
 Version 2.9.1
 =============
 
-    ...
+Bugs corrected:
+
+    * Glances PerCPU issues with Curses UI on Android (issue #1071)
 
 Version 2.9.0
 =============
