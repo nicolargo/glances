@@ -27,7 +27,7 @@ import signal
 import sys
 
 # Global name
-__version__ = '2.9.1'
+__version__ = '2.9.2_DEVELOP'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
