@@ -57,7 +57,7 @@ class Export(GlancesExport):
         # Init the Statsd client
         self.client = self.init()
 
-    def init(self, prefix='glances'):
+    def init(self):
         """Init the connection to the Statsd server."""
         if not self.export_enable:
             return None
@@ -66,7 +66,7 @@ class Export(GlancesExport):
                                                                     self.port))
         return StatsClient(self.host,
                            int(self.port),
-                           prefix=prefix)
+                           prefix=self.prefix)
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
