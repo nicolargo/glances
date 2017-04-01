@@ -5,7 +5,10 @@ Glances Version 2
 Version 2.9.2
 =============
 
+Bugs corrected:
+
     * StatsD export prefix option is ignored (issue #1074)
+    * Some FS and LAN metrics fail to export correctly to StatsD (issue #1068)
 
 Version 2.9.1
 =============

@@ -76,7 +76,18 @@ class Export(GlancesExport):
             stat_name = '{}.{}'.format(name, columns[i])
             stat_value = points[i]
             try:
-                self.client.gauge(stat_name, stat_value)
+                self.client.gauge(self._normalize(stat_name),
+                                  stat_value)
             except Exception as e:
                 logger.error("Can not export stats to Statsd (%s)" % e)
         logger.debug("Export {} stats to Statsd".format(name))
+
+    def _normalize(self, name):
+        """Normalize name for the Statsd convention"""
+
+        # Name should not contain some specials chars (issue #1068)
+        ret = name.replace(':', '')
+        ret = ret.replace('%', '')
+        ret = ret.replace(' ', '_')
+
+        return ret
