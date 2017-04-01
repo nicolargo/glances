@@ -132,7 +132,7 @@ class Plugin(GlancesPlugin):
                     'device_name': fs.device,
                     'fs_type': fs.fstype,
                     # Manage non breaking space (see issue #1065)
-                    'mnt_point': unicode(fs.mountpoint, 'utf-8').replace(u'\u00A0', ' '),
+                    'mnt_point': fs.mountpoint.replace(u'\u00A0', ' '),
                     'size': fs_usage.total,
                     'used': fs_usage.used,
                     'free': fs_usage.free,
