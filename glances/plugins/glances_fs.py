@@ -131,7 +131,8 @@ class Plugin(GlancesPlugin):
                 fs_current = {
                     'device_name': fs.device,
                     'fs_type': fs.fstype,
-                    'mnt_point': fs.mountpoint,
+                    # Manage non breaking space (see issue #1065)
+                    'mnt_point': unicode(fs.mountpoint, 'utf-8').replace(u'\u00A0', ' '),
                     'size': fs_usage.total,
                     'used': fs_usage.used,
                     'free': fs_usage.free,
