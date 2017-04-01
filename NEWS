@@ -9,6 +9,7 @@ Bugs corrected:
 
     * StatsD export prefix option is ignored (issue #1074)
     * Some FS and LAN metrics fail to export correctly to StatsD (issue #1068)
+    * Problem with non breaking space in file system name (issue #1065)
 
 Version 2.9.1
 =============
