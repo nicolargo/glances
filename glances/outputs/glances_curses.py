@@ -82,8 +82,10 @@ class _GlancesCurses(object):
         'm': {'auto_sort': False, 'sort_key': 'memory_percent'},
         'p': {'auto_sort': False, 'sort_key': 'name'},
         't': {'auto_sort': False, 'sort_key': 'cpu_times'},
-        'u': {'auto_sort': False, 'sort_key': 'username'}
+        'u': {'auto_sort': False, 'sort_key': 'username'},
     }
+
+    _sort_loop = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -130,7 +132,7 @@ class _GlancesCurses(object):
         self.args.reset_minmax_tag = False
 
         # Catch key pressed with non blocking mode
-        self.no_flash_cursor()
+        self.term_window.keypad(1)
         self.term_window.nodelay(1)
         self.pressedkey = -1
 
@@ -284,12 +286,6 @@ class _GlancesCurses(object):
             'PASSWORD': curses.A_PROTECT
         }
 
-    def flash_cursor(self):
-        self.term_window.keypad(1)
-
-    def no_flash_cursor(self):
-        self.term_window.keypad(0)
-
     def set_cursor(self, value):
         """Configure the curse cursor apparence.
 
@@ -395,9 +391,26 @@ class _GlancesCurses(object):
                 glances_processes.disable()
             else:
                 glances_processes.enable()
+        elif self.pressedkey == curses.KEY_LEFT:
+            # "<" (left arrow) navigation through process sort
+            setattr(glances_processes, 'auto_sort', False)
+            next_sort = (self.loop_position() - 1) % len(self._sort_loop)
+            glances_processes.sort_key = self._sort_loop[next_sort]
+        elif self.pressedkey == curses.KEY_RIGHT:
+            # ">" (right arrow) navigation through process sort
+            setattr(glances_processes, 'auto_sort', False)
+            next_sort = (self.loop_position() + 1) % len(self._sort_loop)
+            glances_processes.sort_key = self._sort_loop[next_sort]
 
         # Return the key code
         return self.pressedkey
+
+    def loop_position(self):
+        """Return the current sort in the loop"""
+        for i, v in enumerate(self._sort_loop):
+            if v == glances_processes.sort_key:
+                return i
+        return 0
 
     def disable_top(self):
         """Disable the top panel"""
@@ -816,11 +829,11 @@ class _GlancesCurses(object):
             subpop.refresh()
             # Create the textbox inside the subwindows
             self.set_cursor(2)
-            self.flash_cursor()
+            self.term_window.keypad(1)
             textbox = GlancesTextbox(subpop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
-            self.no_flash_cursor()
+            self.term_window.keypad(0)
             if textbox.gather() != '':
                 logger.debug(
                     "User enters the following string: %s" % textbox.gather())
