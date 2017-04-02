@@ -126,6 +126,10 @@ class GlancesAttribute(object):
         """
         return self._history[-pos]
 
+    def history_raw(self, nb=0):
+        """Return the history of last nb items (0 for all) In ISO JSON format"""
+        return self._history[-nb:]
+
     def history_json(self, nb=0):
         """Return the history of last nb items (0 for all) In ISO JSON format"""
         return [(i[0].isoformat(), i[1]) for i in self._history[-nb:]]
