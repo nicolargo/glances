@@ -27,7 +27,7 @@ import re
 import json
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, listkeys, map
+from glances.compat import iterkeys, itervalues, listkeys, map, mean
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -156,12 +156,13 @@ class GlancesPlugin(object):
         """Return the items history list."""
         return self.items_history_list
 
-    def get_raw_history(self, item=None):
+    def get_raw_history(self, item=None, nb=0):
         """Return
         - the stats history (dict of list) if item is None
         - the stats history for the given item (list) instead
-        - None if item did not exist in the history"""
-        s = self.stats_history.get()
+        - None if item did not exist in the history
+        Limit to lasts nb items (all if nb=0)"""
+        s = self.stats_history.get(nb=nb)
         if item is None:
             return s
         else:
@@ -214,6 +215,17 @@ class GlancesPlugin(object):
                 return None
         else:
             return None
+
+    def get_trend(self, item, nb=6):
+        """Get the trend regarding to the last nb values
+        The trend is the diff between the mean of the last nb values
+        and the current one.
+        """
+        raw_history = self.get_raw_history(item=item, nb=nb)
+        if raw_history is None or len(raw_history) < nb:
+            return None
+        last_nb = [v[1] for v in raw_history]
+        return last_nb[-1] - mean(last_nb[:-1])
 
     @property
     def input_method(self):
@@ -797,6 +809,18 @@ class GlancesPlugin(object):
                 return '{:.{decimal}f}{symbol}'.format(
                     value, decimal=decimal_precision, symbol=symbol)
         return '{!s}'.format(number)
+
+    def trend_msg(self, trend, significant=1):
+        """Return the trend message
+        Do not take into account if trend < significant"""
+        ret = '-'
+        if trend is None:
+            ret = ' '
+        elif trend > significant:
+            ret = '/'
+        elif trend < -significant:
+            ret = '\\'
+        return ret
 
     def _check_decorator(fct):
         """Check if the plugin is enabled."""

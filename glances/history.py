@@ -49,9 +49,9 @@ class GlancesHistory(object):
         for a in self.stats_history:
             self.stats_history[a].history_reset()
 
-    def get(self):
+    def get(self, nb=0):
         """Get the history as a dict of list"""
-        return {i: self.stats_history[i].history for i in self.stats_history}
+        return {i: self.stats_history[i].history_raw(nb=nb) for i in self.stats_history}
 
     def get_json(self, nb=0):
         """Get the history as a dict of list (with list JSON compliant)"""
