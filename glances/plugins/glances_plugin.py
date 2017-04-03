@@ -813,7 +813,6 @@ class GlancesPlugin(object):
     def trend_msg(self, trend, significant=1):
         """Return the trend message
         Do not take into account if trend < significant"""
-        logger.info(trend)
         ret = '-'
         if trend is None:
             ret = ' '
@@ -821,7 +820,6 @@ class GlancesPlugin(object):
             ret = '/'
         elif trend < -significant:
             ret = '\\'
-        logger.info(ret)
         return ret
 
     def _check_decorator(fct):
