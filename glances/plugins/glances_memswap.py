@@ -154,9 +154,9 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{} '.format('SWAP')
+        msg = '{}'.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
+        msg = ' {:3}'.format(self.trend_msg(self.get_trend('percent')))
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
