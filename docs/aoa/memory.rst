@@ -28,3 +28,9 @@ RAM/Swap Status
 .. note::
     Limit values can be overwritten in the configuration file under
     the ``[memory]`` and/or ``[memswap]`` sections.
+
+.. note::
+    A trend character could be displayed just after the title.
+    * '-': value is more or less equal to the mean of the lasts N values
+    * '/': value is higher than the mean of the lasts N values
+    * '/': value is lower than the mean of the lasts N values

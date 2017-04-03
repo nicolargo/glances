@@ -183,8 +183,10 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{:5} '.format('MEM')
+        msg = '{}'.format('MEM')
         ret.append(self.curse_add_line(msg, "TITLE"))
+        msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
+        ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>7.1%}'.format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(msg))

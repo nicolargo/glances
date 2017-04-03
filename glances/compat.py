@@ -35,6 +35,7 @@ if PY3:
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from urllib.request import urlopen
     from urllib.error import HTTPError, URLError
+    from statistics import mean
 
     input = input
     range = range
@@ -102,6 +103,9 @@ else:
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
+
+    def mean(numbers):
+        return float(sum(numbers)) / max(len(numbers), 1)
 
     def to_ascii(s):
         """Convert the unicode 's' to a ASCII string

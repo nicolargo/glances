@@ -8,6 +8,7 @@ Version 2.9.2
 Enhancements and new features:
 
     * Use -> and <- arrows keys to switch between processing sort (issue #1075)
+    * Add trends in the Curses interface (issue #1077)
 
 Bugs corrected:
 
