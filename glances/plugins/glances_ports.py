@@ -24,9 +24,17 @@ import subprocess
 import threading
 import socket
 import time
+import numbers
+
+try:
+    import requests
+    requests_tag = True
+except ImportError:
+    requests_tag = False
 
 from glances.globals import WINDOWS
 from glances.ports_list import GlancesPortsList
+from glances.web_list import GlancesWebList
 from glances.timer import Timer, Counter
 from glances.compat import bool_type
 from glances.logger import logger
@@ -47,7 +55,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Init stats
-        self.stats = GlancesPortsList(config=config, args=args).get_ports_list()
+        self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + GlancesWebList(config=config, args=args).get_web_list()
 
         # Init global Timer
         self.timer_ports = Timer(0)
@@ -93,7 +101,7 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_alert(self, port, header="", log=False):
+    def get_ports_alert(self, port, header="", log=False):
         """Return the alert status relative to the port scan return value."""
 
         if port['status'] is None:
@@ -103,6 +111,18 @@ class Plugin(GlancesPlugin):
         elif (isinstance(port['status'], (float, int)) and
               port['rtt_warning'] is not None and
               port['status'] > port['rtt_warning']):
+            return 'WARNING'
+
+        return 'OK'
+
+    def get_web_alert(self, web, header="", log=False):
+        """Return the alert status relative to the web/url scan return value."""
+
+        if web['status'] is None:
+            return 'CAREFUL'
+        elif web['status'] not in [200, 301, 302]:
+            return 'CRITICAL'
+        elif web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning']:
             return 'WARNING'
 
         return 'OK'
@@ -118,23 +138,36 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         for p in self.stats:
-            if p['host'] is None:
-                status = 'None'
-            elif p['status'] is None:
-                status = 'Scanning'
-            elif isinstance(p['status'], bool_type) and p['status'] is True:
-                status = 'Open'
-            elif p['status'] == 0:
-                status = 'Timeout'
-            else:
-                # Convert second to ms
-                status = '{0:.0f}ms'.format(p['status'] * 1000.0)
+            if 'host' in p:
+                if p['host'] is None:
+                    status = 'None'
+                elif p['status'] is None:
+                    status = 'Scanning'
+                elif isinstance(p['status'], bool_type) and p['status'] is True:
+                    status = 'Open'
+                elif p['status'] == 0:
+                    status = 'Timeout'
+                else:
+                    # Convert second to ms
+                    status = '{0:.0f}ms'.format(p['status'] * 1000.0)
 
-            msg = '{:14.14} '.format(p['description'])
-            ret.append(self.curse_add_line(msg))
-            msg = '{:>8}'.format(status)
-            ret.append(self.curse_add_line(msg, self.get_alert(p)))
-            ret.append(self.curse_new_line())
+                msg = '{:14.14} '.format(p['description'])
+                ret.append(self.curse_add_line(msg))
+                msg = '{:>8}'.format(status)
+                ret.append(self.curse_add_line(msg, self.get_ports_alert(p)))
+                ret.append(self.curse_new_line())
+            elif 'url' in p:
+                msg = '{:14.14} '.format(p['description'])
+                ret.append(self.curse_add_line(msg))
+                if isinstance(p['status'], numbers.Number):
+                    status = 'Code {}'.format(p['status'])
+                elif p['status'] is None:
+                    status = 'Scanning'
+                else:
+                    status = p['status']
+                msg = '{:>8}'.format(status)
+                ret.append(self.curse_add_line(msg, self.get_web_alert(p)))
+                ret.append(self.curse_new_line())
 
         # Delete the last empty line
         try:
@@ -144,18 +177,10 @@ class Plugin(GlancesPlugin):
 
         return ret
 
-    def _port_scan_all(self, stats):
-        """Scan all host/port of the given stats"""
-        for p in stats:
-            self._port_scan(p)
-            # Had to wait between two scans
-            # If not, result are not ok
-            time.sleep(1)
-
 
 class ThreadScanner(threading.Thread):
     """
-    Specific thread for the port scanner.
+    Specific thread for the port/web scanner.
 
     stats is a list of dict
     """
@@ -176,12 +201,18 @@ class ThreadScanner(threading.Thread):
         Infinite loop, should be stopped by calling the stop() method"""
 
         for p in self._stats:
-            self._port_scan(p)
+            # End of the thread has been asked
             if self.stopped():
                 break
-            # Had to wait between two scans
-            # If not, result are not ok
-            time.sleep(1)
+            # Scan a port (ICMP or TCP)
+            if 'port' in p:
+                self._port_scan(p)
+                # Had to wait between two scans
+                # If not, result are not ok
+                time.sleep(1)
+            # Scan an URL
+            elif 'url' in p and requests_tag:
+                self._web_scan(p)
 
     @property
     def stats(self):
@@ -201,6 +232,21 @@ class ThreadScanner(threading.Thread):
     def stopped(self):
         """Return True is the thread is stopped"""
         return self._stopper.isSet()
+
+    def _web_scan(self, web):
+        """Scan the  Web/URL (dict) and update the status key"""
+        try:
+            req = requests.head(web['url'],
+                                allow_redirects=True,
+                                timeout=web['timeout'])
+        except Exception as e:
+            logger.debug(e)
+            web['status'] = 'Error'
+            web['elapsed'] = 0
+        else:
+            web['status'] = req.status_code
+            web['elapsed'] = req.elapsed.total_seconds()
+        return web
 
     def _port_scan(self, port):
         """Scan the port structure (dict) and update the status key"""
