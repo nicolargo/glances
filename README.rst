@@ -20,7 +20,10 @@ Glances - An eye on your system
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/
 
-Follow Glances on Twitter: `@nicolargo`_ or `@glances_system`_
+.. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
+    :target: https://www.paypal.me/nicolargo
+
+Follow Glances on Twitter: `@nicolargo`_
 
 Summary
 =======
