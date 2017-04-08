@@ -36,6 +36,7 @@ if PY3:
     from urllib.request import urlopen
     from urllib.error import HTTPError, URLError
     from statistics import mean
+    from urllib.parse import urlparse
 
     input = input
     range = range
@@ -91,6 +92,7 @@ else:
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport, Server
     from urllib2 import urlopen, HTTPError, URLError
+    from urlparse import urlparse
 
     input = raw_input
     range = xrange
