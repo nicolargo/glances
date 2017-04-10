@@ -63,21 +63,24 @@ class GlancesActions(object):
         """Set the stat_name to criticity."""
         self.status[stat_name] = criticity
 
-    def run(self, stat_name, criticity, commands, mustache_dict=None):
+    def run(self, stat_name, criticity, commands, repeat, mustache_dict=None):
         """Run the commands (in background).
 
         - stats_name: plugin_name (+ header)
         - criticity: criticity of the trigger
         - commands: a list of command line with optional {{mustache}}
+        - If True, then repeat the action
         - mustache_dict: Plugin stats (can be use within {{mustache}})
 
         Return True if the commands have been ran.
         """
-        if self.get(stat_name) == criticity or not self.start_timer.finished():
+        if (self.get(stat_name) == criticity and not repeat) or \
+           not self.start_timer.finished():
             # Action already executed => Exit
             return False
 
-        logger.debug("Run action {} for {} ({}) with stats {}".format(
+        logger.debug("{} action {} for {} ({}) with stats {}".format(
+            "Repeat" if repeat else "Run",
             commands, stat_name, criticity, mustache_dict))
 
         # Run all actions in background
