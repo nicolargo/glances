@@ -559,7 +559,7 @@ class GlancesPlugin(object):
         """Manage the action for the current stat"""
         # Here is a command line for the current trigger ?
         try:
-            command = self.get_limit_action(trigger, stat_name=stat_name)
+            command, repeat = self.get_limit_action(trigger, stat_name=stat_name)
         except KeyError:
             # Reset the trigger
             self.actions.set(stat_name, trigger)
@@ -584,7 +584,8 @@ class GlancesPlugin(object):
                 mustache_dict = self.get_stats_action()
             # 2) Run the action
             self.actions.run(
-                stat_name, trigger, command, mustache_dict=mustache_dict)
+                stat_name, trigger,
+                command, repeat, mustache_dict=mustache_dict)
 
     def get_alert_log(self,
                       current=0,
@@ -617,18 +618,22 @@ class GlancesPlugin(object):
         return limit
 
     def get_limit_action(self, criticity, stat_name=""):
-        """Return the action for the alert."""
+        """Return the tuple (action, repeat) for the alert.
+        - action is a command line
+        - repeat is a bool"""
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
-        try:
-            ret = self._limits[stat_name + '_' + criticity + '_action']
-        except KeyError:
-            # Try fallback to plugin default limit
-            # Exemple: network_careful_action
-            ret = self._limits[self.plugin_name + '_' + criticity + '_action']
+        # Action key available ?
+        ret = [(stat_name + '_' + criticity + '_action', False),
+               (stat_name + '_' + criticity + '_action_repeat', True),
+               (self.plugin_name + '_' + criticity + '_action', False),
+               (self.plugin_name + '_' + criticity + '_action_repeat', True)]
+        for r in ret:
+            if r[0] in self._limits:
+                return self._limits[r[0]], r[1]
 
-        # Return the action list
-        return ret
+        # No key found, the raise an error
+        raise KeyError
 
     def get_limit_log(self, stat_name, default_action=False):
         """Return the log tag for the alert."""

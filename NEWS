@@ -7,9 +7,10 @@ Version 2.9.2
 
 Enhancements and new features:
 
-    * New plugin to scan remote Web sites (URL) (issue #981) 
+    * New plugin to scan remote Web sites (URL) (issue #981)
     * Use -> and <- arrows keys to switch between processing sort (issue #1075)
     * Add trends in the Curses interface (issue #1077)
+    * Add new repeat function to the action (issue #952)
 
 Bugs corrected:
 
