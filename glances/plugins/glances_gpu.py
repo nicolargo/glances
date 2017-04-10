@@ -226,7 +226,7 @@ class Plugin(GlancesPlugin):
             # GPU id (for multiple GPU, start at 0)
             device_stats['gpu_id'] = index
             # GPU name
-            device_stats['name'] = self.get_device_name(device_handle)
+            device_stats['name'] = self.get_device_name(device_handle).decode('ascii').replace('GeForce ','')
             # Memory consumption in % (not available on all GPU)
             device_stats['mem'] = self.get_mem(device_handle)
             # Processor consumption in %
