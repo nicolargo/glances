@@ -31,4 +31,14 @@ reached:
     https://github.com/nicolargo/glances/wiki/The-Glances-2.x-API-How-to
     for the stats list.
 
+It is also possible to repeat action until the end of the alert.
+Keep in mind that the command line is executed every refresh time so
+use with caution:
+
+.. code-block:: ini
+
+    [load]
+    critical=5.0
+    critical_action_repeat=/home/myhome/bin/bipper.sh
+
 .. _{{mustache}}: https://mustache.github.io/
