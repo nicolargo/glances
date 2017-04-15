@@ -42,6 +42,10 @@ glancesApp.service('GlancesPluginProcessList', function($filter, GlancesPlugin) 
                 process.cmdline = process.cmdline.join(' ');
             }
 
+            if (data['system'].os_name === 'Windows') {
+                process.username = _.last(process.username.split('\\'));
+            }
+
             this.processes.push(process);
         }
     };
