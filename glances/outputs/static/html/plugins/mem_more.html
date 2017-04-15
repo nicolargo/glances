@@ -1,9 +1,9 @@
 <div class="table">
-    <div class="table-row">
+    <div class="table-row" ng-show="statsMem.active != undefined">
         <div class="table-cell text-left">active:</div>
         <div class="table-cell">{{ statsMem.active | bytes }}</div>
     </div>
-    <div class="table-row">
+    <div class="table-row" ng-show="statsMem.inactive != undefined">
         <div class="table-cell text-left">inactive:</div>
         <div class="table-cell">{{ statsMem.inactive | bytes }}</div>
     </div>
