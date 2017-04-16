@@ -294,6 +294,10 @@ Command-Line Options
 
     show RAM FS in the DiskIO plugin
 
+.. option:: --diskio-show-virtual-devices
+
+    show virtual devices in the DiskIO plugin
+
 .. option:: --diskio-iops
 
     show I/O per second in the DiskIO plugin

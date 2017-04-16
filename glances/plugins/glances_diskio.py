@@ -105,6 +105,12 @@ class Plugin(GlancesPlugin):
                     if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
                         continue
 
+                    # Full list of virtual devices is in /sys/devices/virtual/block/
+                    if self.args is not None and not self.args.diskio_show_virtual_devices and (
+                                disk.startswith('dm-') or
+                                disk.startswith('loop')):
+                        continue
+
                     # Do not take hide disk into account
                     if self.is_hide(disk):
                         continue
