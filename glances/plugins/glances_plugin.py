@@ -548,7 +548,7 @@ class GlancesPlugin(object):
         # Manage action
         self.manage_action(stat_name, ret.lower(), header, action_key)
 
-        # Default is ok
+        # Default is 'OK'
         return ret + log_str
 
     def manage_action(self,
