@@ -21,6 +21,47 @@
 Thresholds classes: OK, CAREFUL, WARNING, CRITICAL
 """
 
+import sys
+
+
+class GlancesThresholds(object):
+    """Class to manage thresholds dict for all Glances plugins:
+    key: Glances stats (example: cpu_user)
+    value: Threasold* instance
+    """
+
+    threshold_list = ['OK', 'CAREFUL', 'WARNING', 'CRITICAL']
+
+    def __init__(self):
+        self.current_module = sys.modules[__name__]
+        self._thresholds = {}
+
+    def get(self, stat_name=None):
+        """Return the threshold dict.
+        If stat_name is None, return the threshold for all plugins (dict of Threshold*)
+        Else return the Threshold* instance for the given plugin
+        """
+        if stat_name is None:
+            return self._thresholds
+
+        if stat_name in self._thresholds:
+            return self._thresholds[stat_name]
+        else:
+            return {}
+
+    def add(self, stat_name, threshold_description):
+        """Add a new threshold to the dict (key = stat_name)"""
+        if threshold_description not in self.threshold_list:
+            return False
+        else:
+            self._thresholds[stat_name] = getattr(self.current_module,
+                                                  'GlancesThreshold' + threshold_description.capitalize())()
+            return True
+
+
+# Global variable uses to share thresholds between Glances componants
+glances_thresholds = GlancesThresholds()
+
 
 class _GlancesThreshold(object):
 
@@ -33,7 +74,7 @@ class _GlancesThreshold(object):
         return self._threshold['value']
 
     def __repr__(self):
-        return self._threshold
+        return str(self._threshold)
 
     def __str__(self):
         return self.description()
