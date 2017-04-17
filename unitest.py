@@ -28,6 +28,10 @@ from glances.stats import GlancesStats
 from glances import __version__
 from glances.globals import WINDOWS, LINUX
 from glances.outputs.glances_bars import Bar
+from glances.thresholds import GlancesThresholdOk
+from glances.thresholds import GlancesThresholdCareful
+from glances.thresholds import GlancesThresholdWarning
+from glances.thresholds import GlancesThresholdCritical
 
 # Global variables
 # =================
@@ -204,6 +208,20 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('gpu').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
+
+    def test_094_thresholds(self):
+        """Test thresholds classes"""
+        print('INFO: [TEST_094] Mandatories methods')
+        ok = GlancesThresholdOk()
+        careful = GlancesThresholdCareful()
+        warning = GlancesThresholdWarning()
+        critical = GlancesThresholdCritical()
+        self.assertTrue(ok < careful)
+        self.assertTrue(careful < warning)
+        self.assertTrue(warning < critical)
+        self.assertFalse(ok > careful)
+        self.assertTrue(ok == ok)
+        self.assertTrue(str(ok) == 'OK')
 
     def test_095_methods(self):
         """Test mandatories methods"""
