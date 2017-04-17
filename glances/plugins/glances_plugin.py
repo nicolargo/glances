@@ -32,6 +32,7 @@ from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.logs import glances_logs
+from glances.thresholds import glances_thresholds
 
 
 class GlancesPlugin(object):
@@ -545,11 +546,21 @@ class GlancesPlugin(object):
             # Add the log to the list
             glances_logs.add(ret, stat_name.upper(), value)
 
+        # Manage threshold
+        self.manage_threshold(stat_name, ret)
+
         # Manage action
         self.manage_action(stat_name, ret.lower(), header, action_key)
 
         # Default is 'OK'
         return ret + log_str
+
+    def manage_threshold(self,
+                         stat_name,
+                         trigger):
+        """Manage the threshold for the current stat"""
+        glances_thresholds.add(stat_name, trigger)
+        # logger.info(glances_thresholds.get())
 
     def manage_action(self,
                       stat_name,

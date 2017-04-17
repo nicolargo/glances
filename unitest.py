@@ -32,6 +32,7 @@ from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
+from glances.thresholds import GlancesThresholds
 
 # Global variables
 # =================
@@ -211,7 +212,7 @@ class TestGlances(unittest.TestCase):
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
-        print('INFO: [TEST_094] Mandatories methods')
+        print('INFO: [TEST_094] Thresholds')
         ok = GlancesThresholdOk()
         careful = GlancesThresholdCareful()
         warning = GlancesThresholdWarning()
@@ -222,6 +223,9 @@ class TestGlances(unittest.TestCase):
         self.assertFalse(ok > careful)
         self.assertTrue(ok == ok)
         self.assertTrue(str(ok) == 'OK')
+        thresholds = GlancesThresholds()
+        thresholds.add('cpu_percent', 'OK')
+        self.assertTrue(thresholds.get(stat_name='cpu_percent').description() == 'OK')
 
     def test_095_methods(self):
         """Test mandatories methods"""
@@ -310,6 +314,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_999] Free the stats')
         stats.end()
         self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
