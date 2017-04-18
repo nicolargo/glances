@@ -22,7 +22,41 @@
 from datetime import datetime
 
 from glances.logs import glances_logs
+from glances.thresholds import glances_thresholds, GlancesThresholdWarning
+from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
+
+# Static decision tree for the global alert message
+tree = [{'msg': 'No warning or critical alert detected',
+         'thresholds': []},
+        {'msg': 'High CPU user mode by processes',
+         'thresholds': ['cpu_user']},
+        {'msg': 'High CPU kernel usage by processes',
+         'thresholds': ['cpu_system']},
+        {'msg': 'High CPU I/O waiting by processes',
+         'thresholds': ['cpu_iowait']},
+        {'msg': 'Large CPU stolen time. System running the hypervisor is too busy.',
+         'thresholds': ['cpu_steal']},
+        {'msg': 'High CPU niced value by processes',
+         'thresholds': ['cpu_niced']},
+        {'msg': 'System overload',
+         'thresholds': ['load']},
+        {'msg': 'High swap (paging) usage',
+         'thresholds': ['memswap']},
+        {'msg': 'High memory consumption',
+         'thresholds': ['mem']},
+        ]
+
+
+def global_message():
+    """Parse the decision tree and return the message
+    corresponding to the current threasholds values"""
+    # Compute the weight for each item in the tree
+    current_thresholds = glances_thresholds.get()
+    for i in tree:
+        i['weight'] = sum([current_thresholds[t].value() for t in i['thresholds'] if t in current_thresholds])
+    logger.info(tree)
+    return max(tree, key=lambda d: d['weight'])['msg']
 
 
 class Plugin(GlancesPlugin):
@@ -53,6 +87,9 @@ class Plugin(GlancesPlugin):
         """Nothing to do here. Just return the global glances_log."""
         # Set the stats to the glances_logs
         self.stats = glances_logs.get()
+        # Define the global message thanks to the current thresholds
+        # and the decision tree
+        global_message()
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
@@ -65,19 +102,17 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        if not self.stats:
-            msg = 'No warning or critical alert detected'
-            ret.append(self.curse_add_line(msg, "TITLE"))
-        else:
+        ret.append(self.curse_add_line(global_message(), "TITLE"))
+        if self.stats:
             # Header
-            msg = 'Warning or critical alerts'
-            ret.append(self.curse_add_line(msg, "TITLE"))
-            logs_len = glances_logs.len()
-            if logs_len > 1:
-                msg = ' (last {} entries)'.format(logs_len)
-            else:
-                msg = ' (one entry)'
-            ret.append(self.curse_add_line(msg, "TITLE"))
+            # msg = 'Warning or critical alerts'
+            # ret.append(self.curse_add_line(msg, "TITLE"))
+            # logs_len = glances_logs.len()
+            # if logs_len > 1:
+            #     msg = ' (last {} entries)'.format(logs_len)
+            # else:
+            #     msg = ' (one entry)'
+            # ret.append(self.curse_add_line(msg, "TITLE"))
             # Loop over alerts
             for alert in self.stats:
                 # New line
