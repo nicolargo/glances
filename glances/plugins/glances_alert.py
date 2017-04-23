@@ -22,29 +22,41 @@
 from datetime import datetime
 
 from glances.logs import glances_logs
-from glances.thresholds import glances_thresholds, GlancesThresholdWarning
+from glances.thresholds import glances_thresholds
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Static decision tree for the global alert message
+# - msg: Message to be displayed (result of the decision tree)
+# - threasholds: a list of stats to take into account
+# - thresholds_min: minimal value of the threasholds sum
 tree = [{'msg': 'No warning or critical alert detected',
-         'thresholds': []},
+         'thresholds': [],
+         'thresholds_min': 0},
         {'msg': 'High CPU user mode by processes',
-         'thresholds': ['cpu_user']},
+         'thresholds': ['cpu_user'],
+         'thresholds_min': 2},
         {'msg': 'High CPU kernel usage by processes',
-         'thresholds': ['cpu_system']},
+         'thresholds': ['cpu_system'],
+         'thresholds_min': 2},
         {'msg': 'High CPU I/O waiting by processes',
-         'thresholds': ['cpu_iowait']},
+         'thresholds': ['cpu_iowait'],
+         'thresholds_min': 2},
         {'msg': 'Large CPU stolen time. System running the hypervisor is too busy.',
-         'thresholds': ['cpu_steal']},
+         'thresholds': ['cpu_steal'],
+         'thresholds_min': 2},
         {'msg': 'High CPU niced value by processes',
-         'thresholds': ['cpu_niced']},
-        {'msg': 'System overload',
-         'thresholds': ['load']},
+         'thresholds': ['cpu_niced'],
+         'thresholds_min': 2},
+        {'msg': 'System overloaded in the last 5 minutes',
+         'thresholds': ['load'],
+         'thresholds_min': 2},
         {'msg': 'High swap (paging) usage',
-         'thresholds': ['memswap']},
+         'thresholds': ['memswap'],
+         'thresholds_min': 2},
         {'msg': 'High memory consumption',
-         'thresholds': ['mem']},
+         'thresholds': ['mem'],
+         'thresholds_min': 2},
         ]
 
 
@@ -55,8 +67,12 @@ def global_message():
     current_thresholds = glances_thresholds.get()
     for i in tree:
         i['weight'] = sum([current_thresholds[t].value() for t in i['thresholds'] if t in current_thresholds])
-    logger.info(tree)
-    return max(tree, key=lambda d: d['weight'])['msg']
+    themax = max(tree, key=lambda d: d['weight'])
+    if themax['weight'] >= themax['thresholds_min']:
+        # Check if the weight is > to the minimal threashold value
+        return themax['msg']
+    else:
+        return tree[0]['msg']
 
 
 class Plugin(GlancesPlugin):
@@ -89,7 +105,8 @@ class Plugin(GlancesPlugin):
         self.stats = glances_logs.get()
         # Define the global message thanks to the current thresholds
         # and the decision tree
-        global_message()
+        # !!! Call directly in the msg_curse function
+        # global_message()
 
     def msg_curse(self, args=None):
         """Return the dict to display in the curse interface."""
