@@ -17,6 +17,7 @@ Bugs corrected:
     * StatsD export prefix option is ignored (issue #1074)
     * Some FS and LAN metrics fail to export correctly to StatsD (issue #1068)
     * Problem with non breaking space in file system name (issue #1065)
+    * TypeError: string indices must be integers (Network plugin) (issue #1054)
 
 Version 2.9.1
 =============
