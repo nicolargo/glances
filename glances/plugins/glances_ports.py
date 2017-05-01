@@ -32,7 +32,7 @@ try:
 except ImportError:
     requests_tag = False
 
-from glances.globals import WINDOWS
+from glances.globals import WINDOWS, MACOS, BSD
 from glances.ports_list import GlancesPortsList
 from glances.web_list import GlancesWebList
 from glances.timer import Timer, Counter
@@ -271,7 +271,22 @@ class ThreadScanner(threading.Thread):
         # Create the ping command
         # Use the system ping command because it already have the steacky bit set
         # Python can not create ICMP packet with non root right
-        cmd = ['ping', '-n' if WINDOWS else '-c', '1', self._resolv_name(port['host'])]
+        if WINDOWS:
+            timeout_opt = '-w'
+            count_opt = '-n'
+        elif MACOS or BSD:
+            timeout_opt = '-t'
+            count_opt = '-c'
+        else:
+            # Linux and co...
+            timeout_opt = '-W'
+            count_opt = '-c'
+        # Build the command line
+        # Note: Only string are allowed
+        cmd = ['ping',
+               count_opt, '1',
+               timeout_opt, str(self._resolv_name(port['timeout'])),
+               self._resolv_name(port['host'])]
         fnull = open(os.devnull, 'w')
 
         try:
@@ -281,6 +296,9 @@ class ThreadScanner(threading.Thread):
                 port['status'] = counter.get()
             else:
                 port['status'] = False
+        except subprocess.CalledProcessError as e:
+            # Correct issue #1084: No Offline status for timeouted ports
+            port['status'] = False
         except Exception as e:
             logger.debug("{}: Error while pinging host {} ({})".format(self.plugin_name, port['host'], e))
 
