@@ -90,6 +90,7 @@ class GlancesPlugin(object):
         self.views = dict()
 
         # Init the stats (dict of list or dict)
+        self.stats = None
         self.reset()
 
     def __repr__(self):
