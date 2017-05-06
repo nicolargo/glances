@@ -40,7 +40,28 @@ class GlancesPlugin(object):
     """Main class for Glances plugin."""
 
     def __init__(self, args=None, items_history_list=None):
-        """Init the plugin of plugins class."""
+        """Init the plugin of plugins class.
+
+        All Glances' plugins should inherit from this class. Most of the
+        methods are already implemented in the father classes.
+
+        Your plugin should return a dict or a list of dicts (stored in the
+        self.stats). As an example, you can have a look on the mem plugin
+        (for dict) or network (for list of dicts).
+
+        A plugin should implement:
+        - the __init__ constructor: define the self.display_curse
+        - the reset method: to set your self.stats variable to {} or []
+        - the update method: where your self.stats variable is set
+        and optionnaly:
+        - the get_key method: set the key of the dict (only for list of dict)
+        - the update_view method: only if you need to trick your output
+        - the msg_curse: define the curse (UI) message (if display_curse is True)
+
+        :args: args parameters
+        :items_history_list: list of items to store in the history
+        """
+
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
         # logger.debug("Init plugin %s" % self.plugin_name)
@@ -55,9 +76,6 @@ class GlancesPlugin(object):
         self._input_method = 'local'
         self._short_system_name = None
 
-        # Init the stats list
-        self.stats = None
-
         # Init the history list
         self.items_history_list = items_history_list
         self.stats_history = self.init_stats_history()
@@ -71,9 +89,8 @@ class GlancesPlugin(object):
         # Init the views
         self.views = dict()
 
-    def exit(self):
-        """Method to be called when Glances exit"""
-        logger.debug("Stop the {} plugin".format(self.plugin_name))
+        # Init the stats (dict of list or dict)
+        self.reset()
 
     def __repr__(self):
         """Return the raw stats."""
@@ -82,6 +99,15 @@ class GlancesPlugin(object):
     def __str__(self):
         """Return the human-readable stats."""
         return str(self.stats)
+
+    def reset(self):
+        """Reset the stats.
+        This method should be overwrited by childs' classes"""
+        self.stats = None
+
+    def exit(self):
+        """Method to be called when Glances exit"""
+        logger.debug("Stop the {} plugin".format(self.plugin_name))
 
     def get_key(self):
         """Return the key of the list."""
