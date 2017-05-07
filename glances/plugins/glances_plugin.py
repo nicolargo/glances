@@ -805,7 +805,10 @@ class GlancesPlugin(object):
         """
         self._align = value
 
-    def auto_unit(self, number, low_precision=False):
+    def auto_unit(self, number,
+                  low_precision=False,
+                  min_symbol='K'
+                  ):
         """Make a nice human-readable string out of number.
 
         Number of decimal places increases as quantity approaches 1.
@@ -819,10 +822,13 @@ class GlancesPlugin(object):
         CASE: 1073741824       RESULT:      1024M low_precision:      1024M
         CASE: 1181116006       RESULT:      1.10G low_precision:       1.1G
 
-        'low_precision=True' returns less decimal places potentially
-        sacrificing precision for more readability.
+        :low_precision: returns less decimal places potentially (default is False)
+                        sacrificing precision for more readability.
+        :min_symbol: Do not approache if number < min_symbol (default is K)
         """
         symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+        if min_symbol in symbols:
+            symbols = symbols[symbols.index(min_symbol):]
         prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
