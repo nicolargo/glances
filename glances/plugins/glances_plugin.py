@@ -403,11 +403,6 @@ class GlancesPlugin(object):
         """
         ret = {}
 
-        value = {'decoration': 'DEFAULT',
-                 'optional': False,
-                 'additional': False,
-                 'splittable': False}
-
         if (isinstance(self.get_raw(), list) and
                 self.get_raw() is not None and
                 self.get_key() is not None):
@@ -415,10 +410,18 @@ class GlancesPlugin(object):
             for i in self.get_raw():
                 ret[i[self.get_key()]] = {}
                 for key in listkeys(i):
+                    value = {'decoration': 'DEFAULT',
+                             'optional': False,
+                             'additional': False,
+                             'splittable': False}
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
+                value = {'decoration': 'DEFAULT',
+                         'optional': False,
+                         'additional': False,
+                         'splittable': False}
                 ret[key] = value
 
         self.views = ret
