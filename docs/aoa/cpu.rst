@@ -3,8 +3,10 @@
 CPU
 ===
 
-The CPU stats are shown as a percentage or value and for the configured
-refresh time. The total CPU usage is displayed on the first line.
+The CPU stats are shown as a percentage or values and for the configured
+refresh time.
+
+The total CPU usage is displayed on the first line.
 
 .. image:: ../_static/cpu.png
 
@@ -12,6 +14,17 @@ If enough horizontal space is available, extended CPU information are
 displayed.
 
 .. image:: ../_static/cpu-wide.png
+
+A character is also displayed just after the CPU header and shows the
+trend value:
+
+======== ==============================================================
+Trend    Status
+======== ==============================================================
+``-``    CPU value is equal to the mean of the six latests refreshes
+``\``    CPU value is lower than the mean of the six latests refreshes
+``/``    CPU value is higher than the mean of the six latests refreshes
+======== ==============================================================
 
 CPU stats description:
 
@@ -69,9 +82,3 @@ CPU (user/system) Status
 .. note::
     Limit values can be overwritten in the configuration file under
     the ``[cpu]`` and/or ``[percpu]`` sections.
-
-.. note::
-    A trend character could be displayed just after the title.
-    * '-': value is more or less equal to the mean of the lasts N values
-    * '/': value is higher than the mean of the lasts N values
-    * '/': value is lower than the mean of the lasts N values
