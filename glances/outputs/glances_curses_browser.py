@@ -197,17 +197,17 @@ class GlancesCursesBrowser(_GlancesCurses):
         # ================================
 
         # Table of table
-        # Item description: [stats_id, column name, column size]
+        # Item description: [stats_id, column name, column size, status_key]
         column_def = [
-            ['name', 'Name', 16],
-            ['alias', None, None],
-            ['load_min5', 'LOAD', 6],
-            ['cpu_percent', 'CPU%', 5],
-            ['mem_percent', 'MEM%', 5],
-            ['status', 'STATUS', 9],
-            ['ip', 'IP', 15],
+            ['name', 'Name', 16, 'status'],
+            ['alias', None, None, 'status'],
+            ['load_min5', 'LOAD', 6, 'status'],
+            ['cpu_percent', 'CPU%', 5, 'cpu_percent_views'],
+            ['mem_percent', 'MEM%', 5, 'mem_percent_views'],
+            ['status', 'STATUS', 9, 'status'],
+            ['ip', 'IP', 15, 'status'],
             # ['port', 'PORT', 5],
-            ['hr_name', 'OS', 16],
+            ['hr_name', 'OS', 16, 'status'],
         ]
         y = 2
 
@@ -261,9 +261,13 @@ class GlancesCursesBrowser(_GlancesCurses):
             xc += 2
             for c in column_def:
                 if xc < screen_x and y < screen_y and c[1] is not None:
+                    # Get the status key in the list
+                    status = c[3]
+                    if status not in v or v['status'] == 'OFFLINE':
+                        status = 'status'
                     # Display server stats
                     self.term_window.addnstr(
-                        y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v['status']])
+                        y, xc, format(server_stat[c[0]]), c[2], self.colors_list[v[status]])
                     xc += c[2] + self.space_between_column
                 cpt += 1
             # Next line, next server...

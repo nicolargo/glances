@@ -114,8 +114,11 @@ class GlancesClientBrowser(object):
                 # CPU%
                 cpu_percent = 100 - json.loads(s.getCpu())['idle']
                 server['cpu_percent'] = '{:.1f}'.format(cpu_percent)
+                # !!! Not correct because we have to look system and iowait too...
+                server['cpu_percent_views'] = json.loads(s.getViewsCpu())['user']['decoration']
                 # MEM%
                 server['mem_percent'] = json.loads(s.getMem())['percent']
+                server['mem_percent_views'] = json.loads(s.getViewsMem())['used']['decoration']
                 # OS (Human Readable name)
                 server['hr_name'] = json.loads(s.getSystem())['hr_name']
             except (socket.error, Fault, KeyError) as e:
@@ -140,6 +143,7 @@ class GlancesClientBrowser(object):
                     # LOAD
                     load_min5 = json.loads(s.getLoad())['min5']
                     server['load_min5'] = '{:.2f}'.format(load_min5)
+                    server['load_percent_views'] = json.loads(s.getViewsLoad())['min5']['decoration']
                 except Exception as e:
                     logger.warning(
                         "Error while grabbing stats form {}: {}".format(uri, e))
