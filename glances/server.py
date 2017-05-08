@@ -124,7 +124,6 @@ class GlancesXMLRPCServer(SimpleXMLRPCServer, object):
         """Main loop"""
         while not self.finished:
             self.handle_request()
-            logger.info(self.finished)
 
 
 class GlancesInstance(object):

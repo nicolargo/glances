@@ -447,15 +447,17 @@ class GlancesPlugin(object):
             item_views = self.views[item]
 
         if key is None:
-            return item_views
+            ret = item_views
         else:
             if option is None:
-                return item_views[key]
+                ret = item_views[key]
             else:
                 if option in item_views[key]:
-                    return item_views[key][option]
+                    ret = item_views[key][option]
                 else:
-                    return 'DEFAULT'
+                    ret = 'DEFAULT'
+
+        return self._json_dumps(ret)
 
     def load_limits(self, config):
         """Load limits from the configuration file, if it exists."""
