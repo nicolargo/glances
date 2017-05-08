@@ -54,21 +54,9 @@ class GlancesStats(object):
 
         The goal is to dynamically generate the following methods:
         - getPlugname(): return Plugname stat in JSON format
-        - getViewsPlugname(): return views of the Plugname stat in JSON format
         """
         # Check if the attribute starts with 'get'
-        if item.startswith('getViews'):
-            # Get the plugin name
-            plugname = item[len('getViews'):].lower()
-            # Get the plugin instance
-            plugin = self._plugins[plugname]
-            if hasattr(plugin, 'get_views'):
-                # The method get_views exist, return it
-                return getattr(plugin, 'get_views')
-            else:
-                # The method get_views is not found for the plugin
-                raise AttributeError(item)
-        elif item.startswith('get'):
+        if item.startswith('get'):
             # Get the plugin name
             plugname = item[len('get'):].lower()
             # Get the plugin instance
