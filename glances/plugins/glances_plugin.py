@@ -457,6 +457,10 @@ class GlancesPlugin(object):
                 else:
                     return 'DEFAULT'
 
+    def get_json_views(self, item=None, key=None, option=None):
+        """Return views in JSON"""
+        return self._json_dumps(self.get_views(item, key, option))
+
     def load_limits(self, config):
         """Load limits from the configuration file, if it exists."""
 
