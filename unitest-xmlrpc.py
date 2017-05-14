@@ -182,6 +182,14 @@ class TestGlances(unittest.TestCase):
         req = json.loads(client.getIrq())
         self.assertIsInstance(req, list)
 
+    def test_013_plugin_views(self):
+        """Plugin views."""
+        method = "getViewsCpu()"
+        print('INFO: [TEST_013] Method: %s' % method)
+
+        req = json.loads(client.getViewsCpu())
+        self.assertIsInstance(req, dict)
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Server')
