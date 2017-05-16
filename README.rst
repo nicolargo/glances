@@ -265,6 +265,7 @@ Start Termux on your device and enter:
     $ apt update
     $ apt upgrade
     $ apt install clang python python-dev
+    $ pip install bottle
     $ pip install glances
 
 And start Glances:
@@ -272,6 +273,9 @@ And start Glances:
 .. code-block:: console
 
     $ glances
+
+You can also run Glances in server mode (-s or -w) in order to remotely
+monitor your Android device.
 
 Source
 ------
