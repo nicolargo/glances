@@ -257,7 +257,7 @@ class Plugin(GlancesPlugin):
             msg = '  {:8}'.format('ctx_sw:')
             ret.append(self.curse_add_line(msg, optional=self.get_views(key='ctx_switches', option='optional')))
             msg = '{:>5}'.format(self.auto_unit(int(self.stats['ctx_switches'] // self.stats['time_since_update']),
-                                                min_symbol='M'))
+                                                min_symbol='K'))
             ret.append(self.curse_add_line(
                 msg, self.get_views(key='ctx_switches', option='decoration'),
                 optional=self.get_views(key='ctx_switches', option='optional')))
