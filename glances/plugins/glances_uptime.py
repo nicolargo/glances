@@ -59,7 +59,9 @@ class Plugin(GlancesPlugin):
 
         Export uptime in seconds.
         """
-        return {'seconds': self.uptime.seconds}
+        # Convert the delta time to seconds (with cast)
+        # Correct issue #1092 (thanks to @IanTAtWork)
+        return {'seconds': int(self.uptime.total_seconds())}
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
