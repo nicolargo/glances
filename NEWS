@@ -19,6 +19,7 @@ Bugs corrected:
     * Problem with non breaking space in file system name (issue #1065)
     * TypeError: string indices must be integers (Network plugin) (issue #1054)
     * No Offline status for timeouted ports? (issue #1084)
+    * When exporting, uptime values loop after 1 day (issue #1092)
 
 Version 2.9.1
 =============
