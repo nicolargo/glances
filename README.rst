@@ -378,7 +378,6 @@ LGPLv3. See ``COPYING`` for more details.
 .. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
 .. _@nicolargo: https://twitter.com/nicolargo
-.. _@glances_system: https://twitter.com/glances_system
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
