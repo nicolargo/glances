@@ -28,7 +28,7 @@ from glances.stats import GlancesStats
 from glances import __version__
 from glances.globals import WINDOWS, LINUX
 from glances.outputs.glances_bars import Bar
-from glances.compat import PY3
+from glances.compat import PY3, PY_PYPY
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
@@ -212,6 +212,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: GPU stats: %s' % stats_grab)
 
     @unittest.skipIf(PY3, True)
+    @unittest.skipIf(PY_PYPY, True)
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
