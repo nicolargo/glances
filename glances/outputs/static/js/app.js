@@ -1,4 +1,4 @@
-var glancesApp = angular.module('glancesApp', ['ngRoute', 'glances.config'])
+var glancesApp = angular.module('glancesApp', ['ngRoute', 'glances.config', 'fps.hotkeys'])
 
 .config(function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
