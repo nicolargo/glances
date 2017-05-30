@@ -14,7 +14,7 @@
       <div sortable-th sorter="vm.sorter" column="io_write" class="table-cell hidden-xs hidden-sm" ng-show="vm.ioReadWritePresent">IOW/s</div>
       <div sortable-th sorter="vm.sorter" column="name" class="table-cell text-left">Command</div>
     </div>
-    <div class="table-row" ng-repeat="process in vm.processes | orderBy:sorter.column:sorter.isReverseColumn(sorter.column) | limitTo: vm.getLimit()">
+    <div class="table-row" ng-repeat="process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit()">
       <div class="table-cell" ng-class="vm.getCpuPercentAlert(process)">{{process.cpu_percent | number:1}}</div>
       <div class="table-cell" ng-class="vm.getMemoryPercentAlert(process)">{{process.memory_percent | number:1}}</div>
       <div class="table-cell hidden-xs hidden-sm">{{process.memvirt | bytes}}</div>
