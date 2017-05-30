@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesController($interval, GlancesStats, REFRESH_TIME) {
+function GlancesController($interval, GlancesStats, REFRESH_TIME, Hotkeys) {
     var vm = this;
 
     vm.dataLoaded = false;
@@ -25,4 +25,13 @@ function GlancesController($interval, GlancesStats, REFRESH_TIME) {
     $interval(function () {
         vm.refreshData();
     }, REFRESH_TIME * 1000); // in milliseconds
+
+    Hotkeys.registerHotkey(Hotkeys.createHotkey({
+        key: 'm',
+        callback: function () {
+          console.log('Sort processes by MEM%');
+        }
+    }));
+
+    Hotkeys.registerHotkey( hotkey);
 }
