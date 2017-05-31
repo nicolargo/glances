@@ -13,11 +13,16 @@ Glances offers 3 modes:
 Standalone Mode
 ---------------
 
-If you want to monitor your local machine, simply run:
+If you want to monitor your local machine, open a console/terminal
+and simply run:
 
 .. code-block:: console
 
     $ glances
+
+Glances should start (press 'q' or 'ESC' to exit):
+
+.. image:: _static/screenshot-wide.png
 
 Client/Server Mode
 ------------------
