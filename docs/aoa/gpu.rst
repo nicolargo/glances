@@ -3,10 +3,8 @@
 GPU
 ===
 
-The GPU plugin is **only** compatible with ``NVIDIA`` GPUs.
-
 .. note::
-    You need to install the `nvidia-ml-py`_ library on your system.
+    You need to install the `nvidia-ml-py3`_ library on your system.
 
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. The total GPU usage is displayed on the first line, the
@@ -47,4 +45,4 @@ GPU (PROC/MEM) Status
 ``>90%``       ``CRITICAL``
 ============== ============
 
-.. _nvidia-ml-py: https://pypi.python.org/pypi/nvidia-ml-py
+.. _nvidia-ml-py3: https://pypi.python.org/pypi/nvidia-ml-py3
