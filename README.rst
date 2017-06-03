@@ -64,7 +64,7 @@ Optional dependencies:
 - ``kafka-python`` (for the Kafka export module)
 - ``matplotlib`` (for graphical/chart support)
 - ``netifaces`` (for the IP plugin)
-- ``nvidia-ml-py`` (for the GPU plugin) [Python 2-only]
+- ``nvidia-ml-py3`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
