@@ -7,7 +7,7 @@ Version 2.10.1
 
 Bugs corrected:
 
-    * ...
+    * Installing GPU plugin crashes entire glances (issue #1102)
 
 Version 2.10
 ============

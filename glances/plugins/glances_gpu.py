@@ -24,8 +24,9 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 try:
     import pynvml
-except ImportError:
-    logger.debug("Could not import pynvml.  NVIDIA stats will not be collected.")
+except Exception as e:
+    logger.error("Could not import pynvml.  NVIDIA stats will not be collected.")
+    logger.debug("pynvml error: {}".format(e))
     gpu_nvidia_tag = False
 else:
     gpu_nvidia_tag = True
