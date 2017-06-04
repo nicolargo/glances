@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginCpuController() {
+function GlancesPluginCpuController($scope) {
     var vm = this;
     var _view = {};
 
@@ -17,42 +17,35 @@ function GlancesPluginCpuController() {
     vm.soft_interrupts = null;
     vm.syscalls = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['cpu'];
+      _view = data.view['cpu'];
 
-        var data = stats.stats['cpu'];
-        _view = stats.view['cpu'];
+      vm.total = stats.total;
+      vm.user = stats.user;
+      vm.system = stats.system;
+      vm.idle = stats.idle;
+      vm.nice = stats.nice;
+      vm.irq = stats.irq;
+      vm.iowait = stats.iowait;
+      vm.steal = stats.steal;
 
-        vm.total = data.total;
-        vm.user = data.user;
-        vm.system = data.system;
-        vm.idle = data.idle;
-        vm.nice = data.nice;
-        vm.irq = data.irq;
-        vm.iowait = data.iowait;
-        vm.steal = data.steal;
+      if (stats.ctx_switches) {
+          vm.ctx_switches = Math.floor(stats.ctx_switches / stats.time_since_update);
+      }
 
-        if (data.ctx_switches) {
-            vm.ctx_switches = Math.floor(data.ctx_switches / data.time_since_update);
-        }
+      if (stats.interrupts) {
+          vm.interrupts = Math.floor(stats.interrupts / stats.time_since_update);
+      }
 
-        if (data.interrupts) {
-            vm.interrupts = Math.floor(data.interrupts / data.time_since_update);
-        }
+      if (stats.soft_interrupts) {
+          vm.soft_interrupts = Math.floor(stats.soft_interrupts / stats.time_since_update);
+      }
 
-        if (data.soft_interrupts) {
-            vm.soft_interrupts = Math.floor(data.soft_interrupts / data.time_since_update);
-        }
-
-        if (data.syscalls) {
-            vm.syscalls = Math.floor(data.syscalls / data.time_since_update);
-        }
-
-        data = undefined;
-    };
+      if (stats.syscalls) {
+          vm.syscalls = Math.floor(stats.syscalls / stats.time_since_update);
+      }
+    });
 
     this.getDecoration = function (value) {
         if (_view[value] === undefined) {

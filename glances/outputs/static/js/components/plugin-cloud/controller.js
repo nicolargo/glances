@@ -1,24 +1,17 @@
 'use strict';
 
-function GlancesPluginCloudController() {
+function GlancesPluginCloudController($scope) {
     var vm = this;
 
     vm.provider = null;
     vm.instance = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['cloud'];
 
-        var data = stats.stats['cloud'];
-
-        if (data['ami-id'] !== undefined) {
-            vm.provider = 'AWS EC2';
-            vm.instance =  data['instance-type'] + ' instance ' + data['instance-id'] + ' (' + data['region'] + ')';
-        }
-
-        data = undefined;
-    };
+      if (stats['ami-id'] !== undefined) {
+          vm.provider = 'AWS EC2';
+          vm.instance =  stats['instance-type'] + ' instance ' + stats['instance-id'] + ' (' + stats['region'] + ')';
+      }
+    });
 }

@@ -3,7 +3,7 @@ var glancesApp = angular.module('glancesApp', ['ngRoute', 'glances.config', 'fps
 .config(function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
         template : '<glances arguments="arguments"></glances>',
-        controller : 'statsController',
+        controller : 'StatsController',
         resolve: {
             help: function(GlancesStats) {
                 return GlancesStats.getHelp();

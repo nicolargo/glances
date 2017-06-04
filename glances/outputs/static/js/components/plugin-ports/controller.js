@@ -1,25 +1,18 @@
 'use strict';
 
-function GlancesPluginPortsController() {
+function GlancesPluginPortsController($scope) {
     var vm = this;
 
     vm.ports = [];
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['ports'];
 
-        var data = stats.stats['ports'];
-
-        vm.ports = [];
-        angular.forEach(data, function(port) {
-            vm.ports.push(port);
-        }, this);
-
-        data = undefined;
-    };
+      vm.ports = [];
+      angular.forEach(stats, function(port) {
+          vm.ports.push(port);
+      }, this);
+    });
 
     vm.getDecoration = function(port) {
         if (port.status === null) {
