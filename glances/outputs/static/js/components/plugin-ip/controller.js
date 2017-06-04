@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginIpController($scope) {
+function GlancesPluginIpController($scope, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
 
     vm.address = null;
     vm.gateway = null;

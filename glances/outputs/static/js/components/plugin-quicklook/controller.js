@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginQuicklookController($scope) {
+function GlancesPluginQuicklookController($scope, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
     var _view = {};
 
     vm.mem = null;

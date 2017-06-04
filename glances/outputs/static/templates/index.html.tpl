@@ -21,7 +21,7 @@
     <script type="text/javascript" src="js/templates.min.js"></script>
 </head>
 
-<body ng-view="">
-
+<body>
+  <glances></glances>
 </body>
 </html>

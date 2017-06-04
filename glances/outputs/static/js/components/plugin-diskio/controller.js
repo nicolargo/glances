@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginDiskioController($scope, $filter) {
+function GlancesPluginDiskioController($scope, $filter, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
 
     vm.disks = [];
 

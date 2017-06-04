@@ -1,6 +1,4 @@
-glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
-
-    var _config;
+glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper, CONFIG, ARGUMENTS) {
 
     this.getData = function() {
         return $q.all([
@@ -9,19 +7,17 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
         ]).then(function(results) {
             return {
                 'stats': results[0],
-                'view': results[1]
+                'view': results[1],
+                'isBsd': results[0]['system']['os_name'] === 'FreeBSD',
+                'isLinux': results[0]['system']['os_name'] === 'Linux',
+                'isMac': results[0]['system']['os_name'] === 'Darwin',
+                'isWindows': results[0]['system']['os_name'] === 'Windows'
             };
         });
     };
 
     this.getAllStats = function() {
         return $http.get('api/2/all').then(function (response) {
-            return response.data;
-        });
-    };
-
-    this.getAllLimits = function() {
-        return $http.get('api/2/all/limits').then(function (response) {
             return response.data;
         });
     };
@@ -38,30 +34,15 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper) {
         });
     };
 
-    this.getConfig = function() {
-        if (!_config) {
-            return $http.get('api/2/config').then(function (response) {
-                _config = response.data;
-
-                return response.data;
-            });
-        }
-
-        var deferrer = $q.defer();
-        deferrer.resolve(_config);
-
-        return deferrer.promise;
-    };
-
-    this.getArguments = function() {
-        return $http.get('api/2/args').then(function (response) {
-            return response.data;
-        });
-    };
-
     // load limits to init GlancePlugin helper
-    this.getAllLimits().then(function(limits) {
-        GlancesPluginHelper.setLimits(limits);
+    $http.get('api/2/all/limits').then(function (response) {
+      GlancesPluginHelper.setLimits(response.data);
+    });
+    $http.get('api/2/config').then(function (response) {
+        angular.extend(CONFIG, response.data);
+    });
+    $http.get('api/2/args').then(function (response) {
+        angular.extend(ARGUMENTS, response.data);
     });
 
 });

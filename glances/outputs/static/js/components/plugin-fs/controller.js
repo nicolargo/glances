@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginFsController($scope, $filter) {
+function GlancesPluginFsController($scope, $filter, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
     var _view = {};
 
     vm.fileSystems = [];

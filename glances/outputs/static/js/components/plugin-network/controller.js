@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginNetworkController($scope, $filter) {
+function GlancesPluginNetworkController($scope, $filter, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
 
     vm.networks = [];
 
