@@ -19,5 +19,10 @@ function GlancesPluginSystemController($scope) {
       vm.os.name = stats['os_name'];
       vm.os.version = stats['os_version'];
       vm.humanReadableName = stats['hr_name'];
+      vm.isDisconnected = false;
+    });
+
+    $scope.$on('is_disconnected', function() {
+      vm.isDisconnected = true;
     });
 }
