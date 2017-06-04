@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginProcesscountController() {
+function GlancesPluginProcesscountController($scope) {
     var vm = this;
 
     vm.total  = null;
@@ -9,20 +9,13 @@ function GlancesPluginProcesscountController() {
     vm.stopped = null;
     vm.thread = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var processcountStats = data.stats['processcount'];
 
-        var data = stats.stats['processcount'];
-
-        vm.total = data['total'] || 0;
-        vm.running = data['running'] || 0;
-        vm.sleeping = data['sleeping'] || 0;
-        vm.stopped = data['stopped'] || 0;
-        vm.thread = data['thread'] || 0;
-
-        data = undefined;
-    };
+      vm.total = processcountStats['total'] || 0;
+      vm.running = processcountStats['running'] || 0;
+      vm.sleeping = processcountStats['sleeping'] || 0;
+      vm.stopped = processcountStats['stopped'] || 0;
+      vm.thread = processcountStats['thread'] || 0;
+    });
 }

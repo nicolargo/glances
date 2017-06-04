@@ -1,40 +1,33 @@
 'use strict';
 
-function GlancesPluginWifiController($filter) {
+function GlancesPluginWifiController($scope, $filter) {
     var vm = this;
     var _view = {};
 
     vm.hotspots = [];
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['wifi'];
+      _view = data.view['wifi'];
 
-        var data = stats.stats['wifi'];
-        _view = stats.view['wifi'];
+      vm.hotspots = [];
+      for (var i = 0; i < stats.length; i++) {
+          var hotspotData = stats[i];
 
-        vm.hotspots = [];
-        for (var i = 0; i < data.length; i++) {
-            var hotspotData = data[i];
+          if (hotspotData['ssid'] === '') {
+              continue;
+          }
 
-            if (hotspotData['ssid'] === '') {
-                continue;
-            }
+          vm.hotspots.push({
+              'ssid': hotspotData['ssid'],
+              'encrypted': hotspotData['encrypted'],
+              'signal': hotspotData['signal'],
+              'encryption_type': hotspotData['encryption_type']
+          });
+      }
 
-            vm.hotspots.push({
-                'ssid': hotspotData['ssid'],
-                'encrypted': hotspotData['encrypted'],
-                'signal': hotspotData['signal'],
-                'encryption_type': hotspotData['encryption_type']
-            });
-        }
-
-        vm.hotspots = $filter('orderBy')(vm.hotspots, 'ssid');
-
-        data = undefined;
-    };
+      vm.hotspots = $filter('orderBy')(vm.hotspots, 'ssid');
+    });
 
     vm.getDecoration = function(hotpost, field) {
         if(_view[hotpost.ssid][field] == undefined) {

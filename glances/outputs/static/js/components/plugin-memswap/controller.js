@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginMemswapController() {
+function GlancesPluginMemswapController($scope) {
     var vm = this;
     var _view = {};
 
@@ -9,22 +9,15 @@ function GlancesPluginMemswapController() {
     vm.used = null;
     vm.free = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['memswap'];
+      _view = data.view['memswap'];
 
-        var data = stats.stats['memswap'];
-        _view = stats.view['memswap'];
-
-        vm.percent = data['percent'];
-        vm.total = data['total'];
-        vm.used = data['used'];
-        vm.free = data['free'];
-
-        data = undefined;
-    };
+      vm.percent = stats['percent'];
+      vm.total = stats['total'];
+      vm.used = stats['used'];
+      vm.free = stats['free'];
+    });
 
     this.getDecoration = function (value) {
         if (_view[value] === undefined) {

@@ -1,34 +1,27 @@
 'use strict';
 
-function GlancesPluginPercpuController(GlancesPluginHelper) {
+function GlancesPluginPercpuController($scope, GlancesPluginHelper) {
     var vm = this;
     vm.cpus = [];
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var percpuStats = data.stats['percpu'];
 
-        var data = stats.stats['percpu'];
+      vm.cpus = [];
 
-        vm.cpus = [];
+      for (var i = 0; i < percpuStats.length; i++) {
+          var cpuData = percpuStats[i];
 
-        for (var i = 0; i < data.length; i++) {
-            var cpuData = data[i];
-
-            vm.cpus.push({
-                'total': cpuData.total,
-                'user': cpuData.user,
-                'system': cpuData.system,
-                'idle': cpuData.idle,
-                'iowait': cpuData.iowait,
-                'steal': cpuData.steal
-            });
-        }
-
-        data = undefined;
-    };
+          vm.cpus.push({
+              'total': cpuData.total,
+              'user': cpuData.user,
+              'system': cpuData.system,
+              'idle': cpuData.idle,
+              'iowait': cpuData.iowait,
+              'steal': cpuData.steal
+          });
+      }
+    });
 
     vm.getUserAlert = function(cpu) {
         return GlancesPluginHelper.getAlert('percpu', 'percpu_user_', cpu.user)

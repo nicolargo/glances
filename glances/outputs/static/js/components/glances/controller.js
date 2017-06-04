@@ -1,22 +1,20 @@
 'use strict';
 
-function GlancesController($timeout, GlancesStats, REFRESH_TIME, Hotkeys) {
+function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys) {
     var vm = this;
 
     vm.dataLoaded = false;
-    vm.stats = {};
 
     var refreshDataSuccess = function (data) {
         data.isBsd = data.stats['system']['os_name'] === 'FreeBSD';
         data.isLinux = data.stats['system']['os_name'] === 'Linux';
         data.isMac = data.stats['system']['os_name'] === 'Darwin';
         data.isWindows = data.stats['system']['os_name'] === 'Windows';
-
-        vm.stats = data;
         vm.is_disconnected = false;
+
+        $scope.$broadcast('data_refreshed', data);
         vm.dataLoaded = true;
 
-        data = undefined;
         nextLoad();
     };
 

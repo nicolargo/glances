@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginMemMoreController() {
+function GlancesPluginMemMoreController($scope) {
     var vm = this;
 
     vm.active = null;
@@ -8,19 +8,12 @@ function GlancesPluginMemMoreController() {
     vm.buffers = null;
     vm.cached = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['mem'];
 
-        var data = stats.stats['mem'];
-
-        vm.active = data['active'];
-        vm.inactive = data['inactive'];
-        vm.buffers = data['buffers'];
-        vm.cached = data['cached'];
-
-        data = undefined;
-    };
+      vm.active = stats['active'];
+      vm.inactive = stats['inactive'];
+      vm.buffers = stats['buffers'];
+      vm.cached = stats['cached'];
+    });
 }

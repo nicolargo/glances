@@ -1,4 +1,4 @@
-<div ng-keydown="vm.onKeyDown($event)" tabindex="0">
+<div>
     <div ng-if="!vm.dataLoaded" class="container-fluid" id="loading-page">
         <div class="glances-logo"></div>
         <div class="loader">Loading...</div>
@@ -6,24 +6,24 @@
 
     <glances-help ng-if="vm.arguments.help_tag"></glances-help>
 
-    <div ng-if="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
+    <div ng-show="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
         <div class="top-plugin">
             <div class="row">
                 <div class="col-sm-24">
                     <div class="pull-left">
-                        <glances-plugin-system stats="vm.stats"></glances-plugin-system>
+                        <glances-plugin-system></glances-plugin-system>
                     </div>
                     <div class="pull-left">
-                        <glances-plugin-ip stats="vm.stats" arguments="vm.arguments"></glances-plugin-ip>
+                        <glances-plugin-ip arguments="vm.arguments"></glances-plugin-ip>
                     </div>
                     <div class="pull-right">
-                        <glances-plugin-uptime stats="vm.stats"></glances-plugin-uptime>
+                        <glances-plugin-uptime></glances-plugin-uptime>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-24">
                         <div class="pull-left">
-                            <glances-plugin-cloud stats="vm.stats"></glances-plugin-cloud>
+                            <glances-plugin-cloud></glances-plugin-cloud>
                         </div>
                     </div>
                 </div>
@@ -32,49 +32,49 @@
 
         <div class="row">
             <div class="hidden-xs hidden-sm hidden-md col-lg-6" ng-if="!vm.arguments.disable_quicklook">
-                <glances-plugin-quicklook stats="vm.stats" arguments="vm.arguments"></glances-plugin-quicklook>
+                <glances-plugin-quicklook arguments="vm.arguments"></glances-plugin-quicklook>
             </div>
             <div class="col-sm-6 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && !vm.arguments.percpu">
-                <glances-plugin-cpu stats="vm.stats"></glances-plugin-cpu>
+                <glances-plugin-cpu></glances-plugin-cpu>
             </div>
             <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && vm.arguments.percpu">
-                <glances-plugin-percpu stats="vm.stats"></glances-plugin-percpu>
+                <glances-plugin-percpu></glances-plugin-percpu>
             </div>
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && statsGpu.gpus.length > 0">
-                <glances-plugin-gpu stats="vm.stats"></glances-plugin-gpu>
+                <glances-plugin-gpu></glances-plugin-gpu>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.argumentsdisable_mem">
-                <glances-plugin-mem stats="vm.stats"></glances-plugin-mem>
+                <glances-plugin-mem></glances-plugin-mem>
             </div>
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
                  ng-if="!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && statsGpu.gpus.length > 0)">
-                <glances-plugin-mem-more stats="vm.stats"></glances-plugin-mem-more>
+                <glances-plugin-mem-more></glances-plugin-mem-more>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_memswap">
-                <glances-plugin-memswap stats="vm.stats"></glances-plugin-memswap>
+                <glances-plugin-memswap></glances-plugin-memswap>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_load">
-                <glances-plugin-load stats="vm.stats"></glances-plugin-load>
+                <glances-plugin-load></glances-plugin-load>
             </div>
         </div>
         <div class="row">
             <div class="col-sm-6 sidebar" ng-if="!vm.arguments.disable_left_sidebar">
                 <div class="table">
-                    <glances-plugin-network id="plugin-network" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
-                    <glances-plugin-wifi id="plugin-wifi" class="plugin table-row-group" stats="vm.stats" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
-                    <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" stats="vm.stats" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
-                    <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
-                    <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
-                    <glances-plugin-irq stats="vm.stats" arguments="vm.arguments" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
-                    <glances-plugin-folders stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-folders>
-                    <glances-plugin-raid stats="vm.stats" arguments="vm.arguments"></glances-plugin-raid>
-                    <glances-plugin-sensors stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
+                    <glances-plugin-network id="plugin-network" class="plugin table-row-group" arguments="vm.arguments" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
+                    <glances-plugin-wifi id="plugin-wifi" class="plugin table-row-group" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
+                    <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
+                    <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" arguments="vm.arguments" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
+                    <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
+                    <glances-plugin-irq arguments="vm.arguments" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
+                    <glances-plugin-folders arguments="vm.arguments" ng-if="!vm.arguments.disable_fs"></glances-plugin-folders>
+                    <glances-plugin-raid arguments="vm.arguments"></glances-plugin-raid>
+                    <glances-plugin-sensors arguments="vm.arguments" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
                 </div>
             </div>
             <div class="col-sm-18">
-                <glances-plugin-docker stats="vm.stats" arguments="vm.arguments" ng-if="!vm.arguments.disable_docker"></glances-plugin-docker>
-                <glances-plugin-alert stats="vm.stats" ng-if="!vm.arguments.disable_alert"></glances-plugin-alert>
-                <glances-plugin-process stats="vm.stats" arguments="vm.arguments"></glances-plugin-process>
+                <glances-plugin-docker arguments="vm.arguments" ng-if="!vm.arguments.disable_docker"></glances-plugin-docker>
+                <glances-plugin-alert ng-if="!vm.arguments.disable_alert"></glances-plugin-alert>
+                <glances-plugin-process arguments="vm.arguments"></glances-plugin-process>
             </div>
             </div>
         </div>

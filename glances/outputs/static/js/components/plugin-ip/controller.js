@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginIpController() {
+function GlancesPluginIpController($scope) {
     var vm = this;
 
     vm.address = null;
@@ -9,20 +9,13 @@ function GlancesPluginIpController() {
     vm.maskCidr = null;
     vm.publicAddress = null;
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var ipStats = data.stats['ip'];
 
-        var data = stats.stats['ip'];
-
-        vm.address = data.address;
-        vm.gateway = data.gateway;
-        vm.mask = data.mask;
-        vm.maskCidr = data.mask_cidr;
-        vm.publicAddress = data.public_address
-
-        data = undefined;
-    };
+      vm.address = ipStats.address;
+      vm.gateway = ipStats.gateway;
+      vm.mask = ipStats.mask;
+      vm.maskCidr = ipStats.mask_cidr;
+      vm.publicAddress = ipStats.public_address
+    });
 }

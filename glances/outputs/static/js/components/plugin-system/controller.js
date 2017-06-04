@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginSystemController() {
+function GlancesPluginSystemController($scope) {
     var vm = this;
 
     vm.hostname = null;
@@ -11,20 +11,13 @@ function GlancesPluginSystemController() {
         'version': null
     };
 
-    vm.$onChanges = function (changes) {
-        var stats = changes.stats.currentValue;
-        if (stats === undefined || stats.stats === undefined) {
-            return;
-        }
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['system'];
 
-        var data = stats.stats['system'];
-
-        vm.hostname = data['hostname'];
-        vm.platform = data['platform'];
-        vm.os.name = data['os_name'];
-        vm.os.version = data['os_version'];
-        vm.humanReadableName = data['hr_name'];
-
-        data = undefined;
-    };
+      vm.hostname = stats['hostname'];
+      vm.platform = stats['platform'];
+      vm.os.name = stats['os_name'];
+      vm.os.version = stats['os_version'];
+      vm.humanReadableName = stats['hr_name'];
+    });
 }
