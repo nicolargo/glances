@@ -1,7 +1,7 @@
 'use strict';
 
-glancesApp.component('glancesPluginAlert', {
-    controller: GlancesPluginAlertController,
+glancesApp.component('glancesPluginAmps', {
+    controller: GlancesPluginAmpsController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-alert/view.html'
+    templateUrl: 'components/plugin-amps/view.html'
 });
