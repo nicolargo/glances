@@ -10,7 +10,6 @@ function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys
         data.isLinux = data.stats['system']['os_name'] === 'Linux';
         data.isMac = data.stats['system']['os_name'] === 'Darwin';
         data.isWindows = data.stats['system']['os_name'] === 'Windows';
-        vm.is_disconnected = false;
 
         $scope.$broadcast('data_refreshed', data);
         vm.dataLoaded = true;
@@ -19,7 +18,7 @@ function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys
     };
 
     var refreshDataError = function() {
-        vm.is_disconnected = true;
+        $scope.$broadcast('is_disconnected');
         nextLoad();
     };
 
