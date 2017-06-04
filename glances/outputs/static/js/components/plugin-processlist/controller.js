@@ -46,6 +46,10 @@ function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter
               process.cmdline = process.cmdline.join(' ');
           }
 
+          if (data.isWindows) {
+              process.username = _.last(process.username.split('\\'));
+          }
+
           vm.processes.push(process);
       }
     });
