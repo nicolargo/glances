@@ -1,7 +1,8 @@
 'use strict';
 
-function GlancesPluginProcessController() {
+function GlancesPluginProcessController(ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
 
     vm.sorter = {
         column: "cpu_percent",

@@ -1,29 +1,20 @@
 'use strict';
 
-function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys) {
+function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys, ARGUMENTS) {
     var vm = this;
-
     vm.dataLoaded = false;
-
-    var refreshDataSuccess = function (data) {
-        data.isBsd = data.stats['system']['os_name'] === 'FreeBSD';
-        data.isLinux = data.stats['system']['os_name'] === 'Linux';
-        data.isMac = data.stats['system']['os_name'] === 'Darwin';
-        data.isWindows = data.stats['system']['os_name'] === 'Windows';
-
-        $scope.$broadcast('data_refreshed', data);
-        vm.dataLoaded = true;
-
-        nextLoad();
-    };
-
-    var refreshDataError = function() {
-        $scope.$broadcast('is_disconnected');
-        nextLoad();
-    };
+    vm.arguments = ARGUMENTS;
 
     vm.refreshData = function () {
-        GlancesStats.getData().then(refreshDataSuccess, refreshDataError);
+        GlancesStats.getData().then(function (data) {
+            $scope.$broadcast('data_refreshed', data);
+            vm.dataLoaded = true;
+
+            nextLoad();
+        }, function() {
+            $scope.$broadcast('is_disconnected');
+            nextLoad();
+        });
     };
 
     var loadPromise;

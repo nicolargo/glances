@@ -3,8 +3,5 @@
 glancesApp.component('glancesPluginDiskio', {
     controller: GlancesPluginDiskioController,
     controllerAs: 'vm',
-    bindings: {
-        arguments: '<'
-    },
     templateUrl: 'components/plugin-diskio/view.html'
 });

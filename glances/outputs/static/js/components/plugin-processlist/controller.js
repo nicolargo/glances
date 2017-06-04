@@ -1,15 +1,11 @@
 'use strict';
 
-function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter, GlancesStats) {
+function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
     var vm = this;
+    vm.arguments = ARGUMENTS;
 
-    var _maxProcessesToDisplay = undefined;
     vm.processes = [];
     vm.ioReadWritePresent = false;
-
-    GlancesStats.getConfig().then(function(config) {
-        _maxProcessesToDisplay = config.outputs !== undefined ? config.outputs.max_processes_display : undefined;
-    });
 
     $scope.$on('data_refreshed', function(event, data) {
       var processlistStats = data.stats['processlist'];
@@ -63,6 +59,6 @@ function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter
     };
 
     vm.getLimit = function() {
-        return _maxProcessesToDisplay;
+        return CONFIG.outputs !== undefined ? CONFIG.outputs.max_processes_display : undefined;
     };
 }
