@@ -1,12 +1,13 @@
 'use strict';
 
-function GlancesController($scope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys, ARGUMENTS) {
+function GlancesController($scope, $rootScope, $timeout, GlancesStats, REFRESH_TIME, Hotkeys, ARGUMENTS) {
     var vm = this;
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
 
     vm.refreshData = function () {
         GlancesStats.getData().then(function (data) {
+            $rootScope.title = data.stats.system.hostname + ' - Glances';
             $scope.$broadcast('data_refreshed', data);
             vm.dataLoaded = true;
 
