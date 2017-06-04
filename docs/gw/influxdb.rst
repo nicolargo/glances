@@ -30,8 +30,11 @@ configuration file (no limit on columns number).
 Grafana
 -------
 
-For Grafana users, Glances provides a dedicated `dashboard`_. To use it,
-just import the file in your ``Grafana`` web interface.
+For Grafana users, Glances provides a dedicated `dashboard`_.
+
+.. image:: ../_static/glances-influxdb.png
+
+To use it, just import the file in your ``Grafana`` web interface.
 
 .. image:: ../_static/grafana.png
 
