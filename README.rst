@@ -383,3 +383,8 @@ LGPLv3. See ``COPYING`` for more details.
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/eeb88ca303204651a6d40b8f2744a5bc
+   :alt: Codacy Badge
+   :target: https://www.codacy.com/app/nicolargo/glances?utm_source=github.com&utm_medium=referral&utm_content=nicolargo/glances&utm_campaign=badger
