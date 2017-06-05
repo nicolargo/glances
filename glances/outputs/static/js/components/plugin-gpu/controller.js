@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginGpuController($scope, ARGUMENTS) {
+function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     var _view = {};
@@ -8,7 +8,15 @@ function GlancesPluginGpuController($scope, ARGUMENTS) {
     vm.name = "GPU";
     vm.mean = {};
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['gpu'];
       _view = data.views['gpu'];
 
@@ -43,7 +51,7 @@ function GlancesPluginGpuController($scope, ARGUMENTS) {
 
       vm.mean.proc = vm.mean.proc / stats.length;
       vm.mean.mem = vm.mean.mem / stats.length;
-    });
+    }
 
     vm.getDecoration = function(gpuId, value) {
         if(_view[gpuId][value] == undefined) {

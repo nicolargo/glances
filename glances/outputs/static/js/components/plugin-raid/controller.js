@@ -1,10 +1,18 @@
 'use strict';
 
-function GlancesPluginRaidController($scope) {
+function GlancesPluginRaidController($scope, GlancesStats) {
     var vm = this;
     vm.disks = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var disks = [];
       var stats = data.stats['raid'];
 
@@ -32,7 +40,7 @@ function GlancesPluginRaidController($scope) {
       });
 
       vm.disks = disks;
-    });
+    }
 
     vm.hasDisks = function() {
         return this.disks.length > 0;

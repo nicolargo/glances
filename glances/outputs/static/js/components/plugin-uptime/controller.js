@@ -1,10 +1,18 @@
 'use strict';
 
-function GlancesPluginUptimeController($scope) {
+function GlancesPluginUptimeController($scope, GlancesStats) {
     var vm = this;
     vm.value = null;
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
-      vm.value = data.stats['uptime'];
+        loadData(data);
     });
+
+    var loadData = function(data) {
+      vm.value = data.stats['uptime'];
+    }
 }

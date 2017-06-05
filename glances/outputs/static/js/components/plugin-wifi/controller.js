@@ -1,12 +1,20 @@
 'use strict';
 
-function GlancesPluginWifiController($scope, $filter) {
+function GlancesPluginWifiController($scope, $filter, GlancesStats) {
     var vm = this;
     var _view = {};
 
     vm.hotspots = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['wifi'];
       _view = data.views['wifi'];
 
@@ -27,7 +35,7 @@ function GlancesPluginWifiController($scope, $filter) {
       }
 
       vm.hotspots = $filter('orderBy')(vm.hotspots, 'ssid');
-    });
+    }
 
     vm.getDecoration = function(hotpost, field) {
         if(_view[hotpost.ssid][field] == undefined) {

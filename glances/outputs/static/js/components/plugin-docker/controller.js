@@ -1,11 +1,19 @@
 'use strict';
 
-function GlancesPluginDockerController($scope) {
+function GlancesPluginDockerController($scope, GlancesStats) {
     var vm = this;
     vm.containers = [];
     vm.version = null;
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['docker'];
       this.containers = [];
 
@@ -36,5 +44,5 @@ function GlancesPluginDockerController($scope) {
       }
 
       vm.version = stats['version']['Version'];
-    });
+    }
 }

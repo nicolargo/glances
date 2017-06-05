@@ -1,10 +1,18 @@
 'use strict';
 
-function GlancesPluginIrqController($scope) {
+function GlancesPluginIrqController($scope, GlancesStats) {
     var vm = this;
     vm.irqs = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['irq'];
       vm.irqs = [];
 
@@ -18,5 +26,5 @@ function GlancesPluginIrqController($scope) {
 
           vm.irqs.push(irq);
       }
-    });
+    }
 }

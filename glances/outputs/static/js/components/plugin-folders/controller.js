@@ -1,10 +1,18 @@
 'use strict';
 
-function GlancesPluginFoldersController($scope) {
+function GlancesPluginFoldersController($scope, GlancesStats) {
     var vm = this;
     vm.folders = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['folders'];
       vm.folders = [];
 
@@ -21,7 +29,7 @@ function GlancesPluginFoldersController($scope) {
 
           vm.folders.push(folder);
       }
-    });
+    }
 
     vm.getDecoration = function(folder) {
 

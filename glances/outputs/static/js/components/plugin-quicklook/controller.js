@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginQuicklookController($scope, ARGUMENTS) {
+function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     var _view = {};
@@ -13,7 +13,15 @@ function GlancesPluginQuicklookController($scope, ARGUMENTS) {
     vm.swap = null;
     vm.percpus = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['quicklook'];
       _view = data.views['quicklook'];
 
@@ -31,7 +39,7 @@ function GlancesPluginQuicklookController($scope, ARGUMENTS) {
               'total': cpu.total
           });
       }, this);
-    });
+    }
 
     this.getDecoration = function (value) {
         if (_view[value] === undefined) {

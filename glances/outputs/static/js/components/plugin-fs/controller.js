@@ -1,13 +1,20 @@
 'use strict';
 
-function GlancesPluginFsController($scope, $filter, ARGUMENTS) {
+function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
-    vm.arguments = ARGUMENTS;
     var _view = {};
-
+    vm.arguments = ARGUMENTS;
     vm.fileSystems = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['fs'];
       _view = data.views['fs'];
 
@@ -32,7 +39,7 @@ function GlancesPluginFsController($scope, $filter, ARGUMENTS) {
       }
 
       vm.fileSystems = $filter('orderBy')(vm.fileSystems,'mnt_point');
-    });
+    };
 
     vm.getDecoration = function(mountPoint, field) {
         if(_view[mountPoint][field] == undefined) {
