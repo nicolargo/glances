@@ -25,9 +25,9 @@ function GlancesPluginLoadController($scope, GlancesStats) {
         vm.min1 = stats['min1'];
         vm.min5 = stats['min5'];
         vm.min15 = stats['min15'];
-    }
+    };
 
-    this.getDecoration = function (value) {
+    vm.getDecoration = function (value) {
         if (_view[value] === undefined) {
             return;
         }
