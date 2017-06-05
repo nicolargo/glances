@@ -1,0 +1,7 @@
+<section id="system">
+    <span ng-if="vm.isDisconnected" class="critical">Disconnected from</span>
+    <span class="title">{{ vm.hostname }}</span>
+    <span ng-if="vm.stats.isLinux" class="hidden-xs hidden-sm">({{ vm.humanReadableName }} / {{ vm.os.name }} {{ vm.os.version }})</span>
+    <span ng-if="!vm.stats.isLinux"
+          class="hidden-xs hidden-sm">({{ vm.os.name }} {{ vm.os.version }} {{ vm.platform }})</span>
+</section>

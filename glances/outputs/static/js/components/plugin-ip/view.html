@@ -1,0 +1,4 @@
+<section id="ip" ng-if="vm.address != undefined && !vm.arguments.disable_ip">
+    &nbsp;-&nbsp;<span class="title">IP</span>&nbsp;<span>{{ vm.address }}/{{ vm.maskCidr }}</span>&nbsp;<span
+        ng-if="vm.publicAddress" class="title">Pub</span>&nbsp;<span>{{ vm.publicAddress }}</span>
+</section>

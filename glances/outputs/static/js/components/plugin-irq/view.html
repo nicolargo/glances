@@ -1,0 +1,10 @@
+<div class="table-row" ng-if="vm.irqs.length > 0">
+    <div class="table-cell text-left title">IRQ</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">Rate/s</div>
+</div>
+<div class="table-row" ng-repeat="irq in vm.irqs">
+    <div class="table-cell text-left">{{irq.irq_line}}</div>
+    <div class="table-cell"></div>
+    <div class="table-cell"><span>{{irq.irq_rate}}</span></div>
+</div>

@@ -1,0 +1,18 @@
+<div class="table-row">
+    <div class="table-cell text-left title">FILE SYS</div>
+    <div class="table-cell">
+        <span ng-show="!vm.arguments.fs_free_space">Used</span>
+        <span ng-show="vm.arguments.fs_free_space">Free</span>
+    </div>
+    <div class="table-cell">Total</div>
+</div>
+<div class="table-row" ng-repeat="fs in vm.fileSystems">
+    <div class="table-cell text-left">{{ fs.shortMountPoint }} <span class="visible-lg-inline"
+                                                                     ng-show="fs.name.length <= 20">({{ fs.name }})<span>
+    </div>
+    <div class="table-cell" ng-class="vm.getDecoration(fs.mountPoint, 'used')">
+        <span ng-show="!vm.arguments.fs_free_space">{{ fs.used | bytes }}</span>
+        <span ng-show="vm.arguments.fs_free_space">{{ fs.free | bytes }}</span>
+    </div>
+    <div class="table-cell">{{ fs.size | bytes }}</div>
+</div>

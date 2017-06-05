@@ -1,0 +1,37 @@
+'use strict';
+
+function GlancesPluginMemswapController($scope, GlancesStats) {
+    var vm = this;
+    var _view = {};
+
+    vm.percent = null;
+    vm.total = null;
+    vm.used = null;
+    vm.free = null;
+
+    vm.$onInit = function () {
+        loadData(GlancesStats.getData());
+    };
+
+    $scope.$on('data_refreshed', function (event, data) {
+        loadData(data);
+    });
+
+    var loadData = function (data) {
+        var stats = data.stats['memswap'];
+        _view = data.views['memswap'];
+
+        vm.percent = stats['percent'];
+        vm.total = stats['total'];
+        vm.used = stats['used'];
+        vm.free = stats['free'];
+    }
+
+    this.getDecoration = function (value) {
+        if (_view[value] === undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    };
+}

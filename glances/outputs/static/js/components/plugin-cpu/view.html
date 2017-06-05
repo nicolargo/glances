@@ -1,0 +1,84 @@
+<section id="cpu" class="plugin">
+    <div class="row">
+        <div class="col-sm-24 col-md-12 col-lg-8">
+            <div class="table">
+                <div class="table-row">
+                    <div class="table-cell text-left title">CPU</div>
+                    <div class="table-cell">{{ vm.total }}%</div>
+                </div>
+                <div class="table-row">
+                    <div class="table-cell text-left">user:</div>
+                    <div class="table-cell" ng-class="vm.getDecoration('user')">
+                        {{ vm.user }}%
+                    </div>
+                </div>
+                <div class="table-row">
+                    <div class="table-cell text-left">system:</div>
+                    <div class="table-cell" ng-class="vm.getDecoration('system')">
+                        {{ vm.system }}%
+                    </div>
+                </div>
+                <div class="table-row">
+                    <div class="table-cell text-left">idle:</div>
+                    <div class="table-cell">{{ vm.idle }}%</div>
+                </div>
+            </div>
+        </div>
+        <div class="hidden-xs hidden-sm col-md-12 col-lg-8">
+            <div class="table">
+                <div class="table-row" ng-show="vm.nice != undefined">
+                    <div class="table-cell text-left">nice:</div>
+                    <div class="table-cell">
+                        {{ vm.nice }}%
+                    </div>
+                </div>
+                <div class="table-row" ng-show="vm.irq != undefined">
+                    <div class="table-cell text-left">irq:</div>
+                    <div class="table-cell">
+                        {{ vm.irq }}%
+                    </div>
+                </div>
+                <div class="table-row" ng-show="vm.iowait != undefined">
+                    <div class="table-cell text-left">iowait:</div>
+                    <div class="table-cell" ng-class="vm.getDecoration('iowait')">
+                        {{ vm.iowait }}%
+                    </div>
+                </div>
+                <div class="table-row" ng-show="vm.steal != undefined">
+                    <div class="table-cell text-left">steal:</div>
+                    <div class="table-cell" ng-class="vm.getDecoration('steal')">
+                        {{ vm.steal }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hidden-xs hidden-sm hidden-md col-lg-8">
+            <div class="table">
+                <div class="table-row" ng-if="vm.ctx_switches">
+                    <div class="table-cell text-left">ctx_sw:</div>
+                    <div class="table-cell" ng-class="vm.getDecoration('ctx_switches')">
+                        {{ vm.ctx_switches }}
+                    </div>
+                </div>
+                <div class="table-row" ng-if="vm.interrupts">
+                    <div class="table-cell text-left">inter:</div>
+                    <div class="table-cell">
+                        {{ vm.interrupts }}
+                    </div>
+                </div>
+                <div class="table-row" ng-if="vm.soft_interrupts">
+                    <div class="table-cell text-left">sw_int:</div>
+                    <div class="table-cell">
+                        {{ vm.soft_interrupts }}
+                    </div>
+                </div>
+                <div class="table-row" ng-if="!statsSystem.isLinux() && vm.syscalls">
+                    <div class="table-cell text-left">syscal:</div>
+                    <div class="table-cell">
+                        {{ vm.syscalls }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

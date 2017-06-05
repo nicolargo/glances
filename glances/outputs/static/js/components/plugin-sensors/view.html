@@ -1,0 +1,9 @@
+<div class="table-row" ng-if="vm.sensors.length > 0">
+    <div class="table-cell text-left title">SENSORS</div>
+</div>
+
+<div class="table-row" ng-repeat="sensor in vm.sensors">
+    <div class="table-cell text-left">{{ sensor.label }}</div>
+    <div class="table-cell">{{ sensor.unit }}</div>
+    <div class="table-cell" ng-class="vm.getAlert(sensor)">{{ sensor.value }}</div>
+</div>

@@ -1,0 +1,19 @@
+<div class="table-row" ng-if="vm.hasDisks()">
+    <div class="table-cell text-left title">RAID disks</div>
+    <div class="table-cell">Used</div>
+    <div class="table-cell">Total</div>
+</div>
+<div class="table-row" ng-repeat="disk in vm.disks | orderBy:  'name'">
+    <div class="table-cell text-left">
+        {{ disk.type | uppercase }} {{ disk.name }}
+        <div class="warning" ng-show="disk.degraded">└─ Degraded mode</div>
+        <div ng-show="disk.degraded"> &nbsp; &nbsp;└─ {{ disk.config }}</div>
+
+        <div class="critical" ng-show="disk.inactive">└─ Status {{ disk.status }}</div>
+        <div ng-show="disk.inactive" ng-repeat="component in disk.components | orderBy:  'number'">
+            &nbsp; &nbsp;{{ $last ? '└─' : '├─' }} disk {{ component.number }}: {{ component.name }}
+        </div>
+    </div>
+    <div class="table-cell" ng-show="!disk.inactive" ng-class="vm.getAlert(disk)">{{ disk.used }}</div>
+    <div class="table-cell" ng-show="!disk.inactive" ng-class="vm.getAlert(disk)">{{ disk.available }}</div>
+</div>

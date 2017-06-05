@@ -3,8 +3,15 @@
   "private": true,
   "dependencies": {
     "angular": "^1.5.8",
-    "angular-route": "^1.5.8",
     "lodash": "^4.13.1",
-    "favico.js": "^0.3.10"
+    "favico.js": "^0.3.10",
+    "angular-hotkeys": "chieffancypants/angular-hotkeys#^1.7.0"
+  },
+  "overrides": {
+    "angular-hotkeys": {
+      "main": [
+        "build/hotkeys.js"
+      ]
+    }
   }
 }

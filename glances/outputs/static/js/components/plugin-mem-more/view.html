@@ -1,0 +1,20 @@
+<section id="mem-more" class="plugin">
+    <div class="table">
+        <div class="table-row" ng-show="vm.active != undefined">
+            <div class="table-cell text-left">active:</div>
+            <div class="table-cell">{{ vm.active | bytes }}</div>
+        </div>
+        <div class="table-row" ng-show="vm.inactive != undefined">
+            <div class="table-cell text-left">inactive:</div>
+            <div class="table-cell">{{ vm.inactive | bytes }}</div>
+        </div>
+        <div class="table-row" ng-show="vm.buffers != undefined">
+            <div class="table-cell text-left">buffers:</div>
+            <div class="table-cell">{{ vm.buffers | bytes }}</div>
+        </div>
+        <div class="table-row" ng-show="vm.cached != undefined">
+            <div class="table-cell text-left">cached:</div>
+            <div class="table-cell">{{ vm.cached | bytes }}</div>
+        </div>
+    </div>
+</section>

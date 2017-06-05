@@ -1,0 +1,10 @@
+<div ng-if="!vm.arguments.disable_process">
+    <glances-plugin-processcount sorter="vm.sorter"></glances-plugin-processcount>
+    <div class="row" ng-if="!vm.arguments.disable_amps">
+        <div class="col-lg-18">
+            <glances-plugin-amps></glances-plugin-amps>
+        </div>
+    </div>
+    <glances-plugin-processlist sorter="vm.sorter"></glances-plugin-processlist>
+</div>
+<div ng-if="vm.arguments.disable_process">PROCESSES DISABLED (press 'z' to display)</div>
