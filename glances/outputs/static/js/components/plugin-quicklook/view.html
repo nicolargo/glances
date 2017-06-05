@@ -3,7 +3,7 @@
         {{ vm.cpu_name }}
     </div>
     <div class="table">
-        <div class="table-row" ng-show="!vm.arguments.percpu">
+        <div class="table-row" ng-if="!vm.arguments.percpu">
             <div class="table-cell text-left">CPU</div>
             <div class="table-cell">
                 <div class="progress">
@@ -16,7 +16,7 @@
                 {{ vm.cpu }}%
             </div>
         </div>
-        <div class="table-row" ng-show="vm.arguments.percpu" ng-repeat="percpu in vm.percpus">
+        <div class="table-row" ng-if="vm.arguments.percpu" ng-repeat="percpu in vm.percpus track by percpu.number">
             <div class="table-cell text-left">CPU{{ percpu.number }}</div>
             <div class="table-cell">
                 <div class="progress">
