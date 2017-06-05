@@ -4,26 +4,26 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
     var vm = this;
     vm.processes = [];
 
-    vm.$onInit = function() {
+    vm.$onInit = function () {
         loadData(GlancesStats.getData());
     };
 
-    $scope.$on('data_refreshed', function(event, data) {
+    $scope.$on('data_refreshed', function (event, data) {
         loadData(data);
     });
 
-    var loadData = function(data) {
-      var processes = data.stats['amps'];
+    var loadData = function (data) {
+        var processes = data.stats['amps'];
 
-      this.processes = [];
-      angular.forEach(processes, function(process) {
-          if (process.result !== null) {
-              this.processes.push(process);
-          }
-      }, this);
+        this.processes = [];
+        angular.forEach(processes, function (process) {
+            if (process.result !== null) {
+                this.processes.push(process);
+            }
+        }, this);
     }
 
-    vm.getDescriptionDecoration = function(process) {
+    vm.getDescriptionDecoration = function (process) {
         var count = process.count;
         var countMin = process.countmin;
         var countMax = process.countmax;

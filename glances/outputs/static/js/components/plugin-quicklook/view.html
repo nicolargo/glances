@@ -7,7 +7,9 @@
             <div class="table-cell text-left">CPU</div>
             <div class="table-cell">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-{{ vm.getDecoration('cpu') }}" role="progressbar" aria-valuenow="{{ vm.cpu }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ vm.cpu }}%;">
+                    <div class="progress-bar progress-bar-{{ vm.getDecoration('cpu') }}" role="progressbar"
+                         aria-valuenow="{{ vm.cpu }}" aria-valuemin="0" aria-valuemax="100"
+                         style="width: {{ vm.cpu }}%;">
                         &nbsp;
                     </div>
                 </div>
@@ -20,7 +22,9 @@
             <div class="table-cell text-left">CPU{{ percpu.number }}</div>
             <div class="table-cell">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-{{ vm.getDecoration('cpu') }}" role="progressbar" aria-valuenow="{{ percpu.total }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ percpu.total }}%;">
+                    <div class="progress-bar progress-bar-{{ vm.getDecoration('cpu') }}" role="progressbar"
+                         aria-valuenow="{{ percpu.total }}" aria-valuemin="0" aria-valuemax="100"
+                         style="width: {{ percpu.total }}%;">
                         &nbsp;
                     </div>
                 </div>
@@ -33,7 +37,9 @@
             <div class="table-cell text-left">MEM</div>
             <div class="table-cell">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-{{ vm.getDecoration('mem') }}" role="progressbar" aria-valuenow="{{ vm.mem }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ vm.mem }}%;">
+                    <div class="progress-bar progress-bar-{{ vm.getDecoration('mem') }}" role="progressbar"
+                         aria-valuenow="{{ vm.mem }}" aria-valuemin="0" aria-valuemax="100"
+                         style="width: {{ vm.mem }}%;">
                         &nbsp;
                     </div>
                 </div>
@@ -46,7 +52,9 @@
             <div class="table-cell text-left">SWAP</div>
             <div class="table-cell">
                 <div class="progress">
-                    <div class="progress-bar progress-bar-{{ vm.getDecoration('swap') }}" role="progressbar" aria-valuenow="{{ vm.swap }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ vm.swap }}%;">
+                    <div class="progress-bar progress-bar-{{ vm.getDecoration('swap') }}" role="progressbar"
+                         aria-valuenow="{{ vm.swap }}" aria-valuemin="0" aria-valuemax="100"
+                         style="width: {{ vm.swap }}%;">
                         &nbsp;
                     </div>
                 </div>

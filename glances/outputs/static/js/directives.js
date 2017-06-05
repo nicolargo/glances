@@ -1,4 +1,4 @@
-glancesApp.directive("sortableTh", function() {
+glancesApp.directive("sortableTh", function () {
     return {
         restrict: 'A',
         scope: {
@@ -8,9 +8,9 @@ glancesApp.directive("sortableTh", function() {
 
             element.addClass('sortable');
 
-            scope.$watch(function() {
+            scope.$watch(function () {
                 return scope.sorter.column;
-            }, function(newValue, oldValue) {
+            }, function (newValue, oldValue) {
 
                 if (angular.isArray(newValue)) {
                     if (newValue.indexOf(attrs.column) !== -1) {
@@ -28,7 +28,7 @@ glancesApp.directive("sortableTh", function() {
 
             });
 
-            element.on('click', function() {
+            element.on('click', function () {
 
                 scope.sorter.column = attrs.column;
 

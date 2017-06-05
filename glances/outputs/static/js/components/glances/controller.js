@@ -5,16 +5,16 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
 
-    $scope.$on('data_refreshed', function(event, data) {
-      vm.hasGpu = data.stats.gpu.length > 0;
-      vm.dataLoaded = true;
+    $scope.$on('data_refreshed', function (event, data) {
+        vm.hasGpu = data.stats.gpu.length > 0;
+        vm.dataLoaded = true;
     });
 
     // A => Enable/disable AMPs
     hotkeys.add({
         combo: 'A',
         callback: function () {
-          ARGUMENTS.disable_amps = !ARGUMENTS.disable_amps;
+            ARGUMENTS.disable_amps = !ARGUMENTS.disable_amps;
         }
     });
 
@@ -22,7 +22,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'd',
         callback: function () {
-          ARGUMENTS.disable_diskio = !ARGUMENTS.disable_diskio;
+            ARGUMENTS.disable_diskio = !ARGUMENTS.disable_diskio;
         }
     });
 
@@ -30,7 +30,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'Q',
         callback: function () {
-          ARGUMENTS.enable_irq = !ARGUMENTS.enable_irq;
+            ARGUMENTS.enable_irq = !ARGUMENTS.enable_irq;
         }
     });
 
@@ -38,7 +38,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'f',
         callback: function () {
-          ARGUMENTS.disable_fs = !ARGUMENTS.disable_fs;
+            ARGUMENTS.disable_fs = !ARGUMENTS.disable_fs;
         }
     });
 
@@ -46,7 +46,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'n',
         callback: function () {
-          ARGUMENTS.disable_network = !ARGUMENTS.disable_network;
+            ARGUMENTS.disable_network = !ARGUMENTS.disable_network;
         }
     });
 
@@ -54,7 +54,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 's',
         callback: function () {
-          ARGUMENTS.disable_sensors = !ARGUMENTS.disable_sensors;
+            ARGUMENTS.disable_sensors = !ARGUMENTS.disable_sensors;
         }
     });
 
@@ -62,7 +62,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: '2',
         callback: function () {
-          ARGUMENTS.disable_left_sidebar = !ARGUMENTS.disable_left_sidebar;
+            ARGUMENTS.disable_left_sidebar = !ARGUMENTS.disable_left_sidebar;
         }
     });
 
@@ -70,7 +70,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'z',
         callback: function () {
-          ARGUMENTS.disable_process = !ARGUMENTS.disable_process;
+            ARGUMENTS.disable_process = !ARGUMENTS.disable_process;
         }
     });
 
@@ -78,7 +78,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: '/',
         callback: function () {
-          ARGUMENTS.process_short_name = !ARGUMENTS.process_short_name;
+            ARGUMENTS.process_short_name = !ARGUMENTS.process_short_name;
         }
     });
 
@@ -86,7 +86,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'D',
         callback: function () {
-          ARGUMENTS.disable_docker = !ARGUMENTS.disable_docker;
+            ARGUMENTS.disable_docker = !ARGUMENTS.disable_docker;
         }
     });
 
@@ -94,7 +94,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'b',
         callback: function () {
-          ARGUMENTS.byte = !ARGUMENTS.byte;
+            ARGUMENTS.byte = !ARGUMENTS.byte;
         }
     });
 
@@ -102,7 +102,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'B',
         callback: function () {
-          ARGUMENTS.diskio_iops = !ARGUMENTS.diskio_iops;
+            ARGUMENTS.diskio_iops = !ARGUMENTS.diskio_iops;
         }
     });
 
@@ -110,7 +110,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'l',
         callback: function () {
-          ARGUMENTS.disable_alert = !ARGUMENTS.disable_alert;
+            ARGUMENTS.disable_alert = !ARGUMENTS.disable_alert;
         }
     });
 
@@ -118,7 +118,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: '1',
         callback: function () {
-          ARGUMENTS.percpu = !ARGUMENTS.percpu;
+            ARGUMENTS.percpu = !ARGUMENTS.percpu;
         }
     });
 
@@ -126,7 +126,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'h',
         callback: function () {
-          ARGUMENTS.help_tag = !ARGUMENTS.help_tag;
+            ARGUMENTS.help_tag = !ARGUMENTS.help_tag;
         }
     });
 
@@ -134,7 +134,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'T',
         callback: function () {
-          ARGUMENTS.network_sum = !ARGUMENTS.network_sum;
+            ARGUMENTS.network_sum = !ARGUMENTS.network_sum;
         }
     });
 
@@ -142,7 +142,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'U',
         callback: function () {
-          ARGUMENTS.network_cumul = !ARGUMENTS.network_cumul;
+            ARGUMENTS.network_cumul = !ARGUMENTS.network_cumul;
         }
     });
 
@@ -150,7 +150,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'F',
         callback: function () {
-          ARGUMENTS.fs_free_space = !ARGUMENTS.fs_free_space;
+            ARGUMENTS.fs_free_space = !ARGUMENTS.fs_free_space;
         }
     });
 
@@ -158,7 +158,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: '3',
         callback: function () {
-          ARGUMENTS.disable_quicklook = !ARGUMENTS.disable_quicklook;
+            ARGUMENTS.disable_quicklook = !ARGUMENTS.disable_quicklook;
         }
     });
 
@@ -166,7 +166,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: '6',
         callback: function () {
-          ARGUMENTS.meangpu = !ARGUMENTS.meangpu;
+            ARGUMENTS.meangpu = !ARGUMENTS.meangpu;
         }
     });
 
@@ -174,19 +174,19 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'G',
         callback: function () {
-          ARGUMENTS.disable_gpu = !ARGUMENTS.disable_gpu;
+            ARGUMENTS.disable_gpu = !ARGUMENTS.disable_gpu;
         }
     });
 
     hotkeys.add({
         combo: '5',
         callback: function () {
-          ARGUMENTS.disable_quicklook = !ARGUMENTS.disable_quicklook;
-          ARGUMENTS.disable_cpu = !ARGUMENTS.disable_cpu;
-          ARGUMENTS.disable_mem = !ARGUMENTS.disable_mem;
-          ARGUMENTS.disable_memswap = !ARGUMENTS.disable_memswap;
-          ARGUMENTS.disable_load = !ARGUMENTS.disable_load;
-          ARGUMENTS.disable_gpu = !ARGUMENTS.disable_gpu;
+            ARGUMENTS.disable_quicklook = !ARGUMENTS.disable_quicklook;
+            ARGUMENTS.disable_cpu = !ARGUMENTS.disable_cpu;
+            ARGUMENTS.disable_mem = !ARGUMENTS.disable_mem;
+            ARGUMENTS.disable_memswap = !ARGUMENTS.disable_memswap;
+            ARGUMENTS.disable_load = !ARGUMENTS.disable_load;
+            ARGUMENTS.disable_gpu = !ARGUMENTS.disable_gpu;
         }
     });
 
@@ -194,7 +194,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'I',
         callback: function () {
-          ARGUMENTS.disable_ip = !ARGUMENTS.disable_ip;
+            ARGUMENTS.disable_ip = !ARGUMENTS.disable_ip;
         }
     });
 
@@ -202,7 +202,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'P',
         callback: function () {
-          ARGUMENTS.disable_ports = !ARGUMENTS.disable_ports;
+            ARGUMENTS.disable_ports = !ARGUMENTS.disable_ports;
         }
     });
 
@@ -210,7 +210,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     hotkeys.add({
         combo: 'W',
         callback: function () {
-          ARGUMENTS.disable_wifi = !ARGUMENTS.disable_wifi;
+            ARGUMENTS.disable_wifi = !ARGUMENTS.disable_wifi;
         }
     });
 }

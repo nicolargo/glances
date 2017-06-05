@@ -9,22 +9,22 @@ function GlancesPluginMemController($scope, GlancesStats) {
     vm.used = null;
     vm.free = null;
 
-    vm.$onInit = function() {
+    vm.$onInit = function () {
         loadData(GlancesStats.getData());
     };
 
-    $scope.$on('data_refreshed', function(event, data) {
+    $scope.$on('data_refreshed', function (event, data) {
         loadData(data);
     });
 
-    var loadData = function(data) {
-      var stats = data.stats['mem'];
-      _view = data.views['mem'];
+    var loadData = function (data) {
+        var stats = data.stats['mem'];
+        _view = data.views['mem'];
 
-      vm.percent = stats['percent'];
-      vm.total = stats['total'];
-      vm.used = stats['used'];
-      vm.free = stats['free'];
+        vm.percent = stats['percent'];
+        vm.total = stats['total'];
+        vm.used = stats['used'];
+        vm.free = stats['free'];
     }
 
     this.getDecoration = function (value) {
