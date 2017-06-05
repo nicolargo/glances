@@ -212,6 +212,10 @@ Examples of use:
                             help='define a client/server username')
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help='define a client/server password')
+        parser.add_argument('--username-default', default=self.username, dest='username_default',
+                            help='this option will be ignored if --username is specified')
+        parser.add_argument('--realm', default='glances', dest='realm',
+                            help='used by Glances in web server mode when authentication is enabled')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help='SNMP community')
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -312,7 +316,7 @@ Examples of use:
                     description='Enter the Glances server username: ')
         else:
             # Default user name is 'glances'
-            args.username = self.username
+            args.username = args.username_default
 
         if args.password_prompt:
             # Interactive or file password
