@@ -5,9 +5,14 @@ Glances Version 2
 Version 2.10.1
 ==============
 
+Enhancements and new features:
+
+    * [WIP] Refactoring of the WebUI
+
 Bugs corrected:
 
     * Installing GPU plugin crashes entire glances (issue #1102)
+    * Potential memory leak in Windows WebUI (issue #1056)
 
 Version 2.10
 ============
