@@ -21,6 +21,7 @@ function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper
           var cpuData = percpuStats[i];
 
           vm.cpus.push({
+              'number': cpuData.cpu_number,
               'total': cpuData.total,
               'user': cpuData.user,
               'system': cpuData.system,
