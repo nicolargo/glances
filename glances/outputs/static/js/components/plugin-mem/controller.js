@@ -27,7 +27,7 @@ function GlancesPluginMemController($scope, GlancesStats) {
         vm.free = stats['free'];
     }
 
-    this.getDecoration = function (value) {
+    vm.getDecoration = function (value) {
         if (_view[value] === undefined) {
             return;
         }

@@ -55,7 +55,7 @@ function GlancesPluginCpuController($scope, GlancesStats) {
         }
     }
 
-    this.getDecoration = function (value) {
+    vm.getDecoration = function (value) {
         if (_view[value] === undefined) {
             return;
         }
