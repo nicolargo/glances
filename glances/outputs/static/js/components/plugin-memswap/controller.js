@@ -11,7 +11,7 @@ function GlancesPluginMemswapController($scope) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['memswap'];
-      _view = data.view['memswap'];
+      _view = data.views['memswap'];
 
       vm.percent = stats['percent'];
       vm.total = stats['total'];

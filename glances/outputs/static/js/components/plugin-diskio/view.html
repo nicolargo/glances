@@ -1,4 +1,4 @@
-<div class="table-row" ng-show="vm.disks.length > 0">
+<div class="table-row" ng-if="vm.disks.length > 0">
     <div class="table-cell text-left title">DISK I/O</div>
     <div class="table-cell" ng-show="!vm.arguments.diskio_iops">R/s</div>
     <div class="table-cell" ng-show="!vm.arguments.diskio_iops">W/s</div>

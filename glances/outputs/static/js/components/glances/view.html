@@ -40,14 +40,14 @@
             <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && vm.arguments.percpu">
                 <glances-plugin-percpu></glances-plugin-percpu>
             </div>
-            <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && statsGpu.gpus.length > 0">
+            <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && vm.hasGpu">
                 <glances-plugin-gpu></glances-plugin-gpu>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.argumentsdisable_mem">
                 <glances-plugin-mem></glances-plugin-mem>
             </div>
             <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
-                 ng-if="!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && statsGpu.gpus.length > 0)">
+                 ng-if="!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)">
                 <glances-plugin-mem-more></glances-plugin-mem-more>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_memswap">
@@ -65,10 +65,10 @@
                     <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
                     <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
                     <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
-                    <glances-plugin-irq ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
-                    <glances-plugin-folders ng-if="!vm.arguments.disable_fs"></glances-plugin-folders>
-                    <glances-plugin-raid></glances-plugin-raid>
-                    <glances-plugin-sensors ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
+                    <glances-plugin-irq id="plugin-irq" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
+                    <glances-plugin-folders id="plugin-folders" ng-if="!vm.arguments.disable_folders"></glances-plugin-folders>
+                    <glances-plugin-raid id="plugin-raid" ng-if="!vm.arguments.raid"></glances-plugin-raid>
+                    <glances-plugin-sensors id="plugin-sensors" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
                 </div>
             </div>
             <div class="col-sm-18">

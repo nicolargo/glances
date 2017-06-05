@@ -9,7 +9,7 @@ function GlancesPluginFsController($scope, $filter, ARGUMENTS) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['fs'];
-      _view = data.view['fs'];
+      _view = data.views['fs'];
 
       vm.fileSystems = [];
       for (var i = 0; i < stats.length; i++) {

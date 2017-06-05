@@ -11,7 +11,7 @@ function GlancesPluginMemController($scope) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['mem'];
-      _view = data.view['mem'];
+      _view = data.views['mem'];
 
       vm.percent = stats['percent'];
       vm.total = stats['total'];

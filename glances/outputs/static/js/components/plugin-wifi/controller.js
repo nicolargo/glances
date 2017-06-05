@@ -8,7 +8,7 @@ function GlancesPluginWifiController($scope, $filter) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['wifi'];
-      _view = data.view['wifi'];
+      _view = data.views['wifi'];
 
       vm.hotspots = [];
       for (var i = 0; i < stats.length; i++) {
