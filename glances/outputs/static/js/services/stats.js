@@ -22,9 +22,7 @@ glancesApp.service('GlancesStats', function($http, $q, $rootScope, $timeout, Gla
                   'isWindows': results[0]['system']['os_name'] === 'Windows'
               };
 
-              $rootScope.title = _data.stats.system.hostname + ' - Glances';
               $rootScope.$broadcast('data_refreshed', _data);
-
               nextLoad();
           }, function() {
               $rootScope.$broadcast('is_disconnected');

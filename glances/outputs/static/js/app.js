@@ -11,5 +11,9 @@ var glancesApp = angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
 .run(function($rootScope, GlancesStats) {
       $rootScope.title = "Glances";
 
+      $rootScope.$on('data_refreshed', function(event, data) {
+          $rootScope.title = data.stats.system.hostname + ' - Glances';
+      });
+
       GlancesStats.init();
 });
