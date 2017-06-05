@@ -21,7 +21,7 @@ gulp.task('copy', function() {
   gulp.src('./images/*.png')
     .pipe(gulp.dest('./public/images'));
 
-  gulp.src('favicon.ico')
+  gulp.src('./images/favicon.ico')
     .pipe(gulp.dest('./public'));
 });
 
