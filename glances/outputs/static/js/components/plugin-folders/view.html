@@ -1,0 +1,8 @@
+<div class="table-row" ng-if="vm.folders.length > 0">
+    <div class="table-cell text-left title">FOLDERS</div>
+    <div class="table-cell">Size</div>
+</div>
+<div class="table-row" ng-repeat="folder in vm.folders">
+    <div class="table-cell text-left">{{ folder.path }}</div>
+    <div class="table-cell" ng-class="vm.getDecoration(folder)">{{ folder.size | bytes }}</div>
+</div>

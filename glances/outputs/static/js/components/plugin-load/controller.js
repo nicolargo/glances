@@ -11,7 +11,7 @@ function GlancesPluginLoadController($scope) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['load'];
-      _view = data.view['load'];
+      _view = data.views['load'];
 
       vm.cpucore = stats['cpucore'];
       vm.min1 = stats['min1'];

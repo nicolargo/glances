@@ -1,0 +1,42 @@
+'use strict';
+
+function GlancesPluginFoldersController($scope) {
+    var vm = this;
+    vm.folders = [];
+
+    $scope.$on('data_refreshed', function(event, data) {
+      var stats = data.stats['folders'];
+      vm.folders = [];
+
+      for (var i = 0; i < stats.length; i++) {
+          var folderData = stats[i];
+
+          var folder = {
+              'path': folderData['path'],
+              'size': folderData['size'],
+              'careful': folderData['careful'],
+              'warning': folderData['warning'],
+              'critical': folderData['critical']
+          };
+
+          vm.folders.push(folder);
+      }
+    });
+
+    vm.getDecoration = function(folder) {
+
+        if (!Number.isInteger(folder.size)) {
+            return;
+        }
+
+        if (folder.critical !== null && folder.size > (folder.critical * 1000000)) {
+            return 'critical';
+        } else if (folder.warning !== null && folder.size > (folder.warning * 1000000)) {
+            return 'warning';
+        } else if (folder.careful !== null && folder.size > (folder.careful * 1000000)) {
+            return 'careful';
+        }
+
+        return 'ok';
+    };
+}

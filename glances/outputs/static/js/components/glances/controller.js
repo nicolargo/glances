@@ -9,6 +9,7 @@ function GlancesController($scope, $rootScope, $timeout, GlancesStats, REFRESH_T
         GlancesStats.getData().then(function (data) {
             $rootScope.title = data.stats.system.hostname + ' - Glances';
             $scope.$broadcast('data_refreshed', data);
+            vm.hasGpu = data.stats.gpu.length > 0;
             vm.dataLoaded = true;
 
             nextLoad();

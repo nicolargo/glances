@@ -19,7 +19,7 @@ function GlancesPluginCpuController($scope) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['cpu'];
-      _view = data.view['cpu'];
+      _view = data.views['cpu'];
 
       vm.total = stats.total;
       vm.user = stats.user;

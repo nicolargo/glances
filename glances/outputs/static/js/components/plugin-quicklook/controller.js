@@ -15,7 +15,7 @@ function GlancesPluginQuicklookController($scope, ARGUMENTS) {
 
     $scope.$on('data_refreshed', function(event, data) {
       var stats = data.stats['quicklook'];
-      _view = data.view['quicklook'];
+      _view = data.views['quicklook'];
 
       vm.mem = stats.mem;
       vm.cpu = stats.cpu;

@@ -7,7 +7,7 @@ glancesApp.service('GlancesStats', function($http, $q, GlancesPluginHelper, CONF
         ]).then(function(results) {
             return {
                 'stats': results[0],
-                'view': results[1],
+                'views': results[1],
                 'isBsd': results[0]['system']['os_name'] === 'FreeBSD',
                 'isLinux': results[0]['system']['os_name'] === 'Linux',
                 'isMac': results[0]['system']['os_name'] === 'Darwin',
