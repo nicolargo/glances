@@ -1,0 +1,32 @@
+<section id="gpu" class="plugin">
+    <div class="gpu-name title">
+        {{ vm.name }}
+    </div>
+    <div class="table">
+        <div class="table-row" ng-if="arguments.meangpu || vm.gpus.length === 1">
+            <div class="table-cell text-left">proc:</div>
+            <div class="table-cell" ng-class="vm.getMeanDecoration('proc')" ng-if="vm.mean.proc">{{ vm.mean.proc |
+                number : 0 }}%
+            </div>
+            <div class="table-cell" ng-if="!vm.mean.proc">N/A</div>
+        </div>
+        <div class="table-row" ng-if="arguments.meangpu || vm.gpus.length === 1">
+            <div class="table-cell text-left">mem:</div>
+            <div class="table-cell" ng-class="vm.getMeanDecoration('mem')" ng-if="vm.mean.mem">{{ vm.mean.mem | number :
+                0 }}%
+            </div>
+            <div class="table-cell" ng-if="!vm.mean.mem">N/A</div>
+        </div>
+        <div class="table-row" ng-if="!arguments.meangpu && vm.gpus.length > 1" ng-repeat="gpu in vm.gpus">
+            <div class="table-cell text-left">
+                {{ gpu.gpu_id }}:
+                <span ng-class="vm.getDecoration(gpu.gpu_id, 'proc')"
+                      ng-if="gpu.proc">{{ gpu.proc | number : 0 }}%</span>
+                <span ng-if="!gpu.proc">N/A</span>
+                mem:
+                <span ng-class="vm.getDecoration(gpu.gpu_id, 'mem')" ng-if="gpu.mem">{{ gpu.mem | number : 0 }}%</span>
+                <span ng-if="!gpu.mem">N/A</span>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,15 @@
+<section id="alerts">
+    <span class="title" ng-if="!vm.hasAlerts()">No warning or critical alert detected</span>
+    <span class="title" ng-if="vm.hasAlerts()">Warning or critical alerts (lasts {{vm.count()}} entries)</span>
+</section>
+<section id="alert" class="plugin">
+    <div class="table">
+        <div class="table-row" ng-repeat="alert in vm.getAlerts()">
+            <div class="table-cell text-left">
+                {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span
+                    ng-hide="alert.ongoing">{{alert.level}} on</span> <span class="{{ alert.level | lowercase }}">{{alert.name}}</span>
+                ({{alert.max}})
+            </div>
+        </div>
+    </div>
+</section>

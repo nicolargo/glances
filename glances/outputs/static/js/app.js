@@ -1,31 +1,19 @@
-var glancesApp = angular.module('glancesApp', ['ngRoute'])
+var glancesApp = angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
 
-.config(function($routeProvider, $locationProvider) {
-    $routeProvider.when('/:refresh_time?', {
-        templateUrl : 'stats.html',
-        controller : 'statsController',
-        resolve: {
-            help: function(GlancesStats) {
-                return GlancesStats.getHelp();
-            },
-            config: function(GlancesStats) {
-                return GlancesStats.getConfig();
-            },
-            arguments: function(GlancesStats, $route) {
-                return GlancesStats.getArguments().then(function(arguments) {
-                    var refreshTimeRoute = parseInt($route.current.params.refresh_time);
-                    if (!isNaN(refreshTimeRoute) && refreshTimeRoute > 1) {
-                        arguments.time = refreshTimeRoute;
-                    }
+.value('CONFIG', {})
+.value('ARGUMENTS', {})
 
-                    return arguments;
-                });
-            }
-        }
+.config(function (hotkeysProvider) {
+    hotkeysProvider.useNgRoute = false;
+    hotkeysProvider.includeCheatSheet = false;
+})
+
+.run(function ($rootScope, GlancesStats) {
+    $rootScope.title = "Glances";
+
+    $rootScope.$on('data_refreshed', function (event, data) {
+        $rootScope.title = data.stats.system.hostname + ' - Glances';
     });
 
-    $locationProvider.html5Mode(true);
-})
-.run(function($rootScope) {
-      $rootScope.title = "Glances";
+    GlancesStats.init();
 });

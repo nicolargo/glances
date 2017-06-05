@@ -31,11 +31,22 @@ static
 |
 |--- css
 |
-|--- html
-|
 |--- images
 |
 |--- js
 |
 |--- public # path where builds are put
+|
+|--- templates (bottle)
 ```
+
+## Data
+
+Each plugin receives the data in the following format:
+
+* stats
+* views
+* isBsd
+* isLinux
+* isMac
+* isWindows

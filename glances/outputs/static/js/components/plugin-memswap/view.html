@@ -1,0 +1,22 @@
+<section id="memswap" class="plugin">
+    <div class="table">
+        <div class="table-row">
+            <div class="table-cell text-left title">SWAP</div>
+            <div class="table-cell">{{ vm.percent }}%</div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">total:</div>
+            <div class="table-cell">{{ vm.total | bytes }}</div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">used:</div>
+            <div class="table-cell" ng-class="vm.getDecoration('used')">
+                {{ vm.used | bytes }}
+            </div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">free:</div>
+            <div class="table-cell">{{ vm.free | bytes }}</div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,40 @@
+<div class="table-row">
+    <div class="table-cell text-left title">NETWORK</div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && !vm.arguments.network_sum">Rx/s</div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && !vm.arguments.network_sum">Tx/s</div>
+
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && vm.arguments.network_sum"></div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && vm.arguments.network_sum">Rx+Tx/s</div>
+
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && !vm.arguments.network_sum">Rx</div>
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && !vm.arguments.network_sum">Tx</div>
+
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && vm.arguments.network_sum"></div>
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && vm.arguments.network_sum">Rx+Tx</div>
+</div>
+<div class="table-row" ng-repeat="network in vm.networks track by network.interfaceName">
+    <div class="table-cell text-left">{{ network.interfaceName | min_size }}</div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && !vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}
+    </div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && !vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.tx / network.time_since_update | bytes) : (network.tx / network.time_since_update | bits) }}
+    </div>
+
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && vm.arguments.network_sum"></div>
+    <div class="table-cell" ng-show="!vm.arguments.network_cumul && vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.cx / network.time_since_update | bytes) : (network.cx / network.time_since_update | bits) }}
+    </div>
+
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && !vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.cumulativeRx | bytes) : (network.cumulativeRx | bits) }}
+    </div>
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && !vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.cumulativeTx | bytes) : (network.cumulativeTx | bits) }}
+    </div>
+
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && vm.arguments.network_sum"></div>
+    <div class="table-cell" ng-show="vm.arguments.network_cumul && vm.arguments.network_sum">{{ vm.arguments.byte ?
+        (network.cumulativeCx | bytes) : (network.cumulativeCx | bits) }}
+    </div>
+</div>

@@ -21,7 +21,7 @@ gulp.task('copy', function() {
   gulp.src('./images/*.png')
     .pipe(gulp.dest('./public/images'));
 
-  gulp.src('favicon.ico')
+  gulp.src('./images/favicon.ico')
     .pipe(gulp.dest('./public'));
 });
 
@@ -41,8 +41,8 @@ gulp.task('build-js', function() {
 });
 
 gulp.task('template', function () {
-  return gulp.src('./html/plugins/*.html')
-    .pipe(templateCache('templates.js', {'root': 'plugins/', 'module': 'glancesApp'}))
+  return gulp.src('./js/components/**/*.html')
+    .pipe(templateCache('templates.js', {'root': 'components/', 'module': 'glancesApp'}))
     .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest('./public/js'));
 });

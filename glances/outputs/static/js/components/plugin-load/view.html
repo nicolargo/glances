@@ -1,0 +1,26 @@
+<section id="load" class="plugin" ng-if="vm.cpucore != undefined">
+    <div class="table">
+        <div class="table-row">
+            <div class="table-cell text-left title">LOAD</div>
+            <div class="table-cell">{{ vm.cpucore }}-core</div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">1 min:</div>
+            <div class="table-cell">
+                {{ vm.min1 | number : 2}}
+            </div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">5 min:</div>
+            <div class="table-cell" ng-class="vm.getDecoration('min5')">
+                {{ vm.min5 | number : 2}}
+            </div>
+        </div>
+        <div class="table-row">
+            <div class="table-cell text-left">15 min:</div>
+            <div class="table-cell" ng-class="vm.getDecoration('min15')">
+                {{ vm.min15 | number : 2}}
+            </div>
+        </div>
+    </div>
+</section>
