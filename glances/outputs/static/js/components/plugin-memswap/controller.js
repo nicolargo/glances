@@ -25,9 +25,9 @@ function GlancesPluginMemswapController($scope, GlancesStats) {
         vm.total = stats['total'];
         vm.used = stats['used'];
         vm.free = stats['free'];
-    }
+    };
 
-    this.getDecoration = function (value) {
+    vm.getDecoration = function (value) {
         if (_view[value] === undefined) {
             return;
         }

@@ -14,15 +14,13 @@ function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS)
     });
 
     var loadData = function (data) {
-        var stats = data.stats['diskio'];
+        var stats = data.stats['diskio'] || [];
         stats = $filter('orderBy')(stats, 'disk_name');
 
-        vm.disks = [];
-        for (var i = 0; i < stats.length; i++) {
-            var diskioData = stats[i];
+        vm.disks = stats.map(function(diskioData) {
             var timeSinceUpdate = diskioData['time_since_update'];
 
-            vm.disks.push({
+            return {
                 'name': diskioData['disk_name'],
                 'bitrate': {
                     'txps': $filter('bytes')(diskioData['read_bytes'] / timeSinceUpdate),
@@ -33,7 +31,7 @@ function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS)
                     'rxps': $filter('bytes')(diskioData['write_count'] / timeSinceUpdate)
                 },
                 'alias': diskioData['alias'] !== undefined ? diskioData['alias'] : null
-            });
-        }
+            };
+        });
     }
 }

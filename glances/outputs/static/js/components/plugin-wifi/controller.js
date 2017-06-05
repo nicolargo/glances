@@ -17,6 +17,7 @@ function GlancesPluginWifiController($scope, $filter, GlancesStats) {
     var loadData = function (data) {
         var stats = data.stats['wifi'];
         _view = data.views['wifi'];
+        //stats = [{"ssid": "Freebox-40A258", "encrypted": true, "signal": -45, "key": "ssid", "encryption_type": "wpa2", "quality": "65/70"}];
 
         vm.hotspots = [];
         for (var i = 0; i < stats.length; i++) {
@@ -35,10 +36,10 @@ function GlancesPluginWifiController($scope, $filter, GlancesStats) {
         }
 
         vm.hotspots = $filter('orderBy')(vm.hotspots, 'ssid');
-    }
+    };
 
     vm.getDecoration = function (hotpost, field) {
-        if (_view[hotpost.ssid][field] == undefined) {
+        if (_view[hotpost.ssid][field] === undefined) {
             return;
         }
 

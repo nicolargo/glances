@@ -15,13 +15,13 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
     var loadData = function (data) {
         var processes = data.stats['amps'];
 
-        this.processes = [];
+        vm.processes = [];
         angular.forEach(processes, function (process) {
             if (process.result !== null) {
-                this.processes.push(process);
+                vm.processes.push(process);
             }
         }, this);
-    }
+    };
 
     vm.getDescriptionDecoration = function (process) {
         var count = process.count;
@@ -30,13 +30,13 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
         var decoration = "ok";
 
         if (count > 0) {
-            if ((countMin == null || count >= countMin) && (countMax == null || count <= countMax)) {
+            if ((countMin === null || count >= countMin) && (countMax === null || count <= countMax)) {
                 decoration = 'ok';
             } else {
                 decoration = 'careful';
             }
         } else {
-            decoration = countMin == null ? 'ok' : 'critical';
+            decoration = countMin === null ? 'ok' : 'critical';
         }
 
         return decoration;
