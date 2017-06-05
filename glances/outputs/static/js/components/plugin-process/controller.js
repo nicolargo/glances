@@ -23,8 +23,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'a',
         callback: function () {
-          vm.sorter.column = "cpu_percent";
-          vm.sorter.auto = true;
+            vm.sorter.column = "cpu_percent";
+            vm.sorter.auto = true;
         }
     });
 
@@ -32,8 +32,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'c',
         callback: function () {
-          vm.sorter.column = "cpu_percent";
-          vm.sorter.auto = false;
+            vm.sorter.column = "cpu_percent";
+            vm.sorter.auto = false;
         }
     });
 
@@ -41,8 +41,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'm',
         callback: function () {
-          vm.sorter.column = "memory_percent";
-          vm.sorter.auto = false;
+            vm.sorter.column = "memory_percent";
+            vm.sorter.auto = false;
         }
     });
 
@@ -50,8 +50,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'u',
         callback: function () {
-          vm.sorter.column = "username";
-          vm.sorter.auto = false;
+            vm.sorter.column = "username";
+            vm.sorter.auto = false;
         }
     });
 
@@ -59,8 +59,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'p',
         callback: function () {
-          vm.sorter.column = "name";
-          vm.sorter.auto = false;
+            vm.sorter.column = "name";
+            vm.sorter.auto = false;
         }
     });
 
@@ -68,8 +68,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 'i',
         callback: function () {
-          vm.sorter.column = ['io_read', 'io_write'];
-          vm.sorter.auto = false;
+            vm.sorter.column = ['io_read', 'io_write'];
+            vm.sorter.auto = false;
         }
     });
 
@@ -77,8 +77,8 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     hotkeys.add({
         combo: 't',
         callback: function () {
-          vm.sorter.column = "timemillis";
-          vm.sorter.auto = false;
+            vm.sorter.column = "timemillis";
+            vm.sorter.auto = false;
         }
     });
 }

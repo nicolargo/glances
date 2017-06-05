@@ -1,14 +1,14 @@
-glancesApp.service('favicoService', function() {
+glancesApp.service('favicoService', function () {
 
-  var favico = new Favico({
-    animation : 'none'
-  });
+    var favico = new Favico({
+        animation: 'none'
+    });
 
-  this.badge = function(nb) {
-    favico.badge(nb);
-  };
+    this.badge = function (nb) {
+        favico.badge(nb);
+    };
 
-  this.reset = function() {
-    favico.reset();
-  };
+    this.reset = function () {
+        favico.reset();
+    };
 });

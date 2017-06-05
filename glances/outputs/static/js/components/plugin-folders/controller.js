@@ -4,34 +4,34 @@ function GlancesPluginFoldersController($scope, GlancesStats) {
     var vm = this;
     vm.folders = [];
 
-    vm.$onInit = function() {
+    vm.$onInit = function () {
         loadData(GlancesStats.getData());
     };
 
-    $scope.$on('data_refreshed', function(event, data) {
+    $scope.$on('data_refreshed', function (event, data) {
         loadData(data);
     });
 
-    var loadData = function(data) {
-      var stats = data.stats['folders'];
-      vm.folders = [];
+    var loadData = function (data) {
+        var stats = data.stats['folders'];
+        vm.folders = [];
 
-      for (var i = 0; i < stats.length; i++) {
-          var folderData = stats[i];
+        for (var i = 0; i < stats.length; i++) {
+            var folderData = stats[i];
 
-          var folder = {
-              'path': folderData['path'],
-              'size': folderData['size'],
-              'careful': folderData['careful'],
-              'warning': folderData['warning'],
-              'critical': folderData['critical']
-          };
+            var folder = {
+                'path': folderData['path'],
+                'size': folderData['size'],
+                'careful': folderData['careful'],
+                'warning': folderData['warning'],
+                'critical': folderData['critical']
+            };
 
-          vm.folders.push(folder);
-      }
+            vm.folders.push(folder);
+        }
     }
 
-    vm.getDecoration = function(folder) {
+    vm.getDecoration = function (folder) {
 
         if (!Number.isInteger(folder.size)) {
             return;

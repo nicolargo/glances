@@ -13,32 +13,32 @@ function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
     vm.swap = null;
     vm.percpus = [];
 
-    vm.$onInit = function() {
+    vm.$onInit = function () {
         loadData(GlancesStats.getData());
     };
 
-    $scope.$on('data_refreshed', function(event, data) {
+    $scope.$on('data_refreshed', function (event, data) {
         loadData(data);
     });
 
-    var loadData = function(data) {
-      var stats = data.stats['quicklook'];
-      _view = data.views['quicklook'];
+    var loadData = function (data) {
+        var stats = data.stats['quicklook'];
+        _view = data.views['quicklook'];
 
-      vm.mem = stats.mem;
-      vm.cpu = stats.cpu;
-      vm.cpu_name = stats.cpu_name;
-      vm.cpu_hz_current = stats.cpu_hz_current;
-      vm.cpu_hz = stats.cpu_hz;
-      vm.swap = stats.swap;
-      vm.percpus = [];
+        vm.mem = stats.mem;
+        vm.cpu = stats.cpu;
+        vm.cpu_name = stats.cpu_name;
+        vm.cpu_hz_current = stats.cpu_hz_current;
+        vm.cpu_hz = stats.cpu_hz;
+        vm.swap = stats.swap;
+        vm.percpus = [];
 
-      angular.forEach(stats.percpu, function(cpu) {
-          vm.percpus.push({
-              'number': cpu.cpu_number,
-              'total': cpu.total
-          });
-      }, this);
+        angular.forEach(stats.percpu, function (cpu) {
+            vm.percpus.push({
+                'number': cpu.cpu_number,
+                'total': cpu.total
+            });
+        }, this);
     }
 
     this.getDecoration = function (value) {

@@ -5,7 +5,7 @@ glancesApp.service('GlancesPluginHelper', function () {
         'limitSuffix': ['critical', 'careful', 'warning']
     };
 
-    plugin.setLimits = function(limits){
+    plugin.setLimits = function (limits) {
         this.limits = limits;
     };
 
