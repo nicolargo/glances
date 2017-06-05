@@ -1,14 +1,22 @@
 'use strict';
 
-function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
+function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
 
     vm.processes = [];
     vm.ioReadWritePresent = false;
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
-      var processlistStats = data.stats['processlist'];
+        loadData(data);
+    });
+
+    var loadData = function(data) {
+      var processlistStats = data.stats['processlist'] || [];
 
       vm.processes = [];
       vm.ioReadWritePresent = false;
@@ -52,7 +60,7 @@ function GlancesPluginProcesslistController($scope, GlancesPluginHelper, $filter
 
           vm.processes.push(process);
       }
-    });
+    }
 
     vm.getCpuPercentAlert = function(process) {
         return GlancesPluginHelper.getAlert('processlist', 'processlist_cpu_', process.cpu_percent);

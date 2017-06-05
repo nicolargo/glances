@@ -6,7 +6,7 @@
 
     <glances-help ng-if="vm.arguments.help_tag"></glances-help>
 
-    <div ng-show="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
+    <div ng-if="vm.dataLoaded && !vm.arguments.help_tag" class="container-fluid">
         <div class="top-plugin">
             <div class="row">
                 <div class="col-sm-24">

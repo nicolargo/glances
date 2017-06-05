@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginSystemController($scope) {
+function GlancesPluginSystemController($scope, GlancesStats) {
     var vm = this;
 
     vm.hostname = null;
@@ -11,7 +11,19 @@ function GlancesPluginSystemController($scope) {
         'version': null
     };
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    $scope.$on('is_disconnected', function() {
+      vm.isDisconnected = true;
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['system'];
 
       vm.hostname = stats['hostname'];
@@ -20,9 +32,5 @@ function GlancesPluginSystemController($scope) {
       vm.os.version = stats['os_version'];
       vm.humanReadableName = stats['hr_name'];
       vm.isDisconnected = false;
-    });
-
-    $scope.$on('is_disconnected', function() {
-      vm.isDisconnected = true;
-    });
+    }
 }

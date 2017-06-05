@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginMemController($scope) {
+function GlancesPluginMemController($scope, GlancesStats) {
     var vm = this;
     var _view = {};
 
@@ -9,7 +9,15 @@ function GlancesPluginMemController($scope) {
     vm.used = null;
     vm.free = null;
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['mem'];
       _view = data.views['mem'];
 
@@ -17,7 +25,7 @@ function GlancesPluginMemController($scope) {
       vm.total = stats['total'];
       vm.used = stats['used'];
       vm.free = stats['free'];
-    });
+    }
 
     this.getDecoration = function (value) {
         if (_view[value] === undefined) {

@@ -8,6 +8,8 @@ var glancesApp = angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
   hotkeysProvider.includeCheatSheet = false;
 })
 
-.run(function($rootScope) {
+.run(function($rootScope, GlancesStats) {
       $rootScope.title = "Glances";
+
+      GlancesStats.init();
 });

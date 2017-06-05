@@ -1,10 +1,18 @@
 'use strict';
 
-function GlancesPluginPercpuController($scope, GlancesPluginHelper) {
+function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper) {
     var vm = this;
     vm.cpus = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var percpuStats = data.stats['percpu'];
 
       vm.cpus = [];
@@ -21,7 +29,7 @@ function GlancesPluginPercpuController($scope, GlancesPluginHelper) {
               'steal': cpuData.steal
           });
       }
-    });
+    }
 
     vm.getUserAlert = function(cpu) {
         return GlancesPluginHelper.getAlert('percpu', 'percpu_user_', cpu.user)

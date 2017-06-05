@@ -1,35 +1,14 @@
 'use strict';
 
-function GlancesController($scope, $rootScope, $timeout, GlancesStats, REFRESH_TIME, hotkeys, ARGUMENTS) {
+function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     var vm = this;
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
 
-    vm.refreshData = function () {
-        GlancesStats.getData().then(function (data) {
-            $rootScope.title = data.stats.system.hostname + ' - Glances';
-            $scope.$broadcast('data_refreshed', data);
-            vm.hasGpu = data.stats.gpu.length > 0;
-            vm.dataLoaded = true;
-
-            nextLoad();
-        }, function() {
-            $scope.$broadcast('is_disconnected');
-            nextLoad();
-        });
-    };
-
-    var loadPromise;
-    var cancelNextLoad = function() {
-      $timeout.cancel(loadPromise);
-    };
-
-    var nextLoad = function() {
-      cancelNextLoad();
-      loadPromise = $timeout(vm.refreshData, REFRESH_TIME * 1000); // in milliseconds
-    };
-
-    vm.refreshData();
+    $scope.$on('data_refreshed', function(event, data) {
+      vm.hasGpu = data.stats.gpu.length > 0;
+      vm.dataLoaded = true;
+    });
 
     // A => Enable/disable AMPs
     hotkeys.add({

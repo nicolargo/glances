@@ -1,12 +1,19 @@
 'use strict';
 
-function GlancesPluginNetworkController($scope, $filter, ARGUMENTS) {
+function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
-
     vm.networks = [];
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var networkStats = data.stats['network'];
 
       vm.networks = [];
@@ -28,5 +35,5 @@ function GlancesPluginNetworkController($scope, $filter, ARGUMENTS) {
       }
 
       vm.networks = $filter('orderBy')(vm.networks, 'interfaceName');
-    });
+    }
 }

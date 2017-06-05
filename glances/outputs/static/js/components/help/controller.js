@@ -1,9 +1,9 @@
 'use strict';
 
-function GlancesHelpController(GlancesStats) {
+function GlancesHelpController($http) {
     var vm = this;
 
-    GlancesStats.getHelp().then(function(help) {
-        vm.help = help;
+    $http.get('api/2/help').then(function (response) {
+        vm.help = response.data;
     });
 }

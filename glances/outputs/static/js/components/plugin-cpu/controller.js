@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginCpuController($scope) {
+function GlancesPluginCpuController($scope, GlancesStats) {
     var vm = this;
     var _view = {};
 
@@ -17,7 +17,15 @@ function GlancesPluginCpuController($scope) {
     vm.soft_interrupts = null;
     vm.syscalls = null;
 
+    vm.$onInit = function() {
+        loadData(GlancesStats.getData());
+    };
+
     $scope.$on('data_refreshed', function(event, data) {
+        loadData(data);
+    });
+
+    var loadData = function(data) {
       var stats = data.stats['cpu'];
       _view = data.views['cpu'];
 
@@ -45,7 +53,7 @@ function GlancesPluginCpuController($scope) {
       if (stats.syscalls) {
           vm.syscalls = Math.floor(stats.syscalls / stats.time_since_update);
       }
-    });
+    }
 
     this.getDecoration = function (value) {
         if (_view[value] === undefined) {
