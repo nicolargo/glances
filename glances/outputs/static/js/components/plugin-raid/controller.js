@@ -40,11 +40,11 @@ function GlancesPluginRaidController($scope, GlancesStats) {
         });
 
         vm.disks = disks;
-    }
+    };
 
     vm.hasDisks = function () {
-        return this.disks.length > 0;
-    }
+        return vm.disks.length > 0;
+    };
 
     vm.getAlert = function (disk) {
         if (disk.inactive) {
@@ -56,5 +56,5 @@ function GlancesPluginRaidController($scope, GlancesStats) {
         }
 
         return 'ok'
-    }
+    };
 }

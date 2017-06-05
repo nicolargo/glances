@@ -15,16 +15,14 @@ function GlancesPluginDockerController($scope, GlancesStats) {
 
     var loadData = function (data) {
         var stats = data.stats['docker'];
-        this.containers = [];
+        vm.containers = [];
 
         if (_.isEmpty(stats)) {
             return;
         }
 
-        for (var i = 0; i < stats['containers'].length; i++) {
-            var containerData = stats['containers'][i];
-
-            var container = {
+        vm.containers = stats['containers'].map(function(containerData) {
+            return {
                 'id': containerData.Id,
                 'name': containerData.Names[0].split('/').splice(-1)[0],
                 'status': containerData.Status,
@@ -39,9 +37,7 @@ function GlancesPluginDockerController($scope, GlancesStats) {
                 'command': containerData.Command,
                 'image': containerData.Image
             };
-
-            vm.containers.push(container);
-        }
+        });
 
         vm.version = stats['version']['Version'];
     }

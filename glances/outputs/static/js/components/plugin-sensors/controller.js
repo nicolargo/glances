@@ -20,7 +20,7 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
         });
 
         vm.sensors = data;
-    }
+    };
 
     vm.getAlert = function (sensor) {
         var current = sensor.type == 'battery' ? 100 - sensor.value : sensor.value;

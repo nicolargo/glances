@@ -39,9 +39,9 @@ function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
                 'total': cpu.total
             });
         }, this);
-    }
+    };
 
-    this.getDecoration = function (value) {
+    vm.getDecoration = function (value) {
         if (_view[value] === undefined) {
             return;
         }

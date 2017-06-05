@@ -1,4 +1,4 @@
-<section id="containers" class="plugin" ng-if="vm.containers.length">
+<section id="containers-plugin" class="plugin" ng-if="vm.containers.length">
     <span class="title">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})
 
     <div class="table">
@@ -13,7 +13,7 @@
             <div class="table-cell">TX/s</div>
             <div class="table-cell text-left">Command</div>
         </div>
-        <div class="table-row" ng-repeat="container in vm.containers">
+        <div class="table-row" ng-repeat="container in vm.containers track by container.id">
             <div class="table-cell text-left">{{ container.name }}</div>
             <div class="table-cell" ng-class="container.status == 'Paused' ? 'careful' : 'ok'">{{ container.status }}
             </div>

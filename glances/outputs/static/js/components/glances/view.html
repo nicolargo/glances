@@ -60,22 +60,15 @@
         <div class="row">
             <div class="col-sm-6 sidebar" ng-if="!vm.arguments.disable_left_sidebar">
                 <div class="table">
-                    <glances-plugin-network id="plugin-network" class="plugin table-row-group"
-                                            ng-if="!vm.arguments.disable_network"></glances-plugin-network>
-                    <glances-plugin-wifi id="plugin-wifi" class="plugin table-row-group"
-                                         ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
-                    <glances-plugin-ports id="plugin-ports" class="plugin table-row-group"
-                                          ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
-                    <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group"
-                                           ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
-                    <glances-plugin-fs id="plugin-fs" class="plugin table-row-group"
-                                       ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
+                    <glances-plugin-network id="plugin-network" class="plugin table-row-group" ng-if="!vm.arguments.disable_network"></glances-plugin-network>
+                    <glances-plugin-wifi id="plugin-wifi" class="plugin table-row-group" ng-if="!vm.arguments.disable_wifi"></glances-plugin-wifi>
+                    <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
+                    <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
+                    <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
                     <glances-plugin-irq id="plugin-irq" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
-                    <glances-plugin-folders id="plugin-folders"
-                                            ng-if="!vm.arguments.disable_folders"></glances-plugin-folders>
+                    <glances-plugin-folders id="plugin-folders" ng-if="!vm.arguments.disable_folders"></glances-plugin-folders>
                     <glances-plugin-raid id="plugin-raid" ng-if="!vm.arguments.raid"></glances-plugin-raid>
-                    <glances-plugin-sensors id="plugin-sensors"
-                                            ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
+                    <glances-plugin-sensors id="plugin-sensors" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
                 </div>
             </div>
             <div class="col-sm-18">
