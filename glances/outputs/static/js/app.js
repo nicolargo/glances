@@ -1,4 +1,4 @@
-var glancesApp = angular.module('glancesApp', ['ngRoute', 'glances.config', 'cfp.hotkeys'])
+var glancesApp = angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
 
 .value('CONFIG', {})
 .value('ARGUMENTS', {})
