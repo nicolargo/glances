@@ -56,7 +56,7 @@ class Export(GlancesExport):
         self.client = self.init()
 
     def init(self):
-        """Init the connection to the CouchDB server."""
+        """Init the connection to the ZeroMQ server."""
         if not self.export_enable:
             return None
 
@@ -96,8 +96,8 @@ class Export(GlancesExport):
         # - First frame containing the following prefix (STRING)
         # - Second frame with the Glances plugin name (STRING)
         # - Third frame with the Glances plugin stats (JSON)
-        message = [b(self.prefix),
-                   b(name),
+        message = [b(self.prefix).decode('utf-8'),
+                   b(name).decode('utf-8'),
                    asbytes(json.dumps(data))]
 
         # Write data to the ZeroMQ bus
