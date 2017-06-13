@@ -85,7 +85,9 @@ if PY3:
         return iter(d.values())
 
     def u(s):
-        return s
+        if isinstance(s, text_type):
+            return s
+        return s.decode('utf-8', 'replace')
 
     def b(s):
         if isinstance(s, binary_type):
@@ -143,10 +145,14 @@ else:
         return d.itervalues()
 
     def u(s):
+        if isinstance(s, text_type):
+            return s
         return s.decode('utf-8')
 
     def b(s):
-        return s
+        if isinstance(s, binary_type):
+            return s
+        return s.encode('utf-8', 'replace')
 
     def nativestr(s):
         if isinstance(s, binary_type):
