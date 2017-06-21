@@ -19,6 +19,7 @@
 
 """GPU plugin (limited to NVIDIA chipsets)"""
 
+from glances.compat import nativestr
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -252,7 +253,7 @@ def get_device_handles():
 def get_device_name(device_handle):
     """Get GPU device name"""
     try:
-        return pynvml.nvmlDeviceGetName(device_handle)
+        return nativestr(pynvml.nvmlDeviceGetName(device_handle))
     except pynvml.NVMlError:
         return "NVIDIA"
 
