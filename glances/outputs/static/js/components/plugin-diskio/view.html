@@ -7,7 +7,7 @@
     <div class="table-cell" ng-show="vm.arguments.diskio_iops">IOW/s</div>
 </div>
 <div class="table-row" ng-repeat="disk in vm.disks">
-    <div class="table-cell text-left">{{(disk.alias ? disk.alias : disk.name) | min_size}}</div>
+    <div class="table-cell text-left">{{(disk.alias ? disk.alias : disk.name) | min_size:9}}</div>
     <div class="table-cell" ng-show="!vm.arguments.diskio_iops">{{disk.bitrate.txps }}</div>
     <div class="table-cell" ng-show="!vm.arguments.diskio_iops">{{disk.bitrate.rxps }}</div>
 
