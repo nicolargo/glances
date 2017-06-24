@@ -22,7 +22,7 @@ parts:
     source: https://github.com/nicolargo/glances.git
   psutil:
     plugin: python
-    source: https://github.com/markokr/spongeshaker.git
+    source: https://github.com/giampaolo/psutil.git
     build-packages: [gcc, python-dev, python-pip]
   bottle:
     plugin: python
