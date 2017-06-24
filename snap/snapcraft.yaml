@@ -1,0 +1,29 @@
+name: glances
+version: '2.10'
+summary: Glances an Eye on your system. A top/htop alternative.
+description: |
+  Glances is a cross-platform monitoring tool which aims to present
+  a maximum of information in a minimum of space through a curses or
+  Web based interface. It can adapt dynamically the displayed information
+  depending on the user interface size.
+
+grade: stable
+confinement: strict
+
+apps:
+  glances:
+    command: bin/glances
+    plugs:
+      - network
+
+parts:
+  glances:
+    plugin: python
+    source: https://github.com/nicolargo/glances.git
+  psutil:
+    plugin: python
+    source: https://github.com/markokr/spongeshaker.git
+    build-packages: [gcc, python-dev, python-pip]
+  bottle:
+    plugin: python
+    source: https://github.com/bottlepy/bottle.git
