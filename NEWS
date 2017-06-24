@@ -16,6 +16,10 @@ Bugs corrected:
     * glances_network `OSError: [Errno 19] No such device` (issue #1106)
     * GPU plugin. <class 'TypeError'>: ... not JSON serializable"> (issue #1112)
 
+Installation:
+
+    * Create a Snap of Glances (issue #1101)
+
 Version 2.10
 ============
 
