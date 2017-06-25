@@ -20,10 +20,9 @@ parts:
   glances:
     plugin: python
     source: https://github.com/nicolargo/glances.git
-  psutil:
-    plugin: python
-    source: https://github.com/giampaolo/psutil.git
-    build-packages: [gcc, python-dev, python-pip]
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
+  docker:
+    plugin: python
+    source: https://github.com/docker/docker-py.git
