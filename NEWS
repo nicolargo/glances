@@ -15,6 +15,7 @@ Bugs corrected:
     * Potential memory leak in Windows WebUI (issue #1056)
     * glances_network `OSError: [Errno 19] No such device` (issue #1106)
     * GPU plugin. <class 'TypeError'>: ... not JSON serializable"> (issue #1112)
+    * PermissionError on macOS (issue #1120)
 
 Installation:
 
