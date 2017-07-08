@@ -240,8 +240,9 @@ class GlancesProcesses(object):
             procstat.update(proc.as_dict(
                 attrs=['name', 'cpu_times', 'status', 'ppid'],
                 ad_value=''))
-        except psutil.NoSuchProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             # Try/catch for issue #432 (process no longer exist)
+            # Try/catch for issue #1120 (only see on Macos)
             return None
         else:
             procstat['status'] = str(procstat['status'])[:1].upper()
@@ -250,7 +251,7 @@ class GlancesProcesses(object):
             procstat.update(proc.as_dict(
                 attrs=['username', 'cpu_percent', 'memory_percent'],
                 ad_value=''))
-        except psutil.NoSuchProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             # Try/catch for issue #432 (process no longer exist)
             return None
 
