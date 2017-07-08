@@ -26,10 +26,10 @@ import threading
 from glances.compat import Fault, ProtocolError, ServerProxy
 from glances.autodiscover import GlancesAutoDiscoverServer
 from glances.client import GlancesClient, GlancesClientTransport
-from glances.logger import logger, LOG_FILENAME
 from glances.password_list import GlancesPasswordList as GlancesPassword
 from glances.static_list import GlancesStaticServer
 from glances.outputs.glances_curses_browser import GlancesCursesBrowser
+from glances.logger import logger, LOG_FILENAME
 
 
 class GlancesClientBrowser(object):
@@ -53,7 +53,8 @@ class GlancesClientBrowser(object):
             self.autodiscover_server = None
 
         # Init screen
-        self.screen = GlancesCursesBrowser(args=self.args)
+        if not self.args.webserver:
+            self.screen = GlancesCursesBrowser(args=self.args)
 
     def load(self):
         """Load server and password list from the confiuration file."""
@@ -213,6 +214,13 @@ class GlancesClientBrowser(object):
         # Return to the browser (no server selected)
         self.screen.active_server = None
 
+    def update_servers_list(self):
+        """Update the server list"""
+        logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
+        for v in self.get_servers_list():
+            thread = threading.Thread(target=self.__update_stats, args=[v])
+            thread.start()
+
     def __serve_forever(self):
         """Main client loop."""
         # No need to update the server list
@@ -221,10 +229,8 @@ class GlancesClientBrowser(object):
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
 
         while True:
-            logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
-            for v in self.get_servers_list():
-                thread = threading.Thread(target=self.__update_stats, args=[v])
-                thread.start()
+            # Update the stats
+            self.update_servers_list()
 
             # Update the screen (list or Glances client)
             if self.screen.active_server is None:

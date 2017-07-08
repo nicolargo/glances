@@ -22,6 +22,7 @@
 from glances.globals import WINDOWS
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
+from glances.client_browser import GlancesClientBrowser
 from glances.outputs.glances_bottle import GlancesBottle
 
 
@@ -37,6 +38,12 @@ class GlancesWebServer(object):
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
+        # Init the client browser list
+        if args.browser:
+            self.browser_list = GlancesClientBrowser(config=config, args=args)
+        else:
+            self.browser_list = None
+
         # Initial system informations update
         self.stats.update()
 
@@ -45,7 +52,7 @@ class GlancesWebServer(object):
 
     def serve_forever(self):
         """Main loop for the Web server."""
-        self.web.start(self.stats)
+        self.web.start(self.stats, browser_list=self.browser_list)
 
     def end(self):
         """End of the Web server."""

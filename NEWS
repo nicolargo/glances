@@ -7,7 +7,8 @@ Version NEXT RELEASE
 
 Enhancements and new features:
 
-    * [WIP] Refactoring of the WebUI
+    * [WIP] Refactoring of the WebUI (issue #1103)
+    * New Feature - Web Based browser function (issue #1121)
 
 Bugs corrected:
 

@@ -418,11 +418,11 @@ Examples of use:
 
     def is_client(self):
         """Return True if Glances is running in client mode."""
-        return (self.args.client or self.args.browser) and not self.args.server
+        return (self.args.client or self.args.browser) and not self.args.server and not self.args.webserver
 
     def is_client_browser(self):
         """Return True if Glances is running in client browser mode."""
-        return self.args.browser and not self.args.server
+        return self.args.browser and not self.args.server and not self.args.webserver
 
     def is_server(self):
         """Return True if Glances is running in server mode."""
@@ -431,6 +431,10 @@ Examples of use:
     def is_webserver(self):
         """Return True if Glances is running in Web server mode."""
         return not self.args.client and self.args.webserver
+
+    def is_webserver_browser(self):
+        """Return True if Glances is running in Web server mode + Browser."""
+        return self.args.browser and not self.args.client and self.args.webserver
 
     def get_config(self):
         """Return configuration file object."""

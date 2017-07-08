@@ -87,6 +87,8 @@ class GlancesBottle(object):
         # Never update more than 1 time per cached_time
         if self.timer.finished():
             self.stats.update()
+            if self.browser_list is not None:
+                self.browser_list.update_servers_list()
             self.timer = Timer(self.args.cached_time)
 
     def app(self):
@@ -113,6 +115,7 @@ class GlancesBottle(object):
         self._app.route('/api/2/args/<item>', method="GET", callback=self._api_args_item)
         self._app.route('/api/2/help', method="GET", callback=self._api_help)
         self._app.route('/api/2/pluginslist', method="GET", callback=self._api_plugins)
+        self._app.route('/api/2/serverslist', method="GET", callback=self._api_servers)
         self._app.route('/api/2/all', method="GET", callback=self._api_all)
         self._app.route('/api/2/all/limits', method="GET", callback=self._api_all_limits)
         self._app.route('/api/2/all/views', method="GET", callback=self._api_all_views)
@@ -128,10 +131,13 @@ class GlancesBottle(object):
 
         self._app.route('/<filepath:path>', method="GET", callback=self._resource)
 
-    def start(self, stats):
+    def start(self, stats, browser_list=None):
         """Start the bottle."""
         # Init stats
         self.stats = stats
+
+        # Init the optional browser list
+        self.browser_list = browser_list
 
         # Init plugin list
         self.plugins_list = self.stats.getAllPlugins()
@@ -221,6 +227,56 @@ class GlancesBottle(object):
         except Exception as e:
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
+
+    def _api_servers(self):
+        """
+        @api {get} /api/2/serverslist Get servers list
+        @apiVersion 2.0
+        @apiName serverslist
+        @apiGroup servers
+
+        @apiSuccess [{}] Servers list.
+
+        @apiSuccessExample Success-Response:
+            HTTP/1.1 200 OK
+            [{"username": "glances",
+              "status": "OFFLINE",
+              "name": "localhost",
+              "ip": "127.0.0.1",
+              "alias": "My local PC",
+              "key": "localhost:61269",
+              "password": "",
+              "type": "STATIC",
+              "port": "61269"},
+              {"username": "glances",
+               "status": "ONLINE",
+               "mem_percent": 50.6,
+               "name": "localhost",
+               "cpu_percent": "3.9",
+               "ip": "127.0.0.1",
+               "load_min5": "0.17",
+               "alias": "My local PC",
+               "key": "localhost:61209",
+               "password": "",
+               "type": "STATIC",
+               "port": "61209",
+               "hr_name": "Ubuntu 16.04 64bit"}
+              ...]
+         @apiError Cannot get servers list.
+
+         @apiErrorExample Error-Response:
+            HTTP/1.1 404 Not Found
+        """
+        response.content_type = 'application/json'
+
+        # Update the stat
+        self.__update__()
+
+        try:
+            slist = json.dumps(self.browser_list.get_servers_list())
+        except Exception as e:
+            abort(404, "Cannot get servers list (%s)" % str(e))
+        return slist
 
     def _api_all(self):
         """Glances API RESTFul implementation.
