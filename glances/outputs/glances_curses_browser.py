@@ -21,6 +21,7 @@
 
 import sys
 
+import curses
 from glances.outputs.glances_curses import _GlancesCurses
 
 from glances.logger import logger
@@ -108,10 +109,10 @@ class GlancesCursesBrowser(_GlancesCurses):
             # 'ENTER' > Run Glances on the selected server
             logger.debug("Server number {} selected".format(self.cursor + 1))
             self.active_server = self.cursor
-        elif self.pressedkey == 65:
+        elif self.pressedkey == curses.KEY_UP:
             # 'UP' > Up in the server list
             self.cursor_up(servers_list)
-        elif self.pressedkey == 66:
+        elif self.pressedkey == curses.KEY_DOWN:
             # 'DOWN' > Down in the server list
             self.cursor_down(servers_list)
 
