@@ -1,9 +1,11 @@
 'use strict';
 
-function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
+function GlancesController($scope, hotkeys, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
+
+    GlancesStats.init();
 
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;

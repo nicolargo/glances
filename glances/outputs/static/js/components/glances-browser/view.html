@@ -1,0 +1,39 @@
+<div>
+    <div ng-if="!vm.dataLoaded" class="container-fluid" id="loading-page">
+        <div class="glances-logo"></div>
+        <div class="loader">Loading...</div>
+    </div>
+
+    <div ng-if="vm.dataLoaded" class="container-fluid">
+       <p ng-show="vm.servers.length === 0">
+           No Glances server available
+       </p>
+
+        <p ng-show="vm.servers.length > 0">
+            {{ vm.servers.length }} Glances server available
+        </p>
+
+        <table id="servers-lists" class="table">
+            <thead>
+                <th>Name</th>
+                <th>LOAD</th>
+                <th>CPU%</th>
+                <th>MEM%</th>
+                <th>STATUS</th>
+                <th>IP</th>
+                <th>OS</th>
+            </thead>
+            <tbody>
+                <tr ng-repeat="server in vm.servers" ng-click="vm.openServer(server)" class="{{ server.status }}">
+                    <td>{{ server.name }}</td>
+                    <td>{{ server.load_min5 || '?' }}</td>
+                    <td>{{ server.cpu_percent || '?' }}</td>
+                    <td>{{ server.mem_percent || '?' }}</td>
+                    <td>{{ server.status }}</td>
+                    <td>{{ server.ip }}</td>
+                    <td>{{ server.hr_name || '?' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

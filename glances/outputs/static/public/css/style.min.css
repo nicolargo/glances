@@ -228,3 +228,22 @@ source : https://github.com/lukehaas/css-loaders
         box-shadow: 0 2.5em 0 0 #56CA69;
     }
 }
+
+#servers-lists thead {
+    text-align: left;
+    color: white;
+    font-weight: bold;
+}
+
+#servers-lists tbody tr.ONLINE {
+    color:  #3E7B04;
+}
+
+#servers-lists tbody tr.ONLINE:hover {
+    cursor: pointer;
+}
+
+#servers-lists tbody tr.OFFLINE {
+    color:  #A30000;
+}
+

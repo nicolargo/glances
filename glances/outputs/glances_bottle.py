@@ -106,7 +106,8 @@ class GlancesBottle(object):
     def _route(self):
         """Define route."""
         self._app.route('/', method="GET", callback=self._index)
-        self._app.route('/<refresh_time:int>', method=["GET"], callback=self._index)
+        self._app.route('/<refresh_time:int>', method="GET", callback=self._index)
+        self._app.route('/browser', method="GET", callback=self._browser)
 
         # REST API
         self._app.route('/api/2/config', method="GET", callback=self._api_config)
@@ -171,6 +172,15 @@ class GlancesBottle(object):
 
         # Display
         return template("index.html", refresh_time=refresh_time)
+
+    def _browser(self, refresh_time=None):
+        """Bottle callback for browser.html (/) file."""
+
+        if refresh_time is None:
+            refresh_time = self.args.time
+
+        # Display
+        return template("browser.html", refresh_time=refresh_time)
 
     def _resource(self, filepath):
         """Bottle callback for resources files."""
