@@ -722,7 +722,7 @@ class GlancesPlugin(object):
         hide=sda2,sda5,loop.*
         """
         # TODO: possible optimisation: create a re.compile list
-        return not all(j is None for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
+        return not all(j is None for j in [re.match(i, value.lower()) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist."""
