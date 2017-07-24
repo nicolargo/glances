@@ -727,8 +727,10 @@ class GlancesPlugin(object):
     def has_alias(self, header):
         """Return the alias name for the relative header or None if nonexist."""
         try:
-            return self._limits[self.plugin_name + '_' + header + '_' + 'alias'][0]
+            # Force to lower case (issue #1126)
+            return self._limits[self.plugin_name + '_' + header.lower() + '_' + 'alias'][0]
         except (KeyError, IndexError):
+            # logger.debug("No alias found for {}".format(header))
             return None
 
     def msg_curse(self, args=None, max_width=None):
