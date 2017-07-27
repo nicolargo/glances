@@ -189,6 +189,8 @@ Examples of use:
                             dest='export_prometheus', help='export stats to a Prometheus exporter (prometheus_client lib needed)')
         parser.add_argument('--export-rabbitmq', action='store_true', default=False,
                             dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
+        parser.add_argument('--export-restful', action='store_true', default=False,
+                            dest='export_restful', help='export stats to a Restful endpoint (requests lib needed)')
         parser.add_argument('--export-riemann', action='store_true', default=False,
                             dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
         parser.add_argument('--export-statsd', action='store_true', default=False,
