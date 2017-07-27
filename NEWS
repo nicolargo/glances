@@ -18,6 +18,7 @@ Bugs corrected:
     * PermissionError on macOS (issue #1120)
     * Cant move up or down in glances --browser (issue #1113)
     * Unable to give aliases to or hide network interfaces and disks (issue #1126)
+    * `UnicodeDecodeError` on mountpoints with non-breaking spaces (issue #1128)
 
 Installation:
 
