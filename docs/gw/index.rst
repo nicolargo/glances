@@ -18,6 +18,7 @@ to providing stats to multiple services (see list below).
    opentsdb
    prometheus
    rabbitmq
+   restful
    riemann
    statsd
    zeromq

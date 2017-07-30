@@ -23,6 +23,8 @@ I am your father...
 ...for all Glances exports IF.
 """
 
+import json
+
 from glances.compat import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
 
@@ -182,6 +184,8 @@ class GlancesExport(object):
                 pre_key = ''
             # Walk through the dict
             for key, value in iteritems(stats):
+                if isinstance(value, bool):
+                    value = json.dumps(value)
                 if isinstance(value, list):
                     try:
                         value = value[0]
