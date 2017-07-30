@@ -8,6 +8,7 @@ Version NEXT RELEASE
 Enhancements and new features:
 
     * [WIP] Refactoring of the WebUI
+    * New export plugin: standard and configurable Restfull exporter (issue #1129)
 
 Bugs corrected:
 

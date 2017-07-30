@@ -21,6 +21,7 @@
 
 import sys
 
+from glances.compat import listkeys
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
@@ -63,18 +64,19 @@ class Export(GlancesExport):
                                     self.port,
                                     self.path)
         logger.info(
-            "Stats will be exported to the restful URL: {}".format(url))
+            "Stats will be exported to the restful endpoint {}".format(url))
         return url
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        if name in self.buffer:
+        if name == self.plugins_to_export()[0] and self.buffer != {}:
             # One complete loop have been done
+            logger.debug("Export stats ({}) to Restful endpoint ({})".format(listkeys(self.buffer),
+                                                                             self.client))
             # Export stats
             post(self.client, json=self.buffer, allow_redirects=True)
             # Reset buffer
             self.buffer = {}
-            logger.debug("Export stats to Restful endpoint ({})".format(self.client))
 
         # Add current stat to the buffer
         self.buffer[name] = dict(zip(columns, points))
