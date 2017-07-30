@@ -27,8 +27,8 @@ URL Syntax:
     |      |         |   |
     |      |         |   path
     |      |         port
-    |      hostname
-    host
+    |      host
+    protocol
 
 and run Glances with:
 
