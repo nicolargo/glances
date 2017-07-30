@@ -20,9 +20,7 @@
 """Restful interface class."""
 
 import sys
-from numbers import Number
 
-from glances.compat import range
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
@@ -31,7 +29,8 @@ from requests import post
 
 class Export(GlancesExport):
 
-    """This class manages the Restful export module."""
+    """This class manages the Restful export module.
+    Be aware that stats will be exported in one big POST request"""
 
     def __init__(self, config=None, args=None):
         """Init the Restful export IF."""
@@ -46,6 +45,10 @@ class Export(GlancesExport):
                                             mandatories=['host', 'port', 'protocol', 'path'])
         if not self.export_enable:
             sys.exit(2)
+
+        # Init the stats buffer
+        # It's a dict of stats
+        self.buffer = {}
 
         # Init the Statsd client
         self.client = self.init()
@@ -65,16 +68,13 @@ class Export(GlancesExport):
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
-        post(self.client, json=dict(zip(columns, points)), allow_redirects=True)
-        logger.debug("Export {} stats to Restful endpoint".format(name))
+        if name in self.buffer:
+            # One complete loop have been done
+            # Export stats
+            post(self.client, json=self.buffer, allow_redirects=True)
+            # Reset buffer
+            self.buffer = {}
+            logger.debug("Export stats to Restful endpoint ({})".format(self.client))
 
-
-def normalize(name):
-    """Normalize name for the Statsd convention"""
-
-    # Name should not contain some specials chars (issue #1068)
-    ret = name.replace(':', '')
-    ret = ret.replace('%', '')
-    ret = ret.replace(' ', '_')
-
-    return ret
+        # Add current stat to the buffer
+        self.buffer[name] = dict(zip(columns, points))
