@@ -173,6 +173,8 @@ Examples of use:
                             dest='path_graph', help='set the export path for graphs (default is {})'.format(tempfile.gettempdir()))
         parser.add_argument('--export-csv', default=None,
                             dest='export_csv', help='export stats to a CSV file')
+        parser.add_argument('--export-json', default=None,
+                            dest='export_json', help='export stats to a JSON file')
         parser.add_argument('--export-cassandra', action='store_true', default=False,
                             dest='export_cassandra', help='export stats to a Cassandra or Scylla server (cassandra lib needed)')
         parser.add_argument('--export-couchdb', action='store_true', default=False,
