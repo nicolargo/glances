@@ -10,6 +10,7 @@ to providing stats to multiple services (see list below).
    :maxdepth: 2
 
    csv
+   json
    cassandra
    couchdb
    elastic
