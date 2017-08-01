@@ -7,9 +7,9 @@ Version NEXT RELEASE
 
 Enhancements and new features:
 
-    * [WIP] Refactoring of the WebUI
     * New export plugin: standard and configurable Restfull exporter (issue #1129)
-    * Add a JSON export module
+    * Add a JSON export module (issue #1130)
+    * [WIP] Refactoring of the WebUI
 
 Bugs corrected:
 
