@@ -2,8 +2,8 @@
 Glances Version 2
 ==============================================================================
 
-Version NEXT RELEASE
-====================
+Version 2.11
+============
 
 Enhancements and new features:
 
@@ -13,7 +13,7 @@ Enhancements and new features:
 
 Bugs corrected:
 
-    * Installing GPU plugin crashes entire glances (issue #1102)
+    * Installing GPU plugin crashes entire Glances (issue #1102)
     * Potential memory leak in Windows WebUI (issue #1056)
     * glances_network `OSError: [Errno 19] No such device` (issue #1106)
     * GPU plugin. <class 'TypeError'>: ... not JSON serializable"> (issue #1112)
