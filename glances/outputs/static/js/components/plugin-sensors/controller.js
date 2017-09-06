@@ -19,7 +19,7 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
             return (_.isArray(sensor.value) && _.isEmpty(sensor.value)) || sensor.value === 0;
         });
 
-        vm.sensors = data;
+        vm.sensors = stats;
     };
 
     vm.getAlert = function (sensor) {
