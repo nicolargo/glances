@@ -13,6 +13,13 @@ Enhancements and new features:
 Glances Version 2
 ==============================================================================
 
+Version 2.11.1
+==============
+
+Bugs corrected:
+
+    * [WebUI] Sensors not showing on Web (issue #1142)
+
 Version 2.11
 ============
 
