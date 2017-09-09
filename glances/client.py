@@ -46,6 +46,8 @@ class GlancesClient(object):
         # Store the arg/config
         self.args = args
         self.config = config
+        # Quiet mode
+        self._quiet = args.quiet
 
         # Default client mode
         self._client_mode = 'glances'
@@ -69,6 +71,10 @@ class GlancesClient(object):
             self.client = ServerProxy(self.uri, transport=transport)
         except Exception as e:
             self.log_and_exit("Client couldn't create socket {}: {}".format(self.uri, e))
+
+    @property
+    def quiet(self):
+        return self._quiet
 
     def log_and_exit(self, msg=''):
         """Log and exit."""
@@ -167,7 +173,11 @@ class GlancesClient(object):
         self.stats.load_limits(self.config)
 
         # Init screen
-        self.screen = GlancesCursesClient(config=self.config, args=self.args)
+        if self.quiet:
+            # In quiet mode, nothing is displayed
+            logger.info("Quiet mode is ON: Nothing will be displayed")
+        else:
+            self.screen = GlancesCursesClient(config=self.config, args=self.args)
 
         # Return True: OK
         return True
@@ -237,9 +247,10 @@ class GlancesClient(object):
                 cs_status = self.update()
 
                 # Update the screen
-                exitkey = self.screen.update(self.stats,
-                                             cs_status=cs_status,
-                                             return_to_browser=self.return_to_browser)
+                if not self.quiet:
+                    exitkey = self.screen.update(self.stats,
+                                                 cs_status=cs_status,
+                                                 return_to_browser=self.return_to_browser)
 
                 # Export stats using export modules
                 self.stats.export(self.stats)
@@ -251,4 +262,5 @@ class GlancesClient(object):
 
     def end(self):
         """End of the client session."""
-        self.screen.end()
+        if not self.quiet:
+            self.screen.end()
