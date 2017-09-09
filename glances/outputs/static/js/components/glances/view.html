@@ -65,10 +65,10 @@
                     <glances-plugin-ports id="plugin-ports" class="plugin table-row-group" ng-if="!vm.arguments.disable_ports"></glances-plugin-ports>
                     <glances-plugin-diskio id="plugin-diskio" class="plugin table-row-group" ng-if="!vm.arguments.disable_diskio"></glances-plugin-diskio>
                     <glances-plugin-fs id="plugin-fs" class="plugin table-row-group" ng-if="!vm.arguments.disable_fs"></glances-plugin-fs>
-                    <glances-plugin-irq id="plugin-irq" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
-                    <glances-plugin-folders id="plugin-folders" ng-if="!vm.arguments.disable_folders"></glances-plugin-folders>
-                    <glances-plugin-raid id="plugin-raid" ng-if="!vm.arguments.raid"></glances-plugin-raid>
-                    <glances-plugin-sensors id="plugin-sensors" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
+                    <glances-plugin-irq id="plugin-irq" class="plugin table-row-group" ng-if="vm.arguments.enable_irq"></glances-plugin-irq>
+                    <glances-plugin-folders id="plugin-folders" class="plugin table-row-group" ng-if="!vm.arguments.disable_folders"></glances-plugin-folders>
+                    <glances-plugin-raid id="plugin-raid" class="plugin table-row-group" ng-if="!vm.arguments.raid"></glances-plugin-raid>
+                    <glances-plugin-sensors id="plugin-sensors" class="plugin table-row-group" ng-if="!vm.arguments.disable_sensors"></glances-plugin-sensors>
                 </div>
             </div>
             <div class="col-sm-18">
