@@ -4,7 +4,7 @@ Applications Monitoring Process
 ===============================
 
 Thanks to Glances and its AMP module, you can add specific monitoring to
-running processes. AMPs are defined in the Glances configuration file.
+running processes. AMPs are defined in the Glances [configuration file](http://glances.readthedocs.io/en/stable/config.html).
 
 You can disable AMP using the ``--disable-amps`` option or pressing the
 ``A`` key.
