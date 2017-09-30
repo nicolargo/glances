@@ -9,6 +9,10 @@ Enhancements and new features:
 
     * ...
 
+Bugs corrected:
+
+    * Failed to connect to bus: No such file or directory #1156
+
 ==============================================================================
 Glances Version 2
 ==============================================================================
