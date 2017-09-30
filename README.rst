@@ -29,9 +29,9 @@ Summary
 =======
 
 **Glances** is a cross-platform monitoring tool which aims to present a
-maximum of information in a minimum of space through a curses or Web
-based interface. It can adapt dynamically the displayed information
-depending on the user interface size.
+large amount of monitoring information through a curses or Web
+based interface. The information dynamically adapts depending on the 
+size of the user interface. 
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
@@ -81,24 +81,24 @@ Optional dependencies:
 
 *Note for Python 2.6 users*
 
-Since version 2.7, Glances no longer support Python 2.6. Please upgrade
-to at least Python 2.7/3.3+ or downgrade to Glances 2.6.2 (latest version
+Glances no longer supports Python 2.6. Please upgrade
+to a minimum Python version of 2.7/3.3+ or downgrade to Glances 2.6.2 (last version
 with Python 2.6 support).
 
 *Note for CentOS Linux 6 and 7 users*
 
-Python 2.7, 3.3 and 3.4 are now available via SCLs. See:
+Python 2.7, 3.3 and 3.4 are now available via SCL repositories. See:
 https://lists.centos.org/pipermail/centos-announce/2015-December/021555.html.
 
 Installation
 ============
 
-Several method to test/install Glances on your system. Choose your weapon !
+There are several methods to test/install Glances on your system. Choose your weapon!
 
 Glances Auto Install script: the total way
 ------------------------------------------
 
-To install both dependencies and latest Glances production ready version
+To install both dependencies and the latest Glances production ready version
 (aka *master* branch), just enter the following command line:
 
 .. code-block:: console
@@ -111,13 +111,13 @@ or
 
     wget -O- https://bit.ly/glances | /bin/bash
 
-*Note*: Only supported on some GNU/Linux distributions. If you want to
+*Note*: This is only supported on some GNU/Linux distributions. If you want to
 support other distributions, please contribute to `glancesautoinstall`_.
 
 PyPI: The simple way
 --------------------
 
-Glances is on ``PyPI``. By using PyPI, you are sure to have the latest
+Glances is on ``PyPI``. By using PyPI, you will be using the latest
 stable version.
 
 To install, simply use ``pip``:
@@ -158,9 +158,9 @@ If you need to install Glances in a specific user location, use:
 Docker: the funny way
 ---------------------
 
-A Glances container is available. It will include the latest development
-HEAD version. You can use it to monitor your server and all your others
-containers !
+A Glances container is available. It includes the latest development
+HEAD version. You can use it to monitor your server and all your other 
+containers!
 
 Get the Glances container:
 
@@ -204,7 +204,8 @@ GNU/Linux
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
-Glances may not be the latest one using this method.
+when you use this method the operating system package for `Glances` 
+may not be the latest version. 
 
 FreeBSD
 -------
@@ -246,7 +247,7 @@ Windows
 -------
 
 Install `Python`_ for Windows (Python 2.7.9+ and 3.4+ ship with pip) and
-then just:
+then run the following command:
 
 .. code-block:: console
 
@@ -256,7 +257,7 @@ Android
 -------
 
 You need a rooted device and the `Termux`_ application (available on the
-Google Store).
+Google Play Store).
 
 Start Termux on your device and enter:
 
