@@ -140,7 +140,12 @@ class GlancesGrabHDDTemp(object):
         try:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sck.connect((self.host, self.port))
-            data = sck.recv(4096)
+            data = b''
+            while True:
+                received = sck.recv(4096)
+                if not received:
+                    break
+                data += received
         except socket.error as e:
             logger.debug("Cannot connect to an HDDtemp server ({}:{} => {})".format(self.host, self.port, e))
             logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
@@ -149,6 +154,8 @@ class GlancesGrabHDDTemp(object):
             data = ""
         finally:
             sck.close()
+            if data != "":
+                logger.debug("Received data from the HDDtemp server: {}".format(data))
 
         return data
 
