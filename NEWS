@@ -13,6 +13,10 @@ Bugs corrected:
 
     * Failed to connect to bus: No such file or directory #1156
 
+Backward-incompatible changes:
+
+    * Support for Docker API < 2.0 is deprecated (docker plugins)
+
 ==============================================================================
 Glances Version 2
 ==============================================================================
