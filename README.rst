@@ -134,7 +134,7 @@ just install psutil from the binary installation file.
 *Note 2 (for the Wifi plugin)*: If you want to use the Wifi plugin, you need
 to install the *wireless-tools* package on your system.
 
-You can also install the following libraries in order to use optional
+You can also install the following libraries(in **Bash shell**) in order to use optional
 features (like the Web interface, exports modules...):
 
 .. code-block:: console
