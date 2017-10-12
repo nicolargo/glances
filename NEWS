@@ -7,6 +7,7 @@ Version 3.0
 
 Enhancements and new features:
 
+    * A way to have only REST API available and disable WEB GUI access #1149
     * Docker module doesn't export details about stopped containers #1152
 
 Bugs corrected:
