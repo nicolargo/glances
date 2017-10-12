@@ -12,6 +12,7 @@ Enhancements and new features:
 Bugs corrected:
 
     * Failed to connect to bus: No such file or directory #1156
+    * glances_plugin.py has a problem with specific docker output #1160
 
 Backward-incompatible changes:
 
