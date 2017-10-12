@@ -376,7 +376,7 @@ class Plugin(GlancesPlugin):
                 iow = [i for i in iocounters['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
                 ior_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Read'][0]['value']
                 iow_old = [i for i in self.iocounters_old[container_id]['io_service_bytes_recursive'] if i['op'] == 'Write'][0]['value']
-            except (IndexError, KeyError, TypeError) as e:
+            except (TypeError, IndexError, KeyError) as e:
                 # all_stats do not have io information
                 logger.debug("docker plugin - Cannot grab block IO usage for container {} ({})".format(container_id, e))
             else:
