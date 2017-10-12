@@ -26,6 +26,9 @@ under the ``[docker]`` section:
     containername_cpu_warning=20
     containername_cpu_critical=30
     containername_cpu_critical_action=echo {{Image}} {{Id}} {{cpu}} > /tmp/container_{{name}}.alert
+    # By default, Glances only display running containers
+    # Set the following key to True to display all containers
+    all=False
 
 You can use all the variables ({{foo}}) available in the Docker plugin.
 
