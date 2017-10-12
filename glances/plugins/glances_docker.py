@@ -104,6 +104,19 @@ class Plugin(GlancesPlugin):
         """Reset/init the stats."""
         self.stats = {}
 
+    def _all_tag(self):
+        """Return the all tag of the Glances/Docker configuration file
+
+        # By default, Glances only display running containers
+        # Set the following key to True to display all containers
+        all=True
+        """
+        all_tag = self.get_conf_value('all')
+        if len(all_tag) == 0:
+            return False
+        else:
+            return all_tag[0].lower() == 'true'
+
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -139,8 +152,8 @@ class Plugin(GlancesPlugin):
             # Update current containers list
             try:
                 # Issue #1152: Docker module doesn't export details about stopped containers
-                # It could be done here by setting all=True but the list is too long...
-                containers = self.docker_client.containers.list(all=False) or []
+                # The Docker/all key of the configuration file should be set to True
+                containers = self.docker_client.containers.list(all=self._all_tag()) or []
             except Exception as e:
                 logger.error("{} plugin - Cannot get containers list ({})".format(self.plugin_name, e))
                 return self.stats
@@ -507,7 +520,7 @@ class Plugin(GlancesPlugin):
             try:
                 msg = '{:>6.1f}'.format(container['cpu']['total'])
             except KeyError:
-                msg = '{:>6}'.format('?')
+                msg = '{:>6}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
                                                                key='cpu',
                                                                option='decoration')))
@@ -515,14 +528,14 @@ class Plugin(GlancesPlugin):
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['usage']))
             except KeyError:
-                msg = '{:>7}'.format('?')
+                msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg, self.get_views(item=container['name'],
                                                                key='mem',
                                                                option='decoration')))
             try:
                 msg = '{:>7}'.format(self.auto_unit(container['memory']['limit']))
             except KeyError:
-                msg = '{:>7}'.format('?')
+                msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # IO R/W
             for r in ['ior', 'iow']:
@@ -530,7 +543,7 @@ class Plugin(GlancesPlugin):
                     value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'] * 8)) + "b"
                     msg = '{:>7}'.format(value)
                 except KeyError:
-                    msg = '{:>7}'.format('?')
+                    msg = '{:>7}'.format('_')
                 ret.append(self.curse_add_line(msg))
             # NET RX/TX
             if args.byte:
@@ -546,7 +559,7 @@ class Plugin(GlancesPlugin):
                     value = self.auto_unit(int(container['network'][r] // container['network']['time_since_update'] * to_bit)) + unit
                     msg = '{:>7}'.format(value)
                 except KeyError:
-                    msg = '{:>7}'.format('?')
+                    msg = '{:>7}'.format('_')
                 ret.append(self.curse_add_line(msg))
             # Command
             msg = ' {}'.format(container['Command'])
