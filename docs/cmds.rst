@@ -98,6 +98,10 @@ Command-Line Options
 
     disable sensors module
 
+.. option:: --disable-webui
+
+    disable the Web UI (only the Restful API will respond)
+
 .. option:: --disable-wifi
 
     disable Wifi module
