@@ -7,7 +7,7 @@ Version 3.0
 
 Enhancements and new features:
 
-    * ...
+    * Docker module doesn't export details about stopped containers #1152
 
 Bugs corrected:
 
