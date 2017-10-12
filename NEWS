@@ -11,6 +11,7 @@ Enhancements and new features:
 
 Bugs corrected:
 
+    * Crash in the Wifi plugin on my Laptop #1151
     * Failed to connect to bus: No such file or directory #1156
     * glances_plugin.py has a problem with specific docker output #1160
 
