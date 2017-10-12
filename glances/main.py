@@ -55,9 +55,13 @@ Examples of use:
   Monitor local machine (standalone mode):
     $ glances
 
-  Monitor local machine with the Web interface (Web UI):
+  Monitor local machine with the Web interface and start Restful server:
     $ glances -w
     Glances web server started on http://0.0.0.0:61208/
+
+  Only start Restful API (without the WebUI):
+    $ glances -w --disable-webui
+    Glances API available on http://0.0.0.0:61208/api/
 
   Monitor local machine and export stats to a CSV file (standalone mode):
     $ glances --export-csv /tmp/glances.csv
@@ -65,10 +69,10 @@ Examples of use:
   Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
     $ glances -t 5 --export-influxdb
 
-  Start a Glances server (server mode):
+  Start a Glances XML/RCP server (server mode):
     $ glances -s
 
-  Connect Glances to a Glances server (client mode):
+  Connect Glances to a Glances XML/RCP server (client mode):
     $ glances -c <ip_server>
 
   Connect Glances to a Glances server and export stats to a StatsD server (client mode):
@@ -138,6 +142,8 @@ Examples of use:
                             dest='disable_raid', help='disable RAID module')
         parser.add_argument('--disable-sensors', action='store_true', default=False,
                             dest='disable_sensors', help='disable sensors module')
+        parser.add_argument('--disable-webui', action='store_true', default=False,
+                            dest='disable_webui', help='disable the Web Interface')
         parser.add_argument('--disable-wifi', action='store_true', default=False,
                             dest='disable_wifi', help='disable wifi module')
         parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
