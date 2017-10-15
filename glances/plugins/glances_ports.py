@@ -42,7 +42,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances ports scanner plugin."""
 
     def __init__(self, args=None, config=None):
@@ -64,7 +63,7 @@ class Plugin(GlancesPlugin):
         self._thread = None
 
     def exit(self):
-        """Overwrite the exit method to close threads"""
+        """Overwrite the exit method to close threads."""
         if self._thread is not None:
             self._thread.stop()
         # Call the father class
@@ -77,7 +76,6 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the ports list."""
-
         if self.input_method == 'local':
             # Only refresh:
             # * if there is not other scanning thread
@@ -103,7 +101,6 @@ class Plugin(GlancesPlugin):
 
     def get_ports_alert(self, port, header="", log=False):
         """Return the alert status relative to the port scan return value."""
-
         if port['status'] is None:
             return 'CAREFUL'
         elif port['status'] == 0:
@@ -117,7 +114,6 @@ class Plugin(GlancesPlugin):
 
     def get_web_alert(self, web, header="", log=False):
         """Return the alert status relative to the web/url scan return value."""
-
         if web['status'] is None:
             return 'CAREFUL'
         elif web['status'] not in [200, 301, 302]:
@@ -186,7 +182,7 @@ class ThreadScanner(threading.Thread):
     """
 
     def __init__(self, stats):
-        """Init the class"""
+        """Init the class."""
         logger.debug("ports plugin - Create thread for scan list {}".format(stats))
         super(ThreadScanner, self).__init__()
         # Event needed to stop properly the thread
@@ -197,9 +193,10 @@ class ThreadScanner(threading.Thread):
         self.plugin_name = "ports"
 
     def run(self):
-        """Function called to grab stats.
-        Infinite loop, should be stopped by calling the stop() method"""
+        """Grab the stats.
 
+        Infinite loop, should be stopped by calling the stop() method.
+        """
         for p in self._stats:
             # End of the thread has been asked
             if self.stopped():
@@ -216,25 +213,25 @@ class ThreadScanner(threading.Thread):
 
     @property
     def stats(self):
-        """Stats getter"""
+        """Stats getter."""
         return self._stats
 
     @stats.setter
     def stats(self, value):
-        """Stats setter"""
+        """Stats setter."""
         self._stats = value
 
     def stop(self, timeout=None):
-        """Stop the thread"""
+        """Stop the thread."""
         logger.debug("ports plugin - Close thread for scan list {}".format(self._stats))
         self._stopper.set()
 
     def stopped(self):
-        """Return True is the thread is stopped"""
+        """Return True is the thread is stopped."""
         return self._stopper.isSet()
 
     def _web_scan(self, web):
-        """Scan the  Web/URL (dict) and update the status key"""
+        """Scan the  Web/URL (dict) and update the status key."""
         try:
             req = requests.head(web['url'],
                                 allow_redirects=True,
@@ -249,14 +246,14 @@ class ThreadScanner(threading.Thread):
         return web
 
     def _port_scan(self, port):
-        """Scan the port structure (dict) and update the status key"""
+        """Scan the port structure (dict) and update the status key."""
         if int(port['port']) == 0:
             return self._port_scan_icmp(port)
         else:
             return self._port_scan_tcp(port)
 
     def _resolv_name(self, hostname):
-        """Convert hostname to IP address"""
+        """Convert hostname to IP address."""
         ip = hostname
         try:
             ip = socket.gethostbyname(hostname)
@@ -265,7 +262,7 @@ class ThreadScanner(threading.Thread):
         return ip
 
     def _port_scan_icmp(self, port):
-        """Scan the (ICMP) port structure (dict) and update the status key"""
+        """Scan the (ICMP) port structure (dict) and update the status key."""
         ret = None
 
         # Create the ping command
@@ -305,7 +302,7 @@ class ThreadScanner(threading.Thread):
         return ret
 
     def _port_scan_tcp(self, port):
-        """Scan the (TCP) port structure (dict) and update the status key"""
+        """Scan the (TCP) port structure (dict) and update the status key."""
         ret = None
 
         # Create and configure the scanning socket

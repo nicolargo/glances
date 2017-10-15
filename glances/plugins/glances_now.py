@@ -17,13 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+"""Now (current date) plugin."""
+
 from datetime import datetime
 
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Plugin to get the current date/time.
 
     stats is (string)

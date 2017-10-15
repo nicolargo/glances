@@ -37,7 +37,6 @@ def to_fahrenheit(celsius):
 
 
 class Plugin(GlancesPlugin):
-
     """Glances sensors plugin.
 
     The stats list includes both sensors and hard disks stats, if any.
@@ -218,7 +217,6 @@ class Plugin(GlancesPlugin):
 
 
 class GlancesGrabSensors(object):
-
     """Get sensors stats."""
 
     def __init__(self):
@@ -282,7 +280,8 @@ class GlancesGrabSensors(object):
 
         type: SENSOR_TEMP_UNIT or SENSOR_FAN_UNIT
 
-        output: a list"""
+        output: a list
+        """
         ret = []
         if type == SENSOR_TEMP_UNIT and self.init_temp:
             input_list = self.stemps

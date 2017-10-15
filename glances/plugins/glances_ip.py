@@ -52,7 +52,6 @@ urls = [('http://ip.42.pl/raw', False, None),
 
 
 class Plugin(GlancesPlugin):
-
     """Glances IP Plugin.
 
     stats is a dict
@@ -159,13 +158,14 @@ class Plugin(GlancesPlugin):
 
 
 class PublicIpAddress(object):
-    """Get public IP address from online services"""
+    """Get public IP address from online services."""
 
     def __init__(self, timeout=2):
+        """Init the class."""
         self.timeout = timeout
 
     def get(self):
-        """Get the first public IP address returned by one of the online services"""
+        """Get the first public IP address returned by one of the online services."""
         q = queue.Queue()
 
         for u, j, k in urls:
@@ -182,7 +182,7 @@ class PublicIpAddress(object):
         return ip
 
     def _get_ip_public(self, queue_target, url, json=False, key=None):
-        """Request the url service and put the result in the queue_target"""
+        """Request the url service and put the result in the queue_target."""
         try:
             response = urlopen(url, timeout=self.timeout).read().decode('utf-8')
         except Exception as e:

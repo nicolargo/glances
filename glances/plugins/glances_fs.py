@@ -66,7 +66,6 @@ items_history_list = [{'name': 'percent',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances file system plugin.
 
     stats is a list

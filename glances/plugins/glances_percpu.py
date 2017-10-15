@@ -24,7 +24,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances per-CPU plugin.
 
     'stats' is a list of dictionaries that contain the utilization percentages

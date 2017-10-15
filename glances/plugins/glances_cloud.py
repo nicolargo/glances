@@ -38,7 +38,6 @@ from glances.logger import logger
 
 
 class Plugin(GlancesPlugin):
-
     """Glances' cloud plugin.
 
     The goal of this plugin is to retreive additional information
@@ -70,7 +69,7 @@ class Plugin(GlancesPlugin):
         self.stats = {}
 
     def exit(self):
-        """Overwrite the exit method to close threads"""
+        """Overwrite the exit method to close threads."""
         self.aws_ec2.stop()
         # Call the father class
         super(Plugin, self).exit()
@@ -137,7 +136,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
                             'region': 'placement/availability-zone'}
 
     def __init__(self):
-        """Init the class"""
+        """Init the class."""
         logger.debug("cloud plugin - Create thread for AWS EC2")
         super(ThreadAwsEc2Grabber, self).__init__()
         # Event needed to stop properly the thread
@@ -146,9 +145,10 @@ class ThreadAwsEc2Grabber(threading.Thread):
         self._stats = {}
 
     def run(self):
-        """Function called to grab stats.
-        Infinite loop, should be stopped by calling the stop() method"""
+        """Grab plugin's stats.
 
+        Infinite loop, should be stopped by calling the stop() method
+        """
         if not cloud_tag:
             logger.debug("cloud plugin - Requests lib is not installed")
             self.stop()
@@ -170,19 +170,19 @@ class ThreadAwsEc2Grabber(threading.Thread):
 
     @property
     def stats(self):
-        """Stats getter"""
+        """Stats getter."""
         return self._stats
 
     @stats.setter
     def stats(self, value):
-        """Stats setter"""
+        """Stats setter."""
         self._stats = value
 
     def stop(self, timeout=None):
-        """Stop the thread"""
+        """Stop the thread."""
         logger.debug("cloud plugin - Close thread for AWS EC2")
         self._stopper.set()
 
     def stopped(self):
-        """Return True is the thread is stopped"""
+        """Return True is the thread is stopped."""
         return self._stopper.isSet()

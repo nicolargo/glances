@@ -28,7 +28,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances IRQ plugin.
 
     stats is a list
@@ -56,8 +55,7 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
-        """Update the IRQ stats"""
-
+        """Update the IRQ stats."""
         # Reset the list
         self.reset()
 
@@ -117,27 +115,25 @@ class Plugin(GlancesPlugin):
 
 
 class GlancesIRQ(object):
-    """
-    This class manages the IRQ file
-    """
+    """This class manages the IRQ file."""
 
     IRQ_FILE = '/proc/interrupts'
 
     def __init__(self):
-        """
-        Init the class
+        """Init the class.
+
         The stat are stored in a internal list of dict
         """
         self.lasts = {}
         self.reset()
 
     def reset(self):
-        """Reset the stats"""
+        """Reset the stats."""
         self.stats = []
         self.cpu_number = 0
 
     def get(self):
-        """Return the current IRQ stats"""
+        """Return the current IRQ stats."""
         return self.__update()
 
     def get_key(self):
@@ -145,7 +141,7 @@ class GlancesIRQ(object):
         return 'irq_line'
 
     def __header(self, line):
-        """The header contain the number of CPU
+        """Build the header (contain the number of CPU).
 
         CPU0       CPU1       CPU2       CPU3
         0:         21          0          0          0   IO-APIC   2-edge      timer
@@ -154,8 +150,7 @@ class GlancesIRQ(object):
         return self.cpu_number
 
     def __humanname(self, line):
-        """Get a line and
-        Return the IRQ name, alias or number (choose the best for human)
+        """Return the IRQ name, alias or number (choose the best for human).
 
         IRQ line samples:
         1:      44487        341         44         72   IO-APIC   1-edge      i8042
@@ -169,8 +164,7 @@ class GlancesIRQ(object):
         return irq_line
 
     def __sum(self, line):
-        """Get a line and
-        Return the IRQ sum number
+        """Return the IRQ sum number.
 
         IRQ line samples:
         1:     44487        341         44         72   IO-APIC   1-edge      i8042
@@ -186,10 +180,7 @@ class GlancesIRQ(object):
         return ret
 
     def __update(self):
-        """
-        Load the IRQ file and update the internal dict
-        """
-
+        """Load the IRQ file and update the internal dict."""
         self.reset()
 
         if not os.path.exists(self.IRQ_FILE):

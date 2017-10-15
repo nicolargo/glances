@@ -57,7 +57,6 @@ def split_cmdline(cmdline):
 
 
 class Plugin(GlancesPlugin):
-
     """Glances' processes plugin.
 
     stats is a list
@@ -202,6 +201,7 @@ class Plugin(GlancesPlugin):
 
     def get_process_curses_data(self, p, first, args):
         """Get curses data to display for a process.
+
         - p is the process to display
         - first is a tag=True if the process is the first on the list
         """
@@ -466,9 +466,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def __msg_curse_header(self, ret, process_sort_key, args=None):
-        """
-        Build the header and add it to the ret dict
-        """
+        """Build the header and add it to the ret dict."""
         sort_style = 'SORT'
 
         if args.disable_irix and 0 < self.nb_log_core < 10:
@@ -503,7 +501,8 @@ class Plugin(GlancesPlugin):
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
         """
-        Build the sum message (only when filter is on) and add it to the ret dict
+        Build the sum message (only when filter is on) and add it to the ret dict.
+
         * ret: list of string where the message is added
         * sep_char: define the line separation char
         * mmm: display min, max, mean or current (if mmm=None)
@@ -586,24 +585,20 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg, optional=True))
 
     def __mmm_deco(self, mmm):
-        """
-        Return the decoration string for the current mmm status
-        """
+        """Return the decoration string for the current mmm status."""
         if mmm is not None:
             return 'DEFAULT'
         else:
             return 'FILTER'
 
     def __mmm_reset(self):
-        """
-        Reset the MMM stats
-        """
+        """Reset the MMM stats."""
         self.mmm_min = {}
         self.mmm_max = {}
 
     def __sum_stats(self, key, indice=None, mmm=None):
-        """
-        Return the sum of the stats value for the given key
+        """Return the sum of the stats value for the given key.
+
         * indice: If indice is set, get the p[key][indice]
         * mmm: display min, max, mean or current (if mmm=None)
         """
@@ -647,13 +642,13 @@ class Plugin(GlancesPlugin):
         return ret
 
     def __sort_stats(self, sortedby=None):
-        """Return the stats (dict) sorted by (sortedby)"""
+        """Return the stats (dict) sorted by (sortedby)."""
         return sort_stats(self.stats, sortedby,
                           tree=glances_processes.is_tree_enabled(),
                           reverse=glances_processes.sort_reverse)
 
     def __max_pid_size(self):
-        """Return the maximum PID size in number of char"""
+        """Return the maximum PID size in number of char."""
         if self.pid_max is not None:
             return len(str(self.pid_max))
         else:

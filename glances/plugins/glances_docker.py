@@ -40,7 +40,6 @@ else:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances Docker plugin.
 
     stats is a dict: {'version': {...}, 'containers': [{}, {}]}
@@ -68,7 +67,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
     def exit(self):
-        """Overwrite the exit method to close threads"""
+        """Overwrite the exit method to close threads."""
         for t in itervalues(self.thread_list):
             t.stop()
         # Call the father class
@@ -105,7 +104,7 @@ class Plugin(GlancesPlugin):
         self.stats = {}
 
     def _all_tag(self):
-        """Return the all tag of the Glances/Docker configuration file
+        """Return the all tag of the Glances/Docker configuration file.
 
         # By default, Glances only display running containers
         # Set the following key to True to display all containers
@@ -121,7 +120,6 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update Docker stats using the input method."""
-
         # Reset stats
         self.reset()
 
@@ -410,8 +408,10 @@ class Plugin(GlancesPlugin):
         return os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 
     def get_stats_action(self):
-        """Return stats for the action
-        Docker will return self.stats['containers']"""
+        """Return stats for the action.
+
+        Docker will return self.stats['containers']
+        """
         return self.stats['containers']
 
     def update_views(self):
@@ -587,7 +587,8 @@ class ThreadDockerGrabber(threading.Thread):
     """
 
     def __init__(self, container):
-        """Init the class:
+        """Init the class.
+
         container: instance of Docker-py Container
         """
         super(ThreadDockerGrabber, self).__init__()
@@ -601,9 +602,10 @@ class ThreadDockerGrabber(threading.Thread):
         logger.debug("docker plugin - Create thread for container {}".format(self._container.name))
 
     def run(self):
-        """Function called to grab stats.
-        Infinite loop, should be stopped by calling the stop() method"""
+        """Grab the stats.
 
+        Infinite loop, should be stopped by calling the stop() method
+        """
         for i in self._stats_stream:
             self._stats = i
             time.sleep(0.1)
@@ -612,19 +614,19 @@ class ThreadDockerGrabber(threading.Thread):
 
     @property
     def stats(self):
-        """Stats getter"""
+        """Stats getter."""
         return self._stats
 
     @stats.setter
     def stats(self, value):
-        """Stats setter"""
+        """Stats setter."""
         self._stats = value
 
     def stop(self, timeout=None):
-        """Stop the thread"""
+        """Stop the thread."""
         logger.debug("docker plugin - Close thread for container {}".format(self._container.name))
         self._stopper.set()
 
     def stopped(self):
-        """Return True is the thread is stopped"""
+        """Return True is the thread is stopped."""
         return self._stopper.isSet()

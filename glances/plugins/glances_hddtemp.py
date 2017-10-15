@@ -28,7 +28,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances HDD temperature sensors plugin.
 
     stats is a list
@@ -72,7 +71,6 @@ class Plugin(GlancesPlugin):
 
 
 class GlancesGrabHDDTemp(object):
-
     """Get hddtemp stats using a socket connection."""
 
     def __init__(self, host='127.0.0.1', port=7634, args=None):

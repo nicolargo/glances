@@ -44,7 +44,6 @@ items_history_list = [{'name': 'percent',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances swap memory plugin.
 
     stats is a dict

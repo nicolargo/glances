@@ -26,7 +26,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances folder plugin."""
 
     def __init__(self, args=None):
@@ -76,8 +75,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_alert(self, stat):
-        """Manage limits of the folder list"""
-
+        """Manage limits of the folder list."""
         if not isinstance(stat['size'], numbers.Number):
             return 'DEFAULT'
         else:

@@ -37,7 +37,6 @@ else:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances quicklook plugin.
 
     'stats' is a dictionary.
@@ -143,7 +142,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def _msg_create_line(self, msg, bar, key):
-        """Create a new line to the Quickview"""
+        """Create a new line to the Quickview."""
         ret = []
 
         ret.append(self.curse_add_line(msg))
@@ -155,5 +154,5 @@ class Plugin(GlancesPlugin):
         return ret
 
     def _hz_to_ghz(self, hz):
-        """Convert Hz to Ghz"""
+        """Convert Hz to Ghz."""
         return hz / 1000000000.0

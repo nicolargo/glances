@@ -28,7 +28,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances help plugin."""
 
     def __init__(self, args=None, config=None):
@@ -54,6 +53,7 @@ class Plugin(GlancesPlugin):
         pass
 
     def generate_view_data(self):
+        """Generate the views."""
         self.view_data['version'] = '{} {}'.format('Glances', __version__)
         self.view_data['psutil_version'] = ' with PSutil {}'.format(psutil_version)
 
@@ -103,6 +103,7 @@ class Plugin(GlancesPlugin):
         self.view_data['edit_pattern_filter'] = 'ENTER: Edit the process filter pattern'
 
     def get_view_data(self, args=None):
+        """Return the view."""
         return self.view_data
 
     def msg_curse(self, args=None):
