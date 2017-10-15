@@ -146,6 +146,9 @@ Examples of use:
                             dest='disable_webui', help='disable the Web Interface')
         parser.add_argument('--disable-wifi', action='store_true', default=False,
                             dest='disable_wifi', help='disable wifi module')
+        parser.add_argument('--light', '--enable-light', action='store_true',
+                            default=False, dest='enable_light',
+                            help='light mode for Curses UI (disable all but top menu)')
         parser.add_argument('-0', '--disable-irix', action='store_true', default=False,
                             dest='disable_irix', help='task\'s cpu usage will be divided by the total number of CPUs')
         parser.add_argument('-1', '--percpu', action='store_true', default=False,
@@ -355,6 +358,15 @@ Examples of use:
         # Display Rx and Tx, not the sum for the network
         args.network_sum = False
         args.network_cumul = False
+
+        # Manage light mode
+        if args.enable_light:
+            logger.info("Light mode is on")
+            args.disable_left_sidebar = True
+            args.disable_process = True
+            args.disable_alert = True
+            args.disable_amps = True
+            args.disable_docker = True
 
         # Manage full quicklook option
         if args.full_quicklook:
