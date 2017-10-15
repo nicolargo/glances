@@ -23,7 +23,7 @@ from datetime import datetime
 
 from glances.logs import glances_logs
 from glances.thresholds import glances_thresholds
-from glances.logger import logger
+# from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # Static decision tree for the global alert message
@@ -61,8 +61,10 @@ tree = [{'msg': 'No warning or critical alert detected',
 
 
 def global_message():
-    """Parse the decision tree and return the message
-    corresponding to the current threasholds values"""
+    """Parse the decision tree and return the message.
+
+    Note: message corresponding to the current threasholds values
+    """
     # Compute the weight for each item in the tree
     current_thresholds = glances_thresholds.get()
     for i in tree:
@@ -76,7 +78,6 @@ def global_message():
 
 
 class Plugin(GlancesPlugin):
-
     """Glances alert plugin.
 
     Only for display.

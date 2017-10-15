@@ -41,7 +41,6 @@ items_history_list = [{'name': 'read_bytes',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances disks I/O plugin.
 
     stats is a list

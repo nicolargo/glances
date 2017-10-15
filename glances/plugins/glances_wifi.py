@@ -38,8 +38,8 @@ else:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances Wifi plugin.
+
     Get stats of the current Wifi hotspots.
     """
 
@@ -130,11 +130,11 @@ class Plugin(GlancesPlugin):
 
     def get_alert(self, value):
         """Overwrite the default get_alert method.
+
         Alert is on signal quality where lower is better...
 
         :returns: string -- Signal alert
         """
-
         ret = 'OK'
         try:
             if value <= self.get_limit('critical', stat_name=self.plugin_name):

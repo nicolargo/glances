@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""GPU plugin (limited to NVIDIA chipsets)"""
+"""GPU plugin (limited to NVIDIA chipsets)."""
 
 from glances.compat import nativestr
 from glances.logger import logger
@@ -34,14 +34,13 @@ else:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances GPU plugin (limited to NVIDIA chipsets).
 
     stats is a list of dictionaries with one entry per GPU
     """
 
     def __init__(self, args=None):
-        """Init the plugin"""
+        """Init the plugin."""
         super(Plugin, self).__init__(args=args)
 
         # Init the NVidia API
@@ -58,7 +57,7 @@ class Plugin(GlancesPlugin):
         self.stats = []
 
     def init_nvidia(self):
-        """Init the NVIDIA API"""
+        """Init the NVIDIA API."""
         if not gpu_nvidia_tag:
             self.nvml_ready = False
 
@@ -79,8 +78,7 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
-        """Update the GPU stats"""
-
+        """Update the GPU stats."""
         self.reset()
 
         # !!! JUST FOR TEST
@@ -212,7 +210,7 @@ class Plugin(GlancesPlugin):
         return ret
 
     def get_device_stats(self):
-        """Get GPU stats"""
+        """Get GPU stats."""
         stats = []
 
         for index, device_handle in enumerate(self.device_handles):
@@ -232,7 +230,7 @@ class Plugin(GlancesPlugin):
         return stats
 
     def exit(self):
-        """Overwrite the exit method to close the GPU API"""
+        """Overwrite the exit method to close the GPU API."""
         if self.nvml_ready:
             try:
                 pynvml.nvmlShutdown()
@@ -244,14 +242,15 @@ class Plugin(GlancesPlugin):
 
 
 def get_device_handles():
-    """
-    Returns a list of NVML device handles, one per device.  Can throw NVMLError.
+    """Get a list of NVML device handles, one per device.
+
+    Can throw NVMLError.
     """
     return [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
 
 
 def get_device_name(device_handle):
-    """Get GPU device name"""
+    """Get GPU device name."""
     try:
         return nativestr(pynvml.nvmlDeviceGetName(device_handle))
     except pynvml.NVMlError:
@@ -259,7 +258,7 @@ def get_device_name(device_handle):
 
 
 def get_mem(device_handle):
-    """Get GPU device memory consumption in percent"""
+    """Get GPU device memory consumption in percent."""
     try:
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
         return memory_info.used * 100.0 / memory_info.total
@@ -268,7 +267,7 @@ def get_mem(device_handle):
 
 
 def get_proc(device_handle):
-    """Get GPU device CPU consumption in percent"""
+    """Get GPU device CPU consumption in percent."""
     try:
         return pynvml.nvmlDeviceGetUtilizationRates(device_handle).gpu
     except pynvml.NVMLError:

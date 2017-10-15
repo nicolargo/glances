@@ -57,7 +57,6 @@ items_history_list = [{'name': 'user',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances CPU plugin.
 
     'stats' is a dictionary that contains the system-wide CPU utilization as a
@@ -88,7 +87,6 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update CPU stats using the input method."""
-
         # Reset stats
         self.reset()
 

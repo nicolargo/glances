@@ -48,7 +48,6 @@ items_history_list = [{'name': 'rx',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances network plugin.
 
     stats is a list

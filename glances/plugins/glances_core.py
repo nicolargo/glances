@@ -25,7 +25,6 @@ import psutil
 
 
 class Plugin(GlancesPlugin):
-
     """Glances CPU core plugin.
 
     Get stats about CPU core number.

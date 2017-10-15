@@ -25,7 +25,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
-
     """Glances AMPs plugin."""
 
     def __init__(self, args=None, config=None):

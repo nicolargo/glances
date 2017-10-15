@@ -36,7 +36,6 @@ from glances.thresholds import glances_thresholds
 
 
 class GlancesPlugin(object):
-
     """Main class for Glances plugin."""
 
     def __init__(self, args=None, items_history_list=None):
@@ -61,7 +60,6 @@ class GlancesPlugin(object):
         :args: args parameters
         :items_history_list: list of items to store in the history
         """
-
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
         # logger.debug("Init plugin %s" % self.plugin_name)
@@ -103,11 +101,13 @@ class GlancesPlugin(object):
 
     def reset(self):
         """Reset the stats.
-        This method should be overwrited by childs' classes"""
+
+        This method should be overwrited by childs' classes.
+        """
         self.stats = None
 
     def exit(self):
-        """Method to be called when Glances exit"""
+        """Just log an event when Glances exit."""
         logger.debug("Stop the {} plugin".format(self.plugin_name))
 
     def get_key(self):
@@ -115,7 +115,7 @@ class GlancesPlugin(object):
         return None
 
     def is_enable(self):
-        """Return true if plugin is enabled"""
+        """Return true if plugin is enabled."""
         try:
             d = getattr(self.args, 'disable_' + self.plugin_name)
         except AttributeError:
@@ -124,12 +124,14 @@ class GlancesPlugin(object):
             return d is False
 
     def is_disable(self):
-        """Return true if plugin is disabled"""
+        """Return true if plugin is disabled."""
         return not self.is_enable()
 
     def _json_dumps(self, d):
-        """Return the object 'd' in a JSON format
-        Manage the issue #815 for Windows OS"""
+        """Return the object 'd' in a JSON format.
+
+        Manage the issue #815 for Windows OS
+        """
         try:
             return json.dumps(d)
         except UnicodeDecodeError:
@@ -185,11 +187,13 @@ class GlancesPlugin(object):
         return self.items_history_list
 
     def get_raw_history(self, item=None, nb=0):
-        """Return
+        """Return the history (RAW format).
+
         - the stats history (dict of list) if item is None
         - the stats history for the given item (list) instead
         - None if item did not exist in the history
-        Limit to lasts nb items (all if nb=0)"""
+        Limit to lasts nb items (all if nb=0)
+        """
         s = self.stats_history.get(nb=nb)
         if item is None:
             return s
@@ -200,11 +204,13 @@ class GlancesPlugin(object):
                 return None
 
     def get_json_history(self, item=None, nb=0):
-        """Return:
+        """Return the history (JSON format).
+
         - the stats history (dict of list) if item is None
         - the stats history for the given item (list) instead
         - None if item did not exist in the history
-        Limit to lasts nb items (all if nb=0)"""
+        Limit to lasts nb items (all if nb=0)
+        """
         s = self.stats_history.get_json(nb=nb)
         if item is None:
             return s
@@ -216,12 +222,16 @@ class GlancesPlugin(object):
 
     def get_export_history(self, item=None):
         """Return the stats history object to export.
-        See get_raw_history for a full description"""
+
+        See get_raw_history for a full description
+        """
         return self.get_raw_history(item=item)
 
     def get_stats_history(self, item=None, nb=0):
-        """Return the stats history as a JSON object (dict or None).
-        Limit to lasts nb items (all if nb=0)"""
+        """Return the stats history (JSON format).
+
+        Limit to lasts nb items (all if nb=0)
+        """
         s = self.get_json_history(nb=nb)
 
         if item is None:
@@ -245,7 +255,8 @@ class GlancesPlugin(object):
             return None
 
     def get_trend(self, item, nb=6):
-        """Get the trend regarding to the last nb values
+        """Get the trend regarding to the last nb values.
+
         The trend is the diff between the mean of the last nb values
         and the current one.
         """
@@ -391,7 +402,7 @@ class GlancesPlugin(object):
                 return None
 
     def update_views(self):
-        """Default builder fo the stats views.
+        """Update the stats views.
 
         The V of MVC
         A dict of dict with the needed information to display the stats.
@@ -458,12 +469,11 @@ class GlancesPlugin(object):
                     return 'DEFAULT'
 
     def get_json_views(self, item=None, key=None, option=None):
-        """Return views in JSON"""
+        """Return the views (in JSON)."""
         return self._json_dumps(self.get_views(item, key, option))
 
     def load_limits(self, config):
         """Load limits from the configuration file, if it exists."""
-
         # By default set the history length to 3 points per second during one day
         self._limits['history_size'] = 28800
 
@@ -499,10 +509,12 @@ class GlancesPlugin(object):
         self._limits = input_limits
 
     def get_stats_action(self):
-        """Return stats for the action
+        """Return stats for the action.
+
         By default return all the stats.
         Can be overwrite by plugins implementation.
-        For example, Docker will return self.stats['containers']"""
+        For example, Docker will return self.stats['containers']
+        """
         return self.stats
 
     def get_alert(self,
@@ -589,7 +601,7 @@ class GlancesPlugin(object):
     def manage_threshold(self,
                          stat_name,
                          trigger):
-        """Manage the threshold for the current stat"""
+        """Manage the threshold for the current stat."""
         glances_thresholds.add(stat_name, trigger)
         # logger.info(glances_thresholds.get())
 
@@ -598,7 +610,7 @@ class GlancesPlugin(object):
                       trigger,
                       header,
                       action_key):
-        """Manage the action for the current stat"""
+        """Manage the action for the current stat."""
         # Here is a command line for the current trigger ?
         try:
             command, repeat = self.get_limit_action(trigger, stat_name=stat_name)
@@ -661,8 +673,10 @@ class GlancesPlugin(object):
 
     def get_limit_action(self, criticity, stat_name=""):
         """Return the tuple (action, repeat) for the alert.
+
         - action is a command line
-        - repeat is a bool"""
+        - repeat is a bool
+        """
         # Get the action for stat + header
         # Exemple: network_wlan0_rx_careful_action
         # Action key available ?
@@ -714,8 +728,8 @@ class GlancesPlugin(object):
             return []
 
     def is_hide(self, value, header=""):
-        """
-        Return True if the value is in the hide configuration list.
+        """Return True if the value is in the hide configuration list.
+
         The hide configuration list is defined in the glances.conf file.
         It is a comma separed list of regexp.
         Example for diskio:
@@ -818,8 +832,6 @@ class GlancesPlugin(object):
         """Make a nice human-readable string out of number.
 
         Number of decimal places increases as quantity approaches 1.
-
-        examples:
         CASE: 613421788        RESULT:       585M low_precision:       585M
         CASE: 5307033647       RESULT:      4.94G low_precision:       4.9G
         CASE: 44968414685      RESULT:      41.9G low_precision:      41.9G
@@ -866,8 +878,10 @@ class GlancesPlugin(object):
         return '{!s}'.format(number)
 
     def trend_msg(self, trend, significant=1):
-        """Return the trend message
-        Do not take into account if trend < significant"""
+        """Return the trend message.
+
+        Do not take into account if trend < significant
+        """
         ret = '-'
         if trend is None:
             ret = ' '

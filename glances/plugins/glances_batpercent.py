@@ -42,7 +42,6 @@ except AttributeError:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances battery capacity plugin.
 
     stats is a list
@@ -87,7 +86,6 @@ class Plugin(GlancesPlugin):
 
 
 class GlancesGrabBat(object):
-
     """Get batteries stats using the batinfo library."""
 
     def __init__(self):

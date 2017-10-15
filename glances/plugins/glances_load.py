@@ -48,7 +48,6 @@ items_history_list = [{'name': 'min1',
 
 
 class Plugin(GlancesPlugin):
-
     """Glances load plugin.
 
     stats is a dict

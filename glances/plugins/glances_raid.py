@@ -31,7 +31,6 @@ except ImportError:
 
 
 class Plugin(GlancesPlugin):
-
     """Glances RAID plugin.
 
     stats is a dict (see pymdstat documentation)
