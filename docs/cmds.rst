@@ -106,6 +106,10 @@ Command-Line Options
 
     disable Wifi module
 
+.. option:: --light, --enable-light
+
+    light mode for Curses UI (disable all but top menu)
+
 .. option:: -0, --disable-irix
 
     task's CPU usage will be divided by the total number of CPUs
