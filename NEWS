@@ -21,6 +21,18 @@ Backward-incompatible changes:
 
     * Support for Docker API < 2.0 is deprecated (docker plugins)
 
+News command line options:
+
+    --disable-webui  Disable the WebUI (only Restful API will respond)
+    --enable-light   Enable the light mode for the UI interface
+
+News configuration keys in the glances.conf file:
+
+    [docker]
+    # By default, Glances only display running containers
+    # Set the following key to True to display all containers
+    all=False
+
 ==============================================================================
 Glances Version 2
 ==============================================================================
