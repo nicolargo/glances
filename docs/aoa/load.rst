@@ -15,7 +15,7 @@ on GNU/Linux operating system:
     over 1, 5, and 15 minutes time periods."
 
 Be aware that Load on Linux and BSD are different things, high
-S`load on BSD`_ does not means high CPU load.
+`load on BSD`_ does not means high CPU load.
 
 Glances gets the number of CPU core to adapt the alerts.
 Alerts on load average are only set on 15 minutes time period.
