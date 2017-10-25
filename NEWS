@@ -20,7 +20,7 @@ Bugs corrected:
 
 Backward-incompatible changes:
 
-    * Support for Docker API < 2.0 is deprecated (Docker plugins)
+    * Minimum supported Docker API version is now 1.21 (Docker plugins)
     * Support for InfluxDB < 0.9 is deprecated (InfluxDB exporter)
 
 News command line options:
