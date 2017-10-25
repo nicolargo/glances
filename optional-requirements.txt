@@ -2,7 +2,7 @@ bernhard
 bottle
 cassandra-driver
 couchdb
-docker
+docker>=2.0.0
 elasticsearch
 influxdb
 kafka-python
