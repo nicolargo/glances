@@ -81,9 +81,11 @@ class Plugin(GlancesPlugin):
             cpu_info = cpuinfo.get_cpu_info()
             #  Check cpu_info (issue #881)
             if cpu_info is not None:
-                self.stats['cpu_name'] = cpu_info['brand']
-                self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
-                self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+                self.stats['cpu_name'] = cpu_info.get('brand', 'CPU')
+                if 'hz_actual_raw' in cpu_info:
+                    self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
+                if 'hz_advertised_raw' in cpu_info:
+                    self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
 
         return self.stats
 
