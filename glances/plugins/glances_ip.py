@@ -130,8 +130,9 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         msg = 'IP '
         ret.append(self.curse_add_line(msg, 'TITLE'))
-        msg = '{}'.format(self.stats['address'])
-        ret.append(self.curse_add_line(msg))
+        if 'address' in self.stats:
+            msg = '{}'.format(self.stats['address'])
+            ret.append(self.curse_add_line(msg))
         if 'mask_cidr' in self.stats:
             # VPN with no internet access (issue #842)
             msg = '/{}'.format(self.stats['mask_cidr'])
