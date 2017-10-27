@@ -30,8 +30,8 @@ Summary
 
 **Glances** is a cross-platform monitoring tool which aims to present a
 large amount of monitoring information through a curses or Web
-based interface. The information dynamically adapts depending on the 
-size of the user interface. 
+based interface. The information dynamically adapts depending on the
+size of the user interface.
 
 .. image:: https://raw.githubusercontent.com/nicolargo/glances/develop/docs/_static/glances-summary.png
 
@@ -139,7 +139,7 @@ features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
+    pip install 'glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]'
 
 To upgrade Glances to the latest version:
 
@@ -159,7 +159,7 @@ Docker: the funny way
 ---------------------
 
 A Glances container is available. It includes the latest development
-HEAD version. You can use it to monitor your server and all your other 
+HEAD version. You can use it to monitor your server and all your other
 containers!
 
 Get the Glances container:
@@ -204,8 +204,8 @@ GNU/Linux
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
-when you use this method the operating system package for `Glances` 
-may not be the latest version. 
+when you use this method the operating system package for `Glances`
+may not be the latest version.
 
 FreeBSD
 -------
