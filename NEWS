@@ -17,7 +17,8 @@ Bugs corrected:
     * Crash in the Wifi plugin on my Laptop #1151
     * Failed to connect to bus: No such file or directory #1156
     * glances_plugin.py has a problem with specific docker output #1160
-    * Key error 'address' in the IP plugin #1176 
+    * Key error 'address' in the IP plugin #1176
+    * NameError: name 'mode' is not defined in case of interrupt shortly after starting the server mode #1175
 
 Backward-incompatible changes:
 

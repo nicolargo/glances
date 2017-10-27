@@ -70,7 +70,13 @@ def __signal_handler(signal, frame):
 
 def end():
     """Stop Glances."""
-    mode.end()
+    try:
+        mode.end()
+    except NameError:
+        # NameError: name 'mode' is not defined in case of interrupt shortly...
+        # ...after starting the server mode (issue #1175)
+        pass
+
     logger.info("Glances stopped with CTRL-C")
 
     # The end...
@@ -78,7 +84,7 @@ def end():
 
 
 def start(config, args):
-    """Start Glances"""
+    """Start Glances."""
 
     # Load mode
     global mode
