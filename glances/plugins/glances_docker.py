@@ -509,7 +509,7 @@ class Plugin(GlancesPlugin):
                                                           max_width=name_max_width)))
             # Status
             status = self.container_alert(container['Status'])
-            msg = '{:>10}'.format(msg[0:10])
+            msg = '{:>10}'.format(container['Status'][0:10])
             ret.append(self.curse_add_line(msg, status))
             # CPU
             try:
