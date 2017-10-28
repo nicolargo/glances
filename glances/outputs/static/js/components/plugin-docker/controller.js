@@ -24,7 +24,7 @@ function GlancesPluginDockerController($scope, GlancesStats) {
         vm.containers = stats['containers'].map(function(containerData) {
             return {
                 'id': containerData.Id,
-                'name': containerData.Names[0].split('/').splice(-1)[0],
+                'name': containerData.name,
                 'status': containerData.Status,
                 'cpu': containerData.cpu.total,
                 'memory': containerData.memory.usage != undefined ? containerData.memory.usage : '?',

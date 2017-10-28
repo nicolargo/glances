@@ -182,8 +182,14 @@ class Plugin(GlancesPlugin):
                 container_stats = {}
                 # The key is the container name and not the Id
                 container_stats['key'] = self.get_key()
-                # Export name (first name in the list, without the /)
+                # Export name (first name in the Names list, without the /)
                 container_stats['name'] = container.name
+                # Export global Names (used by the WebUI)
+                container_stats['Names'] = [container.name]
+                # Container Id
+                container_stats['Id'] = container.id
+                # Container Image
+                container_stats['Image'] = container.image.tags
                 # Global stats (from attrs)
                 container_stats['Status'] = container.attrs['State']['Status']
                 container_stats['Command'] = container.attrs['Config']['Entrypoint']
@@ -473,13 +479,11 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
-        # msg = '{:>14}'.format('Id')
-        # ret.append(self.curse_add_line(msg))
         # Get the maximum containers name (cutted to 20 char max)
         name_max_width = min(20, len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg))
-        msg = '{:>26}'.format('Status')
+        msg = '{:>10}'.format('Status')
         ret.append(self.curse_add_line(msg))
         msg = '{:>6}'.format('CPU%')
         ret.append(self.curse_add_line(msg))
@@ -500,21 +504,12 @@ class Plugin(GlancesPlugin):
         # Data
         for container in self.stats['containers']:
             ret.append(self.curse_new_line())
-            # Id
-            # msg = '{:>14}'.format(container['Id'][0:12])
-            # ret.append(self.curse_add_line(msg))
             # Name
-            name = container['name']
-            if len(name) > name_max_width:
-                name = '_' + name[-name_max_width + 1:]
-            else:
-                name = name[:name_max_width]
-            msg = ' {:{width}}'.format(name, width=name_max_width)
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(self._msg_name(container=container,
+                                                          max_width=name_max_width)))
             # Status
             status = self.container_alert(container['Status'])
-            msg = container['Status'].replace("minute", "min")
-            msg = '{:>26}'.format(msg[0:25])
+            msg = '{:>10}'.format(msg[0:10])
             ret.append(self.curse_add_line(msg, status))
             # CPU
             try:
@@ -562,10 +557,22 @@ class Plugin(GlancesPlugin):
                     msg = '{:>7}'.format('_')
                 ret.append(self.curse_add_line(msg))
             # Command
-            msg = ' {}'.format(container['Command'])
+            if container['Command'] is not None:
+                msg = ' {}'.format(' '.join(container['Command']))
+            else:
+                msg = ' {}'.format('_')
             ret.append(self.curse_add_line(msg, splittable=True))
 
         return ret
+
+    def _msg_name(self, container, max_width):
+        """Build the container name."""
+        name = container['name']
+        if len(name) > max_width:
+            name = '_' + name[-max_width + 1:]
+        else:
+            name = name[:max_width]
+        return ' {:{width}}'.format(name, width=max_width)
 
     def container_alert(self, status):
         """Analyse the container status."""
