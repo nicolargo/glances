@@ -263,15 +263,10 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Max size for the interface name
-        if max_width is not None and max_width >= 23:
-            # Interface size name = max_width - space for interfaces bitrate
-            ifname_max_width = max_width - 14
-        else:
-            ifname_max_width = 9
+        name_max_width = max_width - 12
 
-        # Build the string message
         # Header
-        msg = '{:{width}}'.format('NETWORK', width=ifname_max_width)
+        msg = '{:{width}}'.format('NETWORK', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.network_cumul:
             # Cumulative stats
@@ -307,9 +302,9 @@ class Plugin(GlancesPlugin):
             ifname = self.has_alias(i['interface_name'])
             if ifname is None:
                 ifname = ifrealname
-            if len(ifname) > ifname_max_width:
+            if len(ifname) > name_max_width:
                 # Cut interface name if it is too long
-                ifname = '_' + ifname[-ifname_max_width + 1:]
+                ifname = '_' + ifname[-name_max_width + 1:]
 
             if args.byte:
                 # Bytes per second (for dummy)
@@ -333,7 +328,7 @@ class Plugin(GlancesPlugin):
 
             # New line
             ret.append(self.curse_new_line())
-            msg = '{:{width}}'.format(ifname, width=ifname_max_width)
+            msg = '{:{width}}'.format(ifname, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.network_sum:
                 msg = '{:>14}'.format(sx)

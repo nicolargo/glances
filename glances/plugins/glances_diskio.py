@@ -157,7 +157,7 @@ class Plugin(GlancesPlugin):
             self.views[i[self.get_key()]]['write_bytes']['decoration'] = self.get_alert(int(i['write_bytes'] // i['time_since_update']),
                                                                                         header=disk_real_name + '_tx')
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -166,9 +166,11 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Build the string message
+        # Max size for the interface name
+        name_max_width = max_width - 12
+
         # Header
-        msg = '{:9}'.format('DISK I/O')
+        msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.diskio_iops:
             msg = '{:>7}'.format('IOR/s')
@@ -189,10 +191,10 @@ class Plugin(GlancesPlugin):
                 disk_name = disk_real_name
             # New line
             ret.append(self.curse_new_line())
-            if len(disk_name) > 9:
+            if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
-                disk_name = '_' + disk_name[-8:]
-            msg = '{:9}'.format(disk_name)
+                disk_name = '_' + disk_name[-name_max_width:]
+            msg = '{:{width}}'.format(disk_name, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
                 # count

@@ -768,6 +768,7 @@ class GlancesPlugin(object):
             align_curse = self._align
 
         if max_width is not None:
+            logger.info(self.plugin_name)
             ret = {'display': display_curse,
                    'msgdict': self.msg_curse(args, max_width=max_width),
                    'align': align_curse}

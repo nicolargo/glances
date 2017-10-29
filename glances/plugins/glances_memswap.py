@@ -142,7 +142,7 @@ class Plugin(GlancesPlugin):
         # Alert and log
         self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
