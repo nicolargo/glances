@@ -161,7 +161,7 @@ class Plugin(GlancesPlugin):
             else:
                 self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(i['value'], header=i['type'])
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
@@ -170,11 +170,14 @@ class Plugin(GlancesPlugin):
         if not self.stats or args.disable_sensors:
             return ret
 
-        # Build the string message
+        # Max size for the interface name
+        name_max_width = max_width - 12
+
         # Header
-        msg = '{:18}'.format('SENSORS')
+        msg = '{:{width}}'.format('SENSORS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
 
+        # Stats
         for i in self.stats:
             # Do not display anything if no battery are detected
             if i['type'] == 'battery' and i['value'] == []:
@@ -185,13 +188,11 @@ class Plugin(GlancesPlugin):
             label = self.has_alias(i['label'].lower())
             if label is None:
                 label = i['label']
-            if i['type'] != 'fan_speed':
-                msg = '{:15}'.format(label[:15])
-            else:
-                msg = '{:13}'.format(label[:13])
+            msg = '{:{width}}'.format(label[:name_max_width],
+                                      width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if i['value'] in (b'ERR', b'SLP', b'UNK', b'NOS'):
-                msg = '{:>8}'.format(i['value'])
+                msg = '{:>13}'.format(i['value'])
                 ret.append(self.curse_add_line(
                     msg, self.get_views(item=i[self.get_key()],
                                         key='value',
@@ -205,7 +206,7 @@ class Plugin(GlancesPlugin):
                     value = i['value']
                     unit = i['unit']
                 try:
-                    msg = '{:>7.0f}{}'.format(value, unit)
+                    msg = '{:>13.0f}{}'.format(value, unit)
                     ret.append(self.curse_add_line(
                         msg, self.get_views(item=i[self.get_key()],
                                             key='value',

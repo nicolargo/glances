@@ -90,7 +90,7 @@ class Plugin(GlancesPlugin):
 
         return ret
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []

@@ -203,16 +203,12 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Max size for the fsname name
-        if max_width is not None and max_width >= 23:
-            # Interface size name = max_width - space for interfaces bitrate
-            fsname_max_width = max_width - 14
-        else:
-            fsname_max_width = 9
+        # Max size for the interface name
+        name_max_width = max_width - 12
 
         # Build the string message
         # Header
-        msg = '{:{width}}'.format('FILE SYS', width=fsname_max_width)
+        msg = '{:{width}}'.format('FILE SYS', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
         if args.fs_free_space:
             msg = '{:>7}'.format('Free')
@@ -227,16 +223,16 @@ class Plugin(GlancesPlugin):
             # New line
             ret.append(self.curse_new_line())
             if i['device_name'] == '' or i['device_name'] == 'none':
-                mnt_point = i['mnt_point'][-fsname_max_width + 1:]
-            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= fsname_max_width - 3:
+                mnt_point = i['mnt_point'][-name_max_width + 1:]
+            elif len(i['mnt_point']) + len(i['device_name'].split('/')[-1]) <= name_max_width - 3:
                 # If possible concatenate mode info... Glances touch inside :)
                 mnt_point = i['mnt_point'] + ' (' + i['device_name'].split('/')[-1] + ')'
-            elif len(i['mnt_point']) > fsname_max_width:
+            elif len(i['mnt_point']) > name_max_width:
                 # Cut mount point name if it is too long
-                mnt_point = '_' + i['mnt_point'][-fsname_max_width + 1:]
+                mnt_point = '_' + i['mnt_point'][-name_max_width + 1:]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{:{width}}'.format(mnt_point, width=fsname_max_width)
+            msg = '{:{width}}'.format(mnt_point, width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:
                 msg = '{:>7}'.format(self.auto_unit(i['free']))

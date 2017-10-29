@@ -85,7 +85,13 @@ class _GlancesCurses(object):
         'u': {'auto_sort': False, 'sort_key': 'username'},
     }
 
-    _sort_loop = ['cpu_percent', 'memory_percent', 'username', 'cpu_times', 'io_counters', 'name']
+    _sort_loop = ['cpu_percent', 'memory_percent', 'username',
+                  'cpu_times', 'io_counters', 'name']
+
+    _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
+                     'irq', 'folders', 'raid', 'sensors', 'now']
+    _left_sidebar_min_width = 23
+    _left_sidebar_max_width = 84
 
     def __init__(self, config=None, args=None):
         # Init
@@ -469,31 +475,40 @@ class _GlancesCurses(object):
         """New column in the curses interface."""
         self.column = self.next_column
 
-    def __get_stat_display(self, stats, plugin_max_width):
-        """Return a dict of dict with all the stats display
-        * key: plugin name
-        * value: dict returned by the get_stats_display Plugin method
+    def __get_stat_display(self, stats, layer):
+        """Return a dict of dict with all the stats display.
+        stats: Global stats dict
+        layer: ~ cs_status
+            "None": standalone or server mode
+            "Connected": Client is connected to a Glances server
+            "SNMP": Client is connected to a SNMP server
+            "Disconnected": Client is disconnected from the server
 
         :returns: dict of dict
+            * key: plugin name
+            * value: dict returned by the get_stats_display Plugin method
         """
         ret = {}
+
         for p in stats.getAllPlugins(enable=False):
-            if p in ['network', 'wifi', 'irq', 'fs', 'folders']:
-                ret[p] = stats.get_plugin(p).get_stats_display(
-                    args=self.args, max_width=plugin_max_width)
-            elif p in ['quicklook']:
-                # Grab later because we need plugin size
+            if p == 'quicklook':
                 continue
-            else:
-                # system, uptime, cpu, percpu, gpu, load, mem, memswap, ip,
-                # ... diskio, raid, sensors, ports, now, docker, processcount,
-                # ... amps, alert
-                try:
-                    ret[p] = stats.get_plugin(p).get_stats_display(args=self.args)
-                except AttributeError:
-                    ret[p] = None
+
+            # Compute the plugin max size
+            plugin_max_width = None
+            if p in self._left_sidebar:
+                plugin_max_width = max(self._left_sidebar_min_width,
+                                       self.screen.getmaxyx()[1] - 105)
+                plugin_max_width = min(self._left_sidebar_max_width,
+                                       plugin_max_width)
+
+            # Get the view
+            ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
+                                                           max_width=plugin_max_width)
+
         if self.args.percpu:
             ret['cpu'] = ret['percpu']
+
         return ret
 
     def display(self, stats, cs_status=None):
@@ -513,19 +528,12 @@ class _GlancesCurses(object):
         # Init the internal line/column for Glances Curses
         self.init_line_column()
 
-        # No processes list in SNMP mode
-        if cs_status == 'SNMP':
-            # so... more space for others plugins
-            plugin_max_width = 43
-        else:
-            plugin_max_width = None
-
         # Update the stats messages
         ###########################
 
         # Update the client server status
         self.args.cs_status = cs_status
-        __stat_display = self.__get_stat_display(stats, plugin_max_width)
+        __stat_display = self.__get_stat_display(stats, layer=cs_status)
 
         # Adapt number of processes to the available space
         max_processes_displayed = (
@@ -729,14 +737,10 @@ class _GlancesCurses(object):
         self.saved_line = self.next_line
 
     def __display_left(self, stat_display):
-        """Display the left sidebar in the Curses interface.
-
-        network+wifi+ports+diskio+fs+irq+folders+raid+sensors+now
-        """
+        """Display the left sidebar in the Curses interface."""
         self.init_column()
         if not self.args.disable_left_sidebar:
-            for s in ['network', 'wifi', 'ports', 'diskio', 'fs', 'irq',
-                      'folders', 'raid', 'sensors', 'now']:
+            for s in self._left_sidebar:
                 if ((hasattr(self.args, 'enable_' + s) or
                      hasattr(self.args, 'disable_' + s)) and s in stat_display):
                     self.new_line()

@@ -106,7 +106,7 @@ class Plugin(GlancesPlugin):
         """Return the view."""
         return self.view_data
 
-    def msg_curse(self, args=None):
+    def msg_curse(self, args=None, max_width=None):
         """Return the list to display in the curse interface."""
         # Init the return message
         ret = []
