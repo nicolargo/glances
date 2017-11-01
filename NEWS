@@ -7,6 +7,7 @@ Version 3.0
 
 Enhancements and new features:
 
+    * Make the left side bar width dynamic in the Curse UI #1177
     * A way to have only REST API available and disable WEB GUI access #1149
     * Docker module doesn't export details about stopped containers #1152
     * Add a light mode for the console UI #1165
@@ -19,7 +20,7 @@ Bugs corrected:
     * glances_plugin.py has a problem with specific docker output #1160
     * Key error 'address' in the IP plugin #1176
     * NameError: name 'mode' is not defined in case of interrupt shortly after starting the server mode #1175
-    * Crash on startup: KeyError: 'hz_actual_raw' on Raspbian 9.1 #1170 
+    * Crash on startup: KeyError: 'hz_actual_raw' on Raspbian 9.1 #1170
 
 Backward-incompatible changes:
 
