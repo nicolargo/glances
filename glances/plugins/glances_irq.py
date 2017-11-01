@@ -92,23 +92,22 @@ class Plugin(GlancesPlugin):
         if not LINUX or not self.stats or not self.args.enable_irq:
             return ret
 
-        if max_width is not None and max_width >= 23:
-            irq_max_width = max_width - 14
-        else:
-            irq_max_width = 9
+        # Max size for the interface name
+        name_max_width = max_width - 7
 
         # Build the string message
         # Header
-        msg = '{:{width}}'.format('IRQ', width=irq_max_width)
+        msg = '{:{width}}'.format('IRQ', width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{:>14}'.format('Rate/s')
+        msg = '{:>9}'.format('Rate/s')
         ret.append(self.curse_add_line(msg))
 
         for i in self.stats:
             ret.append(self.curse_new_line())
-            msg = '{:<15}'.format(i['irq_line'][:15])
+            msg = '{:{width}}'.format(i['irq_line'][:name_max_width],
+                                      width=name_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>8}'.format(str(i['irq_rate']))
+            msg = '{:>9}'.format(str(i['irq_rate']))
             ret.append(self.curse_add_line(msg))
 
         return ret

@@ -99,25 +99,29 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Build the string message
+        # Max size for the interface name
+        name_max_width = max_width - 7
+
         # Header
-        msg = '{}'.format('FOLDERS')
+        msg = '{:{width}}'.format('FOLDERS',
+                                  width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
 
         # Data
         for i in self.stats:
             ret.append(self.curse_new_line())
-            if len(i['path']) > 15:
+            if len(i['path']) > name_max_width:
                 # Cut path if it is too long
-                path = '_' + i['path'][-15 + 1:]
+                path = '_' + i['path'][-name_max_width + 1:]
             else:
                 path = i['path']
-            msg = '{:<16} '.format(path)
+            msg = '{:{width}}'.format(path,
+                                      width=name_max_width)
             ret.append(self.curse_add_line(msg))
             try:
-                msg = '{:>6}'.format(self.auto_unit(i['size']))
+                msg = '{:>9}'.format(self.auto_unit(i['size']))
             except (TypeError, ValueError):
-                msg = '{:>6}'.format(i['size'])
+                msg = '{:>9}'.format(i['size'])
             ret.append(self.curse_add_line(msg, self.get_alert(i)))
 
         return ret

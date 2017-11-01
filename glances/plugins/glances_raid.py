@@ -60,6 +60,9 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
+                # Just for test
+                # mds = MdStat(path='~/dev/pymdstat/tests/mdstat.02')
+                # Note: replace 02 by 02 ==> 09
                 mds = MdStat()
                 self.stats = mds.get_stats()['arrays']
             except Exception as e:
@@ -82,13 +85,16 @@ class Plugin(GlancesPlugin):
         if not self.stats:
             return ret
 
-        # Build the string message
+        # Max size for the interface name
+        name_max_width = max_width - 12
+
         # Header
-        msg = '{:11}'.format('RAID disks')
+        msg = '{:{width}}'.format('RAID disks',
+                                  width=name_max_width)
         ret.append(self.curse_add_line(msg, "TITLE"))
-        msg = '{:>6}'.format('Used')
+        msg = '{:>7}'.format('Used')
         ret.append(self.curse_add_line(msg))
-        msg = '{:>6}'.format('Avail')
+        msg = '{:>7}'.format('Avail')
         ret.append(self.curse_add_line(msg))
         # Data
         arrays = sorted(iterkeys(self.stats))
@@ -99,12 +105,15 @@ class Plugin(GlancesPlugin):
             status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
             # Data: RAID type name | disk used | disk available
             array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
-            msg = '{:<5}{:>6}'.format(array_type, array)
+            # Build the full name = array type + array name
+            full_name = '{} {}'.format(array_type, array)
+            msg = '{:{width}}'.format(full_name,
+                                      width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if self.stats[array]['status'] == 'active':
-                msg = '{:>6}'.format(self.stats[array]['used'])
+                msg = '{:>7}'.format(self.stats[array]['used'])
                 ret.append(self.curse_add_line(msg, status))
-                msg = '{:>6}'.format(self.stats[array]['available'])
+                msg = '{:>7}'.format(self.stats[array]['available'])
                 ret.append(self.curse_add_line(msg, status))
             elif self.stats[array]['status'] == 'inactive':
                 ret.append(self.curse_new_line())

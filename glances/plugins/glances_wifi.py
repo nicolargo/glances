@@ -169,11 +169,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Max size for the interface name
-        if max_width is not None and max_width >= 23:
-            # Interface size name = max_width - space for encyption + quality
-            ifname_max_width = max_width - 5
-        else:
-            ifname_max_width = 16
+        ifname_max_width = max_width - 5
 
         # Build the string message
         # Header
@@ -198,7 +194,8 @@ class Plugin(GlancesPlugin):
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(hotspotname, width=ifname_max_width)
+            msg = '{:{width}}'.format(hotspotname,
+                                      width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(i['signal'], width=ifname_max_width)
             ret.append(self.curse_add_line(msg,

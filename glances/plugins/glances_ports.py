@@ -132,6 +132,9 @@ class Plugin(GlancesPlugin):
         if not self.stats or args.disable_ports:
             return ret
 
+        # Max size for the interface name
+        name_max_width = max_width - 7
+
         # Build the string message
         for p in self.stats:
             if 'host' in p:
@@ -147,13 +150,15 @@ class Plugin(GlancesPlugin):
                     # Convert second to ms
                     status = '{0:.0f}ms'.format(p['status'] * 1000.0)
 
-                msg = '{:14.14} '.format(p['description'])
+                msg = '{:{width}}'.format(p['description'][0:name_max_width],
+                                          width=name_max_width)
                 ret.append(self.curse_add_line(msg))
-                msg = '{:>8}'.format(status)
+                msg = '{:>9}'.format(status)
                 ret.append(self.curse_add_line(msg, self.get_ports_alert(p)))
                 ret.append(self.curse_new_line())
             elif 'url' in p:
-                msg = '{:14.14} '.format(p['description'])
+                msg = '{:{width}}'.format(p['description'][0:name_max_width],
+                                          width=name_max_width)
                 ret.append(self.curse_add_line(msg))
                 if isinstance(p['status'], numbers.Number):
                     status = 'Code {}'.format(p['status'])
@@ -161,7 +166,7 @@ class Plugin(GlancesPlugin):
                     status = 'Scanning'
                 else:
                     status = p['status']
-                msg = '{:>8}'.format(status)
+                msg = '{:>9}'.format(status)
                 ret.append(self.curse_add_line(msg, self.get_web_alert(p)))
                 ret.append(self.curse_new_line())
 
