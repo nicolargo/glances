@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
-        logger.info(ret)
+        # logger.info(ret)
         return ret
 
 
