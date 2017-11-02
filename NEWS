@@ -21,6 +21,7 @@ Bugs corrected:
     * Key error 'address' in the IP plugin #1176
     * NameError: name 'mode' is not defined in case of interrupt shortly after starting the server mode #1175
     * Crash on startup: KeyError: 'hz_actual_raw' on Raspbian 9.1 #1170
+    * Add missing mount-observe and system-observe interfaces #1179
 
 Backward-incompatible changes:
 
