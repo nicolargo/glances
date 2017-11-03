@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Oct 15, 2017" "3.0_DEV" "Glances"
+.TH "GLANCES" "1" "Nov 03, 2017" "3.0_DEV" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -170,6 +170,11 @@ disable the Web UI (only the Restful API will respond)
 .TP
 .B \-\-disable\-wifi
 disable Wifi module
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-light, \-\-enable\-light
+light mode for Curses UI (disable all but top menu)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -394,12 +399,12 @@ force short name for processes name
 .INDENT 0.0
 .TP
 .B \-\-hide\-kernel\-threads
-hide kernel threads in process list
+hide kernel threads in process list (not available on Windows)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-tree
-display processes as a tree
+display processes as a tree (Linux only)
 .UNINDENT
 .INDENT 0.0
 .TP

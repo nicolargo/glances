@@ -288,11 +288,11 @@ Command-Line Options
 
 .. option:: --hide-kernel-threads
 
-    hide kernel threads in process list
+    hide kernel threads in process list (not available on Windows)
 
 .. option:: --tree
 
-    display processes as a tree
+    display processes as a tree (Linux only)
 
 .. option:: -b, --byte
 
