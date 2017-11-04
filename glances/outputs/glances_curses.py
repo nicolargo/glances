@@ -88,10 +88,17 @@ class _GlancesCurses(object):
     _sort_loop = ['cpu_percent', 'memory_percent', 'username',
                   'cpu_times', 'io_counters', 'name']
 
+    # Define top menu
+    _top = ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']
+
+    # Define left sidebar
     _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
                      'irq', 'folders', 'raid', 'sensors', 'now']
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 84
+
+    # Define right sidebar
+    _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
 
     def __init__(self, config=None, args=None):
         # Init
@@ -571,12 +578,12 @@ class _GlancesCurses(object):
         # Display first line (system+ip+uptime)
         # Optionnaly: Cloud on second line
         # =====================================
-        self.__display_firstline(__stat_display)
+        self.__display_header(__stat_display)
 
         # ==============================================================
         # Display second line (<SUMMARY>+CPU|PERCPU+<GPU>+LOAD+MEM+SWAP)
         # ==============================================================
-        self.__display_secondline(__stat_display, stats)
+        self.__display_top(__stat_display, stats)
 
         # ==================================================================
         # Display left sidebar (NETWORK+PORTS+DISKIO+FS+SENSORS+Current time)
@@ -633,33 +640,34 @@ class _GlancesCurses(object):
 
         return True
 
-    def __display_firstline(self, stat_display):
-        """Display the first line in the Curses interface.
+    def __display_header(self, stat_display):
+        """Display the firsts lines (header) in the Curses interface.
 
         system + ip + uptime
+        (cloud)
         """
-        # Space between column
-        self.space_between_column = 0
+        # First line
         self.new_line()
+        self.space_between_column = 0
         l_uptime = (self.get_stats_display_width(stat_display["system"]) +
-                    self.space_between_column +
-                    self.get_stats_display_width(stat_display["ip"]) + 3 +
-                    self.get_stats_display_width(stat_display["uptime"]))
+                    self.get_stats_display_width(stat_display["ip"]) +
+                    self.get_stats_display_width(stat_display["uptime"]) + 1)
         self.display_plugin(
             stat_display["system"],
             display_optional=(self.screen.getmaxyx()[1] >= l_uptime))
-        self.new_column()
-        self.display_plugin(stat_display["ip"])
-        # Space between column
         self.space_between_column = 3
         self.new_column()
-        self.display_plugin(stat_display["uptime"],
-                            add_space=self.get_stats_display_width(stat_display["cloud"]) == 0)
+        self.display_plugin(stat_display["ip"])
+        self.new_column()
+        self.display_plugin(
+            stat_display["uptime"],
+            add_space=self.get_stats_display_width(stat_display["cloud"]) == 0)
+        # Second line (optional)
         self.init_column()
         self.new_line()
         self.display_plugin(stat_display["cloud"])
 
-    def __display_secondline(self, stat_display, stats):
+    def __display_top(self, stat_display, stats):
         """Display the second line in the Curses interface.
 
         <QUICKLOOK> + CPU|PERCPU + <GPU> + MEM + SWAP + LOAD
@@ -671,20 +679,15 @@ class _GlancesCurses(object):
         stat_display['quicklook'] = {'msgdict': []}
 
         # Dict for plugins width
-        plugin_widths = {'quicklook': 0}
-        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
-            plugin_widths[p] = self.get_stats_display_width(stat_display[p]) if hasattr(self.args, 'disable_' + p) and p in stat_display else 0
+        plugin_widths = {}
+        for p in self._top:
+            plugin_widths[p] = self.get_stats_display_width(stat_display.get(p, 0)) if hasattr(self.args, 'disable_' + p) else 0
 
         # Width of all plugins
         stats_width = sum(itervalues(plugin_widths))
 
         # Number of plugin but quicklook
-        stats_number = (
-            int(not self.args.disable_cpu and stat_display["cpu"]['msgdict'] != []) +
-            int(not self.args.disable_gpu and stat_display["gpu"]['msgdict'] != []) +
-            int(not self.args.disable_mem and stat_display["mem"]['msgdict'] != []) +
-            int(not self.args.disable_memswap and stat_display["memswap"]['msgdict'] != []) +
-            int(not self.args.disable_load and stat_display["load"]['msgdict'] != []))
+        stats_number = sum([int(stat_display[p]['msgdict'] != []) for p in self._top if not getattr(self.args, 'disable_' + p)])
 
         if not self.args.disable_quicklook:
             # Quick look is in the place !
@@ -707,7 +710,7 @@ class _GlancesCurses(object):
         # Compute spaces between plugins
         # Note: Only one space between Quicklook and others
         plugin_display_optional = {}
-        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
+        for p in self._top:
             plugin_display_optional[p] = True
         if stats_number > 1:
             self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
@@ -722,7 +725,9 @@ class _GlancesCurses(object):
             self.space_between_column = 0
 
         # Display CPU, MEM, SWAP and LOAD
-        for p in ['cpu', 'gpu', 'mem', 'memswap', 'load']:
+        for p in self._top:
+            if p == 'quicklook':
+                continue
             if p in stat_display:
                 self.display_plugin(stat_display[p],
                                     display_optional=plugin_display_optional[p])
@@ -751,27 +756,24 @@ class _GlancesCurses(object):
 
         docker + processcount + amps + processlist + alert
         """
-        # If space available...
-        if self.screen.getmaxyx()[1] > 52:
-            # Restore line position
-            self.next_line = self.saved_line
+        # Do not display anything if space is not available...
+        if self.screen.getmaxyx()[1] < self._left_sidebar_min_width:
+            return
 
-            # Display right sidebar
-            # DOCKER+PROCESS_COUNT+AMPS+PROCESS_LIST+ALERT
-            self.new_column()
+        # Restore line position
+        self.next_line = self.saved_line
+
+        # Display right sidebar
+        self.new_column()
+        for p in self._right_sidebar:
             self.new_line()
-            self.display_plugin(stat_display["docker"])
-            self.new_line()
-            self.display_plugin(stat_display["processcount"])
-            self.new_line()
-            self.display_plugin(stat_display["amps"])
-            self.new_line()
-            self.display_plugin(stat_display["processlist"],
-                                display_optional=(self.screen.getmaxyx()[1] > 102),
-                                display_additional=(not MACOS),
-                                max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display["alert"]) - 2))
-            self.new_line()
-            self.display_plugin(stat_display["alert"])
+            if p == 'processlist':
+                self.display_plugin(stat_display['processlist'],
+                                    display_optional=(self.screen.getmaxyx()[1] > 102),
+                                    display_additional=(not MACOS),
+                                    max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
+            else:
+                self.display_plugin(stat_display[p])
 
     def display_popup(self, message,
                       size_x=None, size_y=None,
