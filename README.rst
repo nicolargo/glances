@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnicolargo%2Fglances.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnicolargo%2Fglances?ref=badge_shield)
+
 ===============================
 Glances - An eye on your system
 ===============================
@@ -383,3 +385,7 @@ LGPLv3. See ``COPYING`` for more details.
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnicolargo%2Fglances.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fnicolargo%2Fglances?ref=badge_large)
