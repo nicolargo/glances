@@ -47,6 +47,17 @@ class TestGlances(unittest.TestCase):
         """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
+    def http_get(self, url, gzipped=False):
+        """Make the gt request"""
+        if gzipped:
+            ret = requests.get(url,
+                               stream=True,
+                               headers={'Accept-encoding': 'gzip'})
+        else:
+            ret = requests.get(url,
+                               headers={'Accept-encoding': 'identity'})
+        return ret
+
     def test_000_start_server(self):
         """Start the Glances Web Server."""
         global pid
@@ -66,16 +77,26 @@ class TestGlances(unittest.TestCase):
         method = "all"
         print('INFO: [TEST_001] Get all stats')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = requests.get("%s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
+
+    def test_001a_all_gzip(self):
+        """All."""
+        method = "all"
+        print('INFO: [TEST_001a] Get all stats (with Gzip compression)')
+        print("HTTP RESTful request: %s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method), gzipped=True)
+
+        self.assertTrue(req.ok)
+        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
 
     def test_002_pluginslist(self):
         """Plugins list."""
         method = "pluginslist"
         print('INFO: [TEST_002] Plugins list')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = requests.get("%s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), list)
@@ -85,11 +106,11 @@ class TestGlances(unittest.TestCase):
         """Plugins."""
         method = "pluginslist"
         print('INFO: [TEST_003] Plugins')
-        plist = requests.get("%s/%s" % (URL, method))
+        plist = self.http_get("%s/%s" % (URL, method))
 
         for p in plist.json():
             print("HTTP RESTful request: %s/%s" % (URL, p))
-            req = requests.get("%s/%s" % (URL, p))
+            req = self.http_get("%s/%s" % (URL, p))
             self.assertTrue(req.ok)
             if p in ('uptime', 'now'):
                 self.assertIsInstance(req.json(), text_type)
@@ -106,11 +127,11 @@ class TestGlances(unittest.TestCase):
         """Items."""
         method = "cpu"
         print('INFO: [TEST_004] Items for the CPU method')
-        ilist = requests.get("%s/%s" % (URL, method))
+        ilist = self.http_get("%s/%s" % (URL, method))
 
         for i in ilist.json():
             print("HTTP RESTful request: %s/%s/%s" % (URL, method, i))
-            req = requests.get("%s/%s/%s" % (URL, method, i))
+            req = self.http_get("%s/%s/%s" % (URL, method, i))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
             print(req.json()[i])
@@ -121,7 +142,7 @@ class TestGlances(unittest.TestCase):
         method = "processlist"
         print('INFO: [TEST_005] Item=Value for the PROCESSLIST method')
         print("%s/%s/pid/0" % (URL, method))
-        req = requests.get("%s/%s/pid/0" % (URL, method))
+        req = self.http_get("%s/%s/pid/0" % (URL, method))
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), dict)
@@ -131,7 +152,7 @@ class TestGlances(unittest.TestCase):
         method = "all/limits"
         print('INFO: [TEST_006] Get all limits')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = requests.get("%s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), dict)
@@ -141,7 +162,7 @@ class TestGlances(unittest.TestCase):
         method = "all/views"
         print('INFO: [TEST_007] Get all views')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = requests.get("%s/%s" % (URL, method))
+        req = self.http_get("%s/%s" % (URL, method))
 
         self.assertTrue(req.ok)
         self.assertIsInstance(req.json(), dict)
@@ -150,11 +171,11 @@ class TestGlances(unittest.TestCase):
         """Plugins limits."""
         method = "pluginslist"
         print('INFO: [TEST_008] Plugins limits')
-        plist = requests.get("%s/%s" % (URL, method))
+        plist = self.http_get("%s/%s" % (URL, method))
 
         for p in plist.json():
             print("HTTP RESTful request: %s/%s/limits" % (URL, p))
-            req = requests.get("%s/%s/limits" % (URL, p))
+            req = self.http_get("%s/%s/limits" % (URL, p))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
 
@@ -162,11 +183,11 @@ class TestGlances(unittest.TestCase):
         """Plugins views."""
         method = "pluginslist"
         print('INFO: [TEST_009] Plugins views')
-        plist = requests.get("%s/%s" % (URL, method))
+        plist = self.http_get("%s/%s" % (URL, method))
 
         for p in plist.json():
             print("HTTP RESTful request: %s/%s/views" % (URL, p))
-            req = requests.get("%s/%s/views" % (URL, p))
+            req = self.http_get("%s/%s/views" % (URL, p))
             self.assertTrue(req.ok)
             self.assertIsInstance(req.json(), dict)
 
@@ -175,22 +196,22 @@ class TestGlances(unittest.TestCase):
         method = "history"
         print('INFO: [TEST_010] History')
         print("HTTP RESTful request: %s/cpu/%s" % (URL, method))
-        req = requests.get("%s/cpu/%s" % (URL, method))
+        req = self.http_get("%s/cpu/%s" % (URL, method))
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['user'], list)
         self.assertTrue(len(req.json()['user']) > 0)
         print("HTTP RESTful request: %s/cpu/%s/3" % (URL, method))
-        req = requests.get("%s/cpu/%s/3" % (URL, method))
+        req = self.http_get("%s/cpu/%s/3" % (URL, method))
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['user'], list)
         self.assertTrue(len(req.json()['user']) > 1)
         print("HTTP RESTful request: %s/cpu/system/%s" % (URL, method))
-        req = requests.get("%s/cpu/system/%s" % (URL, method))
+        req = self.http_get("%s/cpu/system/%s" % (URL, method))
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['system'], list)
         self.assertTrue(len(req.json()['system']) > 0)
         print("HTTP RESTful request: %s/cpu/system/%s/3" % (URL, method))
-        req = requests.get("%s/cpu/system/%s/3" % (URL, method))
+        req = self.http_get("%s/cpu/system/%s/3" % (URL, method))
         self.assertIsInstance(req.json(), dict)
         self.assertIsInstance(req.json()['system'], list)
         self.assertTrue(len(req.json()['system']) > 1)
