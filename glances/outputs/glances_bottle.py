@@ -25,7 +25,9 @@ import sys
 import tempfile
 from io import open
 import webbrowser
-from zlib import compress
+import zlib
+import struct
+import time
 
 from glances.timer import Timer
 from glances.logger import logger
@@ -40,11 +42,47 @@ except ImportError:
 def gzip_compress(func):
     """Compress result with Gzip algorithm if the client ask for it."""
     def wrapper(*args, **kwargs):
+        """Wrapper that take one function and return the result Gzipped."""
         ret = func(*args, **kwargs)
+        logger.debug('Receive {} {} request with header: {}'.format(
+            request.method,
+            request.url,
+            ['{}: {}'.format(h, request.headers.get(h)) for h in request.headers.keys()]
+        ))
         if 'gzip' in request.headers.get('Accept-Encoding', ''):
             response.headers['Content-Encoding'] = 'gzip'
-            ret = compress(ret.encode('utf-8'))
+            ret = compress(ret)
+        else:
+            response.headers['Content-Encoding'] = 'identity'
         return ret
+
+    def gzip_header():
+        header = '\037\213'
+        header += '\010'
+        header += '\0'
+        header += struct.pack("<L", long(time.time()))
+        header += '\002'
+        header += '\377'
+        return header
+
+    def gzip_trailer(crc, size):
+        footer = struct.pack("<l", crc)
+        footer += struct.pack("<L", size & 0xFFFFFFFF)
+        return footer
+
+    def compress(data, compress_level=6):
+        # Compress page
+        yield gzip_header()
+        crc = zlib.crc32('')
+        zobj = zlib.compressobj(compress_level,
+                                zlib.DEFLATED, -zlib.MAX_WBITS,
+                                zlib.DEF_MEM_LEVEL, 0)
+        size = len(data)
+        crc = zlib.crc32(data, crc)
+        yield zobj.compress(data)
+        yield zobj.flush()
+        yield gzip_trailer(crc, size)
+
     return wrapper
 
 

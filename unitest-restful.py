@@ -48,7 +48,7 @@ class TestGlances(unittest.TestCase):
         print('\n' + '=' * 78)
 
     def http_get(self, url, gzipped=False):
-        """Make the gt request"""
+        """Make the request"""
         if gzipped:
             ret = requests.get(url,
                                stream=True,
@@ -225,6 +225,7 @@ class TestGlances(unittest.TestCase):
         time.sleep(1)
 
         self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
