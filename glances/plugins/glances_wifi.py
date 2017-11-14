@@ -19,12 +19,13 @@
 
 """Wifi plugin."""
 
+import locale
 import operator
+import psutil
 
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-import psutil
 # Use the Wifi Python lib (https://pypi.python.org/pypi/wifi)
 # Linux-only
 try:
@@ -194,7 +195,7 @@ class Plugin(GlancesPlugin):
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(hotspotname,
+            msg = '{:{width}}'.format(hotspotname.encode(locale.getpreferredencoding(), 'replace'),
                                       width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(i['signal'], width=ifname_max_width)
