@@ -23,6 +23,7 @@ Bugs corrected:
     * Crash on startup: KeyError: 'hz_actual_raw' on Raspbian 9.1 #1170
     * Add missing mount-observe and system-observe interfaces #1179
     * OS specific arguments should be documented and reported #1180
+    * 'ascii' codec can't encode character u'\U0001f4a9' in position 4: ordinal not in range(128) #1185
 
 Backward-incompatible changes:
 
