@@ -21,6 +21,7 @@
 
 import operator
 
+from glances.compat import u
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -194,7 +195,7 @@ class Plugin(GlancesPlugin):
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(hotspotname,
+            msg = '{:{width}}'.format(u(hotspotname),
                                       width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(i['signal'], width=ifname_max_width)
