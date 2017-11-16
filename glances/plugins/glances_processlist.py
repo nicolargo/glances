@@ -605,6 +605,9 @@ class Plugin(GlancesPlugin):
         # Compute stats summary
         ret = 0
         for p in self.stats:
+            if key not in p:
+                # Correct issue #1188
+                continue
             if indice is None:
                 ret += p[key]
             else:
