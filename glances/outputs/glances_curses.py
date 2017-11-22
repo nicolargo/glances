@@ -95,7 +95,7 @@ class _GlancesCurses(object):
     _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
                      'irq', 'folders', 'raid', 'sensors', 'now']
     _left_sidebar_min_width = 23
-    _left_sidebar_max_width = 84
+    _left_sidebar_max_width = 64
 
     # Define right sidebar
     _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
@@ -694,7 +694,8 @@ class _GlancesCurses(object):
             if self.args.full_quicklook:
                 quicklook_width = self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
             else:
-                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column), 79)
+                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                                      self._left_sidebar_max_width - 5)
             try:
                 stat_display["quicklook"] = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
