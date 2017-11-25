@@ -20,7 +20,6 @@
 """Process list plugin."""
 
 import os
-import shlex
 from datetime import timedelta
 
 from glances.compat import iteritems
@@ -44,9 +43,8 @@ def convert_timedelta(delta):
 
 def split_cmdline(cmdline):
     """Return path, cmd and arguments for a process cmdline."""
-    cmdline_split = shlex.split(cmdline[0])
-    path, cmd = os.path.split(cmdline_split[0])
-    arguments = ' '.join(cmdline_split[1:])
+    path, cmd = os.path.split(cmdline[0])
+    arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
 
@@ -325,7 +323,6 @@ class Plugin(GlancesPlugin):
             # XXX: remove `cmdline != ['']` when we'll drop support for psutil<4.0.0
             if cmdline and cmdline != ['']:
                 # !!! DEBUG
-                logger.info(p['name'])
                 logger.info(cmdline)
                 logger.info(split_cmdline(cmdline))
                 # /!!!
