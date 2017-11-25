@@ -25,6 +25,7 @@ Bugs corrected:
     * OS specific arguments should be documented and reported #1180
     * 'ascii' codec can't encode character u'\U0001f4a9' in position 4: ordinal not in range(128) #1185
     * KeyError: 'memory_info' on stats sum #1188
+    * Electron processes displayed wrong in process list #1192
 
 Backward-incompatible changes:
 

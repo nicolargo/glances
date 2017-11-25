@@ -20,10 +20,11 @@
 """Process list plugin."""
 
 import os
+import shlex
 from datetime import timedelta
 
 from glances.compat import iteritems
-from glances.globals import LINUX, WINDOWS
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes, sort_stats
 from glances.plugins.glances_core import Plugin as CorePlugin
@@ -43,16 +44,9 @@ def convert_timedelta(delta):
 
 def split_cmdline(cmdline):
     """Return path, cmd and arguments for a process cmdline."""
-    path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
-    # XXX: workaround for psutil issue #742
-    if LINUX and any(x in cmdline[0] for x in ('chrome', 'chromium')):
-        try:
-            exe, arguments = cmdline[0].split(' ', 1)
-            path, cmd = os.path.split(exe)
-        except ValueError:
-            arguments = None
-
+    cmdline_split = shlex.split(cmdline[0])
+    path, cmd = os.path.split(cmdline_split[0])
+    arguments = ' '.join(cmdline_split[1:])
     return path, cmd, arguments
 
 
@@ -330,6 +324,11 @@ class Plugin(GlancesPlugin):
         try:
             # XXX: remove `cmdline != ['']` when we'll drop support for psutil<4.0.0
             if cmdline and cmdline != ['']:
+                # !!! DEBUG
+                logger.info(p['name'])
+                logger.info(cmdline)
+                logger.info(split_cmdline(cmdline))
+                # /!!!
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {}'.format(path) + os.sep
