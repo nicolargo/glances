@@ -325,11 +325,6 @@ class Plugin(GlancesPlugin):
             # XXX: remove `cmdline != ['']` when we'll drop support for psutil<4.0.0
             if cmdline and cmdline != ['']:
                 path, cmd, arguments = split_cmdline(cmdline)
-                if p['pid'] == 4430:
-                    logger.info('{}'.format(cmdline))
-                    logger.info('{}'.format(path))
-                    logger.info('{}'.format(cmd))
-                    logger.info('{}'.format(arguments))
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
