@@ -498,7 +498,9 @@ class _GlancesCurses(object):
         ret = {}
 
         for p in stats.getAllPlugins(enable=False):
-            if p == 'quicklook':
+            if p == 'quicklook' or p == 'processlist':
+                # processlist is done later
+                # because we need to know how many processes could be displayed
                 continue
 
             # Compute the plugin max size
@@ -538,7 +540,7 @@ class _GlancesCurses(object):
         # Update the stats messages
         ###########################
 
-        # Update the client server status
+        # Get all the plugins but quicklook and proceslist
         self.args.cs_status = cs_status
         __stat_display = self.__get_stat_display(stats, layer=cs_status)
 
@@ -560,6 +562,7 @@ class _GlancesCurses(object):
             logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
+        # Get the processlist
         __stat_display["processlist"] = stats.get_plugin(
             'processlist').get_stats_display(args=self.args)
 
