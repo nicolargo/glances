@@ -135,9 +135,6 @@ class _GlancesCurses(object):
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
 
-        # Init refresh time
-        self.__refresh_time = args.time
-
         # Init edit filter tag
         self.edit_filter = False
 
@@ -965,13 +962,18 @@ class _GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
-    def update(self, stats, cs_status=None, return_to_browser=False):
+    def update(self,
+               stats,
+               duration=3,
+               cs_status=None,
+               return_to_browser=False):
         """Update the screen.
 
-        Wait for __refresh_time sec / catch key every 100 ms.
+        Catch key every 100 ms.
 
         INPUT
         stats: Stats database to display
+        duration: duration of the loop
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
@@ -987,9 +989,15 @@ class _GlancesCurses(object):
         # Flush display
         self.flush(stats, cs_status=cs_status)
 
+        # If the duration is < 0 (update + export time > refresh_time)
+        # Then display the interface and log a message
+        if duration <= 0:
+            logger.debug('Update and export time higher than refresh_time.')
+            duration = 0.1
+
         # Wait
         exitkey = False
-        countdown = Timer(self.__refresh_time)
+        countdown = Timer(duration)
         while not countdown.finished() and not exitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
