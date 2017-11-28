@@ -101,8 +101,9 @@ class Plugin(GlancesPlugin):
                 # Grab the stats using the Wifi Python lib
                 try:
                     wifi_cells = Cell.all(net)
-                except InterfaceError:
+                except InterfaceError as e:
                     # Not a Wifi interface
+                    logger.debug("WIFI plugin: Scan InterfaceError ({})".format(e))
                     pass
                 except Exception as e:
                     # Other error
