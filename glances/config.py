@@ -135,6 +135,7 @@ class Config(object):
     def read(self):
         """Read the config file, if it exists. Using defaults otherwise."""
         for config_file in self.config_file_paths():
+            logger.info('Search glances.conf file in {}'.format(config_file))
             if os.path.exists(config_file):
                 try:
                     with open(config_file, encoding='utf-8') as f:
@@ -142,7 +143,7 @@ class Config(object):
                         self.parser.read(f)
                     logger.info("Read configuration file '{}'".format(config_file))
                 except UnicodeDecodeError as err:
-                    logger.error("Cannot decode configuration file '{}': {}".format(config_file, err))
+                    logger.error("Can not read configuration file '{}': {}".format(config_file, err))
                     sys.exit(1)
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file

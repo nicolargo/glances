@@ -19,8 +19,6 @@
 
 """Manage the Glances standalone session."""
 
-import sched
-import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
@@ -28,6 +26,7 @@ from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outdated import Outdated
+from glances.timer import Counter
 
 
 class GlancesStandalone(object):
@@ -82,41 +81,35 @@ class GlancesStandalone(object):
         # Check the latest Glances version
         self.outdated = Outdated(config=config, args=args)
 
-        # Create the schedule instance
-        self.schedule = sched.scheduler(
-            timefunc=time.time, delayfunc=time.sleep)
-
     @property
     def quiet(self):
         return self._quiet
 
     def __serve_forever(self):
         """Main loop for the CLI."""
-        # Reschedule the function inside itself
-        self.schedule.enter(self.refresh_time, priority=0,
-                            action=self.__serve_forever, argument=())
+        # Start a counter used to compute the time needed for
+        # update and export the stats
+        counter = Counter()
 
-        # Update system informations
+        # Update stats
         self.stats.update()
+        logger.debug('Stats updated in {} seconds'.format(counter.get()))
 
-        # Update the screen
-        if not self.quiet:
-            self.screen.update(self.stats)
-
-        # Export stats using export modules
+        # Export stats
+        counter_export = Counter()
         self.stats.export(self.stats)
+        logger.debug('Stats exported in {} seconds'.format(counter_export.get()))
+
+        # Display stats
+        # and wait refresh_time - counter
+        if not self.quiet:
+            self.screen.update(self.stats,
+                               duration=self.refresh_time - counter.get())
 
     def serve_forever(self):
-        """Wrapper to the serve_forever function.
-
-        This function will restore the terminal to a sane state
-        before re-raising the exception and generating a traceback.
-        """
-        self.__serve_forever()
-        try:
-            self.schedule.run()
-        finally:
-            self.end()
+        """Wrapper to the serve_forever function."""
+        while True:
+            self.__serve_forever()
 
     def end(self):
         """End of the standalone CLI."""

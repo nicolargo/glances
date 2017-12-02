@@ -20,10 +20,11 @@
 """Process list plugin."""
 
 import os
+import shlex
 from datetime import timedelta
 
 from glances.compat import iteritems
-from glances.globals import LINUX, WINDOWS
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes, sort_stats
 from glances.plugins.glances_core import Plugin as CorePlugin
@@ -43,16 +44,16 @@ def convert_timedelta(delta):
 
 def split_cmdline(cmdline):
     """Return path, cmd and arguments for a process cmdline."""
-    path, cmd = os.path.split(cmdline[0])
-    arguments = ' '.join(cmdline[1:]).replace('\n', ' ')
-    # XXX: workaround for psutil issue #742
-    if LINUX and any(x in cmdline[0] for x in ('chrome', 'chromium')):
-        try:
-            exe, arguments = cmdline[0].split(' ', 1)
-            path, cmd = os.path.split(exe)
-        except ValueError:
-            arguments = None
+    # There is an issue in PsUtil for Electron/Atom processes (maybe others...)
+    # Tracked by https://github.com/nicolargo/glances/issues/1192
+    #            https://github.com/giampaolo/psutil/issues/1179
+    # Add this dirty workarround (to be removed when the PsUtil is solved)
+    if len(cmdline) == 1:
+        cmdline = shlex.split(cmdline[0])
+    # /End of the direty workarround
 
+    path, cmd = os.path.split(cmdline[0])
+    arguments = ' '.join(cmdline[1:])
     return path, cmd, arguments
 
 
@@ -605,6 +606,9 @@ class Plugin(GlancesPlugin):
         # Compute stats summary
         ret = 0
         for p in self.stats:
+            if key not in p:
+                # Correct issue #1188
+                continue
             if indice is None:
                 ret += p[key]
             else:
