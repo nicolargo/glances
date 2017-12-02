@@ -92,7 +92,7 @@ if PY3:
     def b(s):
         if isinstance(s, binary_type):
             return s
-        return s.encode('latin-1')
+        return s.encode('utf-8')
 
     def nativestr(s):
         if isinstance(s, text_type):

@@ -21,7 +21,7 @@
 
 import operator
 
-from glances.compat import u
+from glances.compat import b
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -101,8 +101,9 @@ class Plugin(GlancesPlugin):
                 # Grab the stats using the Wifi Python lib
                 try:
                     wifi_cells = Cell.all(net)
-                except InterfaceError:
+                except InterfaceError as e:
                     # Not a Wifi interface
+                    logger.debug("WIFI plugin: Scan InterfaceError ({})".format(e))
                     pass
                 except Exception as e:
                     # Other error
@@ -195,7 +196,7 @@ class Plugin(GlancesPlugin):
             if len(hotspotname) > ifname_max_width:
                 hotspotname = '_' + hotspotname[-ifname_max_width + 1:]
             # Add the new hotspot to the message
-            msg = '{:{width}}'.format(u(hotspotname),
+            msg = '{:{width}}'.format(b(hotspotname),
                                       width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
             msg = '{:>7}'.format(i['signal'], width=ifname_max_width)

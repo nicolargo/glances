@@ -95,7 +95,7 @@ class _GlancesCurses(object):
     _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
                      'irq', 'folders', 'raid', 'sensors', 'now']
     _left_sidebar_min_width = 23
-    _left_sidebar_max_width = 84
+    _left_sidebar_max_width = 64
 
     # Define right sidebar
     _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
@@ -134,9 +134,6 @@ class _GlancesCurses(object):
 
         # Init main window
         self.term_window = self.screen.subwin(0, 0)
-
-        # Init refresh time
-        self.__refresh_time = args.time
 
         # Init edit filter tag
         self.edit_filter = False
@@ -498,7 +495,9 @@ class _GlancesCurses(object):
         ret = {}
 
         for p in stats.getAllPlugins(enable=False):
-            if p == 'quicklook':
+            if p == 'quicklook' or p == 'processlist':
+                # processlist is done later
+                # because we need to know how many processes could be displayed
                 continue
 
             # Compute the plugin max size
@@ -538,7 +537,7 @@ class _GlancesCurses(object):
         # Update the stats messages
         ###########################
 
-        # Update the client server status
+        # Get all the plugins but quicklook and proceslist
         self.args.cs_status = cs_status
         __stat_display = self.__get_stat_display(stats, layer=cs_status)
 
@@ -560,6 +559,7 @@ class _GlancesCurses(object):
             logger.debug("Set number of displayed processes to {}".format(max_processes_displayed))
             glances_processes.max_processes = max_processes_displayed
 
+        # Get the processlist
         __stat_display["processlist"] = stats.get_plugin(
             'processlist').get_stats_display(args=self.args)
 
@@ -694,7 +694,8 @@ class _GlancesCurses(object):
             if self.args.full_quicklook:
                 quicklook_width = self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
             else:
-                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column), 79)
+                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                                      self._left_sidebar_max_width - 5)
             try:
                 stat_display["quicklook"] = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
@@ -961,13 +962,18 @@ class _GlancesCurses(object):
         self.erase()
         self.display(stats, cs_status=cs_status)
 
-    def update(self, stats, cs_status=None, return_to_browser=False):
+    def update(self,
+               stats,
+               duration=3,
+               cs_status=None,
+               return_to_browser=False):
         """Update the screen.
 
-        Wait for __refresh_time sec / catch key every 100 ms.
+        Catch key every 100 ms.
 
         INPUT
         stats: Stats database to display
+        duration: duration of the loop
         cs_status:
             "None": standalone or server mode
             "Connected": Client is connected to the server
@@ -983,9 +989,15 @@ class _GlancesCurses(object):
         # Flush display
         self.flush(stats, cs_status=cs_status)
 
+        # If the duration is < 0 (update + export time > refresh_time)
+        # Then display the interface and log a message
+        if duration <= 0:
+            logger.debug('Update and export time higher than refresh_time.')
+            duration = 0.1
+
         # Wait
         exitkey = False
-        countdown = Timer(self.__refresh_time)
+        countdown = Timer(duration)
         while not countdown.finished() and not exitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
