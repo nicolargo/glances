@@ -64,7 +64,9 @@ if PY3:
     def to_ascii(s):
         """Convert the bytes string to a ASCII string
         Usefull to remove accent (diacritics)"""
-        return str(s, 'utf-8')
+        if isinstance(s, binary_type):
+            return s
+        return s.encode('ascii', 'ignore')
 
     def listitems(d):
         return list(d.items())
@@ -124,7 +126,7 @@ else:
         Usefull to remove accent (diacritics)"""
         if isinstance(s, binary_type):
             return s
-        return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore')
+        return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
 
     def listitems(d):
         return d.items()
