@@ -26,6 +26,9 @@ import sys
 import unicodedata
 import types
 import platform
+import subprocess
+
+from glances.logger import logger
 
 PY_CYTHON = platform.python_implementation() == 'CPython'
 PY_PYPY = platform.python_implementation() == 'PyPy'
@@ -100,6 +103,17 @@ if PY3:
         if isinstance(s, text_type):
             return s
         return s.decode('utf-8', 'replace')
+
+    def system_exec(command):
+        """Execute a system command and return the resul as a str"""
+        try:
+            res = subprocess.run(command.split(' '),
+                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
+        except Exception as e:
+            logger.debug('Can not evaluate command {} ({})'.format(command, e))
+            res = ''
+        return res.rstrip()
+
 else:
     import Queue as queue
     from itertools import imap as map
@@ -160,3 +174,12 @@ else:
         if isinstance(s, binary_type):
             return s
         return s.encode('utf-8', 'replace')
+
+    def system_exec(command):
+        """Execute a system command and return the resul as a str"""
+        try:
+            res = subprocess.check_output(command.split(' '))
+        except Exception as e:
+            logger.debug('Can not execute command {} ({})'.format(command, e))
+            res = ''
+        return res.rstrip()

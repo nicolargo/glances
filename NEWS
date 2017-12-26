@@ -10,6 +10,7 @@ Enhancements and new features:
     * Make the left side bar width dynamic in the Curse UI #1177
     * A way to have only REST API available and disable WEB GUI access #1149
     * Docker module doesn't export details about stopped containers #1152
+    * Add dynamic fields in all sections of the configuration file #1204
     * Add a light mode for the console UI #1165
     * Refactor InfluxDB (API is now stable) #1166
 
