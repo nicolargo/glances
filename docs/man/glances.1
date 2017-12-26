@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Nov 03, 2017" "3.0_DEV" "Glances"
+.TH "GLANCES" "1" "Dec 26, 2017" "3.0_DEV" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -750,6 +750,36 @@ regex=\e/usr\e/sbin\e/nginx
 refresh=60
 one_line=false
 status_url=http://localhost/nginx_status
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+With Glances 3.0 or higher it is also possible to use dynamic configuration
+value using system command. For example, if you to set the prefix of an
+InfluxDB export to the current hostname, use:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[influxdb]
+\&...
+prefix=\(gahostname\(ga
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Or if you want to add the Operating System name as a tag:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[influxdb]
+\&...
+tags=system:\(gauname \-a\(ga
 .ft P
 .fi
 .UNINDENT
