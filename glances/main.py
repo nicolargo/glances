@@ -31,6 +31,16 @@ from glances.globals import LINUX, WINDOWS
 from glances.logger import logger
 
 
+def disable(class_name, var):
+    """Set disable_<var> to True in the class class_name."""
+    setattr(class_name, 'disable_' + var, True)
+
+
+def enable(class_name, var):
+    """Set disable_<var> to False in the class class_name."""
+    setattr(class_name, 'disable_' + var, False)
+
+
 class GlancesMain(object):
     """Main class to manage Glances instance."""
 
@@ -79,6 +89,9 @@ Examples of use:
 
   Start the client browser (browser mode):
     $ glances --browser
+
+  Disable some plugins (any modes):
+    $ glances --disable-plugin network,ports
 """
 
     def __init__(self):
@@ -100,51 +113,14 @@ Examples of use:
                             dest='debug', help='enable debug mode')
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
-        # Enable or disable option on startup
-        parser.add_argument('--disable-alert', action='store_true', default=False,
-                            dest='disable_alert', help='disable alert module')
-        parser.add_argument('--disable-amps', action='store_true', default=False,
-                            dest='disable_amps', help='disable applications monitoring process (AMP) module')
-        parser.add_argument('--disable-cloud', action='store_true', default=False,
-                            dest='disable_cloud', help='disable Cloud module')
-        parser.add_argument('--disable-cpu', action='store_true', default=False,
-                            dest='disable_cpu', help='disable CPU module')
-        parser.add_argument('--disable-diskio', action='store_true', default=False,
-                            dest='disable_diskio', help='disable disk I/O module')
-        parser.add_argument('--disable-docker', action='store_true', default=False,
-                            dest='disable_docker', help='disable Docker module')
-        parser.add_argument('--disable-folders', action='store_true', default=False,
-                            dest='disable_folders', help='disable folder module')
-        parser.add_argument('--disable-fs', action='store_true', default=False,
-                            dest='disable_fs', help='disable filesystem module')
-        parser.add_argument('--disable-gpu', action='store_true', default=False,
-                            dest='disable_gpu', help='disable GPU module')
-        parser.add_argument('--disable-hddtemp', action='store_true', default=False,
-                            dest='disable_hddtemp', help='disable HD temperature module')
-        parser.add_argument('--disable-ip', action='store_true', default=False,
-                            dest='disable_ip', help='disable IP module')
-        parser.add_argument('--disable-load', action='store_true', default=False,
-                            dest='disable_load', help='disable load module')
-        parser.add_argument('--disable-mem', action='store_true', default=False,
-                            dest='disable_mem', help='disable memory module')
-        parser.add_argument('--disable-memswap', action='store_true', default=False,
-                            dest='disable_memswap', help='disable memory swap module')
-        parser.add_argument('--disable-network', action='store_true', default=False,
-                            dest='disable_network', help='disable network module')
-        parser.add_argument('--disable-now', action='store_true', default=False,
-                            dest='disable_now', help='disable current time module')
-        parser.add_argument('--disable-ports', action='store_true', default=False,
-                            dest='disable_ports', help='disable ports scanner module')
+        # Disable plugin
+        parser.add_argument('--disable-plugin', dest='disable_plugin',
+                            help='disable plugin (comma separed list)')
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help='disable process module')
-        parser.add_argument('--disable-raid', action='store_true', default=False,
-                            dest='disable_raid', help='disable RAID module')
-        parser.add_argument('--disable-sensors', action='store_true', default=False,
-                            dest='disable_sensors', help='disable sensors module')
+        # Enable or disable option
         parser.add_argument('--disable-webui', action='store_true', default=False,
                             dest='disable_webui', help='disable the Web Interface')
-        parser.add_argument('--disable-wifi', action='store_true', default=False,
-                            dest='disable_wifi', help='disable wifi module')
         parser.add_argument('--light', '--enable-light', action='store_true',
                             default=False, dest='enable_light',
                             help='light mode for Curses UI (disable all but top menu)')
@@ -286,6 +262,11 @@ Examples of use:
             from logging import DEBUG
             logger.setLevel(DEBUG)
 
+        # Plugins disable/enable
+        if args.disable_plugin is not None:
+            for p in args.disable_plugin.split(','):
+                disable(args, p)
+
         # Client/server Port
         if args.port is None:
             if args.webserver:
@@ -362,28 +343,28 @@ Examples of use:
         if args.enable_light:
             logger.info("Light mode is on")
             args.disable_left_sidebar = True
-            args.disable_process = True
-            args.disable_alert = True
-            args.disable_amps = True
-            args.disable_docker = True
+            disable(args, 'process')
+            disable(args, 'alert')
+            disable(args, 'amps')
+            disable(args, 'docker')
 
         # Manage full quicklook option
         if args.full_quicklook:
-            logger.info("Disable QuickLook menu")
-            args.disable_quicklook = False
-            args.disable_cpu = True
-            args.disable_mem = True
-            args.disable_memswap = True
-            args.disable_load = False
+            logger.info("Full quicklook mode")
+            enable(args, 'quicklook')
+            disable(args, 'cpu')
+            disable(args, 'mem')
+            disable(args, 'memswap')
+            enable(args, 'load')
 
         # Manage disable_top option
         if args.disable_top:
             logger.info("Disable top menu")
-            args.disable_quicklook = True
-            args.disable_cpu = True
-            args.disable_mem = True
-            args.disable_memswap = True
-            args.disable_load = True
+            disable(args, 'quicklook')
+            disable(args, 'cpu')
+            disable(args, 'mem')
+            disable(args, 'memswap')
+            disable(args, 'load')
 
         # Control parameter and exit if it is not OK
         self.args = args
@@ -420,8 +401,8 @@ Examples of use:
             sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
-        if args.disable_sensors:
-            args.disable_hddtemp = True
+        if getattr(args, 'disable_sensors', False):
+            disable(args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
 
         return args

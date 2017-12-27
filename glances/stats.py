@@ -115,6 +115,10 @@ class GlancesStats(object):
                 self._plugins[name] = plugin.Plugin(args=args, config=config)
             else:
                 self._plugins[name] = plugin.Plugin(args=args)
+            # Set the disable_<name> to False by default
+            setattr(self.args,
+                    'disable_' + name,
+                    getattr(self.args, 'disable_' + name, False))
         except Exception as e:
             # If a plugin can not be log, display a critical message
             # on the console but do not crash

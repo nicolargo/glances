@@ -285,10 +285,12 @@ class Config(object):
 
         # Search a substring `foo` and replace it by the result of its exec
         if ret is not None:
-            match = self.re_pattern.findall(ret)
-            for m in match:
-                ret = ret.replace(m, system_exec(m[1:-1]))
-
+            try:
+                match = self.re_pattern.findall(ret)
+                for m in match:
+                    ret = ret.replace(m, system_exec(m[1:-1]))
+            except TypeError:
+                pass
         return ret
 
     def get_int_value(self, section, option, default=0):
