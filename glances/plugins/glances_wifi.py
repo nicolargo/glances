@@ -167,7 +167,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or args.disable_wifi or not wifi_tag:
+        if not self.stats or not wifi_tag or self.is_disable():
             return ret
 
         # Max size for the interface name
