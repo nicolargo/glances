@@ -162,7 +162,7 @@ class GlancesInstance(object):
 
     def getAllPlugins(self):
         # Return the plugins list
-        return json.dumps(self.stats.getAllPlugins())
+        return json.dumps(self.stats.getPluginsList())
 
     def getAllLimits(self):
         # Return all the plugins limits

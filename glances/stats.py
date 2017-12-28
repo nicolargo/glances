@@ -87,14 +87,16 @@ class GlancesStats(object):
         """Wrapper to load: plugins and export modules."""
 
         # Init the plugins dict
+        # Active plugins dictionnary
         self._plugins = collections.defaultdict(dict)
-
         # Load the plugins
         self.load_plugins(args=args)
 
         # Init the export modules dict
+        # Active exporters dictionnary
         self._exports = collections.defaultdict(dict)
-
+        # All available exporters dictionnary
+        self._exports_all = collections.defaultdict(dict)
         # Load the export modules
         self.load_exports(args=args)
 
@@ -102,7 +104,7 @@ class GlancesStats(object):
         sys.path = sys_path
 
     def _load_plugin(self, plugin_script, args=None, config=None):
-        """Load the plugin (script), init it and add to the _plugin dict"""
+        """Load the plugin (script), init it and add to the _plugin dict."""
         # The key is the plugin name
         # for example, the file glances_xxx.py
         # generate self._plugins_list["xxx"] = ...
@@ -136,23 +138,26 @@ class GlancesStats(object):
                                   args=args, config=self.config)
 
         # Log plugins list
-        logger.debug("Available plugins list: {}".format(self.getAllPlugins()))
+        logger.debug("Active plugins list: {}".format(self.getPluginsList()))
 
     def load_exports(self, args=None):
         """Load all export modules in the 'exports' folder."""
         if args is None:
             return False
         header = "glances_"
-        # Transform the arguments list into a dict
-        # The aim is to chec if the export module should be loaded
+        # Build the export module available list
         args_var = vars(locals()['args'])
         for item in os.listdir(exports_path):
             export_name = os.path.basename(item)[len(header):-3].lower()
             if (item.startswith(header) and
                     item.endswith(".py") and
                     item != (header + "export.py") and
-                    item != (header + "history.py") and
-                    args_var['export_' + export_name] is not None and
+                    item != (header + "history.py")):
+                self._exports_all[export_name] = None
+
+        # Aim is to check if the export module should be loaded
+        for export_name in self._exports_all:
+            if (args_var['export_' + export_name] is not None and
                     args_var['export_' + export_name] is not False):
                 # Import the export module
                 export_module = __import__(os.path.basename(item)[:-3])
@@ -160,22 +165,38 @@ class GlancesStats(object):
                 # The key is the module name
                 # for example, the file glances_xxx.py
                 # generate self._exports_list["xxx"] = ...
-                self._exports[export_name] = export_module.Export(args=args, config=self.config)
+                self._exports[export_name] = export_module.Export(args=args,
+                                                                  config=self.config)
+                self._exports_all[export_name] = self._exports[export_name]
         # Log plugins list
-        logger.debug("Available exports modules list: {}".format(self.getExportList()))
+        logger.debug("Active exports modules list: {}".format(self.getExportsList()))
         return True
 
-    def getAllPlugins(self, enable=True):
-        """Return the enable plugins list.
-        if enable is False, return the list of all the plugins"""
+    def getPluginsList(self, enable=True):
+        """Return the plugins list.
+
+        if enable is True, only return the active plugins (default)
+        if enable is False, return all the plugins
+
+        Return: list of plugin name
+        """
         if enable:
             return [p for p in self._plugins if self._plugins[p].is_enable()]
         else:
             return [p for p in self._plugins]
 
-    def getExportList(self):
-        """Return the exports modules list."""
-        return [e for e in self._exports]
+    def getExportsList(self, enable=True):
+        """Return the export module list.
+
+        if enable is True, only return the active exporters (default)
+        if enable is False, return all the exporters
+
+        Return: list of export module name
+        """
+        if enable:
+            return [e for e in self._exports]
+        else:
+            return [e for e in self._exports_all]
 
     def load_limits(self, config=None):
         """Load the stats limits (except the one in the exclude list)."""

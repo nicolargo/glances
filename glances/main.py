@@ -114,6 +114,10 @@ Examples of use:
         parser.add_argument('-C', '--config', dest='conf_file',
                             help='path to the configuration file')
         # Disable plugin
+        parser.add_argument('--modules-list', '--module-list',
+                            action='store_true', default=False,
+                            dest='modules_list',
+                            help='display modules (plugins & exports) list and exit')
         parser.add_argument('--disable-plugin', dest='disable_plugin',
                             help='disable plugin (comma separed list)')
         parser.add_argument('--disable-process', action='store_true', default=False,

@@ -494,7 +494,7 @@ class _GlancesCurses(object):
         """
         ret = {}
 
-        for p in stats.getAllPlugins(enable=False):
+        for p in stats.getPluginsList(enable=False):
             if p == 'quicklook' or p == 'processlist':
                 # processlist is done later
                 # because we need to know how many processes could be displayed
