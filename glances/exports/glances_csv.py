@@ -65,7 +65,7 @@ class Export(GlancesExport):
         """Update stats in the CSV output file."""
         # Get the stats
         all_stats = stats.getAllExports()
-        plugins = stats.getAllPlugins()
+        plugins = stats.getPluginsList()
 
         # Init data with timestamp (issue#708)
         if self.first_line:

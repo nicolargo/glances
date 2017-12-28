@@ -19,6 +19,7 @@
 
 """Manage the Glances standalone session."""
 
+import sys
 
 from glances.globals import WINDOWS
 from glances.logger import logger
@@ -40,6 +41,12 @@ class GlancesStandalone(object):
 
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
+
+        # Modules (plugins and exporters) are loaded at this point
+        # Glances can display the list if asked...
+        if args.modules_list:
+            self.display_modules_list()
+            sys.exit(0)
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
@@ -84,6 +91,13 @@ class GlancesStandalone(object):
     @property
     def quiet(self):
         return self._quiet
+
+    def display_modules_list(self):
+        """Display modules list"""
+        print("Plugins list: {}".format(
+            ', '.join(sorted(self.stats.getPluginsList(enable=False)))))
+        print("Exporters list: {}".format(
+            ', '.join(sorted(self.stats.getExportsList(enable=False)))))
 
     def __serve_forever(self):
         """Main loop for the CLI."""

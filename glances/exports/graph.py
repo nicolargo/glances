@@ -54,7 +54,7 @@ class GlancesGraph(object):
         """Reset all the history."""
         if not self.graph_enabled():
             return False
-        for p in stats.getAllPlugins():
+        for p in stats.getPluginsList():
             h = stats.get_plugin(p).get_stats_history()
             if h is not None:
                 stats.get_plugin(p).reset_stats_history()
@@ -94,7 +94,7 @@ class GlancesGraph(object):
             return 0
 
         index_all = 0
-        for p in stats.getAllPlugins():
+        for p in stats.getPluginsList():
             # History
             h = stats.get_plugin(p).get_export_history()
             # Current plugin item history list
