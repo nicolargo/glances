@@ -37,7 +37,7 @@ class Export(GlancesExport):
         super(Export, self).__init__(config=config, args=args)
 
         # CSV file name
-        self.csv_filename = args.export_csv
+        self.csv_filename = args.export_csv_file
 
         # Set the CSV output file
         try:

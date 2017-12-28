@@ -165,15 +165,6 @@ class _GlancesCurses(object):
         """Init the history option."""
 
         self.reset_history_tag = False
-        self.graph_tag = False
-        if self.args.export_graph:
-            logger.info('Export graphs function enabled with output path %s' %
-                        self.args.path_graph)
-            from glances.exports.graph import GlancesGraph
-            self.glances_graph = GlancesGraph(self.args.path_graph)
-            if not self.glances_graph.graph_enabled():
-                self.args.export_graph = False
-                logger.error('Export graphs disabled')
 
     def _init_cursor(self):
         """Init cursors."""
@@ -382,12 +373,13 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('g'):
-            # 'g' > Generate graph from history
-            self.graph_tag = not self.graph_tag
-        elif self.pressedkey == ord('r'):
-            # 'r' > Reset graph history
-            self.reset_history_tag = not self.reset_history_tag
+        # To be removed on https://github.com/nicolargo/glances/issues/1206
+        # elif self.pressedkey == ord('g'):
+        #     # 'g' > Generate graph from history
+        #     self.graph_tag = not self.graph_tag
+        # elif self.pressedkey == ord('r'):
+        #     # 'r' > Reset graph history
+        #     self.reset_history_tag = not self.reset_history_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
@@ -597,25 +589,26 @@ class _GlancesCurses(object):
 
         # History option
         # Generate history graph
-        if self.graph_tag and self.args.export_graph:
-            self.display_popup(
-                'Generate graphs history in {}\nPlease wait...'.format(
-                    self.glances_graph.get_output_folder()))
-            self.display_popup(
-                'Generate graphs history in {}\nDone: {} graphs generated'.format(
-                    self.glances_graph.get_output_folder(),
-                    self.glances_graph.generate_graph(stats)))
-        elif self.reset_history_tag and self.args.export_graph:
-            self.display_popup('Reset graph history')
-            self.glances_graph.reset(stats)
-        elif (self.graph_tag or self.reset_history_tag) and not self.args.export_graph:
-            try:
-                self.glances_graph.graph_enabled()
-            except Exception:
-                self.display_popup('Graph disabled\nEnable it using --export-graph')
-            else:
-                self.display_popup('Graph disabled')
-        self.graph_tag = False
+        # To be removed on https://github.com/nicolargo/glances/issues/1206
+        # if self.graph_tag and self.args.export_graph:
+        #     self.display_popup(
+        #         'Generate graphs history in {}\nPlease wait...'.format(
+        #             self.glances_graph.get_output_folder()))
+        #     self.display_popup(
+        #         'Generate graphs history in {}\nDone: {} graphs generated'.format(
+        #             self.glances_graph.get_output_folder(),
+        #             self.glances_graph.generate_graph(stats)))
+        # elif self.reset_history_tag and self.args.export_graph:
+        #     self.display_popup('Reset graph history')
+        #     self.glances_graph.reset(stats)
+        # elif (self.graph_tag or self.reset_history_tag) and not self.args.export_graph:
+        #     try:
+        #         self.glances_graph.graph_enabled()
+        #     except Exception:
+        #         self.display_popup('Graph disabled\nEnable it using --export-graph')
+        #     else:
+        #         self.display_popup('Graph disabled')
+        # self.graph_tag = False
         self.reset_history_tag = False
 
         # Display edit filter popup

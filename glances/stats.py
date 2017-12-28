@@ -153,14 +153,17 @@ class GlancesStats(object):
                     item.endswith(".py") and
                     item != (header + "export.py") and
                     item != (header + "history.py")):
-                self._exports_all[export_name] = None
+                self._exports_all[export_name] = os.path.basename(item)[:-3]
+                # Set the disable_<name> to False by default
+                setattr(self.args,
+                        'export_' + export_name,
+                        getattr(self.args, 'export_' + export_name, False))
 
         # Aim is to check if the export module should be loaded
         for export_name in self._exports_all:
-            if (args_var['export_' + export_name] is not None and
-                    args_var['export_' + export_name] is not False):
+            if getattr(self.args, 'export_' + export_name, False):
                 # Import the export module
-                export_module = __import__(os.path.basename(item)[:-3])
+                export_module = __import__(self._exports_all[export_name])
                 # Add the export to the dictionary
                 # The key is the module name
                 # for example, the file glances_xxx.py
@@ -168,6 +171,7 @@ class GlancesStats(object):
                 self._exports[export_name] = export_module.Export(args=args,
                                                                   config=self.config)
                 self._exports_all[export_name] = self._exports[export_name]
+
         # Log plugins list
         logger.debug("Active exports modules list: {}".format(self.getExportsList()))
         return True
@@ -186,7 +190,7 @@ class GlancesStats(object):
             return [p for p in self._plugins]
 
     def getExportsList(self, enable=True):
-        """Return the export module list.
+        """Return the exports list.
 
         if enable is True, only return the active exporters (default)
         if enable is False, return all the exporters

@@ -17,7 +17,7 @@ class Export(GlancesExport):
         super(Export, self).__init__(config=config, args=args)
 
         # JSON file name
-        self.json_filename = args.export_json
+        self.json_filename = args.export_json_file
 
         # Set the JSON output file
         try:
