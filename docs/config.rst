@@ -66,7 +66,7 @@ an InfluxDB export module:
 .. code-block:: ini
 
     [influxdb]
-    # Configuration for the --export-influxdb option
+    # Configuration for the --export influxdb option
     # https://influxdb.com/
     host=localhost
     port=8086

@@ -64,6 +64,9 @@ Examples of use:
   Monitor local machine (standalone mode):
     $ glances
 
+  Display all Glances modules (plugins and exporters) and exit:
+    $ glances --module-list
+
   Monitor local machine with the Web interface and start Restful server:
     $ glances -w
     Glances web server started on http://0.0.0.0:61208/
@@ -73,10 +76,10 @@ Examples of use:
     Glances API available on http://0.0.0.0:61208/api/
 
   Monitor local machine and export stats to a CSV file (standalone mode):
-    $ glances --export-csv /tmp/glances.csv
+    $ glances --export csv --export-csv-file /tmp/glances.csv
 
   Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
-    $ glances -t 5 --export-influxdb
+    $ glances -t 5 --export influxdb
 
   Start a Glances XML/RCP server (server mode):
     $ glances -s
@@ -85,7 +88,7 @@ Examples of use:
     $ glances -c <ip_server>
 
   Connect Glances to a Glances server and export stats to a StatsD server (client mode):
-    $ glances -c <ip_server> --export-statsd
+    $ glances -c <ip_server> --export statsd
 
   Start the client browser (browser mode):
     $ glances --browser
@@ -155,38 +158,21 @@ Examples of use:
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
         # Export modules feature
-        parser.add_argument('--export-graph', action='store_true', default=None,
-                            dest='export_graph', help='export stats to graphs')
-        parser.add_argument('--path-graph', default=tempfile.gettempdir(),
-                            dest='path_graph', help='set the export path for graphs (default is {})'.format(tempfile.gettempdir()))
-        parser.add_argument('--export-csv', default=None,
-                            dest='export_csv', help='export stats to a CSV file')
-        parser.add_argument('--export-json', default=None,
-                            dest='export_json', help='export stats to a JSON file')
-        parser.add_argument('--export-cassandra', action='store_true', default=False,
-                            dest='export_cassandra', help='export stats to a Cassandra or Scylla server (cassandra lib needed)')
-        parser.add_argument('--export-couchdb', action='store_true', default=False,
-                            dest='export_couchdb', help='export stats to a CouchDB server (couch lib needed)')
-        parser.add_argument('--export-elasticsearch', action='store_true', default=False,
-                            dest='export_elasticsearch', help='export stats to an ElasticSearch server (elasticsearch lib needed)')
-        parser.add_argument('--export-influxdb', action='store_true', default=False,
-                            dest='export_influxdb', help='export stats to an InfluxDB server (influxdb lib needed)')
-        parser.add_argument('--export-kafka', action='store_true', default=False,
-                            dest='export_kafka', help='export stats to a Kafka server (kafka-python lib needed)')
-        parser.add_argument('--export-opentsdb', action='store_true', default=False,
-                            dest='export_opentsdb', help='export stats to an OpenTSDB server (potsdb lib needed)')
-        parser.add_argument('--export-prometheus', action='store_true', default=False,
-                            dest='export_prometheus', help='export stats to a Prometheus exporter (prometheus_client lib needed)')
-        parser.add_argument('--export-rabbitmq', action='store_true', default=False,
-                            dest='export_rabbitmq', help='export stats to rabbitmq broker (pika lib needed)')
-        parser.add_argument('--export-restful', action='store_true', default=False,
-                            dest='export_restful', help='export stats to a Restful endpoint (requests lib needed)')
-        parser.add_argument('--export-riemann', action='store_true', default=False,
-                            dest='export_riemann', help='export stats to riemann broker (bernhard lib needed)')
-        parser.add_argument('--export-statsd', action='store_true', default=False,
-                            dest='export_statsd', help='export stats to a StatsD server (statsd lib needed)')
-        parser.add_argument('--export-zeromq', action='store_true', default=False,
-                            dest='export_zeromq', help='export stats to a ZeroMQ server (pyzmq lib needed)')
+        parser.add_argument('--export', dest='export',
+                            help='enable export module (comma separed list)')
+        # To be removed on https://github.com/nicolargo/glances/issues/1206
+        # parser.add_argument('--export-graph', action='store_true', default=None,
+        #                     dest='export_graph', help='export stats to graphs')
+        # parser.add_argument('--path-graph', default=tempfile.gettempdir(),
+        #                     dest='path_graph', help='set the export path for graphs (default is {})'.format(tempfile.gettempdir()))
+        parser.add_argument('--export-csv-file',
+                            default='./glances.csv',
+                            dest='export_csv_file',
+                            help='file path for CSV exporter')
+        parser.add_argument('--export-json-file',
+                            default='./glances.json',
+                            dest='export_json_file',
+                            help='file path for JSON exporter')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')
@@ -270,6 +256,11 @@ Examples of use:
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
+
+        # Exporters activation
+        if args.export is not None:
+            for p in args.export.split(','):
+                setattr(args, 'export_' + p, True)
 
         # Client/server Port
         if args.port is None:
@@ -374,7 +365,7 @@ Examples of use:
         self.args = args
 
         # Export is only available in standalone or client mode (issue #614)
-        export_tag = any([getattr(args, a) for a in args.__dict__ if a.startswith('export_')])
+        export_tag = self.args.export is not None and any(self.args.export)
         if WINDOWS and export_tag:
             # On Windows, export is possible but only in quiet mode
             # See issue #1038
@@ -392,17 +383,17 @@ Examples of use:
             sys.exit(2)
 
         # Check graph output path
-        if args.export_graph and args.path_graph is not None:
-            if not os.access(args.path_graph, os.W_OK):
-                logger.critical("Graphs output path {} doesn't exist or is not writable".format(args.path_graph))
-                sys.exit(2)
-            logger.debug(
-                "Graphs output path is set to {}".format(args.path_graph))
-
+        # To be removed on https://github.com/nicolargo/glances/issues/1206
+        # if args.export_graph and args.path_graph is not None:
+        #     if not os.access(args.path_graph, os.W_OK):
+        #         logger.critical("Graphs output path {} doesn't exist or is not writable".format(args.path_graph))
+        #         sys.exit(2)
+        #     logger.debug(
+        #         "Graphs output path is set to {}".format(args.path_graph))
         # For export graph, history is mandatory
-        if args.export_graph and args.disable_history:
-            logger.critical("Can not export graph if history is disabled")
-            sys.exit(2)
+        # if args.export_graph and args.disable_history:
+        #     logger.critical("Can not export graph if history is disabled")
+        #     sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
         if getattr(args, 'disable_sensors', False):

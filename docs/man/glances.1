@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Dec 26, 2017" "3.0_DEV" "Glances"
+.TH "GLANCES" "1" "Dec 28, 2017" "3.0_DEV" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -68,108 +68,38 @@ path to the configuration file
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-alert
-disable alert/log module
+.B \-modules\-list
+display modules (plugins & exports) list and exit
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-amps
-disable application monitoring process module
+.B \-\-disable\-plugin PLUGIN
+disable PLUGIN (comma separed list)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-cpu
-disable CPU module
+.B \-\-export EXPORT
+enable EXPORT module (comma separed list)
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-diskio
-disable disk I/O module
+.B \-\-export\-csv\-file EXPORT_CSV_FILE
+file path for CSV exporter
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-\-disable\-docker
-disable Docker module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-folders
-disable folders module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-fs
-disable file system module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-hddtemp
-disable HD temperature module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-ip
-disable IP module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-irq
-disable IRQ module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-load
-disable load module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-mem
-disable memory module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-memswap
-disable memory swap module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-network
-disable network module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-now
-disable current time module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-ports
-disable Ports module
+.B \-\-export\-json\-file EXPORT_JSON_FILE
+file path for JSON exporter
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-disable\-process
-disable process module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-raid
-disable RAID module
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-sensors
-disable sensors module
+disable process module (reduce Glances CPU consumption)
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-\-disable\-webui
 disable the Web UI (only the Restful API will respond)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-disable\-wifi
-disable Wifi module
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -230,66 +160,6 @@ disable background colors in the terminal
 .TP
 .B \-\-enable\-process\-extended
 enable extended stats on top process
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-graph
-export stats to graph
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-path\-graph PATH_GRAPH
-set the export path for graph history
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-csv EXPORT_CSV
-export stats to a CSV file
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-cassandra
-export stats to a Cassandra/Scylla server (cassandra lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-couchdb
-export stats to a CouchDB server (couchdb lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-elasticsearch
-export stats to an Elasticsearch server (elasticsearch lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-influxdb
-export stats to an InfluxDB server (influxdb lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-opentsdb
-export stats to an OpenTSDB server (potsdb lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-rabbitmq
-export stats to RabbitMQ broker (pika lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-statsd
-export stats to a StatsD server (statsd lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-riemann
-export stats to Riemann server (bernhard lib needed)
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-\-export\-zeromq
-export stats to a ZeroMQ server (zmq lib needed)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -537,7 +407,7 @@ Show/hide current time
 .B \fBp\fP
 Sort processes by name
 .TP
-.B \fBq|ESC\fP
+.B \fBq|ESC|CTRL\-C\fP
 Quit the current Glances session
 .TP
 .B \fBQ\fP
@@ -723,7 +593,7 @@ an InfluxDB export module:
 .nf
 .ft C
 [influxdb]
-# Configuration for the \-\-export\-influxdb option
+# Configuration for the \-\-export influxdb option
 # https://influxdb.com/
 host=localhost
 port=8086
@@ -926,7 +796,7 @@ $ glances \-w
 Monitor local machine and export stats to a CSV file:
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-\-export\-csv
+$ glances \-\-export csv \-\-export\-csv\-file /tmp/glances.csv
 .UNINDENT
 .UNINDENT
 .sp
@@ -935,7 +805,14 @@ refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
 ElasticSearch, RabbitMQ and Riemann):
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-t 5 \-\-export\-influxdb
+$ glances \-t 5 \-\-export influxdb
+.UNINDENT
+.UNINDENT
+.sp
+It is also possible to export stats to multiple endpoints:
+.INDENT 0.0
+.INDENT 3.5
+$ glances \-t 5 \-\-export influxdb,statsd,csv
 .UNINDENT
 .UNINDENT
 .sp
@@ -956,7 +833,7 @@ $ glances \-c <ip_server>
 Connect to a Glances server and export stats to a StatsD server:
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-c <ip_server> \-\-export\-statsd
+$ glances \-c <ip_server> \-\-export statsd
 .UNINDENT
 .UNINDENT
 .sp
