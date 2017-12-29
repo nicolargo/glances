@@ -82,7 +82,6 @@ setup(
         'browser': ['zeroconf>=0.17'],
         'cloud': ['requests'],
         'cpuinfo': ['py-cpuinfo'],
-        'chart': ['matplotlib'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'influxdb>=1.0.0', 'kafka-python', 'pika', 'potsdb',

@@ -14,6 +14,7 @@ Enhancements and new features:
     * Make plugins disable and export CLI option dynamical #1173
     * Add a light mode for the console UI #1165
     * Refactor InfluxDB (API is now stable) #1166
+    * Remove graph export from Glances #1206
 
 Bugs corrected:
 
@@ -34,6 +35,7 @@ Backward-incompatible changes:
 
     * Minimum supported Docker API version is now 1.21 (Docker plugins)
     * Support for InfluxDB < 0.9 is deprecated (InfluxDB exporter)
+    * Remove graph export from Glances
     * --disable-<plugin> no longer available (use --disable-plugin <plugin>)
     * --export-<exporter> no longer available (use --export <exporter>)
 

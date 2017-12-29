@@ -65,7 +65,6 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
 - ``kafka-python`` (for the Kafka export module)
-- ``matplotlib`` (for graphical/chart support)
 - ``netifaces`` (for the IP plugin)
 - ``nvidia-ml-py3`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
