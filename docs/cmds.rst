@@ -84,7 +84,7 @@ Command-Line Options
 
 .. option:: --enable-history
 
-    enable the history mode (matplotlib lib needed)
+    enable the history mode
 
 .. option:: --disable-bold
 

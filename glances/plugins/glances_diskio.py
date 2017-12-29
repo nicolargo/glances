@@ -29,14 +29,11 @@ import psutil
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'read_bytes',
                        'description': 'Bytes read per second',
-                       'color': '#00FF00',
                        'y_unit': 'B/s'},
                       {'name': 'write_bytes',
                        'description': 'Bytes write per second',
-                       'color': '#FF0000',
                        'y_unit': 'B/s'}]
 
 

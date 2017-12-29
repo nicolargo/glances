@@ -59,10 +59,9 @@ snmp_oid['esxi'] = snmp_oid['windows']
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'percent',
                        'description': 'File system usage in percent',
-                       'color': '#00FF00'}]
+                       'y_unit': '%'}]
 
 
 class Plugin(GlancesPlugin):

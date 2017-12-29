@@ -20,9 +20,7 @@
 """Glances main class."""
 
 import argparse
-import os
 import sys
-import tempfile
 
 from glances import __version__, psutil_version
 from glances.compat import input
@@ -160,11 +158,6 @@ Examples of use:
         # Export modules feature
         parser.add_argument('--export', dest='export',
                             help='enable export module (comma separed list)')
-        # To be removed on https://github.com/nicolargo/glances/issues/1206
-        # parser.add_argument('--export-graph', action='store_true', default=None,
-        #                     dest='export_graph', help='export stats to graphs')
-        # parser.add_argument('--path-graph', default=tempfile.gettempdir(),
-        #                     dest='path_graph', help='set the export path for graphs (default is {})'.format(tempfile.gettempdir()))
         parser.add_argument('--export-csv-file',
                             default='./glances.csv',
                             dest='export_csv_file',
@@ -381,19 +374,6 @@ Examples of use:
             logger.critical(
                 "Process filter is only available in standalone mode")
             sys.exit(2)
-
-        # Check graph output path
-        # To be removed on https://github.com/nicolargo/glances/issues/1206
-        # if args.export_graph and args.path_graph is not None:
-        #     if not os.access(args.path_graph, os.W_OK):
-        #         logger.critical("Graphs output path {} doesn't exist or is not writable".format(args.path_graph))
-        #         sys.exit(2)
-        #     logger.debug(
-        #         "Graphs output path is set to {}".format(args.path_graph))
-        # For export graph, history is mandatory
-        # if args.export_graph and args.disable_history:
-        #     logger.critical("Can not export graph if history is disabled")
-        #     sys.exit(2)
 
         # Disable HDDTemp if sensors are disabled
         if getattr(args, 'disable_sensors', False):
