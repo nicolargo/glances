@@ -100,7 +100,10 @@ class GlancesStandalone(object):
             ', '.join(sorted(self.stats.getExportsList(enable=False)))))
 
     def __serve_forever(self):
-        """Main loop for the CLI."""
+        """Main loop for the CLI.
+
+        return True if we should continue (no exit key has been pressed)
+        """
         # Start a counter used to compute the time needed for
         # update and export the stats
         counter = Counter()
@@ -117,13 +120,23 @@ class GlancesStandalone(object):
         # Display stats
         # and wait refresh_time - counter
         if not self.quiet:
-            self.screen.update(self.stats,
-                               duration=self.refresh_time - counter.get())
+            # The update function return True if an exit key 'q' or 'ESC'
+            # has been pressed.
+            ret = not self.screen.update(self.stats,
+                                         duration=self.refresh_time - counter.get())
+        else:
+            # Nothing is displayed
+            # Break should be done via a signal (CTRL-C)
+            ret = True
+
+        return ret
 
     def serve_forever(self):
         """Wrapper to the serve_forever function."""
-        while True:
-            self.__serve_forever()
+        loop = True
+        while loop:
+            loop = self.__serve_forever()
+        self.end()
 
     def end(self):
         """End of the standalone CLI."""
