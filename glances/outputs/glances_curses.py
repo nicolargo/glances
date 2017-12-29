@@ -341,9 +341,7 @@ class _GlancesCurses(object):
             if return_to_browser:
                 logger.info("Stop Glances client and return to the browser")
             else:
-                self.end()
-                logger.info("Stop Glances")
-                sys.exit(0)
+                logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
         elif self.pressedkey == ord('\n'):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
