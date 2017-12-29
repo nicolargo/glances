@@ -30,6 +30,7 @@ Bugs corrected:
     * KeyError: 'memory_info' on stats sum #1188
     * Electron/Atom processes displayed wrong in process list #1192
     * Another encoding issue... With both Python 2 and Python 3 #1197
+    * Glances do not exit when eating 'q' #1207
 
 Backward-incompatible changes:
 

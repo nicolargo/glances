@@ -418,11 +418,11 @@ Examples of use:
         return self.mode
 
     def __get_username(self, description=''):
-        """Read an username from the command line.
-        """
+        """Read an username from the command line."""
         return input(description)
 
-    def __get_password(self, description='', confirm=False, clear=False, username='glances'):
+    def __get_password(self, description='',
+                       confirm=False, clear=False, username='glances'):
         """Read a password from the command line.
 
         - if confirm = True, with confirmation
