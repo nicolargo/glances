@@ -35,16 +35,12 @@ snmp_oid = {'min1': '1.3.6.1.4.1.2021.10.1.3.1',
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'min1',
-                       'description': '1 minute load',
-                       'color': '#0000FF'},
+                       'description': '1 minute load'},
                       {'name': 'min5',
-                       'description': '5 minutes load',
-                       'color': '#0000AA'},
+                       'description': '5 minutes load'},
                       {'name': 'min15',
-                       'description': '15 minutes load',
-                       'color': '#000044'}]
+                       'description': '15 minutes load'}]
 
 
 class Plugin(GlancesPlugin):
