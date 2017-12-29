@@ -77,7 +77,7 @@ def end():
         # ...after starting the server mode (issue #1175)
         pass
 
-    logger.info("Glances stopped with CTRL-C")
+    logger.info("Glances stopped (keypressed: CTRL-C)")
 
     # The end...
     sys.exit(0)
@@ -118,6 +118,9 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
+    # Catch the CTRL-C signal
+    signal.signal(signal.SIGINT, __signal_handler)
+
     # Log Glances and PSutil version
     logger.info('Start Glances {}'.format(__version__))
     logger.info('{} {} and PSutil {} detected'.format(
@@ -132,9 +135,6 @@ def main():
     core = GlancesMain()
     config = core.get_config()
     args = core.get_args()
-
-    # Catch the CTRL-C signal
-    signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
     start(config=config, args=args)
