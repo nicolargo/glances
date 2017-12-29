@@ -168,7 +168,7 @@ class GlancesBottle(object):
         self.stats = stats
 
         # Init plugin list
-        self.plugins_list = self.stats.getAllPlugins()
+        self.plugins_list = self.stats.getPluginsList()
 
         # Bind the Bottle TCP address/port
         if self.args.open_web_browser:

@@ -44,13 +44,17 @@ Monitor local machine with the web interface (Web UI):
 
 Monitor local machine and export stats to a CSV file:
 
-    $ glances --export-csv
+    $ glances --export csv --export-csv-file /tmp/glances.csv
 
 Monitor local machine and export stats to a InfluxDB server with 5s
 refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
 ElasticSearch, RabbitMQ and Riemann):
 
-    $ glances -t 5 --export-influxdb
+    $ glances -t 5 --export influxdb
+
+It is also possible to export stats to multiple endpoints:
+
+    $ glances -t 5 --export influxdb,statsd,csv
 
 Start a Glances server (server mode):
 
@@ -62,7 +66,7 @@ Connect Glances to a Glances server (client mode):
 
 Connect to a Glances server and export stats to a StatsD server:
 
-    $ glances -c <ip_server> --export-statsd
+    $ glances -c <ip_server> --export statsd
 
 Start the client browser (browser mode):
 
