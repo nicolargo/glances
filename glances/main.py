@@ -244,6 +244,9 @@ Examples of use:
         if args.debug:
             from logging import DEBUG
             logger.setLevel(DEBUG)
+        else:
+            from warnings import simplefilter
+            simplefilter("ignore")
 
         # Plugins disable/enable
         if args.disable_plugin is not None:
