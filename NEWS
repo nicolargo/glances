@@ -32,6 +32,7 @@ Bugs corrected:
     * Electron/Atom processes displayed wrong in process list #1192
     * Another encoding issue... With both Python 2 and Python 3 #1197
     * Glances do not exit when eating 'q' #1207
+    * FreeBSD blackhole bug #1202
 
 Backward-incompatible changes:
 
