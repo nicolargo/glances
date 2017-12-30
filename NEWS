@@ -15,6 +15,7 @@ Enhancements and new features:
     * Add a light mode for the console UI #1165
     * Refactor InfluxDB (API is now stable) #1166
     * Remove graph export from Glances #1206
+    * Add a code of conduct for Glances project's participants #1211
 
 Bugs corrected:
 
