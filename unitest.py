@@ -38,11 +38,13 @@ from glances.thresholds import GlancesThresholds
 # Global variables
 # =================
 
+
 # Init Glances core
 core = GlancesMain()
 
 # Init Glances stats
-stats = GlancesStats()
+stats = GlancesStats(config=core.get_config(),
+                     args=core.get_args())
 
 # Unitest class
 # ==============
@@ -80,7 +82,7 @@ class TestGlances(unittest.TestCase):
         """Check mandatory plugins."""
         plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'irq']
         print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plugins_to_check))
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_to_check:
             self.assertTrue(plugin in plugins_list)
 
@@ -234,7 +236,7 @@ class TestGlances(unittest.TestCase):
         """Test mandatories methods"""
         print('INFO: [TEST_095] Mandatories methods')
         mandatories_methods = ['reset', 'update']
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             for method in mandatories_methods:
                 self.assertTrue(hasattr(stats.get_plugin(plugin), method),
@@ -243,7 +245,7 @@ class TestGlances(unittest.TestCase):
     def test_096_views(self):
         """Test get_views method"""
         print('INFO: [TEST_096] Test views')
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             stats_grab = stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()
