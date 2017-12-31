@@ -16,6 +16,7 @@ Enhancements and new features:
     * Refactor InfluxDB (API is now stable) #1166
     * Remove graph export from Glances #1206
     * Add a code of conduct for Glances project's participants #1211
+    * Context switches bottleneck identification #1212
 
 Bugs corrected:
 
