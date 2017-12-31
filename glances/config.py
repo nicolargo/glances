@@ -172,7 +172,8 @@ class Config(object):
                              [str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
                               str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
                               str(iowait_bottleneck)])
-        ctx_switches_bottleneck = 56000 / multiprocessing.cpu_count()
+        # Context switches bottleneck identification #1212
+        ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
         self.set_default_cwc('cpu', 'ctx_switches',
                              [str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)),
                               str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)),
