@@ -421,8 +421,8 @@ class GlancesProcesses(object):
         self.processcount['pid_max'] = self.pid_max
 
         # Compute the maximum value for keys in self._max_values_list
-        # Reset the max dict
-        self.reset_max_values()
+        # # Reset the max dict
+        # self.reset_max_values()
         # Compute max
         for k in self._max_values_list:
             self.set_max_values(k, max(i[k] for i in self.processlist))
