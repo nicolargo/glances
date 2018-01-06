@@ -22,7 +22,7 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
 
         _.forEach(stats, function (sensor) {
             if (convertToFahrenheit && sensor.type != 'battery' && sensor.type != 'fan_speed') {
-                sensor.value = sensor.value * 1.8 + 32;
+                sensor.value = parseFloat(sensor.value * 1.8 + 32).toFixed(1);
                 sensor.unit = 'F';
             }
         });
