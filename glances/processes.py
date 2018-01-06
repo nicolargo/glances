@@ -407,29 +407,34 @@ class GlancesProcesses(object):
         if self.disable_tag:
             return
 
-        # Get the time since last update
-        time_since_update = getTimeSinceLastUpdate('process_disk')
-
-        # Reset the max dict
-        self.reset_max_values()
-
-        # Update the maximum process ID (pid) number
-        self.processcount['pid_max'] = self.pid_max
-
-        # Only work whith PsUtil
+        # Grab the stats
         mandatories_attr = ['cmdline', 'cpu_percent', 'cpu_times',
                             'io_counters', 'memory_info', 'memory_percent',
                             'name', 'nice', 'pid',
                             'ppid', 'status', 'username']
+        # and build the processes stats list
         self.processlist = [p.info for p in sorted(psutil.process_iter(attrs=mandatories_attr,
                                                                        ad_value=None),
                                                    key=lambda p: p.info['cpu_percent'])]
 
-        # Add metadata
+        # Update the maximum process ID (pid) number
+        self.processcount['pid_max'] = self.pid_max
+
+        # Compute the maximum value for keys in self._max_values_list
+        # Reset the max dict
+        self.reset_max_values()
+        # Compute max
+        for k in self._max_values_list:
+            self.set_max_values(k, max(i[k] for i in self.processlist))
+
+        # Loop over processes and add metadata
         for proc in self.processlist:
-            proc['time_since_update'] = time_since_update
-            # Status
+            # Time since last update (for disk_io rate computation)
+            proc['time_since_update'] = getTimeSinceLastUpdate('process_disk')
+
+            # Process status (only keep the first char)
             proc['status'] = str(proc['status'])[:1].upper()
+
             # Process IO
             # procstat['io_counters'] is a list:
             # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
@@ -437,17 +442,18 @@ class GlancesProcesses(object):
             # If io_tag = 1 > No access denied (display the IO rate)
             # Availability: all platforms except macOS and Illumos/Solaris
             if proc['io_counters'] is not None:
-                proc_io = proc['io_counters']
-                io_new = [proc_io.read_bytes, proc_io.write_bytes]
+                io_new = [proc['io_counters'].read_bytes,
+                          proc['io_counters'].write_bytes]
                 # For IO rate computation
                 # Append saved IO r/w bytes
                 try:
                     proc['io_counters'] = io_new + self.io_old[proc['pid']]
+                    io_tag = 1
                 except KeyError:
                     proc['io_counters'] = io_new + [0, 0]
+                    io_tag = 0
                 # then save the IO r/w bytes
                 self.io_old[proc['pid']] = io_new
-                io_tag = 1
             else:
                 proc['io_counters'] = [0, 0] + [0, 0]
                 io_tag = 0
