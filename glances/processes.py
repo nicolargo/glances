@@ -420,13 +420,6 @@ class GlancesProcesses(object):
         # Update the maximum process ID (pid) number
         self.processcount['pid_max'] = self.pid_max
 
-        # Compute the maximum value for keys in self._max_values_list
-        # # Reset the max dict
-        # self.reset_max_values()
-        # Compute max
-        for k in self._max_values_list:
-            self.set_max_values(k, max(i[k] for i in self.processlist))
-
         # Loop over processes and add metadata
         for proc in self.processlist:
             # Time since last update (for disk_io rate computation)
@@ -460,6 +453,11 @@ class GlancesProcesses(object):
 
             # Append the IO tag (for display)
             proc['io_counters'] += [io_tag]
+
+        # Compute the maximum value for keys in self._max_values_list
+        # Compute max
+        for k in self._max_values_list:
+            self.set_max_values(k, max(i[k] for i in self.processlist))
 
     def update_OLD(self):
         """Update the processes stats."""
