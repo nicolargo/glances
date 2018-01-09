@@ -65,7 +65,8 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Get the public IP address once
-        self.public_address = PublicIpAddress().get()
+        if not self.is_disable():
+            self.public_address = PublicIpAddress().get()
 
         # Init the stats
         self.reset()
