@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -527,9 +527,11 @@ class _GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = (
             self.screen.getmaxyx()[0] - 11 -
-            self.get_stats_display_height(__stat_display["alert"]) -
-            self.get_stats_display_height(__stat_display["docker"])
-        )
+            (0 if 'alert' not in __stat_display else
+                self.get_stats_display_height(__stat_display["alert"])) -
+            (0 if 'docker' not in __stat_display else
+                self.get_stats_display_height(__stat_display["docker"])))
+
         try:
             if self.args.enable_process_extended and not self.args.process_tree:
                 max_processes_displayed -= 4
