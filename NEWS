@@ -17,6 +17,7 @@ Enhancements and new features:
     * Remove graph export from Glances #1206
     * Add a code of conduct for Glances project's participants #1211
     * Context switches bottleneck identification #1212
+    * Take advantage of the PSUtil issue #1025 (Add process_iter(attrs, ad_value)) #1105
 
 Bugs corrected:
 

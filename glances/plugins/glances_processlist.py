@@ -21,6 +21,7 @@
 
 import os
 import shlex
+import copy
 from datetime import timedelta
 
 from glances.compat import iteritems
@@ -80,7 +81,7 @@ class Plugin(GlancesPlugin):
             self.nb_log_core = 0
 
         # Get the max values (dict)
-        self.max_values = glances_processes.max_values()
+        self.max_values = copy.deepcopy(glances_processes.max_values())
 
         # Get the maximum PID number
         # Use to optimize space (see https://github.com/nicolargo/glances/issues/959)
@@ -111,7 +112,8 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.getlist()
 
             # Get the max values (dict)
-            self.max_values = glances_processes.max_values()
+            # Use Deep copy to avoid change between update and display
+            self.max_values = copy.deepcopy(glances_processes.max_values())
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
@@ -304,7 +306,8 @@ class Plugin(GlancesPlugin):
             msg = '{:>10}'.format('?')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
-        if 'io_counters' in p:
+        if 'io_counters' in p and p['io_counters'][4] == 1:
+            # Display rate if stats is available and io_tag ([4]) == 1
             # IO read
             io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
             if io_rs == 0:

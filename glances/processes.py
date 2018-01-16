@@ -149,6 +149,8 @@ class GlancesProcesses(object):
                     return int(f.read())
             except (OSError, IOError):
                 return None
+        else:
+            return None
 
     @property
     def max_processes(self):
@@ -396,6 +398,68 @@ class GlancesProcesses(object):
         return procstat
 
     def update(self):
+        """Update the processes stats."""
+        # Reset the stats
+        self.processlist = []
+        self.reset_processcount()
+
+        # Do not process if disable tag is set
+        if self.disable_tag:
+            return
+
+        # Grab the stats
+        mandatories_attr = ['cmdline', 'cpu_percent', 'cpu_times',
+                            'io_counters', 'memory_info', 'memory_percent',
+                            'name', 'nice', 'pid',
+                            'ppid', 'status', 'username']
+        # and build the processes stats list
+        self.processlist = [p.info for p in sorted(psutil.process_iter(attrs=mandatories_attr,
+                                                                       ad_value=None),
+                                                   key=lambda p: p.info['cpu_percent'])]
+
+        # Update the maximum process ID (pid) number
+        self.processcount['pid_max'] = self.pid_max
+
+        # Loop over processes and add metadata
+        for proc in self.processlist:
+            # Time since last update (for disk_io rate computation)
+            proc['time_since_update'] = getTimeSinceLastUpdate('process_disk')
+
+            # Process status (only keep the first char)
+            proc['status'] = str(proc['status'])[:1].upper()
+
+            # Process IO
+            # procstat['io_counters'] is a list:
+            # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
+            # If io_tag = 0 > Access denied (display "?")
+            # If io_tag = 1 > No access denied (display the IO rate)
+            # Availability: all platforms except macOS and Illumos/Solaris
+            if proc['io_counters'] is not None:
+                io_new = [proc['io_counters'].read_bytes,
+                          proc['io_counters'].write_bytes]
+                # For IO rate computation
+                # Append saved IO r/w bytes
+                try:
+                    proc['io_counters'] = io_new + self.io_old[proc['pid']]
+                    io_tag = 1
+                except KeyError:
+                    proc['io_counters'] = io_new + [0, 0]
+                    io_tag = 0
+                # then save the IO r/w bytes
+                self.io_old[proc['pid']] = io_new
+            else:
+                proc['io_counters'] = [0, 0] + [0, 0]
+                io_tag = 0
+
+            # Append the IO tag (for display)
+            proc['io_counters'] += [io_tag]
+
+        # Compute the maximum value for keys in self._max_values_list
+        # Compute max
+        for k in self._max_values_list:
+            self.set_max_values(k, max(i[k] for i in self.processlist))
+
+    def update_OLD(self):
         """Update the processes stats."""
         # Reset the stats
         self.processlist = []
