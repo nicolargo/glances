@@ -21,6 +21,7 @@
 
 import os
 import shlex
+import copy
 from datetime import timedelta
 
 from glances.compat import iteritems
@@ -80,7 +81,7 @@ class Plugin(GlancesPlugin):
             self.nb_log_core = 0
 
         # Get the max values (dict)
-        self.max_values = glances_processes.max_values()
+        self.max_values = copy.deepcopy(glances_processes.max_values())
 
         # Get the maximum PID number
         # Use to optimize space (see https://github.com/nicolargo/glances/issues/959)
@@ -111,7 +112,8 @@ class Plugin(GlancesPlugin):
                 self.stats = glances_processes.getlist()
 
             # Get the max values (dict)
-            self.max_values = glances_processes.max_values()
+            # Use Deep copy to avoid change between update and display
+            self.max_values = copy.deepcopy(glances_processes.max_values())
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
@@ -445,6 +447,8 @@ class Plugin(GlancesPlugin):
         self.__msg_curse_header(ret, process_sort_key, args)
 
         # Process list
+        logger.info(self.max_values)
+        logger.info([(i['cpu_percent'], i['name']) for i in self.stats])
         if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(
                 self.__sort_stats(process_sort_key), args, first_level=True,
