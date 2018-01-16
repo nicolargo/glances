@@ -235,8 +235,7 @@ Homebrew
 
 .. code-block:: console
 
-    $ brew install python
-    $ pip install glances
+    $ brew install glances
 
 MacPorts
 ````````
