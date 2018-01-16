@@ -447,8 +447,6 @@ class Plugin(GlancesPlugin):
         self.__msg_curse_header(ret, process_sort_key, args)
 
         # Process list
-        logger.info(self.max_values)
-        logger.info([(i['cpu_percent'], i['name']) for i in self.stats])
         if glances_processes.is_tree_enabled():
             ret.extend(self.get_process_tree_curses_data(
                 self.__sort_stats(process_sort_key), args, first_level=True,
