@@ -174,7 +174,7 @@ Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it docker.io/nicolargo/glances
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
