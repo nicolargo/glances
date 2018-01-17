@@ -18,6 +18,7 @@ Enhancements and new features:
     * Add a code of conduct for Glances project's participants #1211
     * Context switches bottleneck identification #1212
     * Take advantage of the PSUtil issue #1025 (Add process_iter(attrs, ad_value)) #1105
+    * Nice Process Priority Configuration #1218
 
 Bugs corrected:
 
@@ -55,6 +56,20 @@ News command line options:
                      Export stats to a comma separated exporters
 
 News configuration keys in the glances.conf file:
+
+Processes list Nice value:
+
+    [processlist]
+    # Nice priorities range from -20 to 19.
+    # Configure nice levels using a comma separated list.
+    #
+    # Nice: Example 1, non-zero is warning (default behavior)
+    nice_warning=-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
+    #
+    # Nice: Example 2, low priority processes escalate from careful to critical
+    #nice_careful=1,2,3,4,5,6,7,8,9
+    #nice_warning=10,11,12,13,14
+    #nice_critical=15,16,17,18,19
 
 Docker plugin (related to #1152)
 

@@ -202,6 +202,26 @@ class Plugin(GlancesPlugin):
 
         return child_data
 
+    def get_nice_alert(self, value):
+        """Return the alert relative to the Nice configuration list"""
+        value = str(value)
+        try:
+            if value in self.get_limit('nice_critical'):
+                return 'CRITICAL'
+        except KeyError:
+            pass
+        try:
+            if value in self.get_limit('nice_warning'):
+                return 'WARNING'
+        except KeyError:
+            pass
+        try:
+            if value in self.get_limit('nice_careful'):
+                return 'CAREFUL'
+        except KeyError:
+            pass
+        return 'DEFAULT'
+
     def get_process_curses_data(self, p, first, args):
         """Get curses data to display for a process.
 
@@ -264,11 +284,8 @@ class Plugin(GlancesPlugin):
             if nice is None:
                 nice = '?'
             msg = '{:>5}'.format(nice)
-            if isinstance(nice, int) and ((WINDOWS and nice != 32) or
-                                          (not WINDOWS and nice != 0)):
-                ret.append(self.curse_add_line(msg, decoration='NICE'))
-            else:
-                ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.get_nice_alert(nice)))
         else:
             msg = '{:>5}'.format('?')
             ret.append(self.curse_add_line(msg))
