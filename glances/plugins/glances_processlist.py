@@ -323,7 +323,7 @@ class Plugin(GlancesPlugin):
             msg = '{:>10}'.format('?')
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
-        if 'io_counters' in p and p['io_counters'][4] == 1:
+        if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
             # Display rate if stats is available and io_tag ([4]) == 1
             # IO read
             io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
