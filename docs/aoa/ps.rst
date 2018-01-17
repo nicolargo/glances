@@ -122,5 +122,7 @@ The extended stats feature can be enabled using the
 (curses interface).
 
 .. note::
-    Limit values can be overwritten in the configuration file under
-    the ``[process]`` section.
+    Limit for CPU and MEM percent values can be overwritten in the
+    configuration file under the ``[processlist]`` section. It is also
+    possible to define limit for Nice values (comma separated list).
+    For example: nice_warning=-20,-19,-18
