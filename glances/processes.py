@@ -21,9 +21,8 @@ import operator
 import os
 
 from glances.compat import iteritems, itervalues, listitems
-from glances.globals import BSD, LINUX, MACOS, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
-from glances.processes_tree import ProcessTreeNode
 from glances.filter import GlancesFilter
 from glances.logger import logger
 
@@ -407,11 +406,17 @@ class GlancesProcesses(object):
         if self.disable_tag:
             return
 
+        # Time since last update (for disk_io rate computation)
+        time_since_update = getTimeSinceLastUpdate('process_disk')
+
         # Grab the stats
         mandatories_attr = ['cmdline', 'cpu_percent', 'cpu_times',
-                            'io_counters', 'memory_info', 'memory_percent',
+                            'memory_info', 'memory_percent',
                             'name', 'nice', 'pid',
                             'ppid', 'status', 'username']
+        # io_counters is not available on macOS and Illumos/Solaris
+        if not MACOS and not SUNOS:
+            mandatories_attr += ['io_counters']
         # and build the processes stats list
         self.processlist = [p.info for p in sorted(psutil.process_iter(attrs=mandatories_attr,
                                                                        ad_value=None),
@@ -423,7 +428,7 @@ class GlancesProcesses(object):
         # Loop over processes and add metadata
         for proc in self.processlist:
             # Time since last update (for disk_io rate computation)
-            proc['time_since_update'] = getTimeSinceLastUpdate('process_disk')
+            proc['time_since_update'] = time_since_update
 
             # Process status (only keep the first char)
             proc['status'] = str(proc['status'])[:1].upper()
@@ -431,10 +436,9 @@ class GlancesProcesses(object):
             # Process IO
             # procstat['io_counters'] is a list:
             # [read_bytes, write_bytes, read_bytes_old, write_bytes_old, io_tag]
-            # If io_tag = 0 > Access denied (display "?")
+            # If io_tag = 0 > Access denied or first time (display "?")
             # If io_tag = 1 > No access denied (display the IO rate)
-            # Availability: all platforms except macOS and Illumos/Solaris
-            if proc['io_counters'] is not None:
+            if 'io_counters' in proc and proc['io_counters'] is not None:
                 io_new = [proc['io_counters'].read_bytes,
                           proc['io_counters'].write_bytes]
                 # For IO rate computation
@@ -458,150 +462,6 @@ class GlancesProcesses(object):
         # Compute max
         for k in self._max_values_list:
             self.set_max_values(k, max(i[k] for i in self.processlist))
-
-    def update_OLD(self):
-        """Update the processes stats."""
-        # Reset the stats
-        self.processlist = []
-        self.reset_processcount()
-
-        # Do not process if disable tag is set
-        if self.disable_tag:
-            return
-
-        # Get the time since last update
-        time_since_update = getTimeSinceLastUpdate('process_disk')
-
-        # Reset the max dict
-        self.reset_max_values()
-
-        # Update the maximum process ID (pid) number
-        self.processcount['pid_max'] = self.pid_max
-
-        # Build an internal dict with only mandatories stats (sort keys)
-        processdict = {}
-        excluded_processes = set()
-        for proc in psutil.process_iter():
-            # Ignore kernel threads if needed
-            if self.no_kernel_threads and not WINDOWS and is_kernel_thread(proc):
-                continue
-
-            # If self.max_processes is None: Only retrieve mandatory stats
-            # Else: retrieve mandatory and standard stats
-            s = self.__get_process_stats(proc,
-                                         mandatory_stats=True,
-                                         standard_stats=self.max_processes is None)
-            # Check if s is note None (issue #879)
-            # ignore the 'idle' process on Windows and *BSD
-            # ignore the 'kernel_task' process on macOS
-            # waiting for upstream patch from psutil
-            if (s is None or
-                    BSD and s['name'] == 'idle' or
-                    WINDOWS and s['name'] == 'System Idle Process' or
-                    MACOS and s['name'] == 'kernel_task'):
-                continue
-            # Continue to the next process if it has to be filtered
-            if self._filter.is_filtered(s):
-                excluded_processes.add(proc)
-                continue
-
-            # Ok add the process to the list
-            processdict[proc] = s
-            # Update processcount (global statistics)
-            try:
-                self.processcount[str(proc.status())] += 1
-            except KeyError:
-                # Key did not exist, create it
-                try:
-                    self.processcount[str(proc.status())] = 1
-                except psutil.NoSuchProcess:
-                    pass
-            except psutil.NoSuchProcess:
-                pass
-            else:
-                self.processcount['total'] += 1
-            # Update thread number (global statistics)
-            try:
-                self.processcount['thread'] += proc.num_threads()
-            except Exception:
-                pass
-
-        if self._enable_tree:
-            self.process_tree = ProcessTreeNode.build_tree(processdict,
-                                                           self.sort_key,
-                                                           self.sort_reverse,
-                                                           self.no_kernel_threads,
-                                                           excluded_processes)
-
-            for i, node in enumerate(self.process_tree):
-                # Only retreive stats for visible processes (max_processes)
-                if self.max_processes is not None and i >= self.max_processes:
-                    break
-
-                # add standard stats
-                new_stats = self.__get_process_stats(node.process,
-                                                     mandatory_stats=False,
-                                                     standard_stats=True,
-                                                     extended_stats=False)
-                if new_stats is not None:
-                    node.stats.update(new_stats)
-
-                # Add a specific time_since_update stats for bitrate
-                node.stats['time_since_update'] = time_since_update
-
-        else:
-            # Process optimization
-            # Only retreive stats for visible processes (max_processes)
-            if self.max_processes is not None:
-                # Sort the internal dict and cut the top N (Return a list of tuple)
-                # tuple=key (proc), dict (returned by __get_process_stats)
-                try:
-                    processiter = sorted(iteritems(processdict),
-                                         key=lambda x: x[1][self.sort_key],
-                                         reverse=self.sort_reverse)
-                except (KeyError, TypeError) as e:
-                    logger.error("Cannot sort process list by {}: {}".format(self.sort_key, e))
-                    logger.error('{}'.format(listitems(processdict)[0]))
-                    # Fallback to all process (issue #423)
-                    processloop = iteritems(processdict)
-                    first = False
-                else:
-                    processloop = processiter[0:self.max_processes]
-                    first = True
-            else:
-                # Get all processes stats
-                processloop = iteritems(processdict)
-                first = False
-
-            for i in processloop:
-                # Already existing mandatory stats
-                procstat = i[1]
-                if self.max_processes is not None:
-                    # Update with standard stats
-                    # and extended stats but only for TOP (first) process
-                    s = self.__get_process_stats(i[0],
-                                                 mandatory_stats=False,
-                                                 standard_stats=True,
-                                                 extended_stats=first)
-                    if s is None:
-                        continue
-                    procstat.update(s)
-                # Add a specific time_since_update stats for bitrate
-                procstat['time_since_update'] = time_since_update
-                # Update process list
-                self.processlist.append(procstat)
-                # Next...
-                first = False
-
-        # Build the all processes list used by the AMPs
-        self.allprocesslist = [p for p in itervalues(processdict)]
-
-        # Clean internals caches if timeout is reached
-        if self.cache_timer.finished():
-            self.username_cache = {}
-            self.cmdline_cache = {}
-            # Restart the timer
-            self.cache_timer.reset()
 
     def getcount(self):
         """Get the number of processes."""

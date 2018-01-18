@@ -186,10 +186,6 @@ Command-Line Options
 
     hide kernel threads in process list (not available on Windows)
 
-.. option:: --tree
-
-    display processes as a tree (Linux only)
-
 .. option:: -b, --byte
 
     display network rate in byte per second

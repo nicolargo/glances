@@ -213,9 +213,9 @@ Examples of use:
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')
-        if LINUX:
-            parser.add_argument('--tree', action='store_true', default=False,
-                                dest='process_tree', help='display processes as a tree (Linux only)')
+        # if LINUX:
+        #     parser.add_argument('--tree', action='store_true', default=False,
+        #                         dest='process_tree', help='display processes as a tree (Linux only)')
         parser.add_argument('-b', '--byte', action='store_true', default=False,
                             dest='byte', help='display network rate in byte per second')
         parser.add_argument('--diskio-show-ramfs', action='store_true', default=False,
