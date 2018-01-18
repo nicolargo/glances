@@ -106,6 +106,7 @@ class AmpsList(object):
         """Update the command result attributed."""
         # Search application monitored processes by a regular expression
         processlist = glances_processes.getalllist()
+        logger.info(processlist)
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):
             if not v.enable():
