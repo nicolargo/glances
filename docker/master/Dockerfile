@@ -7,10 +7,6 @@
 # Pull base image.
 FROM bitnami/minideb:stretch
 
-# Install Glances (develop branch)
-#RUN apt-get update && apt-get -y install curl && rm -rf /var/lib/apt/lists/*
-#RUN curl -L https://raw.githubusercontent.com/nicolargo/glancesautoinstall/master/install.sh | /bin/bash && rm -rf /var/lib/apt/lists/*
-
 # Install run dependencies
 RUN install_packages \
     ca-certificates \
