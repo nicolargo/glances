@@ -301,17 +301,29 @@ class GlancesProcesses(object):
             mandatories_attr += ['io_counters']
 
         # and build the processes stats list
-        self.processlist = [p.info for p in psutil.process_iter(attrs=mandatories_attr,
-                                                                ad_value=None)
-                            # OS specifics processes filter
-                            if not (BSD and p.info['name'] == 'idle') and
-                            not (WINDOWS and p.info['name'] == 'System Idle Process') and
-                            not (MACOS and p.info['name'] == 'kernel_task') and
-                            # Kernel threads filter
-                            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0) and
-                            # User filter
-                            not (self._filter.is_filtered(p.info))
-                            ]
+        try:
+            self.processlist = [p.info for p in psutil.process_iter(attrs=mandatories_attr,
+                                                                    ad_value=None)
+                                # OS specifics processes filter
+                                if not (BSD and p.info['name'] == 'idle') and
+                                not (WINDOWS and p.info['name'] == 'System Idle Process') and
+                                not (MACOS and p.info['name'] == 'kernel_task') and
+                                # Kernel threads filter
+                                not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0) and
+                                # User filter
+                                not (self._filter.is_filtered(p.info))]
+        except TypeError:
+            # Fallback for PsUtil 2.0
+            before_filter = [p.as_dict(attrs=mandatories_attr, ad_value=None) for p in psutil.process_iter()]
+            self.processlist = [p for p in before_filter
+                                # OS specifics processes filter
+                                if not (BSD and p['name'] == 'idle') and
+                                not (WINDOWS and p['name'] == 'System Idle Process') and
+                                not (MACOS and p['name'] == 'kernel_task') and
+                                # Kernel threads filter
+                                not (self.no_kernel_threads and LINUX and p['gids'].real == 0) and
+                                # User filter
+                                not (self._filter.is_filtered(p))]
 
         # Sort the processes list by the current sort_key
         self.processlist = sorted(self.processlist,
