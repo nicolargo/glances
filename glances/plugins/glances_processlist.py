@@ -375,8 +375,6 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
-        # !!! CPU consumption ???
-        # TODO: extended stats into the web interface
         if first and 'extended_stats' in p:
             # Left padding
             xpad = ' ' * 13
@@ -392,22 +390,22 @@ class Plugin(GlancesPlugin):
                 for k, v in iteritems(p['memory_info']._asdict()):
                     # Ignore rss and vms (already displayed)
                     if k not in ['rss', 'vms'] and v is not None:
-                        msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
+                        msg += self.auto_unit(v, low_precision=False) + ' ' + k + ' '
                 if 'memory_swap' in p and p['memory_swap'] is not None:
-                    msg += 'swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
+                    msg += self.auto_unit(p['memory_swap'], low_precision=False) + ' swap '
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Third line is for open files/network sessions
             msg = ''
             if 'num_threads' in p and p['num_threads'] is not None:
-                msg += 'threads ' + str(p['num_threads']) + ' '
+                msg += str(p['num_threads']) + ' threads '
             if 'num_fds' in p and p['num_fds'] is not None:
-                msg += 'files ' + str(p['num_fds']) + ' '
+                msg += str(p['num_fds']) + ' files '
             if 'num_handles' in p and p['num_handles'] is not None:
-                msg += 'handles ' + str(p['num_handles']) + ' '
+                msg += str(p['num_handles']) + ' handles '
             if 'tcp' in p and p['tcp'] is not None:
-                msg += 'TCP ' + str(p['tcp']) + ' '
+                msg += str(p['tcp']) + ' TCP '
             if 'udp' in p and p['udp'] is not None:
-                msg += 'UDP ' + str(p['udp']) + ' '
+                msg += str(p['udp']) + ' UDP'
             if msg != '':
                 ret.append(self.curse_new_line())
                 msg = xpad + 'Open: ' + msg

@@ -228,55 +228,6 @@ class GlancesProcesses(object):
         for k in self._max_values_list:
             self._max_values[k] = 0.0
 
-    def __get_extended_stats(self, proc, procstat):
-        """
-        Get extended stats, only for top processes (see issue #403).
-
-        - cpu_affinity (Linux, Windows, FreeBSD)
-        - ionice (Linux and Windows > Vista)
-        - memory_full_info (Linux)
-        - num_ctx_switches (not available on Illumos/Solaris)
-        - num_fds (Unix-like)
-        - num_handles (Windows)
-        - num_threads (not available on *BSD)
-        - memory_maps (only swap, Linux)
-          https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
-        - connections (TCP and UDP)
-        """
-        procstat['extended_stats'] = True
-
-        for stat in ['cpu_affinity', 'ionice', 'memory_full_info',
-                     'num_ctx_switches', 'num_fds', 'num_handles',
-                     'num_threads']:
-            try:
-                procstat.update(proc.as_dict(attrs=[stat]))
-            except psutil.NoSuchProcess:
-                pass
-            # XXX: psutil>=4.3.1 raises ValueError while <4.3.1 raises AttributeError
-            except (ValueError, AttributeError):
-                procstat[stat] = None
-
-        if LINUX:
-            try:
-                procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
-            except psutil.NoSuchProcess:
-                pass
-            except (psutil.AccessDenied, TypeError, NotImplementedError):
-                # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                # is not enabled (see psutil #533/glances #413).
-                # XXX: Remove TypeError once we'll drop psutil < 3.0.0.
-                procstat['memory_swap'] = None
-
-        try:
-            procstat['tcp'] = len(proc.connections(kind="tcp"))
-            procstat['udp'] = len(proc.connections(kind="udp"))
-        except psutil.AccessDenied:
-            procstat['tcp'] = None
-            procstat['udp'] = None
-
-        return procstat
-
     def update(self):
         """Update the processes stats."""
         # Reset the stats
@@ -290,19 +241,21 @@ class GlancesProcesses(object):
         # Time since last update (for disk_io rate computation)
         time_since_update = getTimeSinceLastUpdate('process_disk')
 
-        # Grab the stats
-        mandatories_attr = ['cmdline', 'cpu_percent', 'cpu_times',
+        # Grab standards stats
+        ######################
+        standards_attr = ['cmdline', 'cpu_percent', 'cpu_times',
                             'memory_info', 'memory_percent',
                             'name', 'nice', 'pid',
                             'ppid', 'status', 'username',
                             'status', 'num_threads', 'gids']
         # io_counters availability: Linux, BSD, Windows, AIX
         if LINUX or BSD or WINDOWS:
-            mandatories_attr += ['io_counters']
+            standards_attr += ['io_counters']
 
         # and build the processes stats list
         try:
-            self.processlist = [p.info for p in psutil.process_iter(attrs=mandatories_attr,
+            # PsUtil 2.0 or higher
+            self.processlist = [p.info for p in psutil.process_iter(attrs=standards_attr,
                                                                     ad_value=None)
                                 # OS specifics processes filter
                                 if not (BSD and p.info['name'] == 'idle') and
@@ -314,7 +267,7 @@ class GlancesProcesses(object):
                                 not (self._filter.is_filtered(p.info))]
         except TypeError:
             # Fallback for PsUtil 2.0
-            before_filter = [p.as_dict(attrs=mandatories_attr, ad_value=None) for p in psutil.process_iter()]
+            before_filter = [p.as_dict(attrs=standards_attr, ad_value=None) for p in psutil.process_iter()]
             self.processlist = [p for p in before_filter
                                 # OS specifics processes filter
                                 if not (BSD and p['name'] == 'idle') and
@@ -326,9 +279,9 @@ class GlancesProcesses(object):
                                 not (self._filter.is_filtered(p))]
 
         # Sort the processes list by the current sort_key
-        self.processlist = sorted(self.processlist,
-                                  key=lambda p: p[self.sort_key],
-                                  reverse=True)
+        self.processlist = sort_stats(self.processlist,
+                                      sortedby=self.sort_key,
+                                      reverse=True)
 
         # Update the processcount
         self.update_processcount(self.processlist)
@@ -357,24 +310,23 @@ class GlancesProcesses(object):
                     if WINDOWS:
                         extended_stats += ['num_handles']
                     extended = top_process.as_dict(attrs=extended_stats)
-                    # !!! TODO
-                    # if LINUX:
-                    #     try:
-                    #         procstat['memory_swap'] = sum([v.swap for v in proc.memory_maps()])
-                    #     except psutil.NoSuchProcess:
-                    #         pass
-                    #     except (psutil.AccessDenied, TypeError, NotImplementedError):
-                    #         # NotImplementedError: /proc/${PID}/smaps file doesn't exist
-                    #         # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
-                    #         # is not enabled (see psutil #533/glances #413).
-                    #         # XXX: Remove TypeError once we'll drop psutil < 3.0.0.
-                    #         procstat['memory_swap'] = None
-                    # try:
-                    #     procstat['tcp'] = len(proc.connections(kind="tcp"))
-                    #     procstat['udp'] = len(proc.connections(kind="udp"))
-                    # except psutil.AccessDenied:
-                    #     procstat['tcp'] = None
-                    #     procstat['udp'] = None
+                    if LINUX:
+                        try:
+                            extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
+                        except psutil.NoSuchProcess:
+                            pass
+                        except (psutil.AccessDenied, TypeError, NotImplementedError):
+                            # NotImplementedError: /proc/${PID}/smaps file doesn't exist
+                            # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
+                            # is not enabled (see psutil #533/glances #413).
+                            # XXX: Remove TypeError once we'll drop psutil < 3.0.0.
+                            extended['memory_swap'] = None
+                    try:
+                        extended['tcp'] = len(top_process.connections(kind="tcp"))
+                        extended['udp'] = len(top_process.connections(kind="udp"))
+                    except psutil.AccessDenied:
+                        extended['tcp'] = None
+                        extended['udp'] = None
                 except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
                     logger.error('Can not grab extended stats ({})'.format(e))
                     extended['extended_stats'] = False
