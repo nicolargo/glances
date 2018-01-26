@@ -51,7 +51,7 @@ add new plugins or exports modules.
 Requirements
 ============
 
-- ``python 2.7,>=3.3``
+- ``python 2.7,>=3.4``
 - ``psutil>=2.0.0`` (better with latest version)
 
 Optional dependencies:
@@ -84,12 +84,12 @@ Optional dependencies:
 *Note for Python 2.6 users*
 
 Glances no longer supports Python 2.6. Please upgrade
-to a minimum Python version of 2.7/3.3+ or downgrade to Glances 2.6.2 (last version
+to a minimum Python version of 2.7/3.4+ or downgrade to Glances 2.6.2 (last version
 with Python 2.6 support).
 
 *Note for CentOS Linux 6 and 7 users*
 
-Python 2.7, 3.3 and 3.4 are now available via SCL repositories. See:
+Python 2.7 and 3.4 are now available via SCL repositories. See:
 https://lists.centos.org/pipermail/centos-announce/2015-December/021555.html.
 
 Installation
