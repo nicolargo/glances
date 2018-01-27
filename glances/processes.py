@@ -235,10 +235,13 @@ class GlancesProcesses(object):
                             'memory_info', 'memory_percent',
                             'name', 'nice', 'pid',
                             'ppid', 'status', 'username',
-                            'status', 'num_threads', 'gids']
+                            'status', 'num_threads']
         # io_counters availability: Linux, BSD, Windows, AIX
-        if LINUX or BSD or WINDOWS:
+        if not MACOS and not SUNOS:
             standards_attr += ['io_counters']
+        # gids availability: Unix
+        if not WINDOWS:
+            standards_attr += ['gids']
 
         # and build the processes stats list
         try:
