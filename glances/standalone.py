@@ -64,13 +64,6 @@ class GlancesStandalone(object):
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
-        # try:
-        #     if args.process_tree:
-        #         # Enable process tree view
-        #         glances_processes.enable_tree()
-        # except AttributeError:
-        #     pass
-
         # Initial system informations update
         self.stats.update()
 
