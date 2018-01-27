@@ -109,7 +109,7 @@ class GlancesLogs(object):
         If 'item' is not a 'new one', update the existing item.
         If event < peak_time the the alert is not setoff.
         """
-        proc_list = proc_list or glances_processes.getalllist()
+        proc_list = proc_list or glances_processes.getlist()
 
         # Add or update the log
         item_index = self.__itemexist__(item_type)
