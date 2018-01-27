@@ -39,6 +39,7 @@ Bugs corrected:
 
 Backward-incompatible changes:
 
+    * Support for Python 3.3 has been dropped (EOL 2017-09-29)
     * Minimum supported Docker API version is now 1.21 (Docker plugins)
     * Support for InfluxDB < 0.9 is deprecated (InfluxDB exporter)
     * Remove graph export from Glances

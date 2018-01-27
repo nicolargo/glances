@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances requires at least Python 2.7 or 3.3 to run.')
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
+    print('Glances requires at least Python 2.7 or 3.4 to run.')
     sys.exit(1)
 
 
@@ -113,7 +113,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
