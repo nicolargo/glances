@@ -533,7 +533,7 @@ class _GlancesCurses(object):
                 self.get_stats_display_height(__stat_display["docker"])))
 
         try:
-            if self.args.enable_process_extended and not self.args.process_tree:
+            if self.args.enable_process_extended:
                 max_processes_displayed -= 4
         except AttributeError:
             pass

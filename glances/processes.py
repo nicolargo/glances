@@ -49,10 +49,6 @@ class GlancesProcesses(object):
         # value = [ read_bytes_old, write_bytes_old ]
         self.io_old = {}
 
-        # Wether or not to enable process tree
-        self._enable_tree = False
-        self.process_tree = None
-
         # Init stats
         self.auto_sort = True
         self._sort_key = 'cpu_percent'
@@ -193,14 +189,6 @@ class GlancesProcesses(object):
     def disable_kernel_threads(self):
         """Ignore kernel threads in process list."""
         self.no_kernel_threads = True
-
-    def enable_tree(self):
-        """Enable process tree."""
-        self._enable_tree = True
-
-    def is_tree_enabled(self):
-        """Return True if process tree is enabled, False instead."""
-        return self._enable_tree
 
     @property
     def sort_reverse(self):
@@ -379,10 +367,6 @@ class GlancesProcesses(object):
         """Get the processlist."""
         return self.processlist
 
-    def gettree(self):
-        """Get the process tree."""
-        return self.process_tree
-
     @property
     def sort_key(self):
         """Get the current sort key."""
@@ -396,14 +380,14 @@ class GlancesProcesses(object):
 
 # TODO: move this global function (also used in glances_processlist
 #       and logs) inside the GlancesProcesses class
-def sort_stats(stats, sortedby=None, tree=False, reverse=True):
+def sort_stats(stats, sortedby=None, reverse=True):
     """Return the stats (dict) sorted by (sortedby)
     Reverse the sort if reverse is True."""
     if sortedby is None:
         # No need to sort...
         return stats
 
-    if sortedby == 'io_counters' and not tree:
+    if sortedby == 'io_counters':
         # Specific case for io_counters
         # Sum of io_r + io_w
         try:
@@ -417,15 +401,12 @@ def sort_stats(stats, sortedby=None, tree=False, reverse=True):
                        reverse=reverse)
     else:
         # Others sorts
-        if tree:
-            stats.set_sorting(sortedby, reverse)
-        else:
-            try:
-                stats.sort(key=operator.itemgetter(sortedby),
-                           reverse=reverse)
-            except (KeyError, TypeError):
-                stats.sort(key=operator.itemgetter('name'),
-                           reverse=False)
+        try:
+            stats.sort(key=operator.itemgetter(sortedby),
+                       reverse=reverse)
+        except (KeyError, TypeError):
+            stats.sort(key=operator.itemgetter('name'),
+                       reverse=False)
 
     return stats
 
