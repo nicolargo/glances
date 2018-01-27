@@ -106,10 +106,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            if glances_processes.is_tree_enabled():
-                self.stats = glances_processes.gettree()
-            else:
-                self.stats = glances_processes.getlist()
+            self.stats = glances_processes.getlist()
 
             # Get the max values (dict)
             # Use Deep copy to avoid change between update and display
@@ -120,87 +117,6 @@ class Plugin(GlancesPlugin):
             pass
 
         return self.stats
-
-    def get_process_tree_curses_data(self, node, args, first_level=True, max_node_count=None):
-        """Get curses data to display for a process tree."""
-        ret = []
-        node_count = 0
-        if not node.is_root and ((max_node_count is None) or (max_node_count > 0)):
-            node_data = self.get_process_curses_data(node.stats, False, args)
-            node_count += 1
-            ret.extend(node_data)
-        for child in node.iter_children():
-            # stop if we have enough nodes to display
-            if max_node_count is not None and node_count >= max_node_count:
-                break
-
-            if max_node_count is None:
-                children_max_node_count = None
-            else:
-                children_max_node_count = max_node_count - node_count
-            child_data = self.get_process_tree_curses_data(child,
-                                                           args,
-                                                           first_level=node.is_root,
-                                                           max_node_count=children_max_node_count)
-            if max_node_count is None:
-                node_count += len(child)
-            else:
-                node_count += min(children_max_node_count, len(child))
-
-            if not node.is_root:
-                child_data = self.add_tree_decoration(child_data, child is node.children[-1], first_level)
-            ret.extend(child_data)
-        return ret
-
-    def add_tree_decoration(self, child_data, is_last_child, first_level):
-        """Add tree curses decoration and indentation to a subtree."""
-        # find process command indices in messages
-        pos = []
-        for i, m in enumerate(child_data):
-            if m.get("_tree_decoration", False):
-                del m["_tree_decoration"]
-                pos.append(i)
-
-        # add new curses items for tree decoration
-        new_child_data = []
-        new_pos = []
-        for i, m in enumerate(child_data):
-            if i in pos:
-                new_pos.append(len(new_child_data))
-                new_child_data.append(self.curse_add_line(""))
-                new_child_data[-1]["_tree_decoration"] = True
-            new_child_data.append(m)
-        child_data = new_child_data
-        pos = new_pos
-
-        if pos:
-            # draw node prefix
-            if is_last_child:
-                prefix = "└─"
-            else:
-                prefix = "├─"
-            child_data[pos[0]]["msg"] = prefix
-
-            # add indentation
-            for i in pos:
-                spacing = 2
-                if first_level:
-                    spacing = 1
-                elif is_last_child and (i is not pos[0]):
-                    # compensate indentation for missing '│' char
-                    spacing = 3
-                child_data[i]["msg"] = "%s%s" % (" " * spacing, child_data[i]["msg"])
-
-            if not is_last_child:
-                # add '│' tree decoration
-                for i in pos[1:]:
-                    old_str = child_data[i]["msg"]
-                    if first_level:
-                        child_data[i]["msg"] = " │" + old_str[2:]
-                    else:
-                        child_data[i]["msg"] = old_str[:2] + "│" + old_str[3:]
-
-        return child_data
 
     def get_nice_alert(self, value):
         """Return the alert relative to the Nice configuration list"""
@@ -355,16 +271,10 @@ class Plugin(GlancesPlugin):
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = ' {}'.format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    if glances_processes.is_tree_enabled():
-                        # mark position to add tree decoration
-                        ret[-1]["_tree_decoration"] = True
                     ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
                 else:
                     msg = ' {}'.format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
-                    if glances_processes.is_tree_enabled():
-                        # mark position to add tree decoration
-                        ret[-1]["_tree_decoration"] = True
                 if arguments:
                     msg = ' {}'.format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
@@ -375,8 +285,6 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
-        # !!! CPU consumption ???
-        # TODO: extended stats into the web interface
         if first and 'extended_stats' in p:
             # Left padding
             xpad = ' ' * 13
@@ -392,22 +300,22 @@ class Plugin(GlancesPlugin):
                 for k, v in iteritems(p['memory_info']._asdict()):
                     # Ignore rss and vms (already displayed)
                     if k not in ['rss', 'vms'] and v is not None:
-                        msg += k + ' ' + self.auto_unit(v, low_precision=False) + ' '
+                        msg += self.auto_unit(v, low_precision=False) + ' ' + k + ' '
                 if 'memory_swap' in p and p['memory_swap'] is not None:
-                    msg += 'swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
+                    msg += self.auto_unit(p['memory_swap'], low_precision=False) + ' swap '
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Third line is for open files/network sessions
             msg = ''
             if 'num_threads' in p and p['num_threads'] is not None:
-                msg += 'threads ' + str(p['num_threads']) + ' '
+                msg += str(p['num_threads']) + ' threads '
             if 'num_fds' in p and p['num_fds'] is not None:
-                msg += 'files ' + str(p['num_fds']) + ' '
+                msg += str(p['num_fds']) + ' files '
             if 'num_handles' in p and p['num_handles'] is not None:
-                msg += 'handles ' + str(p['num_handles']) + ' '
+                msg += str(p['num_handles']) + ' handles '
             if 'tcp' in p and p['tcp'] is not None:
-                msg += 'TCP ' + str(p['tcp']) + ' '
+                msg += str(p['tcp']) + ' TCP '
             if 'udp' in p and p['udp'] is not None:
-                msg += 'UDP ' + str(p['udp']) + ' '
+                msg += str(p['udp']) + ' UDP'
             if msg != '':
                 ret.append(self.curse_new_line())
                 msg = xpad + 'Open: ' + msg
@@ -464,24 +372,19 @@ class Plugin(GlancesPlugin):
         self.__msg_curse_header(ret, process_sort_key, args)
 
         # Process list
-        if glances_processes.is_tree_enabled():
-            ret.extend(self.get_process_tree_curses_data(
-                self.__sort_stats(process_sort_key), args, first_level=True,
-                max_node_count=glances_processes.max_processes))
-        else:
-            # Loop over processes (sorted by the sort key previously compute)
-            first = True
-            for p in self.__sort_stats(process_sort_key):
-                ret.extend(self.get_process_curses_data(p, first, args))
-                # End of extended stats
-                first = False
-            if glances_processes.process_filter is not None:
-                if args.reset_minmax_tag:
-                    args.reset_minmax_tag = not args.reset_minmax_tag
-                    self.__mmm_reset()
-                self.__msg_curse_sum(ret, args=args)
-                self.__msg_curse_sum(ret, mmm='min', args=args)
-                self.__msg_curse_sum(ret, mmm='max', args=args)
+        # Loop over processes (sorted by the sort key previously compute)
+        first = True
+        for p in self.__sort_stats(process_sort_key):
+            ret.extend(self.get_process_curses_data(p, first, args))
+            # End of extended stats
+            first = False
+        if glances_processes.process_filter is not None:
+            if args.reset_minmax_tag:
+                args.reset_minmax_tag = not args.reset_minmax_tag
+                self.__mmm_reset()
+            self.__msg_curse_sum(ret, args=args)
+            self.__msg_curse_sum(ret, mmm='min', args=args)
+            self.__msg_curse_sum(ret, mmm='max', args=args)
 
         # Return the message with decoration
         return ret
@@ -668,7 +571,6 @@ class Plugin(GlancesPlugin):
     def __sort_stats(self, sortedby=None):
         """Return the stats (dict) sorted by (sortedby)."""
         return sort_stats(self.stats, sortedby,
-                          tree=glances_processes.is_tree_enabled(),
                           reverse=glances_processes.sort_reverse)
 
     def __max_pid_size(self):
