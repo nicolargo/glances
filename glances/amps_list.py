@@ -74,9 +74,9 @@ class AmpsList(object):
                 try:
                     amp = __import__(os.path.basename(amp_script)[:-3])
                 except ImportError as e:
-                    logger.warning("Cannot load {}, you need to install an external Python package ({})".format(os.path.basename(amp_script), e))
+                    logger.warning("Missing Python Lib ({}), cannot load {} AMP".format(e, amp_conf_name))
                 except Exception as e:
-                    logger.warning("Cannot load {} ({})".format(os.path.basename(amp_script), e))
+                    logger.warning("Cannot load {} AMP ({})".format(amp_conf_name, e))
                 else:
                     # Add the AMP to the dictionary
                     # The key is the AMP name

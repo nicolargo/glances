@@ -26,12 +26,6 @@ import socket
 import time
 import numbers
 
-try:
-    import requests
-    requests_tag = True
-except ImportError:
-    requests_tag = False
-
 from glances.globals import WINDOWS, MACOS, BSD
 from glances.ports_list import GlancesPortsList
 from glances.web_list import GlancesWebList
@@ -39,6 +33,13 @@ from glances.timer import Timer, Counter
 from glances.compat import bool_type
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
+
+try:
+    import requests
+    requests_tag = True
+except ImportError as e:
+    requests_tag = False
+    logger.warning("Missing Python Lib ({}), Ports plugin is limited to port scanning".format(e))
 
 
 class Plugin(GlancesPlugin):

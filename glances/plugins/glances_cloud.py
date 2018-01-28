@@ -23,18 +23,21 @@ Supported Cloud API:
 - AWS EC2 (class ThreadAwsEc2Grabber, see bellow)
 """
 
-try:
-    import requests
-except ImportError:
-    cloud_tag = False
-else:
-    cloud_tag = True
-
 import threading
 
 from glances.compat import iteritems, to_ascii
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
+
+# Import plugin specific dependency
+try:
+    import requests
+except ImportError as e:
+    import_error_tag = True
+    # Display debu message if import KeyError
+    logger.warning("Missing Python Lib ({}), Cloud plugin is disable".format(e))
+else:
+    import_error_tag = False
 
 
 class Plugin(GlancesPlugin):
@@ -85,16 +88,17 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Requests lib is needed to get stats from the Cloud API
-        if not cloud_tag:
+        if import_error_tag:
             return self.stats
 
         # Update the stats
         if self.input_method == 'local':
-            self.stats = self.aws_ec2.stats
+            # Example:
             # self.stats = {'ami-id': 'ami-id',
             #                         'instance-id': 'instance-id',
             #                         'instance-type': 'instance-type',
             #                         'region': 'placement/availability-zone'}
+            self.stats = self.aws_ec2.stats
 
         return self.stats
 
@@ -149,8 +153,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
 
         Infinite loop, should be stopped by calling the stop() method
         """
-        if not cloud_tag:
-            logger.debug("cloud plugin - Requests lib is not installed")
+        if import_error_tag:
             self.stop()
             return False
 
