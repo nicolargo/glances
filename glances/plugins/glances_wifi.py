@@ -31,11 +31,11 @@ import psutil
 try:
     from wifi.scan import Cell
     from wifi.exceptions import InterfaceError
-except ImportError:
-    logger.debug("Wifi library not found. Glances cannot grab Wifi info.")
-    wifi_tag = False
+except ImportError as e:
+    import_error_tag = True
+    logger.warning("Missing Python Lib ({}), Wifi plugin is disable".format(e))
 else:
-    wifi_tag = True
+    import_error_tag = False
 
 
 class Plugin(GlancesPlugin):
@@ -81,7 +81,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # Exist if we can not grab the stats
-        if not wifi_tag:
+        if import_error_tag:
             return self.stats
 
         if self.input_method == 'local':
@@ -167,7 +167,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or not wifi_tag or self.is_disable():
+        if not self.stats or import_error_tag or self.is_disable():
             return ret
 
         # Max size for the interface name
