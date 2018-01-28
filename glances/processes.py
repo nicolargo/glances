@@ -96,7 +96,8 @@ class GlancesProcesses(object):
             self.processcount[k] = len(list(filter(lambda v: v['status'] is k,
                                                    plist)))
         # Compute thread
-        self.processcount['thread'] = sum(i['num_threads'] for i in plist)
+        self.processcount['thread'] = sum(i['num_threads'] for i in plist
+                                          if i['num_threads'] is not None)
         # Compute total
         self.processcount['total'] = len(plist)
 
