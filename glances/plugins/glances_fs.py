@@ -26,7 +26,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
-
 # SNMP OID
 # The snmpd.conf needs to be edited.
 # Add the following to enable it on all disk
