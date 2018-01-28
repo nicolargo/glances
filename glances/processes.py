@@ -230,21 +230,22 @@ class GlancesProcesses(object):
         # Time since last update (for disk_io rate computation)
         time_since_update = getTimeSinceLastUpdate('process_disk')
 
-        # Grab standards stats
-        ######################
-        standards_attr = ['cmdline', 'cpu_percent', 'cpu_times',
-                            'memory_info', 'memory_percent',
-                            'name', 'nice', 'pid',
-                            'ppid', 'status', 'username',
-                            'status', 'num_threads', 'gids']
+        # Grab standard stats
+        #####################
+        standard_attrs = ['cmdline', 'cpu_percent', 'cpu_times', 'memory_info',
+                          'memory_percent', 'name', 'nice', 'pid', 'ppid',
+                          'status', 'username', 'status', 'num_threads']
         # io_counters availability: Linux, BSD, Windows, AIX
-        if LINUX or BSD or WINDOWS:
-            standards_attr += ['io_counters']
+        if not MACOS and not SUNOS:
+            standard_attrs += ['io_counters']
+        # gids availability: Unix
+        if not WINDOWS:
+            standard_attrs += ['gids']
 
         # and build the processes stats list
         try:
             # PsUtil 2.0 or higher
-            self.processlist = [p.info for p in psutil.process_iter(attrs=standards_attr,
+            self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs,
                                                                     ad_value=None)
                                 # OS specifics processes filter
                                 if not (BSD and p.info['name'] == 'idle') and
@@ -256,7 +257,7 @@ class GlancesProcesses(object):
                                 not (self._filter.is_filtered(p.info))]
         except TypeError:
             # Fallback for PsUtil 2.0
-            before_filter = [p.as_dict(attrs=standards_attr, ad_value=None) for p in psutil.process_iter()]
+            before_filter = [p.as_dict(attrs=standard_attrs, ad_value=None) for p in psutil.process_iter()]
             self.processlist = [p for p in before_filter
                                 # OS specifics processes filter
                                 if not (BSD and p['name'] == 'idle') and
