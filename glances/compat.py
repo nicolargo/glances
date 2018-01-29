@@ -25,15 +25,10 @@ import operator
 import sys
 import unicodedata
 import types
-import platform
 import subprocess
 
 from glances.logger import logger
 
-PY_CYTHON = platform.python_implementation() == 'CPython'
-PY_PYPY = platform.python_implementation() == 'PyPy'
-PY_JYTHON = platform.python_implementation() == 'Jython'
-PY_IRON = platform.python_implementation() == 'IronPython'
 PY3 = sys.version_info[0] == 3
 
 try:
