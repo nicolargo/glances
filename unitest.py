@@ -28,7 +28,6 @@ from glances.stats import GlancesStats
 from glances import __version__
 from glances.globals import WINDOWS, LINUX
 from glances.outputs.glances_bars import Bar
-from glances.compat import PY3, PY_PYPY
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
@@ -213,8 +212,6 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
 
-    @unittest.skipIf(PY3, True)
-    @unittest.skipIf(PY_PYPY, True)
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
@@ -226,11 +223,11 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(careful < warning)
         self.assertTrue(warning < critical)
         self.assertFalse(ok > careful)
-        self.assertTrue(ok == ok)
-        self.assertTrue(str(ok) == 'OK')
+        self.assertEqual(ok, ok)
+        self.assertEqual(str(ok), 'OK')
         thresholds = GlancesThresholds()
         thresholds.add('cpu_percent', 'OK')
-        self.assertTrue(thresholds.get(stat_name='cpu_percent').description() == 'OK')
+        self.assertEqual(thresholds.get(stat_name='cpu_percent').description(), 'OK')
 
     def test_095_methods(self):
         """Test mandatories methods"""

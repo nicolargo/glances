@@ -25,27 +25,16 @@ import operator
 import sys
 import unicodedata
 import types
-import platform
 import subprocess
 
 from glances.logger import logger
 
-PY_CYTHON = platform.python_implementation() == 'CPython'
-PY_PYPY = platform.python_implementation() == 'PyPy'
-PY_JYTHON = platform.python_implementation() == 'Jython'
-PY_IRON = platform.python_implementation() == 'IronPython'
 PY3 = sys.version_info[0] == 3
-
-try:
-    from statistics import mean
-except ImportError:
-    # Statistics is only available for Python 3.4 or higher
-    def mean(numbers):
-        return float(sum(numbers)) / max(len(numbers), 1)
 
 if PY3:
     import queue
     from configparser import ConfigParser, NoOptionError, NoSectionError
+    from statistics import mean
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from urllib.request import urlopen
@@ -134,6 +123,9 @@ else:
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
+
+    def mean(numbers):
+        return float(sum(numbers)) / max(len(numbers), 1)
 
     def to_ascii(s):
         """Convert the unicode 's' to a ASCII string
