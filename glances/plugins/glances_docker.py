@@ -35,7 +35,7 @@ try:
 except ImportError as e:
     import_error_tag = True
     # Display debu message if import KeyError
-    logger.warning("Missing Python Lib ({}), Docker plugin is disable".format(e))
+    logger.warning("Missing Python Lib ({}), Docker plugin is disabled".format(e))
 else:
     import_error_tag = False
 

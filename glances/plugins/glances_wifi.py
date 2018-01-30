@@ -33,7 +33,7 @@ try:
     from wifi.exceptions import InterfaceError
 except ImportError as e:
     import_error_tag = True
-    logger.warning("Missing Python Lib ({}), Wifi plugin is disable".format(e))
+    logger.warning("Missing Python Lib ({}), Wifi plugin is disabled".format(e))
 else:
     import_error_tag = False
 

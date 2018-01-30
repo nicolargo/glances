@@ -28,7 +28,7 @@ try:
     from pymdstat import MdStat
 except ImportError as e:
     import_error_tag = True
-    logger.warning("Missing Python Lib ({}), Raid plugin is disable".format(e))
+    logger.warning("Missing Python Lib ({}), Raid plugin is disabled".format(e))
 else:
     import_error_tag = False
 
