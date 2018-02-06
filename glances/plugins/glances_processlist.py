@@ -532,6 +532,9 @@ class Plugin(GlancesPlugin):
             if key not in p:
                 # Correct issue #1188
                 continue
+            if p[key] is None:
+                # Correct https://github.com/nicolargo/glances/issues/1105#issuecomment-363553788
+                continue
             if indice is None:
                 ret += p[key]
             else:
