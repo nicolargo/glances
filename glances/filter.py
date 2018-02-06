@@ -140,6 +140,9 @@ class GlancesFilter(object):
             return False
         try:
             return self._filter_re.match(value) is None
-        except AttributeError:
-            #  Filter processes crashs with a bad regular expression pattern (issue #665)
+        except (AttributeError, TypeError):
+            # AttributeError
+            # Filter processes crashs with a bad regular expression pattern (issue #665)
+            # TypeError
+            # Filter processes crashs if value is None (issue #1105)
             return False
