@@ -119,7 +119,8 @@ class GlancesFilter(object):
 
         if self.filter_key is None:
             # Apply filter on command line and process name
-            return self._is_process_filtered(process, key='cmdline') and self._is_process_filtered(process, key='name')
+            return self._is_process_filtered(process, key='name') or \
+                self._is_process_filtered(process, key='cmdline')
         else:
             # Apply filter on <key>
             return self._is_process_filtered(process)
