@@ -217,26 +217,23 @@ class Plugin(GlancesPlugin):
             msg = '{:>2}'.format('?')
             ret.append(self.curse_add_line(msg))
         # TIME+
-        if self.tag_proc_time:
-            try:
-                delta = timedelta(seconds=sum(p['cpu_times']))
-            except (OverflowError, TypeError) as e:
-                # Catch OverflowError on some Amazon EC2 server
-                # See https://github.com/nicolargo/glances/issues/87
-                # Also catch TypeError on macOS
-                # See: https://github.com/nicolargo/glances/issues/622
-                logger.debug("Cannot get TIME+ ({})".format(e))
-                self.tag_proc_time = False
-            else:
-                hours, minutes, seconds, microseconds = convert_timedelta(delta)
-                if hours:
-                    msg = '{:>4}h'.format(hours)
-                    ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
-                    msg = '{}:{}'.format(str(minutes).zfill(2), seconds)
-                else:
-                    msg = '{:>4}:{}.{}'.format(minutes, seconds, microseconds)
-        else:
+        try:
+            delta = timedelta(seconds=sum(p['cpu_times']))
+        except (OverflowError, TypeError) as e:
+            # Catch OverflowError on some Amazon EC2 server
+            # See https://github.com/nicolargo/glances/issues/87
+            # Also catch TypeError on macOS
+            # See: https://github.com/nicolargo/glances/issues/622
+            # logger.debug("Cannot get TIME+ ({})".format(e))
             msg = '{:>10}'.format('?')
+        else:
+            hours, minutes, seconds, microseconds = convert_timedelta(delta)
+            if hours:
+                msg = '{:>4}h'.format(hours)
+                ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
+                msg = '{}:{}'.format(str(minutes).zfill(2), seconds)
+            else:
+                msg = '{:>4}:{}.{}'.format(minutes, seconds, microseconds)
         ret.append(self.curse_add_line(msg, optional=True))
         # IO read/write
         if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
