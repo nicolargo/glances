@@ -19,7 +19,7 @@
 
 """Disk I/O plugin."""
 
-import operator
+import re
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -180,7 +180,10 @@ class Plugin(GlancesPlugin):
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in sorted(self.stats, key=lambda stat: tuple(map(
+                lambda part: int(part) if part.isdigit() else part.lower(),
+                re.split(r"(\d+|\D+)", stat.get('alias') or stat['disk_name'])
+        ))):
             # Is there an alias for the disk name ?
             disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])
