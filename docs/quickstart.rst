@@ -24,6 +24,19 @@ Glances should start (press 'q' or 'ESC' to exit):
 
 .. image:: _static/screenshot-wide.png
 
+It is also possible to display stats directly to stdout using:
+
+.. code-block:: console
+
+    $ glances --stdout cpu.user,mem.used,load
+    cpu.user: 30.7
+    mem.used: 3278204928
+    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    cpu.user: 3.4
+    mem.used: 3275251712
+    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    ...
+
 Client/Server Mode
 ------------------
 
