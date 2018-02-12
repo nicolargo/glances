@@ -27,7 +27,7 @@ import tempfile
 from glances import __version__, psutil_version
 from glances.compat import input
 from glances.config import Config
-from glances.globals import LINUX, WINDOWS
+from glances.globals import LINUX, WINDOWS, MACOS
 from glances.logger import logger
 
 
@@ -246,7 +246,7 @@ Examples of use:
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list')
-        if LINUX:
+        if LINUX or MACOS:
             parser.add_argument('--tree', action='store_true', default=False,
                                 dest='process_tree', help='display processes as a tree')
         parser.add_argument('-b', '--byte', action='store_true', default=False,
