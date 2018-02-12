@@ -435,6 +435,12 @@ class GlancesProcesses(object):
                     BSD and s['name'] == 'idle' or
                     WINDOWS and s['name'] == 'System Idle Process' or
                     MACOS and s['name'] == 'kernel_task'):
+
+                # Adding excluded process to avoid infinite loop when building
+                # the tree (issue #542)
+                if MACOS:
+                    excluded_processes.add(proc)
+
                 continue
             # Continue to the next process if it has to be filtered
             if self._filter.is_filtered(s):
