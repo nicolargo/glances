@@ -286,6 +286,13 @@ class GlancesPlugin(object):
         """Get the short detected OS name (SNMP)."""
         return self._short_system_name
 
+    def sorted_stats(self, key):
+        """Get the stats sorted by an alias (if present) or key."""
+        return sorted(self.stats, key=lambda stat: tuple(map(
+            lambda part: int(part) if part.isdigit() else part.lower(),
+            re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
+        )))
+
     @short_system_name.setter
     def short_system_name(self, short_name):
         """Set the short detected OS name (SNMP)."""

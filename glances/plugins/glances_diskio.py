@@ -180,10 +180,7 @@ class Plugin(GlancesPlugin):
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=lambda stat: tuple(map(
-                lambda part: int(part) if part.isdigit() else part.lower(),
-                re.split(r"(\d+|\D+)", stat.get('alias') or stat['disk_name'])
-        ))):
+        for i in self.sorted_stats('disk_name'):
             # Is there an alias for the disk name ?
             disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])
