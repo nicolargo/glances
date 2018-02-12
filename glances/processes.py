@@ -359,7 +359,8 @@ class GlancesProcesses(object):
         # Compute the maximum value for keys in self._max_values_list (CPU, MEM)
         for k in self._max_values_list:
             if self.processlist != []:
-                self.set_max_values(k, max(i[k] for i in self.processlist))
+                self.set_max_values(k, max(i[k] for i in self.processlist
+                if not (i[k] == None)))
 
     def getcount(self):
         """Get the number of processes."""
