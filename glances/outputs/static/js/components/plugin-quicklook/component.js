@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginQuicklook', {
+import GlancesPluginQuicklookController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginQuicklook', {
     controller: GlancesPluginQuicklookController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-quicklook/view.html'
+    templateUrl: template,
 });

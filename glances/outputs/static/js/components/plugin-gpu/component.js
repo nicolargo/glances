@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginGpu', {
+import GlancesPluginGpuController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginGpu', {
     controller: GlancesPluginGpuController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-gpu/view.html'
+    templateUrl: template,
 });
