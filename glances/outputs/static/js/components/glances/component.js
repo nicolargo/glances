@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glances', {
+import GlancesController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glances', {
     controller: GlancesController,
     controllerAs: 'vm',
-    templateUrl: 'components/glances/view.html'
+    templateUrl: template,
 });

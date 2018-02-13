@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginWifiController($scope, $filter, GlancesStats) {
+export default function GlancesPluginWifiController($scope, $filter, GlancesStats) {
     var vm = this;
     var _view = {};
 
