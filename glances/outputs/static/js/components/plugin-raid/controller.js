@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginRaidController($scope, GlancesStats) {
+export default function GlancesPluginRaidController($scope, GlancesStats) {
     var vm = this;
     vm.disks = [];
 

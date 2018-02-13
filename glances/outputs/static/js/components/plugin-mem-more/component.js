@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginMemMore', {
+import GlancesPluginMemMoreController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginMemMore', {
     controller: GlancesPluginMemMoreController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-mem-more/view.html'
+    templateUrl: template,
 });
