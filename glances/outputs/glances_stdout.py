@@ -79,4 +79,5 @@ class GlancesStdout(object):
                 print("{}: {}".format(plugin, stat))
 
         # Wait until next refresh
-        time.sleep(duration)
+        if duration > 0:
+            time.sleep(duration)
