@@ -289,7 +289,7 @@ class Plugin(GlancesPlugin):
                 msg = '{:>7}'.format('Tx/s')
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in self.sorted_stats():
             # Do not display interface in down state (issue #765)
             if ('is_up' in i) and (i['is_up'] is False):
                 continue
