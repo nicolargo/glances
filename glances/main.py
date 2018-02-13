@@ -214,7 +214,7 @@ Examples of use:
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
         parser.add_argument('--stdout', default=None,
-                            dest='stdout', help='display stats to stdout (comma separated list of plugins / plugins.attribute)')
+                            dest='stdout', help='display stats to stdout (comma separated list of plugins/plugins.attribute)')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')
