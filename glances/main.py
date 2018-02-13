@@ -91,6 +91,9 @@ Examples of use:
   Start the client browser (browser mode):
     $ glances --browser
 
+  Display stats to stdout:
+    $ glances --stdout cpu.user,mem.used,load
+
   Disable some plugins (any modes):
     $ glances --disable-plugin network,ports
 """
@@ -210,6 +213,8 @@ Examples of use:
                             dest='process_filter', help='set the process filter pattern (regular expression)')
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
+        parser.add_argument('--stdout', default=None,
+                            dest='stdout', help='display stats to stdout (comma separated list of plugins/plugins.attribute)')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')

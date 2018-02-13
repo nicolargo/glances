@@ -20,6 +20,7 @@ Enhancements and new features:
     * Take advantage of the PSUtil issue #1025 (Add process_iter(attrs, ad_value)) #1105
     * Nice Process Priority Configuration #1218
     * Display debug message if dep lib is not found #1224
+    * Add a new output mode to stdout #1168
 
 Bugs corrected:
 
@@ -56,6 +57,8 @@ News command line options:
                      Disable a list of comma separated plugins
     --export exporter1,exporter2
                      Export stats to a comma separated exporters
+    --stdout plugin1,plugin2.attribute
+                     Display stats to stdout
 
 News configuration keys in the glances.conf file:
 
