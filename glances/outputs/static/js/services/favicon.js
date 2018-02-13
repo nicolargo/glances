@@ -1,8 +1,7 @@
 
 import Favico from 'favico.js';
-// import angular from 'angular';
 
-angular.module('glancesApp').service('favicoService', favicoService);
+export default angular.module('glancesApp').service('favicoService', favicoService);
 
 function favicoService () {
 
