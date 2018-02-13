@@ -1,19 +1,8 @@
-var glancesApp = angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
 
-.value('CONFIG', {})
-.value('ARGUMENTS', {})
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/style.css';
 
-.config(function (hotkeysProvider) {
-    hotkeysProvider.useNgRoute = false;
-    hotkeysProvider.includeCheatSheet = false;
-})
-
-.run(function ($rootScope, GlancesStats) {
-    $rootScope.title = "Glances";
-
-    $rootScope.$on('data_refreshed', function (event, data) {
-        $rootScope.title = data.stats.system.hostname + ' - Glances';
-    });
-
-    GlancesStats.init();
-});
+import './module';
+import './services';
+import './components';
+import './filters';
