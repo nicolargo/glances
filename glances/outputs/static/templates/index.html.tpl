@@ -7,18 +7,12 @@
     <title ng-bind="title">Glances</title>
 
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="css/normalize.min.css" />
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="css/style.min.css" />
-
-    <script type="text/javascript" src="js/vendor.min.js"></script>
+    <script type="text/javascript" src="glances.js"></script>
     <script>
         angular
             .module('glances.config', [])
             .constant('REFRESH_TIME', {{ refresh_time }});
     </script>
-    <script type="text/javascript" src="js/main.min.js"></script>
-    <script type="text/javascript" src="js/templates.min.js"></script>
 </head>
 
 <body>
