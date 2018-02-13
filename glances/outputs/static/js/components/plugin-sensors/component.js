@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginSensors', {
+import GlancesPluginSensorsController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginSensors', {
     controller: GlancesPluginSensorsController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-sensors/view.html'
+    templateUrl: template,
 });

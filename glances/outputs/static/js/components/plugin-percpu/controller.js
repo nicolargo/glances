@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper) {
+export default function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper) {
     var vm = this;
     vm.cpus = [];
 

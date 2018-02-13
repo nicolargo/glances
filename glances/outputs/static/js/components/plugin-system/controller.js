@@ -1,6 +1,6 @@
 'use strict';
 
-function GlancesPluginSystemController($scope, GlancesStats) {
+export default function GlancesPluginSystemController($scope, GlancesStats) {
     var vm = this;
 
     vm.hostname = null;

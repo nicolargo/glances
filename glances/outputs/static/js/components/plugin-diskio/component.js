@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginDiskio', {
+import GlancesPluginDiskioController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginDiskio', {
     controller: GlancesPluginDiskioController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-diskio/view.html'
+    templateUrl: template,
 });

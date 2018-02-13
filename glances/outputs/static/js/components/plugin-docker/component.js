@@ -1,7 +1,10 @@
 'use strict';
 
-glancesApp.component('glancesPluginDocker', {
+import GlancesPluginDockerController from './controller';
+import template from './view.html';
+
+export default angular.module('glancesApp').component('glancesPluginDocker', {
     controller: GlancesPluginDockerController,
     controllerAs: 'vm',
-    templateUrl: 'components/plugin-docker/view.html'
+    templateUrl: template,
 });
