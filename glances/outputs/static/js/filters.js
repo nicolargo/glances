@@ -1,4 +1,17 @@
-glancesApp.filter('min_size', function () {
+
+import _ from 'lodash';
+// import angular from 'angular';
+
+export default angular.module('glancesApp')
+    .filter('min_size', min_size_filter)
+    .filter('exclamation', exclamation_filter)
+    .filter('bytes', bytes_filter)
+    .filter('bits', bits_filter)
+    .filter('leftPad', leftPad_filter)
+    .filter('timemillis', timemillis_filter)
+    .filter('timedelta', timedelta_filter);
+
+function min_size_filter() {
     return function (input, max) {
         var max = max || 8;
         if (input.length > max) {
@@ -6,17 +19,18 @@ glancesApp.filter('min_size', function () {
         }
         return input
     };
-});
-glancesApp.filter('exclamation', function () {
+}
+
+function exclamation_filter() {
     return function (input) {
         if (input === undefined || input === '') {
             return '?';
         }
         return input;
     };
-});
+}
 
-glancesApp.filter('bytes', function () {
+function bytes_filter() {
     return function (bytes, low_precision) {
         low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0) {
@@ -68,24 +82,24 @@ glancesApp.filter('bytes', function () {
 
         return bytes.toFixed(0);
     }
-});
+}
 
-glancesApp.filter('bits', function ($filter) {
+function bits_filter($filter) {
     return function (bits, low_precision) {
         bits = Math.round(bits) * 8;
         return $filter('bytes')(bits, low_precision) + 'b';
     }
-});
+}
 
-glancesApp.filter('leftPad', function () {
+function leftPad_filter() {
     return function (value, length, chars) {
         length = length || 0;
         chars = chars || ' ';
         return _.padStart(value, length, chars);
     }
-});
+}
 
-glancesApp.filter('timemillis', function () {
+function timemillis_filter() {
     return function (array) {
         var sum = 0.0;
         for (var i = 0; i < array.length; i++) {
@@ -93,9 +107,9 @@ glancesApp.filter('timemillis', function () {
         }
         return sum;
     }
-});
+}
 
-glancesApp.filter('timedelta', function ($filter) {
+function timedelta_filter($filter) {
     return function (value) {
         var sum = $filter('timemillis')(value);
         var d = new Date(sum);
@@ -107,4 +121,4 @@ glancesApp.filter('timedelta', function ($filter) {
             milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
         };
     }
-});
+}
