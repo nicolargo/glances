@@ -1,4 +1,9 @@
-glancesApp.service('GlancesStats', function ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REFRESH_TIME, CONFIG, ARGUMENTS) {
+
+// import angular from 'angular';
+
+export default angular.module('glancesApp').service('GlancesStats', GlancesStats);
+
+function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REFRESH_TIME, CONFIG, ARGUMENTS) {
 
     var _data = false;
 
@@ -65,4 +70,4 @@ glancesApp.service('GlancesStats', function ($http, $q, $rootScope, $timeout, Gl
             return response.data;
         });
     };
-});
+}

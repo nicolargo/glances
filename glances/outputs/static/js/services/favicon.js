@@ -1,4 +1,10 @@
-glancesApp.service('favicoService', function () {
+
+import Favico from 'favico.js';
+// import angular from 'angular';
+
+angular.module('glancesApp').service('favicoService', favicoService);
+
+function favicoService () {
 
     var favico = new Favico({
         animation: 'none'
@@ -11,4 +17,4 @@ glancesApp.service('favicoService', function () {
     this.reset = function () {
         favico.reset();
     };
-});
+}
