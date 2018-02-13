@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
+from glances.outputs.glances_stdout import GlancesStdout
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -68,9 +69,13 @@ class GlancesStandalone(object):
         self.stats.update()
 
         if self.quiet:
-            logger.info("Quiet mode is ON: Nothing will be displayed")
+            logger.info("Quiet mode is ON, nothing will be displayed")
             # In quiet mode, nothing is displayed
             glances_processes.max_processes = 0
+        elif args.stdout:
+            logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
+            # Init screen
+            self.screen = GlancesStdout(config=config, args=args)
         else:
             # Default number of processes to displayed is set to 50
             glances_processes.max_processes = 50
