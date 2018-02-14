@@ -33,10 +33,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 try:
     import docker
 except ImportError as e:
-    logger.debug("Docker library not found (%s). Glances cannot grab Docker info." % e)
-    docker_tag = False
+    import_error_tag = True
+    # Display debu message if import KeyError
+    logger.warning("Missing Python Lib ({}), Docker plugin is disabled".format(e))
 else:
-    docker_tag = True
+    import_error_tag = False
 
 
 class Plugin(GlancesPlugin):
@@ -92,9 +93,7 @@ class Plugin(GlancesPlugin):
 
     def connect(self):
         """Connect to the Docker server."""
-        global docker_tag
-
-        if not docker_tag:
+        if import_error_tag:
             return None
 
         return docker.from_env()
@@ -124,7 +123,7 @@ class Plugin(GlancesPlugin):
         self.reset()
 
         # The Docker-py lib is mandatory
-        if not docker_tag:
+        if import_error_tag:
             return self.stats
 
         if self.input_method == 'local':

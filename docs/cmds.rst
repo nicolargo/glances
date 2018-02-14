@@ -22,89 +22,37 @@ Command-Line Options
 
     path to the configuration file
 
-.. option:: --disable-alert
+.. option:: -modules-list
 
-    disable alert/log module
+    display modules (plugins & exports) list and exit
 
-.. option:: --disable-amps
+.. option:: --disable-plugin PLUGIN
 
-    disable application monitoring process module
+    disable PLUGIN (comma separed list)
 
-.. option:: --disable-cpu
+.. option:: --stdout PLUGINS_STATS
 
-    disable CPU module
+    display stats to stdout (comma separated list of plugins/plugins.attribute)
 
-.. option:: --disable-diskio
+.. option:: --export EXPORT
 
-    disable disk I/O module
+    enable EXPORT module (comma separed list)
 
-.. option:: --disable-docker
+.. option:: --export-csv-file EXPORT_CSV_FILE
 
-    disable Docker module
+    file path for CSV exporter
 
-.. option:: --disable-folders
+.. option:: --export-json-file EXPORT_JSON_FILE
 
-    disable folders module
-
-.. option:: --disable-fs
-
-    disable file system module
-
-.. option:: --disable-hddtemp
-
-    disable HD temperature module
-
-.. option:: --disable-ip
-
-    disable IP module
-
-.. option:: --disable-irq
-
-    disable IRQ module
-
-.. option:: --disable-load
-
-    disable load module
-
-.. option:: --disable-mem
-
-    disable memory module
-
-.. option:: --disable-memswap
-
-    disable memory swap module
-
-.. option:: --disable-network
-
-    disable network module
-
-.. option:: --disable-now
-
-    disable current time module
-
-.. option:: --disable-ports
-
-    disable Ports module
+    file path for JSON exporter
 
 .. option:: --disable-process
 
-    disable process module
-
-.. option:: --disable-raid
-
-    disable RAID module
-
-.. option:: --disable-sensors
-
-    disable sensors module
+    disable process module (reduce Glances CPU consumption)
 
 .. option:: --disable-webui
 
     disable the Web UI (only the Restful API will respond)
-
-.. option:: --disable-wifi
-
-    disable Wifi module
 
 .. option:: --light, --enable-light
 
@@ -140,7 +88,7 @@ Command-Line Options
 
 .. option:: --enable-history
 
-    enable the history mode (matplotlib lib needed)
+    enable the history mode
 
 .. option:: --disable-bold
 
@@ -153,54 +101,6 @@ Command-Line Options
 .. option:: --enable-process-extended
 
     enable extended stats on top process
-
-.. option:: --export-graph
-
-    export stats to graph
-
-.. option:: --path-graph PATH_GRAPH
-
-    set the export path for graph history
-
-.. option:: --export-csv EXPORT_CSV
-
-    export stats to a CSV file
-
-.. option:: --export-cassandra
-
-    export stats to a Cassandra/Scylla server (cassandra lib needed)
-
-.. option:: --export-couchdb
-
-    export stats to a CouchDB server (couchdb lib needed)
-
-.. option:: --export-elasticsearch
-
-    export stats to an Elasticsearch server (elasticsearch lib needed)
-
-.. option:: --export-influxdb
-
-    export stats to an InfluxDB server (influxdb lib needed)
-
-.. option:: --export-opentsdb
-
-    export stats to an OpenTSDB server (potsdb lib needed)
-
-.. option:: --export-rabbitmq
-
-    export stats to RabbitMQ broker (pika lib needed)
-
-.. option:: --export-statsd
-
-    export stats to a StatsD server (statsd lib needed)
-
-.. option:: --export-riemann
-
-    export stats to Riemann server (bernhard lib needed)
-
-.. option:: --export-zeromq
-
-    export stats to a ZeroMQ server (zmq lib needed)
 
 .. option:: -c CLIENT, --client CLIENT
 
@@ -289,10 +189,6 @@ Command-Line Options
 .. option:: --hide-kernel-threads
 
     hide kernel threads in process list (not available on Windows)
-
-.. option:: --tree
-
-    display processes as a tree (Linux only)
 
 .. option:: -b, --byte
 
@@ -409,7 +305,7 @@ The following commands (key pressed) are supported while in Glances:
 ``p``
     Sort processes by name
 
-``q|ESC``
+``q|ESC|CTRL-C``
     Quit the current Glances session
 
 ``Q``

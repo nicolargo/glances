@@ -23,8 +23,9 @@ import os
 import sys
 import multiprocessing
 from io import open
+import re
 
-from glances.compat import ConfigParser, NoOptionError
+from glances.compat import ConfigParser, NoOptionError, system_exec
 from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
 from glances.logger import logger
 
@@ -103,6 +104,9 @@ class Config(object):
         self.config_filename = 'glances.conf'
         self._loaded_config_file = None
 
+        # Re patern for optimize research of `foo`
+        self.re_pattern = re.compile('(\`.+?\`)')
+
         self.parser = ConfigParser()
         self.read()
 
@@ -168,7 +172,8 @@ class Config(object):
                              [str(iowait_bottleneck - (iowait_bottleneck * 0.20)),
                               str(iowait_bottleneck - (iowait_bottleneck * 0.10)),
                               str(iowait_bottleneck)])
-        ctx_switches_bottleneck = 56000 / multiprocessing.cpu_count()
+        # Context switches bottleneck identification #1212
+        ctx_switches_bottleneck = (500000 * 0.10) * multiprocessing.cpu_count()
         self.set_default_cwc('cpu', 'ctx_switches',
                              [str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.20)),
                               str(ctx_switches_bottleneck - (ctx_switches_bottleneck * 0.10)),
@@ -257,17 +262,37 @@ class Config(object):
         self.set_default(section, header + 'warning', cwc[1])
         self.set_default(section, header + 'critical', cwc[2])
 
-    def set_default(self, section, option, default):
+    def set_default(self, section, option,
+                    default):
         """If the option did not exist, create a default value."""
         if not self.parser.has_option(section, option):
             self.parser.set(section, option, default)
 
-    def get_value(self, section, option, default=None):
-        """Get the value of an option, if it exists."""
+    def get_value(self, section, option,
+                  default=None):
+        """Get the value of an option, if it exists.
+
+        If it did not exist, then return de default value.
+
+        It allows user to define dynamic configuration key (see issue#1204)
+        Dynamic vlaue should starts and end with the ` char
+        Example: prefix=`hostname`
+        """
+        ret = default
         try:
-            return self.parser.get(section, option)
+            ret = self.parser.get(section, option)
         except NoOptionError:
-            return default
+            pass
+
+        # Search a substring `foo` and replace it by the result of its exec
+        if ret is not None:
+            try:
+                match = self.re_pattern.findall(ret)
+                for m in match:
+                    ret = ret.replace(m, system_exec(m[1:-1]))
+            except TypeError:
+                pass
+        return ret
 
     def get_int_value(self, section, option, default=0):
         """Get the int value of an option, if it exists."""

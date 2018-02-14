@@ -23,11 +23,14 @@ from glances.compat import iterkeys
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# pymdstat only available on GNU/Linux OS
+# Import plugin specific dependency
 try:
     from pymdstat import MdStat
-except ImportError:
-    logger.debug("pymdstat library not found. Glances cannot grab RAID info.")
+except ImportError as e:
+    import_error_tag = True
+    logger.warning("Missing Python Lib ({}), Raid plugin is disabled".format(e))
+else:
+    import_error_tag = False
 
 
 class Plugin(GlancesPlugin):
@@ -56,6 +59,9 @@ class Plugin(GlancesPlugin):
         """Update RAID stats using the input method."""
         # Reset stats
         self.reset()
+
+        if import_error_tag:
+            return self.stats
 
         if self.input_method == 'local':
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)

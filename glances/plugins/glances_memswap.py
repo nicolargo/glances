@@ -36,10 +36,8 @@ snmp_oid = {'default': {'total': '1.3.6.1.4.1.2021.4.3.0',
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'percent',
                        'description': 'Swap memory usage',
-                       'color': '#00FF00',
                        'y_unit': '%'}]
 
 

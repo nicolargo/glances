@@ -23,22 +23,18 @@ import threading
 from json import loads
 
 from glances.compat import iterkeys, urlopen, queue
-from glances.globals import BSD
 from glances.logger import logger
 from glances.timer import Timer
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# XXX *BSDs: Segmentation fault (core dumped)
-# -- https://bitbucket.org/al45tair/netifaces/issues/15
-# Also used in the ports_list script
-if not BSD:
-    try:
-        import netifaces
-        netifaces_tag = True
-    except ImportError:
-        netifaces_tag = False
+# Import plugin specific dependency
+try:
+    import netifaces
+except ImportError as e:
+    import_error_tag = True
+    logger.warning("Missing Python Lib ({}), IP plugin is disabled".format(e))
 else:
-    netifaces_tag = False
+    import_error_tag = False
 
 # List of online services to retreive public IP address
 # List of tuple (url, json, key)
@@ -65,7 +61,8 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Get the public IP address once
-        self.public_address = PublicIpAddress().get()
+        if not self.is_disable():
+            self.public_address = PublicIpAddress().get()
 
         # Init the stats
         self.reset()
@@ -84,7 +81,7 @@ class Plugin(GlancesPlugin):
         # Reset stats
         self.reset()
 
-        if self.input_method == 'local' and netifaces_tag:
+        if self.input_method == 'local' and not import_error_tag:
             # Update stats using the netifaces lib
             try:
                 default_gw = netifaces.gateways()['default'][netifaces.AF_INET]

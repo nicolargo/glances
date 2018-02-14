@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -165,15 +165,6 @@ class _GlancesCurses(object):
         """Init the history option."""
 
         self.reset_history_tag = False
-        self.graph_tag = False
-        if self.args.export_graph:
-            logger.info('Export graphs function enabled with output path %s' %
-                        self.args.path_graph)
-            from glances.exports.graph import GlancesGraph
-            self.glances_graph = GlancesGraph(self.args.path_graph)
-            if not self.glances_graph.graph_enabled():
-                self.args.export_graph = False
-                logger.error('Export graphs disabled')
 
     def _init_cursor(self):
         """Init cursors."""
@@ -350,9 +341,7 @@ class _GlancesCurses(object):
             if return_to_browser:
                 logger.info("Stop Glances client and return to the browser")
             else:
-                self.end()
-                logger.info("Stop Glances")
-                sys.exit(0)
+                logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
         elif self.pressedkey == ord('\n'):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
@@ -382,12 +371,6 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('g'):
-            # 'g' > Generate graph from history
-            self.graph_tag = not self.graph_tag
-        elif self.pressedkey == ord('r'):
-            # 'r' > Reset graph history
-            self.reset_history_tag = not self.reset_history_tag
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_logs.clean()
@@ -494,7 +477,7 @@ class _GlancesCurses(object):
         """
         ret = {}
 
-        for p in stats.getAllPlugins(enable=False):
+        for p in stats.getPluginsList(enable=False):
             if p == 'quicklook' or p == 'processlist':
                 # processlist is done later
                 # because we need to know how many processes could be displayed
@@ -544,11 +527,13 @@ class _GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = (
             self.screen.getmaxyx()[0] - 11 -
-            self.get_stats_display_height(__stat_display["alert"]) -
-            self.get_stats_display_height(__stat_display["docker"])
-        )
+            (0 if 'alert' not in __stat_display else
+                self.get_stats_display_height(__stat_display["alert"])) -
+            (0 if 'docker' not in __stat_display else
+                self.get_stats_display_height(__stat_display["docker"])))
+
         try:
-            if self.args.enable_process_extended and not self.args.process_tree:
+            if self.args.enable_process_extended:
                 max_processes_displayed -= 4
         except AttributeError:
             pass
@@ -594,29 +579,6 @@ class _GlancesCurses(object):
         # Display right stats (process and co)
         # ====================================
         self.__display_right(__stat_display)
-
-        # History option
-        # Generate history graph
-        if self.graph_tag and self.args.export_graph:
-            self.display_popup(
-                'Generate graphs history in {}\nPlease wait...'.format(
-                    self.glances_graph.get_output_folder()))
-            self.display_popup(
-                'Generate graphs history in {}\nDone: {} graphs generated'.format(
-                    self.glances_graph.get_output_folder(),
-                    self.glances_graph.generate_graph(stats)))
-        elif self.reset_history_tag and self.args.export_graph:
-            self.display_popup('Reset graph history')
-            self.glances_graph.reset(stats)
-        elif (self.graph_tag or self.reset_history_tag) and not self.args.export_graph:
-            try:
-                self.glances_graph.graph_enabled()
-            except Exception:
-                self.display_popup('Graph disabled\nEnable it using --export-graph')
-            else:
-                self.display_popup('Graph disabled')
-        self.graph_tag = False
-        self.reset_history_tag = False
 
         # Display edit filter popup
         # Only in standalone mode (cs_status is None)

@@ -66,7 +66,7 @@ an InfluxDB export module:
 .. code-block:: ini
 
     [influxdb]
-    # Configuration for the --export-influxdb option
+    # Configuration for the --export influxdb option
     # https://influxdb.com/
     host=localhost
     port=8086
@@ -87,6 +87,24 @@ or a Nginx AMP:
     refresh=60
     one_line=false
     status_url=http://localhost/nginx_status
+
+With Glances 3.0 or higher it is also possible to use dynamic configuration
+value using system command. For example, if you to set the prefix of an
+InfluxDB export to the current hostname, use:
+
+.. code-block:: ini
+
+    [influxdb]
+    ...
+    prefix=`hostname`
+
+Or if you want to add the Operating System name as a tag:
+
+.. code-block:: ini
+
+    [influxdb]
+    ...
+    tags=system:`uname -a`
 
 Logging
 -------

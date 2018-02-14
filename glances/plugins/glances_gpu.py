@@ -26,11 +26,11 @@ from glances.plugins.glances_plugin import GlancesPlugin
 try:
     import pynvml
 except Exception as e:
-    logger.error("Could not import pynvml.  NVIDIA stats will not be collected.")
-    logger.debug("pynvml error: {}".format(e))
-    gpu_nvidia_tag = False
+    import_error_tag = True
+    # Display debu message if import KeyError
+    logger.warning("Missing Python Lib ({}), Nvidia GPU plugin is disabled".format(e))
 else:
-    gpu_nvidia_tag = True
+    import_error_tag = False
 
 
 class Plugin(GlancesPlugin):
@@ -58,7 +58,7 @@ class Plugin(GlancesPlugin):
 
     def init_nvidia(self):
         """Init the NVIDIA API."""
-        if not gpu_nvidia_tag:
+        if import_error_tag:
             self.nvml_ready = False
 
         try:

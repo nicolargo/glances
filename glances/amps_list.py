@@ -74,9 +74,9 @@ class AmpsList(object):
                 try:
                     amp = __import__(os.path.basename(amp_script)[:-3])
                 except ImportError as e:
-                    logger.warning("Cannot load {}, you need to install an external Python package ({})".format(os.path.basename(amp_script), e))
+                    logger.warning("Missing Python Lib ({}), cannot load {} AMP".format(e, amp_conf_name))
                 except Exception as e:
-                    logger.warning("Cannot load {} ({})".format(os.path.basename(amp_script), e))
+                    logger.warning("Cannot load {} AMP ({})".format(amp_conf_name, e))
                 else:
                     # Add the AMP to the dictionary
                     # The key is the AMP name
@@ -105,7 +105,7 @@ class AmpsList(object):
     def update(self):
         """Update the command result attributed."""
         # Search application monitored processes by a regular expression
-        processlist = glances_processes.getalllist()
+        processlist = glances_processes.getlist()
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):
             if not v.enable():

@@ -28,21 +28,23 @@ from glances.stats import GlancesStats
 from glances import __version__
 from glances.globals import WINDOWS, LINUX
 from glances.outputs.glances_bars import Bar
-from glances.compat import PY3, PY_PYPY
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
+from glances.plugins.glances_plugin import GlancesPlugin
 
 # Global variables
 # =================
+
 
 # Init Glances core
 core = GlancesMain()
 
 # Init Glances stats
-stats = GlancesStats()
+stats = GlancesStats(config=core.get_config(),
+                     args=core.get_args())
 
 # Unitest class
 # ==============
@@ -80,7 +82,7 @@ class TestGlances(unittest.TestCase):
         """Check mandatory plugins."""
         plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'irq']
         print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plugins_to_check))
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_to_check:
             self.assertTrue(plugin in plugins_list)
 
@@ -211,8 +213,34 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
 
-    @unittest.skipIf(PY3, True)
-    @unittest.skipIf(PY_PYPY, True)
+    def test_014_sorted_stats(self):
+        """Check sorted stats method."""
+        print('INFO: [TEST_015] Check sorted stats method')
+        aliases = {
+            "key2": "alias11",
+            "key5": "alias2",
+        }
+        unsorted_stats = [
+            {"key": "key4"},
+            {"key": "key2"},
+            {"key": "key5"},
+            {"key": "key21"},
+            {"key": "key3"},
+        ]
+
+        gp = GlancesPlugin()
+        gp.get_key = lambda: "key"
+        gp.has_alias = aliases.get
+        gp.stats = unsorted_stats
+
+        sorted_stats = gp.sorted_stats()
+        self.assertEqual(len(sorted_stats), 5)
+        self.assertEqual(sorted_stats[0]["key"], "key5")
+        self.assertEqual(sorted_stats[1]["key"], "key2")
+        self.assertEqual(sorted_stats[2]["key"], "key3")
+        self.assertEqual(sorted_stats[3]["key"], "key4")
+        self.assertEqual(sorted_stats[4]["key"], "key21")
+
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
@@ -224,17 +252,17 @@ class TestGlances(unittest.TestCase):
         self.assertTrue(careful < warning)
         self.assertTrue(warning < critical)
         self.assertFalse(ok > careful)
-        self.assertTrue(ok == ok)
-        self.assertTrue(str(ok) == 'OK')
+        self.assertEqual(ok, ok)
+        self.assertEqual(str(ok), 'OK')
         thresholds = GlancesThresholds()
         thresholds.add('cpu_percent', 'OK')
-        self.assertTrue(thresholds.get(stat_name='cpu_percent').description() == 'OK')
+        self.assertEqual(thresholds.get(stat_name='cpu_percent').description(), 'OK')
 
     def test_095_methods(self):
         """Test mandatories methods"""
         print('INFO: [TEST_095] Mandatories methods')
         mandatories_methods = ['reset', 'update']
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             for method in mandatories_methods:
                 self.assertTrue(hasattr(stats.get_plugin(plugin), method),
@@ -243,7 +271,7 @@ class TestGlances(unittest.TestCase):
     def test_096_views(self):
         """Test get_views method"""
         print('INFO: [TEST_096] Test views')
-        plugins_list = stats.getAllPlugins()
+        plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
             stats_grab = stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()

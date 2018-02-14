@@ -51,7 +51,7 @@ add new plugins or exports modules.
 Requirements
 ============
 
-- ``python 2.7,>=3.3``
+- ``python 2.7,>=3.4``
 - ``psutil>=2.0.0`` (better with latest version)
 
 Optional dependencies:
@@ -65,7 +65,6 @@ Optional dependencies:
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
 - ``kafka-python`` (for the Kafka export module)
-- ``matplotlib`` (for graphical/chart support)
 - ``netifaces`` (for the IP plugin)
 - ``nvidia-ml-py3`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
@@ -85,12 +84,12 @@ Optional dependencies:
 *Note for Python 2.6 users*
 
 Glances no longer supports Python 2.6. Please upgrade
-to a minimum Python version of 2.7/3.3+ or downgrade to Glances 2.6.2 (last version
+to a minimum Python version of 2.7/3.4+ or downgrade to Glances 2.6.2 (last version
 with Python 2.6 support).
 
 *Note for CentOS Linux 6 and 7 users*
 
-Python 2.7, 3.3 and 3.4 are now available via SCL repositories. See:
+Python 2.7 and 3.4 are now available via SCL repositories. See:
 https://lists.centos.org/pipermail/centos-announce/2015-December/021555.html.
 
 Installation
@@ -175,7 +174,7 @@ Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it docker.io/nicolargo/glances
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -236,8 +235,7 @@ Homebrew
 
 .. code-block:: console
 
-    $ brew install python
-    $ pip install glances
+    $ brew install glances
 
 MacPorts
 ````````

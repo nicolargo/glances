@@ -19,7 +19,7 @@
 
 """Disk I/O plugin."""
 
-import operator
+import re
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -29,14 +29,11 @@ import psutil
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'read_bytes',
                        'description': 'Bytes read per second',
-                       'color': '#00FF00',
                        'y_unit': 'B/s'},
                       {'name': 'write_bytes',
                        'description': 'Bytes write per second',
-                       'color': '#FF0000',
                        'y_unit': 'B/s'}]
 
 
@@ -183,7 +180,7 @@ class Plugin(GlancesPlugin):
             msg = '{:>7}'.format('W/s')
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in self.sorted_stats():
             # Is there an alias for the disk name ?
             disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])

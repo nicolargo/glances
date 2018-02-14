@@ -27,7 +27,7 @@ import signal
 import sys
 
 # Global name
-__version__ = '3.0_DEV'
+__version__ = '3.0.dev0'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
@@ -51,8 +51,8 @@ except locale.Error:
     print("Warning: Unable to set locale. Expect encoding problems.")
 
 # Check Python version
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances requires at least Python 2.7 or 3.3 to run.')
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
+    print('Glances requires at least Python 2.7 or 3.4 to run.')
     sys.exit(1)
 
 # Check PSutil version
@@ -77,7 +77,7 @@ def end():
         # ...after starting the server mode (issue #1175)
         pass
 
-    logger.info("Glances stopped with CTRL-C")
+    logger.info("Glances stopped (keypressed: CTRL-C)")
 
     # The end...
     sys.exit(0)
@@ -118,6 +118,9 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
+    # Catch the CTRL-C signal
+    signal.signal(signal.SIGINT, __signal_handler)
+
     # Log Glances and PSutil version
     logger.info('Start Glances {}'.format(__version__))
     logger.info('{} {} and PSutil {} detected'.format(
@@ -132,9 +135,6 @@ def main():
     core = GlancesMain()
     config = core.get_config()
     args = core.get_args()
-
-    # Catch the CTRL-C signal
-    signal.signal(signal.SIGINT, __signal_handler)
 
     # Glances can be ran in standalone, client or server mode
     start(config=config, args=args)
