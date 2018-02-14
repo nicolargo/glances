@@ -33,6 +33,7 @@ from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
+from glances.plugins.glances_plugin import GlancesPlugin
 
 # Global variables
 # =================
@@ -211,6 +212,34 @@ class TestGlances(unittest.TestCase):
         stats_grab = stats.get_plugin('gpu').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
+
+    def test_014_sorted_stats(self):
+        """Check sorted stats method."""
+        print('INFO: [TEST_015] Check sorted stats method')
+        aliases = {
+            "key2": "alias11",
+            "key5": "alias2",
+        }
+        unsorted_stats = [
+            {"key": "key4"},
+            {"key": "key2"},
+            {"key": "key5"},
+            {"key": "key21"},
+            {"key": "key3"},
+        ]
+
+        gp = GlancesPlugin()
+        gp.get_key = lambda: "key"
+        gp.has_alias = aliases.get
+        gp.stats = unsorted_stats
+
+        sorted_stats = gp.sorted_stats()
+        self.assertEqual(len(sorted_stats), 5)
+        self.assertEqual(sorted_stats[0]["key"], "key5")
+        self.assertEqual(sorted_stats[1]["key"], "key2")
+        self.assertEqual(sorted_stats[2]["key"], "key3")
+        self.assertEqual(sorted_stats[3]["key"], "key4")
+        self.assertEqual(sorted_stats[4]["key"], "key21")
 
     def test_094_thresholds(self):
         """Test thresholds classes"""
