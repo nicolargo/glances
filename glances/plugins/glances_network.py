@@ -36,14 +36,11 @@ snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
 
 # Define the history items list
 # All items in this list will be historised if the --enable-history tag is set
-# 'color' define the graph color in #RGB format
 items_history_list = [{'name': 'rx',
                        'description': 'Download rate per second',
-                       'color': '#00FF00',
                        'y_unit': 'bit/s'},
                       {'name': 'tx',
                        'description': 'Upload rate per second',
-                       'color': '#FF0000',
                        'y_unit': 'bit/s'}]
 
 
@@ -292,7 +289,7 @@ class Plugin(GlancesPlugin):
                 msg = '{:>7}'.format('Tx/s')
                 ret.append(self.curse_add_line(msg))
         # Interface list (sorted by name)
-        for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
+        for i in self.sorted_stats():
             # Do not display interface in down state (issue #765)
             if ('is_up' in i) and (i['is_up'] is False):
                 continue

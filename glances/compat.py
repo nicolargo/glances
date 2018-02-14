@@ -25,24 +25,16 @@ import operator
 import sys
 import unicodedata
 import types
-import platform
+import subprocess
 
-PY_CYTHON = platform.python_implementation() == 'CPython'
-PY_PYPY = platform.python_implementation() == 'PyPy'
-PY_JYTHON = platform.python_implementation() == 'Jython'
-PY_IRON = platform.python_implementation() == 'IronPython'
+from glances.logger import logger
+
 PY3 = sys.version_info[0] == 3
-
-try:
-    from statistics import mean
-except ImportError:
-    # Statistics is only available for Python 3.4 or higher
-    def mean(numbers):
-        return float(sum(numbers)) / max(len(numbers), 1)
 
 if PY3:
     import queue
     from configparser import ConfigParser, NoOptionError, NoSectionError
+    from statistics import mean
     from xmlrpc.client import Fault, ProtocolError, ServerProxy, Transport, Server
     from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
     from urllib.request import urlopen
@@ -64,7 +56,9 @@ if PY3:
     def to_ascii(s):
         """Convert the bytes string to a ASCII string
         Usefull to remove accent (diacritics)"""
-        return str(s, 'utf-8')
+        if isinstance(s, binary_type):
+            return s.decode()
+        return s.encode('ascii', 'ignore').decode()
 
     def listitems(d):
         return list(d.items())
@@ -98,6 +92,17 @@ if PY3:
         if isinstance(s, text_type):
             return s
         return s.decode('utf-8', 'replace')
+
+    def system_exec(command):
+        """Execute a system command and return the resul as a str"""
+        try:
+            res = subprocess.run(command.split(' '),
+                                 stdout=subprocess.PIPE).stdout.decode('utf-8')
+        except Exception as e:
+            logger.debug('Can not evaluate command {} ({})'.format(command, e))
+            res = ''
+        return res.rstrip()
+
 else:
     import Queue as queue
     from itertools import imap as map
@@ -119,12 +124,15 @@ else:
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
 
+    def mean(numbers):
+        return float(sum(numbers)) / max(len(numbers), 1)
+
     def to_ascii(s):
         """Convert the unicode 's' to a ASCII string
         Usefull to remove accent (diacritics)"""
         if isinstance(s, binary_type):
             return s
-        return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore')
+        return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
 
     def listitems(d):
         return d.items()
@@ -158,3 +166,12 @@ else:
         if isinstance(s, binary_type):
             return s
         return s.encode('utf-8', 'replace')
+
+    def system_exec(command):
+        """Execute a system command and return the resul as a str"""
+        try:
+            res = subprocess.check_output(command.split(' '))
+        except Exception as e:
+            logger.debug('Can not execute command {} ({})'.format(command, e))
+            res = ''
+        return res.rstrip()

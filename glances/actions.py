@@ -91,8 +91,11 @@ class GlancesActions(object):
             else:
                 cmd_full = cmd
             # Execute the action
-            logger.info("Action triggered for {} ({}): {}".format(stat_name, criticity, cmd_full))
-            logger.debug("Stats value for the trigger: {}".format(mustache_dict))
+            logger.info("Action triggered for {} ({}): {}".format(stat_name,
+                                                                  criticity,
+                                                                  cmd_full))
+            logger.debug("Stats value for the trigger: {}".format(
+                mustache_dict))
             try:
                 Popen(cmd_full, shell=True)
             except OSError as e:

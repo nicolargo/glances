@@ -6,7 +6,6 @@ docker>=2.0.0
 elasticsearch
 influxdb
 kafka-python
-matplotlib
 netifaces
 nvidia-ml-py3
 pika

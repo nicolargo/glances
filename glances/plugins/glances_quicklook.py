@@ -20,18 +20,18 @@
 """Quicklook plugin."""
 
 from glances.cpu_percent import cpu_percent
+from glances.logger import logger
 from glances.outputs.glances_bars import Bar
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
-cpuinfo_tag = False
+# Import plugin specific dependency
 try:
     from cpuinfo import cpuinfo
-except ImportError:
-    # Correct issue #754
-    # Waiting for a correction on the upstream Cpuinfo lib
-    pass
+except ImportError as e:
+    cpuinfo_tag = False
+    logger.warning("Missing Python Lib ({}), Quicklook plugin will not display CPU info".format(e))
 else:
     cpuinfo_tag = True
 

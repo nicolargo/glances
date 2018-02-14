@@ -9,8 +9,8 @@ from io import open
 from setuptools import setup, Command
 
 
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    print('Glances requires at least Python 2.7 or 3.3 to run.')
+if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
+    print('Glances requires at least Python 2.7 or 3.4 to run.')
     sys.exit(1)
 
 
@@ -82,7 +82,6 @@ setup(
         'browser': ['zeroconf>=0.17'],
         'cloud': ['requests'],
         'cpuinfo': ['py-cpuinfo'],
-        'chart': ['matplotlib'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'influxdb>=1.0.0', 'kafka-python', 'pika', 'potsdb',
@@ -114,7 +113,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

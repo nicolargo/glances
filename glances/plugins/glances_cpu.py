@@ -43,16 +43,13 @@ snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
 
 # Define the history items list
 # - 'name' define the stat identifier
-# - 'color' define the graph color in #RGB format
 # - 'y_unit' define the Y label
 # All items in this list will be historised if the --enable-history tag is set
 items_history_list = [{'name': 'user',
                        'description': 'User CPU usage',
-                       'color': '#00FF00',
                        'y_unit': '%'},
                       {'name': 'system',
                        'description': 'System CPU usage',
-                       'color': '#FF0000',
                        'y_unit': '%'}]
 
 

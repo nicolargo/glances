@@ -19,12 +19,14 @@
 
 """Manage the Glances standalone session."""
 
+import sys
 
 from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
+from glances.outputs.glances_stdout import GlancesStdout
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -40,6 +42,12 @@ class GlancesStandalone(object):
 
         # Init stats
         self.stats = GlancesStats(config=config, args=args)
+
+        # Modules (plugins and exporters) are loaded at this point
+        # Glances can display the list if asked...
+        if args.modules_list:
+            self.display_modules_list()
+            sys.exit(0)
 
         # If process extended stats is disabled by user
         if not args.enable_process_extended:
@@ -57,20 +65,17 @@ class GlancesStandalone(object):
             # Ignore kernel threads in process list
             glances_processes.disable_kernel_threads()
 
-        try:
-            if args.process_tree:
-                # Enable process tree view
-                glances_processes.enable_tree()
-        except AttributeError:
-            pass
-
         # Initial system informations update
         self.stats.update()
 
         if self.quiet:
-            logger.info("Quiet mode is ON: Nothing will be displayed")
+            logger.info("Quiet mode is ON, nothing will be displayed")
             # In quiet mode, nothing is displayed
             glances_processes.max_processes = 0
+        elif args.stdout:
+            logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
+            # Init screen
+            self.screen = GlancesStdout(config=config, args=args)
         else:
             # Default number of processes to displayed is set to 50
             glances_processes.max_processes = 50
@@ -85,8 +90,18 @@ class GlancesStandalone(object):
     def quiet(self):
         return self._quiet
 
+    def display_modules_list(self):
+        """Display modules list"""
+        print("Plugins list: {}".format(
+            ', '.join(sorted(self.stats.getPluginsList(enable=False)))))
+        print("Exporters list: {}".format(
+            ', '.join(sorted(self.stats.getExportsList(enable=False)))))
+
     def __serve_forever(self):
-        """Main loop for the CLI."""
+        """Main loop for the CLI.
+
+        return True if we should continue (no exit key has been pressed)
+        """
         # Start a counter used to compute the time needed for
         # update and export the stats
         counter = Counter()
@@ -103,13 +118,23 @@ class GlancesStandalone(object):
         # Display stats
         # and wait refresh_time - counter
         if not self.quiet:
-            self.screen.update(self.stats,
-                               duration=self.refresh_time - counter.get())
+            # The update function return True if an exit key 'q' or 'ESC'
+            # has been pressed.
+            ret = not self.screen.update(self.stats,
+                                         duration=self.refresh_time - counter.get())
+        else:
+            # Nothing is displayed
+            # Break should be done via a signal (CTRL-C)
+            ret = True
+
+        return ret
 
     def serve_forever(self):
         """Wrapper to the serve_forever function."""
-        while True:
-            self.__serve_forever()
+        loop = True
+        while loop:
+            loop = self.__serve_forever()
+        self.end()
 
     def end(self):
         """End of the standalone CLI."""
