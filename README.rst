@@ -75,7 +75,7 @@ Optional dependencies:
 - ``pysnmp`` (for SNMP support)
 - ``pystache`` (for the action script feature)
 - ``pyzmq`` (for the ZeroMQ export module)
-- ``requests`` (for the Ports, Cloud plugins and Restful export module)
+- ``requests`` (for the Ports, Cloud plugins and RESTful export module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
@@ -355,7 +355,7 @@ Gateway to other services
 
 Glances can export stats to: ``CSV`` file, ``JSON`` file, ``InfluxDB``, ``Cassandra``, ``CouchDB``,
 ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``ElasticSearch``, ``RabbitMQ/ActiveMQ``,
-``ZeroMQ``, ``Kafka``, ``Riemann`` and ``Restful`` server.
+``ZeroMQ``, ``Kafka``, ``Riemann`` and ``RESTful`` server.
 
 How to contribute ?
 ===================
