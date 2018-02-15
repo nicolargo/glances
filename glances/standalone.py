@@ -144,7 +144,7 @@ class GlancesStandalone(object):
         # Exit from export modules
         self.stats.end()
 
-        # Check Glances version versus Pypi one
+        # Check Glances version versus PyPI one
         if self.outdated.is_outdated():
             print("You are using Glances version {}, however version {} is available.".format(
                 self.outdated.installed_version(), self.outdated.latest_version()))
