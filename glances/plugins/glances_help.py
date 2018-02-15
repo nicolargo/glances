@@ -55,7 +55,7 @@ class Plugin(GlancesPlugin):
     def generate_view_data(self):
         """Generate the views."""
         self.view_data['version'] = '{} {}'.format('Glances', __version__)
-        self.view_data['psutil_version'] = ' with PSutil {}'.format(psutil_version)
+        self.view_data['psutil_version'] = ' with psutil {}'.format(psutil_version)
 
         try:
             self.view_data['configuration_file'] = 'Configuration file: {}'.format(self.config.loaded_config_file)

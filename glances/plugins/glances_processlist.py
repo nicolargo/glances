@@ -45,10 +45,10 @@ def convert_timedelta(delta):
 
 def split_cmdline(cmdline):
     """Return path, cmd and arguments for a process cmdline."""
-    # There is an issue in PsUtil for Electron/Atom processes (maybe others...)
+    # There is an issue in psutil for Electron/Atom processes (maybe others...)
     # Tracked by https://github.com/nicolargo/glances/issues/1192
     #            https://github.com/giampaolo/psutil/issues/1179
-    # Add this dirty workarround (to be removed when the PsUtil is solved)
+    # Add this dirty workarround (to be removed when the psutil is solved)
     if len(cmdline) == 1:
         cmdline = shlex.split(cmdline[0])
     # /End of the direty workarround

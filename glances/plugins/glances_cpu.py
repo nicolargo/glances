@@ -96,7 +96,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def update_local(self):
-        """Update CPU stats using PSUtil."""
+        """Update CPU stats using psutil."""
         # Grab CPU stats using psutil's cpu_percent and cpu_times_percent
         # Get all possible values for CPU stats: user, system, idle,
         # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)

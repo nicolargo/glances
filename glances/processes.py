@@ -35,7 +35,7 @@ class GlancesProcesses(object):
 
     def __init__(self, cache_timeout=60):
         """Init the class to collect stats about processes."""
-        # Add internals caches because PSUtil do not cache all the stats
+        # Add internals caches because psutil do not cache all the stats
         # See: https://code.google.com/p/psutil/issues/detail?id=462
         self.username_cache = {}
         self.cmdline_cache = {}

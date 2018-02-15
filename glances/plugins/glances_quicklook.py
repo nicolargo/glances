@@ -68,7 +68,7 @@ class Plugin(GlancesPlugin):
             # Get the latest CPU percent value
             self.stats['cpu'] = cpu_percent.get()
             self.stats['percpu'] = cpu_percent.get(percpu=True)
-            # Use the PsUtil lib for the memory (virtual and swap)
+            # Use the psutil lib for the memory (virtual and swap)
             self.stats['mem'] = psutil.virtual_memory().percent
             self.stats['swap'] = psutil.swap_memory().percent
         elif self.input_method == 'snmp':

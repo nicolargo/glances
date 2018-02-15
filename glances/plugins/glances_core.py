@@ -58,7 +58,7 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the standard system lib
 
-            # The PSUtil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
+            # The psutil 2.0 include psutil.cpu_count() and psutil.cpu_count(logical=False)
             # Return a dict with:
             # - phys: physical cores only (hyper thread CPUs are excluded)
             # - log: logical CPUs in the system
