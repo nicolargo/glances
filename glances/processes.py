@@ -242,31 +242,16 @@ class GlancesProcesses(object):
         if not WINDOWS:
             standard_attrs += ['gids']
 
-        # and build the processes stats list
-        try:
-            # PsUtil 2.0 or higher
-            self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs,
-                                                                    ad_value=None)
-                                # OS specifics processes filter
-                                if not (BSD and p.info['name'] == 'idle') and
-                                not (WINDOWS and p.info['name'] == 'System Idle Process') and
-                                not (MACOS and p.info['name'] == 'kernel_task') and
-                                # Kernel threads filter
-                                not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0) and
-                                # User filter
-                                not (self._filter.is_filtered(p.info))]
-        except TypeError:
-            # Fallback for PsUtil 2.0
-            before_filter = [p.as_dict(attrs=standard_attrs, ad_value=None) for p in psutil.process_iter()]
-            self.processlist = [p for p in before_filter
-                                # OS specifics processes filter
-                                if not (BSD and p['name'] == 'idle') and
-                                not (WINDOWS and p['name'] == 'System Idle Process') and
-                                not (MACOS and p['name'] == 'kernel_task') and
-                                # Kernel threads filter
-                                not (self.no_kernel_threads and LINUX and p['gids'].real == 0) and
-                                # User filter
-                                not (self._filter.is_filtered(p))]
+        # and build the processes stats list (psutil>=5.3.0)
+        self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs, ad_value=None)
+                            # OS-related processes filter
+                            if not (BSD and p.info['name'] == 'idle') and
+                            not (WINDOWS and p.info['name'] == 'System Idle Process') and
+                            not (MACOS and p.info['name'] == 'kernel_task') and
+                            # Kernel threads filter
+                            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0) and
+                            # User filter
+                            not (self._filter.is_filtered(p.info))]
 
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist,
@@ -305,11 +290,10 @@ class GlancesProcesses(object):
                             extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
                         except psutil.NoSuchProcess:
                             pass
-                        except (psutil.AccessDenied, TypeError, NotImplementedError):
+                        except (psutil.AccessDenied, NotImplementedError):
                             # NotImplementedError: /proc/${PID}/smaps file doesn't exist
                             # on kernel < 2.6.14 or CONFIG_MMU kernel configuration option
                             # is not enabled (see psutil #533/glances #413).
-                            # XXX: Remove TypeError once we'll drop psutil < 3.0.0.
                             extended['memory_swap'] = None
                     try:
                         extended['tcp'] = len(top_process.connections(kind="tcp"))
