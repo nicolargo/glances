@@ -745,7 +745,7 @@ Version 1.7.6
 Version 1.7.5
 =============
 
-    * Force the Pypi installer to use the psutil branch 1.x (#333)
+    * Force the PyPI installer to use the psutil branch 1.x (#333)
 
 Version 1.7.4
 =============
@@ -783,7 +783,7 @@ Version 1.7.1
     * Fix IoWait error on FreeBSD / Mac OS
     * HDDTemp module is now Python v3 compatible
     * Don't warn a process is not running if countmin=0
-    * Add Pypi badge on the README.rst
+    * Add PyPI badge on the README.rst
     * Update documentation
     * Add document structure for http://readthedocs.org
 
