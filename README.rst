@@ -52,7 +52,7 @@ Requirements
 ============
 
 - ``python 2.7,>=3.4``
-- ``psutil>=2.0.0`` (better with latest version)
+- ``psutil>=5.3.0`` (better with latest version)
 
 Optional dependencies:
 

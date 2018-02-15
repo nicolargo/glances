@@ -23,9 +23,7 @@ import errno
 import os
 import sys
 
-# Operating system flag
-# Note: Somes libs depends of OS
-# Note2: Included in PsUtil 4.0 or higher
+# OS constants (some libraries/features are OS-dependent)
 BSD = sys.platform.find('bsd') != -1
 LINUX = sys.platform.startswith('linux')
 MACOS = sys.platform.startswith('darwin')

@@ -55,11 +55,11 @@ if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
     print('Glances requires at least Python 2.7 or 3.4 to run.')
     sys.exit(1)
 
-# Check PSutil version
-psutil_min_version = (2, 0, 0)
+# Check psutil version
+psutil_min_version = (5, 3, 0)
 psutil_version_info = tuple([int(num) for num in psutil_version.split('.')])
 if psutil_version_info < psutil_min_version:
-    print('PSutil 2.0 or higher is needed. Glances cannot start.')
+    print('psutil 5.3.0 or higher is needed. Glances cannot start.')
     sys.exit(1)
 
 
