@@ -65,11 +65,11 @@ Examples of use:
   Display all Glances modules (plugins and exporters) and exit:
     $ glances --module-list
 
-  Monitor local machine with the Web interface and start Restful server:
+  Monitor local machine with the Web interface and start RESTful server:
     $ glances -w
     Glances web server started on http://0.0.0.0:61208/
 
-  Only start Restful API (without the WebUI):
+  Only start RESTful API (without the WebUI):
     $ glances -w --disable-webui
     Glances API available on http://0.0.0.0:61208/api/
 

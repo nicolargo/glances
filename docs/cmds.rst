@@ -52,7 +52,7 @@ Command-Line Options
 
 .. option:: --disable-webui
 
-    disable the Web UI (only the Restful API will respond)
+    disable the Web UI (only the RESTful API will respond)
 
 .. option:: --light, --enable-light
 

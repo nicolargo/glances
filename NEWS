@@ -51,7 +51,7 @@ Backward-incompatible changes:
 
 News command line options:
 
-    --disable-webui  Disable the WebUI (only Restful API will respond)
+    --disable-webui  Disable the WebUI (only RESTful API will respond)
     --enable-light   Enable the light mode for the UI interface
     --modules-list   Display plugins and exporters list
     --disable-plugin plugin1,plugin2
@@ -106,7 +106,7 @@ Version 2.11
 
 Enhancements and new features:
 
-    * New export plugin: standard and configurable Restfull exporter (issue #1129)
+    * New export plugin: standard and configurable RESTful exporter (issue #1129)
     * Add a JSON export module (issue #1130)
     * [WIP] Refactoring of the WebUI
 
@@ -631,8 +631,8 @@ Version 2.1
       Users can configure alias from the Glances configuration file.
     * Add Glances log message (in the /tmp/glances.log file)
       The default log level is INFO, you can switch to the DEBUG mode using the -d option on the command line.
-    * Add RESTFul API to the Web server mode
-      RestFul API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+    * Add RESTful API to the Web server mode
+      RESTful API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
     * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
     * Add --theme-white feature to optimize display for white background
     * Experimental history feature (--enable-history option on the command line)

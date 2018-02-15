@@ -1,12 +1,12 @@
 .. _restful:
 
-Restful
+RESTful
 =======
 
-You can export statistics to a ``Restful`` JSON server. All the available stats
-will be exported in one big (~15 KB) POST request to the Restful endpoint.
+You can export statistics to a ``RESTful`` JSON server. All the available stats
+will be exported in one big (~15 KB) POST request to the RESTful endpoint.
 
-The Restful endpoint should be defined in the Glances configuration file as
+The RESTful endpoint should be defined in the Glances configuration file as
 following:
 
 .. code-block:: ini
