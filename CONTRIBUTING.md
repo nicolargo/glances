@@ -46,7 +46,7 @@ Example:
 
 > Short and descriptive example bug report title
 >
-> Glances and PsUtil version used (glances -V)
+> Glances and psutil version used (glances -V)
 >
 > Operating system description (name and version).
 >

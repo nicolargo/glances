@@ -35,7 +35,7 @@ __license__ = 'LGPLv3'
 try:
     from psutil import __version__ as psutil_version
 except ImportError:
-    print('PSutil library not found. Glances cannot start.')
+    print('psutil library not found. Glances cannot start.')
     sys.exit(1)
 
 # Import Glances libs
@@ -121,9 +121,9 @@ def main():
     # Catch the CTRL-C signal
     signal.signal(signal.SIGINT, __signal_handler)
 
-    # Log Glances and PSutil version
+    # Log Glances and psutil version
     logger.info('Start Glances {}'.format(__version__))
-    logger.info('{} {} and PSutil {} detected'.format(
+    logger.info('{} {} and psutil {} detected'.format(
         platform.python_implementation(),
         platform.python_version(),
         psutil_version))

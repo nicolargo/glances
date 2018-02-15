@@ -15,7 +15,7 @@ To install, simply use ``pip``:
 *Note*: Python headers are required to install `psutil`_. For example,
 on Debian/Ubuntu you need to install first the *python-dev* package.
 For Fedora/CentOS/RHEL install first *python-devel* package. For Windows,
-just install PsUtil from the binary installation file.
+just install psutil from the binary installation file.
 
 You can also install the following libraries in order to use optional
 features (like the Web interface, export modules...):
