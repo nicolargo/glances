@@ -76,6 +76,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license='LGPLv3',
     keywords="cli curses monitoring system",
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=get_install_requires(),
     extras_require={
         'action': ['pystache'],
