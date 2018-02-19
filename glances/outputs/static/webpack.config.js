@@ -1,61 +1,56 @@
 
-const webpack = require('webpack');
-const path = require('path');
+const webpack = require("webpack");
+const path = require("path");
 
 module.exports = {
-    entry: './js/app.js',
+    entry: "./js/app.js",
     output: {
-        path: path.join(__dirname, 'public'),
-        filename: 'glances.js',
-        sourceMapFilename: 'glances.map.js',
+        path: path.join(__dirname, "public"),
+        filename: "glances.js",
+        sourceMapFilename: "glances.map.js",
     },
-    devtool: '#source-map',
+    devtool: "#source-map",
     module: {
         loaders: [
             {
                 test: /\.scss$/,
                 use: [{
-                    loader: 'style-loader',
+                    loader: "style-loader",
                 }, {
-                    loader: 'css-loader',
+                    loader: "css-loader",
                 }, {
-                    loader: 'sass-loader',
+                    loader: "sass-loader",
                 }]
             },
             {
                 test: /\.less$/,
                 use: [{
-                    loader: 'style-loader',
+                    loader: "style-loader",
                 }, {
-                    loader: 'css-loader',
+                    loader: "css-loader",
                 }, {
-                    loader: 'less-loader',
+                    loader: "less-loader",
                 }]
             },
             {
                 test: /\.css$/,
-                loader: 'style-loader!css-loader',
+                loader: "style-loader!css-loader",
             },
             {
                 test: /\.(png|jpg|gif|svg|ttf|woff|woff2|eot)$/,
-                loader: 'url-loader',
+                loader: "url-loader",
                 options: {
                     limit: 10000,
                 }
             },
             {
                 test: /\.html/,
-                loader: 'ngtemplate-loader!html-loader'
+                loader: "ngtemplate-loader!html-loader"
             },
             {
-                test: require.resolve('angular'),
-                loader: 'exports-loader?window.angular'
+                test: require.resolve("angular"),
+                loader: "exports-loader?window.angular"
             },
         ],
     },
-    plugins: [
-        new webpack.ProvidePlugin({
-            'angular': 'angular',
-        }),
-    ]
 };
