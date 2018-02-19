@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginMemswapController($scope, GlancesStats) {
     var vm = this;

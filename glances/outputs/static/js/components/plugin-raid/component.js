@@ -1,10 +1,11 @@
-'use strict';
 
-import GlancesPluginRaidController from './controller';
-import template from './view.html';
+import angular from "angular";
 
-export default angular.module('glancesApp').component('glancesPluginRaid', {
+import GlancesPluginRaidController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginRaid", {
     controller: GlancesPluginRaidController,
-    controllerAs: 'vm',
+    controllerAs: "vm",
     templateUrl: template,
 });

@@ -1,13 +1,14 @@
-'use strict';
 
-import GlancesPluginProcesslistController from './controller';
-import template from './view.html';
+import angular from "angular";
 
-export default angular.module('glancesApp').component('glancesPluginProcesslist', {
+import GlancesPluginProcesslistController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginProcesslist", {
     controller: GlancesPluginProcesslistController,
-    controllerAs: 'vm',
+    controllerAs: "vm",
     bindings: {
-        sorter: '<'
+        sorter: "<"
     },
     templateUrl: template,
 });

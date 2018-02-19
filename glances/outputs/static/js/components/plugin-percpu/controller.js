@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper) {
     var vm = this;

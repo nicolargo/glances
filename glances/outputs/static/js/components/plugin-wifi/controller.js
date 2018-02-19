@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginWifiController($scope, $filter, GlancesStats) {
     var vm = this;

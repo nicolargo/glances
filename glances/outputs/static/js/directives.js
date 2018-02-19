@@ -1,7 +1,7 @@
 
-// import angular from 'angular';
+import angular from "angular";
 
-export default angular.module('glancesApp').directive("sortableTh", function () {
+export default angular.module("glancesApp").directive("sortableTh", function () {
     return {
         restrict: 'A',
         scope: {

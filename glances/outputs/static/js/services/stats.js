@@ -1,7 +1,5 @@
 
-// import angular from 'angular';
-
-export default angular.module('glancesApp').service('GlancesStats', GlancesStats);
+import angular from 'angular';
 
 function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REFRESH_TIME, CONFIG, ARGUMENTS) {
 
@@ -71,3 +69,5 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REF
         });
     };
 }
+
+export default angular.module('glancesApp').service('GlancesStats', GlancesStats);

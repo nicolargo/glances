@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginRaidController($scope, GlancesStats) {
     var vm = this;

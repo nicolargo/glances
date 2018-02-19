@@ -1,5 +1,5 @@
 
-export default angular.module('glancesApp').service('GlancesPluginHelper', GlancesPluginHelper);
+import angular from "angular";
 
 function GlancesPluginHelper () {
 
@@ -43,3 +43,5 @@ function GlancesPluginHelper () {
 
     return plugin;
 }
+
+export default angular.module('glancesApp').service('GlancesPluginHelper', GlancesPluginHelper);
