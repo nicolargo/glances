@@ -2,7 +2,7 @@
 import angular from "angular";
 import _ from "lodash";
 
-function min_size_filter() {
+function minSizeFilter() {
     return function (input, max) {
         var max = max || 8;
         if (input.length > max) {
@@ -12,7 +12,7 @@ function min_size_filter() {
     };
 }
 
-function exclamation_filter() {
+function exclamationFilter() {
     return function (input) {
         if (input === undefined || input === '') {
             return '?';
@@ -21,7 +21,7 @@ function exclamation_filter() {
     };
 }
 
-function bytes_filter() {
+function bytesFilter() {
     return function (bytes, low_precision) {
         low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0) {
@@ -75,14 +75,14 @@ function bytes_filter() {
     }
 }
 
-function bits_filter($filter) {
+function bitsFilter($filter) {
     return function (bits, low_precision) {
         bits = Math.round(bits) * 8;
         return $filter('bytes')(bits, low_precision) + 'b';
     }
 }
 
-function leftPad_filter() {
+function leftPadFilter() {
     return function (value, length, chars) {
         length = length || 0;
         chars = chars || ' ';
@@ -90,7 +90,7 @@ function leftPad_filter() {
     }
 }
 
-function timemillis_filter() {
+function timemillisFilter() {
     return function (array) {
         var sum = 0.0;
         for (var i = 0; i < array.length; i++) {
@@ -100,7 +100,7 @@ function timemillis_filter() {
     }
 }
 
-function timedelta_filter($filter) {
+function timedeltaFilter($filter) {
     return function (value) {
         var sum = $filter('timemillis')(value);
         var d = new Date(sum);
@@ -115,10 +115,10 @@ function timedelta_filter($filter) {
 }
 
 export default angular.module("glancesApp")
-    .filter("min_size", min_size_filter)
-    .filter("exclamation", exclamation_filter)
-    .filter("bytes", bytes_filter)
-    .filter("bits", bits_filter)
-    .filter("leftPad", leftPad_filter)
-    .filter("timemillis", timemillis_filter)
-    .filter("timedelta", timedelta_filter);
+    .filter("min_size", minSizeFilter)
+    .filter("exclamation", exclamationFilter)
+    .filter("bytes", bytesFilter)
+    .filter("bits", bitsFilter)
+    .filter("leftPad", leftPadFilter)
+    .filter("timemillis", timemillisFilter)
+    .filter("timedelta", timedeltaFilter);
