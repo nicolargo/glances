@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;

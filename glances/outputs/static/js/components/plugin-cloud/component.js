@@ -1,9 +1,10 @@
-'use strict';
 
-import GlancesPluginCloudController from './controller';
-import template from './view.html';
+import angular from "angular";
 
-export default angular.module('glancesApp').component('glancesPluginCloud', {
+import GlancesPluginCloudController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginCloud", {
     controller: GlancesPluginCloudController,
     controllerAs: 'vm',
     templateUrl: template,

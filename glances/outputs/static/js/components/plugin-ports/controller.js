@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginPortsController($scope, GlancesStats) {
     var vm = this;

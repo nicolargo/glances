@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginCpuController($scope, GlancesStats) {
     var vm = this;
