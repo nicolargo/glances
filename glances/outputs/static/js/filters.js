@@ -1,15 +1,6 @@
 
-import _ from 'lodash';
-// import angular from 'angular';
-
-export default angular.module('glancesApp')
-    .filter('min_size', min_size_filter)
-    .filter('exclamation', exclamation_filter)
-    .filter('bytes', bytes_filter)
-    .filter('bits', bits_filter)
-    .filter('leftPad', leftPad_filter)
-    .filter('timemillis', timemillis_filter)
-    .filter('timedelta', timedelta_filter);
+import angular from "angular";
+import _ from "lodash";
 
 function min_size_filter() {
     return function (input, max) {
@@ -122,3 +113,12 @@ function timedelta_filter($filter) {
         };
     }
 }
+
+export default angular.module("glancesApp")
+    .filter("min_size", min_size_filter)
+    .filter("exclamation", exclamation_filter)
+    .filter("bytes", bytes_filter)
+    .filter("bits", bits_filter)
+    .filter("leftPad", leftPad_filter)
+    .filter("timemillis", timemillis_filter)
+    .filter("timedelta", timedelta_filter);

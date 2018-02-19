@@ -1,10 +1,11 @@
-'use strict';
 
-import GlancesPluginIpController from './controller';
-import template from './view.html';
+import angular from "angular";
 
-export default angular.module('glancesApp').component('glancesPluginIp', {
+import GlancesPluginIpController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginIp", {
     controller: GlancesPluginIpController,
-    controllerAs: 'vm',
+    controllerAs: "vm",
     templateUrl: template,
 });

@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
     var vm = this;
