@@ -2,6 +2,8 @@
 const webpack = require("webpack");
 const path = require("path");
 
+const CleanWebpackPlugin = require("clean-webpack-plugin");
+
 module.exports = {
     entry: "./js/app.js",
     output: {
@@ -53,4 +55,7 @@ module.exports = {
             },
         ],
     },
+    plugins: [
+        new CleanWebpackPlugin("./public/*.*"),
+    ]
 };
