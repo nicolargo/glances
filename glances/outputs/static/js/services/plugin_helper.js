@@ -44,4 +44,4 @@ function GlancesPluginHelper () {
     return plugin;
 }
 
-export default angular.module('glancesApp').service('GlancesPluginHelper', GlancesPluginHelper);
+export default angular.module("glancesApp").service("GlancesPluginHelper", GlancesPluginHelper);
