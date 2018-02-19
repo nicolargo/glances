@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelper, ARGUMENTS) {
     var vm = this;

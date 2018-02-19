@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     var vm = this;

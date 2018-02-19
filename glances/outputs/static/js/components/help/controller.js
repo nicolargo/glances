@@ -1,4 +1,3 @@
-'use strict';
 
 export default function GlancesHelpController($http) {
     var vm = this;

@@ -1,11 +1,11 @@
 
-import angular from 'angular';
-import 'angular-hotkeys';
+import angular from "angular";
+import "angular-hotkeys";
 
-export default angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
+export default angular.module("glancesApp", ["glances.config", "cfp.hotkeys"])
 
-.value('CONFIG', {})
-.value('ARGUMENTS', {})
+.value("CONFIG", {})
+.value("ARGUMENTS", {})
 
 .config(function (hotkeysProvider) {
     hotkeysProvider.useNgRoute = false;
@@ -15,8 +15,8 @@ export default angular.module('glancesApp', ['glances.config', 'cfp.hotkeys'])
 .run(function ($rootScope, GlancesStats) {
     $rootScope.title = "Glances";
 
-    $rootScope.$on('data_refreshed', function (event, data) {
-        $rootScope.title = data.stats.system.hostname + ' - Glances';
+    $rootScope.$on("data_refreshed", function (event, data) {
+        $rootScope.title = `${data.stats.system.hostname} - Glances`;
     });
 
     GlancesStats.init();
