@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
+function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
 

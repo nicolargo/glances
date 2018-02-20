@@ -1,11 +1,7 @@
-
-import angular from "angular";
-import Favico from "favico.js";
-
-function favicoService () {
+glancesApp.service('favicoService', function () {
 
     var favico = new Favico({
-        animation: "none"
+        animation: 'none'
     });
 
     this.badge = function (nb) {
@@ -15,6 +11,4 @@ function favicoService () {
     this.reset = function () {
         favico.reset();
     };
-}
-
-export default angular.module("glancesApp").service("favicoService", favicoService);
+});

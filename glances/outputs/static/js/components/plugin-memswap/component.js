@@ -1,11 +1,7 @@
+'use strict';
 
-import angular from "angular";
-
-import GlancesPluginMemswapController from "./controller";
-import template from "./view.html";
-
-export default angular.module("glancesApp").component("glancesPluginMemswap", {
+glancesApp.component('glancesPluginMemswap', {
     controller: GlancesPluginMemswapController,
-    controllerAs: "vm",
-    templateUrl: template,
+    controllerAs: 'vm',
+    templateUrl: 'components/plugin-memswap/view.html'
 });

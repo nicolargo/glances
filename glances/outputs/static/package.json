@@ -1,32 +1,19 @@
 {
   "private": true,
-  "dependencies": {
-    "angular": "^1.5.8",
-    "angular-hotkeys": "^1.7.0",
-    "bootstrap": "^3.3.5",
-    "favico.js": "^0.3.10",
-    "lodash": "^4.13.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "bower": "^1.8.0",
-    "clean-webpack-plugin": "^0.1.18",
-    "copy-webpack-plugin": "^4.4.1",
-    "css-loader": "^0.28.9",
     "del": "^2.2.1",
-    "exports-loader": "^0.7.0",
-    "file-loader": "^1.1.6",
-    "html-loader": "^0.5.5",
-    "less": "^3.0.1",
-    "less-loader": "^4.0.5",
-    "ngtemplate-loader": "^2.0.1",
-    "node-sass": "^4.7.2",
-    "sass-loader": "^6.0.6",
-    "style-loader": "^0.20.1",
-    "url-loader": "^0.6.2",
-    "webpack": "^3.11.0"
+    "gulp": "^3.9.1",
+    "gulp-angular-templatecache": "^2.0.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-ng-annotate": "^2.0.0",
+    "gulp-rename": "^1.2.2",
+    "main-bower-files": "^2.13.1"
   },
   "scripts": {
-    "build": "webpack --bail --progress --profile",
-    "watch": "webpack --bail --progress --profile --watch"
+    "build": "gulp build",
+    "watch": "gulp watch",
+    "postinstall": "bower install"
   }
 }

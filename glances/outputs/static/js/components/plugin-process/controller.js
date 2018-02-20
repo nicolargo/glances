@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
+function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
     var vm = this;
     vm.arguments = ARGUMENTS;
 

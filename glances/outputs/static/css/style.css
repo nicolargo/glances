@@ -115,35 +115,32 @@ body {
     white-space: nowrap;
 }
 
-#quicklook-plugin {
-    .progress {
-        margin-bottom: 0px;
-        min-width: 100px;
-        background-color: #000;
-        height: 12px;
-        border-radius: 0px;
-        text-align: right;
-    }
-    .progress-bar-ok {
-        background-color: #3E7B04;
-    }
-    .progress-bar-careful {
-        background-color: #295183;
-    }
-    .progress-bar-warning {
-        background-color: #5D4062;
-    }
-    .progress-bar-critical {
-        background-color: #A30000;
-    }
-    .cpu-name {
-        white-space: nowrap;
-        overflow: hidden;
-        width: 100%;
-        text-overflow: ellipsis;
-    }
-} 
-
+#quicklook-plugin .progress {
+    margin-bottom: 0px;
+    min-width: 100px;
+    background-color: #000;
+    height: 12px;
+    border-radius: 0px;
+    text-align: right;
+}
+#quicklook-plugin .progress-bar-ok {
+    background-color: #3E7B04;
+}
+#quicklook-plugin .progress-bar-careful {
+    background-color: #295183;
+}
+#quicklook-plugin .progress-bar-warning {
+    background-color: #5D4062;
+}
+#quicklook-plugin .progress-bar-critical {
+    background-color: #A30000;
+}
+#quicklook-plugin .cpu-name {
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+    text-overflow: ellipsis;
+}
 #amps-plugin .process-result {
     max-width: 300px;
     overflow: hidden;

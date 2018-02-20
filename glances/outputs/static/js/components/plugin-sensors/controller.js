@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelper, ARGUMENTS) {
+function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelper, ARGUMENTS) {
     var vm = this;
     vm.sensors = [];
     var convertToFahrenheit = ARGUMENTS.fahrenheit;
