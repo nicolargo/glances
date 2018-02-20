@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS) {
+function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     vm.networks = [];

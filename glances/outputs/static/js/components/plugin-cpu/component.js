@@ -1,11 +1,7 @@
+'use strict';
 
-import angular from "angular";
-
-import GlancesPluginCpuController from "./controller";
-import template from "./view.html";
-
-export default angular.module("glancesApp").component("glancesPluginCpu", {
+glancesApp.component('glancesPluginCpu', {
     controller: GlancesPluginCpuController,
     controllerAs: 'vm',
-    templateUrl: template,
+    templateUrl: 'components/plugin-cpu/view.html'
 });

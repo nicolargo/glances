@@ -1,11 +1,7 @@
+'use strict';
 
-import angular from "angular";
-
-import GlancesPluginIrqController from "./controller";
-import template from "./view.html";
-
-export default angular.module("glancesApp").component("glancesPluginIrq", {
+glancesApp.component('glancesPluginIrq', {
     controller: GlancesPluginIrqController,
-    controllerAs: "vm",
-    templateUrl: template,
+    controllerAs: 'vm',
+    templateUrl: 'components/plugin-irq/view.html'
 });

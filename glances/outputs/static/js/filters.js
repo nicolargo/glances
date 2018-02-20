@@ -1,8 +1,4 @@
-
-import angular from "angular";
-import _ from "lodash";
-
-function minSizeFilter() {
+glancesApp.filter('min_size', function () {
     return function (input, max) {
         var max = max || 8;
         if (input.length > max) {
@@ -10,18 +6,17 @@ function minSizeFilter() {
         }
         return input
     };
-}
-
-function exclamationFilter() {
+});
+glancesApp.filter('exclamation', function () {
     return function (input) {
         if (input === undefined || input === '') {
             return '?';
         }
         return input;
     };
-}
+});
 
-function bytesFilter() {
+glancesApp.filter('bytes', function () {
     return function (bytes, low_precision) {
         low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0) {
@@ -73,24 +68,24 @@ function bytesFilter() {
 
         return bytes.toFixed(0);
     }
-}
+});
 
-function bitsFilter($filter) {
+glancesApp.filter('bits', function ($filter) {
     return function (bits, low_precision) {
         bits = Math.round(bits) * 8;
         return $filter('bytes')(bits, low_precision) + 'b';
     }
-}
+});
 
-function leftPadFilter() {
+glancesApp.filter('leftPad', function () {
     return function (value, length, chars) {
         length = length || 0;
         chars = chars || ' ';
         return _.padStart(value, length, chars);
     }
-}
+});
 
-function timemillisFilter() {
+glancesApp.filter('timemillis', function () {
     return function (array) {
         var sum = 0.0;
         for (var i = 0; i < array.length; i++) {
@@ -98,9 +93,9 @@ function timemillisFilter() {
         }
         return sum;
     }
-}
+});
 
-function timedeltaFilter($filter) {
+glancesApp.filter('timedelta', function ($filter) {
     return function (value) {
         var sum = $filter('timemillis')(value);
         var d = new Date(sum);
@@ -112,13 +107,4 @@ function timedeltaFilter($filter) {
             milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
         };
     }
-}
-
-export default angular.module("glancesApp")
-    .filter("min_size", minSizeFilter)
-    .filter("exclamation", exclamationFilter)
-    .filter("bytes", bytesFilter)
-    .filter("bits", bitsFilter)
-    .filter("leftPad", leftPadFilter)
-    .filter("timemillis", timemillisFilter)
-    .filter("timedelta", timedeltaFilter);
+});

@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginUptimeController($scope, GlancesStats) {
+function GlancesPluginUptimeController($scope, GlancesStats) {
     var vm = this;
     vm.value = null;
 

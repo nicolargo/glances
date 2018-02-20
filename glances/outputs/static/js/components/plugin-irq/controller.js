@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginIrqController($scope, GlancesStats) {
+function GlancesPluginIrqController($scope, GlancesStats) {
     var vm = this;
     vm.irqs = [];
 

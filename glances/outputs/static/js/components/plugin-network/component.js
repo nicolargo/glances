@@ -1,11 +1,7 @@
+'use strict';
 
-import angular from "angular";
-
-import GlancesPluginNetworkController from "./controller";
-import template from "./view.html";
-
-export default angular.module("glancesApp").component("glancesPluginNetwork", {
+glancesApp.component('glancesPluginNetwork', {
     controller: GlancesPluginNetworkController,
-    controllerAs: "vm",
-    templateUrl: template,
+    controllerAs: 'vm',
+    templateUrl: 'components/plugin-network/view.html'
 });
