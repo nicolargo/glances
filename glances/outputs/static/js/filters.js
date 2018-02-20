@@ -1,4 +1,8 @@
-glancesApp.filter('min_size', function () {
+
+import angular from "angular";
+import _ from "lodash";
+
+function minSizeFilter() {
     return function (input, max) {
         var max = max || 8;
         if (input.length > max) {
@@ -6,17 +10,18 @@ glancesApp.filter('min_size', function () {
         }
         return input
     };
-});
-glancesApp.filter('exclamation', function () {
+}
+
+function exclamationFilter() {
     return function (input) {
         if (input === undefined || input === '') {
             return '?';
         }
         return input;
     };
-});
+}
 
-glancesApp.filter('bytes', function () {
+function bytesFilter() {
     return function (bytes, low_precision) {
         low_precision = low_precision || false;
         if (isNaN(parseFloat(bytes)) || !isFinite(bytes) || bytes == 0) {
@@ -68,24 +73,24 @@ glancesApp.filter('bytes', function () {
 
         return bytes.toFixed(0);
     }
-});
+}
 
-glancesApp.filter('bits', function ($filter) {
+function bitsFilter($filter) {
     return function (bits, low_precision) {
         bits = Math.round(bits) * 8;
         return $filter('bytes')(bits, low_precision) + 'b';
     }
-});
+}
 
-glancesApp.filter('leftPad', function () {
+function leftPadFilter() {
     return function (value, length, chars) {
         length = length || 0;
         chars = chars || ' ';
         return _.padStart(value, length, chars);
     }
-});
+}
 
-glancesApp.filter('timemillis', function () {
+function timemillisFilter() {
     return function (array) {
         var sum = 0.0;
         for (var i = 0; i < array.length; i++) {
@@ -93,9 +98,9 @@ glancesApp.filter('timemillis', function () {
         }
         return sum;
     }
-});
+}
 
-glancesApp.filter('timedelta', function ($filter) {
+function timedeltaFilter($filter) {
     return function (value) {
         var sum = $filter('timemillis')(value);
         var d = new Date(sum);
@@ -107,4 +112,13 @@ glancesApp.filter('timedelta', function ($filter) {
             milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
         };
     }
-});
+}
+
+export default angular.module("glancesApp")
+    .filter("min_size", minSizeFilter)
+    .filter("exclamation", exclamationFilter)
+    .filter("bytes", bytesFilter)
+    .filter("bits", bitsFilter)
+    .filter("leftPad", leftPadFilter)
+    .filter("timemillis", timemillisFilter)
+    .filter("timedelta", timedeltaFilter);

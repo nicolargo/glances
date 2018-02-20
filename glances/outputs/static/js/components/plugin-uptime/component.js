@@ -1,7 +1,11 @@
-'use strict';
 
-glancesApp.component('glancesPluginUptime', {
+import angular from "angular";
+
+import GlancesPluginUptimeController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginUptime", {
     controller: GlancesPluginUptimeController,
-    controllerAs: 'vm',
-    templateUrl: 'components/plugin-uptime/view.html'
+    controllerAs: "vm",
+    templateUrl: template,
 });

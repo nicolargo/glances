@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
+export default function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
     var _view = {};
     vm.arguments = ARGUMENTS;
@@ -27,7 +26,7 @@ function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
                 shortMountPoint = '_' + fsData['mnt_point'].slice(-8);
             }
 
-            vm.fileSystems.push(fs = {
+            vm.fileSystems.push({
                 'name': fsData['device_name'],
                 'mountPoint': fsData['mnt_point'],
                 'shortMountPoint': shortMountPoint,

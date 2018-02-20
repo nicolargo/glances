@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginCloudController($scope, GlancesStats) {
+export default function GlancesPluginCloudController($scope, GlancesStats) {
     var vm = this;
 
     vm.provider = null;
