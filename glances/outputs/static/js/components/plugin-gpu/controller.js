@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
+function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     var _view = {};

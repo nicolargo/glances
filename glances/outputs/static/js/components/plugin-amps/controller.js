@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
+function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
     var vm = this;
     vm.processes = [];
 

@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS) {
+function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     vm.disks = [];

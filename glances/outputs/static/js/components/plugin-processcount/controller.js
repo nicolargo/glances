@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesPluginProcesscountController($scope, GlancesStats) {
+function GlancesPluginProcesscountController($scope, GlancesStats) {
     var vm = this;
 
     vm.total = null;
