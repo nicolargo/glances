@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginFoldersController($scope, GlancesStats) {
+export default function GlancesPluginFoldersController($scope, GlancesStats) {
     var vm = this;
     vm.folders = [];
 

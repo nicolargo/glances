@@ -1,10 +1,18 @@
 # How to contribute?
 
-In order to build the assets of the Web UI, you'll need [npm](https://docs.npmjs.com/getting-started/what-is-npm).
+In order to build the assets of the Web UI, you'll need [npm](https://docs.npmjs.com/getting-started/what-is-npm) or [yarn](https://yarnpkg.com).
 
 You must run the following command from the `glances/outputs/static/` directory.
 
 ## Install dependencies
+
+You can use yarn or npm:
+
+```bash
+$ yarn
+```
+
+or:
 
 ```bash
 $ npm install

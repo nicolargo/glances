@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginAlertController($scope, favicoService) {
+export default function GlancesPluginAlertController($scope, favicoService) {
     var vm = this;
     var _alerts = [];
 
