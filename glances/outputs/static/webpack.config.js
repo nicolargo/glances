@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const path = require("path");
 
 const CleanWebpackPlugin = require("clean-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: "./js/app.js",
@@ -57,5 +58,8 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin("./public/*.*"),
+        new CopyWebpackPlugin([
+            { from: "./images/favicon.ico" }
+        ]),
     ]
 };
