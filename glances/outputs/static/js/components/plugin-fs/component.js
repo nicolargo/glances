@@ -1,11 +1,7 @@
+'use strict';
 
-import angular from "angular";
-
-import GlancesPluginFsController from "./controller";
-import template from "./view.html";
-
-export default angular.module("glancesApp").component("glancesPluginFs", {
+glancesApp.component('glancesPluginFs', {
     controller: GlancesPluginFsController,
     controllerAs: 'vm',
-    templateUrl: template,
+    templateUrl: 'components/plugin-fs/view.html'
 });

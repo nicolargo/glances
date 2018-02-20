@@ -1,7 +1,4 @@
-
-import angular from "angular";
-
-function GlancesPluginHelper () {
+glancesApp.service('GlancesPluginHelper', function () {
 
     var plugin = {
         'limits': {},
@@ -42,6 +39,4 @@ function GlancesPluginHelper () {
     };
 
     return plugin;
-}
-
-export default angular.module("glancesApp").service("GlancesPluginHelper", GlancesPluginHelper);
+});

@@ -1,5 +1,6 @@
+'use strict';
 
-export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
+function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     var vm = this;
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
