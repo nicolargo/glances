@@ -552,6 +552,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__filters__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives__ = __webpack_require__(111);
+
+
 
 
 
@@ -57855,6 +57858,56 @@ module.exports = function(module) {
 	return module;
 };
 
+
+/***/ }),
+/* 111 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
+
+
+
+/* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp").directive("sortableTh", function () {
+    return {
+        restrict: 'A',
+        scope: {
+            sorter: '='
+        },
+        link: function (scope, element, attrs) {
+
+            element.addClass('sortable');
+
+            scope.$watch(function () {
+                return scope.sorter.column;
+            }, function (newValue, oldValue) {
+
+                if (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.isArray(newValue)) {
+                    if (newValue.indexOf(attrs.column) !== -1) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
+                } else {
+                    if (attrs.column === newValue) {
+                        element.addClass('sort');
+                    } else {
+                        element.removeClass('sort');
+                    }
+                }
+
+            });
+
+            element.on('click', function () {
+
+                scope.sorter.column = attrs.column;
+
+                scope.$apply();
+            });
+        }
+    };
+}));
 
 /***/ })
 /******/ ]);
