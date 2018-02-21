@@ -1,7 +1,11 @@
-'use strict';
 
-glancesApp.component('glancesPluginWifi', {
+import angular from "angular";
+
+import GlancesPluginWifiController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginWifi", {
     controller: GlancesPluginWifiController,
-    controllerAs: 'vm',
-    templateUrl: 'components/plugin-wifi/view.html'
+    controllerAs: "vm",
+    templateUrl: template,
 });

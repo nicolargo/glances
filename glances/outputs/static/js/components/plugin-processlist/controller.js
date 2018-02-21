@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
+export default function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginHelper, $filter, CONFIG, ARGUMENTS) {
     var vm = this;
     vm.arguments = ARGUMENTS;
     vm.processes = [];
