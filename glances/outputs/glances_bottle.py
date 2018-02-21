@@ -191,7 +191,7 @@ class GlancesBottle(object):
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
 
-        if refresh_time is None:
+        if refresh_time is None or refresh_time < 1:
             refresh_time = self.args.time
 
         # Update the stat
