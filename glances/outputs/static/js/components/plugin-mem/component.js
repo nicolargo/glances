@@ -1,7 +1,11 @@
-'use strict';
 
-glancesApp.component('glancesPluginMem', {
+import angular from "angular";
+
+import GlancesPluginMemController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginMem", {
     controller: GlancesPluginMemController,
-    controllerAs: 'vm',
-    templateUrl: 'components/plugin-mem/view.html'
+    controllerAs: "vm",
+    templateUrl: template,
 });
