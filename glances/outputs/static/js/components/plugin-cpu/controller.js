@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginCpuController($scope, GlancesStats) {
+export default function GlancesPluginCpuController($scope, GlancesStats) {
     var vm = this;
     var _view = {};
 
