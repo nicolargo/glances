@@ -278,7 +278,7 @@ Examples of use:
         if WINDOWS:
             args.webserver = True
 
-        # In web server mode, defaul refresh time: 5 sec
+        # In web server mode, default refresh time: 5 sec
         if args.webserver:
             args.time = 5
             args.process_short_name = True
