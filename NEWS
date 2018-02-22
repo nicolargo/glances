@@ -21,6 +21,7 @@ Enhancements and new features:
     * Nice Process Priority Configuration #1218
     * Display debug message if dep lib is not found #1224
     * Add a new output mode to stdout #1168
+    * Huge refactor of the WebUI packaging thanks to @spike008t #1239
 
 Bugs corrected:
 
