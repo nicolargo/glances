@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-psutil==5.4.2
-=======
-psutil==5.3.0
->>>>>>> origin
+psutil==5.4.3

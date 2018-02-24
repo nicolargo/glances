@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginDockerController($scope, GlancesStats) {
+export default function GlancesPluginDockerController($scope, GlancesStats) {
     var vm = this;
     vm.containers = [];
     vm.version = null;

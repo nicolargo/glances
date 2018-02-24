@@ -103,7 +103,7 @@ class GlancesBottle(object):
         self.stats = None
 
         # cached_time is the minimum time interval between stats updates
-        # i.e. HTTP/Restful calls will not retrieve updated info until the time
+        # i.e. HTTP/RESTful calls will not retrieve updated info until the time
         # since last update is passed (will retrieve old cached info instead)
         self.timer = Timer(0)
 
@@ -195,7 +195,7 @@ class GlancesBottle(object):
                         callback=self._api_item_history)
         self._app.route('/api/%s/<plugin>/<item>/<value>' % self.API_VERSION, method="GET",
                         callback=self._api_value)
-        bindmsg = 'Glances Restful API Server started on {}api/{}/'.format(self.bind_url,
+        bindmsg = 'Glances RESTful API Server started on {}api/{}/'.format(self.bind_url,
                                                                            self.API_VERSION)
         logger.info(bindmsg)
 
@@ -240,7 +240,7 @@ class GlancesBottle(object):
     def _index(self, refresh_time=None):
         """Bottle callback for index.html (/) file."""
 
-        if refresh_time is None:
+        if refresh_time is None or refresh_time < 1:
             refresh_time = self.args.time
 
         # Update the stat
@@ -256,7 +256,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_help(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the help data or 404 error.
         """
@@ -310,7 +310,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_all(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of all the plugins
         HTTP/200 if OK
@@ -340,7 +340,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_all_limits(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of all the plugins limits
         HTTP/200 if OK
@@ -358,7 +358,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_all_views(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of all the plugins views
         HTTP/200 if OK
@@ -376,7 +376,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api(self, plugin):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of a given plugin
         HTTP/200 if OK
@@ -400,7 +400,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_history(self, plugin, nb=0):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of a given plugin history
         Limit to the last nb items (all if nb=0)
@@ -425,7 +425,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_limits(self, plugin):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON limits of a given plugin
         HTTP/200 if OK
@@ -449,7 +449,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_views(self, plugin):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON views of a given plugin
         HTTP/200 if OK
@@ -504,7 +504,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_item(self, plugin, item):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/item
         HTTP/200 if OK
@@ -516,7 +516,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_item_history(self, plugin, item, nb=0):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the couple plugin/history of item
         HTTP/200 if OK
@@ -528,7 +528,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_value(self, plugin, item, value):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the process stats (dict) for the given item=value
         HTTP/200 if OK
@@ -539,7 +539,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_config(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances configuration file
         HTTP/200 if OK
@@ -556,7 +556,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_config_item(self, item):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances configuration item
         HTTP/200 if OK
@@ -578,7 +578,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_args(self):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances command line arguments
         HTTP/200 if OK
@@ -597,7 +597,7 @@ class GlancesBottle(object):
 
     @gzip_compress
     def _api_args_item(self, item):
-        """Glances API RESTFul implementation.
+        """Glances API RESTful implementation.
 
         Return the JSON representation of the Glances command line arguments item
         HTTP/200 if OK

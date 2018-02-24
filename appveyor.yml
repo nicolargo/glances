@@ -16,6 +16,10 @@ environment:
       PYTHON_VERSION: "3.5.x"
       PYTHON_ARCH: "32"
 
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "32"
+
     # 64 bits
 
     - PYTHON: "C:\\Python27-x64"
@@ -24,6 +28,13 @@ environment:
 
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.x"
+      PYTHON_ARCH: "64"
+      ARCH: x86_64
+      VS_VER: "2015"
+      INSTANCENAME: "SQL2012SP1"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
       ARCH: x86_64
       VS_VER: "2015"

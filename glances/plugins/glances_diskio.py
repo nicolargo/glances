@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            # Grab the stat using the PsUtil disk_io_counters method
+            # Grab the stat using the psutil disk_io_counters method
             # read_count: number of reads
             # write_count: number of writes
             # read_bytes: number of bytes read

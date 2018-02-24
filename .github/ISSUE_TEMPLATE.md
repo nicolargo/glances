@@ -8,8 +8,7 @@ For an enhancement or new feature: Describe your needs.
 
 #### Versions
 
-* Glances (glances -V):
-* PSutil (glances -V):
+* Glances & psutil (glances -V):
 * Operating System (lsb_release -a):
 
 #### Logs

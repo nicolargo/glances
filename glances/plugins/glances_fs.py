@@ -97,7 +97,7 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the standard system lib
 
-            # Grab the stats using the PsUtil disk_partitions
+            # Grab the stats using the psutil disk_partitions
             # If 'all'=False return physical devices only (e.g. hard disks, cd-rom drives, USB keys)
             # and ignore all others (e.g. memory partitions such as /dev/shm)
             try:

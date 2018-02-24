@@ -1,4 +1,7 @@
-glancesApp.directive("sortableTh", function () {
+
+import angular from "angular";
+
+export default angular.module("glancesApp").directive("sortableTh", function () {
     return {
         restrict: 'A',
         scope: {

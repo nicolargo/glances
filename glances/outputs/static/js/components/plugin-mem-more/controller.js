@@ -1,6 +1,5 @@
-'use strict';
 
-function GlancesPluginMemMoreController($scope, GlancesStats) {
+export default function GlancesPluginMemMoreController($scope, GlancesStats) {
     var vm = this;
 
     vm.active = null;
