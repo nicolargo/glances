@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Restful interface class."""
+"""RESTful interface class."""
 
 import sys
 
@@ -30,18 +30,18 @@ from requests import post
 
 class Export(GlancesExport):
 
-    """This class manages the Restful export module.
+    """This class manages the RESTful export module.
     Be aware that stats will be exported in one big POST request"""
 
     def __init__(self, config=None, args=None):
-        """Init the Restful export IF."""
+        """Init the RESTful export IF."""
         super(Export, self).__init__(config=config, args=args)
 
         # Mandatories configuration keys (additional to host and port)
         self.protocol = None
         self.path = None
 
-        # Load the Restful section in the configuration file
+        # Load the RESTful section in the configuration file
         self.export_enable = self.load_conf('restful',
                                             mandatories=['host', 'port', 'protocol', 'path'])
         if not self.export_enable:
@@ -55,23 +55,23 @@ class Export(GlancesExport):
         self.client = self.init()
 
     def init(self):
-        """Init the connection to the restful server."""
+        """Init the connection to the RESTful server."""
         if not self.export_enable:
             return None
-        # Build the Restful URL where the stats will be posted
+        # Build the RESTful URL where the stats will be posted
         url = '{}://{}:{}{}'.format(self.protocol,
                                     self.host,
                                     self.port,
                                     self.path)
         logger.info(
-            "Stats will be exported to the restful endpoint {}".format(url))
+            "Stats will be exported to the RESTful endpoint {}".format(url))
         return url
 
     def export(self, name, columns, points):
         """Export the stats to the Statsd server."""
         if name == self.plugins_to_export()[0] and self.buffer != {}:
             # One complete loop have been done
-            logger.debug("Export stats ({}) to Restful endpoint ({})".format(listkeys(self.buffer),
+            logger.debug("Export stats ({}) to RESTful endpoint ({})".format(listkeys(self.buffer),
                                                                              self.client))
             # Export stats
             post(self.client, json=self.buffer, allow_redirects=True)

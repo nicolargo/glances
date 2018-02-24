@@ -87,7 +87,7 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the standard system lib
 
-            # Grab network interface stat using the PsUtil net_io_counter method
+            # Grab network interface stat using the psutil net_io_counter method
             try:
                 netiocounters = psutil.net_io_counters(pernic=True)
             except UnicodeDecodeError:

@@ -1,7 +1,11 @@
-'use strict';
 
-glancesApp.component('glancesPluginPercpu', {
+import angular from "angular";
+
+import GlancesPluginPercpuController from "./controller";
+import template from "./view.html";
+
+export default angular.module("glancesApp").component("glancesPluginPercpu", {
     controller: GlancesPluginPercpuController,
-    controllerAs: 'vm',
-    templateUrl: 'components/plugin-percpu/view.html'
+    controllerAs: "vm",
+    templateUrl: template,
 });

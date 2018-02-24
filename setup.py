@@ -38,7 +38,7 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=2.0.0']
+    requires = ['psutil>=5.3.0']
     if sys.platform.startswith('win'):
         requires.append('bottle')
 
@@ -76,6 +76,7 @@ setup(
     url='https://github.com/nicolargo/glances',
     license='LGPLv3',
     keywords="cli curses monitoring system",
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=get_install_requires(),
     extras_require={
         'action': ['pystache'],

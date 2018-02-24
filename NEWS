@@ -18,10 +18,11 @@ Enhancements and new features:
     * Remove graph export from Glances #1206
     * Add a code of conduct for Glances project's participants #1211
     * Context switches bottleneck identification #1212
-    * Take advantage of the PSUtil issue #1025 (Add process_iter(attrs, ad_value)) #1105
+    * Take advantage of the psutil issue #1025 (Add process_iter(attrs, ad_value)) #1105
     * Nice Process Priority Configuration #1218
     * Display debug message if dep lib is not found #1224
     * Add a new output mode to stdout #1168
+    * Huge refactor of the WebUI packaging thanks to @spike008t #1239
 
 Bugs corrected:
 
@@ -43,6 +44,7 @@ Bugs corrected:
 Backward-incompatible changes:
 
     * Support for Python 3.3 has been dropped (EOL 2017-09-29)
+    * Support for psutil < 5.3.0 has been dropped
     * Minimum supported Docker API version is now 1.21 (Docker plugins)
     * Support for InfluxDB < 0.9 is deprecated (InfluxDB exporter)
     * Remove graph export from Glances
@@ -51,7 +53,7 @@ Backward-incompatible changes:
 
 News command line options:
 
-    --disable-webui  Disable the WebUI (only Restful API will respond)
+    --disable-webui  Disable the WebUI (only RESTful API will respond)
     --enable-light   Enable the light mode for the UI interface
     --modules-list   Display plugins and exporters list
     --disable-plugin plugin1,plugin2
@@ -106,7 +108,7 @@ Version 2.11
 
 Enhancements and new features:
 
-    * New export plugin: standard and configurable Restfull exporter (issue #1129)
+    * New export plugin: standard and configurable RESTful exporter (issue #1129)
     * Add a JSON export module (issue #1130)
     * [WIP] Refactoring of the WebUI
 
@@ -219,7 +221,7 @@ Version 2.8.3
 
 Enhancements and new features:
 
-    * Use new sensors-related APIs of Psutil 5.1.0 (issue #1018)
+    * Use new sensors-related APIs of psutil 5.1.0 (issue #1018)
     * Add a "Cloud" plugin to grab stats inside the AWS EC2 API (issue #1029)
 
 Bugs corrected:
@@ -631,8 +633,8 @@ Version 2.1
       Users can configure alias from the Glances configuration file.
     * Add Glances log message (in the /tmp/glances.log file)
       The default log level is INFO, you can switch to the DEBUG mode using the -d option on the command line.
-    * Add RESTFul API to the Web server mode
-      RestFul API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
+    * Add RESTful API to the Web server mode
+      RESTful API doc: https://github.com/nicolargo/glances/wiki/The-Glances-RESTFULL-JSON-API
     * Improve SNMP fallback mode for Cisco IOS, VMware ESXi
     * Add --theme-white feature to optimize display for white background
     * Experimental history feature (--enable-history option on the command line)
@@ -714,7 +716,7 @@ Version 2.0
     * Load-5 alert are no longer logged (by Nicolargo)
     * Rename In/Out by Read/Write for DiskIO according to #339 (by Nicolargo)
     * Migrate from pysensors to py3sensors (by Alessio Sergi)
-    * Migration to PsUtil 2.x (by Nicolargo)
+    * Migration to psutil 2.x (by Nicolargo)
     * New plugins system (by Nicolargo)
     * Python 2.x and 3.x compatibility (by Alessio Sergi)
     * Code quality improvements (by Alessio Sergi)
@@ -730,7 +732,7 @@ Version 1.7.7
 =============
 
     * Fix CVS export [issue #348]
-    * Adapt to PSUtil 2.1.1
+    * Adapt to psutil 2.1.1
     * Compatibility with Python 3.4
     * Improve German update
 
@@ -745,7 +747,7 @@ Version 1.7.6
 Version 1.7.5
 =============
 
-    * Force the Pypi installer to use the PsUtil branch 1.x (#333)
+    * Force the PyPI installer to use the psutil branch 1.x (#333)
 
 Version 1.7.4
 =============
@@ -783,7 +785,7 @@ Version 1.7.1
     * Fix IoWait error on FreeBSD / Mac OS
     * HDDTemp module is now Python v3 compatible
     * Don't warn a process is not running if countmin=0
-    * Add Pypi badge on the README.rst
+    * Add PyPI badge on the README.rst
     * Update documentation
     * Add document structure for http://readthedocs.org
 
@@ -815,7 +817,7 @@ Version 1.6.1
     * API improvment add time_since_update for disk, process_disk and network
     * Improve help display
     * Add more dummy FS to the ignore list
-    * Code refactory: PsUtil < 0.4.1 is depredicated (Thk to Alessio)
+    * Code refactory: psutil < 0.4.1 is deprecated (Thk to Alessio)
     * Correct a bug on the CPU process limit
     * Fix crash bug when specifying custom server port
     * Add Debian style init script for the Glances server
@@ -849,8 +851,8 @@ Version 1.5.2
 Version 1.5.1
 =============
 
-    * Patch for PsUtil 0.4 compatibility
-    * Test PsUtil version before running Glances
+    * Patch for psutil 0.4 compatibility
+    * Test psutil version before running Glances
 
 Version 1.5
 ===========
@@ -876,7 +878,7 @@ Version 1.4.2.1
 Version 1.4.2
 =============
 
-    * Use the new virtual_memory() and virtual_swap() fct (PsUtil)
+    * Use the new virtual_memory() and virtual_swap() fct (psutil)
     * Display "Top process" in logs
     * Minor patch on man page for Debian packaging
     * Code optimization (less try and except)
@@ -884,7 +886,7 @@ Version 1.4.2
 Version 1.4.1.1
 ===============
 
-    * Minor patch to disable Process IO for OS X (not available in PsUtil)
+    * Minor patch to disable Process IO for OS X (not available in psutil)
 
 Version 1.4.1
 =============
@@ -896,7 +898,7 @@ Version 1.4.1
 Version 1.4
 ===========
 
-    * Goodby StatGrab... Welcome to the PsUtil library !
+    * Goodby StatGrab... Welcome to the psutil library !
     * No more autotools, use setup.py to install (or package)
     * Only major stats (CPU, Load and memory) use background colors
     * Improve operating system name detection

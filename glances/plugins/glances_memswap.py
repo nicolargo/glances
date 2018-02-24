@@ -70,10 +70,10 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            # Grab SWAP using the PSUtil swap_memory method
+            # Grab SWAP using the psutil swap_memory method
             sm_stats = psutil.swap_memory()
 
-            # Get all the swap stats (copy/paste of the PsUtil documentation)
+            # Get all the swap stats (copy/paste of the psutil documentation)
             # total: total swap memory in bytes
             # used: used swap memory in bytes
             # free: free swap memory in bytes

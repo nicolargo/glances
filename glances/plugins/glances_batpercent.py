@@ -29,15 +29,17 @@ batinfo_tag = True
 try:
     import batinfo
 except ImportError:
-    logger.debug("batpercent plugin - Batinfo library not found. Trying fallback to PsUtil.")
+    logger.debug("batinfo library not found. Fallback to psutil.")
     batinfo_tag = False
 
-# PsUtil library 5.2.0 or higher (optional; Linux-only)
+# Availability:
+# Linux, Windows, FreeBSD (psutil>=5.1.0)
+# macOS (psutil>=5.4.2)
 psutil_tag = True
 try:
     psutil.sensors_battery()
 except AttributeError:
-    logger.debug("batpercent plugin - PsUtil 5.2.0 or higher is needed to grab battery stats.")
+    logger.debug("Cannot grab battery status. Platform not supported.")
     psutil_tag = False
 
 
@@ -110,7 +112,7 @@ class GlancesGrabBat(object):
                 'value': self.battery_percent,
                 'unit': '%'}]
         elif psutil_tag and hasattr(self.bat.sensors_battery(), 'percent'):
-            # Use the PSUtil 5.2.0 or higher lib to grab the stats
+            # Use psutil to grab the stats
             # Give directly the battery percent
             self.bat_list = [{
                 'label': 'Battery',

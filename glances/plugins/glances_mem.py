@@ -82,10 +82,10 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            # Grab MEM using the PSUtil virtual_memory method
+            # Grab MEM using the psutil virtual_memory method
             vm_stats = psutil.virtual_memory()
 
-            # Get all the memory stats (copy/paste of the PsUtil documentation)
+            # Get all the memory stats (copy/paste of the psutil documentation)
             # total: total physical memory available.
             # available: the actual amount of available memory that can be given instantly to processes that request more memory in bytes; this is calculated by summing different memory values depending on the platform (e.g. free + buffers + cached on Linux) and it is supposed to be used to monitor actual memory usage in a cross platform fashion.
             # percent: the percentage usage calculated as (total - available) / total * 100.
