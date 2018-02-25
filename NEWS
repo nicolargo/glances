@@ -40,6 +40,7 @@ Bugs corrected:
     * Another encoding issue... With both Python 2 and Python 3 #1197
     * Glances do not exit when eating 'q' #1207
     * FreeBSD blackhole bug #1202
+    * Glances crashes when mountpoint with non ASCII characters exists #1201
 
 Backward-incompatible changes:
 
