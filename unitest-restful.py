@@ -47,12 +47,12 @@ class TestGlances(unittest.TestCase):
         """The function is called *every time* before test_*."""
         print('\n' + '=' * 78)
 
-    def http_get(self, url, gzipped=False):
+    def http_get(self, url, deflate=False):
         """Make the request"""
-        if gzipped:
+        if deflate:
             ret = requests.get(url,
                                stream=True,
-                               headers={'Accept-encoding': 'gzip'})
+                               headers={'Accept-encoding': 'deflate'})
         else:
             ret = requests.get(url,
                                headers={'Accept-encoding': 'identity'})
@@ -81,15 +81,15 @@ class TestGlances(unittest.TestCase):
 
         self.assertTrue(req.ok)
 
-    def test_001a_all_gzip(self):
+    def test_001a_all_deflate(self):
         """All."""
         method = "all"
-        print('INFO: [TEST_001a] Get all stats (with Gzip compression)')
+        print('INFO: [TEST_001a] Get all stats (with Deflate compression)')
         print("HTTP RESTful request: %s/%s" % (URL, method))
-        req = self.http_get("%s/%s" % (URL, method), gzipped=True)
+        req = self.http_get("%s/%s" % (URL, method), deflate=True)
 
         self.assertTrue(req.ok)
-        self.assertTrue(req.headers['Content-Encoding'] == 'gzip')
+        self.assertTrue(req.headers['Content-Encoding'] == 'deflate')
 
     def test_002_pluginslist(self):
         """Plugins list."""
