@@ -281,7 +281,7 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
-        if first and 'extended_stats' in p:
+        if first and 'extended_stats' in p and args.enable_process_extended:
             # Left padding
             xpad = ' ' * 13
             # First line is CPU affinity
@@ -290,15 +290,12 @@ class Plugin(GlancesPlugin):
                 msg = xpad + 'CPU affinity: ' + str(len(p['cpu_affinity'])) + ' cores'
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Second line is memory info
-            if 'memory_info' in p and p['memory_info'] is not None:
+            if 'memory_info' in p and \
+               p['memory_info'] is not None:
                 ret.append(self.curse_new_line())
-                msg = xpad + 'Memory info: '
-                for k, v in iteritems(p['memory_info']._asdict()):
-                    # Ignore rss and vms (already displayed)
-                    if k not in ['rss', 'vms'] and v is not None:
-                        msg += self.auto_unit(v, low_precision=False) + ' ' + k + ' '
+                msg = '{}Memory info: {}'.format(xpad, p['memory_info'])
                 if 'memory_swap' in p and p['memory_swap'] is not None:
-                    msg += self.auto_unit(p['memory_swap'], low_precision=False) + ' swap '
+                    msg += ' swap ' + self.auto_unit(p['memory_swap'], low_precision=False)
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Third line is for open files/network sessions
             msg = ''
@@ -317,7 +314,9 @@ class Plugin(GlancesPlugin):
                 msg = xpad + 'Open: ' + msg
                 ret.append(self.curse_add_line(msg, splittable=True))
             # Fouth line is IO nice level (only Linux and Windows OS)
-            if 'ionice' in p and p['ionice'] is not None:
+            if 'ionice' in p and \
+               p['ionice'] is not None \
+               and hasattr(p['ionice'], 'ioclass'):
                 ret.append(self.curse_new_line())
                 msg = xpad + 'IO nice: '
                 k = 'Class is '

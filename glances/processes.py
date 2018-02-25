@@ -268,7 +268,6 @@ class GlancesProcesses(object):
                 # Get extended stats, only for top processes (see issue #403).
                 # - cpu_affinity (Linux, Windows, FreeBSD)
                 # - ionice (Linux and Windows > Vista)
-                # - memory_full_info (Linux)
                 # - num_ctx_switches (not available on Illumos/Solaris)
                 # - num_fds (Unix-like)
                 # - num_handles (Windows)
@@ -280,8 +279,8 @@ class GlancesProcesses(object):
                 try:
                     top_process = psutil.Process(proc['pid'])
                     extended_stats = ['cpu_affinity', 'ionice',
-                                      'memory_full_info', 'num_ctx_switches',
-                                      'num_fds', 'num_threads']
+                                      'num_ctx_switches', 'num_fds',
+                                      'num_threads']
                     if WINDOWS:
                         extended_stats += ['num_handles']
                     extended = top_process.as_dict(attrs=extended_stats)
