@@ -25,7 +25,9 @@ import sys
 import tempfile
 from io import open
 import webbrowser
+import zlib
 
+from glances.compat import b
 from glances.timer import Timer
 from glances.logger import logger
 
@@ -36,8 +38,39 @@ except ImportError:
     sys.exit(2)
 
 
-class GlancesBottle(object):
+def compress(func):
+    """Compress result with deflate algorithm if the client ask for it."""
+    def wrapper(*args, **kwargs):
+        """Wrapper that take one function and return the compressed result."""
+        ret = func(*args, **kwargs)
+        logger.debug('Receive {} {} request with header: {}'.format(
+            request.method,
+            request.url,
+            ['{}: {}'.format(h, request.headers.get(h)) for h in request.headers.keys()]
+        ))
+        if 'deflate' in request.headers.get('Accept-Encoding', ''):
+            response.headers['Content-Encoding'] = 'deflate'
+            ret = deflate_compress(ret)
+        else:
+            response.headers['Content-Encoding'] = 'identity'
+        return ret
 
+    def deflate_compress(data, compress_level=6):
+        """Compress given data using the DEFLATE algorithm"""
+        # Init compression
+        zobj = zlib.compressobj(compress_level,
+                                zlib.DEFLATED,
+                                zlib.MAX_WBITS,
+                                zlib.DEF_MEM_LEVEL,
+                                zlib.Z_DEFAULT_STRATEGY)
+
+        # Return compressed object
+        return zobj.compress(b(data)) + zobj.flush()
+
+    return wrapper
+
+
+class GlancesBottle(object):
     """This class manages the Bottle Web server."""
 
     API_VERSION = '2'
@@ -205,6 +238,7 @@ class GlancesBottle(object):
         # Return the static file
         return static_file(filepath, root=self.STATIC_PATH)
 
+    @compress
     def _api_help(self):
         """Glances API RESTful implementation.
 
@@ -220,8 +254,10 @@ class GlancesBottle(object):
             abort(404, "Cannot get help view data (%s)" % str(e))
         return plist
 
+    @compress
     def _api_plugins(self):
-        """
+        """Glances API RESTFul implementation.
+
         @api {get} /api/%s/pluginslist Get plugins list
         @apiVersion 2.0
         @apiName pluginslist
@@ -256,6 +292,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin list (%s)" % str(e))
         return plist
 
+    @compress
     def _api_all(self):
         """Glances API RESTful implementation.
 
@@ -282,8 +319,10 @@ class GlancesBottle(object):
             statval = json.dumps(self.stats.getAllAsDict())
         except Exception as e:
             abort(404, "Cannot get stats (%s)" % str(e))
+
         return statval
 
+    @compress
     def _api_all_limits(self):
         """Glances API RESTful implementation.
 
@@ -301,6 +340,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get limits (%s)" % (str(e)))
         return limits
 
+    @compress
     def _api_all_views(self):
         """Glances API RESTful implementation.
 
@@ -318,6 +358,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get views (%s)" % (str(e)))
         return limits
 
+    @compress
     def _api(self, plugin):
         """Glances API RESTful implementation.
 
@@ -341,6 +382,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
         return statval
 
+    @compress
     def _api_history(self, plugin, nb=0):
         """Glances API RESTful implementation.
 
@@ -365,6 +407,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get plugin history %s (%s)" % (plugin, str(e)))
         return statval
 
+    @compress
     def _api_limits(self, plugin):
         """Glances API RESTful implementation.
 
@@ -388,6 +431,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get limits for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
+    @compress
     def _api_views(self, plugin):
         """Glances API RESTful implementation.
 
@@ -411,8 +455,9 @@ class GlancesBottle(object):
             abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
+    @compress
     def _api_itemvalue(self, plugin, item, value=None, history=False, nb=0):
-        """Father method for _api_item and _api_value"""
+        """Father method for _api_item and _api_value."""
         response.content_type = 'application/json'
 
         if plugin not in self.plugins_list:
@@ -441,6 +486,7 @@ class GlancesBottle(object):
 
         return ret
 
+    @compress
     def _api_item(self, plugin, item):
         """Glances API RESTful implementation.
 
@@ -452,6 +498,7 @@ class GlancesBottle(object):
         """
         return self._api_itemvalue(plugin, item)
 
+    @compress
     def _api_item_history(self, plugin, item, nb=0):
         """Glances API RESTful implementation.
 
@@ -463,6 +510,7 @@ class GlancesBottle(object):
         """
         return self._api_itemvalue(plugin, item, history=True, nb=int(nb))
 
+    @compress
     def _api_value(self, plugin, item, value):
         """Glances API RESTful implementation.
 
@@ -473,6 +521,7 @@ class GlancesBottle(object):
         """
         return self._api_itemvalue(plugin, item, value)
 
+    @compress
     def _api_config(self):
         """Glances API RESTful implementation.
 
@@ -489,6 +538,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get config (%s)" % str(e))
         return args_json
 
+    @compress
     def _api_config_item(self, item):
         """Glances API RESTful implementation.
 
@@ -510,6 +560,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get config item (%s)" % str(e))
         return args_json
 
+    @compress
     def _api_args(self):
         """Glances API RESTful implementation.
 
@@ -528,6 +579,7 @@ class GlancesBottle(object):
             abort(404, "Cannot get args (%s)" % str(e))
         return args_json
 
+    @compress
     def _api_args_item(self, item):
         """Glances API RESTful implementation.
 
