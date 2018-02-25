@@ -20,16 +20,26 @@ export default function GlancesPluginPortsController($scope, GlancesStats) {
         }, this);
     }
 
-    vm.getDecoration = function (port) {
+    vm.getPortDecoration = function (port) {
         if (port.status === null) {
             return 'careful';
-        }
-
-        if (port.status === false) {
+        } else if (port.status === false) {
             return 'critical';
+        } else if (port.rtt_warning !== null && port.status > port.rtt_warning) {
+            return 'warning';
         }
 
-        if (port.rtt_warning !== null && port.status > port.rtt_warning) {
+        return 'ok';
+    };
+
+    vm.getWebDecoration = function (web) {
+        var okCodes = [200, 301, 302];
+
+        if (web.status === null) {
+            return 'careful';
+        } else if (okCodes.indexOf(web.status) === -1) {
+            return 'critical';
+        } else if (web.rtt_warning !== null && web.elapsed > web.rtt_warning) {
             return 'warning';
         }
 
