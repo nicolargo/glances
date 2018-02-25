@@ -41,6 +41,7 @@ Bugs corrected:
     * Glances do not exit when eating 'q' #1207
     * FreeBSD blackhole bug #1202
     * Glances crashes when mountpoint with non ASCII characters exists #1201
+    * [WEB UI] Minor issue on the Web UI #1240
 
 Backward-incompatible changes:
 
