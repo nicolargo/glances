@@ -48,6 +48,7 @@ if PY3:
     text_type = str
     binary_type = bytes
     bool_type = bool
+    long = int
 
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
@@ -119,6 +120,7 @@ else:
     text_type = unicode
     binary_type = str
     bool_type = types.BooleanType
+    long = long
 
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')

@@ -29,6 +29,7 @@ import zlib
 import struct
 import time
 
+from glances.compat import nativestr, u, b, long
 from glances.timer import Timer
 from glances.logger import logger
 
@@ -56,32 +57,17 @@ def gzip_compress(func):
             response.headers['Content-Encoding'] = 'identity'
         return ret
 
-    def gzip_header():
-        header = '\037\213'
-        header += '\010'
-        header += '\0'
-        header += struct.pack("<L", long(time.time()))
-        header += '\002'
-        header += '\377'
-        return header
-
-    def gzip_trailer(crc, size):
-        footer = struct.pack("<l", crc)
-        footer += struct.pack("<L", size & 0xFFFFFFFF)
-        return footer
-
     def compress(data, compress_level=6):
-        # Compress page
-        yield gzip_header()
-        crc = zlib.crc32('')
+        """Compress given data using the DEFLATE algorithm"""
+        # Init compression
         zobj = zlib.compressobj(compress_level,
-                                zlib.DEFLATED, -zlib.MAX_WBITS,
-                                zlib.DEF_MEM_LEVEL, 0)
-        size = len(data)
-        crc = zlib.crc32(data, crc)
-        yield zobj.compress(data)
-        yield zobj.flush()
-        yield gzip_trailer(crc, size)
+                                zlib.DEFLATED,
+                                zlib.MAX_WBITS,
+                                zlib.DEF_MEM_LEVEL,
+                                zlib.Z_DEFAULT_STRATEGY)
+
+        # Return compressed object
+        return zobj.compress(b(data)) + zobj.flush()
 
     return wrapper
 
