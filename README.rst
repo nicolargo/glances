@@ -306,7 +306,7 @@ You can install Glances using ``Puppet``: https://github.com/rverchere/puppet-gl
 Ansible
 -------
 
-A Glances ``Ansible`` role is available: https://github.com/zaxos/glances-ansible-role
+A Glances ``Ansible`` role is available: https://galaxy.ansible.com/zaxos/glances-ansible-role/
 
 Usage
 =====

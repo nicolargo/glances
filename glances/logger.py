@@ -27,7 +27,8 @@ import tempfile
 import logging
 import logging.config
 
-LOG_FILENAME = os.path.join(tempfile.gettempdir(), 'glances-{}.log'.format(getpass.getuser()))
+LOG_FILENAME = os.path.join(tempfile.gettempdir(),
+                            'glances-{}.log'.format(getpass.getuser()))
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -42,7 +43,10 @@ LOGGING_CFG = {
             "format": "%(asctime)s -- %(levelname)s -- %(message)s"
         },
         "short": {
-            "format": "%(levelname)s: %(message)s"
+            "format": "%(levelname)s -- %(message)s"
+        },
+        "long": {
+            "format": "%(asctime)s -- %(levelname)s -- %(message)s (%(funcName)s in %(filename)s)"
         },
         "free": {
             "format": "%(message)s"
