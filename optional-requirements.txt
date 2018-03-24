@@ -12,6 +12,7 @@ pika
 potsdb
 prometheus_client
 py-cpuinfo
+pygal
 pymdstat
 pysnmp
 pystache

@@ -169,6 +169,10 @@ Examples of use:
                             default='./glances.json',
                             dest='export_json_file',
                             help='file path for JSON exporter')
+        parser.add_argument('--export-graph-path',
+                            default='/tmp',
+                            dest='export_graph_path',
+                            help='Folder for Graph exporter')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')
