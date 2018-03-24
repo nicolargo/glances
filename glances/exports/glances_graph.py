@@ -20,6 +20,7 @@
 """Graph exporter interface class."""
 
 from pygal import DateTimeLine
+from pygal.style import DarkStyle
 import sys
 import os
 
@@ -63,7 +64,7 @@ class Export(GlancesExport):
                 self.export(plugin_name, plugin.get_export_history())
 
     def export(self, title, data):
-        """Generate one graph per item from the data.
+        """Generate graph from the data.
 
         Example for the mem plugin:
         {'percent': [
@@ -76,9 +77,12 @@ class Export(GlancesExport):
             ]
         }
         """
+        chart = DateTimeLine(title=title.capitalize(),
+                             style=DarkStyle,
+                             show_dots=False,
+                             x_label_rotation=20,
+                             x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'))
         for k, v in iteritems(data):
-            chart = DateTimeLine(x_label_rotation=20,
-                                 x_value_formatter=lambda dt: dt.strftime('%d, %b %Y at %I:%M:%S %p'))
             chart.add(k, v)
-            chart.render_to_file(os.path.join(self._graph_path,
-                                              title + '.svg'))
+        chart.render_to_file(os.path.join(self._graph_path,
+                                          title + '.svg'))
