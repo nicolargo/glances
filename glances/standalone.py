@@ -36,6 +36,9 @@ class GlancesStandalone(object):
     """This class creates and manages the Glances standalone session."""
 
     def __init__(self, config=None, args=None):
+        self.config = config
+        self.args = args
+
         # Quiet mode
         self._quiet = args.quiet
         self.refresh_time = args.time
