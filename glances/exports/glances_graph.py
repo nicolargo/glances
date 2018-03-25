@@ -23,6 +23,8 @@ from pygal import DateTimeLine
 from pygal.style import DarkStyle
 import sys
 import os
+import tempfile
+import errno
 
 from glances.logger import logger
 from glances.compat import iteritems
@@ -40,16 +42,23 @@ class Export(GlancesExport):
         # Graph export folder path
         self._graph_path = args.export_graph_path
 
-        # TODO: Test if the folder exist. Overwise, create it.
+        # Create export folder
         try:
-            pass
-        except IOError as e:
-            logger.critical("Cannot create the CSV file: {}".format(e))
+            os.makedirs(self._graph_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                logger.critical("Cannot create the Graph output folder {} ({})".format(self._graph_path, e))
+                sys.exit(2)
+
+        # Check if output folder is writeable
+        try:
+            tempfile.TemporaryFile(dir=self._graph_path)
+        except OSError as e:
+            logger.critical("Graph output folder {} is not writeable".format(self._graph_path))
             sys.exit(2)
 
-        logger.info("Graph will be created in folder:: {}".format(self._graph_path))
-
-        self.export_enable = True
+        logger.info("Graphs will be created in the folder {}".format(self._graph_path))
+        logger.info("Graphs are created when 'g' key is pressed")
 
     def exit(self):
         """Close the files."""
@@ -57,11 +66,17 @@ class Export(GlancesExport):
 
     def update(self, stats):
         """Generate Graph file in the output folder."""
+        if not self.args.generate_graph:
+            return
+
         plugins = stats.getPluginsList()
         for plugin_name in plugins:
             plugin = stats._plugins[plugin_name]
             if plugin_name in self.plugins_to_export():
                 self.export(plugin_name, plugin.get_export_history())
+
+        logger.info("Graphs created in the folder {}".format(self._graph_path))
+        self.args.generate_graph = False
 
     def export(self, title, data):
         """Generate graph from the data.
