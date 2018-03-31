@@ -170,7 +170,7 @@ class GlancesPlugin(object):
                     # interface)
                     for l in self.stats:
                         self.stats_history.add(
-                            l[item_name] + '_' + i['name'],
+                            str(l[item_name]) + '_' + i['name'],
                             l[i['name']],
                             description=i['description'],
                             history_max_size=self._limits['history_size'])

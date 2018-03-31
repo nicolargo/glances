@@ -27,7 +27,6 @@ import psutil
 
 
 # Define the history items list
-# All items in this list will be historised if the --enable-history tag is set
 items_history_list = [{'name': 'read_bytes',
                        'description': 'Bytes read per second',
                        'y_unit': 'B/s'},

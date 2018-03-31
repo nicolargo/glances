@@ -22,6 +22,14 @@
 from glances.cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# Define the history items list
+items_history_list = [{'name': 'user',
+                       'description': 'User CPU usage',
+                       'y_unit': '%'},
+                      {'name': 'system',
+                       'description': 'System CPU usage',
+                       'y_unit': '%'}]
+
 
 class Plugin(GlancesPlugin):
     """Glances per-CPU plugin.
@@ -32,7 +40,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
