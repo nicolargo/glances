@@ -20,7 +20,7 @@
 """Graph exporter interface class."""
 
 from pygal import DateTimeLine
-from pygal.style import DarkStyle
+import pygal.style
 import sys
 import os
 import tempfile
@@ -39,25 +39,37 @@ class Export(GlancesExport):
         """Init the export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Graph export folder path
-        self._graph_path = args.export_graph_path
+        # Load the Graph configuration file section (is exists)
+        self.export_enable = self.load_conf('graph',
+                                            options=['path',
+                                                     'width',
+                                                     'height',
+                                                     'style'])
+
+        # Manage options (command line arguments overwrite configuration file)
+        self.path = args.export_graph_path or self.path
+        self.width = int(getattr(self, 'width', 800))
+        self.height = int(getattr(self, 'height', 600))
+        self.style = getattr(pygal.style,
+                             getattr(self, 'style', 'DarkStyle'),
+                             pygal.style.DarkStyle)
 
         # Create export folder
         try:
-            os.makedirs(self._graph_path)
+            os.makedirs(self.path)
         except OSError as e:
             if e.errno != errno.EEXIST:
-                logger.critical("Cannot create the Graph output folder {} ({})".format(self._graph_path, e))
+                logger.critical("Cannot create the Graph output folder {} ({})".format(self.path, e))
                 sys.exit(2)
 
         # Check if output folder is writeable
         try:
-            tempfile.TemporaryFile(dir=self._graph_path)
+            tempfile.TemporaryFile(dir=self.path)
         except OSError as e:
-            logger.critical("Graph output folder {} is not writeable".format(self._graph_path))
+            logger.critical("Graph output folder {} is not writeable".format(self.path))
             sys.exit(2)
 
-        logger.info("Graphs will be created in the folder {}".format(self._graph_path))
+        logger.info("Graphs will be created in the folder {}".format(self.path))
         logger.info("Graphs are created when 'g' key is pressed")
 
     def exit(self):
@@ -75,7 +87,7 @@ class Export(GlancesExport):
             if plugin_name in self.plugins_to_export():
                 self.export(plugin_name, plugin.get_export_history())
 
-        logger.info("Graphs created in the folder {}".format(self._graph_path))
+        logger.info("Graphs created in the folder {}".format(self.path))
         self.args.generate_graph = False
 
     def export(self, title, data):
@@ -91,13 +103,24 @@ class Export(GlancesExport):
             ...
             ]
         }
+
+        Return:
+        * True if the graph have been generated
+        * False if the graph have not been generated
         """
+        if data == {}:
+            return False
+
         chart = DateTimeLine(title=title.capitalize(),
-                             style=DarkStyle,
+                             width=self.width,
+                             height=self.height,
+                             style=self.style,
                              show_dots=False,
+                             legend_at_bottom=True,
                              x_label_rotation=20,
                              x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'))
         for k, v in iteritems(data):
             chart.add(k, v)
-        chart.render_to_file(os.path.join(self._graph_path,
+        chart.render_to_file(os.path.join(self.path,
                                           title + '.svg'))
+        return True
