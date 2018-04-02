@@ -34,7 +34,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-restful
+    $ glances --export restful
 
 Glances will generate stats as a big JSON dictionary (see example `here`_).
 

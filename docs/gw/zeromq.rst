@@ -26,7 +26,7 @@ Run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-zeromq -C <path>/glances.conf
+    $ glances --export zeromq
 
 Following is a simple Python client to subscribe to the Glances stats:
 

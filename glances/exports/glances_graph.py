@@ -27,6 +27,7 @@ import tempfile
 import errno
 
 from glances.logger import logger
+from glances.timer import Timer
 from glances.compat import iteritems, time_serie_subsample
 from glances.exports.glances_export import GlancesExport
 
@@ -42,12 +43,14 @@ class Export(GlancesExport):
         # Load the Graph configuration file section (is exists)
         self.export_enable = self.load_conf('graph',
                                             options=['path',
+                                                     'generate_every',
                                                      'width',
                                                      'height',
                                                      'style'])
 
         # Manage options (command line arguments overwrite configuration file)
         self.path = args.export_graph_path or self.path
+        self.generate_every = int(getattr(self, 'generate_every', 0))
         self.width = int(getattr(self, 'width', 800))
         self.height = int(getattr(self, 'height', 600))
         self.style = getattr(pygal.style,
@@ -69,8 +72,14 @@ class Export(GlancesExport):
             logger.critical("Graph output folder {} is not writeable".format(self.path))
             sys.exit(2)
 
-        logger.info("Graphs will be created in the folder {}".format(self.path))
-        logger.info("Graphs are created when 'g' key is pressed")
+        logger.info("Graphs will be created in the {} folder".format(self.path))
+        logger.info("Graphs will be created  when 'g' key is pressed (in the CLI interface)")
+        if self.generate_every != 0:
+            logger.info("Graphs will be created automatically every {} seconds".format(self.generate_every))
+            # Start the timer
+            self._timer = Timer(self.generate_every)
+        else:
+            self._timer = None
 
     def exit(self):
         """Close the files."""
@@ -78,6 +87,11 @@ class Export(GlancesExport):
 
     def update(self, stats):
         """Generate Graph file in the output folder."""
+
+        if self.generate_every != 0 and self._timer.finished():
+            self.args.generate_graph = True
+            self._timer.reset()
+
         if not self.args.generate_graph:
             return
 

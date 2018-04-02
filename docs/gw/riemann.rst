@@ -17,4 +17,4 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-riemann
+    $ glances --export riemann
