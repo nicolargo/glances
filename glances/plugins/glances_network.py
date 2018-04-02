@@ -35,7 +35,6 @@ snmp_oid = {'default': {'interface_name': '1.3.6.1.2.1.2.2.1.2',
                         'cumulative_tx': '1.3.6.1.2.1.2.2.1.16'}}
 
 # Define the history items list
-# All items in this list will be historised if the --enable-history tag is set
 items_history_list = [{'name': 'rx',
                        'description': 'Download rate per second',
                        'y_unit': 'bit/s'},

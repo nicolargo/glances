@@ -39,6 +39,31 @@ except ImportError as e:
 else:
     import_error_tag = False
 
+# Define the items history list (list of items to add to history)
+# TODO: For the moment limited to the CPU. Had to change the graph exports
+#       method to display one graph per container.
+# items_history_list = [{'name': 'cpu_percent',
+#                        'description': 'Container CPU consumption in %',
+#                        'y_unit': '%'},
+#                       {'name': 'memory_usage',
+#                        'description': 'Container memory usage in bytes',
+#                        'y_unit': 'B'},
+#                       {'name': 'network_rx',
+#                        'description': 'Container network RX bitrate in bits per second',
+#                        'y_unit': 'bps'},
+#                       {'name': 'network_tx',
+#                        'description': 'Container network TX bitrate in bits per second',
+#                        'y_unit': 'bps'},
+#                       {'name': 'io_r',
+#                        'description': 'Container IO bytes read per second',
+#                        'y_unit': 'Bps'},
+#                       {'name': 'io_w',
+#                        'description': 'Container IO bytes write per second',
+#                        'y_unit': 'Bps'}]
+items_history_list = [{'name': 'cpu_percent',
+                       'description': 'Container CPU consumption in %',
+                       'y_unit': '%'}]
+
 
 class Plugin(GlancesPlugin):
     """Glances Docker plugin.
@@ -48,7 +73,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list)
 
         # The plgin can be disable using: args.disable_docker
         self.args = args
@@ -198,14 +224,26 @@ class Plugin(GlancesPlugin):
                 # Standards stats
                 if container_stats['Status'] in ('running', 'paused'):
                     container_stats['cpu'] = self.get_docker_cpu(container.id, self.thread_list[container.id].stats)
+                    container_stats['cpu_percent'] = container_stats['cpu'].get('total', None)
                     container_stats['memory'] = self.get_docker_memory(container.id, self.thread_list[container.id].stats)
-                    container_stats['network'] = self.get_docker_network(container.id, self.thread_list[container.id].stats)
+                    container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
                     container_stats['io'] = self.get_docker_io(container.id, self.thread_list[container.id].stats)
+                    container_stats['io_r'] = container_stats['io'].get('ior', None)
+                    container_stats['io_w'] = container_stats['io'].get('iow', None)
+                    container_stats['network'] = self.get_docker_network(container.id, self.thread_list[container.id].stats)
+                    container_stats['network_rx'] = container_stats['network'].get('rx', None)
+                    container_stats['network_tx'] = container_stats['network'].get('tx', None)
                 else:
                     container_stats['cpu'] = {}
+                    container_stats['cpu_percent'] = None
                     container_stats['memory'] = {}
-                    container_stats['network'] = {}
+                    container_stats['memory_percent'] = None
                     container_stats['io'] = {}
+                    container_stats['io_r'] = None
+                    container_stats['io_w'] = None
+                    container_stats['network'] = {}
+                    container_stats['network_rx'] = None
+                    container_stats['network_tx'] = None
                 # Add current container stats to the stats list
                 self.stats['containers'].append(container_stats)
 
@@ -537,9 +575,10 @@ class Plugin(GlancesPlugin):
                 msg = '{:>7}'.format('_')
             ret.append(self.curse_add_line(msg))
             # IO R/W
+            unit = 'B'
             for r in ['ior', 'iow']:
                 try:
-                    value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'] * 8)) + "b"
+                    value = self.auto_unit(int(container['io'][r] // container['io']['time_since_update'])) + unit
                     msg = '{:>7}'.format(value)
                 except KeyError:
                     msg = '{:>7}'.format('_')
