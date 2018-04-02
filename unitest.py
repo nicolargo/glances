@@ -34,7 +34,7 @@ from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.compat import subsample
+from glances.compat import subsample, range
 
 # Global variables
 # =================
@@ -249,8 +249,8 @@ class TestGlances(unittest.TestCase):
                   ([1, 2, 3, 4], 4),
                   ([1, 2, 3, 4, 5, 6, 7], 4),
                   ([1, 2, 3, 4, 5, 6, 7, 8], 4),
-                  (list(xrange(1, 800)), 4),
-                  (list(xrange(1, 8000)), 800)]:
+                  (list(range(1, 800)), 4),
+                  (list(range(1, 8000)), 800)]:
             l_subsample = subsample(l[0], l[1])
             self.assertLessEqual(len(l_subsample), l[1])
 
