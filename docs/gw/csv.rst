@@ -7,7 +7,7 @@ It's possible to export stats to a CSV file.
 
 .. code-block:: console
 
-    $ glances --export-csv /tmp/glances.csv
+    $ glances --export csv --export-csv-file /tmp/glances.csv
 
 CSV file description:
 
