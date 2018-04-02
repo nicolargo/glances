@@ -17,7 +17,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-elasticsearch
+    $ glances --export elasticsearch
 
 The stats are available through the elasticsearch API. For example, to
 get the CPU system stats:

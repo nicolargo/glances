@@ -20,7 +20,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-couchdb
+    $ glances --export couchdb
 
 Documents are stored in native ``JSON`` format. Glances adds ``"type"``
 and ``"time"`` entries:

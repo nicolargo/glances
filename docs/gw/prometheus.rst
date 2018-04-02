@@ -18,7 +18,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-prometheus
+    $ glances --export prometheus
 
 You can check that Glances exports the stats using this URL: http://localhost:9091
 

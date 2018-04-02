@@ -22,7 +22,19 @@
 from glances.processes import glances_processes
 from glances.plugins.glances_plugin import GlancesPlugin
 
-# Note: history items list is not compliant with process count
+# Define the history items list
+items_history_list = [{'name': 'total',
+                       'description': 'Total number of processes',
+                       'y_unit': ''},
+                      {'name': 'running',
+                       'description': 'Total number of running processes',
+                       'y_unit': ''},
+                      {'name': 'sleeping',
+                       'description': 'Total number of sleeping processes',
+                       'y_unit': ''},
+                      {'name': 'thread',
+                       'description': 'Total number of threads',
+                       'y_unit': ''}]
 
 
 class Plugin(GlancesPlugin):
@@ -33,7 +45,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

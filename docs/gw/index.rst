@@ -14,6 +14,7 @@ to providing stats to multiple services (see list below).
    cassandra
    couchdb
    elastic
+   graph
    influxdb
    json
    kafka

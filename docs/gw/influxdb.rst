@@ -21,7 +21,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-influxdb
+    $ glances --export influxdb
 
 Glances generates a lot of columns, e.g., if you have many running
 Docker containers, so you should use the ``tsm1`` engine in the InfluxDB

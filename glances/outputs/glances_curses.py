@@ -61,6 +61,7 @@ class _GlancesCurses(object):
         'D': {'switch': 'disable_docker'},
         'd': {'switch': 'disable_diskio'},
         'F': {'switch': 'fs_free_space'},
+        'g': {'switch': 'generate_graph'},
         'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
         'I': {'switch': 'disable_ip'},
@@ -580,6 +581,10 @@ class _GlancesCurses(object):
         # ====================================
         self.__display_right(__stat_display)
 
+        # =====================
+        # Others popup messages
+        # =====================
+
         # Display edit filter popup
         # Only in standalone mode (cs_status is None)
         if self.edit_filter and cs_status is None:
@@ -599,6 +604,10 @@ class _GlancesCurses(object):
         elif self.edit_filter and cs_status is not None:
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
+
+        # Display graph generation popup
+        if self.args.generate_graph:
+            self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
 
         return True
 

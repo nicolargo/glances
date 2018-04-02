@@ -20,7 +20,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-statsd
+    $ glances --export statsd
 
 Glances will generate stats as:
 
