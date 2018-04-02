@@ -25,6 +25,11 @@ Enhancements and new features:
     * Add a new output mode to stdout #1168
     * Huge refactor of the WebUI packaging thanks to @spike008t #1239
 
+    One more thing ! A new Grafana Dash is available with:
+    * Network interface variable
+    * Disk variable
+    * Container CPU
+
 Bugs corrected:
 
     * Crash in the Wifi plugin on my Laptop #1151
@@ -67,6 +72,23 @@ News command line options:
                      Display stats to stdout
 
 News configuration keys in the glances.conf file:
+
+Graph:
+
+    [graph]
+    # Configuration for the --export graph option
+    # Set the path where the graph (.svg files) will be created
+    # Can be overwrite by the --graph-path command line option
+    path=/tmp
+    # It is possible to generate the graphs automatically by setting the
+    # generate_every to a non zero value corresponding to the seconds between
+    # two generation. Set it to 0 to disable graph auto generation.
+    generate_every=60
+    # See followings configuration keys definitions in the Pygal lib documentation
+    # http://pygal.org/en/stable/documentation/index.html
+    width=800
+    height=600
+    style=DarkStyle
 
 Processes list Nice value:
 

@@ -162,13 +162,13 @@ class GlancesPlugin(object):
         else:
             item_name = self.get_key()
         # Build the history
-        if self.stats and self._history_enable():
+        if self.get_export() and self._history_enable():
             for i in self.get_items_history_list():
-                if isinstance(self.stats, list):
+                if isinstance(self.get_export(), list):
                     # Stats is a list of data
                     # Iter throught it (for exemple, iter throught network
                     # interface)
-                    for l in self.stats:
+                    for l in self.get_export():
                         self.stats_history.add(
                             str(l[item_name]) + '_' + i['name'],
                             l[i['name']],
@@ -178,7 +178,7 @@ class GlancesPlugin(object):
                     # Stats is not a list
                     # Add the item to the history directly
                     self.stats_history.add(i['name'],
-                                           self.stats[i['name']],
+                                           self.get_export()[i['name']],
                                            description=i['description'],
                                            history_max_size=self._limits['history_size'])
 

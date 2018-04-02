@@ -92,10 +92,10 @@ class GlancesExport(object):
             for opt in mandatories:
                 setattr(self, opt, self.config.get_value(section, opt))
         except NoSectionError:
-            logger.critical("No {} configuration found".format(section))
+            logger.error("No {} configuration found".format(section))
             return False
         except NoOptionError as e:
-            logger.critical("Error in the {} configuration ({})".format(section, e))
+            logger.error("Error in the {} configuration ({})".format(section, e))
             return False
 
         # Load options
