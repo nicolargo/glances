@@ -93,10 +93,13 @@ class Plugin(GlancesPlugin):
 
     def connect(self):
         """Connect to the Docker server."""
-        if import_error_tag:
-            return None
+        try:
+            ret = docker.from_env()
+        except Exception as e:
+            logger.error("docker plugin - Can not connect to Docker ({})".format(e))
+            ret = None
 
-        return docker.from_env()
+        return ret
 
     def reset(self):
         """Reset/init the stats."""
