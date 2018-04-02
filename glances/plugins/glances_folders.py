@@ -21,7 +21,7 @@
 
 import numbers
 
-from glances.compat import b
+from glances.compat import nativestr
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
                 path = '_' + i['path'][-name_max_width + 1:]
             else:
                 path = i['path']
-            msg = '{:{width}}'.format(b(path),
+            msg = '{:{width}}'.format(nativestr(path),
                                       width=name_max_width)
             ret.append(self.curse_add_line(msg))
             try:

@@ -21,7 +21,7 @@
 
 import operator
 
-from glances.compat import u, b
+from glances.compat import u, nativestr
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -230,7 +230,7 @@ class Plugin(GlancesPlugin):
                 mnt_point = '_' + i['mnt_point'][-name_max_width + 1:]
             else:
                 mnt_point = i['mnt_point']
-            msg = '{:{width}}'.format(b(mnt_point),
+            msg = '{:{width}}'.format(nativestr(mnt_point),
                                       width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.fs_free_space:

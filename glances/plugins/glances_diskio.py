@@ -19,7 +19,7 @@
 
 """Disk I/O plugin."""
 
-from glances.compat import b
+from glances.compat import nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -189,7 +189,7 @@ class Plugin(GlancesPlugin):
             if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
                 disk_name = '_' + disk_name[-name_max_width:]
-            msg = '{:{width}}'.format(b(disk_name),
+            msg = '{:{width}}'.format(nativestr(disk_name),
                                       width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
