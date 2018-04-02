@@ -27,7 +27,7 @@ import tempfile
 import errno
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.compat import iteritems, time_serie_subsample
 from glances.exports.glances_export import GlancesExport
 
 
@@ -119,7 +119,7 @@ class Export(GlancesExport):
                              legend_at_bottom=True,
                              x_label_rotation=20,
                              x_value_formatter=lambda dt: dt.strftime('%Y/%m/%d %H:%M:%S'))
-        for k, v in iteritems(data):
+        for k, v in iteritems(time_serie_subsample(data, self.width)):
             chart.add(k, v)
         chart.render_to_file(os.path.join(self.path,
                                           title + '.svg'))

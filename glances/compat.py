@@ -177,3 +177,36 @@ else:
             logger.debug('Can not execute command {} ({})'.format(command, e))
             res = ''
         return res.rstrip()
+
+
+# Globals functions for both Python 2 and 3
+
+
+def subsample(data, sampling):
+    """Compute a simple mean subsampling.
+
+    Data should be a list of numerical itervalues
+
+    Return a subsampled list of sampling lenght
+    """
+    if len(data) <= sampling:
+        return data
+    sampling_length = int(round(len(data) / float(sampling)))
+    return [mean(data[s * sampling_length:(s + 1) * sampling_length]) for s in xrange(0, sampling)]
+
+
+def time_serie_subsample(data, sampling):
+    """Compute a simple mean subsampling.
+
+    Data should be a list of set (time, value)
+
+    Return a subsampled list of sampling lenght
+    """
+    if len(data) <= sampling:
+        return data
+    t = [t[0] for t in data]
+    v = [t[1] for t in data]
+    sampling_length = int(round(len(data) / float(sampling)))
+    t_subsampled = [t[s * sampling_length:(s + 1) * sampling_length][0] for s in xrange(0, sampling)]
+    v_subsampled = [mean(v[s * sampling_length:(s + 1) * sampling_length]) for s in xrange(0, sampling)]
+    return list(zip(t_subsampled, v_subsampled))

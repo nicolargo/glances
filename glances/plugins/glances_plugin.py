@@ -192,7 +192,6 @@ class GlancesPlugin(object):
         - the stats history (dict of list) if item is None
         - the stats history for the given item (list) instead
         - None if item did not exist in the history
-        Limit to lasts nb items (all if nb=0)
         """
         s = self.stats_history.get(nb=nb)
         if item is None:
@@ -221,17 +220,11 @@ class GlancesPlugin(object):
                 return None
 
     def get_export_history(self, item=None):
-        """Return the stats history object to export.
-
-        See get_raw_history for a full description
-        """
+        """Return the stats history object to export."""
         return self.get_raw_history(item=item)
 
     def get_stats_history(self, item=None, nb=0):
-        """Return the stats history (JSON format).
-
-        Limit to lasts nb items (all if nb=0)
-        """
+        """Return the stats history (JSON format)."""
         s = self.get_json_history(nb=nb)
 
         if item is None:
