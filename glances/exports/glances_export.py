@@ -146,7 +146,7 @@ class GlancesExport(object):
         The method builds two lists: names and values
         and calls the export method to export the stats.
 
-        Be aware that CSV export overwrite this class and use a specific one.
+        Note: this class can be overwrite (for example in CSV and Graph).
         """
         if not self.export_enable:
             return False

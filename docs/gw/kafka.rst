@@ -21,7 +21,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-kafka
+    $ glances --export kafka
 
 Stats  are sent in native ``JSON`` format to the topic:
 

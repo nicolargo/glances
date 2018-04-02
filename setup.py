@@ -89,6 +89,7 @@ setup(
                    'prometheus_client', 'pyzmq', 'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
         'gpu': ['nvidia-ml-py'],  # python_version=="2.7"
+        'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
         'snmp': ['pysnmp'],

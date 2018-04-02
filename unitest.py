@@ -34,6 +34,7 @@ from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.compat import subsample
 
 # Global variables
 # =================
@@ -240,6 +241,18 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(sorted_stats[2]["key"], "key3")
         self.assertEqual(sorted_stats[3]["key"], "key4")
         self.assertEqual(sorted_stats[4]["key"], "key21")
+
+    def test_015_subsample(self):
+        """Test subsampling function."""
+        print('INFO: [TEST_015] Subsampling')
+        for l in [([1, 2, 3], 4),
+                  ([1, 2, 3, 4], 4),
+                  ([1, 2, 3, 4, 5, 6, 7], 4),
+                  ([1, 2, 3, 4, 5, 6, 7, 8], 4),
+                  (list(xrange(1, 800)), 4),
+                  (list(xrange(1, 8000)), 800)]:
+            l_subsample = subsample(l[0], l[1])
+            self.assertLessEqual(len(l_subsample), l[1])
 
     def test_094_thresholds(self):
         """Test thresholds classes"""

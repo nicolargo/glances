@@ -25,7 +25,7 @@ import sys
 from glances import __version__, psutil_version
 from glances.compat import input
 from glances.config import Config
-from glances.globals import LINUX, WINDOWS
+from glances.globals import WINDOWS
 from glances.logger import logger
 
 
@@ -169,6 +169,10 @@ Examples of use:
                             default='./glances.json',
                             dest='export_json_file',
                             help='file path for JSON exporter')
+        parser.add_argument('--export-graph-path',
+                            default='/tmp',
+                            dest='export_graph_path',
+                            help='Folder for Graph exporter')
         # Client/Server option
         parser.add_argument('-c', '--client', dest='client',
                             help='connect to a Glances server by IPv4/IPv6 address or hostname')
@@ -358,6 +362,10 @@ Examples of use:
             disable(args, 'mem')
             disable(args, 'memswap')
             disable(args, 'load')
+
+        # Init the generate_graph tag
+        # Should be set to True to generate graphs
+        args.generate_graph = False
 
         # Control parameter and exit if it is not OK
         self.args = args

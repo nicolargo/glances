@@ -20,4 +20,4 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-rabbitmq
+    $ glances --export rabbitmq

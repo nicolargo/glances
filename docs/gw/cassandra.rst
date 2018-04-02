@@ -21,7 +21,7 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export-cassandra
+    $ glances --export cassandra
 
 The data model is the following:
 
