@@ -1,8 +1,55 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_GLANCES",
+      "label": "glances",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "5.0.4"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "heatmap",
+      "name": "Heatmap",
+      "version": "5.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": "5.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": "5.0.0"
+    }
+  ],
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:2676",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -16,8 +63,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 2,
-  "iteration": 1522698566936,
+  "id": null,
+  "iteration": 1522782995281,
   "links": [],
   "panels": [
     {
@@ -29,7 +76,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "format": "none",
@@ -137,7 +184,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "fill": 1,
       "grid": {
         "max": null,
@@ -355,7 +402,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(245, 54, 54, 0.9)"
       ],
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "format": "none",
@@ -462,7 +509,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -667,7 +714,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -816,7 +863,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 3,
@@ -986,7 +1033,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -1135,7 +1182,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -1298,7 +1345,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -1461,7 +1508,7 @@
         "rgba(245, 150, 40, 0.73)",
         "rgba(225, 40, 40, 0.59)"
       ],
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "format": "percent",
@@ -1570,7 +1617,7 @@
         "rgba(245, 150, 40, 0.73)",
         "rgba(225, 40, 40, 0.59)"
       ],
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "format": "percent",
@@ -1696,7 +1743,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -1724,13 +1771,6 @@
       "renderer": "flot",
       "repeat": "container",
       "repeatDirection": "v",
-      "scopedVars": {
-        "container": {
-          "selected": true,
-          "text": "grafana",
-          "value": "grafana"
-        }
-      },
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
@@ -1836,7 +1876,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -2062,7 +2102,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -2288,7 +2328,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -2516,7 +2556,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -2639,7 +2679,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "editable": true,
       "error": false,
       "fill": 0,
@@ -2782,7 +2822,7 @@
         "mode": "opacity"
       },
       "dataFormat": "timeseries",
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "gridPos": {
         "h": 7,
         "w": 24,
@@ -2872,7 +2912,7 @@
         "mode": "opacity"
       },
       "dataFormat": "timeseries",
-      "datasource": "glances",
+      "datasource": "${DS_GLANCES}",
       "gridPos": {
         "h": 7,
         "w": 24,
@@ -2958,20 +2998,35 @@
     "list": [
       {
         "allValue": null,
-        "current": {
-          "text": "grafana",
-          "value": [
-            "grafana"
-          ]
-        },
-        "datasource": "glances",
+        "current": {},
+        "datasource": "${DS_GLANCES}",
         "hide": 0,
         "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "host",
+        "options": [],
+        "query": "show measurements",
+        "refresh": 1,
+        "regex": "/(.*)\\..*/",
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "${DS_GLANCES}",
+        "hide": 0,
+        "includeAll": true,
         "label": null,
         "multi": true,
         "name": "container",
         "options": [],
-        "query": "show field keys on glances from \"localhost.docker\"",
+        "query": "show field keys on glances from \"$host.docker\"",
         "refresh": 1,
         "regex": "/(.*)\\..*/",
         "sort": 1,
@@ -2983,18 +3038,15 @@
       },
       {
         "allValue": null,
-        "current": {
-          "text": "wlp2s0",
-          "value": "wlp2s0"
-        },
-        "datasource": "glances",
+        "current": {},
+        "datasource": "${DS_GLANCES}",
         "hide": 0,
         "includeAll": false,
         "label": null,
         "multi": false,
         "name": "interface",
         "options": [],
-        "query": "show field keys on glances from \"localhost.network\"",
+        "query": "show field keys on glances from \"$host.network\"",
         "refresh": 1,
         "regex": "/(.*)\\..*/",
         "sort": 1,
@@ -3006,18 +3058,15 @@
       },
       {
         "allValue": null,
-        "current": {
-          "text": "dm-0",
-          "value": "dm-0"
-        },
-        "datasource": "glances",
+        "current": {},
+        "datasource": "${DS_GLANCES}",
         "hide": 0,
         "includeAll": false,
         "label": null,
         "multi": false,
         "name": "disk",
         "options": [],
-        "query": "show field keys on glances from \"localhost.diskio\"",
+        "query": "show field keys on glances from \"$host.diskio\"",
         "refresh": 1,
         "regex": "/(.*)\\..*/",
         "sort": 1,
@@ -3067,5 +3116,5 @@
   "timezone": "browser",
   "title": "Glances_20180117",
   "uid": "000000002",
-  "version": 4
+  "version": 6
 }
