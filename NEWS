@@ -49,6 +49,7 @@ Bugs corrected:
     * Glances crashes when mountpoint with non ASCII characters exists #1201
     * [WEB UI] Minor issue on the Web UI #1240
     * [Glances 3.0 RC1] Client/Server is broken #1244
+    * Fixing horizontal scrolling #1248
 
 Backward-incompatible changes:
 
