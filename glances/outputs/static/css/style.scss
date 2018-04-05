@@ -20,6 +20,10 @@ body {
     text-align: right;
 }
 
+.row {
+    margin-right: 0px;
+}
+
 .top-plugin {
     margin-bottom: 20px;
 }
@@ -142,7 +146,7 @@ body {
         width: 100%;
         text-overflow: ellipsis;
     }
-} 
+}
 
 #amps-plugin .process-result {
     max-width: 300px;
