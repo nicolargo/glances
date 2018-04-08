@@ -24,6 +24,7 @@ Enhancements and new features:
     * Display debug message if dep lib is not found #1224
     * Add a new output mode to stdout #1168
     * Huge refactor of the WebUI packaging thanks to @spike008t #1239
+    * Add time zone to the current time #1249
 
     One more thing ! A new Grafana Dash is available with:
     * Network interface variable
