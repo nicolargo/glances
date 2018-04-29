@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Kirby Banman <kirby.banman@gmail.com>
+# Copyright (C) 2018 Kirby Banman <kirby.banman@gmail.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -41,20 +41,14 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # Init the NVidia API
         self.init_nvidia()
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     def init_nvidia(self):
         """Init the NVIDIA API."""
@@ -79,27 +73,31 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the GPU stats."""
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
-        # !!! JUST FOR TEST
-        # self.stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 10, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": None, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "ANOTHER GPU"}]
+        # !!! JUST FOR TEST (because i did not have any NVidia GPU... :()
+        # stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
+        # stats = [{"key": "gpu_id", "mem": 10, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
+        # stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
+        #          {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
+        #          {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "GeForce GTX 560 Ti"}]
+        # stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
+        #          {"key": "gpu_id", "mem": None, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
+        #          {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "ANOTHER GPU"}]
         # !!! TO BE COMMENTED
 
         if not self.nvml_ready:
             return self.stats
 
         if self.input_method == 'local':
-            self.stats = self.get_device_stats()
+            stats = self.get_device_stats()
         elif self.input_method == 'snmp':
             # not available
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

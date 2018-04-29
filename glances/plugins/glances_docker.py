@@ -90,9 +90,6 @@ class Plugin(GlancesPlugin):
         # value: instance of ThreadDockerGrabber
         self.thread_list = {}
 
-        # Init the stats
-        self.reset()
-
     def exit(self):
         """Overwrite the exit method to close threads."""
         for t in itervalues(self.thread_list):
@@ -127,10 +124,6 @@ class Plugin(GlancesPlugin):
 
         return ret
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     def _all_tag(self):
         """Return the all tag of the Glances/Docker configuration file.
 
@@ -148,8 +141,8 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update Docker stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # The Docker-py lib is mandatory
         if import_error_tag:
@@ -169,7 +162,7 @@ class Plugin(GlancesPlugin):
             #     "GoVersion": "go1.3.3"
             # }
             try:
-                self.stats['version'] = self.docker_client.version()
+                stats['version'] = self.docker_client.version()
             except Exception as e:
                 # Correct issue#649
                 logger.error("{} plugin - Cannot get Docker version ({})".format(self.plugin_name, e))
@@ -204,7 +197,7 @@ class Plugin(GlancesPlugin):
                 del self.thread_list[container_id]
 
             # Get stats for all containers
-            self.stats['containers'] = []
+            stats['containers'] = []
             for container in containers:
                 # Init the stats for the current container
                 container_stats = {}
@@ -245,12 +238,15 @@ class Plugin(GlancesPlugin):
                     container_stats['network_rx'] = None
                     container_stats['network_tx'] = None
                 # Add current container stats to the stats list
-                self.stats['containers'].append(container_stats)
+                stats['containers'].append(container_stats)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # Not available
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

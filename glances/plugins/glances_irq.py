@@ -35,29 +35,25 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Init the stats
         self.irq = GlancesIRQ()
-        self.reset()
 
     def get_key(self):
         """Return the key of the list."""
         return self.irq.get_key()
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the IRQ stats."""
-        # Reset the list
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # IRQ plugin only available on GNU/Linux
         if not LINUX:
@@ -65,15 +61,19 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Grab the stats
-            self.stats = self.irq.get()
+            stats = self.irq.get()
 
         elif self.input_method == 'snmp':
             # not available
             pass
 
-        # Get the TOP 5
-        self.stats = sorted(self.stats, key=operator.itemgetter(
-            'irq_rate'), reverse=True)[:5]  # top 5 IRQ by rate/s
+        # Get the TOP 5 (by rate/s)
+        stats = sorted(stats,
+                       key=operator.itemgetter('irq_rate'),
+                       reverse=True)[:5]
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

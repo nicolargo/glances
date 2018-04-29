@@ -51,13 +51,11 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init stats
-        self.reset()
 
         # Call CorePlugin in order to display the core number
         try:
@@ -65,16 +63,12 @@ class Plugin(GlancesPlugin):
         except Exception:
             self.nb_log_core = 1
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update load stats."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -83,26 +77,29 @@ class Plugin(GlancesPlugin):
             try:
                 load = os.getloadavg()
             except (OSError, AttributeError):
-                self.stats = {}
+                stats = self.get_init_value()
             else:
-                self.stats = {'min1': load[0],
-                              'min5': load[1],
-                              'min15': load[2],
-                              'cpucore': self.nb_log_core}
+                stats = {'min1': load[0],
+                         'min5': load[1],
+                         'min15': load[2],
+                         'cpucore': self.nb_log_core}
         elif self.input_method == 'snmp':
             # Update stats using SNMP
-            self.stats = self.get_stats_snmp(snmp_oid=snmp_oid)
+            stats = self.get_stats_snmp(snmp_oid=snmp_oid)
 
-            if self.stats['min1'] == '':
-                self.reset()
-                return self.stats
+            if stats['min1'] == '':
+                stats = self.get_init_value()
+                return stats
 
             # Python 3 return a dict like:
             # {'min1': "b'0.08'", 'min5': "b'0.12'", 'min15': "b'0.15'"}
-            for k, v in iteritems(self.stats):
-                self.stats[k] = float(v)
+            for k, v in iteritems(stats):
+                stats[k] = float(v)
 
-            self.stats['cpucore'] = self.nb_log_core
+            stats['cpucore'] = self.nb_log_core
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

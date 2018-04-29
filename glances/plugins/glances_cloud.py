@@ -67,10 +67,6 @@ class Plugin(GlancesPlugin):
         # Run the thread
         self.aws_ec2. start()
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     def exit(self):
         """Overwrite the exit method to close threads."""
         self.aws_ec2.stop()
@@ -84,21 +80,24 @@ class Plugin(GlancesPlugin):
 
         Return the stats (dict)
         """
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # Requests lib is needed to get stats from the Cloud API
         if import_error_tag:
-            return self.stats
+            return stats
 
         # Update the stats
         if self.input_method == 'local':
             # Example:
-            # self.stats = {'ami-id': 'ami-id',
-            #                         'instance-id': 'instance-id',
-            #                         'instance-type': 'instance-type',
-            #                         'region': 'placement/availability-zone'}
-            self.stats = self.aws_ec2.stats
+            # stats = {'ami-id': 'ami-id',
+            #                    'instance-id': 'instance-id',
+            #                    'instance-type': 'instance-type',
+            #                    'region': 'placement/availability-zone'}
+            stats = self.aws_ec2.stats
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

@@ -85,20 +85,14 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Set the message position
         self.align = 'bottom'
-
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""
