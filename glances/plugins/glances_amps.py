@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
         self.args = args
         self.config = config
 
@@ -39,34 +40,29 @@ class Plugin(GlancesPlugin):
         # Init the list of AMP (classe define in the glances/amps_list.py script)
         self.glances_amps = glancesAmpsList(self.args, self.config)
 
-        # Init stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the AMP list."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             for k, v in iteritems(self.glances_amps.update()):
-                # self.stats.append({k: v.result()})
-                self.stats.append({'key': k,
-                                   'name': v.NAME,
-                                   'result': v.result(),
-                                   'refresh': v.refresh(),
-                                   'timer': v.time_until_refresh(),
-                                   'count': v.count(),
-                                   'countmin': v.count_min(),
-                                   'countmax': v.count_max()})
+                stats.append({'key': k,
+                              'name': v.NAME,
+                              'result': v.result(),
+                              'refresh': v.refresh(),
+                              'timer': v.time_until_refresh(),
+                              'count': v.count(),
+                              'countmin': v.count_min(),
+                              'countmax': v.count_max()})
         else:
             # Not available in SNMP mode
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

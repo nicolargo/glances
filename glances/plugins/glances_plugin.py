@@ -25,6 +25,7 @@ I am your father...
 
 import re
 import json
+import copy
 from operator import itemgetter
 
 from glances.compat import iterkeys, itervalues, listkeys, map, mean
@@ -38,7 +39,10 @@ from glances.thresholds import glances_thresholds
 class GlancesPlugin(object):
     """Main class for Glances plugin."""
 
-    def __init__(self, args=None, items_history_list=None):
+    def __init__(self,
+                 args=None,
+                 items_history_list=None,
+                 stats_init_value={}):
         """Init the plugin of plugins class.
 
         All Glances' plugins should inherit from this class. Most of the
@@ -59,6 +63,7 @@ class GlancesPlugin(object):
 
         :args: args parameters
         :items_history_list: list of items to store in the history
+        :stats_init_value: Default value for a stats item
         """
         # Plugin name (= module name without glances_)
         self.plugin_name = self.__class__.__module__[len('glances_'):]
@@ -87,7 +92,8 @@ class GlancesPlugin(object):
         # Init the views
         self.views = dict()
 
-        # Init the stats (dict of list or dict)
+        # Init the stats
+        self.stats_init_value = stats_init_value
         self.stats = None
         self.reset()
 
@@ -99,12 +105,16 @@ class GlancesPlugin(object):
         """Return the human-readable stats."""
         return str(self.stats)
 
+    def get_init_value(self):
+        """Return a copy of the init value."""
+        return copy.copy(self.stats_init_value)
+
     def reset(self):
         """Reset the stats.
 
         This method should be overwrited by childs' classes.
         """
-        self.stats = None
+        self.stats = self.get_init_value()
 
     def exit(self):
         """Just log an event when Glances exit."""

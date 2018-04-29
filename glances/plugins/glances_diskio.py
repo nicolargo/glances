@@ -43,28 +43,23 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init the stats
-        self.reset()
 
     def get_key(self):
         """Return the key of the list."""
         return 'disk_name'
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update disk I/O stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -78,7 +73,7 @@ class Plugin(GlancesPlugin):
             try:
                 diskiocounters = psutil.disk_io_counters(perdisk=True)
             except Exception:
-                return self.stats
+                return stats
 
             # Previous disk IO stats are stored in the diskio_old variable
             if not hasattr(self, 'diskio_old'):
@@ -127,7 +122,7 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         diskstat['key'] = self.get_key()
-                        self.stats.append(diskstat)
+                        stats.append(diskstat)
 
                 # Save stats to compute next bitrate
                 self.diskio_old = diskio_new
@@ -135,6 +130,9 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # No standard way for the moment...
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

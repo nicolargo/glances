@@ -71,28 +71,23 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init the stats
-        self.reset()
 
     def get_key(self):
         """Return the key of the list."""
         return 'mnt_point'
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the FS stats using the input method."""
-        # Reset the list
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -136,7 +131,7 @@ class Plugin(GlancesPlugin):
                     'free': fs_usage.free,
                     'percent': fs_usage.percent,
                     'key': self.get_key()}
-                self.stats.append(fs_current)
+                stats.append(fs_current)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -166,7 +161,7 @@ class Plugin(GlancesPlugin):
                         'used': used,
                         'percent': percent,
                         'key': self.get_key()}
-                    self.stats.append(fs_current)
+                    stats.append(fs_current)
             else:
                 # Default behavior
                 for fs in fs_stat:
@@ -177,7 +172,10 @@ class Plugin(GlancesPlugin):
                         'used': int(fs_stat[fs]['used']) * 1024,
                         'percent': float(fs_stat[fs]['percent']),
                         'key': self.get_key()}
-                    self.stats.append(fs_current)
+                    stats.append(fs_current)
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

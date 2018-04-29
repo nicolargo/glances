@@ -47,7 +47,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
         self.args = args
         self.config = config
 
@@ -69,10 +70,6 @@ class Plugin(GlancesPlugin):
             self._thread.stop()
         # Call the father class
         super(Plugin, self).exit()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     @GlancesPlugin._log_result_decorator
     def update(self):

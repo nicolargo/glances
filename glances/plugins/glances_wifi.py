@@ -46,13 +46,11 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init the stats
-        self.reset()
 
     def get_key(self):
         """Return the key of the list.
@@ -60,13 +58,6 @@ class Plugin(GlancesPlugin):
         :returns: string -- SSID is the dict key
         """
         return 'ssid'
-
-    def reset(self):
-        """Reset/init the stats to an empty list.
-
-        :returns: None
-        """
-        self.stats = []
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -77,12 +68,12 @@ class Plugin(GlancesPlugin):
 
         :returns: list -- Stats is a list of dict (hotspot)
         """
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # Exist if we can not grab the stats
         if import_error_tag:
-            return self.stats
+            return stats
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -91,7 +82,7 @@ class Plugin(GlancesPlugin):
             try:
                 netiocounters = psutil.net_io_counters(pernic=True)
             except UnicodeDecodeError:
-                return self.stats
+                return stats
 
             for net in netiocounters:
                 # Do not take hidden interface into account
@@ -120,13 +111,16 @@ class Plugin(GlancesPlugin):
                             'encryption_type': wifi_cell.encryption_type if wifi_cell.encrypted else None
                         }
                         # Add the hotspot to the list
-                        self.stats.append(hotspot)
+                        stats.append(hotspot)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
 
             # Not implemented yet
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

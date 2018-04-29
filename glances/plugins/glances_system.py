@@ -90,13 +90,6 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -104,64 +97,67 @@ class Plugin(GlancesPlugin):
 
         Return the stats (dict)
         """
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            self.stats['os_name'] = platform.system()
-            self.stats['hostname'] = platform.node()
-            self.stats['platform'] = platform.architecture()[0]
-            if self.stats['os_name'] == "Linux":
+            stats['os_name'] = platform.system()
+            stats['hostname'] = platform.node()
+            stats['platform'] = platform.architecture()[0]
+            if stats['os_name'] == "Linux":
                 try:
                     linux_distro = platform.linux_distribution()
                 except AttributeError:
-                    self.stats['linux_distro'] = _linux_os_release()
+                    stats['linux_distro'] = _linux_os_release()
                 else:
                     if linux_distro[0] == '':
-                        self.stats['linux_distro'] = _linux_os_release()
+                        stats['linux_distro'] = _linux_os_release()
                     else:
-                        self.stats['linux_distro'] = ' '.join(linux_distro[:2])
-                self.stats['os_version'] = platform.release()
-            elif (self.stats['os_name'].endswith('BSD') or
-                  self.stats['os_name'] == 'SunOS'):
-                self.stats['os_version'] = platform.release()
-            elif self.stats['os_name'] == "Darwin":
-                self.stats['os_version'] = platform.mac_ver()[0]
-            elif self.stats['os_name'] == "Windows":
+                        stats['linux_distro'] = ' '.join(linux_distro[:2])
+                stats['os_version'] = platform.release()
+            elif (stats['os_name'].endswith('BSD') or
+                  stats['os_name'] == 'SunOS'):
+                stats['os_version'] = platform.release()
+            elif stats['os_name'] == "Darwin":
+                stats['os_version'] = platform.mac_ver()[0]
+            elif stats['os_name'] == "Windows":
                 os_version = platform.win32_ver()
-                self.stats['os_version'] = ' '.join(os_version[::2])
+                stats['os_version'] = ' '.join(os_version[::2])
                 # if the python version is 32 bit perhaps the windows operating
                 # system is 64bit
-                if self.stats['platform'] == '32bit' and 'PROCESSOR_ARCHITEW6432' in os.environ:
-                    self.stats['platform'] = '64bit'
+                if stats['platform'] == '32bit' and 'PROCESSOR_ARCHITEW6432' in os.environ:
+                    stats['platform'] = '64bit'
             else:
-                self.stats['os_version'] = ""
+                stats['os_version'] = ""
             # Add human readable name
-            if self.stats['os_name'] == "Linux":
-                self.stats['hr_name'] = self.stats['linux_distro']
+            if stats['os_name'] == "Linux":
+                stats['hr_name'] = stats['linux_distro']
             else:
-                self.stats['hr_name'] = '{} {}'.format(
-                    self.stats['os_name'], self.stats['os_version'])
-            self.stats['hr_name'] += ' {}'.format(self.stats['platform'])
+                stats['hr_name'] = '{} {}'.format(
+                    stats['os_name'], stats['os_version'])
+            stats['hr_name'] += ' {}'.format(stats['platform'])
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             try:
-                self.stats = self.get_stats_snmp(
+                stats = self.get_stats_snmp(
                     snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
-                self.stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
+                stats = self.get_stats_snmp(snmp_oid=snmp_oid['default'])
             # Default behavor: display all the information
-            self.stats['os_name'] = self.stats['system_name']
+            stats['os_name'] = stats['system_name']
             # Windows OS tips
             if self.short_system_name == 'windows':
                 for r, v in iteritems(snmp_to_human['windows']):
-                    if re.search(r, self.stats['system_name']):
-                        self.stats['os_name'] = v
+                    if re.search(r, stats['system_name']):
+                        stats['os_name'] = v
                         break
             # Add human readable name
-            self.stats['hr_name'] = self.stats['os_name']
+            stats['hr_name'] = stats['os_name']
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

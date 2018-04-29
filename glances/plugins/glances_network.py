@@ -51,21 +51,16 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     items_history_list=items_history_list,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init the stats
-        self.reset()
-
     def get_key(self):
         """Return the key of the list."""
         return 'interface_name'
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -74,8 +69,8 @@ class Plugin(GlancesPlugin):
 
         Stats is a list of dict (one dict per interface)
         """
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -142,7 +137,7 @@ class Plugin(GlancesPlugin):
 
                         # Finaly, set the key
                         netstat['key'] = self.get_key()
-                        self.stats.append(netstat)
+                        stats.append(netstat)
 
                 # Save stats to compute next bitrate
                 self.network_old = network_new
@@ -207,10 +202,13 @@ class Plugin(GlancesPlugin):
                         continue
                     else:
                         netstat['key'] = self.get_key()
-                        self.stats.append(netstat)
+                        stats.append(netstat)
 
                 # Save stats to compute next bitrate
                 self.network_old = network_new
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

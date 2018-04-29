@@ -47,11 +47,6 @@ class Plugin(GlancesPlugin):
 
         # Init the stats
         self.uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
 
     def get_export(self):
         """Overwrite the default export method.
@@ -66,25 +61,27 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update uptime stat using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
             self.uptime = datetime.now() - datetime.fromtimestamp(psutil.boot_time())
 
             # Convert uptime to string (because datetime is not JSONifi)
-            self.stats = str(self.uptime).split('.')[0]
+            stats = str(self.uptime).split('.')[0]
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             uptime = self.get_stats_snmp(snmp_oid=snmp_oid)['_uptime']
             try:
                 # In hundredths of seconds
-                self.stats = str(timedelta(seconds=int(uptime) / 100))
+                stats = str(timedelta(seconds=int(uptime) / 100))
             except Exception:
                 pass
 
-        # Return the result
+        # Update the stats
+        self.stats = stats
+
         return self.stats
 
     def msg_curse(self, args=None, max_width=None):

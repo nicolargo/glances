@@ -35,7 +35,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # Init the sensor class
         self.glancesgrabhddtemp = GlancesGrabHDDTemp(args=args)
@@ -44,28 +45,24 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-        # Init stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update HDD stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            self.stats = self.glancesgrabhddtemp.get()
+            stats = self.glancesgrabhddtemp.get()
 
         else:
             # Update stats using SNMP
             # Not available for the moment
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 
