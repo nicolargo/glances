@@ -41,9 +41,9 @@ else:
 # - url: URL of the Web site
 # - json: service return a JSON (True) or string (False)
 # - key: key of the IP addresse in the JSON structure
-urls = [('http://ip.42.pl/raw', False, None),
-        ('http://httpbin.org/ip', True, 'origin'),
-        ('http://jsonip.com', True, 'ip'),
+urls = [('https://ip.42.pl/raw', False, None),
+        ('https://httpbin.org/ip', True, 'origin'),
+        ('https://jsonip.com', True, 'ip'),
         ('https://api.ipify.org/?format=json', True, 'ip')]
 
 
