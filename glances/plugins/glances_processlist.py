@@ -66,7 +66,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -93,28 +94,27 @@ class Plugin(GlancesPlugin):
         """Return the key of the list."""
         return 'pid'
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     def update(self):
         """Update processes stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
             # Note: Update is done in the processcount plugin
             # Just return the processes list
-            self.stats = glances_processes.getlist()
-
-            # Get the max values (dict)
-            # Use Deep copy to avoid change between update and display
-            self.max_values = copy.deepcopy(glances_processes.max_values())
+            stats = glances_processes.getlist()
 
         elif self.input_method == 'snmp':
             # No SNMP grab for processes
             pass
+
+        # Update the stats
+        self.stats = stats
+
+        # Get the max values (dict)
+        # Use Deep copy to avoid change between update and display
+        self.max_values = copy.deepcopy(glances_processes.max_values())
 
         return self.stats
 
