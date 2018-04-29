@@ -46,7 +46,8 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # Init the sensor class
         self.glancesgrabsensors = GlancesGrabSensors()
@@ -62,27 +63,20 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init the stats
-        self.reset()
-
     def get_key(self):
         """Return the key of the list."""
         return 'label'
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update sensors stats using the input method."""
-        # Reset the stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the dedicated lib
-            self.stats = []
+            stats = []
             # Get the temperature
             try:
                 temperature = self.__set_type(self.glancesgrabsensors.get('temperature_core'),
@@ -91,7 +85,7 @@ class Plugin(GlancesPlugin):
                 logger.error("Cannot grab sensors temperatures (%s)" % e)
             else:
                 # Append temperature
-                self.stats.extend(temperature)
+                stats.extend(temperature)
             # Get the FAN speed
             try:
                 fan_speed = self.__set_type(self.glancesgrabsensors.get('fan_speed'),
@@ -100,7 +94,7 @@ class Plugin(GlancesPlugin):
                 logger.error("Cannot grab FAN speed (%s)" % e)
             else:
                 # Append FAN speed
-                self.stats.extend(fan_speed)
+                stats.extend(fan_speed)
             # Update HDDtemp stats
             try:
                 hddtemp = self.__set_type(self.hddtemp_plugin.update(),
@@ -109,7 +103,7 @@ class Plugin(GlancesPlugin):
                 logger.error("Cannot grab HDD temperature (%s)" % e)
             else:
                 # Append HDD temperature
-                self.stats.extend(hddtemp)
+                stats.extend(hddtemp)
             # Update batteries stats
             try:
                 batpercent = self.__set_type(self.batpercent_plugin.update(),
@@ -118,7 +112,7 @@ class Plugin(GlancesPlugin):
                 logger.error("Cannot grab battery percent (%s)" % e)
             else:
                 # Append Batteries %
-                self.stats.extend(batpercent)
+                stats.extend(batpercent)
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -126,6 +120,9 @@ class Plugin(GlancesPlugin):
             # http://www.net-snmp.org/wiki/index.php/Net-SNMP_and_lm-sensors_on_Ubuntu_10.04
 
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

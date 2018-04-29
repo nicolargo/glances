@@ -60,16 +60,9 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Get the public IP address once
+        # Get the public IP address once (not for each refresh)
         if not self.is_disable():
             self.public_address = PublicIpAddress().get()
-
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -78,8 +71,8 @@ class Plugin(GlancesPlugin):
 
         Stats is dict
         """
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local' and not import_error_tag:
             # Update stats using the netifaces lib
@@ -89,17 +82,19 @@ class Plugin(GlancesPlugin):
                 logger.debug("Cannot grab the default gateway ({})".format(e))
             else:
                 try:
-                    self.stats['address'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
-                    self.stats['mask'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
-                    self.stats['mask_cidr'] = self.ip_to_cidr(self.stats['mask'])
-                    self.stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
-                    # !!! SHOULD be done once, not on each refresh
-                    self.stats['public_address'] = self.public_address
+                    stats['address'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['addr']
+                    stats['mask'] = netifaces.ifaddresses(default_gw[1])[netifaces.AF_INET][0]['netmask']
+                    stats['mask_cidr'] = self.ip_to_cidr(stats['mask'])
+                    stats['gateway'] = netifaces.gateways()['default'][netifaces.AF_INET][0]
+                    stats['public_address'] = self.public_address
                 except (KeyError, AttributeError) as e:
                     logger.debug("Cannot grab IP information: {}".format(e))
         elif self.input_method == 'snmp':
             # Not implemented yet
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

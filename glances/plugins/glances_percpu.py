@@ -41,36 +41,33 @@ class Plugin(GlancesPlugin):
     def __init__(self, args=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
-
-        # Init stats
-        self.reset()
 
     def get_key(self):
         """Return the key of the list."""
         return 'cpu_number'
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update per-CPU stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # Grab per-CPU stats using psutil's cpu_percent(percpu=True) and
         # cpu_times_percent(percpu=True) methods
         if self.input_method == 'local':
-            self.stats = cpu_percent.get(percpu=True)
+            stats = cpu_percent.get(percpu=True)
         else:
             # Update stats using SNMP
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

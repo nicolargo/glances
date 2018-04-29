@@ -49,28 +49,21 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update quicklook stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         # Grab quicklook stats: CPU, MEM and SWAP
         if self.input_method == 'local':
             # Get the latest CPU percent value
-            self.stats['cpu'] = cpu_percent.get()
-            self.stats['percpu'] = cpu_percent.get(percpu=True)
+            stats['cpu'] = cpu_percent.get()
+            stats['percpu'] = cpu_percent.get(percpu=True)
             # Use the psutil lib for the memory (virtual and swap)
-            self.stats['mem'] = psutil.virtual_memory().percent
-            self.stats['swap'] = psutil.swap_memory().percent
+            stats['mem'] = psutil.virtual_memory().percent
+            stats['swap'] = psutil.swap_memory().percent
         elif self.input_method == 'snmp':
             # Not available
             pass
@@ -81,11 +74,14 @@ class Plugin(GlancesPlugin):
             cpu_info = cpuinfo.get_cpu_info()
             #  Check cpu_info (issue #881)
             if cpu_info is not None:
-                self.stats['cpu_name'] = cpu_info.get('brand', 'CPU')
+                stats['cpu_name'] = cpu_info.get('brand', 'CPU')
                 if 'hz_actual_raw' in cpu_info:
-                    self.stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
+                    stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
                 if 'hz_advertised_raw' in cpu_info:
-                    self.stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+                    stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

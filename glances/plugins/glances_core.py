@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -40,20 +40,13 @@ class Plugin(GlancesPlugin):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
-        # Init the stat
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stat using the input method."""
-        self.stats = {}
-
     def update(self):
         """Update core stats.
 
         Stats is a dict (with both physical and log cpu number) instead of a integer.
         """
-        # Reset the stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
@@ -64,8 +57,8 @@ class Plugin(GlancesPlugin):
             # - log: logical CPUs in the system
             # Return None if undefine
             try:
-                self.stats["phys"] = psutil.cpu_count(logical=False)
-                self.stats["log"] = psutil.cpu_count()
+                stats["phys"] = psutil.cpu_count(logical=False)
+                stats["log"] = psutil.cpu_count()
             except NameError:
                 self.reset()
 
@@ -73,5 +66,8 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # http://stackoverflow.com/questions/5662467/how-to-find-out-the-number-of-cpus-using-snmp
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats

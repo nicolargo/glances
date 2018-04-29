@@ -66,31 +66,27 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init stats
-        self.reset()
-
         # Call CorePlugin in order to display the core number
         try:
             self.nb_log_core = CorePlugin(args=self.args).update()["log"]
         except Exception:
             self.nb_log_core = 1
 
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update CPU stats using the input method."""
-        # Reset stats
-        self.reset()
 
         # Grab stats into self.stats
         if self.input_method == 'local':
-            self.update_local()
+            stats = self.update_local()
         elif self.input_method == 'snmp':
-            self.update_snmp()
+            stats = self.update_snmp()
+        else:
+            stats = self.get_init_value()
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 
@@ -101,12 +97,16 @@ class Plugin(GlancesPlugin):
         # nice (UNIX), iowait (Linux), irq (Linux, FreeBSD), steal (Linux 2.6.11+)
         # The following stats are returned by the API but not displayed in the UI:
         # softirq (Linux), guest (Linux 2.6.24+), guest_nice (Linux 3.2.0+)
-        self.stats['total'] = cpu_percent.get()
+
+        # Init new stats
+        stats = self.get_init_value()
+
+        stats['total'] = cpu_percent.get()
         cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
         for stat in ['user', 'system', 'idle', 'nice', 'iowait',
                      'irq', 'softirq', 'steal', 'guest', 'guest_nice']:
             if hasattr(cpu_times_percent, stat):
-                self.stats[stat] = getattr(cpu_times_percent, stat)
+                stats[stat] = getattr(cpu_times_percent, stat)
 
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
         # ctx_switches: number of context switches (voluntary + involuntary) per second
@@ -126,18 +126,24 @@ class Plugin(GlancesPlugin):
         else:
             for stat in cpu_stats._fields:
                 if getattr(cpu_stats, stat) is not None:
-                    self.stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
+                    stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
 
-            self.stats['time_since_update'] = time_since_update
+            stats['time_since_update'] = time_since_update
 
             # Core number is needed to compute the CTX switch limit
-            self.stats['cpucore'] = self.nb_log_core
+            stats['cpucore'] = self.nb_log_core
 
             # Save stats to compute next step
             self.cpu_stats_old = cpu_stats
 
+        return stats
+
     def update_snmp(self):
         """Update CPU stats using SNMP."""
+
+        # Init new stats
+        stats = self.get_init_value()
+
         # Update stats using SNMP
         if self.short_system_name in ('windows', 'esxi'):
             # Windows or VMWare ESXi
@@ -150,35 +156,36 @@ class Plugin(GlancesPlugin):
                 self.reset()
 
             # Iter through CPU and compute the idle CPU stats
-            self.stats['nb_log_core'] = 0
-            self.stats['idle'] = 0
+            stats['nb_log_core'] = 0
+            stats['idle'] = 0
             for c in cpu_stats:
                 if c.startswith('percent'):
-                    self.stats['idle'] += float(cpu_stats['percent.3'])
-                    self.stats['nb_log_core'] += 1
-            if self.stats['nb_log_core'] > 0:
-                self.stats['idle'] = self.stats[
-                    'idle'] / self.stats['nb_log_core']
-            self.stats['idle'] = 100 - self.stats['idle']
-            self.stats['total'] = 100 - self.stats['idle']
+                    stats['idle'] += float(cpu_stats['percent.3'])
+                    stats['nb_log_core'] += 1
+            if stats['nb_log_core'] > 0:
+                stats['idle'] = stats['idle'] / stats['nb_log_core']
+            stats['idle'] = 100 - stats['idle']
+            stats['total'] = 100 - stats['idle']
 
         else:
             # Default behavor
             try:
-                self.stats = self.get_stats_snmp(
+                stats = self.get_stats_snmp(
                     snmp_oid=snmp_oid[self.short_system_name])
             except KeyError:
-                self.stats = self.get_stats_snmp(
+                stats = self.get_stats_snmp(
                     snmp_oid=snmp_oid['default'])
 
-            if self.stats['idle'] == '':
+            if stats['idle'] == '':
                 self.reset()
                 return self.stats
 
             # Convert SNMP stats to float
-            for key in iterkeys(self.stats):
-                self.stats[key] = float(self.stats[key])
-            self.stats['total'] = 100 - self.stats['idle']
+            for key in iterkeys(stats):
+                stats[key] = float(stats[key])
+            stats['total'] = 100 - stats['idle']
+
+        return stats
 
     def update_views(self):
         """Update stats views."""

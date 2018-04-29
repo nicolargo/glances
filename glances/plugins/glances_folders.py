@@ -31,22 +31,18 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args,
+                                     stats_init_value=[])
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Init stats
         self.glances_folders = None
-        self.reset()
 
     def get_key(self):
         """Return the key of the list."""
         return 'path'
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = []
 
     def load_limits(self, config):
         """Load the foldered list from the config file, if it exists."""
@@ -56,8 +52,8 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the foldered list."""
-        # Reset the list
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if self.input_method == 'local':
             # Folder list only available in a full Glances environment
@@ -69,9 +65,12 @@ class Plugin(GlancesPlugin):
             self.glances_folders.update()
 
             # Put it on the stats var
-            self.stats = self.glances_folders.get()
+            stats = self.glances_folders.get()
         else:
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 

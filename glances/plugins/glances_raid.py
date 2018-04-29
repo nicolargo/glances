@@ -46,19 +46,12 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Init the stats
-        self.reset()
-
-    def reset(self):
-        """Reset/init the stats."""
-        self.stats = {}
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update RAID stats using the input method."""
-        # Reset stats
-        self.reset()
+        # Init new stats
+        stats = self.get_init_value()
 
         if import_error_tag:
             return self.stats
@@ -70,7 +63,7 @@ class Plugin(GlancesPlugin):
                 # mds = MdStat(path='~/dev/pymdstat/tests/mdstat.02')
                 # Note: replace 02 by 02 ==> 09
                 mds = MdStat()
-                self.stats = mds.get_stats()['arrays']
+                stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
                 return self.stats
@@ -79,6 +72,9 @@ class Plugin(GlancesPlugin):
             # Update stats using SNMP
             # No standard way for the moment...
             pass
+
+        # Update the stats
+        self.stats = stats
 
         return self.stats
 
