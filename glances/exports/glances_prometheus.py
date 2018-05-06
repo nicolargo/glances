@@ -20,12 +20,11 @@
 """Prometheus interface class."""
 
 import sys
-from datetime import datetime
 from numbers import Number
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
-from glances.compat import iteritems
+from glances.compat import iteritems, listkeys
 
 from prometheus_client import start_http_server, Gauge
 
@@ -42,11 +41,12 @@ class Export(GlancesExport):
 
         # Optionals configuration keys
         self.prefix = 'glances'
+        self.labels = None
 
         # Load the Prometheus configuration file section
         self.export_enable = self.load_conf('prometheus',
                                             mandatories=['host', 'port'],
-                                            options=['prefix'])
+                                            options=['prefix', 'labels'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -82,8 +82,15 @@ class Export(GlancesExport):
             # See: https://prometheus.io/docs/practices/naming/
             for c in ['.', '-', '/', ' ']:
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
+            # Get the labels
+            labels = self.parse_tags(self.labels)
             # Manage an internal dict between metric name and Gauge
             if metric_name not in self._metric_dict:
-                self._metric_dict[metric_name] = Gauge(metric_name, k)
+                self._metric_dict[metric_name] = Gauge(metric_name, k,
+                                                       labelnames=listkeys(labels))
             # Write the value
-            self._metric_dict[metric_name].set(v)
+            if hasattr(self._metric_dict[metric_name], 'labels'):
+                # Add the labels (see issue #1255)
+                self._metric_dict[metric_name].labels(**labels).set(v)
+            else:
+                self._metric_dict[metric_name].set(v)
