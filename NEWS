@@ -26,6 +26,7 @@ Enhancements and new features:
     * Huge refactor of the WebUI packaging thanks to @spike008t #1239
     * Add time zone to the current time #1249
     * Use https URLs for checking external IP #1253
+    * Add labels support to Promotheus exporter #1255
 
     One more thing ! A new Grafana Dash is available with:
     * Network interface variable
