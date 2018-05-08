@@ -54,6 +54,7 @@ Bugs corrected:
     * [Glances 3.0 RC1] Client/Server is broken #1244
     * Fixing horizontal scrolling #1248
     * Stats updated during export (thread issue) #1250
+    * Glances --browser crashed when more than 40 glances servers on screen 78x45 #1256
 
 Backward-incompatible changes:
 
