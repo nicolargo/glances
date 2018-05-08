@@ -29,11 +29,10 @@ from glances.timer import Timer
 
 
 class GlancesCursesBrowser(_GlancesCurses):
-
     """Class for the Glances curse client browser."""
 
     def __init__(self, args=None):
-        # Init the father class
+        """Init the father class."""
         super(GlancesCursesBrowser, self).__init__(args=args)
 
         _colors_list = {
@@ -168,13 +167,15 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Get the current screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
+        servers_list_max = screen_y - 3
+        servers_list_len = len(servers_list)
 
         # Init position
         x = 0
         y = 0
 
         # Display top header
-        if len(servers_list) == 0:
+        if servers_list_len == 0:
             if self.first_scan and not self.args.disable_autodiscover:
                 msg = 'Glances is scanning your network. Please wait...'
                 self.first_scan = False
@@ -183,15 +184,21 @@ class GlancesCursesBrowser(_GlancesCurses):
         elif len(servers_list) == 1:
             msg = 'One Glances server available'
         else:
-            msg = '{} Glances servers available'.format(len(servers_list))
+            msg = '{} Glances servers available'.format(servers_list_len)
         if self.args.disable_autodiscover:
-            msg += ' ' + '(auto discover is disabled)'
-        self.term_window.addnstr(y, x,
-                                 msg,
-                                 screen_x - x,
-                                 self.colors_list['TITLE'])
+            msg += ' (auto discover is disabled)'
+        if screen_y > 1:
+            self.term_window.addnstr(y, x,
+                                     msg,
+                                     screen_x - x,
+                                     self.colors_list['TITLE'])
+        if servers_list_len > servers_list_max and screen_y > 2:
+            msg = 'Warning: Only {} servers will be displayed (please increase your terminal size)'.format(servers_list_max)
+            self.term_window.addnstr(y + 1, x,
+                                     msg,
+                                     screen_x - x)
 
-        if len(servers_list) == 0:
+        if servers_list_len == 0:
             return False
 
         # Display the Glances server list
@@ -232,6 +239,9 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Display table
         line = 0
         for v in servers_list:
+            # Limit the number of displayed server (see issue #1256)
+            if line >= servers_list_max:
+                continue
             # Get server stats
             server_stat = {}
             for c in column_def:
