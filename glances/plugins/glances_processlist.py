@@ -489,67 +489,72 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(sep_char * 69))
             ret.append(self.curse_new_line())
         # CPU percent sum
-        msg = '{:>6.1f}'.format(self.__sum_stats('cpu_percent', mmm=mmm))
+        msg = self.layout_stat['cpu'].format(self.__sum_stats('cpu_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg,
                                        decoration=self.__mmm_deco(mmm)))
         # MEM percent sum
-        msg = '{:>6.1f}'.format(self.__sum_stats('memory_percent', mmm=mmm))
+        msg = self.layout_stat['mem'].format(self.__sum_stats('memory_percent', mmm=mmm))
         ret.append(self.curse_add_line(msg,
                                        decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
         if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
             # VMS
-            msg = '{:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
+            msg = self.layout_stat['virt'].format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))
             # RSS
-            msg = '{:>6}'.format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
+            msg = self.layout_stat['res'].format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))
         else:
-            msg = '{:>6}'.format('')
+            msg = self.layout_header['virt'].format('')
             ret.append(self.curse_add_line(msg))
+            msg = self.layout_header['res'].format('')
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = '{:>6}'.format('')
+        msg = self.layout_header['pid'].format('', width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
         # USER
-        msg = ' {:9}'.format('')
-        ret.append(self.curse_add_line(msg))
-        # NICE
-        msg = '{:>5}'.format('')
-        ret.append(self.curse_add_line(msg))
-        # STATUS
-        msg = '{:>2}'.format('')
+        msg = self.layout_header['user'].format('')
         ret.append(self.curse_add_line(msg))
         # TIME+
-        msg = '{:>10}'.format('')
+        msg = self.layout_header['time'].format('')
         ret.append(self.curse_add_line(msg, optional=True))
+        # THREAD
+        msg = self.layout_header['thread'].format('')
+        ret.append(self.curse_add_line(msg))
+        # NICE
+        msg = self.layout_header['nice'].format('')
+        ret.append(self.curse_add_line(msg))
+        # STATUS
+        msg = self.layout_header['status'].format('')
+        ret.append(self.curse_add_line(msg))
         # IO read/write
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
             io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_rs == 0:
-                msg = '{:>6}'.format('0')
+                msg = self.layout_stat['ior'].format('0')
             else:
-                msg = '{:>6}'.format(self.auto_unit(io_rs, low_precision=True))
+                msg = self.layout_stat['ior'].format(self.auto_unit(io_rs, low_precision=True))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True, additional=True))
             # IO write
             io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_ws == 0:
-                msg = '{:>6}'.format('0')
+                msg = self.layout_stat['iow'].format('0')
             else:
-                msg = '{:>6}'.format(self.auto_unit(io_ws, low_precision=True))
+                msg = self.layout_stat['iow'].format(self.auto_unit(io_ws, low_precision=True))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True, additional=True))
         else:
-            msg = '{:>6}'.format('')
+            msg = self.layout_header['ior'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            msg = self.layout_header['iow'].format('')
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         if mmm is None:
             msg = ' < {}'.format('current')

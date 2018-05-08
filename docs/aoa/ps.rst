@@ -63,6 +63,8 @@ Columns display
                           using (what's currently in the physical memory).
 ``PID``                   Process ID
 ``USER``                  User ID
+``THR``                   Threads number of the process
+``TIME+``                 Cumulative CPU time used by the process
 ``NI``                    Nice level of the process
 ``S``                     Process status
 
@@ -75,7 +77,6 @@ Columns display
                           - ``T``: traced/stopped by job control signal
                           - ``X``: dead (should never be seen)
 
-``TIME+``                 Cumulative CPU time used by the process
 ``R/s``                   Per process I/O read rate in B/s
 ``W/s``                   Per process I/O write rate in B/s
 ``COMMAND``               Process command line or command name
