@@ -64,6 +64,40 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
+    # Define the header layout of the processes list columns
+    layout_header = {
+        'cpu': '{:<6} ',
+        'mem': '{:<5} ',
+        'virt': '{:<5} ',
+        'res': '{:<5} ',
+        'pid': '{:>{width}} ',
+        'user': '{:<10} ',
+        'time': '{:>8} ',
+        'thread': '{:<3} ',
+        'nice': '{:>3} ',
+        'status': '{:>1} ',
+        'ior': '{:>4} ',
+        'iow': '{:<4} ',
+        'command': '{}',
+    }
+
+    # Define the stat layout of the processes list columns
+    layout_stat = {
+        'cpu': '{:<6.1f} ',
+        'mem': '{:<5.1f} ',
+        'virt': '{:<5} ',
+        'res': '{:<5} ',
+        'pid': '{:>{width}} ',
+        'user': '{:<10} ',
+        'time': '{:>8} ',
+        'thread': '{:<3} ',
+        'nice': '{:>3} ',
+        'status': '{:>1} ',
+        'ior': '{:>4} ',
+        'iow': '{:<4} ',
+        'command': '{}',
+    }
+
     def __init__(self, args=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
@@ -148,73 +182,52 @@ class Plugin(GlancesPlugin):
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             if args.disable_irix and self.nb_log_core != 0:
-                msg = '{:>6.1f}'.format(p['cpu_percent'] / float(self.nb_log_core))
+                msg = self.layout_stat['cpu'].format(p['cpu_percent'] / float(self.nb_log_core))
             else:
-                msg = '{:>6.1f}'.format(p['cpu_percent'])
+                msg = self.layout_stat['cpu'].format(p['cpu_percent'])
             alert = self.get_alert(p['cpu_percent'],
                                    highlight_zero=False,
                                    is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
                                    header="cpu")
             ret.append(self.curse_add_line(msg, alert))
         else:
-            msg = '{:>6}'.format('?')
+            msg = self.layout_header['cpu'].format('?')
             ret.append(self.curse_add_line(msg))
         # MEM
         if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
-            msg = '{:>6.1f}'.format(p['memory_percent'])
+            msg = self.layout_stat['mem'].format(p['memory_percent'])
             alert = self.get_alert(p['memory_percent'],
                                    highlight_zero=False,
                                    is_max=(p['memory_percent'] == self.max_values['memory_percent']),
                                    header="mem")
             ret.append(self.curse_add_line(msg, alert))
         else:
-            msg = '{:>6}'.format('?')
+            msg = self.layout_header['mem'].format('?')
             ret.append(self.curse_add_line(msg))
         # VMS/RSS
         if 'memory_info' in p and p['memory_info'] is not None and p['memory_info'] != '':
             # VMS
-            msg = '{:>6}'.format(self.auto_unit(p['memory_info'][1], low_precision=False))
+            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
             # RSS
-            msg = '{:>6}'.format(self.auto_unit(p['memory_info'][0], low_precision=False))
+            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            msg = '{:>6}'.format('?')
+            msg = self.layout_header['virt'].format('?')
             ret.append(self.curse_add_line(msg))
+            msg = self.layout_header['res'].format('?')
             ret.append(self.curse_add_line(msg))
         # PID
-        msg = '{:>{width}}'.format(p['pid'], width=self.__max_pid_size() + 1)
+        msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
         # USER
         if 'username' in p:
             # docker internal users are displayed as ints only, therefore str()
             # Correct issue #886 on Windows OS
-            msg = ' {:9}'.format(str(p['username'])[:9])
+            msg = self.layout_stat['user'].format(str(p['username'])[:9])
             ret.append(self.curse_add_line(msg))
         else:
-            msg = ' {:9}'.format('?')
-            ret.append(self.curse_add_line(msg))
-        # NICE
-        if 'nice' in p:
-            nice = p['nice']
-            if nice is None:
-                nice = '?'
-            msg = '{:>5}'.format(nice)
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.get_nice_alert(nice)))
-        else:
-            msg = '{:>5}'.format('?')
-            ret.append(self.curse_add_line(msg))
-        # STATUS
-        if 'status' in p:
-            status = p['status']
-            msg = '{:>2}'.format(status)
-            if status == 'R':
-                ret.append(self.curse_add_line(msg, decoration='STATUS'))
-            else:
-                ret.append(self.curse_add_line(msg))
-        else:
-            msg = '{:>2}'.format('?')
+            msg = self.layout_header['user'].format('?')
             ret.append(self.curse_add_line(msg))
         # TIME+
         try:
@@ -225,36 +238,78 @@ class Plugin(GlancesPlugin):
             # Also catch TypeError on macOS
             # See: https://github.com/nicolargo/glances/issues/622
             # logger.debug("Cannot get TIME+ ({})".format(e))
-            msg = '{:>10}'.format('?')
+            msg = self.layout_header['time'].format('?')
+            ret.append(self.curse_add_line(msg, optional=True))
         else:
             hours, minutes, seconds, microseconds = convert_timedelta(delta)
-            if hours:
-                msg = '{:>4}h'.format(hours)
-                ret.append(self.curse_add_line(msg, decoration='CPU_TIME', optional=True))
-                msg = '{}:{}'.format(str(minutes).zfill(2), seconds)
+            if hours > 99:
+                msg = '{:<7}h'.format(hours)
+            elif 0 < hours < 100:
+                msg = '{}h{}:{}'.format(hours, minutes, seconds)
             else:
-                msg = '{:>4}:{}.{}'.format(minutes, seconds, microseconds)
-        ret.append(self.curse_add_line(msg, optional=True))
+                msg = '{}:{}'.format(minutes, seconds)
+            msg = self.layout_stat['time'].format(msg)
+            if hours > 0:
+                ret.append(self.curse_add_line(msg,
+                                               decoration='CPU_TIME',
+                                               optional=True))
+            else:
+                ret.append(self.curse_add_line(msg, optional=True))
+        # THREAD
+        if 'num_threads' in p:
+            num_threads = p['num_threads']
+            if num_threads is None:
+                num_threads = '?'
+            msg = self.layout_stat['thread'].format(num_threads)
+            ret.append(self.curse_add_line(msg))
+        else:
+            msg = self.layout_header['thread'].format('?')
+            ret.append(self.curse_add_line(msg))
+        # NICE
+        if 'nice' in p:
+            nice = p['nice']
+            if nice is None:
+                nice = '?'
+            msg = self.layout_stat['nice'].format(nice)
+            ret.append(self.curse_add_line(msg,
+                                           decoration=self.get_nice_alert(nice)))
+        else:
+            msg = self.layout_header['nice'].format('?')
+            ret.append(self.curse_add_line(msg))
+        # STATUS
+        if 'status' in p:
+            status = p['status']
+            msg = self.layout_stat['status'].format(status)
+            if status == 'R':
+                ret.append(self.curse_add_line(msg, decoration='STATUS'))
+            else:
+                ret.append(self.curse_add_line(msg))
+        else:
+            msg = self.layout_header['status'].format('?')
+            ret.append(self.curse_add_line(msg))
         # IO read/write
         if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
             # Display rate if stats is available and io_tag ([4]) == 1
             # IO read
             io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
             if io_rs == 0:
-                msg = '{:>6}'.format("0")
+                msg = self.layout_stat['ior'].format("0")
             else:
-                msg = '{:>6}'.format(self.auto_unit(io_rs, low_precision=True))
+                msg = self.layout_stat['ior'].format(self.auto_unit(io_rs,
+                                                                    low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
             # IO write
             io_ws = int((p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update'])
             if io_ws == 0:
-                msg = '{:>6}'.format("0")
+                msg = self.layout_stat['iow'].format("0")
             else:
-                msg = '{:>6}'.format(self.auto_unit(io_ws, low_precision=True))
+                msg = self.layout_stat['iow'].format(self.auto_unit(io_ws,
+                                                                    low_precision=True))
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
         else:
-            msg = '{:>6}'.format("?")
+            msg = self.layout_header['ior'].format("?")
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
+            msg = self.layout_header['iow'].format("?")
             ret.append(self.curse_add_line(msg, optional=True, additional=True))
 
         # Command line
@@ -265,17 +320,17 @@ class Plugin(GlancesPlugin):
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
-                    msg = ' {}'.format(path) + os.sep
+                    msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
                     ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
                 else:
-                    msg = ' {}'.format(cmd)
+                    msg = self.layout_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                 if arguments:
-                    msg = ' {}'.format(arguments)
+                    msg = self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                msg = ' {}'.format(p['name'])
+                msg = self.layout_stat['command'].format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
             ret.append(self.curse_add_line('', splittable=True))
@@ -389,33 +444,35 @@ class Plugin(GlancesPlugin):
         sort_style = 'SORT'
 
         if args.disable_irix and 0 < self.nb_log_core < 10:
-            msg = '{:>6}'.format('CPU%/' + str(self.nb_log_core))
+            msg = self.layout_header['cpu'].format('CPU%/' + str(self.nb_log_core))
         elif args.disable_irix and self.nb_log_core != 0:
-            msg = '{:>6}'.format('CPU%/C')
+            msg = self.layout_header['cpu'].format('CPU%/C')
         else:
-            msg = '{:>6}'.format('CPU%')
+            msg = self.layout_header['cpu'].format('CPU%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_percent' else 'DEFAULT'))
-        msg = '{:>6}'.format('MEM%')
+        msg = self.layout_header['mem'].format('MEM%')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'memory_percent' else 'DEFAULT'))
-        msg = '{:>6}'.format('VIRT')
+        msg = self.layout_header['virt'].format('VIRT')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{:>6}'.format('RES')
+        msg = self.layout_header['res'].format('RES')
         ret.append(self.curse_add_line(msg, optional=True))
-        msg = '{:>{width}}'.format('PID', width=self.__max_pid_size() + 1)
+        msg = self.layout_header['pid'].format('PID', width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
-        msg = ' {:10}'.format('USER')
+        msg = self.layout_header['user'].format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
-        msg = '{:>4}'.format('NI')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>2}'.format('S')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>10}'.format('TIME+')
+        msg = self.layout_header['time'].format('TIME+')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
-        msg = '{:>6}'.format('R/s')
+        msg = self.layout_header['thread'].format('THR')
+        ret.append(self.curse_add_line(msg))
+        msg = self.layout_header['nice'].format('NI')
+        ret.append(self.curse_add_line(msg))
+        msg = self.layout_header['status'].format('S')
+        ret.append(self.curse_add_line(msg))
+        msg = self.layout_header['ior'].format('R/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = '{:>6}'.format('W/s')
+        msg = self.layout_header['iow'].format('W/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = ' {:8}'.format('Command')
+        msg = self.layout_header['command'].format('Command')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):

@@ -8,6 +8,7 @@ Version 3.0
 Enhancements and new features:
 
     * Make the left side bar width dynamic in the Curse UI #1177
+    * Add threads number in the process list #1259
     * A way to have only REST API available and disable WEB GUI access #1149
     * Replace Matplolib by Pygal #697
     * Docker module doesn't export details about stopped containers #1152
