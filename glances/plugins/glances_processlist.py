@@ -24,9 +24,8 @@ import shlex
 import copy
 from datetime import timedelta
 
-from glances.compat import iteritems
-from glances.globals import WINDOWS
 from glances.logger import logger
+from glances.globals import WINDOWS
 from glances.processes import glances_processes, sort_stats
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
