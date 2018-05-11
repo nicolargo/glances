@@ -253,6 +253,11 @@ class GlancesProcesses(object):
                             # User filter
                             not (self._filter.is_filtered(p.info))]
 
+        # !!! TODO: Remove
+        self.processlist[0]['cpu_percent'] = None
+        # !!! /TODO
+
+
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist,
                                       sortedby=self.sort_key,
@@ -339,11 +344,11 @@ class GlancesProcesses(object):
             # Append the IO tag (for display)
             proc['io_counters'] += [io_tag]
 
-        # Compute the maximum value for keys in self._max_values_list (CPU, MEM)
+        # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         for k in self._max_values_list:
-            if self.processlist != []:
-                self.set_max_values(k, max(i[k] for i in self.processlist
-                if not (i[k] == None)))
+            values_list = [i[k] for i in self.processlist if i[k] is not None]
+            if values_list != []:
+                self.set_max_values(k, max(values_list))
 
     def getcount(self):
         """Get the number of processes."""
@@ -364,11 +369,16 @@ class GlancesProcesses(object):
         self._sort_key = key
 
 
-# TODO: move this global function (also used in glances_processlist
-#       and logs) inside the GlancesProcesses class
+def weighted(value):
+    """Manage None value in dict value."""
+    return -float('inf') if value is None else value
+
+
 def sort_stats(stats, sortedby=None, reverse=True):
-    """Return the stats (dict) sorted by (sortedby)
-    Reverse the sort if reverse is True."""
+    """Return the stats (dict) sorted by (sortedby).
+
+    Reverse the sort if reverse is True.
+    """
     if sortedby is None:
         # No need to sort...
         return stats
@@ -383,12 +393,12 @@ def sort_stats(stats, sortedby=None, reverse=True):
                        process[sortedby][3],
                        reverse=reverse)
         except Exception:
-            stats.sort(key=operator.itemgetter('cpu_percent'),
+            stats.sort(key=lambda x: weighted(x['cpu_percent']),
                        reverse=reverse)
     else:
         # Others sorts
         try:
-            stats.sort(key=operator.itemgetter(sortedby),
+            stats.sort(key=lambda x: weighted(x[sortedby]),
                        reverse=reverse)
         except (KeyError, TypeError):
             stats.sort(key=operator.itemgetter('name'),
