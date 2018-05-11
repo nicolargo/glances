@@ -326,7 +326,7 @@ class Plugin(GlancesPlugin):
                     msg = self.layout_stat['command'].format(cmd)
                     ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
                 if arguments:
-                    msg = self.layout_stat['command'].format(arguments)
+                    msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['command'].format(p['name'])
