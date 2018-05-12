@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -113,7 +113,7 @@ class AmpsList(object):
                 continue
             try:
                 amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
-            except TypeError:
+            except (TypeError, KeyError):
                 continue
             if len(amps_list) > 0:
                 # At least one process is matching the regex

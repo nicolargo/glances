@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -243,7 +243,8 @@ class GlancesProcesses(object):
             standard_attrs += ['gids']
 
         # and build the processes stats list (psutil>=5.3.0)
-        self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs, ad_value=None)
+        self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs,
+                                                                ad_value=None)
                             # OS-related processes filter
                             if not (BSD and p.info['name'] == 'idle') and
                             not (WINDOWS and p.info['name'] == 'System Idle Process') and
@@ -264,14 +265,13 @@ class GlancesProcesses(object):
         # Loop over processes and add metadata
         first = True
         for proc in self.processlist:
+            # Get extended stats, only for top processes (see issue #403).
             if first and not self.disable_extended_tag:
-                # Get extended stats, only for top processes (see issue #403).
                 # - cpu_affinity (Linux, Windows, FreeBSD)
                 # - ionice (Linux and Windows > Vista)
                 # - num_ctx_switches (not available on Illumos/Solaris)
                 # - num_fds (Unix-like)
                 # - num_handles (Windows)
-                # - num_threads (not available on *BSD)
                 # - memory_maps (only swap, Linux)
                 #   https://www.cyberciti.biz/faq/linux-which-process-is-using-swap/
                 # - connections (TCP and UDP)
@@ -279,11 +279,14 @@ class GlancesProcesses(object):
                 try:
                     top_process = psutil.Process(proc['pid'])
                     extended_stats = ['cpu_affinity', 'ionice',
-                                      'num_ctx_switches', 'num_fds',
-                                      'num_threads']
+                                      'num_ctx_switches', 'num_fds']
                     if WINDOWS:
                         extended_stats += ['num_handles']
-                    extended = top_process.as_dict(attrs=extended_stats)
+
+                    # Get the extended stats
+                    extended = top_process.as_dict(attrs=extended_stats,
+                                                   ad_value=None)
+
                     if LINUX:
                         try:
                             extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
@@ -308,6 +311,7 @@ class GlancesProcesses(object):
                     extended['extended_stats'] = True
                 proc.update(extended)
             first = False
+            # /End of extended stats
 
             # Time since last update (for disk_io rate computation)
             proc['time_since_update'] = time_since_update
@@ -340,6 +344,7 @@ class GlancesProcesses(object):
             proc['io_counters'] += [io_tag]
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
+        # Usefull to highlight the processes with maximum values
         for k in self._max_values_list:
             values_list = [i[k] for i in self.processlist if i[k] is not None]
             if values_list != []:
