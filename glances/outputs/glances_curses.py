@@ -528,10 +528,14 @@ class _GlancesCurses(object):
         # Adapt number of processes to the available space
         max_processes_displayed = (
             self.screen.getmaxyx()[0] - 11 -
-            (0 if 'alert' not in __stat_display else
-                self.get_stats_display_height(__stat_display["alert"])) -
             (0 if 'docker' not in __stat_display else
-                self.get_stats_display_height(__stat_display["docker"])))
+                self.get_stats_display_height(__stat_display["docker"])) -
+            (0 if 'processcount' not in __stat_display else
+                self.get_stats_display_height(__stat_display["processcount"])) -
+            (0 if 'amps' not in __stat_display else
+                self.get_stats_display_height(__stat_display["amps"])) -
+            (0 if 'alert' not in __stat_display else
+                self.get_stats_display_height(__stat_display["alert"])))
 
         try:
             if self.args.enable_process_extended:
@@ -632,7 +636,7 @@ class _GlancesCurses(object):
         self.new_column()
         self.display_plugin(
             stat_display["uptime"],
-            add_space=self.get_stats_display_width(stat_display["cloud"]) == 0)
+            add_space=-(self.get_stats_display_width(stat_display["cloud"]) != 0))
         # Second line (optional)
         self.init_column()
         self.new_line()
@@ -716,12 +720,15 @@ class _GlancesCurses(object):
     def __display_left(self, stat_display):
         """Display the left sidebar in the Curses interface."""
         self.init_column()
-        if not self.args.disable_left_sidebar:
-            for s in self._left_sidebar:
-                if ((hasattr(self.args, 'enable_' + s) or
-                     hasattr(self.args, 'disable_' + s)) and s in stat_display):
-                    self.new_line()
-                    self.display_plugin(stat_display[s])
+
+        if self.args.disable_left_sidebar:
+            return
+
+        for s in self._left_sidebar:
+            if ((hasattr(self.args, 'enable_' + s) or
+                 hasattr(self.args, 'disable_' + s)) and s in stat_display):
+                self.new_line()
+                self.display_plugin(stat_display[s])
 
     def __display_right(self, stat_display):
         """Display the right sidebar in the Curses interface.
@@ -829,12 +836,13 @@ class _GlancesCurses(object):
                        display_optional=True,
                        display_additional=True,
                        max_y=65535,
-                       add_space=True):
+                       add_space=0):
         """Display the plugin_stats on the screen.
 
         If display_optional=True display the optional stats
         If display_additional=True display additionnal stats
-        max_y do not display line > max_y
+        max_y: do not display line > max_y
+        add_space: add x space (line) after the plugin
         """
         # Exit if:
         # - the plugin_stats message is empty
@@ -913,9 +921,8 @@ class _GlancesCurses(object):
             self.next_column, x_max + self.space_between_column)
         self.next_line = max(self.next_line, y + self.space_between_line)
 
-        if not add_space and self.next_line > 0:
-            # Do not have empty line after
-            self.next_line -= 1
+        # Have empty lines after the plugins
+        self.next_line += add_space
 
     def erase(self):
         """Erase the content of the screen."""
