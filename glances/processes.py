@@ -253,11 +253,6 @@ class GlancesProcesses(object):
                             # User filter
                             not (self._filter.is_filtered(p.info))]
 
-        # !!! TODO: Remove
-        self.processlist[0]['cpu_percent'] = None
-        # !!! /TODO
-
-
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist,
                                       sortedby=self.sort_key,
