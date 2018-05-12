@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -314,7 +314,10 @@ class Plugin(GlancesPlugin):
         # Command line
         # If no command line for the process is available, fallback to
         # the bare process name instead
-        cmdline = p['cmdline']
+        if 'cmdline' in p:
+            cmdline = p['cmdline']
+        else:
+            cmdline = '?'
         try:
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
