@@ -38,9 +38,8 @@ except ImportError:
 psutil_tag = True
 try:
     psutil.sensors_battery()
-except (OSError, AttributeError) as e:
-    logger.debug("Cannot grab battery status. Platform not supported.")
-    logger.error(e)
+except Exception as e:
+    logger.error("Cannot grab battery status {}.".format(e))
     psutil_tag = False
 
 
