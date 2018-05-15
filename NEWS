@@ -57,6 +57,7 @@ Bugs corrected:
     * Stats updated during export (thread issue) #1250
     * Glances --browser crashed when more than 40 glances servers on screen 78x45 #1256
     * OSX - Python 3 and empty percent and res #1251
+    * Crashes when influxdb option set #1260
 
 Backward-incompatible changes:
 
