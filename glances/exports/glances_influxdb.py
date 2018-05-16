@@ -83,13 +83,28 @@ class Export(GlancesExport):
 
     def _normalize(self, name, columns, points):
         """Normalize data for the InfluxDB's data model."""
+
         for i, _ in enumerate(points):
+            # Supported type:
+            # https://docs.influxdata.com/influxdb/v1.5/write_protocols/line_protocol_reference/
+            if points[i] is None:
+                # Ignore points with None value
+                del(points[i])
+                del(columns[i])
+                continue
             try:
-                # Convert all int to float (mandatory for InfluxDB>0.9.2)
-                # Correct issue#750 and issue#749
                 points[i] = float(points[i])
-            except (TypeError, ValueError) as e:
-                logger.debug("InfluxDB error during stat convertion %s=%s (%s)" % (columns[i], points[i], e))
+            except (TypeError, ValueError):
+                pass
+            else:
+                continue
+            try:
+                points[i] = str(points[i])
+            except (TypeError, ValueError):
+                pass
+            else:
+                continue
+
         return [{'measurement': name,
                  'tags': self.parse_tags(self.tags),
                  'fields': dict(zip(columns, points))}]
