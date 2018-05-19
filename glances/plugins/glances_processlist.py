@@ -95,6 +95,7 @@ class Plugin(GlancesPlugin):
         'ior': '{:>4} ',
         'iow': '{:<4} ',
         'command': '{}',
+        'name': '[{}]'
     }
 
     def __init__(self, args=None):
@@ -332,7 +333,7 @@ class Plugin(GlancesPlugin):
                     msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
-                msg = self.layout_stat['command'].format(p['name'])
+                msg = self.layout_stat['name'].format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
         except UnicodeEncodeError:
             ret.append(self.curse_add_line('', splittable=True))
