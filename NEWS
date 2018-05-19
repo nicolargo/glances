@@ -28,6 +28,7 @@ Enhancements and new features:
     * Add time zone to the current time #1249
     * Use https URLs for checking external IP #1253
     * Add labels support to Promotheus exporter #1255
+    * Overlap in Web UI when monitoring a machine with 16 cpu threads #1265
 
     One more thing ! A new Grafana Dash is available with:
     * Network interface variable
