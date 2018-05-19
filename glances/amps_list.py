@@ -112,9 +112,12 @@ class AmpsList(object):
                 # Do not update if the enable tag is set
                 continue
             try:
+                # Search in both cmdline and name (for kernel thread, see #1261)
                 amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
+                amps_list += [p for p in processlist if re.search(v.regex(), p['name']) is not None]
             except (TypeError, KeyError):
                 continue
+            logger.info(amps_list)
             if len(amps_list) > 0:
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
