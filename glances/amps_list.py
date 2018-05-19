@@ -117,7 +117,6 @@ class AmpsList(object):
                 amps_list += [p for p in processlist if re.search(v.regex(), p['name']) is not None]
             except (TypeError, KeyError):
                 continue
-            logger.info(amps_list)
             if len(amps_list) > 0:
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
