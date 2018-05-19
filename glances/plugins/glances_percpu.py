@@ -19,6 +19,7 @@
 
 """Per-CPU plugin."""
 
+from glances.logger import logger
 from glances.cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -76,6 +77,10 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
+        # Only process if stats exist...
+        if not self.stats or self.is_disable():
+            return ret
+
         # No per CPU stat ? Exit...
         if not self.stats:
             msg = 'PER CPU not available'
@@ -83,35 +88,36 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Build the string message
-        # Header
-        msg = '{:8}'.format('PER CPU')
-        ret.append(self.curse_add_line(msg, "TITLE"))
+        if self.is_disable('quicklook'):
+            msg = '{:7}'.format('PER CPU')
+            ret.append(self.curse_add_line(msg, "TITLE"))
 
-        # Total per-CPU usage
-        for cpu in self.stats:
-            try:
-                msg = '{:6.1f}%'.format(cpu['total'])
-            except TypeError:
-                # TypeError: string indices must be integers (issue #1027)
-                msg = '{:>6}%'.format('?')
-            ret.append(self.curse_add_line(msg))
-
-        # Stats per-CPU
+        # Per CPU stats displayed per line
         for stat in ['user', 'system', 'idle', 'iowait', 'steal']:
             if stat not in self.stats[0]:
                 continue
-
-            ret.append(self.curse_new_line())
-            msg = '{:8}'.format(stat + ':')
+            msg = '{:>7}'.format(stat)
             ret.append(self.curse_add_line(msg))
-            for cpu in self.stats:
+
+        # Per CPU stats displayed per column
+        for cpu in self.stats:
+            ret.append(self.curse_new_line())
+            if self.is_disable('quicklook'):
                 try:
-                    msg = '{:6.1f}%'.format(cpu[stat])
+                    msg = '{:6.1f}%'.format(cpu['total'])
                 except TypeError:
                     # TypeError: string indices must be integers (issue #1027)
                     msg = '{:>6}%'.format('?')
+                ret.append(self.curse_add_line(msg))
+            for stat in ['user', 'system', 'idle', 'iowait', 'steal']:
+                if stat not in self.stats[0]:
+                    continue
+                try:
+                    msg = '{:6.1f}%'.format(cpu[stat])
+                except TypeError:
+                    msg = '{:>6}%'.format('?')
                 ret.append(self.curse_add_line(msg,
-                                               self.get_alert(cpu[stat], header=stat)))
+                                               self.get_alert(cpu[stat],
+                                                              header=stat)))
 
-        # Return the message with decoration
         return ret
