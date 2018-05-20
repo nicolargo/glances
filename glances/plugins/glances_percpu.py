@@ -78,13 +78,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if not self.stats or self.is_disable():
-            return ret
-
-        # No per CPU stat ? Exit...
-        if not self.stats:
-            msg = 'PER CPU not available'
-            ret.append(self.curse_add_line(msg, "TITLE"))
+        if not self.stats or not self.args.percpu or self.is_disable():
             return ret
 
         # Build the string message

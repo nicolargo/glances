@@ -90,7 +90,7 @@ class _GlancesCurses(object):
                   'cpu_times', 'io_counters', 'name']
 
     # Define top menu
-    _top = ['quicklook', 'cpu', 'gpu', 'mem', 'memswap', 'load']
+    _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
 
     # Define left sidebar
     _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
@@ -495,9 +495,6 @@ class _GlancesCurses(object):
             # Get the view
             ret[p] = stats.get_plugin(p).get_stats_display(args=self.args,
                                                            max_width=plugin_max_width)
-
-        if self.args.percpu:
-            ret['cpu'] = ret['percpu']
 
         return ret
 
