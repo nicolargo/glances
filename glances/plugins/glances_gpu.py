@@ -77,14 +77,14 @@ class Plugin(GlancesPlugin):
         stats = self.get_init_value()
 
         # !!! JUST FOR TEST (because i did not have any NVidia GPU... :()
-        # stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # stats = [{"key": "gpu_id", "mem": 10, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #          {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #          {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "GeForce GTX 560 Ti"}]
-        # stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #          {"key": "gpu_id", "mem": None, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #          {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "ANOTHER GPU"}]
+        # self.stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
+        # self.stats = [{"key": "gpu_id", "mem": 10, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
+        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
+        #               {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
+        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "GeForce GTX 560 Ti"}]
+        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
+        #               {"key": "gpu_id", "mem": None, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
+        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "ANOTHER GPU"}]
         # !!! TO BE COMMENTED
 
         if not self.nvml_ready:
