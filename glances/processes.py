@@ -379,9 +379,12 @@ def sort_stats(stats, sortedby=None, reverse=True):
 
     Reverse the sort if reverse is True.
     """
+    sortedby_secondary = 'cpu_percent'
     if sortedby is None:
         # No need to sort...
         return stats
+    elif sortedby is 'cpu_percent':
+        sortedby_secondary = 'memory_percent'
 
     if sortedby == 'io_counters':
         # Specific case for io_counters
@@ -393,12 +396,14 @@ def sort_stats(stats, sortedby=None, reverse=True):
                        process[sortedby][3],
                        reverse=reverse)
         except Exception:
-            stats.sort(key=lambda x: weighted(x['cpu_percent']),
+            stats.sort(key=lambda x:(weighted(x['cpu_percent']),
+                                     weighted(x['memory_percent'])),
                        reverse=reverse)
     else:
         # Others sorts
         try:
-            stats.sort(key=lambda x: weighted(x[sortedby]),
+            stats.sort(key=lambda x: (weighted(x[sortedby]),
+                                      weighted(x[sortedby_secondary])),
                        reverse=reverse)
         except (KeyError, TypeError):
             stats.sort(key=operator.itemgetter('name'),
