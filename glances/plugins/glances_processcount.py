@@ -43,6 +43,13 @@ class Plugin(GlancesPlugin):
     stats is a list
     """
 
+    sort_for_human = {'io_counters': 'disk IO',
+                      'cpu_percent': 'CPU consumption',
+                      'memory_percent': 'memory consumption',
+                      'cpu_times': 'process time',
+                      'name': 'process name',
+                      None: 'None'}
+
     def __init__(self, args=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
@@ -128,14 +135,17 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
 
         # Display sort information
+        try:
+            sort_human = self.sort_for_human[glances_processes.sort_key]
+        except KeyError:
+            sort_human = '?'
         if glances_processes.auto_sort:
             msg = 'sorted automatically'
             ret.append(self.curse_add_line(msg))
-            msg = ' by {}'.format(glances_processes.sort_key)
-            ret.append(self.curse_add_line(msg))
+            msg = ' by {}'.format(sort_human)
         else:
-            msg = 'sorted by {}'.format(glances_processes.sort_key)
-            ret.append(self.curse_add_line(msg))
+            msg = 'sorted by {}'.format(sort_human)
+        ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
         return ret
