@@ -113,13 +113,18 @@ class AmpsList(object):
                 continue
             try:
                 # Search in both cmdline and name (for kernel thread, see #1261)
-                amps_list = [p for p in processlist for c in p['cmdline'] if re.search(v.regex(), c) is not None]
-                amps_list += [p for p in processlist if re.search(v.regex(), p['name']) is not None]
+                amps_list = [p['pid'] for p in processlist
+                             for c in p['cmdline']
+                             if ((re.search(v.regex(), c) is not None) or
+                                 (re.search(v.regex(), p['name']) is not None))]
+                amps_list = list(set(amps_list))
             except (TypeError, KeyError):
                 continue
             if len(amps_list) > 0:
                 # At least one process is matching the regex
-                logger.debug("AMPS: {} process detected (PID={})".format(k, amps_list[0]['pid']))
+                logger.debug("AMPS: {} processes {} detected ({})".format(len(amps_list),
+                                                                          k,
+                                                                          amps_list))
                 # Call the AMP update method
                 thread = threading.Thread(target=v.update_wrapper, args=[amps_list])
                 thread.start()
