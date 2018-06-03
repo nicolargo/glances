@@ -4,14 +4,6 @@ export default function GlancesPluginDockerController($scope, GlancesStats) {
     vm.containers = [];
     vm.version = null;
 
-    vm.$onInit = function () {
-        loadData(GlancesStats.getData());
-    };
-
-    $scope.$on('data_refreshed', function (event, data) {
-        loadData(data);
-    });
-
     var loadData = function (data) {
         var stats = data.stats['docker'];
         vm.containers = [];
@@ -40,4 +32,12 @@ export default function GlancesPluginDockerController($scope, GlancesStats) {
 
         vm.version = stats['version']['Version'];
     }
+
+    vm.$onInit = function () {
+        loadData(GlancesStats.getData());
+    };
+
+    $scope.$on('data_refreshed', function (event, data) {
+        loadData(data);
+    });
 }
