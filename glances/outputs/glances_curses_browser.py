@@ -77,21 +77,21 @@ class GlancesCursesBrowser(_GlancesCurses):
         """Set the cursor position."""
         self.cursor_position = position
 
-    def cursor_up(self, servers_list):
+    def cursor_up(self, stats):
         """Set the cursor to position N-1 in the list."""
         if self.cursor_position > 0:
             self.cursor_position -= 1
         else:
-            self.cursor_position = len(servers_list) - 1
+            self.cursor_position = len(stats) - 1
 
-    def cursor_down(self, servers_list):
+    def cursor_down(self, stats):
         """Set the cursor to position N-1 in the list."""
-        if self.cursor_position < len(servers_list) - 1:
+        if self.cursor_position < len(stats) - 1:
             self.cursor_position += 1
         else:
             self.cursor_position = 0
 
-    def __catch_key(self, servers_list):
+    def __catch_key(self, stats):
         # Catch the browser pressed key
         self.pressedkey = self.get_key(self.term_window)
 
@@ -110,51 +110,55 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.active_server = self.cursor
         elif self.pressedkey == curses.KEY_UP:
             # 'UP' > Up in the server list
-            self.cursor_up(servers_list)
+            self.cursor_up(stats)
         elif self.pressedkey == curses.KEY_DOWN:
             # 'DOWN' > Down in the server list
-            self.cursor_down(servers_list)
+            self.cursor_down(stats)
 
         # Return the key code
         return self.pressedkey
 
-    def update(self, servers_list):
+    def update(self,
+               stats,
+               duration=3,
+               cs_status=None,
+               return_to_browser=False):
         """Update the servers' list screen.
 
         Wait for __refresh_time sec / catch key every 100 ms.
 
-        servers_list: Dict of dict with servers stats
+        stats: Dict of dict with servers stats
         """
         # Flush display
-        logger.debug('Servers list: {}'.format(servers_list))
-        self.flush(servers_list)
+        logger.debug('Servers list: {}'.format(stats))
+        self.flush(stats)
 
         # Wait
         exitkey = False
         countdown = Timer(self.__refresh_time)
         while not countdown.finished() and not exitkey:
             # Getkey
-            pressedkey = self.__catch_key(servers_list)
+            pressedkey = self.__catch_key(stats)
             # Is it an exit or select server key ?
             exitkey = (
                 pressedkey == ord('\x1b') or pressedkey == ord('q') or pressedkey == 10)
             if not exitkey and pressedkey > -1:
                 # Redraw display
-                self.flush(servers_list)
+                self.flush(stats)
             # Wait 100ms...
             self.wait()
 
         return self.active_server
 
-    def flush(self, servers_list):
+    def flush(self, stats):
         """Update the servers' list screen.
 
-        servers_list: List of dict with servers stats
+        stats: List of dict with servers stats
         """
         self.erase()
-        self.display(servers_list)
+        self.display(stats)
 
-    def display(self, servers_list):
+    def display(self, stats, cs_status=None):
         """Display the servers list.
 
         Return:
@@ -167,24 +171,24 @@ class GlancesCursesBrowser(_GlancesCurses):
         # Get the current screen size
         screen_x = self.screen.getmaxyx()[1]
         screen_y = self.screen.getmaxyx()[0]
-        servers_list_max = screen_y - 3
-        servers_list_len = len(servers_list)
+        stats_max = screen_y - 3
+        stats_len = len(stats)
 
         # Init position
         x = 0
         y = 0
 
         # Display top header
-        if servers_list_len == 0:
+        if stats_len == 0:
             if self.first_scan and not self.args.disable_autodiscover:
                 msg = 'Glances is scanning your network. Please wait...'
                 self.first_scan = False
             else:
                 msg = 'No Glances server available'
-        elif len(servers_list) == 1:
+        elif len(stats) == 1:
             msg = 'One Glances server available'
         else:
-            msg = '{} Glances servers available'.format(servers_list_len)
+            msg = '{} Glances servers available'.format(stats_len)
         if self.args.disable_autodiscover:
             msg += ' (auto discover is disabled)'
         if screen_y > 1:
@@ -192,13 +196,13 @@ class GlancesCursesBrowser(_GlancesCurses):
                                      msg,
                                      screen_x - x,
                                      self.colors_list['TITLE'])
-        if servers_list_len > servers_list_max and screen_y > 2:
-            msg = 'Warning: Only {} servers will be displayed (please increase your terminal size)'.format(servers_list_max)
+        if stats_len > stats_max and screen_y > 2:
+            msg = 'Warning: Only {} servers will be displayed (please increase your terminal size)'.format(stats_max)
             self.term_window.addnstr(y + 1, x,
                                      msg,
                                      screen_x - x)
 
-        if servers_list_len == 0:
+        if stats_len == 0:
             return False
 
         # Display the Glances server list
@@ -232,15 +236,15 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         # If a servers has been deleted from the list...
         # ... and if the cursor is in the latest position
-        if self.cursor > len(servers_list) - 1:
+        if self.cursor > len(stats) - 1:
             # Set the cursor position to the latest item
-            self.cursor = len(servers_list) - 1
+            self.cursor = len(stats) - 1
 
         # Display table
         line = 0
-        for v in servers_list:
+        for v in stats:
             # Limit the number of displayed server (see issue #1256)
-            if line >= servers_list_max:
+            if line >= stats_max:
                 continue
             # Get server stats
             server_stat = {}
