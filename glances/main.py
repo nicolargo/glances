@@ -21,6 +21,7 @@
 
 import argparse
 import sys
+import tempfile
 
 from glances import __version__, psutil_version
 from glances.compat import input
@@ -170,7 +171,7 @@ Examples of use:
                             dest='export_json_file',
                             help='file path for JSON exporter')
         parser.add_argument('--export-graph-path',
-                            default='/tmp',
+                            default=tempfile.gettempdir(),
                             dest='export_graph_path',
                             help='Folder for Graph exporter')
         # Client/Server option
