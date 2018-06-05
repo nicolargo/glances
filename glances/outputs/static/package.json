@@ -5,7 +5,7 @@
     "angular-hotkeys": "^1.7.0",
     "bootstrap": "^3.3.5",
     "favico.js": "^0.3.10",
-    "lodash": "^4.13.1"
+    "lodash": "^4.17.10"
   },
   "devDependencies": {
     "bower": "^1.8.0",
@@ -16,10 +16,10 @@
     "exports-loader": "^0.7.0",
     "file-loader": "^1.1.6",
     "html-loader": "^0.5.5",
-    "less": "^3.0.1",
+    "less": "^3.0.4",
     "less-loader": "^4.0.5",
     "ngtemplate-loader": "^2.0.1",
-    "node-sass": "^4.7.2",
+    "node-sass": "^4.9.0",
     "sass-loader": "^6.0.6",
     "style-loader": "^0.20.1",
     "url-loader": "^0.6.2",
