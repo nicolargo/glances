@@ -37437,10 +37437,32 @@ function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginH
         for (var i = 0; i < processlistStats.length; i++) {
             var process = processlistStats[i];
 
-            process.memvirt = process.memory_info[1];
-            process.memres = process.memory_info[0];
-            process.timeplus = $filter('timedelta')(process.cpu_times);
-            process.timemillis = $filter('timemillis')(process.cpu_times);
+            process.memvirt = "?";
+            process.memres = "?";
+            if (process.memory_info) {
+                process.memvirt = process.memory_info[1];
+                process.memres = process.memory_info[0];
+            }
+
+            process.timeplus = "?";
+            process.timemillis = "?";
+            if (process.cpu_times) {
+                process.timeplus = $filter('timedelta')(process.cpu_times);
+                process.timemillis = $filter('timemillis')(process.cpu_times);
+            }
+
+            if (process.num_threads === null) {
+              process.num_threads = -1;
+            }
+
+            if (process.cpu_percent === null) {
+              process.cpu_percent = -1;
+            }
+
+            if (process.memory_percent  === null) {
+              process.memory_percent = -1;
+            }
+
 
             process.ioRead = null;
             process.ioWrite = null;
@@ -37494,7 +37516,7 @@ function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginH
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
-var html = "<section id=\"processlist-plugin\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div sortable-th sorter=\"vm.sorter\" column=\"cpu_percent\" class=\"table-cell\">CPU%</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"memory_percent\" class=\"table-cell\">MEM%</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">VIRT</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">RES</div>\n            <div class=\"table-cell\">PID</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"username\" class=\"table-cell text-left\">USER</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"timemillis\" class=\"table-cell hidden-xs hidden-sm\">TIME+</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"num_threads\" class=\"table-cell text-left hidden-xs hidden-sm\">THR</div>\n            <div class=\"table-cell\">NI</div>\n            <div class=\"table-cell\">S</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_read\" class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOR/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_write\" class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOW/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"name\" class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\"\n             ng-repeat=\"process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit() track by process.pid\">\n            <div class=\"table-cell\" ng-class=\"vm.getCpuPercentAlert(process)\">{{process.cpu_percent | number:1}}</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMemoryPercentAlert(process)\">{{process.memory_percent | number:1}}\n            </div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memvirt | bytes}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memres | bytes}}</div>\n            <div class=\"table-cell\">{{process.pid}}</div>\n            <div class=\"table-cell text-left\">{{process.username}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">\n                <span ng-show=\"process.timeplus.hours > 0\" class=\"highlight\">{{ process.timeplus.hours }}h</span>{{\n                process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span\n                    ng-show=\"process.timeplus.hours <= 0\">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>\n            </div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\">{{process.num_threads}}</div>\n            <div class=\"table-cell\" ng-class=\"{nice: process.isNice}\">{{process.nice | exclamation}}</div>\n            <div class=\"table-cell\" ng-class=\"{status: process.status == 'R'}\">{{process.status}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioRead}}</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioWrite}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"vm.arguments.process_short_name\">{{process.name}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"!vm.arguments.process_short_name\">{{process.cmdline}}</div>\n        </div>\n    </div>\n</section>\n";
+var html = "<section id=\"processlist-plugin\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div sortable-th sorter=\"vm.sorter\" column=\"cpu_percent\" class=\"table-cell\">CPU%</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"memory_percent\" class=\"table-cell\">MEM%</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">VIRT</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">RES</div>\n            <div class=\"table-cell\">PID</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"username\" class=\"table-cell text-left\">USER</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"timemillis\" class=\"table-cell hidden-xs hidden-sm\">TIME+</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"num_threads\" class=\"table-cell text-left hidden-xs hidden-sm\">THR</div>\n            <div class=\"table-cell\">NI</div>\n            <div class=\"table-cell\">S</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_read\" class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOR/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_write\" class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOW/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"name\" class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\"\n             ng-repeat=\"process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit() track by process.pid\">\n            <div class=\"table-cell\" ng-class=\"vm.getCpuPercentAlert(process)\">{{ process.cpu_percent == -1 ? '?' : (process.cpu_percent | number:1) }}</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMemoryPercentAlert(process)\">{{ process.memory_percent == -1 ? '?' : (process.memory_percent | number:1) }}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memvirt | bytes}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memres | bytes}}</div>\n            <div class=\"table-cell\">{{process.pid}}</div>\n            <div class=\"table-cell text-left\">{{process.username}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus != '?'\">\n                <span ng-show=\"process.timeplus.hours > 0\" class=\"highlight\">{{ process.timeplus.hours }}h</span>{{\n                process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span\n                    ng-show=\"process.timeplus.hours <= 0\">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>\n            </div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus == '?'\">?</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\">{{ process.num_threads == -1 ? '?' : process.num_threads }}</div>\n            <div class=\"table-cell\" ng-class=\"{nice: process.isNice}\">{{process.nice | exclamation}}</div>\n            <div class=\"table-cell\" ng-class=\"{status: process.status == 'R'}\">{{process.status}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioRead}}</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioWrite}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"vm.arguments.process_short_name\">{{process.name}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"!vm.arguments.process_short_name\">{{process.cmdline}}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
 
