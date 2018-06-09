@@ -244,7 +244,7 @@ class GlancesBottle(object):
 
         Return the help data or 404 error.
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         # Update the stat
         view_data = self.stats.get_plugin("help").get_view_data()
@@ -281,7 +281,7 @@ class GlancesBottle(object):
          @apiErrorExample Error-Response:
             HTTP/1.1 404 Not Found
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         # Update the stat
         self.__update__()
@@ -301,7 +301,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if self.args.debug:
             fname = os.path.join(tempfile.gettempdir(), 'glances-debug.json')
@@ -331,7 +331,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         try:
             # Get the JSON value of the stat limits
@@ -349,7 +349,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         try:
             # Get the JSON value of the stat view
@@ -367,7 +367,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -392,7 +392,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -416,7 +416,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -440,7 +440,7 @@ class GlancesBottle(object):
         HTTP/400 if plugin is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -458,7 +458,7 @@ class GlancesBottle(object):
     @compress
     def _api_itemvalue(self, plugin, item, value=None, history=False, nb=0):
         """Father method for _api_item and _api_value."""
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if plugin not in self.plugins_list:
             abort(400, "Unknown plugin %s (available plugins: %s)" % (plugin, self.plugins_list))
@@ -529,7 +529,7 @@ class GlancesBottle(object):
         HTTP/200 if OK
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         try:
             # Get the JSON value of the config' dict
@@ -547,7 +547,7 @@ class GlancesBottle(object):
         HTTP/400 if item is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         config_dict = self.config.as_dict()
         if item not in config_dict:
@@ -568,7 +568,7 @@ class GlancesBottle(object):
         HTTP/200 if OK
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         try:
             # Get the JSON value of the args' dict
@@ -588,7 +588,7 @@ class GlancesBottle(object):
         HTTP/400 if item is not found
         HTTP/404 if others error
         """
-        response.content_type = 'application/json'
+        response.content_type = 'application/json; charset=utf-8'
 
         if item not in self.args:
             abort(400, "Unknown argument item %s" % item)
