@@ -23,7 +23,7 @@ import os
 import threading
 import time
 
-from glances.compat import iterkeys, itervalues
+from glances.compat import iterkeys, itervalues, nativestr
 from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -204,9 +204,9 @@ class Plugin(GlancesPlugin):
                 # The key is the container name and not the Id
                 container_stats['key'] = self.get_key()
                 # Export name (first name in the Names list, without the /)
-                container_stats['name'] = container.name
+                container_stats['name'] = nativestr(container.name)
                 # Export global Names (used by the WebUI)
-                container_stats['Names'] = [container.name]
+                container_stats['Names'] = [ nativestr(container.name)]
                 # Container Id
                 container_stats['Id'] = container.id
                 # Container Image
