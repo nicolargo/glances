@@ -20,6 +20,7 @@
 """Sensors plugin."""
 
 import psutil
+import warnings
 
 from glances.logger import logger
 from glances.compat import iteritems
@@ -229,6 +230,9 @@ class GlancesGrabSensors(object):
             logger.debug("Cannot grab temperatures. Platform not supported.")
         else:
             self.init_temp = True
+            # Solve an issue #1203 concerning a RunTimeError warning message displayed
+            # in the curses interface.
+            warnings.filterwarnings("ignore")
 
         # Fans
         self.init_fan = False

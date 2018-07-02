@@ -60,6 +60,7 @@ Bugs corrected:
     * OSX - Python 3 and empty percent and res #1251
     * Crashes when influxdb option set #1260
     * AMP for kernel process is not working #1261
+    * Arch linux package (2.11.1-2) psutil (v5.4.1): RuntimeWarning: ignoring OSError #1203
 
 Backward-incompatible changes:
 
