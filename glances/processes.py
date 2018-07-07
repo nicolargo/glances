@@ -300,7 +300,8 @@ class GlancesProcesses(object):
                     try:
                         extended['tcp'] = len(top_process.connections(kind="tcp"))
                         extended['udp'] = len(top_process.connections(kind="udp"))
-                    except psutil.AccessDenied:
+                    except (psutil.AccessDenied, psutil.NoSuchProcess):
+                        # Manage issue1283 (psutil.AccessDenied)
                         extended['tcp'] = None
                         extended['udp'] = None
                 except (psutil.NoSuchProcess, ValueError, AttributeError) as e:
@@ -396,8 +397,8 @@ def sort_stats(stats, sortedby=None, reverse=True):
                        process[sortedby][3],
                        reverse=reverse)
         except Exception:
-            stats.sort(key=lambda x:(weighted(x['cpu_percent']),
-                                     weighted(x['memory_percent'])),
+            stats.sort(key=lambda x: (weighted(x['cpu_percent']),
+                                      weighted(x['memory_percent'])),
                        reverse=reverse)
     else:
         # Others sorts
