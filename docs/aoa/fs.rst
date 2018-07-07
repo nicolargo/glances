@@ -48,7 +48,7 @@ RAID
 *Availability: Linux*
 
 Thanks to the `pymdstat`_ library, if a ``RAID`` controller is detected
-on you system, its status will be displayed as well:
+on your system, its status will be displayed as well:
 
 .. image:: ../_static/raid.png
 
