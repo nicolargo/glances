@@ -61,7 +61,8 @@ Bugs corrected:
     * Crashes when influxdb option set #1260
     * AMP for kernel process is not working #1261
     * Arch linux package (2.11.1-2) psutil (v5.4.1): RuntimeWarning: ignoring OSError #1203
-    * Glances crash with extended process stats #1283 
+    * Glances crash with extended process stats #1283
+    * Terminal window stuck at the last accessed *protected* server #1275
 
 Backward-incompatible changes:
 
