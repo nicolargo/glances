@@ -31,4 +31,5 @@ Table of Contents
    aoa/index
    gw/index
    api
+   faq
    support
