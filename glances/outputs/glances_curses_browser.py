@@ -106,14 +106,16 @@ class GlancesCursesBrowser(_GlancesCurses):
             sys.exit(0)
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
-            logger.debug("Server number {} selected".format(self.cursor + 1))
             self.active_server = self.cursor
-        elif self.pressedkey == curses.KEY_UP:
+            logger.debug("Server {}/{} selected".format(self.cursor + 1, len(stats)))
+        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
             # 'UP' > Up in the server list
             self.cursor_up(stats)
-        elif self.pressedkey == curses.KEY_DOWN:
+            logger.debug("Server {}/{} selected".format(self.cursor + 1, len(stats)))
+        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
             # 'DOWN' > Down in the server list
             self.cursor_down(stats)
+            logger.debug("Server {}/{} selected".format(self.cursor + 1, len(stats)))
 
         # Return the key code
         return self.pressedkey
