@@ -13,6 +13,9 @@ if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 4):
     print('Glances requires at least Python 2.7 or 3.4 to run.')
     sys.exit(1)
 
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
 
 # Global functions
 ##################
@@ -80,7 +83,8 @@ setup(
     install_requires=get_install_requires(),
     extras_require={
         'action': ['pystache'],
-        'browser': ['zeroconf>=0.17'],
+        # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
+        'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
         'cpuinfo': ['py-cpuinfo'],
         'docker': ['docker>=2.0.0'],
