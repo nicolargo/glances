@@ -32,7 +32,7 @@ from glances.compat import text_type
 import requests
 
 SERVER_PORT = 61234
-API_VERSION = 2
+API_VERSION = 3
 URL = "http://localhost:{}/api/{}".format(SERVER_PORT, API_VERSION)
 pid = None
 

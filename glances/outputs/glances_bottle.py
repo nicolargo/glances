@@ -73,7 +73,7 @@ def compress(func):
 class GlancesBottle(object):
     """This class manages the Bottle Web server."""
 
-    API_VERSION = '2'
+    API_VERSION = '3'
 
     def __init__(self, config=None, args=None):
         # Init config
