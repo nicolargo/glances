@@ -34,13 +34,13 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REF
         };
 
         // load limits to init GlancePlugin helper
-        $http.get('api/2/all/limits').then(function (response) {
+        $http.get('api/3/all/limits').then(function (response) {
             GlancesPluginHelper.setLimits(response.data);
         });
-        $http.get('api/2/config').then(function (response) {
+        $http.get('api/3/config').then(function (response) {
             angular.extend(CONFIG, response.data);
         });
-        $http.get('api/2/args').then(function (response) {
+        $http.get('api/3/args').then(function (response) {
             angular.extend(ARGUMENTS, response.data);
         });
 
@@ -58,13 +58,13 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REF
     }
 
     var getAllStats = function () {
-        return $http.get('api/2/all').then(function (response) {
+        return $http.get('api/3/all').then(function (response) {
             return response.data;
         });
     };
 
     var getAllViews = function () {
-        return $http.get('api/2/all/views').then(function (response) {
+        return $http.get('api/3/all/views').then(function (response) {
             return response.data;
         });
     };
