@@ -70,6 +70,7 @@ Backward-incompatible changes:
     * Support for psutil < 5.3.0 has been dropped
     * Minimum supported Docker API version is now 1.21 (Docker plugins)
     * Support for InfluxDB < 0.9 is deprecated (InfluxDB exporter)
+    * Zeroconf lib should be pinned to 0.19.1 for Python 2.x 
     * --disable-<plugin> no longer available (use --disable-plugin <plugin>)
     * --export-<exporter> no longer available (use --export <exporter>)
 

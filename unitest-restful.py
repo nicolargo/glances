@@ -32,7 +32,8 @@ from glances.compat import text_type
 import requests
 
 SERVER_PORT = 61234
-URL = "http://localhost:%s/api/2" % SERVER_PORT
+API_VERSION = 2
+URL = "http://localhost:{}/api/{}".format(SERVER_PORT, API_VERSION)
 pid = None
 
 # Unitest class
