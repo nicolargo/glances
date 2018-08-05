@@ -255,6 +255,15 @@ then run the following command:
 
     $ pip install glances
 
+Alternatively, you could clone the repository and install with the following command.
+
+.. code-block:: console
+
+    $ git clone https://github.com/nicolargo/glances.git
+    $ cd glances
+    $ python setup.py install
+
+
 Android
 -------
 
