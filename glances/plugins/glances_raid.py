@@ -60,8 +60,8 @@ class Plugin(GlancesPlugin):
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 # Just for test
-                # mds = MdStat(path='/home/nicolargo/dev/pymdstat/tests/mdstat.10')
-                mds = MdStat()
+                mds = MdStat(path='/home/nicolargo/dev/pymdstat/tests/mdstat.10')
+                # mds = MdStat()
                 stats = mds.get_stats()['arrays']
             except Exception as e:
                 logger.debug("Can not grab RAID stats (%s)" % e)
@@ -114,7 +114,12 @@ class Plugin(GlancesPlugin):
             msg = '{:{width}}'.format(full_name,
                                       width=name_max_width)
             ret.append(self.curse_add_line(msg))
-            if self.stats[array]['status'] == 'active':
+            if self.stats[array]['type'] == 'raid0' and self.stats[array]['status'] == 'active':
+                msg = '{:>7}'.format(len(self.stats[array]['components']))
+                ret.append(self.curse_add_line(msg, status))
+                msg = '{:>7}'.format('-')
+                ret.append(self.curse_add_line(msg, status))
+            elif self.stats[array]['status'] == 'active':
                 msg = '{:>7}'.format(self.stats[array]['used'])
                 ret.append(self.curse_add_line(msg, status))
                 msg = '{:>7}'.format(self.stats[array]['available'])
