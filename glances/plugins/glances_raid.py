@@ -60,8 +60,7 @@ class Plugin(GlancesPlugin):
             # Update stats using the PyMDstat lib (https://github.com/nicolargo/pymdstat)
             try:
                 # Just for test
-                # mds = MdStat(path='~/dev/pymdstat/tests/mdstat.02')
-                # Note: replace 02 by 02 ==> 09
+                # mds = MdStat(path='/home/nicolargo/dev/pymdstat/tests/mdstat.10')
                 mds = MdStat()
                 stats = mds.get_stats()['arrays']
             except Exception as e:
@@ -104,7 +103,10 @@ class Plugin(GlancesPlugin):
             # New line
             ret.append(self.curse_new_line())
             # Display the current status
-            status = self.raid_alert(self.stats[array]['status'], self.stats[array]['used'], self.stats[array]['available'])
+            status = self.raid_alert(self.stats[array]['status'],
+                                     self.stats[array]['used'],
+                                     self.stats[array]['available'],
+                                     self.stats[array]['type'])
             # Data: RAID type name | disk used | disk available
             array_type = self.stats[array]['type'].upper() if self.stats[array]['type'] is not None else 'UNKNOWN'
             # Build the full name = array type + array name
@@ -132,7 +134,7 @@ class Plugin(GlancesPlugin):
                     ret.append(self.curse_add_line(msg))
                     msg = '{}'.format(component)
                     ret.append(self.curse_add_line(msg))
-            if self.stats[array]['used'] < self.stats[array]['available']:
+            if self.stats[array]['type'] != 'raid0' and (self.stats[array]['used'] < self.stats[array]['available']):
                 # Display current array configuration
                 ret.append(self.curse_new_line())
                 msg = '└─ Degraded mode'
@@ -144,13 +146,15 @@ class Plugin(GlancesPlugin):
 
         return ret
 
-    def raid_alert(self, status, used, available):
+    def raid_alert(self, status, used, available, type):
         """RAID alert messages.
 
         [available/used] means that ideally the array may have _available_
         devices however, _used_ devices are in use.
         Obviously when used >= available then things are good.
         """
+        if type == 'raid0':
+            return 'OK'
         if status == 'inactive':
             return 'CRITICAL'
         if used is None or available is None:
