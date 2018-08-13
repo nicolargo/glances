@@ -8,6 +8,7 @@ influxdb
 kafka-python
 netifaces
 nvidia-ml-py3
+paho-mqtt
 pika
 potsdb
 prometheus_client
