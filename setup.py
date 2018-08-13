@@ -89,7 +89,7 @@ setup(
         'cpuinfo': ['py-cpuinfo'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'influxdb>=1.0.0', 'kafka-python', 'pika', 'potsdb',
+                   'influxdb>=1.0.0', 'kafka-python', 'pika', 'paho-mqtt', 'potsdb',
                    'prometheus_client', 'pyzmq', 'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
         'gpu': ['nvidia-ml-py3'],  # python_version=="2.7"
