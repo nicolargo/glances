@@ -44,6 +44,7 @@ exports
     => Glances export interfaces
     glances_csv.py          The CSV export module
     glances_influxdb.py     The InfluxDB export module
+    glances_mqtt.py         The MQTT export module
     glances_opentsdb.py     The OpenTSDB export module
     glances_rabbitmq.py     The RabbitMQ export module
     glances_statsd.py       The StatsD export module
