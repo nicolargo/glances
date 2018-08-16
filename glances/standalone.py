@@ -20,6 +20,7 @@
 """Manage the Glances standalone session."""
 
 import sys
+import time
 
 from glances.globals import WINDOWS
 from glances.logger import logger
@@ -128,6 +129,7 @@ class GlancesStandalone(object):
         else:
             # Nothing is displayed
             # Break should be done via a signal (CTRL-C)
+            time.sleep(self.refresh_time - counter.get())
             ret = True
 
         return ret
