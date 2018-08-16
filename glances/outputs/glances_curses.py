@@ -91,12 +91,13 @@ class _GlancesCurses(object):
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']
+    _quicklook_max_width = 68
 
     # Define left sidebar
     _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
                      'irq', 'folders', 'raid', 'sensors', 'now']
     _left_sidebar_min_width = 23
-    _left_sidebar_max_width = 64
+    _left_sidebar_max_width = 34
 
     # Define right sidebar
     _right_sidebar = ['docker', 'processcount', 'amps', 'processlist', 'alert']
@@ -667,7 +668,7 @@ class _GlancesCurses(object):
                 quicklook_width = self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
             else:
                 quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
-                                      self._left_sidebar_max_width - 5)
+                                      self._quicklook_max_width - 5)
             try:
                 stat_display["quicklook"] = stats.get_plugin(
                     'quicklook').get_stats_display(max_width=quicklook_width, args=self.args)
