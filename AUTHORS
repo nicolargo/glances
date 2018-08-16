@@ -10,7 +10,7 @@ nicolashennion@gmail.com
 PGP Fingerprint: A0D9 628F 5A83 A879 48EA  B1FE BA43 C11F 2C8B 4347
 PGP Public key:  gpg --keyserver pgp.mit.edu --recv-keys 0xba43c11f2c8b4347
 
-Alessio Sergi (aka) Al3hex
+Alessio Sergi (aka) Al3hex (for all it work on the project)
 https://twitter.com/al3hex
 https://github.com/asergi
 
@@ -32,6 +32,9 @@ http://github.com/sylvainmouquet
 
 Floran Brutel (aka) notFloran (for the Web user interface)
 https://github.com/notFloran
+
+Erik Eriksson (aka) Molobrakos (for the MQTT plugin and various PR)
+https://www.linkedin.com/in/error-errorsson/
 
 =========
 Packagers
