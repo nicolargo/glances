@@ -18,6 +18,7 @@ to providing stats to multiple services (see list below).
    influxdb
    json
    kafka
+   mqtt
    opentsdb
    prometheus
    rabbitmq
