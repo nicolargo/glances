@@ -24,14 +24,10 @@ Must execute as root
 "usermod -a -G disk USERNAME" is not sufficient unfortunately
 SmartCTL (/usr/sbin/smartctl) must be in system path for python2.
 
-PySMART is a python2 library.
-There are a few forks that are potentially python 3 compatible
-- https://github.com/ilyinon/py.SMART/ https://pypi.org/project/py.SMART/
-- https://github.com/freenas/py-SMART/ - BSD port
-The python2 PySMART library expects smartctl to be in PATH, but adding a bash alias does not help with this.
-The BSD port uses shutil.which() to get smartctl, but this does not exist on python2.
+Regular PySMART is a python2 library.
+We are using the pySMART.smartx updated library to support both python 2 and 3.
 
-If we only have disk group access:
+If we only have disk group access (no root):
 $ smartctl -i /dev/sda
 smartctl 6.6 2016-05-31 r4324 [x86_64-linux-4.15.0-30-generic] (local build)
 Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
@@ -44,20 +40,15 @@ This is not very hopeful: https://medium.com/opsops/why-smartctl-could-not-be-ru
 
 So, here is what we are going to do:
 Check for admin access.  If no admin access, disable SMART plugin.
-Check for python version.  If 3.x use patched library, if 2.7 use library from pypi
 
-If smartmontools is not installed, we will catch the error upstream in plugin initialization.
+If smartmontools is not installed, we should catch the error upstream in plugin initialization.
 """
 
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 from glances.main import disable
-import sys, os
-if sys.version_info >= (3,0):
-    # https://github.com/freenas/py-SMART/ commit 881d09e85f7171f927d528b6205ce2015c7631bb
-    from BpySMART import DeviceList
-else:
-    from pySMART import DeviceList
+import os
+from pySMART import DeviceList
 
 DEVKEY = "DeviceName"
 
