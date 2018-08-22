@@ -1,2 +1,2 @@
 psutil==5.4.3
-pysmart==0.3
+pySMART.smartx
