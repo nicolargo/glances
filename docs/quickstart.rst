@@ -24,7 +24,7 @@ Glances should start (press 'q' or 'ESC' to exit):
 
 .. image:: _static/screenshot-wide.png
 
-It is also possible to display stats directly to stdout using:
+It is also possible to display RAW JSON stats directly to stdout using:
 
 .. code-block:: console
 
@@ -36,6 +36,8 @@ It is also possible to display stats directly to stdout using:
     mem.used: 3275251712
     load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
     ...
+
+Note: It will display one line per stat per refresh.
 
 Client/Server Mode
 ------------------
