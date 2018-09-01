@@ -38,6 +38,9 @@ Monitor local machine (standalone mode):
 
     $ glances
 
+Note: The standalone mode is not available on Microsoft Windows (c).
+Glances will start in Web server mode on this operating system.
+
 Monitor local machine with the web interface (Web UI):
 
     $ glances -w
