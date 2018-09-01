@@ -65,6 +65,7 @@ Bugs corrected:
     * Glances crash with extended process stats #1283
     * Terminal window stuck at the last accessed *protected* server #1275
     * Glances shows mdadm RAID0 as degraded when chunksize=128k and the array isn't degraded. #1299
+    * Never starts in a server on Google Cloud and FreeBSD #1292
 
 Backward-incompatible changes:
 
