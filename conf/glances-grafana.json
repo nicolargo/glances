@@ -895,7 +895,7 @@
       "seriesOverrides": [
         {
           "alias": "Tx",
-          "yaxis": 2
+          "yaxis": 1
         }
       ],
       "spaceLength": 10,
@@ -903,7 +903,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Rx",
+          "alias": "In",
           "column": "enp0s25.rx",
           "dsType": "influxdb",
           "function": "mean",
@@ -947,7 +947,7 @@
           "tags": []
         },
         {
-          "alias": "Tx",
+          "alias": "Out",
           "column": "eth0.tx*-1",
           "dsType": "influxdb",
           "function": "mean",
@@ -968,7 +968,7 @@
           "measurement": "localhost.network",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$interface.tx\")/mean(\"$interface.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
+          "query": "SELECT mean(\"$interface.tx\")/mean(\"$interface.time_since_update\")*8*-1 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1211,7 +1211,12 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "Write",
+          "yaxis": 2
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1367,14 +1372,19 @@
         "values": false
       },
       "lines": true,
-      "linewidth": 1,
+      "linewidth": 3,
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "Used",
+          "fill": 10
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1738,13 +1748,15 @@
     },
     {
       "aliasColors": {
+        "CPU%": "#cca300",
+        "MEM": "#2f575e",
         "localhost.docker.mean": "#ba43a9"
       },
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_GLANCES}",
-      "fill": 1,
+      "fill": 0,
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -1757,12 +1769,12 @@
         "current": false,
         "max": false,
         "min": false,
-        "show": false,
+        "show": true,
         "total": false,
         "values": false
       },
       "lines": true,
-      "linewidth": 1,
+      "linewidth": 2,
       "links": [],
       "nullPointMode": "null",
       "percentage": false,
@@ -1771,12 +1783,28 @@
       "renderer": "flot",
       "repeat": "container",
       "repeatDirection": "v",
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "localhost.docker.mean",
+          "fill": 0
+        },
+        {
+          "alias": "MEM",
+          "yaxis": 2
+        },
+        {
+          "alias": "MEM",
+          "fill": 10,
+          "steppedLine": true,
+          "zindex": -3
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
+          "alias": "CPU%",
           "groupBy": [
             {
               "params": [
@@ -1804,6 +1832,44 @@
               {
                 "params": [
                   "grafana.cpu_percent"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "MEM",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"$container.memory_usage\") FROM \"localhost.docker\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
                 ],
                 "type": "field"
               },
@@ -2990,7 +3056,7 @@
       "yBucketSize": null
     }
   ],
-  "refresh": false,
+  "refresh": "5s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [],
@@ -3114,7 +3180,7 @@
     "type": "timepicker"
   },
   "timezone": "browser",
-  "title": "Glances_20180117",
+  "title": "Glances",
   "uid": "000000002",
-  "version": 6
+  "version": 10
 }

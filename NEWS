@@ -10,14 +10,13 @@ Enhancements and new features:
     * Make the left side bar width dynamic in the Curse UI #1177
     * Add threads number in the process list #1259
     * A way to have only REST API available and disable WEB GUI access #1149
-    * Replace Matplolib by Pygal #697
+    * Refactor graph export plugin (& replace Matplolib by Pygal) #697
     * Docker module doesn't export details about stopped containers #1152
     * Add dynamic fields in all sections of the configuration file #1204
-    * Make plugins disable and export CLI option dynamical #1173
+    * Make plugins and export CLI option dynamical #1173
     * Add a light mode for the console UI #1165
     * Refactor InfluxDB (API is now stable) #1166
     * Add deflate compression support to the RestAPI #1182
-    * Remove graph export from Glances #1206
     * Add a code of conduct for Glances project's participants #1211
     * Context switches bottleneck identification #1212
     * Take advantage of the psutil issue #1025 (Add process_iter(attrs, ad_value)) #1105
@@ -26,7 +25,7 @@ Enhancements and new features:
     * Add a new output mode to stdout #1168
     * Huge refactor of the WebUI packaging thanks to @spike008t #1239
     * Add time zone to the current time #1249
-    * Use https URLs for checking external IP #1253
+    * Use HTTPs URLs to check public IP address #1253
     * Add labels support to Promotheus exporter #1255
     * Overlap in Web UI when monitoring a machine with 16 cpu threads #1265
     * Support for exporting data to a MQTT server #1305
