@@ -254,6 +254,25 @@ class TestGlances(unittest.TestCase):
             l_subsample = subsample(l[0], l[1])
             self.assertLessEqual(len(l_subsample), l[1])
 
+    def test_016_hddsmart(self):
+        """Check hard disk SMART data plugin."""
+        try:
+            from glances.plugins.glances_smart import is_admin
+        except ImportError:
+            print("INFO: [TEST_016] pySMART not found, not running SMART plugin test")
+            return
+
+        stat = 'DeviceName'
+        print('INFO: [TEST_016] Check SMART stats: {}'.format(stat))
+        stats_grab = stats.get_plugin('smart').get_raw()
+        if not is_admin():
+            print("INFO: Not admin, SMART list should be empty")
+            assert len(stats_grab) == 0
+        else:
+            self.assertTrue(stat in stats_grab[0].keys(), msg='Cannot find key: %s' % stat)
+
+        print('INFO: SMART stats: %s' % stats_grab)
+
     def test_094_thresholds(self):
         """Test thresholds classes"""
         print('INFO: [TEST_094] Thresholds')
