@@ -141,7 +141,7 @@ class GlancesGrabHDDTemp(object):
                 if not received:
                     break
                 data += received
-        except socket.error as e:
+        except Exception as e:
             logger.debug("Cannot connect to an HDDtemp server ({}:{} => {})".format(self.host, self.port, e))
             logger.debug("Disable the HDDtemp module. Use the --disable-hddtemp to hide the previous message.")
             if self.args is not None:
