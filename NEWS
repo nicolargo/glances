@@ -2,8 +2,21 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.1
+===========
+
+Enhancements and new features:
+
+    * Feature request: HDD S.M.A.R.T. reports (thanks to @tnibert) #1288
+
+Bugs corrected:
+
+    * ...
+
 Version 3.0
 ===========
+
+See the release note here: https://github.com/nicolargo/glances/wiki/Glances-3.0-Release-Note
 
 Enhancements and new features:
 
