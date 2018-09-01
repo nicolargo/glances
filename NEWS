@@ -228,7 +228,7 @@ Version 2.8.8
 Bugs corrected:
 
     * Drop requests to check for outdated Glances version
-    *  Glances cannot load "Powersupply" (issue #1051)
+    * Glances cannot load "Powersupply" (issue #1051)
 
 Version 2.8.7
 =============
