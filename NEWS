@@ -2,6 +2,13 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.0.1
+=============
+
+Bug corrected:
+
+    *  AMPs error if no output are provided by the system call #1314
+
 Version 3.0
 ===========
 
