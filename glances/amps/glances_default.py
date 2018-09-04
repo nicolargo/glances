@@ -59,7 +59,7 @@ class Amp(GlancesAmp):
     def update(self, process_list):
         """Update the AMP"""
         # Get the systemctl status
-        logger.debug('{}: Update stats using service {}'.format(self.NAME, self.get('service_cmd')))
+        logger.debug('{}: Update AMP stats using service {}'.format(self.NAME, self.get('service_cmd')))
         try:
             res = self.get('command')
         except OSError as e:
