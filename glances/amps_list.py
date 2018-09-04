@@ -104,22 +104,17 @@ class AmpsList(object):
 
     def update(self):
         """Update the command result attributed."""
-        # Search application monitored processes by a regular expression
+        # Get the current processes list (once)
         processlist = glances_processes.getlist()
+
         # Iter upon the AMPs dict
         for k, v in iteritems(self.get()):
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
-            try:
-                # Search in both cmdline and name (for kernel thread, see #1261)
-                amps_list = [p['pid'] for p in processlist
-                             for c in p['cmdline']
-                             if ((re.search(v.regex(), c) is not None) or
-                                 (re.search(v.regex(), p['name']) is not None))]
-                amps_list = list(set(amps_list))
-            except (TypeError, KeyError):
-                continue
+
+            amps_list = self._build_amps_list(v, processlist)
+
             if len(amps_list) > 0:
                 # At least one process is matching the regex
                 logger.debug("AMPS: {} processes {} detected ({})".format(len(amps_list),
@@ -132,10 +127,37 @@ class AmpsList(object):
                 # Set the process number to 0
                 v.set_count(0)
                 if v.count_min() is not None and v.count_min() > 0:
-                    # Only display the "No running process message" is countmin is defined
+                    # Only display the "No running process message" if countmin is defined
                     v.set_result("No running process")
 
         return self.__amps_dict
+
+    def _build_amps_list(self, amp_value, processlist):
+        """Return the AMPS process list according to the amp_value
+
+        Search application monitored processes by a regular expression
+        """
+        ret = []
+        try:
+            # Search in both cmdline and name (for kernel thread, see #1261)
+            for p in processlist:
+                add_it = False
+                if (re.search(amp_value.regex(), p['name']) is not None):
+                    add_it = True
+                else:
+                    for c in p['cmdline']:
+                        if (re.search(amp_value.regex(), c) is not None):
+                            add_it = True
+                            break
+                if add_it:
+                    ret.append({'pid': p['pid'],
+                                'cpu_percent': p['cpu_percent'],
+                                'memory_percent': p['memory_percent']})
+
+        except (TypeError, KeyError) as e:
+            logger.debug("Can not build AMPS list ({})".format(e))
+
+        return ret
 
     def getList(self):
         """Return the AMPs list."""
