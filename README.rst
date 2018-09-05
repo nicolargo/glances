@@ -73,6 +73,7 @@ Optional dependencies:
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
+- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
 - ``pystache`` (for the action script feature)
 - ``pyzmq`` (for the ZeroMQ export module)
