@@ -48,7 +48,15 @@ from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 from glances.main import disable
 import os
-from pySMART import DeviceList
+
+# Import plugin specific dependency
+try:
+    from pySMART import DeviceList
+except ImportError as e:
+    import_error_tag = True
+    logger.warning("Missing Python Lib ({}), HDD Smart plugin is disabled".format(e))
+else:
+    import_error_tag = False
 
 DEVKEY = "DeviceName"
 
@@ -64,13 +72,13 @@ def is_admin():
     """
 
     if os.name == 'nt':
-        import ctypes, traceback
+        import ctypes
+        import traceback
         # WARNING: requires Windows XP SP2 or higher!
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except:
             traceback.print_exc()
-            logger.info("Admin check failed, assuming not an admin.")
             return False
     else:
         # Check for root on Posix
@@ -142,12 +150,14 @@ class Plugin(GlancesPlugin):
     stats is a list of dicts
     """
 
-    def __init__(self, args=None):
+    def __init__(self,
+                 args=None,
+                 stats_init_value=[]):
         """Init the plugin."""
         # check if user is admin
         if not is_admin():
             disable(args, "smart")
-            logger.info("Not admin user, SMART plugin disabled.")
+            logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
         super(Plugin, self).__init__(args=args)
 
@@ -159,7 +169,10 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update SMART stats using the input method."""
         # Init new stats
-        stats = []
+        stats = self.get_init_value()
+
+        if import_error_tag:
+            return self.stats
 
         if self.input_method == 'local':
             stats = get_smart_data()
