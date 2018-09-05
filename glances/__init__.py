@@ -27,11 +27,7 @@ import signal
 import sys
 
 # Global name
-<<<<<<< HEAD
-__version__ = '3.0.1_beta'
-=======
-__version__ = '3.0.1'
->>>>>>> hotfix/issue1314
+__version__ = '3.1.0_beta'
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'
 
