@@ -16,6 +16,7 @@ py-cpuinfo
 pygal
 pymdstat
 pysnmp
+pySMART.smartx
 pystache
 pyzmq
 requests
