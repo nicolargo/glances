@@ -96,6 +96,7 @@ setup(
         'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
+        'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
