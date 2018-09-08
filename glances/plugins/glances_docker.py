@@ -23,10 +23,11 @@ import os
 import threading
 import time
 
-from glances.compat import iterkeys, itervalues, nativestr
 from glances.logger import logger
+from glances.compat import iterkeys, itervalues, nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.processes import sort_stats as sort_stats_processes, weighted, glances_processes
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
@@ -206,7 +207,7 @@ class Plugin(GlancesPlugin):
                 # Export name (first name in the Names list, without the /)
                 container_stats['name'] = nativestr(container.name)
                 # Export global Names (used by the WebUI)
-                container_stats['Names'] = [ nativestr(container.name)]
+                container_stats['Names'] = [nativestr(container.name)]
                 # Container Id
                 container_stats['Id'] = container.id
                 # Container Image
@@ -245,8 +246,10 @@ class Plugin(GlancesPlugin):
             # Not available
             pass
 
-        # Update the stats
-        self.stats = stats
+        # Sort and update the stats
+        self.stats = sort_stats(stats)
+
+        logger.info('Docker stats (sorted): {}'.format(self.stats))
 
         return self.stats
 
@@ -676,3 +679,16 @@ class ThreadDockerGrabber(threading.Thread):
     def stopped(self):
         """Return True is the thread is stopped."""
         return self._stopper.isSet()
+
+
+def sort_stats(stats):
+    # Sort Docker stats using the same function than processes
+    sortedby = 'cpu_percent'
+    sortedby_secondary = 'memory_usage'
+    if glances_processes.sort_key.startswith('memory'):
+        sortedby = 'memory_usage'
+        sortedby_secondary = 'cpu_percent'
+    sort_stats_processes(stats['containers'],
+                         sortedby=sortedby,
+                         sortedby_secondary=sortedby_secondary)
+    return stats
