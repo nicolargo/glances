@@ -407,7 +407,7 @@ def sort_stats(stats, sortedby=None, reverse=True):
                                       weighted(x[sortedby_secondary])),
                        reverse=reverse)
         except (KeyError, TypeError):
-            stats.sort(key=operator.itemgetter('name'),
+            stats.sort(key=lambda x: x['name'] if x['name'] is not None else '~',
                        reverse=False)
 
     return stats
