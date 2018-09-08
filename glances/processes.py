@@ -375,17 +375,17 @@ def weighted(value):
     return -float('inf') if value is None else value
 
 
-def sort_stats(stats, sortedby=None, reverse=True):
+def sort_stats(stats,
+               sortedby='cpu_percent',
+               sortedby_secondary='memory_percent',
+               reverse=True,):
     """Return the stats (dict) sorted by (sortedby).
 
     Reverse the sort if reverse is True.
     """
-    sortedby_secondary = 'cpu_percent'
-    if sortedby is None:
+    if sortedby is None and sortedby_secondary is None:
         # No need to sort...
         return stats
-    elif sortedby is 'cpu_percent':
-        sortedby_secondary = 'memory_percent'
 
     if sortedby == 'io_counters':
         # Specific case for io_counters
@@ -398,7 +398,7 @@ def sort_stats(stats, sortedby=None, reverse=True):
                        reverse=reverse)
         except Exception:
             stats.sort(key=lambda x: (weighted(x['cpu_percent']),
-                                      weighted(x['memory_percent'])),
+                                      weighted(x[sortedby_secondary])),
                        reverse=reverse)
     else:
         # Others sorts
@@ -407,6 +407,7 @@ def sort_stats(stats, sortedby=None, reverse=True):
                                       weighted(x[sortedby_secondary])),
                        reverse=reverse)
         except (KeyError, TypeError):
+            # Fallback to name
             stats.sort(key=lambda x: x['name'] if x['name'] is not None else '~',
                        reverse=False)
 
