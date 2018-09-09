@@ -25,7 +25,7 @@ import sys
 from glances.compat import u, itervalues
 from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
-from glances.logs import glances_logs
+from glances.events import glances_events
 from glances.processes import glances_processes
 from glances.timer import Timer
 
@@ -375,10 +375,10 @@ class _GlancesCurses(object):
             self.args.disable_folders = not self.args.disable_folders
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
-            glances_logs.clean()
+            glances_events.clean()
         elif self.pressedkey == ord('x'):
             # 'x' > Delete finished warning and critical logs
-            glances_logs.clean(critical=True)
+            glances_events.clean(critical=True)
         elif self.pressedkey == ord('z'):
             # 'z' > Enable or disable processes
             self.args.disable_process = not self.args.disable_process
