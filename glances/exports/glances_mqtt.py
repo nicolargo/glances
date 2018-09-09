@@ -92,7 +92,10 @@ class Export(GlancesExport):
         for sensor, value in zip(columns, points):
             try:
                 sensor = [whitelisted(name) for name in sensor.split('.')]
-                topic = '/'.join([self.topic, self.hostname, name, *sensor])
+                tobeexport = [self.topic, self.hostname, name]
+                tobeexport.extend(sensor)
+                topic = '/'.join(tobeexport)
+
                 self.client.publish(topic, value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
