@@ -75,7 +75,7 @@ class GlancesEvents(object):
                 return i
         return -1
 
-    def get_process_sort_key(self, event_type):
+    def get_event_sort_key(self, event_type):
         """Return the process sort key"""
         # Process sort depending on alert type
         if event_type.startswith("MEM"):
@@ -91,14 +91,13 @@ class GlancesEvents(object):
 
     def set_process_sort(self, event_type):
         """Define the process auto sort key from the alert type."""
-        glances_processes.auto_sort = True
-        glances_processes.sort_key = self.get_process_sort_key(event_type)
+        if glances_processes.auto_sort:
+            glances_processes.sort_key = self.get_event_sort_key(event_type)
 
     def reset_process_sort(self):
         """Reset the process auto sort key."""
-        # Default sort is...
-        glances_processes.auto_sort = True
-        glances_processes.sort_key = 'cpu_percent'
+        if glances_processes.auto_sort:
+            glances_processes.sort_key = 'cpu_percent'
 
     def add(self, event_state, event_type, event_value,
             proc_list=None, proc_desc="", peak_time=6):
@@ -178,18 +177,11 @@ class GlancesEvents(object):
                 self.events_list.remove(self.events_list[event_index])
         else:
             # Update the item
+            self.set_process_sort(event_type)
 
             # State
             if event_state == "CRITICAL":
                 self.events_list[event_index][2] = event_state
-
-            # Value
-            # if event_value > self.events_list[event_index][4]:
-            #     # MAX
-            #     self.events_list[event_index][4] = event_value
-            # elif event_value < self.events_list[event_index][6]:
-            #     # MIN
-            #     self.events_list[event_index][6] = event_value
             # Min value
             self.events_list[event_index][6] = min(self.events_list[event_index][6],
                                                    event_value)
@@ -204,9 +196,11 @@ class GlancesEvents(object):
 
             # TOP PROCESS LIST (only for CRITICAL ALERT)
             if event_state == "CRITICAL":
+                events_sort_key = self.get_event_sort_key(event_type)
                 # Sort the current process list to retreive the TOP 3 processes
-                self.events_list[event_index][9] = sort_stats(proc_list, glances_processes.sort_key)[0:3]
-                self.events_list[event_index][11] = glances_processes.sort_key
+                self.events_list[event_index][9] = sort_stats(proc_list,
+                                                              events_sort_key)[0:3]
+                self.events_list[event_index][11] = events_sort_key
 
             # MONITORED PROCESSES DESC
             self.events_list[event_index][10] = proc_desc
