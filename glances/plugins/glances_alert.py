@@ -21,7 +21,7 @@
 
 from datetime import datetime
 
-from glances.logs import glances_logs
+from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 # from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -96,8 +96,8 @@ class Plugin(GlancesPlugin):
 
     def update(self):
         """Nothing to do here. Just return the global glances_log."""
-        # Set the stats to the glances_logs
-        self.stats = glances_logs.get()
+        # Set the stats to the glances_events
+        self.stats = glances_events.get()
         # Define the global message thanks to the current thresholds
         # and the decision tree
         # !!! Call directly in the msg_curse function
@@ -119,7 +119,7 @@ class Plugin(GlancesPlugin):
             # Header
             # msg = 'Warning or critical alerts'
             # ret.append(self.curse_add_line(msg, "TITLE"))
-            # logs_len = glances_logs.len()
+            # logs_len = glances_events.len()
             # if logs_len > 1:
             #     msg = ' (last {} entries)'.format(logs_len)
             # else:
