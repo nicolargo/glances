@@ -32,7 +32,7 @@ from glances.compat import iterkeys, itervalues, listkeys, map, mean
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
-from glances.logs import glances_logs
+from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 
 
@@ -600,7 +600,7 @@ class GlancesPlugin(object):
             # So stats will be highlited with a specific color
             log_str = "_LOG"
             # Add the log to the list
-            glances_logs.add(ret, stat_name.upper(), value)
+            glances_events.add(ret, stat_name.upper(), value)
 
         # Manage threshold
         self.manage_threshold(stat_name, ret)

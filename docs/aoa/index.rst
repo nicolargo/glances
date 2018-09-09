@@ -37,6 +37,6 @@ Legend:
    ps
    monitor
    amps
-   logs
+   events
    docker
    actions

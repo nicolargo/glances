@@ -1,17 +1,16 @@
-.. _logs:
+.. _events:
 
-Logs
-====
+events
+======
 
-.. image:: ../_static/logs.png
+.. image:: ../_static/events.png
 
-A log messages list is displayed in the bottom of the screen if and only
-if:
+Events list is displayed in the bottom of the screen if and only if:
 
 - at least one ``WARNING`` or ``CRITICAL`` alert was occurred
 - space is available in the bottom of the console/terminal
 
-Each alert message displays the following information:
+Each event message displays the following information:
 
 1. start datetime
 2. duration if alert is terminated or `ongoing` if the alert is still in
