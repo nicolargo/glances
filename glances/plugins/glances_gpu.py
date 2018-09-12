@@ -32,6 +32,15 @@ except Exception as e:
 else:
     import_error_tag = False
 
+# Define the history items list
+# All items in this list will be historised if the --enable-history tag is set
+items_history_list = [{'name': 'proc',
+                       'description': 'GPU processor',
+                       'y_unit': '%'},
+                      {'name': 'mem',
+                       'description': 'Memory consumption',
+                       'y_unit': '%'}]
+
 
 class Plugin(GlancesPlugin):
     """Glances GPU plugin (limited to NVIDIA chipsets).

@@ -71,7 +71,8 @@ class GlancesExport(object):
                 'uptime',
                 'sensors',
                 'docker',
-                'uptime']
+                'uptime',
+                'gpu']
 
     def load_conf(self, section, mandatories=['host', 'port'], options=None):
         """Load the export <section> configuration in the Glances configuration file.
