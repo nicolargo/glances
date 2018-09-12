@@ -249,8 +249,6 @@ class Plugin(GlancesPlugin):
         # Sort and update the stats
         self.stats = sort_stats(stats)
 
-        logger.info('Docker stats (sorted): {}'.format(self.stats))
-
         return self.stats
 
     def get_docker_cpu(self, container_id, all_stats):
