@@ -1,16 +1,16 @@
 #
-# Glances Dockerfile (based on Ubuntu)
+# Glances Dockerfile based on Alpine OS
 #
 # https://github.com/nicolargo/glances
 #
 
 # Pull base image.
-FROM ubuntu
+FROM alpine
 
 # Install Glances (develop branch)
-RUN apt-get update && apt-get -y install curl && rm -rf /var/lib/apt/lists/*
-RUN curl -L https://raw.githubusercontent.com/nicolargo/glancesautoinstall/master/install.sh | /bin/bash && rm -rf /var/lib/apt/lists/*
-
+RUN apk add python py2-psutil py2-bottle
+RUN apk add git
+RUN git clone -b develop https://github.com/nicolargo/glances.git
 
 # Define working directory.
 WORKDIR /glances

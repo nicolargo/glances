@@ -1,18 +1,16 @@
 #
-# Glances Dockerfile for ARM
+# Glances Dockerfile for ARM (based on Alpine ARM)
 #
 # https://github.com/nicolargo/glances
 #
 
 # Pull base image.
-FROM alpine
+FROM easypi/alpine-arm
 
 # Install Glances (develop branch)
 RUN apk add python py2-psutil py2-bottle
 RUN apk add git
-RUN git clone https://github.com/nicolargo/glances.git
-RUN cd /glances
-RUN git checkout develop
+RUN git clone -b develop https://github.com/nicolargo/glances.git
 
 # Define working directory.
 WORKDIR /glances
