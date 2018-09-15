@@ -1,5 +1,5 @@
 #
-# Glances Dockerfile
+# Glances Dockerfile based on Ubuntu OS
 #
 # https://github.com/nicolargo/glances
 #
