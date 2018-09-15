@@ -11,6 +11,7 @@ FROM alpine
 RUN apk add python py2-psutil py2-bottle
 RUN apk add git
 RUN git clone https://github.com/nicolargo/glances.git
+RUN cd /glances
 RUN git checkout develop
 
 # Define working directory.
