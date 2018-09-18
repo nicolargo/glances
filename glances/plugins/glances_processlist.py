@@ -31,15 +31,16 @@ from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 
-def convert_timedelta(delta):
-    """Convert timedelta to human-readable time."""
-    days, total_seconds = delta.days, delta.seconds
-    hours = days * 24 + total_seconds // 3600
-    minutes = (total_seconds % 3600) // 60
-    seconds = str(total_seconds % 60).zfill(2)
-    microseconds = str(delta.microseconds)[:2].zfill(2)
+def seconds_to_hms(input_seconds):
+    """Convert seconds to human-readable time."""
+    minutes, seconds = divmod(input_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
 
-    return hours, minutes, seconds, microseconds
+    hours = int(hours)
+    minutes = int(minutes)
+    seconds = str(int(seconds)).zfill(2)
+
+    return hours, minutes, seconds
 
 
 def split_cmdline(cmdline):
@@ -223,7 +224,8 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
         # TIME+
         try:
-            delta = timedelta(seconds=sum(p['cpu_times']))
+            # Sum user and system time
+            user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
         except (OverflowError, TypeError) as e:
             # Catch OverflowError on some Amazon EC2 server
             # See https://github.com/nicolargo/glances/issues/87
@@ -233,7 +235,7 @@ class Plugin(GlancesPlugin):
             msg = self.layout_header['time'].format('?')
             ret.append(self.curse_add_line(msg, optional=True))
         else:
-            hours, minutes, seconds, microseconds = convert_timedelta(delta)
+            hours, minutes, seconds = seconds_to_hms(user_system_time)
             if hours > 99:
                 msg = '{:<7}h'.format(hours)
             elif 0 < hours < 100:
