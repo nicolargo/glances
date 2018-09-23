@@ -1,29 +1,28 @@
 {
   "private": true,
   "dependencies": {
-    "angular": "^1.5.8",
+    "angular": "^1.7.4",
     "angular-hotkeys": "^1.7.0",
-    "bootstrap": "^3.3.5",
+    "bootstrap": "^3.3.7",
     "favico.js": "^0.3.10",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.11"
   },
   "devDependencies": {
-    "bower": "^1.8.0",
-    "clean-webpack-plugin": "^0.1.18",
-    "copy-webpack-plugin": "^4.4.1",
-    "css-loader": "^0.28.9",
+    "clean-webpack-plugin": "^0.1.19",
+    "copy-webpack-plugin": "^4.5.2",
+    "css-loader": "^0.28.11",
     "del": "^2.2.1",
     "exports-loader": "^0.7.0",
-    "file-loader": "^1.1.6",
+    "file-loader": "^1.1.11",
     "html-loader": "^0.5.5",
-    "less": "^3.0.4",
-    "less-loader": "^4.0.5",
+    "less": "^3.8.1",
+    "less-loader": "^4.1.0",
     "ngtemplate-loader": "^2.0.1",
-    "node-sass": "^4.9.0",
-    "sass-loader": "^6.0.6",
-    "style-loader": "^0.20.1",
+    "node-sass": "^4.9.3",
+    "sass-loader": "^6.0.7",
+    "style-loader": "^0.20.3",
     "url-loader": "^0.6.2",
-    "webpack": "^3.11.0"
+    "webpack": "^3.12.0"
   },
   "scripts": {
     "build": "webpack --bail --progress --profile",
