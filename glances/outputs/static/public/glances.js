@@ -38044,8 +38044,8 @@ function bytesFilter() {
             return bytes;
         }
 
-        var symbols = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
-        var prefix = {
+        const symbols = ['Y', 'Z', 'E', 'P', 'T', 'G', 'M', 'K'];
+        const prefix = {
             'Y': 1208925819614629174706176,
             'Z': 1180591620717411303424,
             'E': 1152921504606846976,
@@ -38056,9 +38056,8 @@ function bytesFilter() {
             'K': 1024
         };
 
-        var reverseSymbols = __WEBPACK_IMPORTED_MODULE_1_lodash___default()(symbols).reverse().value();
-        for (var i = 0; i < reverseSymbols.length; i++) {
-            var symbol = reverseSymbols[i];
+        for (var i = 0; i < symbols.length; i++) {
+            var symbol = symbols[i];
             var value = bytes / prefix[symbol];
 
             if (value > 1) {
