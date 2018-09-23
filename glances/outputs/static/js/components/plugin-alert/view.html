@@ -8,7 +8,7 @@
             <div class="table-cell text-left">
                 {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span
                     ng-hide="alert.ongoing">{{alert.level}} on</span> <span class="{{ alert.level | lowercase }}">{{alert.name}}</span>
-                ({{alert.max}})
+                ({{alert.max| number:1 }})
             </div>
         </div>
     </div>
