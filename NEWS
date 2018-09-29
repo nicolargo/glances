@@ -2,6 +2,13 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.0.2
+=============
+
+Bug corrected:
+
+    * Glances IO Errorno 22 - Invalid argument #1326
+
 Version 3.0.1
 =============
 
