@@ -13,6 +13,7 @@ Enhancements and new features:
 Bugs corrected:
 
     * TypeError: '<' not supported between instances of 'float' and 'str' #1315
+    * Glances IO Errorno 22 - Invalid argument #1326
 
 Version 3.0.1
 =============
