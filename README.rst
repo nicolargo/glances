@@ -208,8 +208,9 @@ GNU/Linux
 
 `Glances` is available on many Linux distributions, so you should be
 able to install it using your favorite package manager. Be aware that
-when you use this method the operating system package for `Glances`
+when you use this method the operating system `package`_ for `Glances`
 may not be the latest version.
+
 
 FreeBSD
 -------
@@ -401,3 +402,4 @@ LGPLv3. See ``COPYING`` for more details.
 .. _readthedocs: https://glances.readthedocs.io/
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
+.. _package: https://repology.org/metapackage/glances/packages
