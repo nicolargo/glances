@@ -71,7 +71,6 @@ class GlancesExport(object):
                 'uptime',
                 'sensors',
                 'docker',
-                'uptime',
                 'gpu']
 
     def load_conf(self, section, mandatories=['host', 'port'], options=None):
@@ -208,3 +207,7 @@ class GlancesExport(object):
                 export_names += item_names
                 export_values += item_values
         return export_names, export_values
+
+    def export(self, name, columns, points):
+        # This method should be implemented by each exporter
+        pass
