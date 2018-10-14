@@ -595,7 +595,7 @@ class _GlancesCurses(object):
                 'Examples:\n' +
                 '- python\n' +
                 '- .*python.*\n' +
-                '- \/usr\/lib.*\n' +
+                '- /usr/lib.*\n' +
                 '- name:.*nautilus.*\n' +
                 '- cmdline:.*glances.*\n' +
                 '- username:nicolargo\n' +
