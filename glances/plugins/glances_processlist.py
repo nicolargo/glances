@@ -329,7 +329,9 @@ class Plugin(GlancesPlugin):
             else:
                 msg = self.layout_stat['name'].format(p['name'])
                 ret.append(self.curse_add_line(msg, splittable=True))
-        except UnicodeEncodeError:
+        except (TypeError, UnicodeEncodeError) as e:
+            # Avoid crach after running fine for several hours #1335
+            logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
             ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
