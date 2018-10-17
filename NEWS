@@ -14,6 +14,7 @@ Bugs corrected:
 
     * TypeError: '<' not supported between instances of 'float' and 'str' #1315
     * GPU plugin not exported to influxdb #1333
+    * Crash after running fine for several hours #1335
 
 Version 3.0.2
 =============
