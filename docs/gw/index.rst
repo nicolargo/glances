@@ -16,7 +16,6 @@ to providing stats to multiple services (see list below).
    elastic
    graph
    influxdb
-   json
    kafka
    mqtt
    opentsdb
