@@ -20,7 +20,7 @@
 """Cloud plugin.
 
 Supported Cloud API:
-- AWS EC2 (class ThreadAwsEc2Grabber, see bellow)
+- OpenStack meta data (class ThreadOpenStack, see bellow): AWS, OVH...
 """
 
 import threading
@@ -61,15 +61,15 @@ class Plugin(GlancesPlugin):
         # Init the stats
         self.reset()
 
-        # Init thread to grab AWS EC2 stats asynchroniously
-        self.aws_ec2 = ThreadAwsEc2Grabber()
+        # Init thread to grab OpenStack stats asynchroniously
+        self.OPENSTACK = ThreadOpenStack()
 
         # Run the thread
-        self.aws_ec2. start()
+        self.OPENSTACK.start()
 
     def exit(self):
         """Overwrite the exit method to close threads."""
-        self.aws_ec2.stop()
+        self.OPENSTACK.stop()
         # Call the father class
         super(Plugin, self).exit()
 
@@ -94,7 +94,7 @@ class Plugin(GlancesPlugin):
             #                    'instance-id': 'instance-id',
             #                    'instance-type': 'instance-type',
             #                    'region': 'placement/availability-zone'}
-            stats = self.aws_ec2.stats
+            stats = self.OPENSTACK.stats
 
         # Update the stats
         self.stats = stats
@@ -110,12 +110,14 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Generate the output
-        if 'ami-id' in self.stats and 'region' in self.stats:
-            msg = 'AWS EC2'
+        if 'instance-type' in self.stats \
+           and 'instance-id' in self.stats \
+           and 'region' in self.stats:
+            msg = 'Cloud '
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' {} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
-                                                to_ascii(self.stats['instance-id']),
-                                                to_ascii(self.stats['region']))
+            msg = '{} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
+                                               to_ascii(self.stats['instance-id']),
+                                               to_ascii(self.stats['region']))
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
@@ -123,25 +125,24 @@ class Plugin(GlancesPlugin):
         return ret
 
 
-class ThreadAwsEc2Grabber(threading.Thread):
+class ThreadOpenStack(threading.Thread):
     """
-    Specific thread to grab AWS EC2 stats.
+    Specific thread to grab OpenStack stats.
 
     stats is a dict
     """
 
-    # AWS EC2
-    # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
-    AWS_EC2_API_URL = 'http://169.254.169.254/latest/meta-data'
-    AWS_EC2_API_METADATA = {'ami-id': 'ami-id',
-                            'instance-id': 'instance-id',
-                            'instance-type': 'instance-type',
-                            'region': 'placement/availability-zone'}
+    # https://docs.openstack.org/nova/latest/user/metadata-service.html
+    OPENSTACK_API_URL = 'http://169.254.169.254/latest/meta-data'
+    OPENSTACK_API_METADATA = {'ami-id': 'ami-id',
+                              'instance-id': 'instance-id',
+                              'instance-type': 'instance-type',
+                              'region': 'placement/availability-zone'}
 
     def __init__(self):
         """Init the class."""
-        logger.debug("cloud plugin - Create thread for AWS EC2")
-        super(ThreadAwsEc2Grabber, self).__init__()
+        logger.debug("cloud plugin - Create thread for OpenStack metadata")
+        super(ThreadOpenStack, self).__init__()
         # Event needed to stop properly the thread
         self._stopper = threading.Event()
         # The class return the stats as a dict
@@ -156,13 +157,13 @@ class ThreadAwsEc2Grabber(threading.Thread):
             self.stop()
             return False
 
-        for k, v in iteritems(self.AWS_EC2_API_METADATA):
-            r_url = '{}/{}'.format(self.AWS_EC2_API_URL, v)
+        for k, v in iteritems(self.OPENSTACK_API_METADATA):
+            r_url = '{}/{}'.format(self.OPENSTACK_API_URL, v)
             try:
                 # Local request, a timeout of 3 seconds is OK
                 r = requests.get(r_url, timeout=3)
             except Exception as e:
-                logger.debug('cloud plugin - Cannot connect to the AWS EC2 API {}: {}'.format(r_url, e))
+                logger.debug('cloud plugin - Cannot connect to the OpenStack metadata API {}: {}'.format(r_url, e))
                 break
             else:
                 if r.ok:
@@ -182,7 +183,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
 
     def stop(self, timeout=None):
         """Stop the thread."""
-        logger.debug("cloud plugin - Close thread for AWS EC2")
+        logger.debug("cloud plugin - Close thread for OpenStack metadata")
         self._stopper.set()
 
     def stopped(self):
