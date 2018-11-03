@@ -19,7 +19,7 @@ In client mode, the server connection status is also displayed.
 
 .. image:: ../_static/disconnected.png
 
-If you are hosted on an ``AWS EC2`` instance, some additional
+If you are hosted on an ``OpenStack`` instance, some additional
 information can be displayed (AMI-ID, region).
 
 .. image:: ../_static/aws.png
