@@ -108,7 +108,8 @@ class Plugin(GlancesPlugin):
                 network_new = netiocounters
                 for net in network_new:
                     # Do not take hidden interface into account
-                    if self.is_hide(net):
+                    # or KeyError: 'eth0' when interface is not connected #1348
+                    if self.is_hide(net) or net not in netstatus:
                         continue
                     try:
                         cumulative_rx = network_new[net].bytes_recv
