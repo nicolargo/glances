@@ -375,10 +375,40 @@ def weighted(value):
     return -float('inf') if value is None else value
 
 
+def _sort_io_counters(process,
+                      sortedby='io_counters',
+                      sortedby_secondary='memory_percent'):
+    """Specific case for io_counters
+    Sum of io_r + io_w"""
+    return process[sortedby][0] - process[sortedby][2] + process[sortedby][1] - process[sortedby][3]
+
+
+def _sort_cpu_times(process,
+                    sortedby='cpu_times',
+                    sortedby_secondary='memory_percent'):
+    """ Specific case for cpu_times
+    Patch for "Sorting by process time works not as expected #1321"
+    By default PsUtil only takes user time into account
+    see (https://github.com/giampaolo/psutil/issues/1339)
+    The following implementation takes user and system time into account"""
+    return process[sortedby][0] + process[sortedby][1]
+
+
+def _sort_lambda(sortedby='cpu_percent',
+                 sortedby_secondary='memory_percent'):
+    """Return a sort lambda function for the sortedbykey"""
+    ret = None
+    if sortedby == 'io_counters':
+        ret = _sort_io_counters
+    elif sortedby == 'cpu_times':
+        ret = _sort_cpu_times
+    return ret
+
+
 def sort_stats(stats,
                sortedby='cpu_percent',
                sortedby_secondary='memory_percent',
-               reverse=True,):
+               reverse=True):
     """Return the stats (dict) sorted by (sortedby).
 
     Reverse the sort if reverse is True.
@@ -387,28 +417,28 @@ def sort_stats(stats,
         # No need to sort...
         return stats
 
-    if sortedby == 'io_counters':
-        # Specific case for io_counters
-        # Sum of io_r + io_w
+    # Check if a specific sort should be done
+    sort_lambda = _sort_lambda(sortedby=sortedby,
+                               sortedby_secondary=sortedby_secondary)
+
+    if sort_lambda is not None:
+        # Specific sort
         try:
-            # Sort process by IO rate (sum IO read + IO write)
-            stats.sort(key=lambda process: process[sortedby][0] -
-                       process[sortedby][2] + process[sortedby][1] -
-                       process[sortedby][3],
-                       reverse=reverse)
+            stats.sort(key=sort_lambda, reverse=reverse)
         except Exception:
-            stats.sort(key=lambda x: (weighted(x['cpu_percent']),
-                                      weighted(x[sortedby_secondary])),
+            # If an error is detected, fallback to cpu_percent
+            stats.sort(key=lambda process: (weighted(process['cpu_percent']),
+                                            weighted(process[sortedby_secondary])),
                        reverse=reverse)
     else:
-        # Others sorts
+        # Standard sort
         try:
-            stats.sort(key=lambda x: (weighted(x[sortedby]),
-                                      weighted(x[sortedby_secondary])),
+            stats.sort(key=lambda process: (weighted(process[sortedby]),
+                                            weighted(process[sortedby_secondary])),
                        reverse=reverse)
         except (KeyError, TypeError):
             # Fallback to name
-            stats.sort(key=lambda x: x['name'] if x['name'] is not None else '~',
+            stats.sort(key=lambda process: process['name'] if process['name'] is not None else '~',
                        reverse=False)
 
     return stats
