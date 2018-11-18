@@ -17,6 +17,7 @@ Bugs corrected:
     * Crash after running fine for several hours #1335
     * Timezone listed doesn’t match system timezone, outputs wrong time #1337
     * Compare issue with Process.cpu_times() #1339
+    * ERROR -- Can not grab extended stats (invalid attr name 'num_fds') #1351
 
 Others:
 
