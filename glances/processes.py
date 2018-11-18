@@ -279,7 +279,10 @@ class GlancesProcesses(object):
                 try:
                     top_process = psutil.Process(proc['pid'])
                     extended_stats = ['cpu_affinity', 'ionice',
-                                      'num_ctx_switches', 'num_fds']
+                                      'num_ctx_switches']
+                    if LINUX:
+                        # num_fds only avalable on Unix system (see issue #1351)
+                        extended_stats += ['num_fds']
                     if WINDOWS:
                         extended_stats += ['num_handles']
 
