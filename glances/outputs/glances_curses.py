@@ -302,20 +302,26 @@ class _GlancesCurses(object):
             except Exception:
                 pass
 
+    # def get_key(self, window):
+    #     # Catch ESC key AND numlock key (issue #163)
+    #     keycode = [0, 0]
+    #     keycode[0] = window.getch()
+    #     keycode[1] = window.getch()
+    #
+    #     if keycode != [-1, -1]:
+    #         logger.debug("Keypressed (code: %s)" % keycode)
+    #
+    #     if keycode[0] == 27 and keycode[1] != -1:
+    #         # Do not escape on specials keys
+    #         return -1
+    #     else:
+    #         return keycode[0]
+
     def get_key(self, window):
-        # Catch ESC key AND numlock key (issue #163)
-        keycode = [0, 0]
-        keycode[0] = window.getch()
-        keycode[1] = window.getch()
-
-        if keycode != [-1, -1]:
-            logger.debug("Keypressed (code: %s)" % keycode)
-
-        if keycode[0] == 27 and keycode[1] != -1:
-            # Do not escape on specials keys
-            return -1
-        else:
-            return keycode[0]
+        # @TODO: Check issue #163
+        ret = window.getch()
+        logger.debug("Keypressed (code: %s)" % ret)
+        return ret
 
     def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
@@ -945,8 +951,6 @@ class _GlancesCurses(object):
                return_to_browser=False):
         """Update the screen.
 
-        Catch key every 100 ms.
-
         INPUT
         stats: Stats database to display
         duration: duration of the loop
@@ -958,7 +962,7 @@ class _GlancesCurses(object):
             True: Do not exist, return to the browser list
             False: Exit and return to the shell
 
-        OUPUT
+        OUTPUT
         True: Exit key has been pressed
         False: Others cases...
         """
@@ -968,12 +972,14 @@ class _GlancesCurses(object):
         # If the duration is < 0 (update + export time > refresh_time)
         # Then display the interface and log a message
         if duration <= 0:
-            logger.debug('Update and export time higher than refresh_time.')
+            logger.warning('Update and export time higher than refresh_time.')
             duration = 0.1
 
-        # Wait
+        # Wait duration (in s) time
         exitkey = False
         countdown = Timer(duration)
+        # Set the default timeout (in ms) for the getch method
+        self.term_window.timeout(int(duration * 1000))
         while not countdown.finished() and not exitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
@@ -982,8 +988,6 @@ class _GlancesCurses(object):
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
-            # Wait 100ms...
-            self.wait()
 
         return exitkey
 
