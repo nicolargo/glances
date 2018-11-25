@@ -988,6 +988,8 @@ class _GlancesCurses(object):
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
+                # Overwrite the timeout with the countdown
+                self.term_window.timeout(int(countdown.get() * 1000))
 
         return exitkey
 
