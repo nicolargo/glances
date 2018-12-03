@@ -95,6 +95,9 @@ class GlancesWebList(object):
                     # Convert to second
                     new_web['rtt_warning'] = int(new_web['rtt_warning']) / 1000.0
 
+                # Indice
+                new_web['indice'] = 'web_' + str(i)
+
                 # Add the server to the list
                 logger.debug("Add Web URL %s to the static list" % new_web['url'])
                 web_list.append(new_web)
