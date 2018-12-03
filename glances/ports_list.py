@@ -79,6 +79,7 @@ class GlancesPortsList(object):
                 new_port['timeout'] = timeout
                 new_port['status'] = None
                 new_port['rtt_warning'] = None
+                new_port['indice'] = str('port_0')
                 logger.debug("Add default gateway %s to the static list" % (new_port['host']))
                 ports_list.append(new_port)
 
@@ -120,6 +121,9 @@ class GlancesPortsList(object):
                 if new_port['rtt_warning'] is not None:
                     # Convert to second
                     new_port['rtt_warning'] = int(new_port['rtt_warning']) / 1000.0
+
+                # Indice
+                new_port['indice'] = 'port_' + str(i)
 
                 # Add the server to the list
                 logger.debug("Add port %s:%s to the static list" % (new_port['host'], new_port['port']))

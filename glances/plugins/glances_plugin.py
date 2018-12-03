@@ -530,6 +530,13 @@ class GlancesPlugin(object):
         """
         return self.stats
 
+    def get_stat_name(self, header=""):
+        """"Return the stat name with an optional header"""
+        ret = self.plugin_name
+        if header != "":
+            ret += '_' + header
+        return ret
+
     def get_alert(self,
                   current=0,
                   minimum=0,
@@ -572,11 +579,8 @@ class GlancesPlugin(object):
         except TypeError:
             return 'DEFAULT'
 
-        # Build the stat_name = plugin_name + header
-        if header == "":
-            stat_name = self.plugin_name
-        else:
-            stat_name = self.plugin_name + '_' + header
+        # Build the stat_name
+        stat_name = self.get_stat_name(header=header)
 
         # Manage limits
         # If is_max is set then display the value in MAX
@@ -616,7 +620,6 @@ class GlancesPlugin(object):
                          trigger):
         """Manage the threshold for the current stat."""
         glances_thresholds.add(stat_name, trigger)
-        # logger.info(glances_thresholds.get())
 
     def manage_action(self,
                       stat_name,
@@ -681,7 +684,7 @@ class GlancesPlugin(object):
 
         # logger.debug("{} {} value is {}".format(stat_name, criticity, limit))
 
-        # Return the limit
+        # Return the limiter
         return limit
 
     def get_limit_action(self, criticity, stat_name=""):
