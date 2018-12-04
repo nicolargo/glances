@@ -44,7 +44,7 @@ class GlancesMain(object):
     """Main class to manage Glances instance."""
 
     # Default stats' refresh time is 3 seconds
-    refresh_time = 3
+    refresh_time = 30
     # Set the default cache lifetime to 1 second (only for server)
     cached_time = 1
     # By default, Glances is ran in standalone mode (no client/server)
@@ -166,6 +166,8 @@ Examples of use:
                             default='./glances.csv',
                             dest='export_csv_file',
                             help='file path for CSV exporter')
+        parser.add_argument('--export-http', action='store_true',
+                            dest='export_http', help='export stats to a HTTP endpoint')
         parser.add_argument('--export-json-file',
                             default='./glances.json',
                             dest='export_json_file',
