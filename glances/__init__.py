@@ -25,6 +25,10 @@ import locale
 import platform
 import signal
 import sys
+import random
+import time
+import os
+import json
 
 # Global name
 __version__ = '3.1.0_beta'
@@ -118,6 +122,18 @@ def main():
     Select the mode (standalone, client or server)
     Run it...
     """
+
+    data = {}
+    server_start_interval = random.randint(0, 59)
+    data['server_start_interval'] = server_start_interval
+
+    if 'TEST' in os.environ:
+      f = open('/tmp/glances-init', 'w')
+      f.write(json.dumps(data))
+      f.close()
+    else:
+      time.sleep(server_start_interval)
+
     # Catch the CTRL-C signal
     signal.signal(signal.SIGINT, __signal_handler)
 
