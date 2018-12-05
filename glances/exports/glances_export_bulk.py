@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,13 @@ I am your father...
 ...for all Glances exports IF.
 """
 
+import json
+
 from glances.compat import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
 
 
-class GlancesExportBulk(object):
+class GlancesExport(object):
 
     """Main class for Glances export IF."""
 
@@ -83,10 +85,10 @@ class GlancesExportBulk(object):
             for opt in mandatories:
                 setattr(self, opt, self.config.get_value(section, opt))
         except NoSectionError:
-            logger.critical("No {} configuration found".format(section))
+            logger.error("No {} configuration found".format(section))
             return False
         except NoOptionError as e:
-            logger.critical("Error in the {} configuration ({})".format(section, e))
+            logger.error("Error in the {} configuration ({})".format(section, e))
             return False
 
         # Load options
@@ -115,9 +117,9 @@ class GlancesExportBulk(object):
     def parse_tags(self, tags):
         """Parse tags into a dict.
 
-        tags: a comma separated list of 'key:value' pairs.
+        input tags: a comma separated list of 'key:value' pairs.
             Example: foo:bar,spam:eggs
-        dtags: a dict of tags.
+        output dtags: a dict of tags.
             Example: {'foo': 'bar', 'spam': 'eggs'}
         """
         dtags = {}
@@ -137,7 +139,7 @@ class GlancesExportBulk(object):
         The method builds two lists: names and values
         and calls the export method to export the stats.
 
-        Be aware that CSV export overwrite this class and use a specific one.
+        Note: this class can be overwrite (for example in CSV and Graph).
         """
         if not self.export_enable:
             return False
@@ -148,16 +150,7 @@ class GlancesExportBulk(object):
 
         # Loop over plugins to export
         for plugin in self.plugins_to_export():
-            if isinstance(all_stats[plugin], dict):
-                all_stats[plugin].update(all_limits[plugin])
-            elif isinstance(all_stats[plugin], list):
-                # TypeError: string indices must be integers (Network plugin) #1054
-                for i in all_stats[plugin]:
-                    i.update(all_limits[plugin])
-            else:
-                continue
-            export_names, export_values = self.__build_export(all_stats[plugin])
-            self.export(plugin, export_names, export_values)
+          self.export_stats(plugin, all_stats[plugin])
         self.flush()
         return True
 
@@ -175,6 +168,8 @@ class GlancesExportBulk(object):
                 pre_key = ''
             # Walk through the dict
             for key, value in iteritems(stats):
+                if isinstance(value, bool):
+                    value = json.dumps(value)
                 if isinstance(value, list):
                     try:
                         value = value[0]
