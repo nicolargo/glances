@@ -151,7 +151,9 @@ class GlancesExportBulk(object):
             if isinstance(all_stats[plugin], dict):
                 all_stats[plugin].update(all_limits[plugin])
             elif isinstance(all_stats[plugin], list):
-                all_stats[plugin] += all_limits[plugin]
+                # TypeError: string indices must be integers (Network plugin) #1054
+                for i in all_stats[plugin]:
+                    i.update(all_limits[plugin])
             else:
                 continue
             export_names, export_values = self.__build_export(all_stats[plugin])
