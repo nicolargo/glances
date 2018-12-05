@@ -67,8 +67,7 @@ class Export(GlancesExportBulk):
 
         self.export_enable = True
 
-    def export(self, name, columns, points):
-      data = {k: v for (k, v) in dict(zip(columns, points)).iteritems()}
+    def export_stats(self, name, data):
       self.bulk[name] = data
 
     def flush(self):
