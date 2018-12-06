@@ -29,7 +29,7 @@ from glances.compat import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
 
 
-class GlancesExport(object):
+class GlancesExportBulk(object):
 
     """Main class for Glances export IF."""
 
