@@ -277,14 +277,17 @@ class ThreadAwsEc2Grabber(threading.Thread):
                 headers['Metadata'] = "true"
             elif url == self.GCP_VM_API_URL_CHECK:
                 headers['Metadata-Flavor'] = "Google"
-            r = requests.get(url, headers=headers)
-            if r.ok:
-                if url == self.AWS_EC2_API_URL_CHECK:
-                    return self.AWS
-                elif url == self.AZURE_VM_API_URL_CHECK:
-                    return self.AZURE
-                elif url == self.GCP_VM_API_URL_CHECK:
-                    return self.GCP
-                elif url == self.OPC_VM_API_URL_CHECK:
-                    return self.OPC
+            try:
+                r = requests.get(url, headers=headers)
+                if r.ok:
+                    if url == self.AWS_EC2_API_URL_CHECK:
+                        return self.AWS
+                    elif url == self.AZURE_VM_API_URL_CHECK:
+                        return self.AZURE
+                    elif url == self.GCP_VM_API_URL_CHECK:
+                        return self.GCP
+                    elif url == self.OPC_VM_API_URL_CHECK:
+                        return self.OPC
+            except Exception as e:
+                pass
         return None
