@@ -133,6 +133,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
     AWS = 'aws'
     AZURE = 'azure'
     GCP = 'gcp'
+    OPC = 'opc'
 
     # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
     AWS_EC2_API_URL = 'http://169.254.169.254/latest/dynamic/instance-identity/document'
@@ -154,6 +155,9 @@ class ThreadAwsEc2Grabber(threading.Thread):
                            'tags' : 'tags',
                            'zone' : 'zone'
                            }
+    # https://docs.cloud.oracle.com/iaas/Content/Compute/Tasks/gettingmetadata.htm
+    OPC_VM_API_URL = 'http://169.254.169.254/opc/v1/instance/'
+    OPC_VM_API_URL_CHECK = 'http://169.254.169.254/opc/v1/instance/'
 
     def __init__(self):
         """Init the class"""
@@ -225,6 +229,24 @@ class ThreadAwsEc2Grabber(threading.Thread):
                         self._stats[k] = r.content
                 except Exception as e:
                     logger.debug('cloud plugin - Cannot connect to the GCP VM API {}: {}'.format(r_url, e))
+        elif cloud == self.OPC:
+            self._stats['type'] = self.OPC
+            for k, v in iteritems(self.OPC_VM_API_URL):
+                r_url = self.OPC_VM_API_URL
+                try:
+                    r = requests.get(r_url, timeout=3)
+                    if r.ok:
+                        document = json.loads(r.content)
+                        self._stats['id'] = r.content['id']
+                        self._stats['displayName'] = r.content['displayName']
+                        self._stats['compartmentId'] = r.content['compartmentId']
+                        self._stats['shape'] = r.content['shape']
+                        self._stats['region'] = r.content['region']
+                        self._stats['availabilityDomain'] = r.content['availabilityDomain']
+                        self._stats['timeCreated'] = r.content['timeCreated']
+                        self._stats['image'] = r.content['image']
+                except Exception as e:
+                    logger.debug('cloud plugin - Cannot connect to the OPC VM API {}: {}'.format(r_url, e))
 
 
         return True
@@ -249,7 +271,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
         return self._stopper.isSet()
 
     def determine_cloud_provider(self):
-        for url in [self.AWS_EC2_API_URL_CHECK, self.AZURE_VM_API_URL_CHECK, self.GCP_VM_API_URL_CHECK]:
+        for url in [self.AWS_EC2_API_URL_CHECK, self.AZURE_VM_API_URL_CHECK, self.GCP_VM_API_URL_CHECK, self.OPC_VM_API_URL_CHECK]:
             headers = {}
             if url == self.AZURE_VM_API_URL_CHECK:
                 headers['Metadata'] = "true"
@@ -263,4 +285,6 @@ class ThreadAwsEc2Grabber(threading.Thread):
                     return self.AZURE
                 elif url == self.GCP_VM_API_URL_CHECK:
                     return self.GCP
+                elif url == self.OPC_VM_API_URL_CHECK:
+                    return self.OPC
         return None
