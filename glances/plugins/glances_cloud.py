@@ -231,22 +231,21 @@ class ThreadAwsEc2Grabber(threading.Thread):
                     logger.debug('cloud plugin - Cannot connect to the GCP VM API {}: {}'.format(r_url, e))
         elif cloud == self.OPC:
             self._stats['type'] = self.OPC
-            for k, v in iteritems(self.OPC_VM_API_URL):
-                r_url = self.OPC_VM_API_URL
-                try:
-                    r = requests.get(r_url, timeout=3)
-                    if r.ok:
-                        document = json.loads(r.content)
-                        self._stats['id'] = r.content['id']
-                        self._stats['displayName'] = r.content['displayName']
-                        self._stats['compartmentId'] = r.content['compartmentId']
-                        self._stats['shape'] = r.content['shape']
-                        self._stats['region'] = r.content['region']
-                        self._stats['availabilityDomain'] = r.content['availabilityDomain']
-                        self._stats['timeCreated'] = r.content['timeCreated']
-                        self._stats['image'] = r.content['image']
-                except Exception as e:
-                    logger.debug('cloud plugin - Cannot connect to the OPC VM API {}: {}'.format(r_url, e))
+            r_url = self.OPC_VM_API_URL
+            try:
+                r = requests.get(r_url, timeout=3)
+                if r.ok:
+                    document = json.loads(r.content)
+                    self._stats['id'] = document['id']
+                    self._stats['displayName'] = document['displayName']
+                    self._stats['compartmentId'] = document['compartmentId']
+                    self._stats['shape'] = document['shape']
+                    self._stats['region'] = document['region']
+                    self._stats['availabilityDomain'] = document['availabilityDomain']
+                    self._stats['timeCreated'] = document['timeCreated']
+                    self._stats['image'] = document['image']
+            except Exception as e:
+                logger.debug('cloud plugin - Cannot connect to the OPC VM API {}: {}'.format(r_url, e))
 
 
         return True
