@@ -98,6 +98,7 @@ class Plugin(GlancesPlugin):
         return self.stats
 
     def get_key(self):
+        """Return the key of the list."""
         return 'indice'
 
     def get_ports_alert(self, port, header="", log=False):
@@ -119,7 +120,10 @@ class Plugin(GlancesPlugin):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name, ret.lower(), header, port['indice'])
+        self.manage_action(stat_name,
+                           ret.lower(),
+                           header,
+                           port[self.get_key()])
 
         return ret
 
@@ -140,7 +144,10 @@ class Plugin(GlancesPlugin):
         self.manage_threshold(stat_name, ret)
 
         # Manage action
-        self.manage_action(stat_name, ret.lower(), header, web['indice'])
+        self.manage_action(stat_name,
+                           ret.lower(),
+                           header,
+                           web[self.get_key()])
 
         return ret
 

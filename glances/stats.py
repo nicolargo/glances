@@ -113,7 +113,7 @@ class GlancesStats(object):
             # Import the plugin
             plugin = __import__(plugin_script[:-3])
             # Init and add the plugin to the dictionary
-            if name in ('help', 'amps', 'ports'):
+            if name in ('help', 'amps', 'ports', 'folders'):
                 self._plugins[name] = plugin.Plugin(args=args, config=config)
             else:
                 self._plugins[name] = plugin.Plugin(args=args)
