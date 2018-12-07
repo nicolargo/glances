@@ -18,6 +18,7 @@ Bugs corrected:
     * Timezone listed doesn’t match system timezone, outputs wrong time #1337
     * Compare issue with Process.cpu_times() #1339
     * ERROR -- Can not grab extended stats (invalid attr name 'num_fds') #1351
+    * Action on port/web plugins is not working #1358
 
 Others:
 
