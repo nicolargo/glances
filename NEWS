@@ -7,6 +7,7 @@ Version 3.1
 
 Enhancements and new features:
 
+    * Add a CSV output format to the STDOUT output mode #1363
     * Feature request: HDD S.M.A.R.T. reports (thanks to @tnibert) #1288
     * Sort docker stats #1276
 

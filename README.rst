@@ -358,6 +358,29 @@ network or defined in the configuration file:
 
     $ glances --browser
 
+You can also display raw stats on stdout:
+
+.. code-block:: console
+
+    $ glances --stdout cpu.user,mem.used,load
+    cpu.user: 30.7
+    mem.used: 3278204928
+    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    cpu.user: 3.4
+    mem.used: 3275251712
+    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    ...
+
+or in a CSV format thanks to the stdout-csv option:
+
+.. code-block:: console
+
+    $ glances --stdout-csv now,cpu.user,mem.used,load
+    now,cpu.user,mem.used,load.cpucore,load.min1,load.min5,load.min15
+    2018-12-08 22:04:20 CEST,7.3,5948149760,4,1.04,0.99,1.04
+    2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
+    ...
+
 and RTFM, always.
 
 Documentation

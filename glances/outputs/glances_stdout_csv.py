@@ -112,6 +112,7 @@ class GlancesStdoutCsv(object):
         Refresh every duration second.
         """
         # Build the stats list
+        line = ''
         for plugin, attribute in self.plugins_list:
             # Check if the plugin exist and is enable
             if plugin in stats.getPluginsList() and \
@@ -120,16 +121,17 @@ class GlancesStdoutCsv(object):
             else:
                 continue
 
-        # Build the line to display (header or data)
-        if self.header:
-            line = self.build_header(plugin, attribute, stat)
-            # Display header one time
-            self.header = False
-        else:
-            line = self.build_data(plugin, attribute, stat)
+            # Build the line to display (header or data)
+            if self.header:
+                line += self.build_header(plugin, attribute, stat)
+            else:
+                line += self.build_data(plugin, attribute, stat)
 
         # Display the line (without the last 'separator')
         print(line[:-1])
+
+        # Display header one time
+        self.header = False
 
         # Wait until next refresh
         if duration > 0:
