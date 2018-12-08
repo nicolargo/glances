@@ -181,10 +181,13 @@ class _GlancesCurses(object):
         """Init the Curses color layout."""
 
         # Set curses options
-        if hasattr(curses, 'start_color'):
-            curses.start_color()
-        if hasattr(curses, 'use_default_colors'):
-            curses.use_default_colors()
+        try:
+            if hasattr(curses, 'start_color'):
+                curses.start_color()
+            if hasattr(curses, 'use_default_colors'):
+                curses.use_default_colors()
+        except Exception as e:
+            logger.warning('Error initializing terminal color ({})'.format(e))
 
         # Init colors
         if self.args.disable_bold:
