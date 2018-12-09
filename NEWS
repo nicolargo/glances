@@ -25,6 +25,7 @@ Bugs corrected:
 Others:
 
     * Add Docker documentation (thanks to @rgarrigue)
+    * Refactor Glances logs (now called Glances events)
 
 Version 3.0.2
 =============
