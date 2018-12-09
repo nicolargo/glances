@@ -21,6 +21,7 @@
 
 from datetime import datetime
 
+from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 # from glances.logger import logger
@@ -30,6 +31,10 @@ from glances.plugins.glances_plugin import GlancesPlugin
 # - msg: Message to be displayed (result of the decision tree)
 # - threasholds: a list of stats to take into account
 # - thresholds_min: minimal value of the threasholds sum
+# -                 0: OK
+# -                 1: CAREFUL
+# -                 2: WARNING
+# -                 3: CRITICAL
 tree = [{'msg': 'No warning or critical alert detected',
          'thresholds': [],
          'thresholds_min': 0},
@@ -161,6 +166,7 @@ class Plugin(GlancesPlugin):
                 if top_process != '':
                     msg = ': {}'.format(top_process)
                     ret.append(self.curse_add_line(msg))
+                # logger.info(alert)
 
         return ret
 

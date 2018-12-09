@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Manage Glances events (previously Glances logs in Glances <3.1)."""
+"""Manage Glances events (previously Glances logs in Glances < 3.1)."""
 
 import time
 from datetime import datetime
