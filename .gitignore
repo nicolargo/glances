@@ -47,3 +47,5 @@ _build
 # web ui
 node_modules/
 bower_components/
+
+.idea/
