@@ -171,7 +171,6 @@ class ThreadAwsEc2Grabber(threading.Thread):
                                     'instance-id' : 'instance-id',
                                     'mac' : 'mac',
                                     'network-type' : 'network-type',
-                                    'ntp-conf/ntp-servers' : 'ntp-conf/ntp-servers',
                                     'owner-account-id' : 'owner-account-id',
                                     'private-ipv4' : 'private-ipv4',
                                     'public-ipv4' : 'public-ipv4',
@@ -284,7 +283,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
                     r = requests.get(r_url, headers=headers, timeout=3)
                     if r.ok:
                         self._stats[k] = r.content
-                except:
+                except Exception as e:
                     logger.debug('cloud plugin - Cannot connect to the ALIBABA VM API {}: {}'.format(r_url, e))
         return True
 
