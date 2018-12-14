@@ -134,6 +134,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
     AZURE = 'azure'
     GCP = 'gcp'
     OPC = 'opc'
+    ALIBABA = 'alibaba'
 
     # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
     AWS_EC2_API_URL = 'http://169.254.169.254/latest/dynamic/instance-identity/document'
@@ -158,6 +159,34 @@ class ThreadAwsEc2Grabber(threading.Thread):
     # https://docs.cloud.oracle.com/iaas/Content/Compute/Tasks/gettingmetadata.htm
     OPC_VM_API_URL = 'http://169.254.169.254/opc/v1/instance/'
     OPC_VM_API_URL_CHECK = 'http://169.254.169.254/opc/v1/instance/'
+
+    ALIBABA_VM_API_URL = 'http://100.100.100.200/latest/meta-data'
+    ALIBABA_VM_API_URL_CHECK = 'http://100.100.100.200/latest/meta-data/instance-id'
+    ALIBABA_VM_API_URL_METADATA = {'dns-conf/nameservers' : 'dns-conf/nameservers',
+                                    'eipv4' : 'eipv4',
+                                    'hostname' : 'hostname',
+                                    'image-id' : 'image-id',
+                                    'image/market-place/product-code' : 'image/market-place/product-code',
+                                    'image/market-place/charge-type' : 'image/market-place/charge-type',
+                                    'instance-id' : 'instance-id',
+                                    'mac' : 'mac',
+                                    'network-type' : 'network-type',
+                                    'ntp-conf/ntp-servers' : 'ntp-conf/ntp-servers',
+                                    'owner-account-id' : 'owner-account-id',
+                                    'private-ipv4' : 'private-ipv4',
+                                    'public-ipv4' : 'public-ipv4',
+                                    'region-id' : 'region-id',
+                                    'zone-id' : 'zone-id',
+                                    'serial-number' : 'serial-number',
+                                    'vpc-id' : 'vpc-id',
+                                    'vpc-cidr-block' : 'vpc-cidr-block',
+                                    'vswitch-cidr-block' : 'vswitch-cidr-block',
+                                    'vswitch-id' : 'vswitch-id',
+                                    'instance/spot/termination-time' : 'instance/spot/termination-time',
+                                    'network/interfaces/macs' : 'network/interfaces/macs',
+                                    'instance/virtualization-solution' : 'instance/virtualization-solution',
+                                    'instance/virtualization-solution-version' : 'instance/virtualization-solution-version',
+                                    'instance/last-host-landing-time' : 'instance/last-host-landing-time'}
 
     def __init__(self):
         """Init the class"""
@@ -247,7 +276,17 @@ class ThreadAwsEc2Grabber(threading.Thread):
             except Exception as e:
                 logger.debug('cloud plugin - Cannot connect to the OPC VM API {}: {}'.format(r_url, e))
 
-
+        elif cloud == self.ALIBABA:
+            self._stats['type'] = self.ALIBABA
+            for k, v in iteritems(self.ALIBABA_VM_API_URL_METADATA):
+                r_url = '{}/{}'.format(self.ALIBABA_VM_API_URL, v)
+                try:
+                    headers = {}
+                    r = requests.get(r_url, headers=headers, timeout=3)
+                    if r.ok:
+                        self._stats[k] = r.content
+                except:
+                    logger.debug('cloud plugin - Cannot connect to the ALIBABA VM API {}: {}'.format(r_url, e))
         return True
 
     @property
