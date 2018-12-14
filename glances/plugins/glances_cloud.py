@@ -275,7 +275,6 @@ class ThreadAwsEc2Grabber(threading.Thread):
                     self._stats['image'] = document['image']
             except Exception as e:
                 logger.debug('cloud plugin - Cannot connect to the OPC VM API {}: {}'.format(r_url, e))
-
         elif cloud == self.ALIBABA:
             self._stats['type'] = self.ALIBABA
             for k, v in iteritems(self.ALIBABA_VM_API_URL_METADATA):
@@ -309,14 +308,14 @@ class ThreadAwsEc2Grabber(threading.Thread):
         return self._stopper.isSet()
 
     def determine_cloud_provider(self):
-        for url in [self.AWS_EC2_API_URL_CHECK, self.AZURE_VM_API_URL_CHECK, self.GCP_VM_API_URL_CHECK, self.OPC_VM_API_URL_CHECK]:
+        for url in [self.AWS_EC2_API_URL_CHECK, self.AZURE_VM_API_URL_CHECK, self.GCP_VM_API_URL_CHECK, self.OPC_VM_API_URL_CHECK, self.ALIBABA_VM_API_URL_CHECK]:
             headers = {}
             if url == self.AZURE_VM_API_URL_CHECK:
                 headers['Metadata'] = "true"
             elif url == self.GCP_VM_API_URL_CHECK:
                 headers['Metadata-Flavor'] = "Google"
             try:
-                r = requests.get(url, headers=headers)
+                r = requests.get(url, headers=headers, timeout=0.1)
                 if r.ok:
                     if url == self.AWS_EC2_API_URL_CHECK:
                         return self.AWS
@@ -326,6 +325,8 @@ class ThreadAwsEc2Grabber(threading.Thread):
                         return self.GCP
                     elif url == self.OPC_VM_API_URL_CHECK:
                         return self.OPC
+                    elif url == self.ALIBABA_VM_API_URL_CHECK:
+                        return self.ALIBABA
             except Exception as e:
                 pass
         return None
