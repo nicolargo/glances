@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7dd881ab-bb9f-4b0e-af18-fa26ffa3cd94" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/glances/plugins/glances_cloud.py" beforeDir="false" afterPath="$PROJECT_DIR$/glances/plugins/glances_cloud.py" afterDir="false" />
-    </list>
+    <list default="true" id="7dd881ab-bb9f-4b0e-af18-fa26ffa3cd94" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,8 +13,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/glances/plugins/glances_cloud.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="632">
-              <caret line="245" column="34" lean-forward="true" selection-start-line="245" selection-start-column="34" selection-end-line="245" selection-end-column="34" />
+            <state relative-caret-position="645">
+              <caret line="276" column="103" lean-forward="true" selection-start-line="276" selection-start-column="103" selection-end-line="276" selection-end-column="103" />
             </state>
           </provider>
         </entry>
@@ -121,12 +119,12 @@
       <updated>1544054587093</updated>
       <workItem from="1544218025166" duration="67000" />
       <workItem from="1544218119043" duration="903000" />
-      <workItem from="1544722226330" duration="1582000" />
+      <workItem from="1544722226330" duration="1691000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="2552000" />
+    <option name="totallyTimeSpent" value="2661000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1920" y="-469" width="3008" height="1669" extended-state="0" />
@@ -161,8 +159,8 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/glances/plugins/glances_cloud.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="632">
-          <caret line="245" column="34" lean-forward="true" selection-start-line="245" selection-start-column="34" selection-end-line="245" selection-end-column="34" />
+        <state relative-caret-position="645">
+          <caret line="276" column="103" lean-forward="true" selection-start-line="276" selection-start-column="103" selection-end-line="276" selection-end-column="103" />
         </state>
       </provider>
     </entry>
