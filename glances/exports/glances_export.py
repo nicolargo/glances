@@ -33,6 +33,24 @@ class GlancesExport(object):
 
     """Main class for Glances export IF."""
 
+    # For the moment, only thoses plugins can be exported
+    # @TODO: remove this part and make all plugins exportable
+    exportable_plugins = ['cpu',
+                          'percpu',
+                          'load',
+                          'mem',
+                          'memswap',
+                          'network',
+                          'diskio',
+                          'fs',
+                          'processcount',
+                          'ip',
+                          'system',
+                          'uptime',
+                          'sensors',
+                          'docker',
+                          'gpu']
+
     def __init__(self, config=None, args=None):
         """Init the export class."""
         # Export name (= module name without glances_)
@@ -51,27 +69,23 @@ class GlancesExport(object):
         self.host = None
         self.port = None
 
+        # Build the export list on startup to avoid change during execution
+        self.export_list = self._plugins_to_export()
+
     def exit(self):
         """Close the export module."""
         logger.debug("Finalise export interface %s" % self.export_name)
 
-    def plugins_to_export(self):
+    def _plugins_to_export(self):
         """Return the list of plugins to export."""
-        return ['cpu',
-                'percpu',
-                'load',
-                'mem',
-                'memswap',
-                'network',
-                'diskio',
-                'fs',
-                'processcount',
-                'ip',
-                'system',
-                'uptime',
-                'sensors',
-                'docker',
-                'gpu']
+        ret = self.exportable_plugins
+        for p in ret:
+            if getattr(self.args, 'disable_' + p):
+                ret.remove(p)
+        return ret
+
+    def plugins_to_export(self):
+        return self.export_list
 
     def load_conf(self, section, mandatories=['host', 'port'], options=None):
         """Load the export <section> configuration in the Glances configuration file.

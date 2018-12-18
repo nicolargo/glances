@@ -64,33 +64,31 @@ class Export(GlancesExport):
     def update(self, stats):
         """Update stats in the CSV output file."""
         # Get the stats
-        all_stats = stats.getAllExports()
-        plugins = stats.getPluginsList()
+        all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export())
 
         # Init data with timestamp (issue#708)
         if self.first_line:
             csv_header = ['timestamp']
         csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
-        # Loop over available plugin
-        for i, plugin in enumerate(plugins):
-            if plugin in self.plugins_to_export():
-                if isinstance(all_stats[i], list):
-                    for stat in all_stats[i]:
-                        # First line: header
-                        if self.first_line:
-                            csv_header += ('{}_{}_{}'.format(
-                                plugin, self.get_item_key(stat), item) for item in stat)
-                        # Others lines: stats
-                        csv_data += itervalues(stat)
-                elif isinstance(all_stats[i], dict):
+        # Loop over plugins to export
+        for plugin in self.plugins_to_export():
+            if isinstance(all_stats[plugin], list):
+                for stat in all_stats[plugin]:
                     # First line: header
                     if self.first_line:
-                        fieldnames = iterkeys(all_stats[i])
-                        csv_header += ('{}_{}'.format(plugin, fieldname)
-                                       for fieldname in fieldnames)
+                        csv_header += ('{}_{}_{}'.format(
+                            plugin, self.get_item_key(stat), item) for item in stat)
                     # Others lines: stats
-                    csv_data += itervalues(all_stats[i])
+                    csv_data += itervalues(stat)
+            elif isinstance(all_stats[plugin], dict):
+                # First line: header
+                if self.first_line:
+                    fieldnames = iterkeys(all_stats[plugin])
+                    csv_header += ('{}_{}'.format(plugin, fieldname)
+                                   for fieldname in fieldnames)
+                # Others lines: stats
+                csv_data += itervalues(all_stats[plugin])
 
         # Export to CSV
         if self.first_line:

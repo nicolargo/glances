@@ -10,6 +10,7 @@ Enhancements and new features:
     * Add a CSV output format to the STDOUT output mode #1363
     * Feature request: HDD S.M.A.R.T. reports (thanks to @tnibert) #1288
     * Sort docker stats #1276
+    * Prohibit some plug-in data from being exported to influxdb #1368
 
 Bugs corrected:
 
@@ -21,6 +22,7 @@ Bugs corrected:
     * ERROR -- Can not grab extended stats (invalid attr name 'num_fds') #1351
     * Action on port/web plugins is not working #1358
     * Support for monochrome (serial) terminals e.g. vt220 #1362
+    * Some field name are incorrect in CSV export #1372
 
 Others:
 
