@@ -139,7 +139,8 @@ class Plugin(GlancesPlugin):
                 ret = 'WARNING'
             elif value <= self.get_limit('careful', stat_name=self.plugin_name):
                 ret = 'CAREFUL'
-        except KeyError:
+        except (TypeError, KeyError) as e:
+            # Catch TypeError for issue1373
             ret = 'DEFAULT'
 
         return ret
