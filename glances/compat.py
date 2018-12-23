@@ -21,6 +21,7 @@
 # pylint: skip-file
 """Python 2/3 compatibility shims."""
 
+from __future__ import print_function
 import operator
 import sys
 import unicodedata
@@ -53,6 +54,10 @@ if PY3:
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
     viewitems = operator.methodcaller('items')
+
+    def printandflush(string):
+        """Print and flush (used by stdout* outputs modules)"""
+        print(string, flush=True)
 
     def to_ascii(s):
         """Convert the bytes string to a ASCII string
@@ -125,6 +130,11 @@ else:
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
+
+    def printandflush(string):
+        """Print and flush (used by stdout* outputs modules)"""
+        print(string)
+        sys.stdout.flush()
 
     def mean(numbers):
         return float(sum(numbers)) / max(len(numbers), 1)
