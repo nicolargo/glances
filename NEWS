@@ -22,8 +22,8 @@ Bugs corrected:
     * ERROR -- Can not grab extended stats (invalid attr name 'num_fds') #1351
     * Action on port/web plugins is not working #1358
     * Support for monochrome (serial) terminals e.g. vt220 #1362
+    * TypeError on opening (Wifi plugin) #1373
     * Some field name are incorrect in CSV export #1372
-    * TypeError on opening (Wifi plugin) #1373 
 
 Others:
 
