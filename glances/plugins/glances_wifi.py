@@ -178,8 +178,8 @@ class Plugin(GlancesPlugin):
         # Hotspot list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hotspot with no name (/ssid)...
-            # of ssid None... See issue #1151
-            if i['ssid'] == '' or i['ssid'] is None:
+            # of ssid/signal None... See issue #1151 and #issue1973
+            if i['ssid'] == '' or i['ssid'] is None or i['signal'] is None:
                 continue
             ret.append(self.curse_new_line())
             # New hotspot
