@@ -22,6 +22,7 @@
 import time
 
 from glances.logger import logger
+from glances.compat import printandflush
 
 
 class GlancesStdout(object):
@@ -70,13 +71,13 @@ class GlancesStdout(object):
             if attribute is not None:
                 # With attribute
                 try:
-                    print("{}.{}: {}".format(plugin, attribute,
-                                             stat[attribute]))
+                    printandflush("{}.{}: {}".format(plugin, attribute,
+                                                     stat[attribute]))
                 except KeyError as err:
                     logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
             else:
                 # Without attribute
-                print("{}: {}".format(plugin, stat))
+                printandflush("{}: {}".format(plugin, stat))
 
         # Wait until next refresh
         if duration > 0:

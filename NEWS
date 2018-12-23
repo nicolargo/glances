@@ -24,6 +24,7 @@ Bugs corrected:
     * Support for monochrome (serial) terminals e.g. vt220 #1362
     * TypeError on opening (Wifi plugin) #1373
     * Some field name are incorrect in CSV export #1372
+    * Standard output misbehaviour (need to flush) #1376 
 
 Others:
 

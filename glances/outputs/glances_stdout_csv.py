@@ -22,6 +22,7 @@
 import time
 
 from glances.logger import logger
+from glances.compat import printandflush
 
 
 class GlancesStdoutCsv(object):
@@ -128,7 +129,7 @@ class GlancesStdoutCsv(object):
                 line += self.build_data(plugin, attribute, stat)
 
         # Display the line (without the last 'separator')
-        print(line[:-1])
+        printandflush(line[:-1])
 
         # Display header one time
         self.header = False
