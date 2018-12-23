@@ -21,7 +21,7 @@
 
 import operator
 
-from glances.compat import nativestr
+from glances.compat import nativestr, PY3
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -36,6 +36,11 @@ except ImportError as e:
     logger.warning("Missing Python Lib ({}), Wifi plugin is disabled".format(e))
 else:
     import_error_tag = False
+
+# Python 3 is not supported (see issue #1377)
+if PY3:
+    import_error_tag = False
+    logger.warning("Wifi lib is not compliant with Python 3, Wifi plugin is disabled")
 
 
 class Plugin(GlancesPlugin):
