@@ -264,6 +264,13 @@ Examples of use:
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
+        else:
+            # Allow users to disable plugins from the glances.conf (issue #1378)
+            for s in self.config.sections():
+                if self.config.has_section(s) \
+                   and (self.config.get_bool_value(s, 'disable', False)):
+                    disable(args, s)
+                    logger.debug('{} disabled by the configuration file'.format(s))
 
         # Exporters activation
         if args.export is not None:
