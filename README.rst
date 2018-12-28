@@ -115,8 +115,8 @@ or
 
     wget -O- https://bit.ly/glances | /bin/bash
 
-*Note*: This is only supported on some GNU/Linux distributions. If you want to
-support other distributions, please contribute to `glancesautoinstall`_.
+*Note*: This is only supported on some GNU/Linux distributions and Mac OS X.
+If you want to support other distributions, please contribute to `glancesautoinstall`_.
 
 PyPI: The simple way
 --------------------
@@ -230,6 +230,8 @@ To install Glances from ports:
 
 macOS
 -----
+
+If you do not want to use the glancesautoinstall script, follow this procedure.
 
 macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
