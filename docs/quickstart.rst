@@ -77,9 +77,15 @@ available network interfaces) and TCP port is ``61209``.
 
 In client/server mode, limits are set by the server side.
 
-You can set a password to access to the server ``--password``. By
-default, the username is ``glances`` but you can change it with
-``--username``. It is also possible to set the password in the
+You can set a password to access to the server using the ``--password``.
+By default, the username is ``glances`` but you can change it with
+``--username``.
+
+If you want, the SHA password will be stored in ``username.pwd`` file.
+Next time your run the server/client, password will not be asked. To set a
+specific username you can used the -u <username> option.
+
+It is also possible to set the password in the
 Glances configuration file:
 
 .. code-block:: ini
@@ -92,9 +98,6 @@ Glances configuration file:
     # Additionally (and optionally) a default password could be defined
     localhost=mylocalhostpassword
     default=mydefaultpassword
-
-If you ask it, the SHA password will be stored in ``username.pwd`` file.
-Next time your run the server/client, password will not be asked.
 
 Central client
 ^^^^^^^^^^^^^^
