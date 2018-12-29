@@ -194,6 +194,8 @@ Examples of use:
                             help='define a client/server username')
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help='define a client/server password')
+        parser.add_argument('-u', dest='username_used',
+                            help='use the given client/server username')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help='SNMP community')
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -315,10 +317,14 @@ Examples of use:
                 args.username = self.__get_username(
                     description='Enter the Glances server username: ')
         else:
-            # Default user name is 'glances'
-            args.username = self.username
+            if args.username_used:
+                # A username has been set using the -u option ?
+                args.username = args.username_used
+            else:
+                # Default user name is 'glances'
+                args.username = self.username
 
-        if args.password_prompt:
+        if args.password_prompt or args.username_used:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(

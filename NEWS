@@ -26,6 +26,7 @@ Bugs corrected:
     * TypeError on opening (Wifi plugin) #1373
     * Some field name are incorrect in CSV export #1372
     * Standard output misbehaviour (need to flush) #1376
+    * Create an option to set the username to use in Web or RPC Server mode #1381 
 
 Others:
 
