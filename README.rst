@@ -9,6 +9,10 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
+.. image:: https://pepy.tech/badge/glances/month
+    :target: https://pepy.tech/project/glances
+    :alt: Downloads
+
 .. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
     :alt: Linux tests (Travis)
@@ -19,9 +23,6 @@ Glances - An eye on your system
 
 .. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/
-
-.. image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnicolargo%2Fglances.svg?type=shield
-    :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fnicolargo%2Fglances?ref=badge_shield
 
 .. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
     :target: https://www.paypal.me/nicolargo
