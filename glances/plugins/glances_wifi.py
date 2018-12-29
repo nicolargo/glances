@@ -39,7 +39,7 @@ else:
 
 # Python 3 is not supported (see issue #1377)
 if PY3:
-    import_error_tag = False
+    import_error_tag = True
     logger.warning("Wifi lib is not compliant with Python 3, Wifi plugin is disabled")
 
 
