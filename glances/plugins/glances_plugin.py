@@ -28,7 +28,7 @@ import json
 import copy
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, listkeys, map, mean
+from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
@@ -182,14 +182,14 @@ class GlancesPlugin(object):
                     # interface)
                     for l in self.get_export():
                         self.stats_history.add(
-                            str(l[item_name]) + '_' + i['name'],
+                            nativestr(l[item_name]) + '_' + nativestr(i['name']),
                             l[i['name']],
                             description=i['description'],
                             history_max_size=self._limits['history_size'])
                 else:
                     # Stats is not a list
                     # Add the item to the history directly
-                    self.stats_history.add(i['name'],
+                    self.stats_history.add(nativestr(i['name']),
                                            self.get_export()[i['name']],
                                            description=i['description'],
                                            history_max_size=self._limits['history_size'])
