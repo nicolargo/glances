@@ -97,7 +97,10 @@ if PY3:
     def nativestr(s):
         if isinstance(s, text_type):
             return s
-        return s.decode('utf-8', 'replace')
+        elif isinstance(s, (int, float)):
+            return s.__str__()
+        else:
+            return s.decode('utf-8', 'replace')
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""
@@ -177,7 +180,10 @@ else:
     def nativestr(s):
         if isinstance(s, binary_type):
             return s
-        return s.encode('utf-8', 'replace')
+        elif isinstance(s, (int, float)):
+            return s.__str__()
+        else:
+            return s.encode('utf-8', 'replace')
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""
