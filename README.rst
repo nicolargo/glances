@@ -21,13 +21,16 @@ Glances - An eye on your system
     :target: https://ci.appveyor.com/project/nicolargo/glances
     :alt: Windows tests (Appveyor)
 
-.. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
-    :target: https://scrutinizer-ci.com/g/nicolargo/glances/
+.. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
+    :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
 
+Follow Glances author:
+.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+    :target: https://twitter.com/nicolargo
+
+Glances donation box: 
 .. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
     :target: https://www.paypal.me/nicolargo
-
-Follow Glances on Twitter: `@nicolargo`_
 
 Summary
 =======
