@@ -29,7 +29,6 @@ Glances - An eye on your system
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
-    :align: center
 
 Summary
 =======
@@ -412,19 +411,29 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
+Donation
+========
+
+If this project help you, you can give me a tip ;)
+
+.. image:: https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
+        :target: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KB5BFLMCS7VFQ
+
 Author
 ======
 
 Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
+.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+    :target: https://twitter.com/nicolargo
+
 License
 =======
 
-LGPLv3. See ``COPYING`` for more details.
+Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
-.. _@nicolargo: https://twitter.com/nicolargo
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/
