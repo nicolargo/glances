@@ -97,6 +97,21 @@ class GlancesWebList(object):
 
                 # Indice
                 new_web['indice'] = 'web_' + str(i)
+                
+                # SSL verify
+                # ssl_verify
+                new_web['ssl_verify'] = config.get_value(self._section, 
+                                                        '%sssl_verify' % postfix,
+                                                         default='True')
+                # Proxy
+                http_proxy = config.get_value(self._section, 
+                                                '%shttp_proxy' % postfix,
+                                                default=None)
+                
+                https_proxy = config.get_value(self._section, 
+                                                '%shttps_proxy' % postfix,
+                                                default=None)
+                
 
                 # Add the server to the list
                 logger.debug("Add Web URL %s to the static list" % new_web['url'])
