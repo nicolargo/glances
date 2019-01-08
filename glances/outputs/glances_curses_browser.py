@@ -124,6 +124,8 @@ class GlancesCursesBrowser(_GlancesCurses):
         """Set next page."""
         if self._current_page + 1 < self._page_max:
             self._current_page += 1
+        else:
+            self._current_page = 0
         self.cursor_position = 0
 
     def __catch_key(self, stats):
@@ -288,9 +290,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor = len(stats) - 1
 
         start_line = self._page_max_lines * self._current_page 
-        end_line = start_line + self._page_max_lines
-        if end_line > stats_len:
-            end_line = stats_len
+        end_line = start_line + self.get_pagelines(stats)
 
         current_page = stats[start_line:end_line]
         
