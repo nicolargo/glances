@@ -62,6 +62,8 @@ class GlancesExportBulk(object):
                 'diskio',
                 'load',
                 'mem',
+                'memswap',
+                'processcount',
                 'processlist',
                 'network',
                 'system']
