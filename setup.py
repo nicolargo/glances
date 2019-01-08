@@ -86,7 +86,7 @@ setup(
         'action': ['pystache'],
         # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
         'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
-        'cloud': ['requests'],
+        'cloud': ['requests>=2.4.2'],
         'cpuinfo': ['py-cpuinfo'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
