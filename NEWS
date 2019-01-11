@@ -12,6 +12,7 @@ Enhancements and new features:
     * Sort docker stats #1276
     * Prohibit some plug-in data from being exported to influxdb #1368
     * Disable plugin from Glances configuration file #1378
+    * Curses-browser's server list paging added (thanks to @limfreee) #1385
 
 Bugs corrected:
 

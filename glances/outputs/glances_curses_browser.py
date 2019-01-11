@@ -61,6 +61,8 @@ class GlancesCursesBrowser(_GlancesCurses):
         self._page_max = 0
         self._page_max_lines = 0
 
+        self.is_end = False
+
     @property
     def active_server(self):
         """Return the active server or None if it's the browser list."""
@@ -140,7 +142,8 @@ class GlancesCursesBrowser(_GlancesCurses):
             # 'ESC'|'q' > Quit
             self.end()
             logger.info("Stop Glances client browser")
-            sys.exit(0)
+            # sys.exit(0)
+            self.is_end = True
         elif self.pressedkey == 10:
             # 'ENTER' > Run Glances on the selected server
             self.active_server =  self._current_page * self._page_max_lines + self.cursor_position
@@ -291,7 +294,6 @@ class GlancesCursesBrowser(_GlancesCurses):
 
         start_line = self._page_max_lines * self._current_page 
         end_line = start_line + self.get_pagelines(stats)
-
         current_page = stats[start_line:end_line]
         
         # Display table

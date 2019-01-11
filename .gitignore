@@ -48,4 +48,5 @@ _build
 node_modules/
 bower_components/
 
+# visual stdio code
 .vscode/
