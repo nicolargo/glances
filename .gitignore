@@ -47,3 +47,6 @@ _build
 # web ui
 node_modules/
 bower_components/
+
+# visual stdio code 
+.vscode/
