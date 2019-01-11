@@ -62,7 +62,7 @@ Optional dependencies:
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker`` (for the Docker monitoring support) [Linux-only]
+- ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
