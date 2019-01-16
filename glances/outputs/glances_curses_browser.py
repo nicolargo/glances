@@ -90,6 +90,18 @@ class GlancesCursesBrowser(_GlancesCurses):
             page_lines = self._page_max_lines
         return page_lines
 
+    def _get_status_count(self, stats):
+        counts = {}
+        for item in stats:
+            color = item['status']
+            counts[color] = counts.get(color, 0) + 1
+    
+        result = ''
+        for key in counts.keys():
+            result += key + ': ' + str(counts[key]) + ' '
+   
+        return result
+    
     def cursor_up(self, stats):
         """Set the cursor to position N-1 in the list."""
         if 0 <= self.cursor_position - 1:
@@ -249,11 +261,14 @@ class GlancesCursesBrowser(_GlancesCurses):
                                      screen_x - x,
                                      self.colors_list['TITLE'])
         if stats_len > stats_max and screen_y > 2:
-            msg = '{} servers displayed.({}/{})'.format(self.get_pagelines(stats), self._current_page + 1, self._page_max)
+            msg = '{} servers displayed.({}/{}) {}'.format(self.get_pagelines(stats),
+                                                            self._current_page + 1, 
+                                                            self._page_max, 
+                                                            self._get_status_count(stats))
             self.term_window.addnstr(y + 1, x,
                                      msg,
                                      screen_x - x)
-
+        
         if stats_len == 0:
             return False
 
