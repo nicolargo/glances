@@ -272,6 +272,8 @@ class ThreadScanner(threading.Thread):
         try:
             req = requests.head(web['url'],
                                 allow_redirects=True,
+                                verify=web['ssl_verify'],
+                                proxies=web['proxies'],
                                 timeout=web['timeout'])
         except Exception as e:
             logger.debug(e)
