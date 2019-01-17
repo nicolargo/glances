@@ -340,7 +340,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor = len(stats) - 1
 
         stats_list = None
-        if self._sort_order_list is not None:
+        if self._sort_order_list is not None and self._stats_list is not None:
             stats_list = self._stats_list
             stats_list.sort(key=self._sort_by_status)
         else:
