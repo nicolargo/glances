@@ -62,7 +62,7 @@ class GlancesCursesBrowser(_GlancesCurses):
         self._page_max_lines = 0
 
         self.is_end = False
-        self._sort_order_list = None
+        self._revesed_sorting = False
         self._stats_list = None
 
     @property
@@ -104,19 +104,21 @@ class GlancesCursesBrowser(_GlancesCurses):
    
         return result
 
-    def _sort_by_status(self, item):
-        key = item['status']
-        if key == 'ONLINE':
-            return self._sort_order_list[0]
-        elif key == 'SNMP':
-            return self._sort_order_list[1]
-        elif key == 'PROTECTED':
-            return self._sort_order_list[2]
-        elif key == 'OFFLINE':
-            return self._sort_order_list[3]
-        elif key == 'UNKNOWN':
-            return self._sort_order_list[4]
-
+    def _get_stats(self, stats):
+        stats_list = None
+        if self._stats_list is not None:
+            stats_list = self._stats_list
+            stats_list.sort(reverse = self._revesed_sorting, 
+                            key = lambda x: { 'UNKNOWN' : 0,
+                                              'OFFLINE' : 1,
+                                              'PROTECTED' : 2,
+                                              'SNMP' : 3,
+                                              'ONLINE': 4 }.get(x['status'], 99))
+        else:
+            stats_list = stats
+        
+        return stats_list
+        
     def cursor_up(self, stats):
         """Set the cursor to position N-1 in the list."""
         if 0 <= self.cursor_position - 1:
@@ -192,15 +194,14 @@ class GlancesCursesBrowser(_GlancesCurses):
             self.cursor_pagedown(stats)
             logger.debug("PageDown: Server {}/{} pages".format(self._current_page + 1, self._page_max))
         elif self.pressedkey == ord('1'):
-            self._sort_order_list = None
             self._stats_list = None
             refresh = True
         elif self.pressedkey == ord('2'):
-            self._sort_order_list = [0,1,2,3,4]
+            self._revesed_sorting = False            
             self._stats_list = stats.copy()
             refresh = True
         elif self.pressedkey == ord('3'):
-            self._sort_order_list = [4,3,2,1,0]
+            self._revesed_sorting = True
             self._stats_list = stats.copy()
             refresh = True
 
@@ -292,6 +293,12 @@ class GlancesCursesBrowser(_GlancesCurses):
                                      msg,
                                      screen_x - x,
                                      self.colors_list['TITLE'])
+
+            msg = '{}'.format(self._get_status_count(stats))
+            self.term_window.addnstr(y + 1, x,
+                                     msg,
+                                     screen_x - x)
+
         if stats_len > stats_max and screen_y > 2:
             msg = '{} servers displayed.({}/{}) {}'.format(self.get_pagelines(stats),
                                                             self._current_page + 1, 
@@ -339,13 +346,7 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Set the cursor position to the latest item
             self.cursor = len(stats) - 1
 
-        stats_list = None
-        if self._sort_order_list is not None and self._stats_list is not None:
-            stats_list = self._stats_list
-            stats_list.sort(key=self._sort_by_status)
-        else:
-            stats_list = stats
-
+        stats_list = self._get_stats(stats)
         start_line = self._page_max_lines * self._current_page 
         end_line = start_line + self.get_pagelines(stats_list)
         current_page = stats_list[start_line:end_line]
