@@ -27,6 +27,7 @@ from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 from glances.compat import iteritems
 
+from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
 from cassandra import InvalidRequest
@@ -47,13 +48,17 @@ class Export(GlancesExport):
         self.protocol_version = 3
         self.replication_factor = 2
         self.table = None
+        self.username = None
+        self.password = None
 
         # Load the Cassandra configuration file section
         self.export_enable = self.load_conf('cassandra',
                                             mandatories=['host', 'port', 'keyspace'],
                                             options=['protocol_version',
                                                      'replication_factor',
-                                                     'table'])
+                                                     'table',
+                                                     'username',
+                                                     'password'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -61,15 +66,20 @@ class Export(GlancesExport):
         self.cluster, self.session = self.init()
 
     def init(self):
-        """Init the connection to the InfluxDB server."""
+        """Init the connection to the Cassandra server."""
         if not self.export_enable:
             return None
+
+        # if username and/or password are not set the connection will try to connect with no auth
+        auth_provider = PlainTextAuthProvider(
+            username=self.username, password=self.password)
 
         # Cluster
         try:
             cluster = Cluster([self.host],
                               port=int(self.port),
-                              protocol_version=int(self.protocol_version))
+                              protocol_version=int(self.protocol_version),
+                              auth_provider=auth_provider)
             session = cluster.connect()
         except Exception as e:
             logger.critical("Cannot connect to Cassandra cluster '%s:%s' (%s)" % (self.host, self.port, e))
