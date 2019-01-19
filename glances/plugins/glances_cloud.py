@@ -89,12 +89,13 @@ class Plugin(GlancesPlugin):
 
         # Update the stats
         if self.input_method == 'local':
+            stats = self.OPENSTACK.stats
             # Example:
+            # Uncomment to test on physical computer
             # stats = {'ami-id': 'ami-id',
             #                    'instance-id': 'instance-id',
             #                    'instance-type': 'instance-type',
             #                    'region': 'placement/availability-zone'}
-            stats = self.OPENSTACK.stats
 
         # Update the stats
         self.stats = stats
@@ -115,9 +116,9 @@ class Plugin(GlancesPlugin):
            and 'region' in self.stats:
             msg = 'Cloud '
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = '{} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
-                                               to_ascii(self.stats['instance-id']),
-                                               to_ascii(self.stats['region']))
+            msg = '{} instance {} ({})'.format(self.stats['instance-type'],
+                                               self.stats['instance-id'],
+                                               self.stats['region'])
             ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
@@ -167,7 +168,7 @@ class ThreadOpenStack(threading.Thread):
                 break
             else:
                 if r.ok:
-                    self._stats[k] = r.content
+                    self._stats[k] = to_ascii(r.content)
 
         return True
 
