@@ -13,6 +13,7 @@ Enhancements and new features:
     * Prohibit some plug-in data from being exported to influxdb #1368
     * Disable plugin from Glances configuration file #1378
     * Curses-browser's server list paging added (thanks to @limfreee) #1385
+    * Client Browser's thread management added (thanks to @limfreee) #1391
 
 Bugs corrected:
 
@@ -30,6 +31,7 @@ Bugs corrected:
     * Create an option to set the username to use in Web or RPC Server mode #1381
     * Missing kernel task names when the webui is switched to long process names #1371
     * Drive name with special characters causes crash #1383
+    * Cannot get stats in Cloud plugin (404) #1384
 
 Others:
 
