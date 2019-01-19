@@ -43,7 +43,7 @@ class Export(GlancesExport):
         # Optionals configuration keys
         self.compression = None
 
-        # Load the Cassandra configuration file section
+        # Load the Kafka configuration file section
         self.export_enable = self.load_conf('kafka',
                                             mandatories=['host', 'port', 'topic'],
                                             options=['compression'])
