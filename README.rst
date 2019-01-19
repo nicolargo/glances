@@ -145,7 +145,7 @@ features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install 'glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]'
+    pip install 'glances[action,browser,cloud,cpuinfo,docker,export,folders,gpu,graph,ip,raid,snmp,web,wifi]'
 
 To upgrade Glances to the latest version:
 
