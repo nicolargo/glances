@@ -37,6 +37,7 @@ Others:
 
     * Add Docker documentation (thanks to @rgarrigue)
     * Refactor Glances logs (now called Glances events)
+    * "chart" extra dep replace by "graph" #1389
 
 Version 3.0.2
 =============
