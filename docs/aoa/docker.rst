@@ -6,6 +6,12 @@ Docker
 If you use ``Docker``, Glances can help you to monitor your containers.
 Glances uses the Docker API through the `docker-py`_ library.
 
+You can install this dependency using:
+
+.. code-block:: console
+
+    pip install glances[docker]
+
 .. image:: ../_static/docker.png
 
 It is possible to define limits and actions from the configuration file

@@ -49,6 +49,33 @@ def get_install_requires():
     return requires
 
 
+def get_install_extras_require():
+    extras_require = {
+        'action': ['pystache'],
+        # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
+        'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
+        'cloud': ['requests'],
+        'cpuinfo': ['py-cpuinfo'],
+        'docker': ['docker>=2.0.0'],
+        'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
+                   'influxdb>=1.0.0', 'kafka-python', 'pika', 'paho-mqtt', 'potsdb',
+                   'prometheus_client', 'pyzmq', 'statsd'],
+        'folders': ['scandir'],  # python_version<"3.5"
+        'gpu': ['nvidia-ml-py3'],  # python_version=="2.7"
+        'graph': ['pygal'],
+        'ip': ['netifaces'],
+        'raid': ['pymdstat'],
+        'smart': ['pySMART.smartx'],
+        'snmp': ['pysnmp'],
+        'web': ['bottle', 'requests'],
+        'wifi': ['wifi']
+    }
+    # Add automatically the 'all' target
+    extras_require.update({'all': [i[0] for i in extras_require.values()]})
+
+    return extras_require
+
+
 class tests(Command):
     user_options = []
 
@@ -82,26 +109,7 @@ setup(
     keywords="cli curses monitoring system",
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=get_install_requires(),
-    extras_require={
-        'action': ['pystache'],
-        # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
-        'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
-        'cloud': ['requests'],
-        'cpuinfo': ['py-cpuinfo'],
-        'docker': ['docker>=2.0.0'],
-        'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'influxdb>=1.0.0', 'kafka-python', 'pika', 'paho-mqtt', 'potsdb',
-                   'prometheus_client', 'pyzmq', 'statsd'],
-        'folders': ['scandir'],  # python_version<"3.5"
-        'gpu': ['nvidia-ml-py3'],  # python_version=="2.7"
-        'graph': ['pygal'],
-        'ip': ['netifaces'],
-        'raid': ['pymdstat'],
-        'smart': ['pySMART.smartx'],
-        'snmp': ['pysnmp'],
-        'web': ['bottle', 'requests'],
-        'wifi': ['wifi']
-    },
+    extras_require=get_install_extras_require(),
     packages=['glances'],
     include_package_data=True,
     data_files=get_data_files(),
