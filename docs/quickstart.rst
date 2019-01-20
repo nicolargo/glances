@@ -133,6 +133,12 @@ To start the central client, use the following option:
 
     Use ``--disable-autodiscover`` to disable the auto discovery mode.
 
+When the list is displayed, you can navigate through the Glances servers with
+up/down keys. It is also possible to sort the server using:
+- '1' is normal (do not sort)
+- '2' is using sorting with ascending order (ONLINE > SNMP > PROTECTED > OFFLINE > UNKNOWN)
+- '3' is using sorting with descending order (UNKNOW > OFFLINE > PROTECTED > SNMP > ONLINE)
+
 SNMP
 ^^^^
 
