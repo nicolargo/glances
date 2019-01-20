@@ -62,6 +62,8 @@ class GlancesCursesBrowser(_GlancesCurses):
         self._page_max_lines = 0
 
         self.is_end = False
+        self._revesed_sorting = False
+        self._stats_list = None
 
     @property
     def active_server(self):
@@ -90,6 +92,33 @@ class GlancesCursesBrowser(_GlancesCurses):
             page_lines = self._page_max_lines
         return page_lines
 
+    def _get_status_count(self, stats):
+        counts = {}
+        for item in stats:
+            color = item['status']
+            counts[color] = counts.get(color, 0) + 1
+    
+        result = ''
+        for key in counts.keys():
+            result += key + ': ' + str(counts[key]) + ' '
+   
+        return result
+
+    def _get_stats(self, stats):
+        stats_list = None
+        if self._stats_list is not None:
+            stats_list = self._stats_list
+            stats_list.sort(reverse = self._revesed_sorting, 
+                            key = lambda x: { 'UNKNOWN' : 0,
+                                              'OFFLINE' : 1,
+                                              'PROTECTED' : 2,
+                                              'SNMP' : 3,
+                                              'ONLINE': 4 }.get(x['status'], 99))
+        else:
+            stats_list = stats
+        
+        return stats_list
+        
     def cursor_up(self, stats):
         """Set the cursor to position N-1 in the list."""
         if 0 <= self.cursor_position - 1:
@@ -133,7 +162,7 @@ class GlancesCursesBrowser(_GlancesCurses):
     def __catch_key(self, stats):
         # Catch the browser pressed key
         self.pressedkey = self.get_key(self.term_window)
-
+        refresh = False
         if self.pressedkey != -1:
             logger.debug("Key pressed. Code=%s" % self.pressedkey)
 
@@ -164,6 +193,22 @@ class GlancesCursesBrowser(_GlancesCurses):
             # 'Page Down' > Next page in the server list
             self.cursor_pagedown(stats)
             logger.debug("PageDown: Server {}/{} pages".format(self._current_page + 1, self._page_max))
+        elif self.pressedkey == ord('1'):
+            self._stats_list = None
+            refresh = True
+        elif self.pressedkey == ord('2'):
+            self._revesed_sorting = False            
+            self._stats_list = stats.copy()
+            refresh = True
+        elif self.pressedkey == ord('3'):
+            self._revesed_sorting = True
+            self._stats_list = stats.copy()
+            refresh = True
+
+        if refresh:
+            self._current_page = 0
+            self.cursor_position = 0
+            self.flush(stats)
 
         # Return the key code
         return self.pressedkey
@@ -248,12 +293,21 @@ class GlancesCursesBrowser(_GlancesCurses):
                                      msg,
                                      screen_x - x,
                                      self.colors_list['TITLE'])
-        if stats_len > stats_max and screen_y > 2:
-            msg = '{} servers displayed.({}/{})'.format(self.get_pagelines(stats), self._current_page + 1, self._page_max)
+
+            msg = '{}'.format(self._get_status_count(stats))
             self.term_window.addnstr(y + 1, x,
                                      msg,
                                      screen_x - x)
 
+        if stats_len > stats_max and screen_y > 2:
+            msg = '{} servers displayed.({}/{}) {}'.format(self.get_pagelines(stats),
+                                                            self._current_page + 1, 
+                                                            self._page_max, 
+                                                            self._get_status_count(stats))
+            self.term_window.addnstr(y + 1, x,
+                                     msg,
+                                     screen_x - x)
+        
         if stats_len == 0:
             return False
 
@@ -292,9 +346,10 @@ class GlancesCursesBrowser(_GlancesCurses):
             # Set the cursor position to the latest item
             self.cursor = len(stats) - 1
 
+        stats_list = self._get_stats(stats)
         start_line = self._page_max_lines * self._current_page 
-        end_line = start_line + self.get_pagelines(stats)
-        current_page = stats[start_line:end_line]
+        end_line = start_line + self.get_pagelines(stats_list)
+        current_page = stats_list[start_line:end_line]
         
         # Display table
         line = 0
