@@ -22,7 +22,7 @@ features (like the Web interface, export modules...):
 
 .. code-block:: console
 
-    pip install glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]
+    pip install glances[all]
 
 To upgrade Glances and all its dependencies to the latest versions:
 
@@ -30,7 +30,7 @@ To upgrade Glances and all its dependencies to the latest versions:
 
     pip install --upgrade glances
     pip install --upgrade psutil
-    pip install --upgrade glances[...]
+    pip install --upgrade glances[all]
 
 For additional installation methods, read the official `README`_ file.
 

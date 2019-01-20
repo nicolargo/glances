@@ -14,6 +14,11 @@ Bugs corrected:
 
     * ...
 
+Others:
+
+    * Documentation is unclear how to get Docker information #1386
+    * Add 'all' target to the Pip install (install all dependencies)
+
 Version 3.1
 ===========
 
