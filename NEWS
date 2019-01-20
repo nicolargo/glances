@@ -5,6 +5,11 @@ Glances Version 3
 Version 3.1.1
 =============
 
+Enhancements and new features:
+
+    * Add authprovider for cassandra export (thanks to @EmilienMottet) #1395
+    * Curses's browser server list sorting added (thanks to @limfreee) #1396
+
 Bugs corrected:
 
     * ...
