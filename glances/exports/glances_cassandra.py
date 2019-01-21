@@ -115,11 +115,11 @@ class Export(GlancesExport):
 
         # Write input to the Cassandra table
         try:
+
+            stmt = "INSERT INTO {} (plugin, time, stat) VALUES (?, ?, ?)".format(self.table)
+            query = self.session.prepare(stmt)
             self.session.execute(
-                """
-                INSERT INTO localhost (plugin, time, stat)
-                VALUES (%s, %s, %s)
-                """,
+                query,
                 (name, uuid_from_time(datetime.now()), data)
             )
         except Exception as e:
