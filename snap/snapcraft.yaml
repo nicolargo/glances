@@ -25,6 +25,8 @@ apps:
 
 parts:
   glances:
+    build-packages:
+    - gcc
     plugin: python
     source: https://github.com/nicolargo/glances.git
   bottle:
