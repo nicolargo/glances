@@ -29,15 +29,14 @@ from glances.events import glances_events
 from glances.processes import glances_processes
 from glances.timer import Timer
 
-# Import curses library for "normal" operating system
-if not WINDOWS:
-    try:
-        import curses
-        import curses.panel
-        from curses.textpad import Textbox
-    except ImportError:
-        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
-        sys.exit(1)
+
+try:
+    import curses
+    import curses.panel
+    from curses.textpad import Textbox
+except ImportError:
+    logger.critical("Curses module not found. Glances cannot start in standalone mode.")
+    sys.exit(1)
 
 
 class _GlancesCurses(object):
