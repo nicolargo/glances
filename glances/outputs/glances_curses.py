@@ -32,7 +32,6 @@ from glances.timer import Timer
 
 try:
     import curses
-    import curses.panel
     from curses.textpad import Textbox
 except ImportError:
     logger.critical("Curses module not found. Glances cannot start in standalone mode.")
