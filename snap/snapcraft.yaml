@@ -22,6 +22,12 @@ apps:
       - network-observe
       - physical-memory-observe
       - upower-observe
+      - system-files
+      - home
+
+plugs:
+  system-files:
+    read: [ /etc/glances/glances.conf ]
 
 parts:
   glances:
