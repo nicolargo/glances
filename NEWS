@@ -12,7 +12,9 @@ Enhancements and new features:
 
 Bugs corrected:
 
-    * ...
+    * Fix Cassandra table name export #1402
+    * Permission denied: '/etc/glances/glances.conf' #1403
+    * 500 Internal Server Error /api/3/network/interface_name #1401
 
 Others:
 
