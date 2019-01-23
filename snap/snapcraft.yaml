@@ -25,10 +25,6 @@ apps:
       - system-files
       - home
 
-plugs:
-  system-files:
-    read: [ /etc/glances/glances.conf ]
-
 parts:
   glances:
     plugin: python
