@@ -1,5 +1,5 @@
 name: glances
-version: '3.1.0'
+version: git
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
   Glances is a cross-platform monitoring tool which aims to present
