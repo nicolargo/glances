@@ -22,15 +22,10 @@ apps:
       - network-observe
       - physical-memory-observe
       - upower-observe
-      - system-files
       - home
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
-
-plugs:
-  system-files:
-    read: [ /etc/glances/glances.conf ]
 
 parts:
   glances:
