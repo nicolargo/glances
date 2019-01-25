@@ -35,7 +35,7 @@ plugs:
 parts:
   glances:
     plugin: python
-    source: https://github.com/nicolargo/glances.git
+    source: .
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
