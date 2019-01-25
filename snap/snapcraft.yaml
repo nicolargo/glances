@@ -1,5 +1,6 @@
 name: glances
-version: git
+version: set-by-version-script
+version-script: git describe --always --dirty --tags --match 'v*' | sed s/^v//
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
   Glances is a cross-platform monitoring tool which aims to present
