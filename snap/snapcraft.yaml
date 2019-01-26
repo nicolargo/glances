@@ -34,6 +34,8 @@ parts:
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
+    source-branch: release-0.12
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
+    source-tag: '3.7.0'
