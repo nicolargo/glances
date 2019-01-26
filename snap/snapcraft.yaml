@@ -1,5 +1,5 @@
 name: glances
-version: git
+adopt-info: glances
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
   Glances is a cross-platform monitoring tool which aims to present
@@ -31,6 +31,15 @@ parts:
   glances:
     plugin: python
     source: .
+    # FIXME: Theoretically this also replaces `summary` and `description`
+    #        keys, however due to the following bug we still need to keep
+    #        them until it is fixed.
+    #        https://bugs.launchpad.net/snapcraft/+bug/1813364
+    parse-info: [setup.py]
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version \
+        "$(git describe --always --dirty --tags --match 'v*' | sed s/^v//)"
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
