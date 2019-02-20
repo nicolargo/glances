@@ -22,7 +22,7 @@ Command-Line Options
 
     path to the configuration file
 
-.. option:: -modules-list
+.. option:: --modules-list
 
     display modules (plugins & exports) list and exit
 
