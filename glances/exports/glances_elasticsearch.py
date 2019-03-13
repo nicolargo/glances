@@ -119,7 +119,7 @@ class Export(GlancesExport):
             dtnow = datetime.utcnow()
             action = {
                 "_index": self.index,
-                "_id": c,
+                "_id": '{}.{}'.format(name,c),
                 "_type": "glances",
                 "_source": {
                     "plugin": name,
