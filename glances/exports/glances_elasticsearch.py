@@ -125,8 +125,7 @@ class Export(GlancesExport):
                     "plugin": name,
                     "metric": c,
                     "value": str(p),
-                    "_timestamp": dtnow.timestamp(),
-                    "timestamp": dtnow.isoformat()
+                    "utc_datetime": dtnow.isoformat('T')
                 }
             }
             logger.debug("Exporting the following object to elasticsearch: {}".format(action))
