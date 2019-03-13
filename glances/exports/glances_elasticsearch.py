@@ -57,6 +57,38 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
+        self.index='{}-{}'.format(self.index, datetime.utcnow().strftime("%Y.%m.%d"))
+        template_body =  {
+          "mappings": {
+            "glances": {
+              "dynamic_templates": [
+                {
+                  "integers": {
+                    "match_mapping_type": "long",
+                    "mapping": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "strings": {
+                    "match_mapping_type": "string",
+                    "mapping": {
+                      "type": "text",
+                      "fields": {
+                        "raw": {
+                          "type":  "keyword",
+                          "ignore_above": 256
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+
         try:
             es = Elasticsearch(hosts=['{}:{}'.format(self.host, self.port)])
         except Exception as e:
@@ -70,7 +102,7 @@ class Export(GlancesExport):
         except Exception as e:
             # Index did not exist, it will be created at the first write
             # Create it...
-            es.indices.create(self.index)
+            es.indices.create(index=self.index,body=template_body)
         else:
             logger.info("There is already %s entries in the ElasticSearch %s index" % (index_count, self.index))
 
@@ -84,15 +116,19 @@ class Export(GlancesExport):
         # https://elasticsearch-py.readthedocs.io/en/master/helpers.html
         actions = []
         for c, p in zip(columns, points):
+            dtnow = datetime.utcnow()
             action = {
                 "_index": self.index,
-                "_type": name,
-                "_id": c,
+                "_id": '{}.{}'.format(name,c),
+                "_type": "glances",
                 "_source": {
+                    "plugin": name,
+                    "metric": c,
                     "value": str(p),
-                    "timestamp": datetime.now()
+                    "utc_datetime": dtnow.isoformat('T')
                 }
             }
+            logger.debug("Exporting the following object to elasticsearch: {}".format(action))
             actions.append(action)
 
         # Write input to the ES index
