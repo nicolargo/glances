@@ -57,6 +57,7 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
+        self.index='{}-{}'.format(self.index, datetime.today().strftime("%Y.%m.%d"))
         try:
             es = Elasticsearch(hosts=['{}:{}'.format(self.host, self.port)])
         except Exception as e:
@@ -86,13 +87,16 @@ class Export(GlancesExport):
         for c, p in zip(columns, points):
             action = {
                 "_index": self.index,
-                "_type": name,
                 "_id": c,
+                "_type": "glances",
                 "_source": {
+                    "name": name,
                     "value": str(p),
+                    "type": "keyword",
                     "timestamp": datetime.now()
                 }
             }
+            logger.debug("Exporting the following object to elasticsearch: {}".format(action))
             actions.append(action)
 
         # Write input to the ES index
