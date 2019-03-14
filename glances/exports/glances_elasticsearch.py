@@ -104,7 +104,7 @@ class Export(GlancesExport):
             # Create it...
             es.indices.create(index=self.index,body=template_body)
         else:
-            logger.info("There is already %s entries in the ElasticSearch %s index" % (index_count, self.index))
+            logger.info("The index %s exists and holds %s entries." % (self.index, index_count))
 
         return es
 
@@ -125,7 +125,7 @@ class Export(GlancesExport):
                     "plugin": name,
                     "metric": c,
                     "value": str(p),
-                    "utc_datetime": dtnow.isoformat('T')
+                    "timestamp": dtnow.isoformat('T')
                 }
             }
             logger.debug("Exporting the following object to elasticsearch: {}".format(action))
