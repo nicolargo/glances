@@ -37,7 +37,6 @@ Tested on the following operating systems:
 
 | Distribution  | Version       |
 | ------------- | ------------- |
-| Ubuntu        | 12.04         |
 | Ubuntu        | 14.04         |
 | Ubuntu        | 16.04         |
 | Ubuntu        | 18.04         |
@@ -50,7 +49,6 @@ Tested on the following operating systems:
 | OpenSuSE      | 42.1          |
 | OpenSuSE      | 42.3          |
 | OpenSuSE      | 43.3          |
-| Debian        | wheezy        |
 | Debian        | jessie        |
 | Debian        | stretch       |
 | RHEL          | 6.11          |
