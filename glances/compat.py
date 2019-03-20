@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,7 @@
 # pylint: skip-file
 """Python 2/3 compatibility shims."""
 
+from __future__ import print_function
 import operator
 import sys
 import unicodedata
@@ -53,6 +54,10 @@ if PY3:
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
     viewitems = operator.methodcaller('items')
+
+    def printandflush(string):
+        """Print and flush (used by stdout* outputs modules)"""
+        print(string, flush=True)
 
     def to_ascii(s):
         """Convert the bytes string to a ASCII string
@@ -92,7 +97,10 @@ if PY3:
     def nativestr(s):
         if isinstance(s, text_type):
             return s
-        return s.decode('utf-8', 'replace')
+        elif isinstance(s, (int, float)):
+            return s.__str__()
+        else:
+            return s.decode('utf-8', 'replace')
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""
@@ -125,6 +133,11 @@ else:
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
+
+    def printandflush(string):
+        """Print and flush (used by stdout* outputs modules)"""
+        print(string)
+        sys.stdout.flush()
 
     def mean(numbers):
         return float(sum(numbers)) / max(len(numbers), 1)
@@ -167,7 +180,10 @@ else:
     def nativestr(s):
         if isinstance(s, binary_type):
             return s
-        return s.encode('utf-8', 'replace')
+        elif isinstance(s, (int, float)):
+            return s.__str__()
+        else:
+            return s.encode('utf-8', 'replace')
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""

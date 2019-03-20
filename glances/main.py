@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -92,8 +92,11 @@ Examples of use:
   Start the client browser (browser mode):
     $ glances --browser
 
-  Display stats to stdout:
-    $ glances --stdout cpu.user,mem.used,load
+  Display stats to stdout (one stat per line):
+    $ glances --stdout now,cpu.user,mem.used,load
+
+  Display CSV stats to stdout (all stats in one line):
+    $ glances --stdout-csv now,cpu.user,mem.used,load
 
   Disable some plugins (any modes):
     $ glances --disable-plugin network,ports
@@ -193,6 +196,8 @@ Examples of use:
                             help='define a client/server username')
         parser.add_argument('--password', action='store_true', default=False, dest='password_prompt',
                             help='define a client/server password')
+        parser.add_argument('-u', dest='username_used',
+                            help='use the given client/server username')
         parser.add_argument('--snmp-community', default='public', dest='snmp_community',
                             help='SNMP community')
         parser.add_argument('--snmp-port', default=161, type=int,
@@ -221,7 +226,9 @@ Examples of use:
         parser.add_argument('--process-short-name', action='store_true', default=False,
                             dest='process_short_name', help='force short name for processes name')
         parser.add_argument('--stdout', default=None,
-                            dest='stdout', help='display stats to stdout (comma separated list of plugins/plugins.attribute)')
+                            dest='stdout', help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)')
+        parser.add_argument('--stdout-csv', default=None,
+                            dest='stdout_csv', help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')
@@ -261,6 +268,13 @@ Examples of use:
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
+        else:
+            # Allow users to disable plugins from the glances.conf (issue #1378)
+            for s in self.config.sections():
+                if self.config.has_section(s) \
+                   and (self.config.get_bool_value(s, 'disable', False)):
+                    disable(args, s)
+                    logger.debug('{} disabled by the configuration file'.format(s))
 
         # Exporters activation
         if args.export is not None:
@@ -305,10 +319,14 @@ Examples of use:
                 args.username = self.__get_username(
                     description='Enter the Glances server username: ')
         else:
-            # Default user name is 'glances'
-            args.username = self.username
+            if args.username_used:
+                # A username has been set using the -u option ?
+                args.username = args.username_used
+            else:
+                # Default user name is 'glances'
+                args.username = self.username
 
-        if args.password_prompt:
+        if args.password_prompt or args.username_used:
             # Interactive or file password
             if args.server:
                 args.password = self.__get_password(

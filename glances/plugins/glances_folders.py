@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -24,29 +24,28 @@ import numbers
 from glances.compat import nativestr
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.logger import logger
 
 
 class Plugin(GlancesPlugin):
     """Glances folder plugin."""
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
                                      stats_init_value=[])
+        self.args = args
+        self.config = config
 
         # We want to display the stat in the curse interface
         self.display_curse = True
 
         # Init stats
-        self.glances_folders = None
+        self.glances_folders = glancesFolderList(config)
 
     def get_key(self):
         """Return the key of the list."""
         return 'path'
-
-    def load_limits(self, config):
-        """Load the foldered list from the config file, if it exists."""
-        self.glances_folders = glancesFolderList(config)
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -74,19 +73,34 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
-    def get_alert(self, stat):
+    def get_alert(self, stat, header=""):
         """Manage limits of the folder list."""
         if not isinstance(stat['size'], numbers.Number):
-            return 'DEFAULT'
+            ret = 'DEFAULT'
         else:
             ret = 'OK'
 
-        if stat['critical'] is not None and stat['size'] > int(stat['critical']) * 1000000:
-            ret = 'CRITICAL'
-        elif stat['warning'] is not None and stat['size'] > int(stat['warning']) * 1000000:
-            ret = 'WARNING'
-        elif stat['careful'] is not None and stat['size'] > int(stat['careful']) * 1000000:
-            ret = 'CAREFUL'
+            if stat['critical'] is not None and \
+               stat['size'] > int(stat['critical']) * 1000000:
+                ret = 'CRITICAL'
+            elif stat['warning'] is not None and \
+                    stat['size'] > int(stat['warning']) * 1000000:
+                ret = 'WARNING'
+            elif stat['careful'] is not None and \
+                    stat['size'] > int(stat['careful']) * 1000000:
+                ret = 'CAREFUL'
+
+        # Get stat name
+        stat_name = self.get_stat_name(header=header)
+
+        # Manage threshold
+        self.manage_threshold(stat_name, ret)
+
+        # Manage action
+        self.manage_action(stat_name,
+                           ret.lower(),
+                           header,
+                           stat[self.get_key()])
 
         return ret
 
@@ -122,6 +136,7 @@ class Plugin(GlancesPlugin):
                 msg = '{:>9}'.format(self.auto_unit(i['size']))
             except (TypeError, ValueError):
                 msg = '{:>9}'.format(i['size'])
-            ret.append(self.curse_add_line(msg, self.get_alert(i)))
+            ret.append(self.curse_add_line(msg, self.get_alert(i,
+                                                               header='folder_' + i['indice'])))
 
         return ret

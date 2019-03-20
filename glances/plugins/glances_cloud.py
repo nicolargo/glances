@@ -2,8 +2,9 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2017 Nicolargo <nicolas@nicolargo.com>
-#
+
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -97,7 +98,6 @@ class Plugin(GlancesPlugin):
             #                         'instance-id': 'instance-id',
             #                         'instance-type': 'instance-type',
             #                         'region': 'placement/availability-zone'}
-
         return self.stats
 
     def msg_curse(self, args=None):
@@ -112,10 +112,9 @@ class Plugin(GlancesPlugin):
         if 'ami-id' in self.stats and 'region' in self.stats:
             msg = 'AWS EC2'
             ret.append(self.curse_add_line(msg, "TITLE"))
-            msg = ' {} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
+            msg = '{} instance {} ({})'.format(to_ascii(self.stats['instance-type']),
                                                 to_ascii(self.stats['instance-id']),
                                                 to_ascii(self.stats['region']))
-            ret.append(self.curse_add_line(msg))
 
         # Return the message with decoration
         logger.info(ret)
@@ -285,6 +284,7 @@ class ThreadAwsEc2Grabber(threading.Thread):
                         self._stats[k] = r.content
                 except Exception as e:
                     logger.debug('cloud plugin - Cannot connect to the ALIBABA VM API {}: {}'.format(r_url, e))
+                    self._stats[k] = to_ascii(r.content)
         return True
 
     @property

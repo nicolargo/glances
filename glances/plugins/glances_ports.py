@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -97,29 +97,59 @@ class Plugin(GlancesPlugin):
 
         return self.stats
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'indice'
+
     def get_ports_alert(self, port, header="", log=False):
         """Return the alert status relative to the port scan return value."""
+        ret = 'OK'
         if port['status'] is None:
-            return 'CAREFUL'
+            ret = 'CAREFUL'
         elif port['status'] == 0:
-            return 'CRITICAL'
+            ret = 'CRITICAL'
         elif (isinstance(port['status'], (float, int)) and
               port['rtt_warning'] is not None and
               port['status'] > port['rtt_warning']):
-            return 'WARNING'
+            ret = 'WARNING'
 
-        return 'OK'
+        # Get stat name
+        stat_name = self.get_stat_name(header=header)
+
+        # Manage threshold
+        self.manage_threshold(stat_name, ret)
+
+        # Manage action
+        self.manage_action(stat_name,
+                           ret.lower(),
+                           header,
+                           port[self.get_key()])
+
+        return ret
 
     def get_web_alert(self, web, header="", log=False):
         """Return the alert status relative to the web/url scan return value."""
+        ret = 'OK'
         if web['status'] is None:
-            return 'CAREFUL'
+            ret = 'CAREFUL'
         elif web['status'] not in [200, 301, 302]:
-            return 'CRITICAL'
+            ret = 'CRITICAL'
         elif web['rtt_warning'] is not None and web['elapsed'] > web['rtt_warning']:
-            return 'WARNING'
+            ret = 'WARNING'
 
-        return 'OK'
+        # Get stat name
+        stat_name = self.get_stat_name(header=header)
+
+        # Manage threshold
+        self.manage_threshold(stat_name, ret)
+
+        # Manage action
+        self.manage_action(stat_name,
+                           ret.lower(),
+                           header,
+                           web[self.get_key()])
+
+        return ret
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -152,7 +182,9 @@ class Plugin(GlancesPlugin):
                                           width=name_max_width)
                 ret.append(self.curse_add_line(msg))
                 msg = '{:>9}'.format(status)
-                ret.append(self.curse_add_line(msg, self.get_ports_alert(p)))
+                ret.append(self.curse_add_line(msg,
+                                               self.get_ports_alert(p,
+                                                                    header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
             elif 'url' in p:
                 msg = '{:{width}}'.format(p['description'][0:name_max_width],
@@ -165,7 +197,9 @@ class Plugin(GlancesPlugin):
                 else:
                     status = p['status']
                 msg = '{:>9}'.format(status)
-                ret.append(self.curse_add_line(msg, self.get_web_alert(p)))
+                ret.append(self.curse_add_line(msg,
+                                               self.get_web_alert(p,
+                                                                  header=p['indice'] + '_rtt')))
                 ret.append(self.curse_new_line())
 
         # Delete the last empty line
@@ -238,6 +272,8 @@ class ThreadScanner(threading.Thread):
         try:
             req = requests.head(web['url'],
                                 allow_redirects=True,
+                                verify=web['ssl_verify'],
+                                proxies=web['proxies'],
                                 timeout=web['timeout'])
         except Exception as e:
             logger.debug(e)

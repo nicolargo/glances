@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -219,12 +219,16 @@ class GlancesClientBrowser(object):
         # It's done by the GlancesAutoDiscoverListener class (autodiscover.py)
         # Or define staticaly in the configuration file (module static_list.py)
         # For each server in the list, grab elementary stats (CPU, LOAD, MEM, OS...)
-
-        while True:
+        thread_list = {}
+        while self.screen.is_end == False:
             logger.debug("Iter through the following server list: {}".format(self.get_servers_list()))
             for v in self.get_servers_list():
-                thread = threading.Thread(target=self.__update_stats, args=[v])
-                thread.start()
+                key = v["key"]
+                thread = thread_list.get(key, None)
+                if thread is None or thread.is_alive() == False:
+                    thread = threading.Thread(target=self.__update_stats, args=[v])
+                    thread_list[key] = thread
+                    thread.start()
 
             # Update the screen (list or Glances client)
             if self.screen.active_server is None:
@@ -233,6 +237,10 @@ class GlancesClientBrowser(object):
             else:
                 # Display the active server
                 self.__display_server(self.get_servers_list()[self.screen.active_server])
+
+        # exit key pressed
+        for thread in thread_list.values():
+            thread.join()
 
     def serve_forever(self):
         """Wrapper to the serve_forever function.

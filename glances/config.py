@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -272,7 +272,7 @@ class Config(object):
                   default=None):
         """Get the value of an option, if it exists.
 
-        If it did not exist, then return de default value.
+        If it did not exist, then return the default value.
 
         It allows user to define dynamic configuration key (see issue#1204)
         Dynamic vlaue should starts and end with the ` char
@@ -307,3 +307,10 @@ class Config(object):
             return self.parser.getfloat(section, option)
         except NoOptionError:
             return float(default)
+
+    def get_bool_value(self, section, option, default=True):
+        """Get the bool value of an option, if it exists."""
+        try:
+            return self.parser.getboolean(section, option)
+        except NoOptionError:
+            return bool(default)

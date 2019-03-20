@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -94,6 +94,28 @@ class GlancesWebList(object):
                 if new_web['rtt_warning'] is not None:
                     # Convert to second
                     new_web['rtt_warning'] = int(new_web['rtt_warning']) / 1000.0
+
+                # Indice
+                new_web['indice'] = 'web_' + str(i)
+                
+                # ssl_verify
+                new_web['ssl_verify'] = config.get_value(self._section, 
+                                                        '%sssl_verify' % postfix,
+                                                         default=True)
+                # Proxy
+                http_proxy = config.get_value(self._section, 
+                                                '%shttp_proxy' % postfix,
+                                                default=None)
+                
+                https_proxy = config.get_value(self._section, 
+                                                '%shttps_proxy' % postfix,
+                                                default=None)
+
+                if https_proxy is None and http_proxy is None:
+                    new_web['proxies'] = None
+                else:
+                    new_web['proxies'] = {'http' : http_proxy,
+                                          'https' : https_proxy }
 
                 # Add the server to the list
                 logger.debug("Add Web URL %s to the static list" % new_web['url'])
