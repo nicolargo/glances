@@ -49,3 +49,5 @@ node_modules/
 bower_components/
 
 .idea/
+# visual stdio code 
+.vscode/

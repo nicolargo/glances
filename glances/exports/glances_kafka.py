@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -43,7 +43,7 @@ class Export(GlancesExport):
         # Optionals configuration keys
         self.compression = None
 
-        # Load the Cassandra configuration file section
+        # Load the Kafka configuration file section
         self.export_enable = self.load_conf('kafka',
                                             mandatories=['host', 'port', 'topic'],
                                             options=['compression'])

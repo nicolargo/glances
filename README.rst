@@ -9,6 +9,10 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
+.. image:: https://pepy.tech/badge/glances/month
+    :target: https://pepy.tech/project/glances
+    :alt: Downloads
+
 .. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
     :alt: Linux tests (Travis)
@@ -17,16 +21,14 @@ Glances - An eye on your system
     :target: https://ci.appveyor.com/project/nicolargo/glances
     :alt: Windows tests (Appveyor)
 
-.. image:: https://img.shields.io/scrutinizer/g/nicolargo/glances.svg
-    :target: https://scrutinizer-ci.com/g/nicolargo/glances/
-
-.. image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fnicolargo%2Fglances.svg?type=shield
-    :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fnicolargo%2Fglances?ref=badge_shield
+.. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
+    :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
 
 .. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
     :target: https://www.paypal.me/nicolargo
 
-Follow Glances on Twitter: `@nicolargo`_
+.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+    :target: https://twitter.com/nicolargo
 
 Summary
 =======
@@ -60,7 +62,7 @@ Optional dependencies:
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
 - ``couchdb`` (for the CouchDB export module)
-- ``docker`` (for the Docker monitoring support) [Linux-only]
+- ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
 - ``influxdb`` (for the InfluxDB export module)
@@ -115,8 +117,8 @@ or
 
     wget -O- https://bit.ly/glances | /bin/bash
 
-*Note*: This is only supported on some GNU/Linux distributions. If you want to
-support other distributions, please contribute to `glancesautoinstall`_.
+*Note*: This is only supported on some GNU/Linux distributions and Mac OS X.
+If you want to support other distributions, please contribute to `glancesautoinstall`_.
 
 PyPI: The simple way
 --------------------
@@ -143,7 +145,7 @@ features (like the Web interface, exports modules...):
 
 .. code-block:: console
 
-    pip install 'glances[action,browser,cloud,cpuinfo,chart,docker,export,folders,gpu,ip,raid,snmp,web,wifi]'
+    pip install 'glances[action,browser,cloud,cpuinfo,docker,export,folders,gpu,graph,ip,raid,snmp,web,wifi]'
 
 To upgrade Glances to the latest version:
 
@@ -192,9 +194,9 @@ docker run options:
 
 .. code-block:: console
 
-    docker run -v ./glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
-Where ./glances.conf is a local directory containing your glances.conf file.
+Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
 Run the container in *Web server mode* (notice the `GLANCES_OPT` environment
 variable setting parameters for the glances startup command):
@@ -230,6 +232,8 @@ To install Glances from ports:
 
 macOS
 -----
+
+If you do not want to use the glancesautoinstall script, follow this procedure.
 
 macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
 
@@ -358,6 +362,29 @@ network or defined in the configuration file:
 
     $ glances --browser
 
+You can also display raw stats on stdout:
+
+.. code-block:: console
+
+    $ glances --stdout cpu.user,mem.used,load
+    cpu.user: 30.7
+    mem.used: 3278204928
+    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    cpu.user: 3.4
+    mem.used: 3275251712
+    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    ...
+
+or in a CSV format thanks to the stdout-csv option:
+
+.. code-block:: console
+
+    $ glances --stdout-csv now,cpu.user,mem.used,load
+    now,cpu.user,mem.used,load.cpucore,load.min1,load.min5,load.min15
+    2018-12-08 22:04:20 CEST,7.3,5948149760,4,1.04,0.99,1.04
+    2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
+    ...
+
 and RTFM, always.
 
 Documentation
@@ -384,19 +411,29 @@ There is also a chat dedicated to the Glances developers:
 .. image:: https://badges.gitter.im/Join%20Chat.svg
         :target: https://gitter.im/nicolargo/glances?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
+Donation
+========
+
+If this project help you, you can give me a tip ;)
+
+.. image:: https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
+        :target: https://www.paypal.me/nicolargo
+
 Author
 ======
 
 Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
+.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
+    :target: https://twitter.com/nicolargo
+
 License
 =======
 
-LGPLv3. See ``COPYING`` for more details.
+Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _glancesautoinstall: https://github.com/nicolargo/glancesautoinstall
-.. _@nicolargo: https://twitter.com/nicolargo
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/

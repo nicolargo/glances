@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,7 @@
 import time
 
 from glances.logger import logger
+from glances.compat import printandflush
 
 
 class GlancesStdout(object):
@@ -70,13 +71,13 @@ class GlancesStdout(object):
             if attribute is not None:
                 # With attribute
                 try:
-                    print("{}.{}: {}".format(plugin, attribute,
-                                             stat[attribute]))
+                    printandflush("{}.{}: {}".format(plugin, attribute,
+                                                     stat[attribute]))
                 except KeyError as err:
                     logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
             else:
                 # Without attribute
-                print("{}: {}".format(plugin, stat))
+                printandflush("{}: {}".format(plugin, stat))
 
         # Wait until next refresh
         if duration > 0:

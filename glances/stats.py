@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -113,7 +113,7 @@ class GlancesStats(object):
             # Import the plugin
             plugin = __import__(plugin_script[:-3])
             # Init and add the plugin to the dictionary
-            if name in ('help', 'amps', 'ports'):
+            if name in ('help', 'amps', 'ports', 'folders'):
                 self._plugins[name] = plugin.Plugin(args=args, config=config)
             else:
                 self._plugins[name] = plugin.Plugin(args=args)
@@ -248,11 +248,15 @@ class GlancesStats(object):
         """Return all the stats (dict)."""
         return {p: self._plugins[p].get_raw() for p in self._plugins}
 
-    def getAllExports(self):
+    def getAllExports(self, plugin_list=None):
         """
         Return all the stats to be exported (list).
         Default behavor is to export all the stat
+        if plugin_list is provided, only export stats of given plugin (list)
         """
+        if plugin_list is None:
+            # All plugins should be exported
+            plugin_list = self._plugins
         return [self._plugins[p].get_export() for p in self._plugins]
 
     def getAllExportsAsDict(self, plugin_list=None):

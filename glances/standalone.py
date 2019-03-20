@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -28,6 +28,7 @@ from glances.processes import glances_processes
 from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
+from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -80,6 +81,10 @@ class GlancesStandalone(object):
             logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
             # Init screen
             self.screen = GlancesStdout(config=config, args=args)
+        elif args.stdout_csv:
+            logger.info("Stdout CSV mode is ON, following stats will be displayed: {}".format(args.stdout))
+            # Init screen
+            self.screen = GlancesStdoutCsv(config=config, args=args)
         else:
             # Default number of processes to displayed is set to 50
             glances_processes.max_processes = 50

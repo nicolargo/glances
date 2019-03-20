@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -81,6 +81,7 @@ class FolderList(object):
             key = 'folder_' + str(l) + '_'
 
             # Path is mandatory
+            value['indice'] = str(l)
             value['path'] = self.config.get_value(section, key + 'path')
             if value['path'] is None:
                 continue
@@ -89,9 +90,15 @@ class FolderList(object):
 
             # Optional conf keys
             for i in ['careful', 'warning', 'critical']:
+                # Read threshold
                 value[i] = self.config.get_value(section, key + i)
-                if value[i] is None:
-                    logger.debug("No {} threshold for folder {}".format(i, value["path"]))
+                if value[i] is not None:
+                    logger.debug("{} threshold for folder {} is {}".format(i, value["path"], value[i]))
+                # Read action
+                action = self.config.get_value(section, key + i + '_action')
+                if action is not None:
+                    value[i + '_action'] = action
+                    logger.debug("{} action for folder {} is {}".format(i, value["path"], value[i + '_action']))
 
             # Add the item to the list
             self.__folder_list.append(value)

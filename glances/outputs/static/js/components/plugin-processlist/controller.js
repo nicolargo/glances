@@ -74,6 +74,10 @@ export default function GlancesPluginProcesslistController($scope, GlancesStats,
                 process.cmdline = process.cmdline.join(' ');
             }
 
+            if (process.cmdline === null) {
+                process.cmdline = process.name;
+            }
+
             if (data.isWindows) {
                 process.username = _.last(process.username.split('\\'));
             }

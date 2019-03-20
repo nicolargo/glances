@@ -48,6 +48,7 @@ have a section. Below an example for the CPU plugin:
 .. code-block:: ini
 
     [cpu]
+    disable=false
     user_careful=50
     user_warning=70
     user_critical=90
