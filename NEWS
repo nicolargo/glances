@@ -7,8 +7,13 @@ Version 3.1
 
 Enhancements and new features:
 
+    * Add a CSV output format to the STDOUT output mode #1363
     * Feature request: HDD S.M.A.R.T. reports (thanks to @tnibert) #1288
     * Sort docker stats #1276
+    * Prohibit some plug-in data from being exported to influxdb #1368
+    * Disable plugin from Glances configuration file #1378
+    * Curses-browser's server list paging added (thanks to @limfreee) #1385
+    * Client Browser's thread management added (thanks to @limfreee) #1391
 
 Bugs corrected:
 
@@ -18,10 +23,21 @@ Bugs corrected:
     * Timezone listed doesn’t match system timezone, outputs wrong time #1337
     * Compare issue with Process.cpu_times() #1339
     * ERROR -- Can not grab extended stats (invalid attr name 'num_fds') #1351
+    * Action on port/web plugins is not working #1358
+    * Support for monochrome (serial) terminals e.g. vt220 #1362
+    * TypeError on opening (Wifi plugin) #1373
+    * Some field name are incorrect in CSV export #1372
+    * Standard output misbehaviour (need to flush) #1376
+    * Create an option to set the username to use in Web or RPC Server mode #1381
+    * Missing kernel task names when the webui is switched to long process names #1371
+    * Drive name with special characters causes crash #1383
+    * Cannot get stats in Cloud plugin (404) #1384
 
 Others:
 
     * Add Docker documentation (thanks to @rgarrigue)
+    * Refactor Glances logs (now called Glances events)
+    * "chart" extra dep replace by "graph" #1389
 
 Version 3.0.2
 =============

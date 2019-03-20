@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -21,7 +21,7 @@
 
 import operator
 
-from glances.compat import nativestr
+from glances.compat import nativestr, PY3
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -36,6 +36,11 @@ except ImportError as e:
     logger.warning("Missing Python Lib ({}), Wifi plugin is disabled".format(e))
 else:
     import_error_tag = False
+
+# Python 3 is not supported (see issue #1377)
+if PY3:
+    import_error_tag = True
+    logger.warning("Wifi lib is not compliant with Python 3, Wifi plugin is disabled")
 
 
 class Plugin(GlancesPlugin):
@@ -139,7 +144,8 @@ class Plugin(GlancesPlugin):
                 ret = 'WARNING'
             elif value <= self.get_limit('careful', stat_name=self.plugin_name):
                 ret = 'CAREFUL'
-        except KeyError:
+        except (TypeError, KeyError) as e:
+            # Catch TypeError for issue1373
             ret = 'DEFAULT'
 
         return ret
@@ -177,8 +183,8 @@ class Plugin(GlancesPlugin):
         # Hotspot list (sorted by name)
         for i in sorted(self.stats, key=operator.itemgetter(self.get_key())):
             # Do not display hotspot with no name (/ssid)...
-            # of ssid None... See issue #1151
-            if i['ssid'] == '' or i['ssid'] is None:
+            # of ssid/signal None... See issue #1151 and #issue1973
+            if i['ssid'] == '' or i['ssid'] is None or i['signal'] is None:
                 continue
             ret.append(self.curse_new_line())
             # New hotspot

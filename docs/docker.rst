@@ -29,9 +29,9 @@ Alternatively, you can specify something along the same lines with docker run op
 
 .. code-block:: console
 
-    docker run -v ./glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
 
-Where ./glances.conf is a local directory containing your glances.conf file.
+Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
 Run the container in *Web server mode* (notice the `GLANCES_OPT` environment variable setting parameters for the glances startup command):
 
