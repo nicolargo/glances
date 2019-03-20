@@ -26,13 +26,13 @@ with open(os.path.join('glances', '__init__.py'), encoding='utf-8') as f:
 if not version:
     raise RuntimeError('Cannot find Glances version information.')
 
-with open('README.rst', encoding='utf-8') as f:
+with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 
 def get_data_files():
     data_files = [
-        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.rst',
+        ('share/doc/glances', ['AUTHORS', 'COPYING', 'NEWS', 'README.md',
                                'CONTRIBUTING.md', 'conf/glances.conf']),
         ('share/man/man1', ['docs/man/glances.1'])
     ]
