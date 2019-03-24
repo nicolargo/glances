@@ -17,37 +17,31 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""Manage bars for Glances output."""
+"""Manage sparklines for Glances output."""
 
 from __future__ import division
-
 from math import modf
+from glances.logger import logger
 
-curses_bars = [' ', ' ', ' ', ' ', '|', '|', '|', '|', '|']
+sparklines_module = True
+try:
+    from sparklines import sparklines
+except ImportError as e:
+    logger.debug("Sparklines module not found ({})".format(e))
+    sparklines_module = False
 
 
-class Bar(object):
+class Sparkline(object):
 
-    r"""Manage bar (progression or status).
-
-    import sys
-    import time
-    b = Bar(10)
-    for p in range(0, 100):
-        b.percent = p
-        print("\r%s" % b),
-        time.sleep(0.1)
-        sys.stdout.flush()
-    """
+    r"""Manage sparklines (see https://pypi.org/project/sparklines/)."""
 
     def __init__(self, size, pre_char='[', post_char=']', empty_char=' ', with_text=True):
-        # Bar size
+        # If the sparklines python module available ?
+        self.__available = sparklines_module
+        # Sparkline size
         self.__size = size
-        # Bar current percent
-        self.__percent = 0
-        # Min and max value
-        self.min_value = 0
-        self.max_value = 100
+        # Sparkline current percents list
+        self.__percent = []
         # Char used for the decoration
         self.__pre_char = pre_char
         self.__post_char = post_char
@@ -55,23 +49,23 @@ class Bar(object):
         self.__with_text = with_text
 
     @property
+    def available(self):
+        return self.__available
+
+    @property
     def size(self, with_decoration=False):
-        # Return the bar size, with or without decoration
+        # Return the sparkine size, with or without decoration
         if with_decoration:
             return self.__size
         if self.__with_text:
             return self.__size - 6
 
     @property
-    def percent(self):
+    def percents(self):
         return self.__percent
 
-    @percent.setter
-    def percent(self, value):
-        if value <= self.min_value:
-            value = self.min_value
-        if value >= self.max_value:
-            value = self.max_value
+    @percents.setter
+    def percents(self, value):
         self.__percent = value
 
     @property
@@ -82,14 +76,10 @@ class Bar(object):
     def post_char(self):
         return self.__post_char
 
+    def get(self):
+        """Return the sparkline."""
+        return sparklines(self.percents)[0].encode('utf8')
+
     def __str__(self):
-        """Return the bars."""
-        frac, whole = modf(self.size * self.percent / 100.0)
-        ret = curses_bars[8] * int(whole)
-        if frac > 0:
-            ret += curses_bars[int(frac * 8)]
-            whole += 1
-        ret += self.__empty_char * int(self.size - whole)
-        if self.__with_text:
-            ret = '{}{:5.1f}%'.format(ret, self.percent)
-        return ret
+        """Return the sparkline."""
+        return self.get()
