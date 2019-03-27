@@ -30,6 +30,12 @@ except ImportError as e:
     logger.debug("Sparklines module not found ({})".format(e))
     sparklines_module = False
 
+try:
+    '\xe2\x96\x81'.decode('utf-8')
+except ImportError as e:
+    logger.debug("UTF-8 for sparklines module not available".format(e))
+    sparklines_module = False
+
 
 class Sparkline(object):
 

@@ -1001,18 +1001,15 @@ class _GlancesCurses(object):
         curses.napms(100)
 
     def get_stats_display_width(self, curse_msg, without_option=False):
-        """Return the width of the formatted curses message.
-
-        The height is defined by the maximum line.
-        """
+        """Return the width of the formatted curses message."""
         try:
             if without_option:
                 # Size without options
-                c = len(max(''.join([(re.sub(r'[^\x00-\x7F]+', ' ', i['msg']) if not i['optional'] else "")
+                c = len(max(''.join([(i['msg'].decode('utf-8').encode('ascii', 'replace') if not i['optional'] else "")
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
-                c = len(max(''.join([re.sub(r'[^\x00-\x7F]+', ' ', i['msg'])
+                c = len(max(''.join([i['msg'].decode('utf-8').encode('ascii', 'replace')
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
         except Exception:
             return 0
