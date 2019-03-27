@@ -150,8 +150,9 @@ class Plugin(GlancesPlugin):
             else:
                 if sparkline_tag:
                     # Sparkline display an history
-                    logger.info('Size: {}'.format(data.size))
-                    data.percents = [i[1] for i in self.get_raw_history(item=key, nb=max_width - 6)]
+                    data.percents = [i[1] for i in self.get_raw_history(item=key, nb=data.size)]
+                    # A simple padding in order to align metrics to the right
+                    data.percents += [None] * (data.size - len(data.percents))
                 else:
                     # Bar only the last value
                     data.percent = self.stats[key]
