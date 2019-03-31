@@ -73,6 +73,7 @@ class _GlancesCurses(object):
         'Q': {'switch': 'enable_irq'},
         'R': {'switch': 'disable_raid'},
         's': {'switch': 'disable_sensors'},
+        'S': {'switch': 'sparkline'},
         'T': {'switch': 'network_sum'},
         'U': {'switch': 'network_cumul'},
         'W': {'switch': 'disable_wifi'},
