@@ -15,6 +15,7 @@ Bugs corrected:
 
     * Fix Cassandra table name export #1402
     * 500 Internal Server Error /api/3/network/interface_name #1401
+    * Connection to MQTT server failed : getaddrinfo() argument 2 must be integer or string #1450
 
 Others:
 
