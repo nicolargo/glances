@@ -42,20 +42,22 @@ class Export(GlancesExport):
         self.user = None
         self.password = None
         self.topic = None
+        self.tls = 'true'
 
         # Load the MQTT configuration file
         self.export_enable = self.load_conf('mqtt',
                                             mandatories=['host', 'password'],
-                                            options=['port', 'user', 'topic'])
+                                            options=['port', 'user', 'topic', 'tls'])
         if not self.export_enable:
             exit('Missing MQTT config')
 
         # Get the current hostname
         self.hostname = socket.gethostname()
 
-        self.port = self.port or 8883
+        self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
+        self.tls = (self.tls.lower() == 'true')
 
         # Init the MQTT client
         self.client = self.init()
@@ -69,7 +71,8 @@ class Export(GlancesExport):
                                  clean_session=False)
             client.username_pw_set(username=self.user,
                                    password=self.password)
-            client.tls_set(certs.where())
+            if self.tls:
+                client.tls_set(certs.where())
             client.connect(host=self.host,
                            port=self.port)
             client.loop_start()
@@ -81,8 +84,8 @@ class Export(GlancesExport):
     def export(self, name, columns, points):
         """Write the points in MQTT."""
 
-        WHITELIST='_-' + string.ascii_letters + string.digits
-        SUBSTITUTE='_'
+        WHITELIST = '_-' + string.ascii_letters + string.digits
+        SUBSTITUTE = '_'
 
         def whitelisted(s,
                         whitelist=WHITELIST,
