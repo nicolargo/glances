@@ -149,19 +149,19 @@ class GlancesPlugin(object):
         except UnicodeDecodeError:
             return json.dumps(d, ensure_ascii=False)
 
-    def _history_enable(self):
+    def history_enable(self):
         return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
 
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
-        if self._history_enable():
+        if self.history_enable():
             init_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Stats history activated for plugin {} (items: {})".format(self.plugin_name, init_list))
         return GlancesHistory()
 
     def reset_stats_history(self):
         """Reset the stats history (dict of GlancesAttribute)."""
-        if self._history_enable():
+        if self.history_enable():
             reset_list = [a['name'] for a in self.get_items_history_list()]
             logger.debug("Reset history for plugin {} (items: {})".format(self.plugin_name, reset_list))
             self.stats_history.reset()
@@ -174,7 +174,7 @@ class GlancesPlugin(object):
         else:
             item_name = self.get_key()
         # Build the history
-        if self.get_export() and self._history_enable():
+        if self.get_export() and self.history_enable():
             for i in self.get_items_history_list():
                 if isinstance(self.get_export(), list):
                     # Stats is a list of data

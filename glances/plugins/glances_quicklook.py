@@ -43,6 +43,9 @@ else:
 items_history_list = [{'name': 'cpu',
                        'description': 'CPU percent usage',
                        'y_unit': '%'},
+                      {'name': 'percpu',
+                       'description': 'PERCPU percent usage',
+                       'y_unit': '%'},
                       {'name': 'mem',
                        'description': 'MEM percent usage',
                        'y_unit': '%'},
@@ -120,10 +123,11 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Define the data (Sparkline or Bar)
-        # Sparkline is the default behavor (see https://github.com/nicolargo/glances/issues/1446)
-        data = Sparkline(max_width)
-        sparkline_tag = data.available
+        # Define the data: Bar (default behavor) or Sparkline
+        sparkline_tag = False
+        if self.args.sparkline and self.history_enable():
+            data = Sparkline(max_width)
+            sparkline_tag = data.available
         if not sparkline_tag:
             # Fallback to bar if Sparkline module is not installed
             data = Bar(max_width)
@@ -139,13 +143,22 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_new_line())
         for key in ['cpu', 'mem', 'swap']:
             if key == 'cpu' and args.percpu:
-                for cpu in self.stats['percpu']:
-                    bar.percent = cpu['total']
+                if sparkline_tag:
+                    raw_cpu = self.get_raw_history(item='percpu', nb=data.size)
+                for cpu_index, cpu in enumerate(self.stats['percpu']):
+                    if sparkline_tag:
+                        # Sparkline display an history
+                        data.percents = [i[1][cpu_index]['total'] for i in raw_cpu]
+                        # A simple padding in order to align metrics to the right
+                        data.percents += [None] * (data.size - len(data.percents))
+                    else:
+                        # Bar only the last value
+                        data.percent = cpu['total']
                     if cpu[cpu['key']] < 10:
                         msg = '{:3}{} '.format(key.upper(), cpu['cpu_number'])
                     else:
                         msg = '{:4} '.format(cpu['cpu_number'])
-                    ret.extend(self._msg_create_line(msg, bar, key))
+                    ret.extend(self._msg_create_line(msg, data, key))
                     ret.append(self.curse_new_line())
             else:
                 if sparkline_tag:
