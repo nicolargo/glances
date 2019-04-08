@@ -25,6 +25,7 @@ import threading
 import json
 import pickle
 import os
+from ssl import CertificateError
 
 from glances import __version__
 from glances.compat import nativestr, urlopen, HTTPError, URLError
@@ -155,7 +156,7 @@ class Outdated(object):
 
         try:
             res = urlopen(PYPI_API_URL, timeout=3).read()
-        except (HTTPError, URLError) as e:
+        except (HTTPError, URLError, CertificateError) as e:
             logger.debug("Cannot get Glances version from the PyPI RESTful API ({})".format(e))
         else:
             self.data[u'latest_version'] = json.loads(nativestr(res))['info']['version']
