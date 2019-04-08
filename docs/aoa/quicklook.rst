@@ -12,6 +12,13 @@ If the per CPU mode is on (by clicking the ``1`` key):
 
 .. image:: ../_static/quicklook-percpu.png
 
+In the Curses/terminal interface, it is also possible to switch from bar to
+sparkline using 'S' hot key or --sparkline command line option. Please be
+aware that sparklines use the Glances history and will not be available
+if the history is disabled from the command line.
+
+.. image:: ../_static/sparkline.png  
+
 .. note::
     Limit values can be overwritten in the configuration file under
     the ``[quicklook]`` section.
