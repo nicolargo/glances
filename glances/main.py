@@ -240,6 +240,8 @@ Examples of use:
                             dest='fahrenheit', help='display temperature in Fahrenheit (default is Celsius)')
         parser.add_argument('--fs-free-space', action='store_true', default=False,
                             dest='fs_free_space', help='display FS free space instead of used')
+        parser.add_argument('--sparkline', action='store_true', default=False,
+                            dest='sparkline', help='display sparklines instead of bar in the curses interface')
         parser.add_argument('--theme-white', action='store_true', default=False,
                             dest='theme_white', help='optimize display colors for white background')
         # Globals options
