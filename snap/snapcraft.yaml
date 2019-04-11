@@ -43,6 +43,8 @@ plugs:
 
 parts:
   glances:
+    after:
+    - selective-checkout
     plugin: python
     source: .
     # FIXME: Theoretically this also replaces `summary` and `description`
@@ -52,8 +54,7 @@ parts:
     parse-info: [setup.py]
     override-pull: |
       snapcraftctl pull
-      snapcraftctl set-version \
-        "$(git describe --always --dirty --tags --match 'v*' | sed s/^v//)"
+      "$SNAPCRAFT_STAGE"/scriptlets/selective-checkout
   bottle:
     plugin: python
     source: https://github.com/bottlepy/bottle.git
@@ -69,3 +70,11 @@ parts:
     plugin: dump
     organize:
       '*': bin/
+  selective-checkout:
+    plugin: nil
+    build-packages:
+    - git
+    stage-snaps:
+    - selective-checkout
+    prime:
+    - -*
