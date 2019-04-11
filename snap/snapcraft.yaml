@@ -12,7 +12,9 @@ confinement: strict
 
 apps:
   glances:
-    command: bin/glances
+    command: >
+      bin/glances-launch
+      $SNAP/bin/glances
     plugs:
       - network
       - system-observe
@@ -27,6 +29,16 @@ apps:
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
+
+plugs:
+  home-glances-config:
+    interface: personal-files
+    read:
+    - $HOME/.config/glances/glances.conf
+  etc-glances-config:
+    interface: system-files
+    read:
+    - /etc/glances/glances.conf
 
 parts:
   glances:
@@ -51,3 +63,8 @@ parts:
     source: https://github.com/docker/docker-py.git
     source-tag: '3.7.0'
     source-depth: 1
+  launchers:
+    source: snap/local/launchers
+    plugin: dump
+    organize:
+      '*': bin/
