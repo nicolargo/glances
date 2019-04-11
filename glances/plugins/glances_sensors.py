@@ -122,6 +122,12 @@ class Plugin(GlancesPlugin):
 
             pass
 
+        # Set the alias for each stat
+        for stat in stats:
+            alias = self.has_alias(stat["label"].lower())
+            if alias:
+                stat["label"] = alias
+
         # Update the stats
         self.stats = stats
 
@@ -182,11 +188,7 @@ class Plugin(GlancesPlugin):
                 continue
             # New line
             ret.append(self.curse_new_line())
-            # Alias for the lable name ?
-            label = self.has_alias(i['label'].lower())
-            if label is None:
-                label = i['label']
-            msg = '{:{width}}'.format(label[:name_max_width],
+            msg = '{:{width}}'.format(i["label"][:name_max_width],
                                       width=name_max_width)
             ret.append(self.curse_add_line(msg))
             if i['value'] in (b'ERR', b'SLP', b'UNK', b'NOS'):
