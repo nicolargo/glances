@@ -7,6 +7,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
+base: core
 grade: stable
 confinement: strict
 
