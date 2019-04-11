@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# This is the maintainence launcher for the snap, make necessary runtime
+# environment changes to make the snap work here.  You may also insert
+# security confinement/deprecation/obsoletion notice of the snap here.
+set \
+    -o errexit \
+    -o errtrace \
+    -o nounset \
+    -o pipefail
+
+# Use user's real home directory for canonical configuration path access
+HOME="$(
+    getent passwd "${USER}" \
+        | cut --delimiter=: --fields=6
+)"
+
+# Use snap's own folder for cache directory
+declare XDG_CACHE_HOME
+mkdir \
+    --parents \
+    "${SNAP_USER_DATA}"/.cache
+XDG_CACHE_HOME="${SNAP_USER_DATA}"/.cache
+export XDG_CACHE_HOME
+
+# Finally run the next part of the command chain
+exec "${@}"
