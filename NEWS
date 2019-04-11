@@ -8,6 +8,7 @@ Version 3.1.1
 Enhancements and new features:
 
     * Please add some sparklines! #1446
+    * Add Load Average (similar to Linux) on Windows #344
     * Add authprovider for cassandra export (thanks to @EmilienMottet) #1395
     * Curses's browser server list sorting added (thanks to @limfreee) #1396
     * ElasticSearch: add date to index, unbreak object push (thanks to @genevera) # 1438
