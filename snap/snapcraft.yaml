@@ -23,6 +23,7 @@ apps:
       - physical-memory-observe
       - upower-observe
       - home
+      - network-bind
     environment:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
