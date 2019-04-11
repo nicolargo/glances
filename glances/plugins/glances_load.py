@@ -20,6 +20,7 @@
 """Load plugin."""
 
 import os
+import psutil
 
 from glances.compat import iteritems
 from glances.plugins.glances_core import Plugin as CorePlugin
@@ -63,6 +64,17 @@ class Plugin(GlancesPlugin):
         except Exception:
             self.nb_log_core = 1
 
+    def _getloadavg(self):
+        """Get load average. On both Linux and Windows thanks to PsUtil"""
+        try:
+            return psutil.getloadavg()
+        except AttributeError:
+            pass
+        try:
+            return os.getloadavg()
+        except OSError:
+            return None
+
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -74,15 +86,15 @@ class Plugin(GlancesPlugin):
             # Update stats using the standard system lib
 
             # Get the load using the os standard lib
-            try:
-                load = os.getloadavg()
-            except (OSError, AttributeError):
+            load = self._getloadavg()
+            if load is None:
                 stats = self.get_init_value()
             else:
                 stats = {'min1': load[0],
                          'min5': load[1],
                          'min15': load[2],
                          'cpucore': self.nb_log_core}
+
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             stats = self.get_stats_snmp(snmp_oid=snmp_oid)
