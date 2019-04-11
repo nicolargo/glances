@@ -3,7 +3,7 @@
 Load
 ====
 
-*Availability: Unix*
+*Availability: Unix and Windows with a PsUtil version >= 5.6.2*
 
 .. image:: ../_static/load.png
 
@@ -14,8 +14,9 @@ on GNU/Linux operating system:
     waiting in the run-queue plus the number currently executing
     over 1, 5, and 15 minutes time periods."
 
-Be aware that Load on Linux and BSD are different things, high
-`load on BSD`_ does not means high CPU load.
+Be aware that Load on Linux, BSD and Windows are different things, high
+`load on BSD`_ does not means high CPU load. The Windows load is emulated
+by the PsUtil lib (see `load on Windows`_)
 
 Glances gets the number of CPU core to adapt the alerts.
 Alerts on load average are only set on 15 minutes time period.
@@ -38,3 +39,4 @@ Load avg      Status
 
 .. _load average: http://nosheep.net/story/defining-unix-load-average/
 .. _load on BSD: http://undeadly.org/cgi?action=article&sid=20090715034920
+.. _load on Windows: https://psutil.readthedocs.io/en/latest/#psutil.getloadavg
