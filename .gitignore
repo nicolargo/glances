@@ -50,3 +50,12 @@ bower_components/
 
 # visual stdio code
 .vscode/
+
+# Snap packaging specific
+/snap/.snapcraft/
+/parts/
+/stage/
+/prime/
+
+/*.snap
+/*_source.tar.bz2
