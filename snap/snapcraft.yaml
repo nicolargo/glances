@@ -35,11 +35,11 @@ plugs:
   home-glances-config:
     interface: personal-files
     read:
-    - $HOME/.config/glances/glances.conf
+      - $HOME/.config/glances/glances.conf
   etc-glances-config:
     interface: system-files
     read:
-    - /etc/glances/glances.conf
+      - /etc/glances/glances.conf
 
 parts:
   glances:
