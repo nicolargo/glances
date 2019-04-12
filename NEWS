@@ -19,6 +19,7 @@ Bugs corrected:
     * 500 Internal Server Error /api/3/network/interface_name #1401
     * Connection to MQTT server failed : getaddrinfo() argument 2 must be integer or string #1450
     * `l` keypress (hide alert log) not working after some time #1449
+    * Too less data using prometheus exporter #1462 
 
 Others:
 
