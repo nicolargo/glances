@@ -13,6 +13,9 @@ listening on <host:port> (define in the Glances configuration file).
     host=localhost
     port=9091
     prefix=glances
+    labels=src:glances
+
+Note: you can use dynamc fields for the label (ex: labels=system:`uname -s`)
 
 and run Glances with:
 
