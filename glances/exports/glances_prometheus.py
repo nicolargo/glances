@@ -39,16 +39,19 @@ class Export(GlancesExport):
         """Init the Prometheus export IF."""
         super(Export, self).__init__(config=config, args=args)
 
-        # Optionals configuration keys
-        self.prefix = 'glances'
-        self.labels = None
-
         # Load the Prometheus configuration file section
         self.export_enable = self.load_conf('prometheus',
                                             mandatories=['host', 'port'],
                                             options=['prefix', 'labels'])
         if not self.export_enable:
             sys.exit(2)
+
+        # Optionals configuration keys
+        if self.prefix is None:
+            self.prefix = 'glances'
+
+        if self.labels is None:
+            self.labels = 'src:glances'
 
         # Init the metric dict
         # Perhaps a better method is possible...
@@ -77,7 +80,7 @@ class Export(GlancesExport):
         # Write metrics to the Prometheus exporter
         for k, v in iteritems(data):
             # Prometheus metric name: prefix_<glances stats name>
-            metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR + k
+            metric_name = self.prefix + self.METRIC_SEPARATOR + str(name) + self.METRIC_SEPARATOR + str(k)
             # Prometheus is very sensible to the metric name
             # See: https://prometheus.io/docs/practices/naming/
             for c in ['.', '-', '/', ' ']:
