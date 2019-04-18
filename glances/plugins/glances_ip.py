@@ -131,7 +131,8 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
         try:
             msg_pub = '{}'.format(self.stats['public_address'])
-        except UnicodeEncodeError:
+        except (UnicodeEncodeError, KeyError):
+            # Add KeyError exception (see https://github.com/nicolargo/glances/issues/1469)
             pass
         else:
             if self.stats['public_address'] is not None:
