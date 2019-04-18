@@ -67,6 +67,7 @@ def get_install_extras_require():
         'raid': ['pymdstat'],
         'smart': ['pySMART.smartx'],
         'snmp': ['pysnmp'],
+        'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
     }
