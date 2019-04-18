@@ -753,6 +753,9 @@ class _GlancesCurses(object):
         # Display right sidebar
         self.new_column()
         for p in self._right_sidebar:
+            if p not in p:
+                # Catch for issue #1470
+                continue
             self.new_line()
             if p == 'processlist':
                 self.display_plugin(stat_display['processlist'],
