@@ -27,13 +27,13 @@ sparklines_module = True
 try:
     from sparklines import sparklines
 except ImportError as e:
-    logger.debug("Sparklines module not found ({})".format(e))
+    logger.warning("Sparklines module not found ({})".format(e))
     sparklines_module = False
 
 try:
     '\xe2\x96\x81'.decode('utf-8')
 except ImportError as e:
-    logger.debug("UTF-8 for sparklines module not available".format(e))
+    logger.warning("UTF-8 is mandatory for sparklines ({})".format(e))
     sparklines_module = False
 
 
@@ -88,4 +88,9 @@ class Sparkline(object):
 
     def __str__(self):
         """Return the sparkline."""
-        return self.get()
+        ret = self.get()
+        if self.__with_text:
+            percents_without_none = [x for x in self.percents if x is not None]
+            if len(percents_without_none) > 0:
+                ret = '{}{:5.1f}%'.format(ret, percents_without_none[-1])
+        return ret
