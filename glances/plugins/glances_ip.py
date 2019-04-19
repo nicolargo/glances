@@ -173,7 +173,7 @@ class PublicIpAddress(object):
             if q.qsize() > 0:
                 ip = q.get()
 
-        return ip
+        return ', '.join(set([x.strip() for x in ip.split(',')]))
 
     def _get_ip_public(self, queue_target, url, json=False, key=None):
         """Request the url service and put the result in the queue_target."""
