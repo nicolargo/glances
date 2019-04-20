@@ -82,7 +82,7 @@ class Bar(object):
     def post_char(self):
         return self.__post_char
 
-    def __str__(self):
+    def get(self):
         """Return the bars."""
         frac, whole = modf(self.size * self.percent / 100.0)
         ret = curses_bars[8] * int(whole)
@@ -93,3 +93,7 @@ class Bar(object):
         if self.__with_text:
             ret = '{}{:5.1f}%'.format(ret, self.percent)
         return ret
+
+    def __str__(self):
+        """Return the bars."""
+        return self.get()

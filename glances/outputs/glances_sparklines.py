@@ -19,11 +19,15 @@
 
 """Manage sparklines for Glances output."""
 
+from __future__ import unicode_literals
 from __future__ import division
+import sys
 from math import modf
 from glances.logger import logger
+from glances.compat import nativestr
 
 sparklines_module = True
+
 try:
     from sparklines import sparklines
 except ImportError as e:
@@ -31,8 +35,8 @@ except ImportError as e:
     sparklines_module = False
 
 try:
-    '\xe2\x96\x81'.decode('utf-8')
-except Exception as e:
+    '┌┬┐╔╦╗╒╤╕╓╥╖│║─═├┼┤╠╬╣╞╪╡╟╫╢└┴┘╚╩╝╘╧╛╙╨╜'.encode(sys.stdout.encoding)
+except UnicodeEncodeError:
     logger.warning("UTF-8 is mandatory for sparklines ({})".format(e))
     sparklines_module = False
 
@@ -84,13 +88,13 @@ class Sparkline(object):
 
     def get(self):
         """Return the sparkline."""
-        return sparklines(self.percents)[0].encode('utf8')
-
-    def __str__(self):
-        """Return the sparkline."""
-        ret = self.get()
+        ret = sparklines(self.percents)[0]
         if self.__with_text:
             percents_without_none = [x for x in self.percents if x is not None]
             if len(percents_without_none) > 0:
                 ret = '{}{:5.1f}%'.format(ret, percents_without_none[-1])
-        return ret
+        return nativestr(ret)
+
+    def __str__(self):
+        """Return the sparkline."""
+        return self.get()

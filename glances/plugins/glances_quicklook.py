@@ -185,7 +185,7 @@ class Plugin(GlancesPlugin):
 
         ret.append(self.curse_add_line(msg))
         ret.append(self.curse_add_line(data.pre_char, decoration='BOLD'))
-        ret.append(self.curse_add_line(str(data), self.get_views(key=key, option='decoration')))
+        ret.append(self.curse_add_line(data.get(), self.get_views(key=key, option='decoration')))
         ret.append(self.curse_add_line(data.post_char, decoration='BOLD'))
         ret.append(self.curse_add_line('  '))
 
