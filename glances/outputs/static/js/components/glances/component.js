@@ -7,5 +7,8 @@ import template from "./view.html";
 export default angular.module("glancesApp").component("glances", {
     controller: GlancesController,
     controllerAs: 'vm',
-    templateUrl: template,
+    bindings: {
+        refreshTime: "<"
+    },
+    templateUrl: template
 });

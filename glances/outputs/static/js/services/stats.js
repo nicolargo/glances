@@ -1,7 +1,7 @@
 
 import angular from "angular";
 
-function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REFRESH_TIME, CONFIG, ARGUMENTS) {
+function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, CONFIG, ARGUMENTS) {
 
     var _data = false;
 
@@ -10,7 +10,7 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REF
     }
 
     // load config/limit/arguments and execute stats/views auto refresh
-    this.init = function () {
+    this.init = function (REFRESH_TIME) {
         var refreshData = function () {
             return $q.all([
                 getAllStats(),
