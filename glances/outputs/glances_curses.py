@@ -22,7 +22,7 @@
 import re
 import sys
 
-from glances.compat import u, itervalues
+from glances.compat import to_ascii, nativestr, b, u, itervalues
 from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
 from glances.events import glances_events
@@ -1009,13 +1009,14 @@ class _GlancesCurses(object):
         try:
             if without_option:
                 # Size without options
-                c = len(max(''.join([(i['msg'].decode('utf-8').encode('ascii', 'replace') if not i['optional'] else "")
+                c = len(max(''.join([(u(u(nativestr(i['msg'])).encode('ascii', 'replace')) if not i['optional'] else "")
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
             else:
                 # Size with all options
-                c = len(max(''.join([i['msg'].decode('utf-8').encode('ascii', 'replace')
+                c = len(max(''.join([u(u(nativestr(i['msg'])).encode('ascii', 'replace'))
                                      for i in curse_msg['msgdict']]).split('\n'), key=len))
-        except Exception:
+        except Exception as e:
+            logger.debug('ERROR: Can not compute plugin width ({})'.format(e))
             return 0
         else:
             return c
@@ -1027,7 +1028,8 @@ class _GlancesCurses(object):
         """
         try:
             c = [i['msg'] for i in curse_msg['msgdict']].count('\n')
-        except Exception:
+        except Exception as e:
+            logger.debug('ERROR: Can not compute plugin height ({})'.format(e))
             return 0
         else:
             return c + 1

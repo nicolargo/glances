@@ -19,7 +19,6 @@
 
 """Quicklook plugin."""
 
-from glances.compat import nativestr
 from glances.cpu_percent import cpu_percent
 from glances.logger import logger
 from glances.outputs.glances_bars import Bar
