@@ -32,7 +32,7 @@ except ImportError as e:
 
 try:
     '\xe2\x96\x81'.decode('utf-8')
-except ImportError as e:
+except Exception as e:
     logger.warning("UTF-8 is mandatory for sparklines ({})".format(e))
     sparklines_module = False
 
