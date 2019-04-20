@@ -28,6 +28,8 @@ export default function GlancesPluginCpuController($scope, GlancesStats) {
         var stats = data.stats['cpu'];
         _view = data.views['cpu'];
 
+        vm.isLinux = data.isLinux;
+
         vm.total = stats.total;
         vm.user = stats.user;
         vm.system = stats.system;
