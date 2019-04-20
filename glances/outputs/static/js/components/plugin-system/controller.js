@@ -25,6 +25,7 @@ export default function GlancesPluginSystemController($scope, GlancesStats) {
     var loadData = function (data) {
         var stats = data.stats['system'];
 
+        vm.isLinux = data.isLinux;
         vm.hostname = stats['hostname'];
         vm.platform = stats['platform'];
         vm.os.name = stats['os_name'];

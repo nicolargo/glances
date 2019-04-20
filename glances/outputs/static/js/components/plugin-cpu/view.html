@@ -72,7 +72,7 @@
                         {{ vm.soft_interrupts }}
                     </div>
                 </div>
-                <div class="table-row" ng-if="!statsSystem.isLinux() && vm.syscalls">
+                <div class="table-row" ng-if="!vm.isLinux && vm.syscalls">
                     <div class="table-cell text-left">syscal:</div>
                     <div class="table-cell">
                         {{ vm.syscalls }}
