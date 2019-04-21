@@ -8,14 +8,9 @@
 
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <script type="text/javascript" src="glances.js"></script>
-    <script>
-        angular
-            .module('glances.config', [])
-            .constant('REFRESH_TIME', {{ refresh_time }});
-    </script>
 </head>
 
 <body>
-  <glances></glances>
+  <glances refresh-time="{{ refresh_time }}"></glances>
 </body>
 </html>
