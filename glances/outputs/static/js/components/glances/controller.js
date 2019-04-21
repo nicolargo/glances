@@ -4,6 +4,10 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
 
+    vm.$onInit = function () {
+        GlancesStats.init(vm.refreshTime);
+    };
+
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;
         vm.dataLoaded = true;

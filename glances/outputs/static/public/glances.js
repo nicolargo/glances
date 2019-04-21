@@ -829,7 +829,7 @@ module.exports = __webpack_require__.p + "9a360c92ce9bda60a8da6389741dcfbf.png";
 
 
 
-/* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp", ["glances.config", "cfp.hotkeys"])
+/* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp", ["cfp.hotkeys"])
 
 .value("CONFIG", {})
 .value("ARGUMENTS", {})
@@ -845,8 +845,6 @@ module.exports = __webpack_require__.p + "9a360c92ce9bda60a8da6389741dcfbf.png";
     $rootScope.$on("data_refreshed", function (event, data) {
         $rootScope.title = `${data.stats.system.hostname} - Glances`;
     });
-
-    GlancesStats.init();
 }));
 
 
@@ -38764,7 +38762,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 
 
-function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REFRESH_TIME, CONFIG, ARGUMENTS) {
+function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, CONFIG, ARGUMENTS) {
 
     var _data = false;
 
@@ -38773,7 +38771,7 @@ function GlancesStats ($http, $q, $rootScope, $timeout, GlancesPluginHelper, REF
     }
 
     // load config/limit/arguments and execute stats/views auto refresh
-    this.init = function () {
+    this.init = function (REFRESH_TIME) {
         var refreshData = function () {
             return $q.all([
                 getAllStats(),
@@ -39874,7 +39872,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
 /* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp").component("glances", {
     controller: __WEBPACK_IMPORTED_MODULE_1__controller__["a" /* default */],
     controllerAs: 'vm',
-    templateUrl: __WEBPACK_IMPORTED_MODULE_2__view_html___default.a,
+    bindings: {
+        refreshTime: "<"
+    },
+    templateUrl: __WEBPACK_IMPORTED_MODULE_2__view_html___default.a
 }));
 
 
@@ -39889,6 +39890,10 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
     var vm = this;
     vm.dataLoaded = false;
     vm.arguments = ARGUMENTS;
+
+    vm.$onInit = function () {
+        GlancesStats.init(vm.refreshTime);
+    };
 
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;

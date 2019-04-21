@@ -2,7 +2,7 @@
 import angular from "angular";
 import "angular-hotkeys";
 
-export default angular.module("glancesApp", ["glances.config", "cfp.hotkeys"])
+export default angular.module("glancesApp", ["cfp.hotkeys"])
 
 .value("CONFIG", {})
 .value("ARGUMENTS", {})
@@ -18,6 +18,4 @@ export default angular.module("glancesApp", ["glances.config", "cfp.hotkeys"])
     $rootScope.$on("data_refreshed", function (event, data) {
         $rootScope.title = `${data.stats.system.hostname} - Glances`;
     });
-
-    GlancesStats.init();
 });
