@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Curses interface class."""
+from __future__ import unicode_literals
 
 import re
 import sys

@@ -18,8 +18,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Disk I/O plugin."""
+from __future__ import unicode_literals
 
-from glances.compat import nativestr
+from glances.compat import nativestr, n
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -110,7 +111,7 @@ class Plugin(GlancesPlugin):
                                        self.diskio_old[disk].write_bytes)
                         diskstat = {
                             'time_since_update': time_since_update,
-                            'disk_name': disk,
+                            'disk_name': n(disk),
                             'read_count': read_count,
                             'write_count': write_count,
                             'read_bytes': read_bytes,

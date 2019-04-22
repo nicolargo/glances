@@ -21,7 +21,8 @@
 # pylint: skip-file
 """Python 2/3 compatibility shims."""
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
+
 import operator
 import sys
 import unicodedata
@@ -84,23 +85,29 @@ if PY3:
     def itervalues(d):
         return iter(d.values())
 
-    def u(s):
+    def u(s, errors='replace'):
         if isinstance(s, text_type):
             return s
-        return s.decode('utf-8', 'replace')
+        return s.decode('utf-8', errors=errors)
 
-    def b(s):
+    def b(s, errors='replace'):
         if isinstance(s, binary_type):
             return s
-        return s.encode('utf-8')
+        return s.encode('utf-8', errors=errors)
 
-    def nativestr(s):
+    def n(s):
+        '''Only in Python 2...
+        from future.utils import bytes_to_native_str as n
+        '''
+        return s
+
+    def nativestr(s, errors='replace'):
         if isinstance(s, text_type):
             return s
         elif isinstance(s, (int, float)):
             return s.__str__()
         else:
-            return s.decode('utf-8', 'replace')
+            return s.decode('utf-8', errors=errors)
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""
@@ -113,6 +120,7 @@ if PY3:
         return res.rstrip()
 
 else:
+    from future.utils import bytes_to_native_str as n
     import Queue as queue
     from itertools import imap as map
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, NoSectionError
@@ -167,23 +175,23 @@ else:
     def itervalues(d):
         return d.itervalues()
 
-    def u(s):
+    def u(s, errors='replace'):
         if isinstance(s, text_type):
             return s
-        return s.decode('utf-8')
+        return s.decode('utf-8', errors=errors)
 
-    def b(s):
+    def b(s, errors='replace'):
         if isinstance(s, binary_type):
             return s
-        return s.encode('utf-8', 'replace')
+        return s.encode('utf-8', errors=errors)
 
-    def nativestr(s):
+    def nativestr(s, errors='replace'):
         if isinstance(s, binary_type):
             return s
         elif isinstance(s, (int, float)):
             return s.__str__()
         else:
-            return s.encode('utf-8', 'replace')
+            return s.encode('utf-8', errors=errors)
 
     def system_exec(command):
         """Execute a system command and return the resul as a str"""

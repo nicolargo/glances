@@ -18,10 +18,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Folder plugin."""
+from __future__ import unicode_literals
 
 import numbers
 
-from glances.compat import nativestr
+from glances.compat import nativestr, n
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
