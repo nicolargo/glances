@@ -18,10 +18,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """File system plugin."""
+from __future__ import unicode_literals
 
 import operator
 
-from glances.compat import u, nativestr
+from glances.compat import u, nativestr, n
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil

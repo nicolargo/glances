@@ -18,12 +18,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """Network plugin."""
+from __future__ import unicode_literals
 
 import base64
 import operator
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.compat import n, u, b, nativestr
 
 import psutil
 
@@ -119,7 +121,7 @@ class Plugin(GlancesPlugin):
                     rx = cumulative_rx - self.network_old[net].bytes_recv
                     tx = cumulative_tx - self.network_old[net].bytes_sent
                     cx = rx + tx
-                    netstat = {'interface_name': net,
+                    netstat = {'interface_name': n(net),
                                'time_since_update': time_since_update,
                                'cumulative_rx': cumulative_rx,
                                'rx': rx,
