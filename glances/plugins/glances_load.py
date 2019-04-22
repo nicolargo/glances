@@ -72,7 +72,7 @@ class Plugin(GlancesPlugin):
             pass
         try:
             return os.getloadavg()
-        except OSError:
+        except (AttributeError, OSError):
             return None
 
     @GlancesPlugin._check_decorator
