@@ -33,10 +33,10 @@ from glances.processes import sort_stats as sort_stats_processes, weighted, glan
 # https://github.com/docker/docker-py
 try:
     import docker
-except ImportError as e:
+except Exception as e:
     import_error_tag = True
     # Display debu message if import KeyError
-    logger.warning("Missing Python Lib ({}), Docker plugin is disabled".format(e))
+    logger.warning("Error loading Docker Python Lib. Docker plugin is disabled ({})".format(e))
 else:
     import_error_tag = False
 
