@@ -117,16 +117,22 @@ class GlancesStats(object):
                 self._plugins[name] = plugin.Plugin(args=args, config=config)
             else:
                 self._plugins[name] = plugin.Plugin(args=args)
-            # Set the disable_<name> to False by default
-            if self.args is not None:
-                setattr(self.args,
-                        'disable_' + name,
-                        getattr(self.args, 'disable_' + name, False))
         except Exception as e:
-            # If a plugin can not be log, display a critical message
+            # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
             logger.critical("Error while initializing the {} plugin ({})".format(name, e))
             logger.error(traceback.format_exc())
+            # Disable the plugin
+            if args is not None:
+                setattr(args,
+                        'disable_' + name,
+                        False)
+        else:
+            # Set the disable_<name> to False by default
+            if args is not None:
+                setattr(args,
+                        'disable_' + name,
+                        getattr(args, 'disable_' + name, False))
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
@@ -140,6 +146,7 @@ class GlancesStats(object):
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
+        logger.critical(">>> Active plugins list: {}".format(self.getPluginsList()))
 
     def load_exports(self, args=None):
         """Load all export modules in the 'exports' folder."""

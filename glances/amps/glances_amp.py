@@ -32,7 +32,7 @@ The return string is a string with one or more line (\n between lines).
 If the *one_line* var is true then the AMP will be displayed in one line.
 """
 
-from glances.compat import u
+from glances.compat import u, b, n, nativestr
 from glances.timer import Timer
 from glances.logger import logger
 
@@ -180,6 +180,7 @@ class GlancesAmp(object):
         """Store the result (string) into the result key of the AMP
         if one_line is true then replace \n by separator
         """
+        # self.configs['result'] = unicode(result, 'utf-8').encode('utf-8', errors='replace')
         if self.one_line():
             self.configs['result'] = str(result).replace('\n', separator)
         else:
