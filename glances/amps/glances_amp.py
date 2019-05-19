@@ -180,11 +180,10 @@ class GlancesAmp(object):
         """Store the result (string) into the result key of the AMP
         if one_line is true then replace \n by separator
         """
-        # self.configs['result'] = unicode(result, 'utf-8').encode('utf-8', errors='replace')
         if self.one_line():
-            self.configs['result'] = str(result).replace('\n', separator)
+            self.configs['result'] = u(result).replace('\n', separator)
         else:
-            self.configs['result'] = str(result)
+            self.configs['result'] = u(result)
 
     def result(self):
         """ Return the result of the AMP (as a string)"""
