@@ -146,7 +146,6 @@ class GlancesStats(object):
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
-        logger.critical(">>> Active plugins list: {}".format(self.getPluginsList()))
 
     def load_exports(self, args=None):
         """Load all export modules in the 'exports' folder."""
