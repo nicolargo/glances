@@ -733,11 +733,11 @@ class _GlancesCurses(object):
         if self.args.disable_left_sidebar:
             return
 
-        for s in self._left_sidebar:
-            if ((hasattr(self.args, 'enable_' + s) or
-                 hasattr(self.args, 'disable_' + s)) and s in stat_display):
+        for p in self._left_sidebar:
+            if ((hasattr(self.args, 'enable_' + p) or
+                 hasattr(self.args, 'disable_' + p)) and s in stat_display):
                 self.new_line()
-                self.display_plugin(stat_display[s])
+                self.display_plugin(stat_display[p])
 
     def __display_right(self, stat_display):
         """Display the right sidebar in the Curses interface.
@@ -754,17 +754,19 @@ class _GlancesCurses(object):
         # Display right sidebar
         self.new_column()
         for p in self._right_sidebar:
-            if p not in p:
-                # Catch for issue #1470
-                continue
-            self.new_line()
-            if p == 'processlist':
-                self.display_plugin(stat_display['processlist'],
-                                    display_optional=(self.screen.getmaxyx()[1] > 102),
-                                    display_additional=(not MACOS),
-                                    max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
-            else:
-                self.display_plugin(stat_display[p])
+            if ((hasattr(self.args, 'enable_' + p) or
+                 hasattr(self.args, 'disable_' + p)) and p in stat_display):
+                if p not in p:
+                    # Catch for issue #1470
+                    continue
+                self.new_line()
+                if p == 'processlist':
+                    self.display_plugin(stat_display['processlist'],
+                                        display_optional=(self.screen.getmaxyx()[1] > 102),
+                                        display_additional=(not MACOS),
+                                        max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
+                else:
+                    self.display_plugin(stat_display[p])
 
     def display_popup(self, message,
                       size_x=None, size_y=None,
