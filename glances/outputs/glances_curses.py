@@ -735,7 +735,7 @@ class _GlancesCurses(object):
 
         for p in self._left_sidebar:
             if ((hasattr(self.args, 'enable_' + p) or
-                 hasattr(self.args, 'disable_' + p)) and s in stat_display):
+                 hasattr(self.args, 'disable_' + p)) and p in stat_display):
                 self.new_line()
                 self.display_plugin(stat_display[p])
 
