@@ -46,7 +46,7 @@ class Amp(GlancesAmp):
     """Glances' Default AMP."""
 
     NAME = ''
-    VERSION = '1.0'
+    VERSION = '1.1'
     DESCRIPTION = ''
     AUTHOR = 'Nicolargo'
     EMAIL = 'contact@nicolargo.com'
@@ -59,23 +59,28 @@ class Amp(GlancesAmp):
     def update(self, process_list):
         """Update the AMP"""
         # Get the systemctl status
-        logger.debug('{}: Update AMP stats using service {}'.format(self.NAME, self.get('service_cmd')))
+        logger.debug('{}: Update AMP stats using command {}'.format(self.NAME, self.get('service_cmd')))
+        # Get command to execute
         try:
             res = self.get('command')
         except OSError as e:
-            logger.debug('{}: Error while executing service ({})'.format(self.NAME, e))
-        else:
-            if res is not None:
-                try:
-                    msg = u(check_output(res.split(), stderr=STDOUT))
-                    self.set_result(to_ascii(msg.rstrip()))
-                except CalledProcessError as e:
-                    self.set_result(e.output)
-            else:
-                # Set the default message if command return None
-                # Default sum of CPU and MEM for the matching regex
-                self.set_result('CPU: {:.1f}% | MEM: {:.1f}%'.format(
-                    sum([p['cpu_percent'] for p in process_list]),
-                    sum([p['memory_percent'] for p in process_list])))
-
+            logger.debug('{}: Error while executing command ({})'.format(self.NAME, e))
+            return self.result()
+        # No command found, use default message
+        if res is None:
+            # Set the default message if command return None
+            # Default sum of CPU and MEM for the matching regex
+            self.set_result('CPU: {:.1f}% | MEM: {:.1f}%'.format(
+                sum([p['cpu_percent'] for p in process_list]),
+                sum([p['memory_percent'] for p in process_list])))
+            return self.result()
+        # Run command(s)
+        # Comman separated commands can be executed
+        try:
+            msg = ''
+            for cmd in res.split(';'):
+                msg += u(check_output(cmd.split(), stderr=STDOUT))
+            self.set_result(to_ascii(msg.rstrip()))
+        except CalledProcessError as e:
+            self.set_result(e.output)
         return self.result()
