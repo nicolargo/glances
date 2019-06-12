@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import os
 
+from glances.timer import Timer
 from glances.compat import range, nativestr
 from glances.logger import logger
 
@@ -57,10 +58,18 @@ class FolderList(object):
     __folder_list_max_size = 10
     # The folder list
     __folder_list = []
+    # Default refresh time is 30 seconds for this plugins
+    __default_refresh = 30
 
     def __init__(self, config):
         """Init the folder list from the configuration file, if it exists."""
         self.config = config
+
+        # A list of Timer
+        # One timer per folder
+        # default timer is __default_refresh, can be overwrite by folder_1_refresh=600
+        self.timer_folders = []
+        self.first_grab = True
 
         if self.config is not None and self.config.has_section('folders'):
             if scandir_tag:
@@ -90,6 +99,12 @@ class FolderList(object):
                 value['path'] = nativestr(value['path'])
 
             # Optional conf keys
+            # Refresh time
+            value['refresh'] = int(self.config.get_value(section,
+                                                         key + 'refresh',
+                                                         default=self.__default_refresh))
+            self.timer_folders.append(Timer(value['refresh']))
+            # Thesholds
             for i in ['careful', 'warning', 'critical']:
                 # Read threshold
                 value[i] = self.config.get_value(section, key + i)
@@ -155,6 +170,9 @@ class FolderList(object):
         # Iter upon the folder list
         for i in range(len(self.get())):
             # Update folder size
+            if not self.first_grab and not self.timer_folders[i].finished():
+                continue
+            # Get folder size
             try:
                 self.__folder_list[i]['size'] = self.__folder_size(self.path(i))
             except OSError as e:
@@ -164,6 +182,11 @@ class FolderList(object):
                     self.__folder_list[i]['size'] = '!'
                 else:
                     self.__folder_list[i]['size'] = '?'
+            # Reset the timer
+            self.timer_folders[i].reset()
+
+        # It is no more the first time...
+        self.first_grab = False
 
         return self.__folder_list
 
