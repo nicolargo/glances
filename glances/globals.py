@@ -29,6 +29,7 @@ LINUX = sys.platform.startswith('linux')
 MACOS = sys.platform.startswith('darwin')
 SUNOS = sys.platform.startswith('sunos')
 WINDOWS = sys.platform.startswith('win')
+WSL = "linux" in platform.system().lower() and "microsoft" in platform.uname()[3].lower()
 
 # Set the AMPs, plugins and export modules path
 work_path = os.path.realpath(os.path.dirname(__file__))
