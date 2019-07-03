@@ -167,6 +167,10 @@ class Plugin(GlancesPlugin):
             except Exception as e:
                 # Correct issue#649
                 logger.error("{} plugin - Cannot get Docker version ({})".format(self.plugin_name, e))
+                # We may have lost connection remove version info
+                if 'version' in self.stats:
+                    del self.stats['version']
+                self.stats['containers'] = []
                 return self.stats
 
             # Update current containers list
@@ -176,6 +180,8 @@ class Plugin(GlancesPlugin):
                 containers = self.docker_client.containers.list(all=self._all_tag()) or []
             except Exception as e:
                 logger.error("{} plugin - Cannot get containers list ({})".format(self.plugin_name, e))
+                # We may have lost connection empty the containers list.
+                self.stats['containers'] = []
                 return self.stats
 
             # Start new thread for new container
@@ -653,11 +659,15 @@ class ThreadDockerGrabber(threading.Thread):
 
         Infinite loop, should be stopped by calling the stop() method
         """
-        for i in self._stats_stream:
-            self._stats = i
-            time.sleep(0.1)
-            if self.stopped():
-                break
+        try:
+            for i in self._stats_stream:
+                self._stats = i
+                time.sleep(0.1)
+                if self.stopped():
+                    break
+        except:
+            logger.debug("docker plugin - Exception thrown during run")
+            self.stop()
 
     @property
     def stats(self):
