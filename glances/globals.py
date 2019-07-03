@@ -22,6 +22,7 @@
 import errno
 import os
 import sys
+import platform
 
 # OS constants (some libraries/features are OS-dependent)
 BSD = sys.platform.find('bsd') != -1
