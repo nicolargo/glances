@@ -39,8 +39,10 @@ Run the container in *Web server mode* (notice the `GLANCES_OPT` environment var
 
     docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
 
+Note: if you want to see the network interface stats within the container, add --net=host --privileged
+
 You can also include Glances container in you own `docker-compose.yml`. Here's a realistic example including a "traefik" reverse proxy serving an "whoami" app container plus a Glances container, providing a simple and efficient monitoring webui.
-    
+
 .. code-block:: console
 
     version: '3'
@@ -50,7 +52,7 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
         image: traefik:alpine
         command: --api --docker
         ports:
-          - "80:80"     
+          - "80:80"
           - "8080:8080"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
@@ -64,11 +66,10 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
         image: nicolargo/glances:latest-alpine
         restart: always
         pid: host
-        volumes:    
+        volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         environment:
           - "GLANCES_OPT=-w"
-        labels:      
-          - "traefik.port=61208"      
+        labels:
+          - "traefik.port=61208"
           - "traefik.frontend.rule=Host:glances.docker.localhost"
-          
