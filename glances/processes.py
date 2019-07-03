@@ -21,7 +21,7 @@ import operator
 import os
 
 from glances.compat import iteritems, itervalues, listitems, iterkeys
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, WSL
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
 from glances.logger import logger
@@ -236,7 +236,7 @@ class GlancesProcesses(object):
                           'memory_percent', 'name', 'nice', 'pid', 'ppid',
                           'status', 'username', 'status', 'num_threads']
         # io_counters availability: Linux, BSD, Windows, AIX
-        if not MACOS and not SUNOS:
+        if not MACOS and not SUNOS and not WSL:
             standard_attrs += ['io_counters']
         # gids availability: Unix
         if not WINDOWS:
