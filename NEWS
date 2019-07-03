@@ -26,6 +26,7 @@ Bugs corrected:
     * Stack trace when starts Glances on CentOS #1470
     * UnicodeEncodeError: 'ascii' codec can't encode character u'\u25cf' - Raspbian stretch #1483
     * Prometheus integration broken with latest prometheus_client #1397
+    * "sorted by ?" is displayed when setting the sort criterion to "USER" #1407
 
 Others:
 
