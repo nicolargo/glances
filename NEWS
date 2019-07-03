@@ -12,7 +12,8 @@ Enhancements and new features:
     * Add authprovider for cassandra export (thanks to @EmilienMottet) #1395
     * Curses's browser server list sorting added (thanks to @limfreee) #1396
     * ElasticSearch: add date to index, unbreak object push (thanks to @genevera) # 1438
-    * Performance issue with large folder #1491 
+    * Performance issue with large folder #1491
+    * Can't connect to influxdb with https enabled #1497
 
 Bugs corrected:
 
