@@ -41,6 +41,7 @@ class Export(GlancesExport):
         self.db = None
 
         # Optionals configuration keys
+        self.protocole = 'http'
         self.prefix = None
         self.tags = None
 
@@ -49,7 +50,9 @@ class Export(GlancesExport):
                                             mandatories=['host', 'port',
                                                          'user', 'password',
                                                          'db'],
-                                            options=['prefix', 'tags'])
+                                            options=['protocol',
+                                                     'prefix',
+                                                     'tags'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -64,6 +67,8 @@ class Export(GlancesExport):
         try:
             db = InfluxDBClient(host=self.host,
                                 port=self.port,
+                                ssl=(self.protocol.lower() == 'https'),
+                                verify_ssl=False,
                                 username=self.user,
                                 password=self.password,
                                 database=self.db)
