@@ -47,6 +47,7 @@ class Plugin(GlancesPlugin):
                       'cpu_percent': 'CPU consumption',
                       'memory_percent': 'memory consumption',
                       'cpu_times': 'process time',
+                      'username': 'user name',
                       'name': 'process name',
                       None: 'None'}
 
@@ -138,7 +139,7 @@ class Plugin(GlancesPlugin):
         try:
             sort_human = self.sort_for_human[glances_processes.sort_key]
         except KeyError:
-            sort_human = '?'
+            sort_human = glances_processes.sort_key
         if glances_processes.auto_sort:
             msg = 'sorted automatically'
             ret.append(self.curse_add_line(msg))
