@@ -148,7 +148,9 @@ class Plugin(GlancesPlugin):
 
         Example: '255.255.255.0' will return 24
         """
-        return sum([int(x) << 8 for x in ip.split('.')]) // 8128
+        # Thanks to @Atticfire
+        # See https://github.com/nicolargo/glances/issues/1417#issuecomment-469894399
+        return sum(bin(int(x)).count('1') for x in ip.split('.'))
 
 
 class PublicIpAddress(object):
