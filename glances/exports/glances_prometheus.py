@@ -41,8 +41,8 @@ class Export(GlancesExport):
 
         # Load the Prometheus configuration file section
         self.export_enable = self.load_conf('prometheus',
-                                            mandatories=['host', 'port'],
-                                            options=['prefix', 'labels'])
+                                            mandatories=['host', 'port', 'labels'],
+                                            options=['prefix'])
         if not self.export_enable:
             sys.exit(2)
 

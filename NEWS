@@ -25,6 +25,7 @@ Bugs corrected:
     * Getting an error when running with prometheus exporter #1469
     * Stack trace when starts Glances on CentOS #1470
     * UnicodeEncodeError: 'ascii' codec can't encode character u'\u25cf' - Raspbian stretch #1483
+    * Prometheus integration broken with latest prometheus_client #1397
 
 Others:
 
