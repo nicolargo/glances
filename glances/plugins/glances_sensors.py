@@ -249,8 +249,9 @@ class GlancesGrabSensors(object):
 
         # !!! Disable Fan: High CPU consumption with psutil 5.2.0 or higher
         # Delete the two followings lines when corrected (https://github.com/giampaolo/psutil/issues/1199)
-        self.init_fan = False
-        logger.debug("Fan speed sensors disable (see https://github.com/giampaolo/psutil/issues/1199)")
+        # Correct and tested with PsUtil 5.6.1 (Ubuntu 18.04)
+        # self.init_fan = False
+        # logger.debug("Fan speed sensors disable (see https://github.com/giampaolo/psutil/issues/1199)")
 
         # Init the stats
         self.reset()

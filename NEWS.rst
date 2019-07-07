@@ -30,6 +30,7 @@ Bugs corrected:
     * IP plugin displays incorrect subnet mask #1417
     * Glances PsUtil ValueError on IoCounter with TASK kernel options #1440
     * Per CPU in Web UI have some display issues. #1494
+    * Fan speed and voltages section? #1398
 
 Others:
 
