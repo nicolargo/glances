@@ -12,9 +12,10 @@ RUN apk add --no-cache --virtual .build_deps \
 	gcc \
 	musl-dev \
 	linux-headers \
-	&& pip install 'psutil>=5.4.7,<5.5.0' bottle==0.12.13 \
+	git \
+	&& git clone -b develop https://github.com/nicolargo/glances.git \
+	&& pip install --no-cache-dir -r glances/requirements.txt bottle \
 	&& apk del .build_deps
-RUN apk add --no-cache git && git clone -b develop https://github.com/nicolargo/glances.git
 
 # Define working directory.
 WORKDIR /glances
