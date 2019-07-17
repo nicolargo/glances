@@ -1,7 +1,7 @@
 include AUTHORS
 include CONTRIBUTING.md
 include COPYING
-include NEWS
+include NEWS.rst
 include README.rst
 include conf/glances.conf
 recursive-include docs *
