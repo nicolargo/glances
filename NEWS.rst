@@ -2,6 +2,15 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.1.2
+=============
+
+Enhancements and new features:
+
+
+Bugs corrected:
+
+
 Version 3.1.1
 =============
 
