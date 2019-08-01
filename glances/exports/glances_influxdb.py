@@ -41,7 +41,7 @@ class Export(GlancesExport):
         self.db = None
 
         # Optionals configuration keys
-        self.protocole = 'http'
+        self.protocol = 'http'
         self.prefix = None
         self.tags = None
 
