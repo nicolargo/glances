@@ -98,7 +98,7 @@ class Plugin(GlancesPlugin):
             # and ignore all others (e.g. memory partitions such as /dev/shm)
             try:
                 fs_stat = psutil.disk_partitions(all=False)
-            except UnicodeDecodeError:
+            except (UnicodeDecodeError, PermissionError):
                 return self.stats
 
             # Optionnal hack to allow logicals mounts points (issue #448)
