@@ -77,7 +77,7 @@ class GlancesStdoutCsv(object):
                     if isinstance(i, dict) and 'key' in i:
                         for k in i.keys():
                             line += '{}.{}.{}{}'.format(plugin,
-                                                        str(i[i['key']]),
+                                                        str(i['key']),
                                                         str(k),
                                                         self.separator)
             else:
