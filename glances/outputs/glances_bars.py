@@ -23,8 +23,6 @@ from __future__ import division
 
 from math import modf
 
-curses_bars = [' ', ' ', ' ', ' ', '|', '|', '|', '|', '|']
-
 
 class Bar(object):
 
@@ -40,7 +38,12 @@ class Bar(object):
         sys.stdout.flush()
     """
 
-    def __init__(self, size, pre_char='[', post_char=']', empty_char=' ', with_text=True):
+    def __init__(self, size,
+                 percentage_char='|', empty_char=' ',
+                 pre_char='[', post_char=']',
+                 with_text=True):
+        # Build curses_bars
+        self.__curses_bars = [empty_char] * 5 + [percentage_char] * 5
         # Bar size
         self.__size = size
         # Bar current percent
@@ -85,9 +88,9 @@ class Bar(object):
     def get(self):
         """Return the bars."""
         frac, whole = modf(self.size * self.percent / 100.0)
-        ret = curses_bars[8] * int(whole)
+        ret = self.__curses_bars[8] * int(whole)
         if frac > 0:
-            ret += curses_bars[int(frac * 8)]
+            ret += self.__curses_bars[int(frac * 8)]
             whole += 1
         ret += self.__empty_char * int(self.size - whole)
         if self.__with_text:

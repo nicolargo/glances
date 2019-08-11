@@ -726,7 +726,7 @@ class GlancesPlugin(object):
         # Return the action list
         return log_tag[0].lower() == 'true'
 
-    def get_conf_value(self, value, header="", plugin_name=None):
+    def get_conf_value(self, value, header="", plugin_name=None, default=[]):
         """Return the configuration (header_) value for the current plugin.
 
         ...or the one given by the plugin_name var.
@@ -742,7 +742,7 @@ class GlancesPlugin(object):
         try:
             return self._limits[plugin_name + '_' + value]
         except KeyError:
-            return []
+            return default
 
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list.

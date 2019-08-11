@@ -129,7 +129,9 @@ class Plugin(GlancesPlugin):
             sparkline_tag = data.available
         if not sparkline_tag:
             # Fallback to bar if Sparkline module is not installed
-            data = Bar(max_width)
+            data = Bar(max_width,
+                       percentage_char=self.get_conf_value('percentage_char',
+                                                           default=['|'])[0])
 
         # Build the string message
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
