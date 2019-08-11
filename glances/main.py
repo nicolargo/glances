@@ -169,6 +169,8 @@ Examples of use:
                             default='./glances.csv',
                             dest='export_csv_file',
                             help='file path for CSV exporter')
+        parser.add_argument('--export-csv-overwrite', action='store_true', default=False,
+                            dest='export_csv_overwrite', help='overwrite existing CSV file')
         parser.add_argument('--export-json-file',
                             default='./glances.json',
                             dest='export_json_file',

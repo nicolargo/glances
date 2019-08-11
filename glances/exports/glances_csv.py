@@ -19,6 +19,7 @@
 
 """CSV interface class."""
 
+import os.path
 import csv
 import sys
 import time
@@ -40,11 +41,27 @@ class Export(GlancesExport):
         self.csv_filename = args.export_csv_file
 
         # Set the CSV output file
+        # (see https://github.com/nicolargo/glances/issues/1525)
+        if not os.path.isfile(self.csv_filename) or args.export_csv_overwrite:
+            # File did not exist, create it
+            file_mode = 'w'
+            self.old_header = None
+        else:
+            # A CSV file already exit, append new data
+            file_mode = 'a'
+            # Header will be check later
+            # Get the existing one
+            try:
+                self.csv_file = open_csv_file(self.csv_filename, 'r')
+                reader = csv.reader(self.csv_file)
+            except IOError as e:
+                logger.critical("Cannot open existing CSV file: {}".format(e))
+                sys.exit(2)
+            self.old_header = next(reader, None)
+            self.csv_file.close()
+
         try:
-            if PY3:
-                self.csv_file = open(self.csv_filename, 'w', newline='')
-            else:
-                self.csv_file = open(self.csv_filename, 'wb')
+            self.csv_file = open_csv_file(self.csv_filename, file_mode)
             self.writer = csv.writer(self.csv_file)
         except IOError as e:
             logger.critical("Cannot create the CSV file: {}".format(e))
@@ -91,8 +108,31 @@ class Export(GlancesExport):
                 csv_data += itervalues(all_stats[plugin])
 
         # Export to CSV
+        # Manage header
         if self.first_line:
-            self.writer.writerow(csv_header)
+            if self.old_header is None:
+                # New file, write the header on top on the CSV file
+                self.writer.writerow(csv_header)
+            # File already exist, check if header are compatible
+            if self.old_header != csv_header:
+                # Header are differents, log an error and do not write data
+                logger.error("Cannot append data to existing CSV file. Headers are differents.")
+                logger.debug("Old header: {}".format(self.old_header))
+                logger.debug("New header: {}".format(csv_header))
+            else:
+                # Header are equals, ready to write data
+                self.old_header = None
+            # Only do this once
             self.first_line = False
-        self.writer.writerow(csv_data)
-        self.csv_file.flush()
+        # Manage data
+        if self.old_header is None:
+            self.writer.writerow(csv_data)
+            self.csv_file.flush()
+
+
+def open_csv_file(file_name, file_mode):
+    if PY3:
+        csv_file = open(file_name, file_mode, newline='')
+    else:
+        csv_file = open(file_name, file_mode + 'b')
+    return csv_file
