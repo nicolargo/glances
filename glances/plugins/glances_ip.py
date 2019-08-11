@@ -61,7 +61,7 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Get the public IP address once (not for each refresh)
-        if not self.is_disable():
+        if not self.is_disable() and not import_error_tag:
             self.public_address = PublicIpAddress().get()
 
     @GlancesPlugin._check_decorator
@@ -114,7 +114,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or self.is_disable():
+        if not self.stats or self.is_disable() or import_error_tag:
             return ret
 
         # Build the string message
