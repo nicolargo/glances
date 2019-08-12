@@ -23,3 +23,11 @@ the command line.
 .. note::
     Limit values can be overwritten in the configuration file under
     the ``[quicklook]`` section.
+
+You can also configure the percentage char used in the terminal user interface.
+
+.. code-block:: ini
+
+    [quicklook]
+    # Graphical percentage char used in the terminal user interface (default is |)
+    percentage_char=@
