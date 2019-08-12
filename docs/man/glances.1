@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Jul 17, 2019" "3.1.1" "Glances"
+.TH "GLANCES" "1" "Aug 12, 2019" "3.1.2_BETA" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -54,7 +54,7 @@ show this help message and exit
 .INDENT 0.0
 .TP
 .B \-V, \-\-version
-show program’s version number and exit
+show program\(aqs version number and exit
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -114,7 +114,7 @@ light mode for Curses UI (disable all but top menu)
 .INDENT 0.0
 .TP
 .B \-0, \-\-disable\-irix
-task’s CPU usage will be divided by the total number of CPUs
+task\(aqs CPU usage will be divided by the total number of CPUs
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -449,7 +449,7 @@ Show/hide processes stats
 .B \fB0\fP
 Enable/disable Irix/Solaris mode
 .sp
-Task’s CPU usage will be divided by the total number of CPUs
+Task\(aqs CPU usage will be divided by the total number of CPUs
 .TP
 .B \fB1\fP
 Switch between global CPU and per\-CPU stats
@@ -800,7 +800,7 @@ $ glances \-w
 Monitor local machine and export stats to a CSV file:
 .INDENT 0.0
 .INDENT 3.5
-$ glances –export csv –export\-csv\-file /tmp/glances.csv
+$ glances \-\-export csv \-\-export\-csv\-file /tmp/glances.csv
 .UNINDENT
 .UNINDENT
 .sp
@@ -809,14 +809,14 @@ refresh time (also possible to export to OpenTSDB, Cassandra, Statsd,
 ElasticSearch, RabbitMQ and Riemann):
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-t 5 –export influxdb
+$ glances \-t 5 \-\-export influxdb
 .UNINDENT
 .UNINDENT
 .sp
 It is also possible to export stats to multiple endpoints:
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-t 5 –export influxdb,statsd,csv
+$ glances \-t 5 \-\-export influxdb,statsd,csv
 .UNINDENT
 .UNINDENT
 .sp
@@ -837,14 +837,14 @@ $ glances \-c <ip_server>
 Connect to a Glances server and export stats to a StatsD server:
 .INDENT 0.0
 .INDENT 3.5
-$ glances \-c <ip_server> –export statsd
+$ glances \-c <ip_server> \-\-export statsd
 .UNINDENT
 .UNINDENT
 .sp
 Start the client browser (browser mode):
 .INDENT 0.0
 .INDENT 3.5
-$ glances –browser
+$ glances \-\-browser
 .UNINDENT
 .UNINDENT
 .SH AUTHOR
