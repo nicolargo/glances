@@ -39,7 +39,11 @@ class Plugin(GlancesPlugin):
                                      stats_init_value=[])
 
         # Init the sensor class
-        self.glancesgrabhddtemp = GlancesGrabHDDTemp(args=args)
+        self.hddtemp = GlancesGrabHDDTemp(args=args,
+                                          host=self.get_conf_value("hddtemp_host",
+                                                                   default="127.0.0.1"),
+                                          port=int(self.get_conf_value("hddtemp_port",
+                                                                       default="7634")))
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
@@ -54,7 +58,7 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             # Update stats using the standard system lib
-            stats = self.glancesgrabhddtemp.get()
+            stats = self.hddtemp.get()
 
         else:
             # Update stats using SNMP
