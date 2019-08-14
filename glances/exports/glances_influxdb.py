@@ -64,10 +64,16 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
+        # Correct issue #1530
+        if self.protocol is not None and (self.protocol.lower() == 'https'):
+            ssl = True
+        else:
+            ssl = False
+
         try:
             db = InfluxDBClient(host=self.host,
                                 port=self.port,
-                                ssl=(self.protocol.lower() == 'https'),
+                                ssl=ssl,
                                 verify_ssl=False,
                                 username=self.user,
                                 password=self.password,
