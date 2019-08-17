@@ -50,9 +50,10 @@ class Plugin(GlancesPlugin):
     stats is a dict
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
+                                     config=config,
                                      items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface

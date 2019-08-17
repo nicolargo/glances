@@ -35,9 +35,9 @@ class Plugin(GlancesPlugin):
     stats is date (string)
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

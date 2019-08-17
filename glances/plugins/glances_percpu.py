@@ -39,9 +39,10 @@ class Plugin(GlancesPlugin):
     for each CPU.
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
+                                     config=config,
                                      items_history_list=items_history_list,
                                      stats_init_value=[])
 

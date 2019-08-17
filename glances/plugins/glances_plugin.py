@@ -41,6 +41,7 @@ class GlancesPlugin(object):
 
     def __init__(self,
                  args=None,
+                 config=None,
                  items_history_list=None,
                  stats_init_value={}):
         """Init the plugin of plugins class.
@@ -66,7 +67,8 @@ class GlancesPlugin(object):
         :stats_init_value: Default value for a stats item
         """
         # Plugin name (= module name without glances_)
-        self.plugin_name = self.__class__.__module__[len('glances_'):]
+        pos = self.__class__.__module__.find('glances_') + len('glances') + 1
+        self.plugin_name = self.__class__.__module__[pos:]
         # logger.debug("Init plugin %s" % self.plugin_name)
 
         # Init the args
@@ -83,8 +85,11 @@ class GlancesPlugin(object):
         self.items_history_list = items_history_list
         self.stats_history = self.init_stats_history()
 
-        # Init the limits dictionnary
+        # Init the limits (configuration keys) dictionnary
         self._limits = dict()
+        if not self.load_limits(config=config):
+            logger.debug('Can not load section {} in {}'.format(self.plugin_name,
+                                                                config))
 
         # Init the actions
         self.actions = GlancesActions(args=args)

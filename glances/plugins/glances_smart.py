@@ -152,6 +152,7 @@ class Plugin(GlancesPlugin):
 
     def __init__(self,
                  args=None,
+                 config=None,
                  stats_init_value=[]):
         """Init the plugin."""
         # check if user is admin
@@ -159,7 +160,7 @@ class Plugin(GlancesPlugin):
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

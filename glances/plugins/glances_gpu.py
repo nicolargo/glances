@@ -48,9 +48,10 @@ class Plugin(GlancesPlugin):
     stats is a list of dictionaries with one entry per GPU
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
+                                     config=config,
                                      stats_init_value=[])
 
         # Init the NVidia API

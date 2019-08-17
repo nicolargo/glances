@@ -47,7 +47,8 @@ class GlancesStats(object):
         self.load_modules(self.args)
 
         # Load the limits (for plugins)
-        self.load_limits(self.config)
+        # Not necessary anymore, configuration file is loaded on init
+        # self.load_limits(self.config)
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -109,14 +110,13 @@ class GlancesStats(object):
         # for example, the file glances_xxx.py
         # generate self._plugins_list["xxx"] = ...
         name = plugin_script[len(self.header):-3].lower()
+
+        # Loaf the plugin class
         try:
             # Import the plugin
             plugin = __import__(plugin_script[:-3])
             # Init and add the plugin to the dictionary
-            if name in ('help', 'amps', 'ports', 'folders'):
-                self._plugins[name] = plugin.Plugin(args=args, config=config)
-            else:
-                self._plugins[name] = plugin.Plugin(args=args)
+            self._plugins[name] = plugin.Plugin(args=args, config=config)
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash
