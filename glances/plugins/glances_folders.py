@@ -34,6 +34,7 @@ class Plugin(GlancesPlugin):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
+                                     config=config,
                                      stats_init_value=[])
         self.args = args
         self.config = config

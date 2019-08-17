@@ -24,8 +24,8 @@ import warnings
 
 from glances.logger import logger
 from glances.compat import iteritems
-from glances.plugins.glances_batpercent import Plugin as BatPercentPlugin
-from glances.plugins.glances_hddtemp import Plugin as HddTempPlugin
+from glances.plugins.sensors.glances_batpercent import Plugin as BatPercentPlugin
+from glances.plugins.sensors.glances_hddtemp import Plugin as HddTempPlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 SENSOR_TEMP_UNIT = 'C'
@@ -45,9 +45,10 @@ class Plugin(GlancesPlugin):
     The hard disks are already sorted by name.
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
+                                     config=config,
                                      stats_init_value=[])
 
         # Init the sensor class
@@ -55,11 +56,11 @@ class Plugin(GlancesPlugin):
 
         # Instance for the HDDTemp Plugin in order to display the hard disks
         # temperatures
-        self.hddtemp_plugin = HddTempPlugin(args=args)
+        self.hddtemp_plugin = HddTempPlugin(args=args, config=config)
 
         # Instance for the BatPercent in order to display the batteries
         # capacities
-        self.batpercent_plugin = BatPercentPlugin(args=args)
+        self.batpercent_plugin = BatPercentPlugin(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

@@ -29,9 +29,9 @@ class Plugin(GlancesPlugin):
     stats is a tuple
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args)
+        super(Plugin, self).__init__(args=args, config=config)
 
         self.reset()
 

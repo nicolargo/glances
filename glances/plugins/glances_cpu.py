@@ -59,9 +59,11 @@ class Plugin(GlancesPlugin):
     percentage.
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
-        super(Plugin, self).__init__(args=args, items_history_list=items_history_list)
+        super(Plugin, self).__init__(args=args,
+                                     config=config,
+                                     items_history_list=items_history_list)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
