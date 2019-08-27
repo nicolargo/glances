@@ -7,9 +7,21 @@ Version 3.1.2
 
 Enhancements and new features:
 
+  * Make CSV export append instead of replace #1525
+  * HDDTEMP config IP and Port #1508
+  * [Feature Request] Option in config to change character used to display percentage in Quicklook #1508
 
 Bugs corrected:
+  * Cannot restart glances with --export influxdb after update to 3.1.1 bug #1530
+  * ip plugin empty interface bug #1509
+  * Glances Snap doesn't run on Orange Pi Zero running Ubuntu Core 16 bug #1517
+  * Error with IP Plugin : object has no attribute bug #1528
+  * repair the problem that when running 'glances --stdout-csv amps' #1520
+  * Possible typo in glances_influxdb.py #1514
 
+Others:
+
+      * In debug mode (-d) all duration (init, update are now logged). Grep duration in log file.
 
 Version 3.1.1
 =============
@@ -20,7 +32,7 @@ Enhancements and new features:
     * Add Load Average (similar to Linux) on Windows #344
     * Add authprovider for cassandra export (thanks to @EmilienMottet) #1395
     * Curses's browser server list sorting added (thanks to @limfreee) #1396
-    * ElasticSearch: add date to index, unbreak object push (thanks to @genevera) # 1438
+    * ElasticSearch: add date to index, unbreak object push (thanks to @genevera) #1438
     * Performance issue with large folder #1491
     * Can't connect to influxdb with https enabled #1497
 
