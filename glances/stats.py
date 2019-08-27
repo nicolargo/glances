@@ -25,8 +25,9 @@ import sys
 import threading
 import traceback
 
-from glances.globals import exports_path, plugins_path, sys_path
 from glances.logger import logger
+from glances.globals import exports_path, plugins_path, sys_path
+from glances.timer import Counter
 
 
 class GlancesStats(object):
@@ -136,13 +137,17 @@ class GlancesStats(object):
 
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
+        start_duration = Counter()
         for item in os.listdir(plugins_path):
             if (item.startswith(self.header) and
                     item.endswith(".py") and
                     item != (self.header + "plugin.py")):
                 # Load the plugin
+                start_duration.reset()
                 self._load_plugin(os.path.basename(item),
                                   args=args, config=self.config)
+                logger.debug("Plugin {} started in {} seconds".format(item,
+                                                                      start_duration.get()))
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
@@ -224,12 +229,15 @@ class GlancesStats(object):
                 # If current plugin is disable
                 # then continue to next plugin
                 continue
+            start_duration = Counter()
             # Update the stats...
             self._plugins[p].update()
             # ... the history
             self._plugins[p].update_stats_history()
             # ... and the views
             self._plugins[p].update_views()
+            # logger.debug("Plugin {} update duration: {} seconds".format(p,
+            #                                                             start_duration.get()))
 
     def export(self, input_stats=None):
         """Export all the stats.

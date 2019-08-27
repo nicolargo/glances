@@ -43,7 +43,7 @@ except ImportError:
 from glances.logger import logger
 from glances.main import GlancesMain
 from glances.globals import WINDOWS
-
+from glances.timer import Counter
 # Check locale
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -89,6 +89,8 @@ def start(config, args):
     # Load mode
     global mode
 
+    start_duration = Counter()
+
     if core.is_standalone():
         from glances.standalone import GlancesStandalone as GlancesMode
     elif core.is_client():
@@ -106,6 +108,7 @@ def start(config, args):
     mode = GlancesMode(config=config, args=args)
 
     # Start the main loop
+    logger.debug("Glances started in {} seconds".format(start_duration.get()))
     mode.serve_forever()
 
     # Shutdown
