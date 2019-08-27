@@ -46,7 +46,10 @@ class GlancesStandalone(object):
         self.refresh_time = args.time
 
         # Init stats
+        start_duration = Counter()
+        start_duration.reset()
         self.stats = GlancesStats(config=config, args=args)
+        logger.debug("Plugins initialisation duration: {} seconds".format(start_duration.get()))
 
         # Modules (plugins and exporters) are loaded at this point
         # Glances can display the list if asked...
@@ -71,7 +74,9 @@ class GlancesStandalone(object):
             glances_processes.disable_kernel_threads()
 
         # Initial system informations update
+        start_duration.reset()
         self.stats.update()
+        logger.debug("First stats update duration: {} seconds".format(start_duration.get()))
 
         if self.quiet:
             logger.info("Quiet mode is ON, nothing will be displayed")
@@ -117,12 +122,12 @@ class GlancesStandalone(object):
 
         # Update stats
         self.stats.update()
-        logger.debug('Stats updated in {} seconds'.format(counter.get()))
+        logger.debug('Stats updated duration: {} seconds'.format(counter.get()))
 
         # Export stats
         counter_export = Counter()
         self.stats.export(self.stats)
-        logger.debug('Stats exported in {} seconds'.format(counter_export.get()))
+        logger.debug('Stats exported duration: {} seconds'.format(counter_export.get()))
 
         # Patch for issue1326 to avoid < 0 refresh
         adapted_refresh = self.refresh_time - counter.get()
