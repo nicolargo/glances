@@ -51,6 +51,8 @@ class Plugin(GlancesPlugin):
                          psutil.CONN_CLOSE,
                          psutil.CONN_CLOSE_WAIT,
                          psutil.CONN_LAST_ACK]
+    conntrack = {'nf_conntrack_count': '/proc/sys/net/netfilter/nf_conntrack_count',
+                 'nf_conntrack_max': '/proc/sys/net/netfilter/nf_conntrack_max'}
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
@@ -61,6 +63,8 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+
+        # @TODO the plugin should be enable only for Linux OS
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -94,6 +98,11 @@ class Plugin(GlancesPlugin):
                 stats[s] = len([c for c in net_connections if c.status == s])
                 terminated += stats[s]
             stats['terminated'] = terminated
+
+            # Grab connections track directly from the /proc file
+            for i in self.conntrack:
+                with open(self.conntrack[i], 'r') as f:
+                    stats[i] = float(f.readline().rstrip("\n"))
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -152,5 +161,14 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = '{:>{width}}'.format(self.stats[s], width=max_width - len(s) + 2)
             ret.append(self.curse_add_line(msg))
+        # Connections track
+        s = 'Tracked'
+        ret.append(self.curse_new_line())
+        msg = '{:{width}}'.format(nativestr(s).capitalize(), width=len(s))
+        ret.append(self.curse_add_line(msg))
+        msg = '{:>{width}}'.format('{:0.0f}/{:0.0f}'.format(self.stats['nf_conntrack_count'],
+                                                            self.stats['nf_conntrack_max']),
+                                   width=max_width - len(s) + 2)
+        ret.append(self.curse_add_line(msg))
 
         return ret
