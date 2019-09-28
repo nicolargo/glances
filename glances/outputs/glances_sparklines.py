@@ -36,7 +36,7 @@ except ImportError as e:
 
 try:
     '┌┬┐╔╦╗╒╤╕╓╥╖│║─═├┼┤╠╬╣╞╪╡╟╫╢└┴┘╚╩╝╘╧╛╙╨╜'.encode(sys.stdout.encoding)
-except UnicodeEncodeError:
+except (UnicodeEncodeError, TypeError):
     logger.warning("UTF-8 is mandatory for sparklines ({})".format(e))
     sparklines_module = False
 
