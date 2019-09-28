@@ -96,7 +96,7 @@ class _GlancesCurses(object):
     _quicklook_max_width = 68
 
     # Define left sidebar
-    _left_sidebar = ['network', 'wifi', 'ports', 'diskio', 'fs',
+    _left_sidebar = ['network', 'connections', 'wifi', 'ports', 'diskio', 'fs',
                      'irq', 'folders', 'raid', 'sensors', 'now']
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 34
