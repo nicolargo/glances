@@ -20,6 +20,7 @@
 """Connections plugin."""
 from __future__ import unicode_literals
 
+from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.compat import n, u, b, nativestr
@@ -103,6 +104,7 @@ class Plugin(GlancesPlugin):
             for i in self.conntrack:
                 with open(self.conntrack[i], 'r') as f:
                     stats[i] = float(f.readline().rstrip("\n"))
+            stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
 
         elif self.input_method == 'snmp':
             # Update stats using SNMP
@@ -119,33 +121,19 @@ class Plugin(GlancesPlugin):
         super(Plugin, self).update_views()
 
         # Add specifics informations
-        # Alert
-        # for i in self.stats:
-        #     ifrealname = i['interface_name'].split(':')[0]
-        #     # Convert rate in bps ( to be able to compare to interface speed)
-        #     bps_rx = int(i['rx'] // i['time_since_update'] * 8)
-        #     bps_tx = int(i['tx'] // i['time_since_update'] * 8)
-        #     # Decorate the bitrate with the configuration file thresolds
-        #     alert_rx = self.get_alert(bps_rx, header=ifrealname + '_rx')
-        #     alert_tx = self.get_alert(bps_tx, header=ifrealname + '_tx')
-        #     # If nothing is define in the configuration file...
-        #     # ... then use the interface speed (not available on all systems)
-        #     if alert_rx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
-        #         alert_rx = self.get_alert(current=bps_rx,
-        #                                   maximum=i['speed'],
-        #                                   header='rx')
-        #     if alert_tx == 'DEFAULT' and 'speed' in i and i['speed'] != 0:
-        #         alert_tx = self.get_alert(current=bps_tx,
-        #                                   maximum=i['speed'],
-        #                                   header='tx')
-        #     # then decorates
-        #     self.views[i[self.get_key()]]['rx']['decoration'] = alert_rx
-        #     self.views[i[self.get_key()]]['tx']['decoration'] = alert_tx
+        try:
+            # Alert and log
+            self.views['nf_conntrack_percent']['decoration'] = self.get_alert(header='nf_conntrack_percent')
+        except KeyError:
+            # try/except mandatory for Windows compatibility (no conntrack stats)
+            pass
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
         # Init the return message
         ret = []
+
+        logger.info(self.is_disable())
 
         # Only process if stats exist and display plugin enable...
         if not self.stats or self.is_disable():
@@ -169,6 +157,8 @@ class Plugin(GlancesPlugin):
         msg = '{:>{width}}'.format('{:0.0f}/{:0.0f}'.format(self.stats['nf_conntrack_count'],
                                                             self.stats['nf_conntrack_max']),
                                    width=max_width - len(s) + 2)
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(msg,
+                                       self.get_views(key='nf_conntrack_percent',
+                                                      option='decoration')))
 
         return ret
