@@ -27,6 +27,7 @@ Legend:
    load
    memory
    network
+   connections
    wifi
    ports
    disk
