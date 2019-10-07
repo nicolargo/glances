@@ -8,6 +8,7 @@ Connections
 This plugin display extended information about network connections.
 
 The states are the following:
+
 - Listen: all ports created by server and waiting for a client to connect
 - Initialized: All states when a connection is initialized (sum of SYN_SENT and SYN_RECEIVED)
 - Established: All established connections between a client and a server
