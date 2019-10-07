@@ -90,6 +90,9 @@ class GlancesPlugin(object):
         if not self.load_limits(config=config):
             logger.debug('Can not load section {} in {}'.format(self.plugin_name,
                                                                 config))
+        else:
+            logger.debug('Load section {} in {}'.format(self.plugin_name,
+                                                        config))
 
         # Init the actions
         self.actions = GlancesActions(args=args)
