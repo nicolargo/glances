@@ -301,9 +301,8 @@ Examples of use:
         if WINDOWS:
             args.webserver = True
 
-        # In web server mode, default refresh time: 5 sec
+        # In web server mode
         if args.webserver:
-            args.time = 5
             args.process_short_name = True
 
         # Server or client login/password
