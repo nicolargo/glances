@@ -8,7 +8,7 @@ export default function GlancesPluginDockerController($scope, GlancesStats) {
         var stats = data.stats['docker'];
         vm.containers = [];
 
-        if (_.isEmpty(stats)) {
+        if (_.isEmpty(stats) || _.isEmpty(stats['containers']) ) {
             return;
         }
 
