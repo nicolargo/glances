@@ -146,8 +146,6 @@ class Plugin(GlancesPlugin):
         # Init the return message
         ret = []
 
-        logger.info(self.is_disable())
-
         # Only process if stats exist and display plugin enable...
         if not self.stats or self.is_disable():
             return ret
