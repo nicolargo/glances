@@ -287,6 +287,9 @@ The following commands (key pressed) are supported while in Glances:
 ``I``
     Show/hide IP module
 
+``k``
+    Show/hide TCP connections
+
 ``l``
     Show/hide log messages
 

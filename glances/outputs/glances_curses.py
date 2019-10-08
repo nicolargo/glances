@@ -66,6 +66,7 @@ class _GlancesCurses(object):
         'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
         'I': {'switch': 'disable_ip'},
+        'k': {'switch': 'disable_connections'},
         'l': {'switch': 'disable_alert'},
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
