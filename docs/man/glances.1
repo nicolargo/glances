@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Oct 07, 2019" "3.1.3_BETA" "Glances"
+.TH "GLANCES" "1" "Oct 12, 2019" "3.1.3_BETA" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -75,6 +75,11 @@ display modules (plugins & exports) list and exit
 .TP
 .B \-\-disable\-plugin PLUGIN
 disable PLUGIN (comma separed list)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-enable\-plugin PLUGIN
+enable PLUGIN (comma separed list)
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -389,6 +394,9 @@ Sort processes by I/O rate
 .B \fBI\fP
 Show/hide IP module
 .TP
+.B \fBk\fP
+Show/hide TCP connections
+.TP
 .B \fBl\fP
 Show/hide log messages
 .TP
@@ -569,7 +577,7 @@ have a section. Below an example for the CPU plugin:
 .nf
 .ft C
 [cpu]
-disable=false
+disable=False
 user_careful=50
 user_warning=70
 user_critical=90

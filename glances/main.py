@@ -98,8 +98,11 @@ Examples of use:
   Display CSV stats to stdout (all stats in one line):
     $ glances --stdout-csv now,cpu.user,mem.used,load
 
-  Disable some plugins (any modes):
+  Disable some plugins (comma separated list):
     $ glances --disable-plugin network,ports
+
+  Enable some plugins (comma separated list):
+    $ glances --enable-plugin sensors
 """
 
     def __init__(self):
@@ -126,8 +129,10 @@ Examples of use:
                             action='store_true', default=False,
                             dest='modules_list',
                             help='display modules (plugins & exports) list and exit')
-        parser.add_argument('--disable-plugin', dest='disable_plugin',
+        parser.add_argument('--disable-plugin', '--disable-plugins', dest='disable_plugin',
                             help='disable plugin (comma separed list)')
+        parser.add_argument('--enable-plugin', '--enable-plugins', dest='enable_plugin',
+                            help='enable plugin (comma separed list)')
         parser.add_argument('--disable-process', action='store_true', default=False,
                             dest='disable_process', help='disable process module')
         # Enable or disable option
@@ -277,6 +282,9 @@ Examples of use:
         if args.disable_plugin is not None:
             for p in args.disable_plugin.split(','):
                 disable(args, p)
+        if args.enable_plugin is not None:
+            for p in args.enable_plugin.split(','):
+                enable(args, p)
 
         # Exporters activation
         if args.export is not None:

@@ -30,6 +30,10 @@ Command-Line Options
 
     disable PLUGIN (comma separed list)
 
+.. option:: --enable-plugin PLUGIN
+
+    enable PLUGIN (comma separed list)
+
 .. option:: --stdout PLUGINS_STATS
 
     display stats to stdout (comma separated list of plugins/plugins.attribute)
