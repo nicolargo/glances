@@ -67,11 +67,6 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # !!! @TODO: Debug disable / enable from conf file
-        # logger.info(args)
-        # logger.info(config.as_dict()['quicklook'])
-        # logger.info(self.is_enable())
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):

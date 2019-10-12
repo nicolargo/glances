@@ -86,13 +86,10 @@ class GlancesPlugin(object):
         self.stats_history = self.init_stats_history()
 
         # Init the limits (configuration keys) dictionnary
+        logger.debug('Load section {} in {}'.format(self.plugin_name,
+                                                    config.config_file_paths()))
         self._limits = dict()
-        if not self.load_limits(config=config):
-            logger.debug('Can not load section {} in {}'.format(self.plugin_name,
-                                                                config))
-        else:
-            logger.debug('Load section {} in {}'.format(self.plugin_name,
-                                                        config))
+        self.load_limits(config=config)
 
         # Init the actions
         self.actions = GlancesActions(args=args)
@@ -503,6 +500,7 @@ class GlancesPlugin(object):
             return False
 
         # Read the global section
+        # @TODO: not optimized because this section is loaded for each plugin...
         if config.has_section('global'):
             self._limits['history_size'] = config.get_float_value('global', 'history_size', default=28800)
             logger.debug("Load configuration key: {} = {}".format('history_size', self._limits['history_size']))
