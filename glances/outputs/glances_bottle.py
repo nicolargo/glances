@@ -225,7 +225,7 @@ class GlancesBottle(object):
         """Bottle callback for index.html (/) file."""
 
         if refresh_time is None or refresh_time < 1:
-            refresh_time = self.args.time
+            refresh_time = int(self.args.time)
 
         # Update the stat
         self.__update__()
