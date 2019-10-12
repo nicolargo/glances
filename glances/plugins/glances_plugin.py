@@ -86,10 +86,11 @@ class GlancesPlugin(object):
         self.stats_history = self.init_stats_history()
 
         # Init the limits (configuration keys) dictionnary
-        logger.debug('Load section {} in {}'.format(self.plugin_name,
-                                                    config.config_file_paths()))
         self._limits = dict()
-        self.load_limits(config=config)
+        if config is not None:
+            logger.debug('Load section {} in {}'.format(self.plugin_name,
+                                                        config.config_file_paths()))
+            self.load_limits(config=config)
 
         # Init the actions
         self.actions = GlancesActions(args=args)
