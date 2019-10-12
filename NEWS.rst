@@ -5,7 +5,21 @@ Glances Version 3
 Version 3.1.3
 =============
 
-  ...
+Enhancements and new features:
+
+  * Add a new TCP connections status plugin enhancement #1526
+  * Add --enable-plugin option from the command line
+
+Bugs corrected:
+
+  * Fix custom refresh time in the web UI #1548 by notFloran
+  * Fix issue in WebUI with empty docker stats #1546 by notFloran
+  * Glances fails without network interface bug #1535
+  * Disable option in the configuration file is now take into account
+
+Others:
+
+  * Sensors plugin is disable by default (high CPU consumption on some Liux distribution).
 
 Version 3.1.2
 =============
