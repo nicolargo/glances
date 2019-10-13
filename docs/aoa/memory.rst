@@ -12,6 +12,33 @@ the ``RAM``:
 
 .. image:: ../_static/mem-wide.png
 
+Stats description:
+
+- **percent**: the percentage usage calculated as (total-available)/total*100.
+- **total**: total physical memory available.
+- **used**: memory used, calculated differently depending on the platform and
+  designed for informational purposes only.
+- **free**: memory not being used at all (zeroed) that is readily available;
+  note that this doesn’t reflect the actual memory available (use ‘available’
+  instead).
+- **active**: (UNIX): memory currently in use or very recently used, and so it
+  is in RAM.
+- **inactive**: (UNIX): memory that is marked as not used.
+- **buffers**: (Linux, BSD): cache for things like file system metadata.
+- **cached**: (Linux, BSD): cache for various things.
+
+Additional stats available in through the API:
+
+- **available**: the actual amount of available memory that can be given
+  instantly to processes that request more memory in bytes; this is calculated
+  by summing different memory values depending on the platform (e.g. free +
+  buffers + cached on Linux) and it is supposed to be used to monitor actual
+  memory usage in a cross platform fashion.
+- **wired**: (BSD, macOS): memory that is marked to always stay in RAM. It is
+  never moved to disk.
+- **shared**: (BSD): memory that may be simultaneously accessed by multiple
+  processes.
+
 A character is also displayed just after the MEM header and shows the
 trend value:
 
