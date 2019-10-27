@@ -293,7 +293,8 @@ class GlancesProcesses(object):
                     if LINUX:
                         try:
                             extended['memory_swap'] = sum([v.swap for v in top_process.memory_maps()])
-                        except psutil.NoSuchProcess:
+                        except (psutil.NoSuchProcess, KeyError):
+                            # KeyError catch for issue #1551)
                             pass
                         except (psutil.AccessDenied, NotImplementedError):
                             # NotImplementedError: /proc/${PID}/smaps file doesn't exist
