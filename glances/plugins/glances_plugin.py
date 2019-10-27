@@ -34,6 +34,7 @@ from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
+from glances.timer import Counter
 
 
 class GlancesPlugin(object):
@@ -928,11 +929,14 @@ class GlancesPlugin(object):
     def _log_result_decorator(fct):
         """Log (DEBUG) the result of the function fct."""
         def wrapper(*args, **kw):
+            counter = Counter()
             ret = fct(*args, **kw)
-            logger.debug("%s %s %s return %s" % (
+            duration = counter.get()
+            logger.debug("%s %s %s return %s in %s seconds" % (
                 args[0].__class__.__name__,
                 args[0].__class__.__module__[len('glances_'):],
-                fct.__name__, ret))
+                fct.__name__, ret,
+                duration))
             return ret
         return wrapper
 
