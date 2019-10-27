@@ -642,8 +642,9 @@ class _GlancesCurses(object):
             stat_display["system"],
             display_optional=(self.screen.getmaxyx()[1] >= l_uptime))
         self.space_between_column = 3
-        self.new_column()
-        self.display_plugin(stat_display["ip"])
+        if 'ip' in stat_display:
+            self.new_column()
+            self.display_plugin(stat_display["ip"])
         self.new_column()
         self.display_plugin(
             stat_display["uptime"],
