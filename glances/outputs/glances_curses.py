@@ -80,13 +80,13 @@ class _GlancesCurses(object):
         'U': {'switch': 'network_cumul'},
         'W': {'switch': 'disable_wifi'},
         # Processes sort hotkeys
-        'a': {'auto_sort': True, 'sort_key': 'cpu_percent'},
-        'c': {'auto_sort': False, 'sort_key': 'cpu_percent'},
-        'i': {'auto_sort': False, 'sort_key': 'io_counters'},
-        'm': {'auto_sort': False, 'sort_key': 'memory_percent'},
-        'p': {'auto_sort': False, 'sort_key': 'name'},
-        't': {'auto_sort': False, 'sort_key': 'cpu_times'},
-        'u': {'auto_sort': False, 'sort_key': 'username'},
+        'a': {'sort_key': 'auto'},
+        'c': {'sort_key': 'cpu_percent'},
+        'i': {'sort_key': 'io_counters'},
+        'm': {'sort_key': 'memory_percent'},
+        'p': {'sort_key': 'name'},
+        't': {'sort_key': 'cpu_times'},
+        'u': {'sort_key': 'username'},
     }
 
     _sort_loop = ['cpu_percent', 'memory_percent', 'username',
@@ -276,9 +276,9 @@ class _GlancesCurses(object):
             'DEFAULT': self.no_color,
             'UNDERLINE': curses.A_UNDERLINE,
             'BOLD': A_BOLD,
-            'SORT': A_BOLD,
+            'SORT': curses.A_UNDERLINE | A_BOLD,
             'OK': self.default_color2,
-            'MAX': self.default_color2 | curses.A_BOLD,
+            'MAX': self.default_color2 | A_BOLD,
             'FILTER': self.filter_color,
             'TITLE': self.title_color,
             'PROCESS': self.default_color2,
@@ -325,14 +325,9 @@ class _GlancesCurses(object):
                         self._hotkeys[hotkey]['switch'],
                         not getattr(self.args,
                                     self._hotkeys[hotkey]['switch']))
-            if self.pressedkey == ord(hotkey) and 'auto_sort' in self._hotkeys[hotkey]:
-                setattr(glances_processes,
-                        'auto_sort',
-                        self._hotkeys[hotkey]['auto_sort'])
             if self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
-                setattr(glances_processes,
-                        'sort_key',
-                        self._hotkeys[hotkey]['sort_key'])
+                glances_processes.set_sort_key(self._hotkeys[hotkey]['sort_key'],
+                                               self._hotkeys[hotkey]['sort_key'] == 'auto')
 
         # Other actions...
         if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
@@ -385,14 +380,12 @@ class _GlancesCurses(object):
                 glances_processes.enable()
         elif self.pressedkey == curses.KEY_LEFT:
             # "<" (left arrow) navigation through process sort
-            setattr(glances_processes, 'auto_sort', False)
             next_sort = (self.loop_position() - 1) % len(self._sort_loop)
-            glances_processes.sort_key = self._sort_loop[next_sort]
+            glances_processes.set_sort_key(self._sort_loop[next_sort], False)
         elif self.pressedkey == curses.KEY_RIGHT:
             # ">" (right arrow) navigation through process sort
-            setattr(glances_processes, 'auto_sort', False)
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
-            glances_processes.sort_key = self._sort_loop[next_sort]
+            glances_processes.set_sort_key(self._sort_loop[next_sort], False)
 
         # Return the key code
         return self.pressedkey
