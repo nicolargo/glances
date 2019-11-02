@@ -116,6 +116,12 @@ class Plugin(GlancesPlugin):
         # Use to optimize space (see https://github.com/nicolargo/glances/issues/959)
         self.pid_max = glances_processes.pid_max
 
+        # Set the default sort key if it is defined in the configuration file
+        if 'processlist' in config.as_dict() and 'sort_key' in config.as_dict()['processlist']:
+            logger.debug('Configuration overwrites processes sort key by {}'.format(config.as_dict()['processlist']['sort_key']))
+            self.auto_sort = False
+            self._sort_key = config.as_dict()['processlist']['sort_key']
+
         # Note: 'glances_processes' is already init in the processes.py script
 
     def get_key(self):
