@@ -30,7 +30,6 @@ import psutil
 
 
 class GlancesProcesses(object):
-
     """Get processed stats using the psutil library."""
 
     def __init__(self, cache_timeout=60):
@@ -50,8 +49,11 @@ class GlancesProcesses(object):
         self.io_old = {}
 
         # Init stats
-        self.auto_sort = True
-        self._sort_key = 'cpu_percent'
+        self.auto_sort = None
+        self._sort_key = None
+        # Default processes sort key is 'auto'
+        # Can be overwrite from the configuration file (issue#1536) => See glances_processlist.py init
+        self.set_sort_key('auto', auto=True)
         self.processlist = []
         self.reset_processcount()
 
@@ -368,10 +370,14 @@ class GlancesProcesses(object):
         """Get the current sort key."""
         return self._sort_key
 
-    @sort_key.setter
-    def sort_key(self, key):
+    def set_sort_key(self, key, auto=True):
         """Set the current sort key."""
-        self._sort_key = key
+        if key == 'auto':
+            self.auto_sort = True
+            self._sort_key = 'cpu_percent'
+        else:
+            self.auto_sort = auto
+            self._sort_key = key
 
 
 def weighted(value):

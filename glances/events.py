@@ -92,12 +92,12 @@ class GlancesEvents(object):
     def set_process_sort(self, event_type):
         """Define the process auto sort key from the alert type."""
         if glances_processes.auto_sort:
-            glances_processes.sort_key = self.get_event_sort_key(event_type)
+            glances_processes.set_sort_key(self.get_event_sort_key(event_type))
 
     def reset_process_sort(self):
         """Reset the process auto sort key."""
         if glances_processes.auto_sort:
-            glances_processes.sort_key = 'cpu_percent'
+            glances_processes.set_sort_key('auto')
 
     def add(self, event_state, event_type, event_value,
             proc_list=None, proc_desc="", peak_time=6):
