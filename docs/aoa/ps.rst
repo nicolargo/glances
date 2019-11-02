@@ -48,7 +48,8 @@ Columns display
 
                           If Irix/Solaris mode is off, the value is
                           divided by logical core number
-``MEM%``                  % of MEM used by the process
+``MEM%``                  % of MEM used by the process (RES divided by
+                          the total RAM you have)
 ``VIRT``                  Virtual Memory Size
 
                           The total amount of virtual memory used by the
@@ -57,6 +58,8 @@ Columns display
                           It includes all code, data and shared
                           libraries plus pages that have been swapped out
                           and pages that have been mapped but not used.
+
+                          Most of the time, this is not a useful number.
 ``RES``                   Resident Memory Size
 
                           The non-swapped physical memory a process is
@@ -74,7 +77,8 @@ Columns display
                           - ``S``: interruptible sleep (waiting for an event)
                           - ``D``: uninterruptible sleep (usually I/O)
                           - ``Z``: defunct ("zombie") process
-                          - ``T``: traced/stopped by job control signal
+                          - ``T``: traced by job control signal
+                          - ``t``: stopped by debugger during the tracing
                           - ``X``: dead (should never be seen)
 
 ``R/s``                   Per process I/O read rate in B/s
@@ -84,6 +88,8 @@ Columns display
                           User can switch to the process name by
                           pressing on the ``'/'`` key
 ========================= ==============================================
+
+Source: Thanks to the Peteris Ņikiforovs's blog.
 
 Process filtering
 -----------------

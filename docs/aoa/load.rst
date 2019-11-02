@@ -18,9 +18,12 @@ Be aware that Load on Linux, BSD and Windows are different things, high
 `load on BSD`_ does not means high CPU load. The Windows load is emulated
 by the PsUtil lib (see `load on Windows`_)
 
-Glances gets the number of CPU core to adapt the alerts.
-Alerts on load average are only set on 15 minutes time period.
-The first line also displays the number of CPU core.
+Glances gets the number of CPU core (displayed on the first line) to adapt
+the alerts. Alerts on load average are only set on 15 minutes time period.
+
+Thresholds are computed by dividing the 5 and 15 minutes average load per
+CPU(s) number. For example, if you have 4 CPUs and the 5 minutes load is
+1.0, then the warning threshold will be set to 2.8 (0.7 * 4 * 1.0).
 
 Legend:
 
