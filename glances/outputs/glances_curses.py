@@ -308,21 +308,6 @@ class _GlancesCurses(object):
             except Exception:
                 pass
 
-    # def get_key(self, window):
-    #     # Catch ESC key AND numlock key (issue #163)
-    #     keycode = [0, 0]
-    #     keycode[0] = window.getch()
-    #     keycode[1] = window.getch()
-    #
-    #     if keycode != [-1, -1]:
-    #         logger.debug("Keypressed (code: %s)" % keycode)
-    #
-    #     if keycode[0] == 27 and keycode[1] != -1:
-    #         # Do not escape on specials keys
-    #         return -1
-    #     else:
-    #         return keycode[0]
-
     def get_key(self, window):
         # @TODO: Check issue #163
         ret = window.getch()
