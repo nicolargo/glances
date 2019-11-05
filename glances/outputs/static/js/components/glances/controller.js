@@ -45,6 +45,14 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
         }
     });
 
+    // k => Show/hide connections stats
+    hotkeys.add({
+        combo: 'k',
+        callback: function () {
+            ARGUMENTS.disable_connections = !ARGUMENTS.disable_connections;
+        }
+    });
+
     // n => Show/hide network stats
     hotkeys.add({
         combo: 'n',
