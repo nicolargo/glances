@@ -142,34 +142,29 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{:8}'.format('LOAD')
+        msg = '{:8}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
             msg = '{}-core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
-        # New line
-        ret.append(self.curse_new_line())
-        # 1min load
-        msg = '{:8}'.format('1 min:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6.2f}'.format(self.stats['min1'])
-        ret.append(self.curse_add_line(msg))
-        # New line
-        ret.append(self.curse_new_line())
-        # 5min load
-        msg = '{:8}'.format('5 min:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6.2f}'.format(self.stats['min5'])
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='min5', option='decoration')))
-        # New line
-        ret.append(self.curse_new_line())
-        # 15min load
-        msg = '{:8}'.format('15 min:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6.2f}'.format(self.stats['min15'])
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='min15', option='decoration')))
+        # Loop over 1min, 5min and 15min load
+        for load_time in ['1', '5', '15']:
+            ret.append(self.curse_new_line())
+            msg = '{:8}'.format('{} min:'.format(load_time))
+            ret.append(self.curse_add_line(msg))
+            if args.disable_irix and self.nb_log_core != 0:
+                # Enable Irix mode for load (see issue #1554)
+                load_stat = self.stats['min{}'.format(load_time)] / self.nb_log_core * 100
+            else:
+                load_stat = self.stats['min{}'.format(load_time)]
+            msg = '{:>6.2f}'.format(load_stat)
+            if load_time == '1':
+                ret.append(self.curse_add_line(msg))
+            else:
+                # Alert is only for 5 and 15 min
+                ret.append(self.curse_add_line(
+                    msg, self.get_views(key='min{}'.format(load_time),
+                                        option='decoration')))
 
         return ret
