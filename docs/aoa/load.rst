@@ -25,6 +25,12 @@ Thresholds are computed by dividing the 5 and 15 minutes average load per
 CPU(s) number. For example, if you have 4 CPUs and the 5 minutes load is
 1.0, then the warning threshold will be set to 2.8 (0.7 * 4 * 1.0).
 
+From Glances 3.1.4, if Irix/Solaris mode is off ('0' key), the value is
+divided by logical core number and multiple by 100 to have load as a
+percentage.
+
+.. image:: ../_static/loadpercent.png
+
 Legend:
 
 ============= ============
