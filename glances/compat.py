@@ -234,3 +234,8 @@ def time_serie_subsample(data, sampling):
     t_subsampled = [t[s * sampling_length:(s + 1) * sampling_length][0] for s in range(0, sampling)]
     v_subsampled = [mean(v[s * sampling_length:(s + 1) * sampling_length]) for s in range(0, sampling)]
     return list(zip(t_subsampled, v_subsampled))
+
+
+def to_fahrenheit(celsius):
+    """Convert Celsius to Fahrenheit."""
+    return celsius * 1.8 + 32
