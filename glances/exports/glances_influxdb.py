@@ -126,10 +126,12 @@ class Export(GlancesExport):
         if self.prefix is not None:
             name = self.prefix + '.' + name
         # Write input to the InfluxDB database
-        try:
-            self.client.write_points(self._normalize(name, columns, points))
-        except Exception as e:
-            logger.error("Cannot export {} stats to InfluxDB ({})".format(name,
-                                                                          e))
+        if len(points) == 0:
+            logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
-            logger.debug("Export {} stats to InfluxDB".format(name))
+            try:
+                self.client.write_points(self._normalize(name, columns, points))
+            except Exception as e:
+                logger.error("Cannot export {} stats to InfluxDB ({})".format(name, e))
+            else:
+                logger.debug("Export {} stats to InfluxDB".format(name))
