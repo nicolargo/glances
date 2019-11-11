@@ -19,12 +19,13 @@
 
 """GPU plugin (limited to NVIDIA chipsets)."""
 
-from glances.compat import nativestr
+from glances.compat import nativestr, to_fahrenheit
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 
+# In Glances 3.1.4 or higher, we use the py3nvml lib (see issue #1523)
 try:
-    import pynvml
+    import py3nvml.py3nvml as pynvml
 except Exception as e:
     import_error_tag = True
     # Display debu message if import KeyError
@@ -86,17 +87,6 @@ class Plugin(GlancesPlugin):
         # Init new stats
         stats = self.get_init_value()
 
-        # !!! JUST FOR TEST (because i did not have any NVidia GPU... :()
-        # self.stats = [{"key": "gpu_id", "mem": None, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 10, "proc": 60, "gpu_id": 0, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 70.743, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "GeForce GTX 560 Ti"}]
-        # self.stats = [{"key": "gpu_id", "mem": 48.64645, "proc": 60.73, "gpu_id": 0, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": None, "proc": 80.28, "gpu_id": 1, "name": "GeForce GTX 560 Ti"},
-        #               {"key": "gpu_id", "mem": 0, "proc": 0, "gpu_id": 2, "name": "ANOTHER GPU"}]
-        # !!! TO BE COMMENTED
-
         if not self.nvml_ready:
             return self.stats
 
@@ -120,7 +110,9 @@ class Plugin(GlancesPlugin):
         # Alert
         for i in self.stats:
             # Init the views for the current GPU
-            self.views[i[self.get_key()]] = {'proc': {}, 'mem': {}}
+            self.views[i[self.get_key()]] = {'proc': {},
+                                             'mem': {},
+                                             'temperature': {}}
             # Processor alert
             if 'proc' in i:
                 alert = self.get_alert(i['proc'], header='proc')
@@ -129,6 +121,10 @@ class Plugin(GlancesPlugin):
             if 'mem' in i:
                 alert = self.get_alert(i['mem'], header='mem')
                 self.views[i[self.get_key()]]['mem']['decoration'] = alert
+            # Temperature alert
+            if 'temperature' in i:
+                alert = self.get_alert(i['temperature'], header='temperature')
+                self.views[i[self.get_key()]]['temperature']['decoration'] = alert
 
         return True
 
@@ -197,12 +193,36 @@ class Plugin(GlancesPlugin):
                 mean_mem_msg, self.get_views(item=gpu_stats[self.get_key()],
                                              key='mem',
                                              option='decoration')))
+            # New line
+            ret.append(self.curse_new_line())
+            # GPU TEMPERATURE
+            try:
+                mean_temperature = sum(s['temperature'] for s in self.stats if s is not None) / len(self.stats)
+            except TypeError:
+                mean_temperature_msg = '{:>4}'.format('N/A')
+            else:
+                unit = 'C'
+                if args.fahrenheit:
+                    value = to_fahrenheit(i['value'])
+                    unit = 'F'
+                mean_temperature_msg = '{:>3.0f}{}'.format(mean_temperature,
+                                                           unit)
+            if len(self.stats) > 1:
+                msg = '{:13}'.format('temp mean:')
+            else:
+                msg = '{:13}'.format('temperature:')
+            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(
+                mean_temperature_msg, self.get_views(item=gpu_stats[self.get_key()],
+                                                     key='temperature',
+                                                     option='decoration')))
         else:
             # Multi GPU
+            # Temperature is not displayed in this mode...
             for gpu_stats in self.stats:
                 # New line
                 ret.append(self.curse_new_line())
-                # GPU ID + PROC + MEM
+                # GPU ID + PROC + MEM + TEMPERATURE
                 id_msg = '{}'.format(gpu_stats['gpu_id'])
                 try:
                     proc_msg = '{:>3.0f}%'.format(gpu_stats['proc'])
@@ -212,7 +232,9 @@ class Plugin(GlancesPlugin):
                     mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
                 except ValueError:
                     mem_msg = '{:>4}'.format('N/A')
-                msg = '{}: {} mem: {}'.format(id_msg, proc_msg, mem_msg)
+                msg = '{}: {} mem: {}'.format(id_msg,
+                                              proc_msg,
+                                              mem_msg)
                 ret.append(self.curse_add_line(msg))
 
         return ret
@@ -222,7 +244,7 @@ class Plugin(GlancesPlugin):
         stats = []
 
         for index, device_handle in enumerate(self.device_handles):
-            device_stats = {}
+            device_stats = dict()
             # Dictionnary key is the GPU_ID
             device_stats['key'] = self.get_key()
             # GPU id (for multiple GPU, start at 0)
@@ -233,6 +255,8 @@ class Plugin(GlancesPlugin):
             device_stats['mem'] = get_mem(device_handle)
             # Processor consumption in %
             device_stats['proc'] = get_proc(device_handle)
+            # Processor temperature in °C
+            device_stats['temperature'] = get_temperature(device_handle)
             stats.append(device_stats)
 
         return stats
@@ -268,8 +292,7 @@ def get_device_name(device_handle):
 def get_mem(device_handle):
     """Get GPU device memory consumption in percent."""
     try:
-        memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
-        return memory_info.used * 100.0 / memory_info.total
+        return pynvml.nvmlDeviceGetUtilizationRates(device_handle).memory
     except pynvml.NVMLError:
         return None
 
@@ -278,5 +301,14 @@ def get_proc(device_handle):
     """Get GPU device CPU consumption in percent."""
     try:
         return pynvml.nvmlDeviceGetUtilizationRates(device_handle).gpu
+    except pynvml.NVMLError:
+        return None
+
+
+def get_temperature(device_handle):
+    """Get GPU device CPU consumption in percent."""
+    try:
+        return pynvml.nvmlDeviceGetTemperature(device_handle,
+                                               pynvml.NVML_TEMPERATURE_GPU)
     except pynvml.NVMLError:
         return None

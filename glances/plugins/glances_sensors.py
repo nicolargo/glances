@@ -23,7 +23,7 @@ import psutil
 import warnings
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.compat import iteritems, to_fahrenheit
 from glances.timer import Counter
 from glances.plugins.sensors.glances_batpercent import Plugin as BatPercentPlugin
 from glances.plugins.sensors.glances_hddtemp import Plugin as HddTempPlugin
@@ -31,11 +31,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 SENSOR_TEMP_UNIT = 'C'
 SENSOR_FAN_UNIT = 'R'
-
-
-def to_fahrenheit(celsius):
-    """Convert Celsius to Fahrenheit."""
-    return celsius * 1.8 + 32
 
 
 class Plugin(GlancesPlugin):
