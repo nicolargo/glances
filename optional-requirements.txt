@@ -7,7 +7,7 @@ elasticsearch
 influxdb
 kafka-python
 netifaces
-nvidia-ml-py3
+py3nvml
 paho-mqtt
 pika
 potsdb
