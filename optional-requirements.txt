@@ -7,7 +7,7 @@ elasticsearch
 influxdb
 kafka-python
 netifaces
-py3nvml
+py3nvml; python_version >= "3.0"
 paho-mqtt
 pika
 potsdb

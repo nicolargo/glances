@@ -61,7 +61,7 @@ def get_install_extras_require():
                    'influxdb>=1.0.0', 'kafka-python', 'pika', 'paho-mqtt', 'potsdb',
                    'prometheus_client', 'pyzmq', 'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
-        'gpu': ['nvidia-ml-py3'],  # python_version=="2.7"
+        'gpu': ['py3nvml'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
