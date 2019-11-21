@@ -40,13 +40,13 @@
             <div class="col-sm-12 col-md-8 col-lg-6" ng-if="!vm.arguments.disable_cpu && vm.arguments.percpu">
                 <glances-plugin-percpu></glances-plugin-percpu>
             </div>
-            <div class="hidden-xs hidden-sm col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && vm.hasGpu">
+            <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.arguments.disable_gpu && vm.hasGpu">
                 <glances-plugin-gpu></glances-plugin-gpu>
             </div>
             <div class="col-sm-6 col-md-4 col-lg-3" ng-if="!vm.argumentsdisable_mem">
                 <glances-plugin-mem></glances-plugin-mem>
             </div>
-            <div class="hidden-xs hidden-sm col-md-4 col-lg-3"
+            <div class="col-sm-6 col-md-4 col-lg-3"
                  ng-if="!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)">
                 <glances-plugin-mem-more></glances-plugin-mem-more>
             </div>
