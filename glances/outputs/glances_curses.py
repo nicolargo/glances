@@ -55,38 +55,38 @@ class _GlancesCurses(object):
         '3': {'switch': 'disable_quicklook'},
         '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
+        'a': {'sort_key': 'auto'},
         'A': {'switch': 'disable_amps'},
         'b': {'switch': 'byte'},
         'B': {'switch': 'diskio_iops'},
+        'c': {'sort_key': 'cpu_percent'},
         'C': {'switch': 'disable_cloud'},
-        'D': {'switch': 'disable_docker'},
         'd': {'switch': 'disable_diskio'},
+        'D': {'switch': 'disable_docker'},
         'F': {'switch': 'fs_free_space'},
         'g': {'switch': 'generate_graph'},
         'G': {'switch': 'disable_gpu'},
         'h': {'switch': 'help_tag'},
+        'i': {'sort_key': 'io_counters'},
         'I': {'switch': 'disable_ip'},
         'k': {'switch': 'disable_connections'},
         'l': {'switch': 'disable_alert'},
+        'm': {'sort_key': 'memory_percent'},
         'M': {'switch': 'reset_minmax_tag'},
         'n': {'switch': 'disable_network'},
         'N': {'switch': 'disable_now'},
+        'p': {'sort_key': 'name'},
         'P': {'switch': 'disable_ports'},
         'Q': {'switch': 'enable_irq'},
+        'r': {'switch': 'disable_smart'},
         'R': {'switch': 'disable_raid'},
         's': {'switch': 'disable_sensors'},
         'S': {'switch': 'sparkline'},
+        't': {'sort_key': 'cpu_times'},
         'T': {'switch': 'network_sum'},
+        'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
         'W': {'switch': 'disable_wifi'},
-        # Processes sort hotkeys
-        'a': {'sort_key': 'auto'},
-        'c': {'sort_key': 'cpu_percent'},
-        'i': {'sort_key': 'io_counters'},
-        'm': {'sort_key': 'memory_percent'},
-        'p': {'sort_key': 'name'},
-        't': {'sort_key': 'cpu_times'},
-        'u': {'sort_key': 'username'},
     }
 
     _sort_loop = ['cpu_percent', 'memory_percent', 'username',
@@ -98,7 +98,7 @@ class _GlancesCurses(object):
 
     # Define left sidebar
     _left_sidebar = ['network', 'connections', 'wifi', 'ports', 'diskio', 'fs',
-                     'irq', 'folders', 'raid', 'sensors', 'now']
+                     'irq', 'folders', 'raid', 'smart', 'sensors', 'now']
     _left_sidebar_min_width = 23
     _left_sidebar_max_width = 34
 

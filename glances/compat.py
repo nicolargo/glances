@@ -28,6 +28,7 @@ import sys
 import unicodedata
 import types
 import subprocess
+import os
 
 from glances.logger import logger
 
@@ -239,3 +240,27 @@ def time_serie_subsample(data, sampling):
 def to_fahrenheit(celsius):
     """Convert Celsius to Fahrenheit."""
     return celsius * 1.8 + 32
+
+
+def is_admin():
+    """
+    https://stackoverflow.com/a/19719292
+    @return: True if the current user is an 'Admin' whatever that
+    means (root on Unix), otherwise False.
+    Warning: The inner function fails unless you have Windows XP SP2 or
+    higher. The failure causes a traceback to be printed and this
+    function to return False.
+    """
+
+    if os.name == 'nt':
+        import ctypes
+        import traceback
+        # WARNING: requires Windows XP SP2 or higher!
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except Exception as e:
+            traceback.print_exc()
+            return False
+    else:
+        # Check for root on Posix
+        return os.getuid() == 0

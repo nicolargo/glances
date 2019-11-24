@@ -6,6 +6,8 @@ Quick Look
 The ``quicklook`` plugin is only displayed on wide screen and proposes a
 bar view for CPU and memory (virtual and swap).
 
+In the terminal interface, click on ``3`` to enable/disable it.
+
 .. image:: ../_static/quicklook.png
 
 If the per CPU mode is on (by clicking the ``1`` key):

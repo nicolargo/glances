@@ -47,7 +47,7 @@ If smartmontools is not installed, we should catch the error upstream in plugin 
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 from glances.main import disable
-import os
+from glances.compat import is_admin
 
 # Import plugin specific dependency
 try:
@@ -58,35 +58,10 @@ except ImportError as e:
 else:
     import_error_tag = False
 
-DEVKEY = "DeviceName"
-
-
-def is_admin():
-    """
-    https://stackoverflow.com/a/19719292
-    @return: True if the current user is an 'Admin' whatever that
-    means (root on Unix), otherwise False.
-    Warning: The inner function fails unless you have Windows XP SP2 or
-    higher. The failure causes a traceback to be printed and this
-    function to return False.
-    """
-
-    if os.name == 'nt':
-        import ctypes
-        import traceback
-        # WARNING: requires Windows XP SP2 or higher!
-        try:
-            return ctypes.windll.shell32.IsUserAnAdmin()
-        except:
-            traceback.print_exc()
-            return False
-    else:
-        # Check for root on Posix
-        return os.getuid() == 0
-
 
 def convert_attribute_to_dict(attr):
     return {
+        'name': attr.name,
         'num': attr.num,
         'flags': attr.flags,
         'raw': attr.raw,
@@ -114,6 +89,7 @@ def get_smart_data():
                         "raw": "..",
                         etc,
                     }
+                    ...
                 }
              ]
     """
@@ -123,7 +99,7 @@ def get_smart_data():
 
     for dev in devlist.devices:
         stats.append({
-            DEVKEY: str(dev)
+            'DeviceName': '{} {}'.format(dev.name, dev.model),
         })
         for attribute in dev.attributes:
             if attribute is None:
@@ -187,4 +163,37 @@ class Plugin(GlancesPlugin):
 
     def get_key(self):
         """Return the key of the list."""
-        return DEVKEY
+        return 'DeviceName'
+
+    def msg_curse(self, args=None, max_width=None):
+        """Return the dict to display in the curse interface."""
+        # Init the return message
+        ret = []
+
+        # Only process if stats exist...
+        if not self.stats or self.is_disable():
+            return ret
+
+        # Max size for the interface name
+        name_max_width = max_width - 6
+
+        # Header
+        msg = '{:{width}}'.format('SMART disks',
+                                  width=name_max_width)
+        ret.append(self.curse_add_line(msg, "TITLE"))
+        # Data
+        for device_stat in self.stats:
+            # New line
+            ret.append(self.curse_new_line())
+            msg = '{:{width}}'.format(device_stat['DeviceName'][:max_width],
+                                      width=max_width)
+            ret.append(self.curse_add_line(msg))
+            for smart_stat in sorted([i for i in device_stat.keys() if i != 'DeviceName'], key=int):
+                ret.append(self.curse_new_line())
+                msg = ' {:{width}}'.format(device_stat[smart_stat]['name'][:name_max_width-1].replace('_', ' '),
+                                          width=name_max_width-1)
+                ret.append(self.curse_add_line(msg))
+                msg = '{:>8}'.format(device_stat[smart_stat]['raw'])
+                ret.append(self.curse_add_line(msg))
+
+        return ret

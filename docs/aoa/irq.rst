@@ -5,7 +5,7 @@ IRQ
 
 *Availability: Linux*
 
-This plugin is disable by default, please use the --enable-irq option
+This plugin is disable by default, please use the --enable irq option
 to enable it.
 
 .. image:: ../_static/irq.png
