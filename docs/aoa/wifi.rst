@@ -32,5 +32,5 @@ hide the loopback interface (lo) and all the virtual docker interfaces:
     warning=-75
     critical=-85
 
-You can disable this plugin using the ``--disable-wifi`` option or by
+You can disable this plugin using the ``--disable-plugin wifi`` option or by
 hitting the ``W`` key from the user interface.

@@ -257,7 +257,7 @@ class TestGlances(unittest.TestCase):
     def test_016_hddsmart(self):
         """Check hard disk SMART data plugin."""
         try:
-            from glances.plugins.glances_smart import is_admin
+            from glances.compat import is_admin
         except ImportError:
             print("INFO: [TEST_016] pySMART not found, not running SMART plugin test")
             return
