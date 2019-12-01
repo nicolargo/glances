@@ -21,14 +21,15 @@ export default function GlancesPluginConnectionsController($scope, GlancesStats)
         var stats = data.stats['connections'];
         _view = data.views['connections'];
 
-        vm.isLinux = data.isLinux;
-
-        vm.listen = stats.listen;
-        vm.initiated = stats.initiated;
-        vm.established = stats.established;
-        vm.terminated = stats.terminated;
-        //vm.tracked = null;
-    }
+        vm.listen = stats['LISTEN'];
+        vm.initiated = stats['initiated'];
+        vm.established = stats['ESTABLISHED'];
+        vm.terminated = stats['terminated'];
+        vm.tracked = {
+            count: stats['nf_conntrack_count'],
+            max: stats['nf_conntrack_max'],
+        };
+    };
 
     vm.getDecoration = function (value) {
         if (_view[value] === undefined) {

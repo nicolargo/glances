@@ -10,6 +10,7 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
 
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;
+        vm.isLinux = data.isLinux;
         vm.dataLoaded = true;
     });
 
