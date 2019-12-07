@@ -10,6 +10,7 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
 
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;
+        vm.isLinux = data.isLinux;
         vm.dataLoaded = true;
     });
 
@@ -42,6 +43,14 @@ export default function GlancesController($scope, GlancesStats, hotkeys, ARGUMEN
         combo: 'f',
         callback: function () {
             ARGUMENTS.disable_fs = !ARGUMENTS.disable_fs;
+        }
+    });
+
+    // k => Show/hide connections stats
+    hotkeys.add({
+        combo: 'k',
+        callback: function () {
+            ARGUMENTS.disable_connections = !ARGUMENTS.disable_connections;
         }
     });
 
