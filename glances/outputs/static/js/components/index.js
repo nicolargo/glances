@@ -6,6 +6,7 @@ import "./help/component";
 import "./plugin-alert/component";
 import "./plugin-amps/component";
 import "./plugin-cloud/component";
+import "./plugin-connections/component";
 import "./plugin-cpu/component";
 import "./plugin-diskio/component";
 import "./plugin-docker/component";

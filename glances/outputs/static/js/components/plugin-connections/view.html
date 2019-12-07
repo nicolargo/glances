@@ -1,0 +1,30 @@
+<div class="table-row">
+    <div class="table-cell text-left title">TCP CONNECTIONS</div>
+    <div class="table-cell"></div>
+</div>
+<div class="table-row">
+    <div class="table-cell text-left">Listen</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">{{vm.listen}}</div>
+</div>
+<div class="table-row">
+    <div class="table-cell text-left">Initiated</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">{{vm.initiated}}</div>
+</div>
+<div class="table-row">
+    <div class="table-cell text-left">Established</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">{{vm.established}}</div>
+</div>
+<div class="table-row">
+    <div class="table-cell text-left">Terminated</div>
+    <div class="table-cell"></div>
+    <div class="table-cell">{{vm.terminated}}</div>
+</div>
+<div class="table-row">
+    <div class="table-cell text-left">Tracked</div>
+    <div class="table-cell"></div>
+    <div class="table-cell" ng-class="vm.getDecoration('nf_conntrack_percent')">{{vm.tracked.count}}/{{vm.tracked.max}}</div>
+</div>
+

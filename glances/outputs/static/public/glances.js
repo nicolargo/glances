@@ -17656,7 +17656,7 @@ function updateLink (link, options, obj) {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(77), __webpack_require__(78)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(80), __webpack_require__(81)(module)))
 
 /***/ }),
 /* 4 */
@@ -17671,8 +17671,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__module__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__filters__ = __webpack_require__(110);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__filters__ = __webpack_require__(113);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__directives__ = __webpack_require__(114);
 
 
 
@@ -57133,32 +57133,34 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugin_alert_component__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugin_amps_component__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugin_cloud_component__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugin_cpu_component__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugin_diskio_component__ = __webpack_require__(39);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugin_docker_component__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugin_folders_component__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugin_fs_component__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugin_gpu_component__ = __webpack_require__(51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugin_ip_component__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugin_irq_component__ = __webpack_require__(57);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugin_load_component__ = __webpack_require__(60);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugin_mem_component__ = __webpack_require__(63);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugin_mem_more_component__ = __webpack_require__(66);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugin_memswap_component__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugin_network_component__ = __webpack_require__(72);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugin_percpu_component__ = __webpack_require__(75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__plugin_ports_component__ = __webpack_require__(80);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__plugin_process_component__ = __webpack_require__(83);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__plugin_processcount_component__ = __webpack_require__(86);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__plugin_processlist_component__ = __webpack_require__(89);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__plugin_quicklook_component__ = __webpack_require__(92);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__plugin_raid_component__ = __webpack_require__(95);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__plugin_sensors_component__ = __webpack_require__(98);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__plugin_system_component__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__plugin_uptime_component__ = __webpack_require__(104);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__plugin_wifi_component__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugin_connections_component__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugin_cpu_component__ = __webpack_require__(39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugin_diskio_component__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugin_docker_component__ = __webpack_require__(45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugin_folders_component__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugin_fs_component__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugin_gpu_component__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugin_ip_component__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugin_irq_component__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugin_load_component__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugin_mem_component__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugin_mem_more_component__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugin_memswap_component__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugin_network_component__ = __webpack_require__(75);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__plugin_percpu_component__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__plugin_ports_component__ = __webpack_require__(83);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__plugin_process_component__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__plugin_processcount_component__ = __webpack_require__(89);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__plugin_processlist_component__ = __webpack_require__(92);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_24__plugin_quicklook_component__ = __webpack_require__(95);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__plugin_raid_component__ = __webpack_require__(98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__plugin_sensors_component__ = __webpack_require__(101);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__plugin_system_component__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__plugin_uptime_component__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__plugin_wifi_component__ = __webpack_require__(110);
 
 // import all components
+
 
 
 
@@ -57235,6 +57237,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
 
     $scope.$on('data_refreshed', function (event, data) {
         vm.hasGpu = data.stats.gpu.length > 0;
+        vm.isLinux = data.isLinux;
         vm.dataLoaded = true;
     });
 
@@ -57267,6 +57270,14 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
         combo: 'f',
         callback: function () {
             ARGUMENTS.disable_fs = !ARGUMENTS.disable_fs;
+        }
+    });
+
+    // k => Show/hide connections stats
+    hotkeys.add({
+        combo: 'k',
+        callback: function () {
+            ARGUMENTS.disable_connections = !ARGUMENTS.disable_connections;
         }
     });
 
@@ -57449,7 +57460,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/glances/view.html';
-var html = "<div>\n    <div ng-if=\"!vm.dataLoaded\" class=\"container-fluid\" id=\"loading-page\">\n        <div class=\"glances-logo\"></div>\n        <div class=\"loader\">Loading...</div>\n    </div>\n\n    <glances-help ng-if=\"vm.arguments.help_tag\"></glances-help>\n\n    <div ng-if=\"vm.dataLoaded && !vm.arguments.help_tag\" class=\"container-fluid\">\n        <div class=\"top-plugin\">\n            <div class=\"row\">\n                <div class=\"col-sm-24\">\n                    <div class=\"pull-left\">\n                        <glances-plugin-system></glances-plugin-system>\n                    </div>\n                    <div class=\"pull-left\">\n                        <glances-plugin-ip></glances-plugin-ip>\n                    </div>\n                    <div class=\"pull-right\">\n                        <glances-plugin-uptime></glances-plugin-uptime>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-sm-24\">\n                        <div class=\"pull-left\">\n                            <glances-plugin-cloud></glances-plugin-cloud>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"row\">\n            <div class=\"hidden-xs hidden-sm hidden-md col-lg-6\" ng-if=\"!vm.arguments.disable_quicklook\">\n                <glances-plugin-quicklook></glances-plugin-quicklook>\n            </div>\n            <div class=\"col-sm-6 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && !vm.arguments.percpu\">\n                <glances-plugin-cpu></glances-plugin-cpu>\n            </div>\n            <div class=\"col-sm-12 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && vm.arguments.percpu\">\n                <glances-plugin-percpu></glances-plugin-percpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_gpu && vm.hasGpu\">\n                <glances-plugin-gpu></glances-plugin-gpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.argumentsdisable_mem\">\n                <glances-plugin-mem></glances-plugin-mem>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\"\n                 ng-if=\"!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)\">\n                <glances-plugin-mem-more></glances-plugin-mem-more>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_memswap\">\n                <glances-plugin-memswap></glances-plugin-memswap>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_load\">\n                <glances-plugin-load></glances-plugin-load>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"col-sm-6 sidebar\" ng-if=\"!vm.arguments.disable_left_sidebar\">\n                <div class=\"table\">\n                    <glances-plugin-network id=\"plugin-network\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_network\"></glances-plugin-network>\n                    <glances-plugin-wifi id=\"plugin-wifi\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_wifi\"></glances-plugin-wifi>\n                    <glances-plugin-ports id=\"plugin-ports\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_ports\"></glances-plugin-ports>\n                    <glances-plugin-diskio id=\"plugin-diskio\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_diskio\"></glances-plugin-diskio>\n                    <glances-plugin-fs id=\"plugin-fs\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_fs\"></glances-plugin-fs>\n                    <glances-plugin-irq id=\"plugin-irq\" class=\"plugin table-row-group\" ng-if=\"vm.arguments.enable_irq\"></glances-plugin-irq>\n                    <glances-plugin-folders id=\"plugin-folders\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_folders\"></glances-plugin-folders>\n                    <glances-plugin-raid id=\"plugin-raid\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.raid\"></glances-plugin-raid>\n                    <glances-plugin-sensors id=\"plugin-sensors\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_sensors\"></glances-plugin-sensors>\n                </div>\n            </div>\n            <div class=\"col-sm-18\">\n                <glances-plugin-docker ng-if=\"!vm.arguments.disable_docker\"></glances-plugin-docker>\n                <glances-plugin-alert ng-if=\"!vm.arguments.disable_alert\"></glances-plugin-alert>\n                <glances-plugin-process></glances-plugin-process>\n            </div>\n        </div>\n    </div>\n</div>\n</div>\n";
+var html = "<div>\n    <div ng-if=\"!vm.dataLoaded\" class=\"container-fluid\" id=\"loading-page\">\n        <div class=\"glances-logo\"></div>\n        <div class=\"loader\">Loading...</div>\n    </div>\n\n    <glances-help ng-if=\"vm.arguments.help_tag\"></glances-help>\n\n    <div ng-if=\"vm.dataLoaded && !vm.arguments.help_tag\" class=\"container-fluid\">\n        <div class=\"top-plugin\">\n            <div class=\"row\">\n                <div class=\"col-sm-24\">\n                    <div class=\"pull-left\">\n                        <glances-plugin-system></glances-plugin-system>\n                    </div>\n                    <div class=\"pull-left\">\n                        <glances-plugin-ip></glances-plugin-ip>\n                    </div>\n                    <div class=\"pull-right\">\n                        <glances-plugin-uptime></glances-plugin-uptime>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-sm-24\">\n                        <div class=\"pull-left\">\n                            <glances-plugin-cloud></glances-plugin-cloud>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"row\">\n            <div class=\"hidden-xs hidden-sm hidden-md col-lg-6\" ng-if=\"!vm.arguments.disable_quicklook\">\n                <glances-plugin-quicklook></glances-plugin-quicklook>\n            </div>\n            <div class=\"col-sm-6 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && !vm.arguments.percpu\">\n                <glances-plugin-cpu></glances-plugin-cpu>\n            </div>\n            <div class=\"col-sm-12 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && vm.arguments.percpu\">\n                <glances-plugin-percpu></glances-plugin-percpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_gpu && vm.hasGpu\">\n                <glances-plugin-gpu></glances-plugin-gpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_mem\">\n                <glances-plugin-mem></glances-plugin-mem>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\"\n                 ng-if=\"!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)\">\n                <glances-plugin-mem-more></glances-plugin-mem-more>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_memswap\">\n                <glances-plugin-memswap></glances-plugin-memswap>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_load\">\n                <glances-plugin-load></glances-plugin-load>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"col-sm-6 sidebar\" ng-if=\"!vm.arguments.disable_left_sidebar\">\n                <div class=\"table\">\n                    <glances-plugin-network id=\"plugin-network\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_network\"></glances-plugin-network>\n                    <glances-plugin-connections id=\"plugin-connections\" class=\"plugin table-row-group\" ng-if=\"vm.isLinux && !vm.arguments.disable_connections\"></glances-plugin-connections>\n                    <glances-plugin-wifi id=\"plugin-wifi\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_wifi\"></glances-plugin-wifi>\n                    <glances-plugin-ports id=\"plugin-ports\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_ports\"></glances-plugin-ports>\n                    <glances-plugin-diskio id=\"plugin-diskio\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_diskio\"></glances-plugin-diskio>\n                    <glances-plugin-fs id=\"plugin-fs\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_fs\"></glances-plugin-fs>\n                    <glances-plugin-irq id=\"plugin-irq\" class=\"plugin table-row-group\" ng-if=\"vm.arguments.enable_irq\"></glances-plugin-irq>\n                    <glances-plugin-folders id=\"plugin-folders\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_folders\"></glances-plugin-folders>\n                    <glances-plugin-raid id=\"plugin-raid\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.raid\"></glances-plugin-raid>\n                    <glances-plugin-sensors id=\"plugin-sensors\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_sensors\"></glances-plugin-sensors>\n                </div>\n            </div>\n            <div class=\"col-sm-18\">\n                <glances-plugin-docker ng-if=\"!vm.arguments.disable_docker\"></glances-plugin-docker>\n                <glances-plugin-alert ng-if=\"!vm.arguments.disable_alert\"></glances-plugin-alert>\n                <glances-plugin-process></glances-plugin-process>\n            </div>\n        </div>\n    </div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
 
@@ -57768,6 +57779,87 @@ module.exports = path;
 
 
 
+/* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp").component("glancesPluginConnections", {
+    controller: __WEBPACK_IMPORTED_MODULE_1__controller__["a" /* default */],
+    controllerAs: "vm",
+    templateUrl: __WEBPACK_IMPORTED_MODULE_2__view_html___default.a,
+}));
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = GlancesPluginConnectionsController;
+
+function GlancesPluginConnectionsController($scope, GlancesStats) {
+    var vm = this;
+    var _view = {};
+
+    vm.listen = null;
+    vm.initiated = null;
+    vm.established = null;
+    vm.terminated = null;
+    vm.tracked = null;
+
+    vm.$onInit = function () {
+        loadData(GlancesStats.getData());
+    };
+
+    $scope.$on('data_refreshed', function (event, data) {
+        loadData(data);
+    });
+
+    var loadData = function (data) {
+        var stats = data.stats['connections'];
+        _view = data.views['connections'];
+
+        vm.listen = stats['LISTEN'];
+        vm.initiated = stats['initiated'];
+        vm.established = stats['ESTABLISHED'];
+        vm.terminated = stats['terminated'];
+        vm.tracked = {
+            count: stats['nf_conntrack_count'],
+            max: stats['nf_conntrack_max'],
+        };
+    };
+
+    vm.getDecoration = function (value) {
+        if (_view[value] === undefined) {
+            return;
+        }
+
+        return _view[value].decoration.toLowerCase();
+    };
+}
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports) {
+
+var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-connections/view.html';
+var html = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">TCP CONNECTIONS</div>\n    <div class=\"table-cell\"></div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Listen</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.listen}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Initiated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.initiated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Established</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.established}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Terminated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.terminated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Tracked</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration('nf_conntrack_percent')\">{{vm.tracked.count}}/{{vm.tracked.max}}</div>\n</div>\n\n";
+window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
+module.exports = path;
+
+/***/ }),
+/* 39 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(40);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
+
+
+
+
+
+
 /* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp").component("glancesPluginCpu", {
     controller: __WEBPACK_IMPORTED_MODULE_1__controller__["a" /* default */],
     controllerAs: 'vm',
@@ -57776,7 +57868,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 37 */
+/* 40 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -57850,7 +57942,7 @@ function GlancesPluginCpuController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 38 */
+/* 41 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-cpu/view.html';
@@ -57859,14 +57951,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 39 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(40);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(44);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -57882,7 +57974,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 40 */
+/* 43 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -57926,7 +58018,7 @@ function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS)
 
 
 /***/ }),
-/* 41 */
+/* 44 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
@@ -57935,14 +58027,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 42 */
+/* 45 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(43);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -57958,7 +58050,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 43 */
+/* 46 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58009,7 +58101,7 @@ function GlancesPluginDockerController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 44 */
+/* 47 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';
@@ -58018,14 +58110,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 45 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(46);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(47);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(49);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58041,7 +58133,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 46 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58098,7 +58190,7 @@ function GlancesPluginFoldersController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 47 */
+/* 50 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-folders/view.html';
@@ -58107,14 +58199,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 48 */
+/* 51 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(53);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58130,7 +58222,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 49 */
+/* 52 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58188,7 +58280,7 @@ function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
 
 
 /***/ }),
-/* 50 */
+/* 53 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';
@@ -58197,14 +58289,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 51 */
+/* 54 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(53);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(56);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58220,7 +58312,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 52 */
+/* 55 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58294,7 +58386,7 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 
 
 /***/ }),
-/* 53 */
+/* 56 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
@@ -58303,14 +58395,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 54 */
+/* 57 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58326,7 +58418,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 55 */
+/* 58 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58363,7 +58455,7 @@ function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
 
 
 /***/ }),
-/* 56 */
+/* 59 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';
@@ -58372,14 +58464,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 57 */
+/* 60 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(58);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(62);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58395,7 +58487,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 58 */
+/* 61 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58432,7 +58524,7 @@ function GlancesPluginIrqController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 59 */
+/* 62 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-irq/view.html';
@@ -58441,14 +58533,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 60 */
+/* 63 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(61);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(64);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(65);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58464,7 +58556,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 61 */
+/* 64 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58508,7 +58600,7 @@ function GlancesPluginLoadController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 62 */
+/* 65 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-load/view.html';
@@ -58517,14 +58609,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 63 */
+/* 66 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(64);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(67);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(68);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58540,7 +58632,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 64 */
+/* 67 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58584,7 +58676,7 @@ function GlancesPluginMemController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 65 */
+/* 68 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem/view.html';
@@ -58593,14 +58685,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 66 */
+/* 69 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(67);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(68);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(71);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58616,7 +58708,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 67 */
+/* 70 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58650,7 +58742,7 @@ function GlancesPluginMemMoreController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 68 */
+/* 71 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem-more/view.html';
@@ -58659,14 +58751,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 69 */
+/* 72 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(70);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(73);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(74);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58682,7 +58774,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 70 */
+/* 73 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58726,7 +58818,7 @@ function GlancesPluginMemswapController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 71 */
+/* 74 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-memswap/view.html';
@@ -58735,14 +58827,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 72 */
+/* 75 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(73);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(76);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(77);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58758,7 +58850,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 73 */
+/* 76 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58804,7 +58896,7 @@ function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS
 
 
 /***/ }),
-/* 74 */
+/* 77 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-network/view.html';
@@ -58813,14 +58905,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 75 */
+/* 78 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(76);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(79);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(82);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58836,7 +58928,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 76 */
+/* 79 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58890,7 +58982,7 @@ function GlancesPluginPercpuController($scope, GlancesStats, GlancesPluginHelper
 
 
 /***/ }),
-/* 77 */
+/* 80 */
 /***/ (function(module, exports) {
 
 var g;
@@ -58917,7 +59009,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 78 */
+/* 81 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -58945,7 +59037,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 79 */
+/* 82 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-percpu/view.html';
@@ -58954,14 +59046,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 80 */
+/* 83 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(81);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(84);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -58977,7 +59069,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 81 */
+/* 84 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59033,7 +59125,7 @@ function GlancesPluginPortsController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 82 */
+/* 85 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-ports/view.html';
@@ -59042,14 +59134,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 83 */
+/* 86 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(84);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(85);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(87);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(88);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59065,7 +59157,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 84 */
+/* 87 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59156,7 +59248,7 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
 
 
 /***/ }),
-/* 85 */
+/* 88 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-process/view.html';
@@ -59165,14 +59257,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 86 */
+/* 89 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(87);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(88);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(91);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59191,7 +59283,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 87 */
+/* 90 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59227,7 +59319,7 @@ function GlancesPluginProcesscountController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 88 */
+/* 91 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-processcount/view.html';
@@ -59236,14 +59328,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 89 */
+/* 92 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(90);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(91);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(93);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(94);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59262,7 +59354,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 90 */
+/* 93 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59370,7 +59462,7 @@ function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginH
 
 
 /***/ }),
-/* 91 */
+/* 94 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
@@ -59379,14 +59471,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 92 */
+/* 95 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(93);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(94);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(96);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(97);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59402,7 +59494,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 93 */
+/* 96 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59460,7 +59552,7 @@ function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
 
 
 /***/ }),
-/* 94 */
+/* 97 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-quicklook/view.html';
@@ -59469,14 +59561,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 95 */
+/* 98 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(96);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(99);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(100);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59492,7 +59584,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 96 */
+/* 99 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59559,7 +59651,7 @@ function GlancesPluginRaidController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 97 */
+/* 100 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-raid/view.html';
@@ -59568,14 +59660,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 98 */
+/* 101 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(99);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(100);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(103);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59591,7 +59683,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 99 */
+/* 102 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59636,7 +59728,7 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
 
 
 /***/ }),
-/* 100 */
+/* 103 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-sensors/view.html';
@@ -59645,14 +59737,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 101 */
+/* 104 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(105);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(106);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59668,7 +59760,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 102 */
+/* 105 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59712,7 +59804,7 @@ function GlancesPluginSystemController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 103 */
+/* 106 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-system/view.html';
@@ -59721,14 +59813,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 104 */
+/* 107 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(106);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(108);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(109);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59744,7 +59836,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 105 */
+/* 108 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59769,7 +59861,7 @@ function GlancesPluginUptimeController($scope, GlancesStats) {
 
 
 /***/ }),
-/* 106 */
+/* 109 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-uptime/view.html';
@@ -59778,14 +59870,14 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 107 */
+/* 110 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_angular___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_angular__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(108);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(109);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__controller__ = __webpack_require__(111);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html__ = __webpack_require__(112);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__view_html___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__view_html__);
 
 
@@ -59801,7 +59893,7 @@ module.exports = path;
 
 
 /***/ }),
-/* 108 */
+/* 111 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59856,7 +59948,7 @@ function GlancesPluginWifiController($scope, $filter, GlancesStats) {
 
 
 /***/ }),
-/* 109 */
+/* 112 */
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-wifi/view.html';
@@ -59865,7 +59957,7 @@ window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, htm
 module.exports = path;
 
 /***/ }),
-/* 110 */
+/* 113 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59999,7 +60091,7 @@ function timedeltaFilter($filter) {
 
 
 /***/ }),
-/* 111 */
+/* 114 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
