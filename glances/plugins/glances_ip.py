@@ -175,6 +175,9 @@ class PublicIpAddress(object):
             if q.qsize() > 0:
                 ip = q.get()
 
+        if ip is None:
+            return None
+
         return ', '.join(set([x.strip() for x in ip.split(',')]))
 
     def _get_ip_public(self, queue_target, url, json=False, key=None):
