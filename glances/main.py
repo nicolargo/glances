@@ -27,7 +27,7 @@ from glances import __version__, psutil_version
 from glances.compat import input
 from glances.config import Config
 from glances.globals import WINDOWS
-from glances.logger import logger
+from glances.logger import logger, LOG_FILENAME
 
 
 def disable(class_name, var):
@@ -112,7 +112,7 @@ Examples of use:
 
     def init_args(self):
         """Init all the command line arguments."""
-        version = "Glances v" + __version__ + " with psutil v" + psutil_version
+        version = 'Glances v{} with PsUtil v{}\nLog file: {}'.format(__version__, psutil_version, LOG_FILENAME)
         parser = argparse.ArgumentParser(
             prog='glances',
             conflict_handler='resolve',
