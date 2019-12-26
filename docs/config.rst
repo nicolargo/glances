@@ -115,15 +115,10 @@ Glances logs all of its internal messages to a log file.
 ``DEBUG`` messages can been logged using the ``-d`` option on the command
 line.
 
-By default, the ``glances-USERNAME.log`` file is under the temporary directory:
+The location of the Glances depends of your operating system. You could
+displayed the Glances log file full path using the``glances -V`` command line.
 
-=========== ======
-``*nix``    /tmp
-``Windows`` %TEMP%
-=========== ======
-
-- On Windows XP, ``%TEMP%`` is: ``C:\Documents and Settings\<USERNAME>\Local Settings\Temp``.
-- On Windows Vista and later: ``C:\Users\<USERNAME>\AppData\Local\Temp``.
+The file is automatically rotate when the size is higher than 1 MB.
 
 If you want to use another system path or change the log message, you
 can use your own logger configuration. First of all, you have to create

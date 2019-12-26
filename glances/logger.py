@@ -27,8 +27,27 @@ import tempfile
 import logging
 import logging.config
 
-LOG_FILENAME = os.path.join(tempfile.gettempdir(),
-                            'glances-{}.log'.format(getpass.getuser()))
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, WSL
+from glances.globals import safe_makedirs
+
+# Choose the good place for the log file (see issue #1575)
+# Default root path
+if 'HOME' in os.environ:
+    _XDG_CACHE_HOME = os.path.join(os.environ['HOME'], '.local', 'share')
+else:
+    _XDG_CACHE_HOME = ''
+# Define the glances log file
+if 'XDG_CACHE_HOME' in os.environ \
+        and os.path.isdir(os.environ['XDG_CACHE_HOME']) \
+        and os.access(os.environ['XDG_CACHE_HOME'], os.W_OK):
+    safe_makedirs(os.path.join(os.environ['XDG_CACHE_HOME'], 'glances'))
+    LOG_FILENAME = os.path.join(os.environ['XDG_CACHE_HOME'], 'glances', 'glances.log')
+elif os.path.isdir(_XDG_CACHE_HOME) and os.access(_XDG_CACHE_HOME, os.W_OK):
+    safe_makedirs(os.path.join(_XDG_CACHE_HOME, 'glances'))
+    LOG_FILENAME = os.path.join(_XDG_CACHE_HOME, 'glances', 'glances.log')
+else:
+    LOG_FILENAME = os.path.join(tempfile.gettempdir(),
+                                'glances-{}.log'.format(getpass.getuser()))
 
 # Define the logging configuration
 LOGGING_CFG = {
@@ -56,6 +75,8 @@ LOGGING_CFG = {
         "file": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
+            "maxBytes": 1000000,
+            "backupCount": 3,
             "formatter": "standard",
             "filename": LOG_FILENAME
         },
