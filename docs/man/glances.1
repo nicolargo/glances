@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Nov 24, 2019" "3.1.4_BETA" "Glances"
+.TH "GLANCES" "1" "Dec 26, 2019" "3.1.4_BETA" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -670,30 +670,10 @@ Glances logs all of its internal messages to a log file.
 \fBDEBUG\fP messages can been logged using the \fB\-d\fP option on the command
 line.
 .sp
-By default, the \fBglances\-USERNAME.log\fP file is under the temporary directory:
-.TS
-center;
-|l|l|.
-_
-T{
-\fB*nix\fP
-T}	T{
-/tmp
-T}
-_
-T{
-\fBWindows\fP
-T}	T{
-%TEMP%
-T}
-_
-.TE
-.INDENT 0.0
-.IP \(bu 2
-On Windows XP, \fB%TEMP%\fP is: \fBC:\eDocuments and Settings\e<USERNAME>\eLocal Settings\eTemp\fP\&.
-.IP \(bu 2
-On Windows Vista and later: \fBC:\eUsers\e<USERNAME>\eAppData\eLocal\eTemp\fP\&.
-.UNINDENT
+The location of the Glances depends of your operating system. You could
+displayed the Glances log file full path using the\(ga\(gaglances \-V\(ga\(ga command line.
+.sp
+The file is automatically rotate when the size is higher than 1 MB.
 .sp
 If you want to use another system path or change the log message, you
 can use your own logger configuration. First of all, you have to create
