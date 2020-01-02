@@ -113,6 +113,26 @@ function timedeltaFilter($filter) {
     }
 }
 
+function nl2brFilter($sce) {
+    function escapeHTML(html) {
+        var div = document.createElement('div');
+        div.innerText = html;
+
+        return div.innerHTML;
+    }
+
+    return function (input) {
+        if (typeof input === 'undefined') {
+            return input;
+        }
+
+        var sanitizedInput = escapeHTML(input);
+        var html = sanitizedInput.replace(/\n/g, '<br>');
+
+        return $sce.trustAsHtml(html);
+    };
+}
+
 export default angular.module("glancesApp")
     .filter("min_size", minSizeFilter)
     .filter("exclamation", exclamationFilter)
@@ -120,4 +140,5 @@ export default angular.module("glancesApp")
     .filter("bits", bitsFilter)
     .filter("leftPad", leftPadFilter)
     .filter("timemillis", timemillisFilter)
-    .filter("timedelta", timedeltaFilter);
+    .filter("timedelta", timedeltaFilter)
+    .filter("nl2br", nl2brFilter);
