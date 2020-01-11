@@ -57,7 +57,7 @@ class Export(GlancesExport):
         self.port = int(self.port) or 8883
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
-        self.tls = (self.tls.lower() == 'true')
+        self.tls = (self.tls and self.tls.lower() == 'true')
 
         # Init the MQTT client
         self.client = self.init()
