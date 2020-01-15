@@ -57695,7 +57695,7 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
 /***/ (function(module, exports) {
 
 var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-amps/view.html';
-var html = "<section id=\"amps\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"process in vm.processes\">\n            <div class=\"table-cell text-left\" ng-class=\"vm.getDescriptionDecoration(process)\">{{ process.name }}</div>\n            <div class=\"table-cell text-left\">{{ process.count }}</div>\n            <div class=\"table-cell text-left process-result\">{{ process.result }}</div>\n        </div>\n    </div>\n</section>\n";
+var html = "<section id=\"amps\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"process in vm.processes\">\n            <div class=\"table-cell text-left\" ng-class=\"vm.getDescriptionDecoration(process)\">{{ process.name }}</div>\n            <div class=\"table-cell text-left\">{{ process.count }}</div>\n            <div class=\"table-cell text-left process-result\" ng-bind-html=\"process.result|nl2br\"></div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
 
@@ -60080,6 +60080,26 @@ function timedeltaFilter($filter) {
     }
 }
 
+function nl2brFilter($sce) {
+    function escapeHTML(html) {
+        var div = document.createElement('div');
+        div.innerText = html;
+
+        return div.innerHTML;
+    }
+
+    return function (input) {
+        if (typeof input === 'undefined') {
+            return input;
+        }
+
+        var sanitizedInput = escapeHTML(input);
+        var html = sanitizedInput.replace(/\n/g, '<br>');
+
+        return $sce.trustAsHtml(html);
+    };
+}
+
 /* unused harmony default export */ var _unused_webpack_default_export = (__WEBPACK_IMPORTED_MODULE_0_angular___default.a.module("glancesApp")
     .filter("min_size", minSizeFilter)
     .filter("exclamation", exclamationFilter)
@@ -60087,7 +60107,8 @@ function timedeltaFilter($filter) {
     .filter("bits", bitsFilter)
     .filter("leftPad", leftPadFilter)
     .filter("timemillis", timemillisFilter)
-    .filter("timedelta", timedeltaFilter));
+    .filter("timedelta", timedeltaFilter)
+    .filter("nl2br", nl2brFilter));
 
 
 /***/ }),
