@@ -3,7 +3,7 @@
         <div class="table-row" ng-repeat="process in vm.processes">
             <div class="table-cell text-left" ng-class="vm.getDescriptionDecoration(process)">{{ process.name }}</div>
             <div class="table-cell text-left">{{ process.count }}</div>
-            <div class="table-cell text-left process-result">{{ process.result }}</div>
+            <div class="table-cell text-left process-result" ng-bind-html="process.result|nl2br"></div>
         </div>
     </div>
 </section>
