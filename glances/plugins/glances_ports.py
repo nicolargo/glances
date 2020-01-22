@@ -82,7 +82,7 @@ class Plugin(GlancesPlugin):
             if self._thread is None:
                 thread_is_running = False
             else:
-                thread_is_running = self._thread.isAlive()
+                thread_is_running = self._thread.is_alive()
             if self.timer_ports.finished() and not thread_is_running:
                 # Run ports scanner
                 self._thread = ThreadScanner(self.stats)

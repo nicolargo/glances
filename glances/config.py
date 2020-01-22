@@ -105,7 +105,7 @@ class Config(object):
         self._loaded_config_file = None
 
         # Re patern for optimize research of `foo`
-        self.re_pattern = re.compile('(\`.+?\`)')
+        self.re_pattern = re.compile(r'(\`.+?\`)')
 
         self.parser = ConfigParser()
         self.read()
