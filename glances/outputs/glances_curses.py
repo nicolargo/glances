@@ -697,7 +697,7 @@ class _GlancesCurses(object):
             if p in stat_display:
                 self.display_plugin(stat_display[p],
                                     display_optional=plugin_display_optional[p])
-            if p is not 'load':
+            if p != 'load':
                 # Skip last column
                 self.new_column()
 
