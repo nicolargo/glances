@@ -127,14 +127,20 @@ class Plugin(GlancesPlugin):
 
             pass
 
-        # Set the alias for each stat
+        # Update the stats
+        self.stats = []
+
         for stat in stats:
+            # Do not take hide stat into account
+            if self.is_hide(stat["label"]):
+                continue
+
+            # Set the alias for each stat
             alias = self.has_alias(stat["label"].lower())
             if alias:
                 stat["label"] = alias
 
-        # Update the stats
-        self.stats = stats
+            self.stats.append(stat)
 
         return self.stats
 
