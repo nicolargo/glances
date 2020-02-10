@@ -2,6 +2,8 @@
 
 Elasticsearch
 =============
+.. note::
+    You need to install the `elasticsearch`_ library on your system.
 
 You can export statistics to an ``Elasticsearch`` server. The connection
 should be defined in the Glances configuration file as following:
@@ -36,3 +38,5 @@ get the CPU system stats:
             "value": "2.2"
         }
     }
+
+.. _elasticsearch: https://pypi.org/project/elasticsearch/
