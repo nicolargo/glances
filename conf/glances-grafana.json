@@ -1335,7 +1335,7 @@
           "show": true
         },
         {
-          "format": "short",
+          "format": "bytes",
           "logBase": 1,
           "max": null,
           "min": null,
