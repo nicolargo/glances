@@ -1,7 +1,7 @@
 You are in the main Glances source folder. This page is **ONLY** for developers.
 
 If you are looking for the user manual, please follow this link:
-https://github.com/nicolargo/glances/blob/master/docs/glances-doc.rst
+https://glances.readthedocs.io/en/stable/
 
 ===
 
@@ -42,10 +42,17 @@ outputs
     ...
 exports
     => Glances export interfaces
+    glances_export.py       "Father class" for exports
     glances_csv.py          The CSV export module
     glances_influxdb.py     The InfluxDB export module
     glances_mqtt.py         The MQTT export module
     glances_opentsdb.py     The OpenTSDB export module
     glances_rabbitmq.py     The RabbitMQ export module
     glances_statsd.py       The StatsD export module
+    ...
+amps
+    => Glances Application Monitoring Processes (AMP)
+    glances_amp.py          "Father class" for AMPs
+    glances_default.py      Default AMP
+    glances_nginx.py        Nginx AMP
     ...
