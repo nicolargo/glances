@@ -130,7 +130,7 @@ class Export(GlancesExport):
             logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
             try:
-                self.client.write_points(self._normalize(name, columns, points))
+                self.client.write_points(self._normalize(name, columns, points), time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
                 logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))
