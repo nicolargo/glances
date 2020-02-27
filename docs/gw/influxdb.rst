@@ -16,7 +16,10 @@ following:
     user=root
     password=root
     db=glances
-    tags=foo:bar,spam:eggs
+    # Tags will be added for all measurements
+    #tags=foo:bar,spam:eggs
+    # You can also use dynamic values
+    #tags=system:`uname -s`
 
 and run Glances with:
 

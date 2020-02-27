@@ -42,11 +42,14 @@ class Export(GlancesExport):
 
         # Optionals configuration keys
         self.compression = None
+        self.tags = None
 
         # Load the Kafka configuration file section
         self.export_enable = self.load_conf('kafka',
-                                            mandatories=['host', 'port', 'topic'],
-                                            options=['compression'])
+                                            mandatories=['host', 'port',
+                                                         'topic'],
+                                            options=['compression',
+                                                     'tags'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -79,6 +82,8 @@ class Export(GlancesExport):
 
         # Create DB input
         data = dict(zip(columns, points))
+        if self.tags is not None:
+            data.update(self.parse_tags(self.tags))
 
         # Send stats to the kafka topic
         # key=<plugin name>

@@ -14,6 +14,10 @@ following:
     port=9092
     topic=glances
     #compression=gzip
+    # Tags will be added for all events
+    #tags=foo:bar,spam:eggs
+    # You can also use dynamic values
+    #tags=hostname:`hostname -f`
 
 Note: you can enable the compression but it consume CPU on your host.
 
@@ -43,4 +47,4 @@ Python code example to consume Kafka Glances plugin:
 
     consumer = KafkaConsumer('glances', value_deserializer=json.loads)
     for s in consumer:
-      print s
+      print(s)
