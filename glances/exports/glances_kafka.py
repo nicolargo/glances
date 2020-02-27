@@ -27,6 +27,7 @@ from glances.exports.glances_export import GlancesExport
 
 from kafka import KafkaProducer
 import json
+import codecs
 
 
 class Export(GlancesExport):
@@ -90,7 +91,8 @@ class Export(GlancesExport):
         # value=JSON dict
         try:
             self.client.send(self.topic,
-                             key=name,
+                             # Kafka key name needs to be bytes #1593
+                             key=name.encode('utf-8'),
                              value=data)
         except Exception as e:
             logger.error("Cannot export {} stats to Kafka ({})".format(name, e))
