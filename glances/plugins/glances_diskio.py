@@ -162,7 +162,7 @@ class Plugin(GlancesPlugin):
             return ret
 
         # Max size for the interface name
-        name_max_width = max_width - 12
+        name_max_width = max_width - 13
 
         # Header
         msg = '{:{width}}'.format('DISK I/O', width=name_max_width)
@@ -188,9 +188,9 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_new_line())
             if len(disk_name) > name_max_width:
                 # Cut disk name if it is too long
-                disk_name = '_' + disk_name[-name_max_width:]
+                disk_name = '_' + disk_name[-name_max_width+1:]
             msg = '{:{width}}'.format(nativestr(disk_name),
-                                      width=name_max_width)
+                                      width=name_max_width+1)
             ret.append(self.curse_add_line(msg))
             if args.diskio_iops:
                 # count
