@@ -21,6 +21,7 @@
 
 from time import tzname, localtime, strftime
 
+from glances.globals import WINDOWS
 from glances.plugins.glances_plugin import GlancesPlugin
 
 

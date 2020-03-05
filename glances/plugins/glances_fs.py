@@ -114,7 +114,8 @@ class Plugin(GlancesPlugin):
             # Loop over fs
             for fs in fs_stat:
                 # Do not take hidden file system into account
-                if self.is_hide(fs.mountpoint):
+                # Also check device name (see issue #1606)
+                if self.is_hide(fs.mountpoint) or self.is_hide(fs.device):
                     continue
                 # Grab the disk usage
                 try:
@@ -163,7 +164,11 @@ class Plugin(GlancesPlugin):
                         'used': used,
                         'percent': percent,
                         'key': self.get_key()}
-                    stats.append(fs_current)
+                    # Do not take hidden file system into account
+                    if self.is_hide(fs_current['mnt_point']):
+                        continue
+                    else:
+                        stats.append(fs_current)
             else:
                 # Default behavior
                 for fs in fs_stat:
@@ -174,7 +179,11 @@ class Plugin(GlancesPlugin):
                         'used': int(fs_stat[fs]['used']) * 1024,
                         'percent': float(fs_stat[fs]['percent']),
                         'key': self.get_key()}
-                    stats.append(fs_current)
+                    # Do not take hidden file system into account
+                    if self.is_hide(fs_current['mnt_point']) or self.is_hide(fs_current['device_name']):
+                        continue
+                    else:
+                        stats.append(fs_current)
 
         # Update the stats
         self.stats = stats

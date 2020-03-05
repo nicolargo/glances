@@ -1243,7 +1243,7 @@
           "measurement": "localhost.diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$disk.read_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$disk.read_bytes\")/mean(\"$disk.time_since_update\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1286,7 +1286,7 @@
           "measurement": "localhost.diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$disk.write_bytes\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$disk.write_bytes\")/mean(\"$disk.time_since_update\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1335,7 +1335,7 @@
           "show": true
         },
         {
-          "format": "short",
+          "format": "bytes",
           "logBase": 1,
           "max": null,
           "min": null,
