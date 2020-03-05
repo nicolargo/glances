@@ -38,12 +38,11 @@ Monitor local machine (standalone mode):
 
     $ glances
 
-Note: The standalone mode is not available on Microsoft Windows (c).
-Glances will start in Web server mode on this operating system.
-
-Monitor local machine with the web interface (Web UI):
+Monitor local machine with the web interface (Web UI), run the following command line:
 
     $ glances -w
+
+and open a Web browser with the returned URL
 
 Monitor local machine and export stats to a CSV file:
 

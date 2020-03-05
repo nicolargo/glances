@@ -64,6 +64,28 @@ class GlancesProcesses(object):
         # Extended stats for top process is enable by default
         self.disable_extended_tag = False
 
+        # Test if the system can grab io_counters
+        try:
+            p = psutil.Process()
+            p.io_counters()
+        except Exception as e:
+            logger.warning('PsUtil can not grab processes io_counters ({})'.format(e))
+            self.disable_io_counters = True
+        else:
+            logger.debug('PsUtil can grab processes io_counters')
+            self.disable_io_counters = False
+
+        # Test if the system can grab gids
+        try:
+            p = psutil.Process()
+            p.gids()
+        except Exception as e:
+            logger.warning('PsUtil can not grab processes gids ({})'.format(e))
+            self.disable_gids = True
+        else:
+            logger.debug('PsUtil can grab processes gids')
+            self.disable_gids = False
+
         # Maximum number of processes showed in the UI (None if no limit)
         self._max_processes = None
 
@@ -237,11 +259,9 @@ class GlancesProcesses(object):
         standard_attrs = ['cmdline', 'cpu_percent', 'cpu_times', 'memory_info',
                           'memory_percent', 'name', 'nice', 'pid', 'ppid',
                           'status', 'username', 'status', 'num_threads']
-        # io_counters availability: Linux, BSD, Windows, AIX
-        if not MACOS and not SUNOS and not WSL:
+        if not self.disable_io_counters:
             standard_attrs += ['io_counters']
-        # gids availability: Unix
-        if not WINDOWS:
+        if not self.disable_gids:
             standard_attrs += ['gids']
 
         # and build the processes stats list (psutil>=5.3.0)

@@ -25,6 +25,7 @@ import psutil
 from glances.compat import iteritems
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.logger import logger
 
 # SNMP OID
 # 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
@@ -62,7 +63,8 @@ class Plugin(GlancesPlugin):
         # Call CorePlugin in order to display the core number
         try:
             self.nb_log_core = CorePlugin(args=self.args).update()["log"]
-        except Exception:
+        except Exception as e:
+            logger.debug('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
             self.nb_log_core = 1
 
     def _getloadavg(self):
@@ -142,11 +144,11 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         # Header
-        msg = '{:8}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
+        msg = '{:6}'.format('LOAD%' if (args.disable_irix and self.nb_log_core != 0) else 'LOAD')
         ret.append(self.curse_add_line(msg, "TITLE"))
         # Core number
         if 'cpucore' in self.stats and self.stats['cpucore'] > 0:
-            msg = '{}-core'.format(int(self.stats['cpucore']))
+            msg = '{:3}-core'.format(int(self.stats['cpucore']))
             ret.append(self.curse_add_line(msg))
         # Loop over 1min, 5min and 15min load
         for load_time in ['1', '5', '15']:

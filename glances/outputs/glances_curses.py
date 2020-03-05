@@ -31,14 +31,15 @@ from glances.processes import glances_processes
 from glances.timer import Timer
 
 # Import curses library for "normal" operating system
-if not WINDOWS:
-    try:
-        import curses
-        import curses.panel
-        from curses.textpad import Textbox
-    except ImportError:
-        logger.critical("Curses module not found. Glances cannot start in standalone mode.")
-        sys.exit(1)
+try:
+    import curses
+    import curses.panel
+    from curses.textpad import Textbox
+except ImportError:
+    logger.critical("Curses module not found. Glances cannot start in standalone mode.")
+    if WINDOWS:
+	    logger.critical("For Windows you can try installing windows-curses with pip install.")
+    sys.exit(1)
 
 
 class _GlancesCurses(object):
@@ -479,7 +480,7 @@ class _GlancesCurses(object):
             plugin_max_width = None
             if p in self._left_sidebar:
                 plugin_max_width = max(self._left_sidebar_min_width,
-                                       self.screen.getmaxyx()[1] - 105)
+                                       self.term_window.getmaxyx()[1] - 105)
                 plugin_max_width = min(self._left_sidebar_max_width,
                                        plugin_max_width)
 
@@ -515,7 +516,7 @@ class _GlancesCurses(object):
 
         # Adapt number of processes to the available space
         max_processes_displayed = (
-            self.screen.getmaxyx()[0] - 11 -
+            self.term_window.getmaxyx()[0] - 11 -
             (0 if 'docker' not in __stat_display else
                 self.get_stats_display_height(__stat_display["docker"])) -
             (0 if 'processcount' not in __stat_display else
@@ -618,7 +619,7 @@ class _GlancesCurses(object):
                 l_uptime += self.get_stats_display_width(stat_display[i])
         self.display_plugin(
             stat_display["system"],
-            display_optional=(self.screen.getmaxyx()[1] >= l_uptime))
+            display_optional=(self.term_window.getmaxyx()[1] >= l_uptime))
         self.space_between_column = 3
         if 'ip' in stat_display:
             self.new_column()
@@ -657,9 +658,9 @@ class _GlancesCurses(object):
         if not self.args.disable_quicklook:
             # Quick look is in the place !
             if self.args.full_quicklook:
-                quicklook_width = self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
+                quicklook_width = self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column)
             else:
-                quicklook_width = min(self.screen.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
+                quicklook_width = min(self.term_window.getmaxyx()[1] - (stats_width + 8 + stats_number * self.space_between_column),
                                       self._quicklook_max_width - 5)
             try:
                 stat_display["quicklook"] = stats.get_plugin(
@@ -679,14 +680,14 @@ class _GlancesCurses(object):
         for p in self._top:
             plugin_display_optional[p] = True
         if stats_number > 1:
-            self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+            self.space_between_column = max(1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)))
             for p in ['mem', 'cpu']:
                 # No space ? Remove optional stats
                 if self.space_between_column < 3:
                     plugin_display_optional[p] = False
                     plugin_widths[p] = self.get_stats_display_width(stat_display[p], without_option=True) if hasattr(self.args, 'disable_' + p) else 0
                     stats_width = sum(itervalues(plugin_widths)) + 1
-                    self.space_between_column = max(1, int((self.screen.getmaxyx()[1] - stats_width) / (stats_number - 1)))
+                    self.space_between_column = max(1, int((self.term_window.getmaxyx()[1] - stats_width) / (stats_number - 1)))
         else:
             self.space_between_column = 0
 
@@ -726,7 +727,7 @@ class _GlancesCurses(object):
         docker + processcount + amps + processlist + alert
         """
         # Do not display anything if space is not available...
-        if self.screen.getmaxyx()[1] < self._left_sidebar_min_width:
+        if self.term_window.getmaxyx()[1] < self._left_sidebar_min_width:
             return
 
         # Restore line position
@@ -743,9 +744,9 @@ class _GlancesCurses(object):
                 self.new_line()
                 if p == 'processlist':
                     self.display_plugin(stat_display['processlist'],
-                                        display_optional=(self.screen.getmaxyx()[1] > 102),
+                                        display_optional=(self.term_window.getmaxyx()[1] > 102),
                                         display_additional=(not MACOS),
-                                        max_y=(self.screen.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
+                                        max_y=(self.term_window.getmaxyx()[0] - self.get_stats_display_height(stat_display['alert']) - 2))
                 else:
                     self.display_plugin(stat_display[p])
 
@@ -779,8 +780,8 @@ class _GlancesCurses(object):
                 size_x += input_size
         if size_y is None:
             size_y = len(sentence_list) + 4
-        screen_x = self.screen.getmaxyx()[1]
-        screen_y = self.screen.getmaxyx()[0]
+        screen_x = self.term_window.getmaxyx()[1]
+        screen_y = self.term_window.getmaxyx()[0]
         if size_x > screen_x or size_y > screen_y:
             # No size to display the popup => abord
             return False
@@ -797,7 +798,7 @@ class _GlancesCurses(object):
         for y, m in enumerate(message.split('\n')):
             popup.addnstr(2 + y, 2, m, len(m))
 
-        if is_input and not WINDOWS:
+        if is_input:
             # Create a subwindow for the text field
             subpop = popup.derwin(1, input_size, 2, 2 + len(m))
             subpop.attron(self.colors_list['FILTER'])
@@ -847,8 +848,8 @@ class _GlancesCurses(object):
             return 0
 
         # Get the screen size
-        screen_x = self.screen.getmaxyx()[1]
-        screen_y = self.screen.getmaxyx()[0]
+        screen_x = self.term_window.getmaxyx()[1]
+        screen_y = self.term_window.getmaxyx()[0]
 
         # Set the upper/left position of the message
         if plugin_stats['align'] == 'right':
@@ -1033,15 +1034,14 @@ class GlancesCursesClient(_GlancesCurses):
     pass
 
 
-if not WINDOWS:
-    class GlancesTextbox(Textbox, object):
+class GlancesTextbox(Textbox, object):
 
-        def __init__(self, *args, **kwargs):
-            super(GlancesTextbox, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(GlancesTextbox, self).__init__(*args, **kwargs)
 
-        def do_command(self, ch):
-            if ch == 10:  # Enter
-                return 0
-            if ch == 127:  # Back
-                return 8
-            return super(GlancesTextbox, self).do_command(ch)
+    def do_command(self, ch):
+        if ch == 10:  # Enter
+            return 0
+        if ch == 127:  # Back
+            return 8
+        return super(GlancesTextbox, self).do_command(ch)

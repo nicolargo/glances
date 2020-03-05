@@ -305,10 +305,6 @@ Examples of use:
         if args.disable_autodiscover:
             logger.info("Auto discover mode is disabled")
 
-        # By default Windows is started in Web mode
-        if WINDOWS:
-            args.webserver = True
-
         # In web server mode
         if args.webserver:
             args.process_short_name = True
