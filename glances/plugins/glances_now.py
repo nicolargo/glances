@@ -48,6 +48,7 @@ class Plugin(GlancesPlugin):
     def update(self):
         """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
+        # Add the time zone (issue #1249 / #1337 / #1598)
         if (len(tzname[1]) > 6):
             self.stats = strftime('%Y-%m-%d %H:%M:%S %z')
         else:
