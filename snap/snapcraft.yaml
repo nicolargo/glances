@@ -63,7 +63,7 @@ parts:
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
-    source-tag: '3.7.0'
+    source-tag: '3.7.3'
     source-depth: 1
   launchers:
     source: snap/local/launchers
