@@ -5,7 +5,35 @@ Glances Version 3
 Version 3.1.4
 =============
 
-  ... Under development ...
+Enhancements and new features:
+
+    * FS filtering can be done on device name documentation enhancement #1606
+    * Feature request: Include hostname in all (e.g. kafka) exports #1594
+    * Threading.isAlive was removed in Python 3.9. Use is_alive. #1585
+    * log file under public/shared tmp/ folders must not have deterministic name #1575
+    * Install / Systemd Debian documentation #1560
+    * Display load as percentage when Irix mode is disable #1554
+    * [WebUI] Add a new TCP connections status plugin new feature #1547
+    * Make processes.sort_key configurable enhancement #1536
+    * NVIDIA GPU temperature #1523
+    * Feature request: HDD S.M.A.R.T. #1288
+
+Bugs corrected:
+
+    * Glances 3.1.3: when no network interface with Public address #1615
+    * NameError: name 'logger' is not defined #1602
+    * Disk IO stats missing after upgrade to 5.5.x kernel #1601
+    * Glances don't want to run on Crostini (LXC Container, Debian 10, python 3.7.3) #1600
+    * Kafka key name needs to be bytes #1593
+    * Cant start glances with glances --export mqtt #1581
+    * [WEBUI] AMP plugins is not displayed correctly in the Web Interface #1574
+    * Unhandled AttributeError when no config files found #1569
+    * Glances writing lots of Docker Error message in logs file enhancement #1561
+    * GPU stats not showing on mobile web view bug needs test #1555
+    * KeyError: b'Rss:' in memory_maps #1551
+    * CPU usage is always 100% #1550
+    * IP plugin still exporting data when disabled #1544
+    * Quicklook plugin not working on Systemd #1537
 
 Version 3.1.3
 =============
