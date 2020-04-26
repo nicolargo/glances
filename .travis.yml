@@ -1,19 +1,27 @@
 language: python
+
 cache: pip
+
 python:
-- '2.7'
-- '3.4'
-- '3.5'
-- '3.6'
-- pypy
+  - '2.7'
+  - '3.4'
+  - '3.5'
+  - '3.6'
+  - '3.7'
+  - '3.8'
+  - pypy3
+
 install:
-- pip install -r requirements.txt
-- pip install coveralls
+  - pip install -r requirements.txt
+  - pip install coveralls
+
 script:
-- pip install .
-- coverage run --source=glances unitest.py
+  - pip install .
+  - coverage run --source=glances unitest.py
+
 after_success:
-- coveralls
+  - coveralls
+
 deploy:
   provider: pypi
   user: nicolargo
