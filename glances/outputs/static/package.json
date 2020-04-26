@@ -1,7 +1,7 @@
 {
   "private": true,
   "dependencies": {
-    "angular": "^1.7.8",
+    "angular": "^1.7.9",
     "angular-hotkeys": "^1.7.0",
     "bootstrap": "^3.4.1",
     "favico.js": "^0.3.10",
@@ -18,7 +18,7 @@
     "less": "^3.10.3",
     "less-loader": "^4.1.0",
     "ngtemplate-loader": "^2.0.1",
-    "node-sass": "^4.12.0",
+    "node-sass": "^4.14.0",
     "sass-loader": "^6.0.7",
     "style-loader": "^0.20.3",
     "url-loader": "^0.6.2",

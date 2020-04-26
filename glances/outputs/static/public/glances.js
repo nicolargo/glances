@@ -17973,7 +17973,7 @@ module.exports = __webpack_require__.p + "9a360c92ce9bda60a8da6389741dcfbf.png";
 /***/ (function(module, exports) {
 
 /**
- * @license AngularJS v1.7.8
+ * @license AngularJS v1.7.9
  * (c) 2010-2018 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -18073,7 +18073,7 @@ function isValidObjectMaxDepth(maxDepth) {
 function minErr(module, ErrorConstructor) {
   ErrorConstructor = ErrorConstructor || Error;
 
-  var url = 'https://errors.angularjs.org/1.7.8/';
+  var url = 'https://errors.angularjs.org/1.7.9/';
   var regex = url.replace('.', '\\.') + '[\\s\\S]*';
   var errRegExp = new RegExp(regex, 'g');
 
@@ -18455,8 +18455,10 @@ function baseExtend(dst, objs, deep) {
         } else if (isElement(src)) {
           dst[key] = src.clone();
         } else {
-          if (!isObject(dst[key])) dst[key] = isArray(src) ? [] : {};
-          baseExtend(dst[key], [src], true);
+          if (key !== '__proto__') {
+            if (!isObject(dst[key])) dst[key] = isArray(src) ? [] : {};
+            baseExtend(dst[key], [src], true);
+          }
         }
       } else {
         dst[key] = src;
@@ -20779,11 +20781,11 @@ function toDebugString(obj, maxDepth) {
 var version = {
   // These placeholder strings will be replaced by grunt's `build` task.
   // They need to be double- or single-quoted.
-  full: '1.7.8',
+  full: '1.7.9',
   major: 1,
   minor: 7,
-  dot: 8,
-  codeName: 'enthusiastic-oblation'
+  dot: 9,
+  codeName: 'pollution-eradication'
 };
 
 
@@ -20933,7 +20935,7 @@ function publishExternalAPI(angular) {
       });
     }
   ])
-  .info({ angularVersion: '1.7.8' });
+  .info({ angularVersion: '1.7.9' });
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -25434,7 +25436,7 @@ function $TemplateCacheProvider() {
  *
  * This example show how you might use `$doCheck` to trigger changes in your component's inputs even if the
  * actual identity of the component doesn't change. (Be aware that cloning and deep equality checks on large
- * arrays or objects can have a negative impact on your application performance)
+ * arrays or objects can have a negative impact on your application performance.)
  *
  * <example name="doCheckArrayExample" module="do-check-module">
  *   <file name="index.html">
@@ -25757,7 +25759,7 @@ function $TemplateCacheProvider() {
  * would result in the whole app "stalling" until all templates are loaded asynchronously - even in the
  * case when only one deeply nested directive has `templateUrl`.
  *
- * Template loading is asynchronous even if the template has been preloaded into the {@link $templateCache}
+ * Template loading is asynchronous even if the template has been preloaded into the {@link $templateCache}.
  *
  * You can specify `templateUrl` as a string representing the URL or as a function which takes two
  * arguments `tElement` and `tAttrs` (described in the `compile` function api below) and returns
@@ -25818,7 +25820,7 @@ function $TemplateCacheProvider() {
  * own templates or compile functions. Compiling these directives results in an infinite loop and
  * stack overflow errors.
  *
- * This can be avoided by manually using $compile in the postLink function to imperatively compile
+ * This can be avoided by manually using `$compile` in the postLink function to imperatively compile
  * a directive's template instead of relying on automatic template compilation via `template` or
  * `templateUrl` declaration or manual compilation inside the compile function.
  * </div>
@@ -25922,17 +25924,17 @@ function $TemplateCacheProvider() {
  *
  * * `true` - transclude the content (i.e. the child nodes) of the directive's element.
  * * `'element'` - transclude the whole of the directive's element including any directives on this
- *   element that defined at a lower priority than this directive. When used, the `template`
+ *   element that are defined at a lower priority than this directive. When used, the `template`
  *   property is ignored.
  * * **`{...}` (an object hash):** - map elements of the content onto transclusion "slots" in the template.
  *
- * **Mult-slot transclusion** is declared by providing an object for the `transclude` property.
+ * **Multi-slot transclusion** is declared by providing an object for the `transclude` property.
  *
  * This object is a map where the keys are the name of the slot to fill and the value is an element selector
  * used to match the HTML to the slot. The element selector should be in normalized form (e.g. `myElement`)
  * and will match the standard element variants (e.g. `my-element`, `my:element`, `data-my-element`, etc).
  *
- * For further information check out the guide on {@link guide/directive#matching-directives Matching Directives}
+ * For further information check out the guide on {@link guide/directive#matching-directives Matching Directives}.
  *
  * If the element selector is prefixed with a `?` then that slot is optional.
  *
@@ -25957,7 +25959,7 @@ function $TemplateCacheProvider() {
  * </div>
  *
  * If you want to manually control the insertion and removal of the transcluded content in your directive
- * then you must use this transclude function. When you call a transclude function it returns a a jqLite/JQuery
+ * then you must use this transclude function. When you call a transclude function it returns a jqLite/JQuery
  * object that contains the compiled DOM, which is linked to the correct transclusion scope.
  *
  * When you call a transclusion function you can pass in a **clone attach function**. This function accepts
@@ -26042,8 +26044,8 @@ function $TemplateCacheProvider() {
  * The {@link ng.$compile.directive.Attributes Attributes} object - passed as a parameter in the
  * `link()` or `compile()` functions. It has a variety of uses.
  *
- * * *Accessing normalized attribute names:* Directives like 'ngBind' can be expressed in many ways:
- *   'ng:bind', `data-ng-bind`, or 'x-ng-bind'. The attributes object allows for normalized access
+ * * *Accessing normalized attribute names:* Directives like `ngBind` can be expressed in many ways:
+ *   `ng:bind`, `data-ng-bind`, or `x-ng-bind`. The attributes object allows for normalized access
  *   to the attributes.
  *
  * * *Directive inter-communication:* All directives share the same instance of the attributes
@@ -26084,25 +26086,24 @@ function $TemplateCacheProvider() {
    <file name="index.html">
     <script>
       angular.module('compileExample', [], function($compileProvider) {
-        // configure new 'compile' directive by passing a directive
-        // factory function. The factory function injects the '$compile'
+        // Configure new 'compile' directive by passing a directive
+        // factory function. The factory function injects '$compile'.
         $compileProvider.directive('compile', function($compile) {
-          // directive factory creates a link function
+          // The directive factory creates a link function.
           return function(scope, element, attrs) {
             scope.$watch(
               function(scope) {
-                 // watch the 'compile' expression for changes
+                // Watch the 'compile' expression for changes.
                 return scope.$eval(attrs.compile);
               },
               function(value) {
-                // when the 'compile' expression changes
-                // assign it into the current DOM
+                // When the 'compile' expression changes
+                // assign it into the current DOM.
                 element.html(value);
 
-                // compile the new DOM and link it to the current
-                // scope.
-                // NOTE: we only compile .childNodes so that
-                // we don't get into infinite loop compiling ourselves
+                // Compile the new DOM and link it to the current scope.
+                // NOTE: we only compile '.childNodes' so that we
+                // don't get into an infinite loop compiling ourselves.
                 $compile(element.contents())(scope);
               }
             );
@@ -26175,13 +26176,13 @@ function $TemplateCacheProvider() {
  *        }
  *        ```
  *      * `futureParentElement` - defines the parent to which the `cloneAttachFn` will add
- *        the cloned elements; only needed for transcludes that are allowed to contain non html
- *        elements (e.g. SVG elements). See also the directive.controller property.
+ *        the cloned elements; only needed for transcludes that are allowed to contain non HTML
+ *        elements (e.g. SVG elements). See also the `directive.controller` property.
  *
  * Calling the linking function returns the element of the template. It is either the original
  * element passed in, or the clone of the element if the `cloneAttachFn` is provided.
  *
- * After linking the view is not updated until after a call to $digest which typically is done by
+ * After linking the view is not updated until after a call to `$digest`, which typically is done by
  * AngularJS automatically.
  *
  * If you need access to the bound view, there are two ways to do it:
@@ -26189,21 +26190,23 @@ function $TemplateCacheProvider() {
  * - If you are not asking the linking function to clone the template, create the DOM element(s)
  *   before you send them to the compiler and keep this reference around.
  *   ```js
- *     var element = $compile('<p>{{total}}</p>')(scope);
+ *     var element = angular.element('<p>{{total}}</p>');
+ *     $compile(element)(scope);
  *   ```
  *
  * - if on the other hand, you need the element to be cloned, the view reference from the original
  *   example would not point to the clone, but rather to the original template that was cloned. In
- *   this case, you can access the clone via the cloneAttachFn:
+ *   this case, you can access the clone either via the `cloneAttachFn` or the value returned by the
+ *   linking function:
  *   ```js
- *     var templateElement = angular.element('<p>{{total}}</p>'),
- *         scope = ....;
- *
+ *     var templateElement = angular.element('<p>{{total}}</p>');
  *     var clonedElement = $compile(templateElement)(scope, function(clonedElement, scope) {
- *       //attach the clone to DOM document at the right place
+ *       // Attach the clone to DOM document at the right place.
  *     });
  *
- *     //now we have reference to the cloned DOM via `clonedElement`
+ *     // Now we have reference to the cloned DOM via `clonedElement`.
+ *     // NOTE: The `clonedElement` returned by the linking function is the same as the
+ *     //       `clonedElement` passed to `cloneAttachFn`.
  *   ```
  *
  *
@@ -26729,9 +26732,9 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @description
    * Register a new directive with the compiler.
    *
-   * @param {string|Object} name Name of the directive in camel-case (i.e. <code>ngBind</code> which
-   *    will match as <code>ng-bind</code>), or an object map of directives where the keys are the
-   *    names and the values are the factories.
+   * @param {string|Object} name Name of the directive in camel-case (i.e. `ngBind` which will match
+   *    as `ng-bind`), or an object map of directives where the keys are the names and the values
+   *    are the factories.
    * @param {Function|Array} directiveFactory An injectable directive factory function. See the
    *    {@link guide/directive directive guide} and the {@link $compile compile API} for more info.
    * @returns {ng.$compileProvider} Self for chaining.
@@ -52398,14 +52401,7 @@ var ngHideDirective = ['$animate', function($animate) {
 var ngStyleDirective = ngDirective(function(scope, element, attr) {
   scope.$watchCollection(attr.ngStyle, function ngStyleWatchAction(newStyles, oldStyles) {
     if (oldStyles && (newStyles !== oldStyles)) {
-      if (!newStyles) {
-        newStyles = {};
-      }
-      forEach(oldStyles, function(val, style) {
-        if (newStyles[style] == null) {
-          newStyles[style] = '';
-        }
-      });
+      forEach(oldStyles, function(val, style) { element.css(style, ''); });
     }
     if (newStyles) element.css(newStyles);
   });
@@ -57459,7 +57455,7 @@ function GlancesController($scope, GlancesStats, hotkeys, ARGUMENTS) {
 /* 23 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/glances/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/glances/view.html';
 var html = "<div>\n    <div ng-if=\"!vm.dataLoaded\" class=\"container-fluid\" id=\"loading-page\">\n        <div class=\"glances-logo\"></div>\n        <div class=\"loader\">Loading...</div>\n    </div>\n\n    <glances-help ng-if=\"vm.arguments.help_tag\"></glances-help>\n\n    <div ng-if=\"vm.dataLoaded && !vm.arguments.help_tag\" class=\"container-fluid\">\n        <div class=\"top-plugin\">\n            <div class=\"row\">\n                <div class=\"col-sm-24\">\n                    <div class=\"pull-left\">\n                        <glances-plugin-system></glances-plugin-system>\n                    </div>\n                    <div class=\"pull-left\">\n                        <glances-plugin-ip></glances-plugin-ip>\n                    </div>\n                    <div class=\"pull-right\">\n                        <glances-plugin-uptime></glances-plugin-uptime>\n                    </div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-sm-24\">\n                        <div class=\"pull-left\">\n                            <glances-plugin-cloud></glances-plugin-cloud>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"row\">\n            <div class=\"hidden-xs hidden-sm hidden-md col-lg-6\" ng-if=\"!vm.arguments.disable_quicklook\">\n                <glances-plugin-quicklook></glances-plugin-quicklook>\n            </div>\n            <div class=\"col-sm-6 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && !vm.arguments.percpu\">\n                <glances-plugin-cpu></glances-plugin-cpu>\n            </div>\n            <div class=\"col-sm-12 col-md-8 col-lg-6\" ng-if=\"!vm.arguments.disable_cpu && vm.arguments.percpu\">\n                <glances-plugin-percpu></glances-plugin-percpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_gpu && vm.hasGpu\">\n                <glances-plugin-gpu></glances-plugin-gpu>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_mem\">\n                <glances-plugin-mem></glances-plugin-mem>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\"\n                 ng-if=\"!vm.arguments.disable_mem && !(!vm.arguments.disable_gpu && vm.hasGpu)\">\n                <glances-plugin-mem-more></glances-plugin-mem-more>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_memswap\">\n                <glances-plugin-memswap></glances-plugin-memswap>\n            </div>\n            <div class=\"col-sm-6 col-md-4 col-lg-3\" ng-if=\"!vm.arguments.disable_load\">\n                <glances-plugin-load></glances-plugin-load>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"col-sm-6 sidebar\" ng-if=\"!vm.arguments.disable_left_sidebar\">\n                <div class=\"table\">\n                    <glances-plugin-network id=\"plugin-network\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_network\"></glances-plugin-network>\n                    <glances-plugin-connections id=\"plugin-connections\" class=\"plugin table-row-group\" ng-if=\"vm.isLinux && !vm.arguments.disable_connections\"></glances-plugin-connections>\n                    <glances-plugin-wifi id=\"plugin-wifi\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_wifi\"></glances-plugin-wifi>\n                    <glances-plugin-ports id=\"plugin-ports\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_ports\"></glances-plugin-ports>\n                    <glances-plugin-diskio id=\"plugin-diskio\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_diskio\"></glances-plugin-diskio>\n                    <glances-plugin-fs id=\"plugin-fs\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_fs\"></glances-plugin-fs>\n                    <glances-plugin-irq id=\"plugin-irq\" class=\"plugin table-row-group\" ng-if=\"vm.arguments.enable_irq\"></glances-plugin-irq>\n                    <glances-plugin-folders id=\"plugin-folders\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_folders\"></glances-plugin-folders>\n                    <glances-plugin-raid id=\"plugin-raid\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.raid\"></glances-plugin-raid>\n                    <glances-plugin-sensors id=\"plugin-sensors\" class=\"plugin table-row-group\" ng-if=\"!vm.arguments.disable_sensors\"></glances-plugin-sensors>\n                </div>\n            </div>\n            <div class=\"col-sm-18\">\n                <glances-plugin-docker ng-if=\"!vm.arguments.disable_docker\"></glances-plugin-docker>\n                <glances-plugin-alert ng-if=\"!vm.arguments.disable_alert\"></glances-plugin-alert>\n                <glances-plugin-process></glances-plugin-process>\n            </div>\n        </div>\n    </div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -57507,7 +57503,7 @@ function GlancesHelpController($http) {
 /* 26 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/help/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/help/view.html';
 var html = "<div class=\"container-fluid\">\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.version}} {{vm.help.psutil_version}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-24\">{{vm.help.configuration_file}}</div>\n    </div>\n    <div class=\"row\">&nbsp;</div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_auto}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_alert}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_mem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.percpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_user}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_ip}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_proc}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_docker}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_io}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_network_io_combination}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.sort_cpu_times}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.view_cumulative_network}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_diskio}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesytem_freespace}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_filesystem}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_vm.help}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_network}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.diskio_iops}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_sensors}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_top_menu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_left_sidebar}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_amp}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_process_stats}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.show_hide_irq}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_gpu}}</div>\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_mean_gpu}}</div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_quick_look}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_short_processname}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n    <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-6\">{{vm.help.enable_disable_ports}}</div>\n        <div class=\"col-sm-12 col-lg-6\"></div>\n    </div>\n\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -57611,8 +57607,8 @@ function GlancesPluginAlertController($scope, favicoService) {
 /* 29 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-alert/view.html';
-var html = "<section id=\"alerts\">\n    <span class=\"title\" ng-if=\"!vm.hasAlerts()\">No warning or critical alert detected</span>\n    <span class=\"title\" ng-if=\"vm.hasAlerts()\">Warning or critical alerts (lasts {{vm.count()}} entries)</span>\n</section>\n<section id=\"alert\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"alert in vm.getAlerts()\">\n            <div class=\"table-cell text-left\">\n                {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span\n                    ng-hide=\"alert.ongoing\">{{alert.level}} on</span> <span class=\"{{ alert.level | lowercase }}\">{{alert.name}}</span>\n                ({{alert.max| number:1 }})\n            </div>\n        </div>\n    </div>\n</section>\n";
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-alert/view.html';
+var html = "<section id=\"alerts\">\n    <span class=\"title\" ng-if=\"!vm.hasAlerts()\">No warning or critical alert detected</span>\n    <span class=\"title\" ng-if=\"vm.hasAlerts()\">Warning or critical alerts (last {{vm.count()}} entries)</span>\n</section>\n<section id=\"alert\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"alert in vm.getAlerts()\">\n            <div class=\"table-cell text-left\">\n                {{alert.begin | date : 'yyyy-MM-dd H:mm:ss'}} ({{ alert.ongoing ? 'ongoing' : alert.duration }}) - <span\n                    ng-hide=\"alert.ongoing\">{{alert.level}} on</span> <span class=\"{{ alert.level | lowercase }}\">{{alert.name}}</span>\n                ({{alert.max| number:1 }})\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
 
@@ -57694,7 +57690,7 @@ function GlancesPluginAmpsController($scope, GlancesStats, favicoService) {
 /* 32 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-amps/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-amps/view.html';
 var html = "<section id=\"amps\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-repeat=\"process in vm.processes\">\n            <div class=\"table-cell text-left\" ng-class=\"vm.getDescriptionDecoration(process)\">{{ process.name }}</div>\n            <div class=\"table-cell text-left\">{{ process.count }}</div>\n            <div class=\"table-cell text-left process-result\" ng-bind-html=\"process.result|nl2br\"></div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -57758,7 +57754,7 @@ function GlancesPluginCloudController($scope, GlancesStats) {
 /* 35 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-cloud/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-cloud/view.html';
 var html = "<section id=\"cloud\">\n    <span class=\"title\">{{ vm.provider }}</span> {{ vm.instance }}\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -57839,7 +57835,7 @@ function GlancesPluginConnectionsController($scope, GlancesStats) {
 /* 38 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-connections/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-connections/view.html';
 var html = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">TCP CONNECTIONS</div>\n    <div class=\"table-cell\"></div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Listen</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.listen}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Initiated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.initiated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Established</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.established}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Terminated</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">{{vm.terminated}}</div>\n</div>\n<div class=\"table-row\">\n    <div class=\"table-cell text-left\">Tracked</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration('nf_conntrack_percent')\">{{vm.tracked.count}}/{{vm.tracked.max}}</div>\n</div>\n\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -57945,7 +57941,7 @@ function GlancesPluginCpuController($scope, GlancesStats) {
 /* 41 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-cpu/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-cpu/view.html';
 var html = "<section id=\"cpu\" class=\"plugin\">\n    <div class=\"row\">\n        <div class=\"col-sm-24 col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left title\">CPU</div>\n                    <div class=\"table-cell\">{{ vm.total }}%</div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">user:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('user')\">\n                        {{ vm.user }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">system:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('system')\">\n                        {{ vm.system }}%\n                    </div>\n                </div>\n                <div class=\"table-row\">\n                    <div class=\"table-cell text-left\">idle:</div>\n                    <div class=\"table-cell\">{{ vm.idle }}%</div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm col-md-12 col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-show=\"vm.nice != undefined\">\n                    <div class=\"table-cell text-left\">nice:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.nice }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.irq != undefined\">\n                    <div class=\"table-cell text-left\">irq:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.irq }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.iowait != undefined\">\n                    <div class=\"table-cell text-left\">iowait:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('iowait')\">\n                        {{ vm.iowait }}%\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-show=\"vm.steal != undefined\">\n                    <div class=\"table-cell text-left\">steal:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('steal')\">\n                        {{ vm.steal }}%\n                    </div>\n                </div>\n            </div>\n        </div>\n        <div class=\"hidden-xs hidden-sm hidden-md col-lg-8\">\n            <div class=\"table\">\n                <div class=\"table-row\" ng-if=\"vm.ctx_switches\">\n                    <div class=\"table-cell text-left\">ctx_sw:</div>\n                    <div class=\"table-cell\" ng-class=\"vm.getDecoration('ctx_switches')\">\n                        {{ vm.ctx_switches }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.interrupts\">\n                    <div class=\"table-cell text-left\">inter:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"vm.soft_interrupts\">\n                    <div class=\"table-cell text-left\">sw_int:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.soft_interrupts }}\n                    </div>\n                </div>\n                <div class=\"table-row\" ng-if=\"!vm.isLinux && vm.syscalls\">\n                    <div class=\"table-cell text-left\">syscal:</div>\n                    <div class=\"table-cell\">\n                        {{ vm.syscalls }}\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58021,7 +58017,7 @@ function GlancesPluginDiskioController($scope, $filter, GlancesStats, ARGUMENTS)
 /* 44 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-diskio/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.disks.length > 0\">\n    <div class=\"table-cell text-left title\">DISK I/O</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">R/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">W/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOR/s</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">IOW/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks\">\n    <div class=\"table-cell text-left\">{{(disk.alias ? disk.alias : disk.name) | min_size:9}}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.diskio_iops\">{{disk.bitrate.rxps }}</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.txps }}</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.diskio_iops\">{{disk.count.rxps }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58104,7 +58100,7 @@ function GlancesPluginDockerController($scope, GlancesStats) {
 /* 47 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-docker/view.html';
 var html = "<section id=\"containers-plugin\" class=\"plugin\" ng-if=\"vm.containers.length\">\n    <span class=\"title\">CONTAINERS</span> {{ vm.containers.length }} (served by Docker {{ vm.version }})\n\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">Name</div>\n            <div class=\"table-cell\">Status</div>\n            <div class=\"table-cell\">CPU%</div>\n            <div class=\"table-cell\">MEM</div>\n            <div class=\"table-cell\">IOR/s</div>\n            <div class=\"table-cell\">IOW/s</div>\n            <div class=\"table-cell\">RX/s</div>\n            <div class=\"table-cell\">TX/s</div>\n            <div class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\" ng-repeat=\"container in vm.containers track by container.id\">\n            <div class=\"table-cell text-left\">{{ container.name }}</div>\n            <div class=\"table-cell\" ng-class=\"container.status == 'Paused' ? 'careful' : 'ok'\">{{ container.status }}\n            </div>\n            <div class=\"table-cell\">{{ container.cpu | number:1 }}</div>\n            <div class=\"table-cell\">{{ container.memory | bytes }}</div>\n            <div class=\"table-cell\">{{ container.ior / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.iow / container.io_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.rx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell\">{{ container.tx / container.net_time_since_update | bits }}</div>\n            <div class=\"table-cell text-left\">{{ container.command }}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58193,7 +58189,7 @@ function GlancesPluginFoldersController($scope, GlancesStats) {
 /* 50 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-folders/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-folders/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.folders.length > 0\">\n    <div class=\"table-cell text-left title\">FOLDERS</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Size</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"folder in vm.folders\">\n    <div class=\"table-cell text-left\">{{ folder.path }}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(folder)\">{{ folder.size | bytes }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58283,7 +58279,7 @@ function GlancesPluginFsController($scope, $filter, GlancesStats, ARGUMENTS) {
 /* 53 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-fs/view.html';
 var html = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">FILE SYS</div>\n    <div class=\"table-cell\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">Used</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">Free</span>\n    </div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"fs in vm.fileSystems\">\n    <div class=\"table-cell text-left\">{{ fs.shortMountPoint }} <span class=\"visible-lg-inline\"\n                                                                     ng-show=\"fs.name.length <= 20\">({{ fs.name }})<span>\n    </div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(fs.mountPoint, 'used')\">\n        <span ng-show=\"!vm.arguments.fs_free_space\">{{ fs.used | bytes }}</span>\n        <span ng-show=\"vm.arguments.fs_free_space\">{{ fs.free | bytes }}</span>\n    </div>\n    <div class=\"table-cell\">{{ fs.size | bytes }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58389,7 +58385,7 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 /* 56 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
 var html = "<section id=\"gpu\" class=\"plugin\">\n    <div class=\"gpu-name title\">\n        {{ vm.name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">proc:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('proc')\" ng-if=\"vm.mean.proc\">{{ vm.mean.proc |\n                number : 0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"!vm.mean.proc\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">mem:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('mem')\" ng-if=\"vm.mean.mem\">{{ vm.mean.mem | number :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"!vm.mean.mem\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"!arguments.meangpu && vm.gpus.length > 1\" ng-repeat=\"gpu in vm.gpus\">\n            <div class=\"table-cell text-left\">\n                {{ gpu.gpu_id }}:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'proc')\"\n                      ng-if=\"gpu.proc\">{{ gpu.proc | number : 0 }}%</span>\n                <span ng-if=\"!gpu.proc\">N/A</span>\n                mem:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'mem')\" ng-if=\"gpu.mem\">{{ gpu.mem | number : 0 }}%</span>\n                <span ng-if=\"!gpu.mem\">N/A</span>\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58458,7 +58454,7 @@ function GlancesPluginIpController($scope, GlancesStats, ARGUMENTS) {
 /* 59 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-ip/view.html';
 var html = "<section id=\"ip\" ng-if=\"vm.address != undefined && !vm.arguments.disable_ip\">\n    &nbsp;-&nbsp;<span class=\"title\">IP</span>&nbsp;<span>{{ vm.address }}/{{ vm.maskCidr }}</span>&nbsp;<span\n        ng-if=\"vm.publicAddress\" class=\"title\">Pub</span>&nbsp;<span>{{ vm.publicAddress }}</span>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58527,7 +58523,7 @@ function GlancesPluginIrqController($scope, GlancesStats) {
 /* 62 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-irq/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-irq/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.irqs.length > 0\">\n    <div class=\"table-cell text-left title\">IRQ</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">Rate/s</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"irq in vm.irqs\">\n    <div class=\"table-cell text-left\">{{irq.irq_line}}</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\"><span>{{irq.irq_rate}}</span></div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58603,7 +58599,7 @@ function GlancesPluginLoadController($scope, GlancesStats) {
 /* 65 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-load/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-load/view.html';
 var html = "<section id=\"load\" class=\"plugin\" ng-if=\"vm.cpucore != undefined\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">LOAD</div>\n            <div class=\"table-cell\">{{ vm.cpucore }}-core</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">1 min:</div>\n            <div class=\"table-cell\">\n                {{ vm.min1 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">5 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min5')\">\n                {{ vm.min5 | number : 2}}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">15 min:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('min15')\">\n                {{ vm.min15 | number : 2}}\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58679,7 +58675,7 @@ function GlancesPluginMemController($scope, GlancesStats) {
 /* 68 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-mem/view.html';
 var html = "<section id=\"mem\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">MEM</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes:2 }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58745,7 +58741,7 @@ function GlancesPluginMemMoreController($scope, GlancesStats) {
 /* 71 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-mem-more/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-mem-more/view.html';
 var html = "<section id=\"mem-more\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\" ng-show=\"vm.active != undefined\">\n            <div class=\"table-cell text-left\">active:</div>\n            <div class=\"table-cell\">{{ vm.active | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.inactive != undefined\">\n            <div class=\"table-cell text-left\">inactive:</div>\n            <div class=\"table-cell\">{{ vm.inactive | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.buffers != undefined\">\n            <div class=\"table-cell text-left\">buffers:</div>\n            <div class=\"table-cell\">{{ vm.buffers | bytes }}</div>\n        </div>\n        <div class=\"table-row\" ng-show=\"vm.cached != undefined\">\n            <div class=\"table-cell text-left\">cached:</div>\n            <div class=\"table-cell\">{{ vm.cached | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58821,7 +58817,7 @@ function GlancesPluginMemswapController($scope, GlancesStats) {
 /* 74 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-memswap/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-memswap/view.html';
 var html = "<section id=\"memswap\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\">SWAP</div>\n            <div class=\"table-cell\">{{ vm.percent }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">total:</div>\n            <div class=\"table-cell\">{{ vm.total | bytes }}</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">used:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getDecoration('used')\">\n                {{ vm.used | bytes }}\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">free:</div>\n            <div class=\"table-cell\">{{ vm.free | bytes }}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -58899,7 +58895,7 @@ function GlancesPluginNetworkController($scope, $filter, GlancesStats, ARGUMENTS
 /* 77 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-network/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-network/view.html';
 var html = "<div class=\"table-row\">\n    <div class=\"table-cell text-left title\">NETWORK</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx/s</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx/s</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Rx</div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">Tx</div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">Rx+Tx</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"network in vm.networks track by network.interfaceName\">\n    <div class=\"table-cell text-left\">{{ network.interfaceName | min_size }}</div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.tx / network.time_since_update | bytes) : (network.tx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"!vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cx / network.time_since_update | bytes) : (network.cx / network.time_since_update | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeRx | bytes) : (network.cumulativeRx | bits) }}\n    </div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && !vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeTx | bytes) : (network.cumulativeTx | bits) }}\n    </div>\n\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\"></div>\n    <div class=\"table-cell\" ng-show=\"vm.arguments.network_cumul && vm.arguments.network_sum\">{{ vm.arguments.byte ?\n        (network.cumulativeCx | bytes) : (network.cumulativeCx | bits) }}\n    </div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59040,7 +59036,7 @@ module.exports = function(module) {
 /* 82 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-percpu/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-percpu/view.html';
 var html = "<section id=\"percpu\" class=\"plugin\">\n    <div class=\"table\" ng-repeat=\"cpus in vm.cpusChunks\">\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left title\"><span ng-if=\"$first\">PER CPU</span></div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.total }}%</div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">user:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getUserAlert(percpu)\">\n                {{ percpu.user }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">system:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.system }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">idle:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\">{{ percpu.idle }}%</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].iowait\">\n            <div class=\"table-cell text-left\">iowait:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.iowait }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.cpus[0].steal\">\n            <div class=\"table-cell text-left\">steal:</div>\n            <div class=\"table-cell\" ng-repeat=\"percpu in cpus track by percpu.number\"\n                 ng-class=\"vm.getSystemAlert(percpu)\">\n                {{ percpu.steal }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59128,7 +59124,7 @@ function GlancesPluginPortsController($scope, GlancesStats) {
 /* 85 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-ports/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-ports/view.html';
 var html = "<div class=\"table-row\" ng-repeat=\"port in vm.ports\">\n    <div class=\"table-cell text-left\">{{(port.description ? port.description : port.host + ' ' + port.port) | min_size:\n        20}}\n    </div>\n    <div class=\"table-cell\"></div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getPortDecoration(port)\" class=\"table-cell\" ng-if=\"port.host\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"false\">Timeout</span>\n        <span ng-switch-when=\"true\">Open</span>\n        <span ng-switch-default>{{port.status * 1000.0 | number:0}}ms</span>\n    </div>\n    <div ng-switch=\"port.status\" ng-class=\"vm.getWebDecoration(port)\" class=\"table-cell\" ng-if=\"port.url\">\n        <span ng-switch-when=\"null\">Scanning</span>\n        <span ng-switch-when=\"Error\">Error</span>\n        <span ng-switch-default>Code {{ port.status }}</span>\n    </div>\n</div>";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59251,7 +59247,7 @@ function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
 /* 88 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-process/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-process/view.html';
 var html = "<div ng-if=\"!vm.arguments.disable_process\">\n    <glances-plugin-processcount sorter=\"vm.sorter\"></glances-plugin-processcount>\n    <div class=\"row\" ng-if=\"!vm.arguments.disable_amps\">\n        <div class=\"col-lg-18\">\n            <glances-plugin-amps></glances-plugin-amps>\n        </div>\n    </div>\n    <glances-plugin-processlist sorter=\"vm.sorter\"></glances-plugin-processlist>\n</div>\n<div ng-if=\"vm.arguments.disable_process\">PROCESSES DISABLED (press 'z' to display)</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59322,7 +59318,7 @@ function GlancesPluginProcesscountController($scope, GlancesStats) {
 /* 91 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-processcount/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-processcount/view.html';
 var html = "<section id=\"processcount\" class=\"plugin\">\n    <span class=\"title\">TASKS</span>\n    <span>{{ vm.total }} ({{ vm.thread }} thr),</span>\n    <span>{{ vm.running }} run,</span>\n    <span>{{ vm.sleeping }} slp,</span>\n    <span>{{ vm.stopped }} oth</span>\n    <span> sorted {{ vm.sorter.auto ? 'automatically' : '' }} by {{ vm.sorter.getColumnLabel(vm.sorter.column) }}, flat view</span>\n</section>";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59465,7 +59461,7 @@ function GlancesPluginProcesslistController($scope, GlancesStats, GlancesPluginH
 /* 94 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-processlist/view.html';
 var html = "<section id=\"processlist-plugin\" class=\"plugin\">\n    <div class=\"table\">\n        <div class=\"table-row\">\n            <div sortable-th sorter=\"vm.sorter\" column=\"cpu_percent\" class=\"table-cell\">CPU%</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"memory_percent\" class=\"table-cell\">MEM%</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">VIRT</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">RES</div>\n            <div class=\"table-cell\">PID</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"username\" class=\"table-cell text-left\">USER</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"timemillis\" class=\"table-cell hidden-xs hidden-sm\">TIME+</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"num_threads\" class=\"table-cell text-left hidden-xs hidden-sm\">THR</div>\n            <div class=\"table-cell\">NI</div>\n            <div class=\"table-cell\">S</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_read\" class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOR/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"io_write\" class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">IOW/s</div>\n            <div sortable-th sorter=\"vm.sorter\" column=\"name\" class=\"table-cell text-left\">Command</div>\n        </div>\n        <div class=\"table-row\"\n             ng-repeat=\"process in vm.processes | orderBy:vm.sorter.column:vm.sorter.isReverseColumn(vm.sorter.column) | limitTo: vm.getLimit() track by process.pid\">\n            <div class=\"table-cell\" ng-class=\"vm.getCpuPercentAlert(process)\">{{ process.cpu_percent == -1 ? '?' : (process.cpu_percent | number:1) }}</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMemoryPercentAlert(process)\">{{ process.memory_percent == -1 ? '?' : (process.memory_percent | number:1) }}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memvirt | bytes}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\">{{process.memres | bytes}}</div>\n            <div class=\"table-cell\">{{process.pid}}</div>\n            <div class=\"table-cell text-left\">{{process.username}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus != '?'\">\n                <span ng-show=\"process.timeplus.hours > 0\" class=\"highlight\">{{ process.timeplus.hours }}h</span>{{\n                process.timeplus.minutes | leftPad:2:'0' }}:{{ process.timeplus.seconds | leftPad:2:'0' }}<span\n                    ng-show=\"process.timeplus.hours <= 0\">.{{ process.timeplus.milliseconds | leftPad:2:'0' }}</span>\n            </div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-if=\"process.timeplus == '?'\">?</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\">{{ process.num_threads == -1 ? '?' : process.num_threads }}</div>\n            <div class=\"table-cell\" ng-class=\"{nice: process.isNice}\">{{process.nice | exclamation}}</div>\n            <div class=\"table-cell\" ng-class=\"{status: process.status == 'R'}\">{{process.status}}</div>\n            <div class=\"table-cell hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioRead}}</div>\n            <div class=\"table-cell text-left hidden-xs hidden-sm\" ng-show=\"vm.ioReadWritePresent\">{{process.ioWrite}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"vm.arguments.process_short_name\">{{process.name}}</div>\n            <div class=\"table-cell text-left\" ng-show=\"!vm.arguments.process_short_name\">{{process.cmdline}}</div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59555,7 +59551,7 @@ function GlancesPluginQuicklookController($scope, GlancesStats, ARGUMENTS) {
 /* 97 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-quicklook/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-quicklook/view.html';
 var html = "<section id=\"quicklook-plugin\" class=\"plugin\">\n    <div class=\"cpu-name\">\n        {{ vm.cpu_name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"!vm.arguments.percpu\">\n            <div class=\"table-cell text-left\">CPU</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.cpu }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.cpu }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.cpu }}%\n            </div>\n        </div>\n        <div class=\"table-row\" ng-if=\"vm.arguments.percpu\" ng-repeat=\"percpu in vm.percpus track by percpu.number\">\n            <div class=\"table-cell text-left\">CPU{{ percpu.number }}</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('cpu') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ percpu.total }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ percpu.total }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ percpu.total }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">MEM</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('mem') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.mem }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.mem }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.mem }}%\n            </div>\n        </div>\n        <div class=\"table-row\">\n            <div class=\"table-cell text-left\">SWAP</div>\n            <div class=\"table-cell\">\n                <div class=\"progress\">\n                    <div class=\"progress-bar progress-bar-{{ vm.getDecoration('swap') }}\" role=\"progressbar\"\n                         aria-valuenow=\"{{ vm.swap }}\" aria-valuemin=\"0\" aria-valuemax=\"100\"\n                         style=\"width: {{ vm.swap }}%;\">\n                        &nbsp;\n                    </div>\n                </div>\n            </div>\n            <div class=\"table-cell\">\n                {{ vm.swap }}%\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59654,7 +59650,7 @@ function GlancesPluginRaidController($scope, GlancesStats) {
 /* 100 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-raid/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-raid/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.hasDisks()\">\n    <div class=\"table-cell text-left title\">RAID disks</div>\n    <div class=\"table-cell\">Used</div>\n    <div class=\"table-cell\">Total</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"disk in vm.disks | orderBy:  'name'\">\n    <div class=\"table-cell text-left\">\n        {{ disk.type | uppercase }} {{ disk.name }}\n        <div class=\"warning\" ng-show=\"disk.degraded\">└─ Degraded mode</div>\n        <div ng-show=\"disk.degraded\"> &nbsp; &nbsp;└─ {{ disk.config }}</div>\n\n        <div class=\"critical\" ng-show=\"disk.inactive\">└─ Status {{ disk.status }}</div>\n        <div ng-show=\"disk.inactive\" ng-repeat=\"component in disk.components | orderBy:  'number'\">\n            &nbsp; &nbsp;{{ $last ? '└─' : '├─' }} disk {{ component.number }}: {{ component.name }}\n        </div>\n    </div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.used }}</div>\n    <div class=\"table-cell\" ng-show=\"!disk.inactive\" ng-class=\"vm.getAlert(disk)\">{{ disk.available }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59731,7 +59727,7 @@ function GlancesPluginSensorsController($scope, GlancesStats, GlancesPluginHelpe
 /* 103 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-sensors/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-sensors/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.sensors.length > 0\">\n    <div class=\"table-cell text-left title\">SENSORS</div>\n</div>\n\n<div class=\"table-row\" ng-repeat=\"sensor in vm.sensors\">\n    <div class=\"table-cell text-left\">{{ sensor.label }}</div>\n    <div class=\"table-cell\">{{ sensor.unit }}</div>\n    <div class=\"table-cell\" ng-class=\"vm.getAlert(sensor)\">{{ sensor.value }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59807,7 +59803,7 @@ function GlancesPluginSystemController($scope, GlancesStats) {
 /* 106 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-system/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-system/view.html';
 var html = "<section id=\"system\">\n    <span ng-if=\"vm.isDisconnected\" class=\"critical\">Disconnected from</span>\n    <span class=\"title\">{{ vm.hostname }}</span>\n    <span ng-if=\"vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.humanReadableName }} / {{ vm.os.name }} {{ vm.os.version }})</span>\n    <span ng-if=\"!vm.isLinux\" class=\"hidden-xs hidden-sm\">({{ vm.os.name }} {{ vm.os.version }} {{ vm.platform }})</span>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59864,7 +59860,7 @@ function GlancesPluginUptimeController($scope, GlancesStats) {
 /* 109 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-uptime/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-uptime/view.html';
 var html = "<section id=\"uptime\">\n    <span>Uptime: {{ vm.value }}</span>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
@@ -59951,7 +59947,7 @@ function GlancesPluginWifiController($scope, $filter, GlancesStats) {
 /* 112 */
 /***/ (function(module, exports) {
 
-var path = '/Users/floranbrutel/dev/glances/glances/outputs/static/js/components/plugin-wifi/view.html';
+var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-wifi/view.html';
 var html = "<div class=\"table-row\" ng-if=\"vm.hotspots.length > 0\">\n    <div class=\"table-cell text-left title\">WIFI</div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\">dBm</div>\n</div>\n<div class=\"table-row\" ng-repeat=\"hotspot in vm.hotspots\">\n    <div class=\"table-cell text-left\">{{ hotspot.ssid|limitTo:20 }} <span ng-if=\"hotspot.encrypted\">{{ hotspot.encryption_type }}</span>\n    </div>\n    <div class=\"table-cell\"></div>\n    <div class=\"table-cell\" ng-class=\"vm.getDecoration(hotspot, 'signal')\">{{ hotspot.signal }}</div>\n</div>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
