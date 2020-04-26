@@ -203,7 +203,7 @@ class Plugin(GlancesPlugin):
             else:
                 unit = 'C'
                 if args.fahrenheit:
-                    value = to_fahrenheit(i['value'])
+                    mean_temperature = to_fahrenheit(mean_temperature)
                     unit = 'F'
                 mean_temperature_msg = '{:>3.0f}{}'.format(mean_temperature,
                                                            unit)
