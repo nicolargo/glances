@@ -23,6 +23,7 @@
 import json
 import shlex
 import subprocess
+import sys
 import time
 import unittest
 
@@ -53,7 +54,7 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        cmdline = "python -m glances -s -p %s" % SERVER_PORT
+        cmdline = "%s -m glances -s -p %s" % (sys.executable, SERVER_PORT)
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
