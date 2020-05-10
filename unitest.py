@@ -81,7 +81,7 @@ class TestGlances(unittest.TestCase):
 
     def test_001_plugins(self):
         """Check mandatory plugins."""
-        plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs', 'irq']
+        plugins_to_check = ['system', 'cpu', 'load', 'mem', 'memswap', 'network', 'diskio', 'fs']
         print('INFO: [TEST_001] Check the mandatory plugins list: %s' % ', '.join(plugins_to_check))
         plugins_list = stats.getPluginsList()
         for plugin in plugins_to_check:
