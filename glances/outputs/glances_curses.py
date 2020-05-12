@@ -50,10 +50,13 @@ class _GlancesCurses(object):
     """
 
     _hotkeys = {
+        # 'ENTER' > Edit the process filter
         '0': {'switch': 'disable_irix'},
         '1': {'switch': 'percpu'},
         '2': {'switch': 'disable_left_sidebar'},
         '3': {'switch': 'disable_quicklook'},
+        # '4' > Enable or disable quicklook
+        # '5' > Enable or disable top menu
         '6': {'switch': 'meangpu'},
         '/': {'switch': 'process_short_name'},
         'a': {'sort_key': 'auto'},
@@ -64,6 +67,9 @@ class _GlancesCurses(object):
         'C': {'switch': 'disable_cloud'},
         'd': {'switch': 'disable_diskio'},
         'D': {'switch': 'disable_docker'},
+        # 'e' > Enable/Disable process extended
+        # 'E' > Erase the process filter
+        # 'f' > Show/hide fs / folder stats
         'F': {'switch': 'fs_free_space'},
         'g': {'switch': 'generate_graph'},
         'G': {'switch': 'disable_gpu'},
@@ -71,6 +77,7 @@ class _GlancesCurses(object):
         'i': {'sort_key': 'io_counters'},
         'I': {'switch': 'disable_ip'},
         'k': {'switch': 'disable_connections'},
+        # 'K' > Kill selected process
         'l': {'switch': 'disable_alert'},
         'm': {'sort_key': 'memory_percent'},
         'M': {'switch': 'reset_minmax_tag'},
@@ -78,6 +85,7 @@ class _GlancesCurses(object):
         'N': {'switch': 'disable_now'},
         'p': {'sort_key': 'name'},
         'P': {'switch': 'disable_ports'},
+        # 'q' or ESCAPE > Quit
         'Q': {'switch': 'enable_irq'},
         'r': {'switch': 'disable_smart'},
         'R': {'switch': 'disable_raid'},
@@ -87,7 +95,14 @@ class _GlancesCurses(object):
         'T': {'switch': 'network_sum'},
         'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
+        # 'w' > Delete finished warning logs
         'W': {'switch': 'disable_wifi'},
+        # 'x' > Delete finished warning and critical logs
+        # 'z' > Enable or disable processes
+        # "<" (left arrow) navigation through process sort
+        # ">" (right arrow) navigation through process sort
+        # 'UP' > Up in the server list
+        # 'DOWN' > Down in the server list    
     }
 
     _sort_loop = ['cpu_percent', 'memory_percent', 'username',
@@ -144,8 +159,14 @@ class _GlancesCurses(object):
         # Init edit filter tag
         self.edit_filter = False
 
+        # Init kill process tag
+        self.kill_process = False
+
         # Init the process min/max reset
         self.args.reset_minmax_tag = False
+
+        # Init cursor
+        self.args.cursor_position = 0
 
         # Catch key pressed with non blocking mode
         self.term_window.keypad(1)
@@ -188,6 +209,8 @@ class _GlancesCurses(object):
         try:
             if hasattr(curses, 'start_color'):
                 curses.start_color()
+                logger.debug(
+                    'Curses interface compatible with {} colors'.format(curses.COLORS))
             if hasattr(curses, 'use_default_colors'):
                 curses.use_default_colors()
         except Exception as e:
@@ -226,35 +249,35 @@ class _GlancesCurses(object):
             curses.init_pair(8, curses.COLOR_BLUE, -1)
 
             # Colors text styles
-            if curses.COLOR_PAIRS > 8:
-                try:
-                    curses.init_pair(9, curses.COLOR_MAGENTA, -1)
-                except Exception:
-                    if self.is_theme('white'):
-                        curses.init_pair(9, curses.COLOR_BLACK, -1)
-                    else:
-                        curses.init_pair(9, curses.COLOR_WHITE, -1)
-                try:
-                    curses.init_pair(10, curses.COLOR_CYAN, -1)
-                except Exception:
-                    if self.is_theme('white'):
-                        curses.init_pair(10, curses.COLOR_BLACK, -1)
-                    else:
-                        curses.init_pair(10, curses.COLOR_WHITE, -1)
-
-                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
-                self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
-                self.filter_color = curses.color_pair(10) | A_BOLD
-
             self.no_color = curses.color_pair(1)
             self.default_color = curses.color_pair(3) | A_BOLD
-            self.nice_color = curses.color_pair(9)
-            self.cpu_time_color = curses.color_pair(9)
+            self.nice_color = curses.color_pair(5)
+            self.cpu_time_color = curses.color_pair(5)
             self.ifCAREFUL_color = curses.color_pair(4) | A_BOLD
             self.ifWARNING_color = curses.color_pair(5) | A_BOLD
             self.ifCRITICAL_color = curses.color_pair(2) | A_BOLD
             self.default_color2 = curses.color_pair(7)
             self.ifCAREFUL_color2 = curses.color_pair(8) | A_BOLD
+            self.ifWARNING_color2 = curses.color_pair(5) | A_BOLD
+            self.ifCRITICAL_color2 = curses.color_pair(6) | A_BOLD
+            self.filter_color = A_BOLD
+            self.selected_color = A_BOLD
+
+            if curses.COLOR_PAIRS > 8:
+                colors_list = [curses.COLOR_MAGENTA, curses.COLOR_CYAN, curses.COLOR_YELLOW]
+                for i in range(0, 3):
+                    try:
+                        curses.init_pair(i + 9, colors_list[i], -1)
+                    except Exception:
+                        if self.is_theme('white'):
+                            curses.init_pair(i + 9, curses.COLOR_BLACK, -1)
+                        else:
+                            curses.init_pair(i + 9, curses.COLOR_WHITE, -1)
+                self.nice_color = curses.color_pair(9)
+                self.cpu_time_color = curses.color_pair(9)
+                self.ifWARNING_color2 = curses.color_pair(9) | A_BOLD
+                self.filter_color = curses.color_pair(10) | A_BOLD
+                self.selected_color = curses.color_pair(11) | A_BOLD
 
         else:
             # The screen is NOT compatible with a colored design
@@ -271,6 +294,7 @@ class _GlancesCurses(object):
             self.ifWARNING_color2 = A_BOLD
             self.ifCRITICAL_color2 = curses.A_REVERSE
             self.filter_color = A_BOLD
+            self.selected_color = A_BOLD
 
         # Define the colors list (hash table) for stats
         self.colors_list = {
@@ -293,7 +317,8 @@ class _GlancesCurses(object):
             'CAREFUL_LOG': self.ifCAREFUL_color,
             'WARNING_LOG': self.ifWARNING_color,
             'CRITICAL_LOG': self.ifCRITICAL_color,
-            'PASSWORD': curses.A_PROTECT
+            'PASSWORD': curses.A_PROTECT,
+            'SELECTED': self.selected_color
         }
 
     def set_cursor(self, value):
@@ -341,12 +366,14 @@ class _GlancesCurses(object):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('4'):
+            # '4' > Enable or disable quicklook
             self.args.full_quicklook = not self.args.full_quicklook
             if self.args.full_quicklook:
                 self.enable_fullquicklook()
             else:
                 self.disable_fullquicklook()
         elif self.pressedkey == ord('5'):
+            # '5' > Enable or disable top menu
             self.args.disable_top = not self.args.disable_top
             if self.args.disable_top:
                 self.disable_top()
@@ -366,6 +393,9 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
+        elif self.pressedkey == ord('K'):
+            # 'K' > Kill selected process (after confirmation)
+            self.kill_process = not self.kill_process
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
             glances_events.clean()
@@ -387,6 +417,14 @@ class _GlancesCurses(object):
             # ">" (right arrow) navigation through process sort
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
             glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+        elif self.pressedkey == curses.KEY_UP or self.pressedkey == 65:
+            # 'UP' > Up in the server list
+            if self.args.cursor_position > 0:
+                self.args.cursor_position -= 1
+        elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
+            # 'DOWN' > Down in the server list
+            if self.args.cursor_position < glances_processes.max_processes - 2:
+                self.args.cursor_position += 1
 
         # Return the key code
         return self.pressedkey
