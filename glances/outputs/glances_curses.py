@@ -636,6 +636,22 @@ class _GlancesCurses(object):
             self.display_popup('Process filter only available in standalone mode')
         self.edit_filter = False
 
+        # Display kill process confirmation popup
+        # Only in standalone mode (cs_status is None)
+        if self.kill_process and cs_status is None:
+            selected_process_raw = stats.get_plugin('processlist').get_raw()[
+                self.args.cursor_position]
+            confirm = self.display_popup(
+                'Kill process: {} (pid: {})\n\n Please confirm [Y]es / [N]o'.format(
+                    selected_process_raw['name'], 
+                    selected_process_raw['pid']), 
+                    is_input=True)
+        elif self.kill_process and cs_status is not None:
+            self.display_popup(
+                'Kill process only available in standalone mode')
+        self.kill_process = False
+
+
         # Display graph generation popup
         if self.args.generate_graph:
             self.display_popup('Generate graph in {}'.format(self.args.export_graph_path))
