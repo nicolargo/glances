@@ -18,3 +18,6 @@ There is no alert on this information.
 
 .. note::
     This plugin is disabled by default in the configuration file.
+    To enable it just use the following option:
+
+    # glances --enable-plugin sensors
