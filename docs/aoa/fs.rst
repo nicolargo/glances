@@ -40,8 +40,9 @@ Also, you can hide mount points as well (in the following ``/boot``):
 
 .. code-block:: ini
 
-[fs]
-hide=/boot.*
+    [fs]
+    hide=/boot.*
+
 Filtering can also be done on device name (Glances 3.1.4 or higher):
 
 .. code-block:: ini
