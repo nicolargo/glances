@@ -307,6 +307,7 @@ class _GlancesCurses(object):
             'FILTER': self.filter_color,
             'TITLE': self.title_color,
             'PROCESS': self.default_color2,
+            'PROCESS_SELECTED': self.default_color2 | curses.A_UNDERLINE,
             'STATUS': self.default_color2,
             'NICE': self.nice_color,
             'CPU_TIME': self.cpu_time_color,
