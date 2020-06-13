@@ -75,8 +75,8 @@ class Plugin(GlancesPlugin):
 
     # Define the stat layout of the processes list columns
     layout_stat = {
-        'cpu': '{:<6.1f} ',
-        'cpu_no_digit': '{:<6.0f} ',
+        'cpu': '{:<6.1f}',
+        'cpu_no_digit': '{:<6.0f}',
         'mem': '{:<5.1f} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -180,7 +180,9 @@ class Plugin(GlancesPlugin):
         - selected is a tag=True if the selected process
         """
         ret = [self.curse_new_line()]
-        # Selected or not selected, that the question...
+        # When a process is selected:
+        # * display a special caracter at the beginning of the line
+        # * underline the command name
         ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
@@ -326,21 +328,24 @@ class Plugin(GlancesPlugin):
         else:
             cmdline = '?'
         try:
+            process_decoration = 'PROCESS_SELECTED' if selected else 'PROCESS'
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
+                    ret.append(self.curse_add_line(
+                        cmd, decoration=process_decoration, splittable=True))
                 else:
                     msg = self.layout_stat['command'].format(cmd)
-                    ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
+                    ret.append(self.curse_add_line(
+                        msg, decoration=process_decoration, splittable=True))
                 if arguments:
                     msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['name'].format(p['name'])
-                ret.append(self.curse_add_line(msg, splittable=True))
+                ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
             # Avoid crach after running fine for several hours #1335
             logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
