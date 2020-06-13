@@ -356,13 +356,7 @@ class _GlancesCurses(object):
                                                self._hotkeys[hotkey]['sort_key'] == 'auto')
 
         # Other actions...
-        if self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
-            # 'ESC'|'q' > Quit
-            if return_to_browser:
-                logger.info("Stop Glances client and return to the browser")
-            else:
-                logger.info("Stop Glances (keypressed: {})".format(self.pressedkey))
-        elif self.pressedkey == ord('\n'):
+        if self.pressedkey == ord('\n'):
             # 'ENTER' > Edit the process filter
             self.edit_filter = not self.edit_filter
         elif self.pressedkey == ord('4'):
@@ -425,6 +419,14 @@ class _GlancesCurses(object):
             # 'DOWN' > Down in the server list
             if self.args.cursor_position < glances_processes.max_processes - 2:
                 self.args.cursor_position += 1
+        elif self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
+            # 'ESC'|'q' > Quit
+            if return_to_browser:
+                logger.info("Stop Glances client and return to the browser")
+            else:
+                logger.info(
+                    "Stop Glances (keypressed: {})".format(self.pressedkey))
+
 
         # Return the key code
         return self.pressedkey
@@ -629,7 +631,7 @@ class _GlancesCurses(object):
                 '- cmdline:.*glances.*\n' +
                 '- username:nicolargo\n' +
                 '- username:^root        ',
-                is_input=True,
+                popup_type='input',
                 input_value=glances_processes.process_filter_input)
             glances_processes.process_filter = new_filter
         elif self.edit_filter and cs_status is not None:
@@ -642,10 +644,20 @@ class _GlancesCurses(object):
             selected_process_raw = stats.get_plugin('processlist').get_raw()[
                 self.args.cursor_position]
             confirm = self.display_popup(
-                'Kill process: {} (pid: {})\n\n Please confirm [Y]es / [N]o'.format(
+                'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
                     selected_process_raw['name'], 
                     selected_process_raw['pid']), 
-                    is_input=True)
+                    popup_type='yesno')
+            if confirm.lower().startswith('y'):
+                try:
+                    ret_kill = glances_processes.kill(selected_process_raw['pid'])
+                except Exception as e:
+                    logger.error('Can not kill process {} ({})'.format(
+                        selected_process_raw['name'], e))
+                else:
+                    logger.info('Kill signal has been sent to process {} (return code: {})'.format(
+                        selected_process_raw['name'], ret_kill))
+
         elif self.kill_process and cs_status is not None:
             self.display_popup(
                 'Kill process only available in standalone mode')
@@ -807,30 +819,37 @@ class _GlancesCurses(object):
     def display_popup(self, message,
                       size_x=None, size_y=None,
                       duration=3,
-                      is_input=False,
+                      popup_type='info',
                       input_size=30,
                       input_value=None):
         """
         Display a centered popup.
 
-        If is_input is False:
+        popup_type='info'
+         Just an infotmation popup, no user interaction
          Display a centered popup with the given message during duration seconds
          If size_x and size_y: set the popup size
          else set it automatically
          Return True if the popup could be displayed
 
-        If is_input is True:
+        popup_type='input'
          Display a centered popup with the given message and a input field
          If size_x and size_y: set the popup size
          else set it automatically
          Return the input string or None if the field is empty
+
+        popup_type='yesno'
+         Display a centered popup with the given message
+         If size_x and size_y: set the popup size
+         else set it automatically
+         Return True (yes) or False (no)
         """
         # Center the popup
         sentence_list = message.split('\n')
         if size_x is None:
             size_x = len(max(sentence_list, key=len)) + 4
             # Add space for the input field
-            if is_input:
+            if popup_type == 'input':
                 size_x += input_size
         if size_y is None:
             size_y = len(sentence_list) + 4
@@ -849,10 +868,15 @@ class _GlancesCurses(object):
         popup.border()
 
         # Add the message
-        for y, m in enumerate(message.split('\n')):
+        for y, m in enumerate(sentence_list):
             popup.addnstr(2 + y, 2, m, len(m))
 
-        if is_input:
+        if popup_type == 'info':
+            # Display the popup
+            popup.refresh()
+            self.wait(duration * 1000)
+            return True
+        elif popup_type == 'input':
             # Create a subwindow for the text field
             subpop = popup.derwin(1, input_size, 2, 2 + len(m))
             subpop.attron(self.colors_list['FILTER'])
@@ -868,7 +892,7 @@ class _GlancesCurses(object):
             textbox = GlancesTextbox(subpop, insert_mode=False)
             textbox.edit()
             self.set_cursor(0)
-            self.term_window.keypad(0)
+            # self.term_window.keypad(0)
             if textbox.gather() != '':
                 logger.debug(
                     "User enters the following string: %s" % textbox.gather())
@@ -876,11 +900,23 @@ class _GlancesCurses(object):
             else:
                 logger.debug("User centers an empty string")
                 return None
-        else:
+        elif popup_type == 'yesno':
+            # # Create a subwindow for the text field
+            subpop = popup.derwin(1, 2, len(sentence_list) + 1, len(m) + 2)
+            subpop.attron(self.colors_list['FILTER'])
+            # Init the field with the current value
+            subpop.addnstr(0, 0, '', 0)
             # Display the popup
             popup.refresh()
-            self.wait(duration * 1000)
-            return True
+            subpop.refresh()
+            # Create the textbox inside the subwindows
+            self.set_cursor(2)
+            self.term_window.keypad(1)
+            textbox = GlancesTextboxYesNo(subpop, insert_mode=False)
+            textbox.edit()
+            self.set_cursor(0)
+            # self.term_window.keypad(0)
+            return textbox.gather()
 
     def display_plugin(self, plugin_stats,
                        display_optional=True,
@@ -1099,3 +1135,12 @@ class GlancesTextbox(Textbox, object):
         if ch == 127:  # Back
             return 8
         return super(GlancesTextbox, self).do_command(ch)
+
+
+class GlancesTextboxYesNo(Textbox, object):
+
+    def __init__(self, *args, **kwargs):
+        super(GlancesTextboxYesNo, self).__init__(*args, **kwargs)
+
+    def do_command(self, ch):
+        return super(GlancesTextboxYesNo, self).do_command(ch)
