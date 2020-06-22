@@ -16,7 +16,9 @@ then add the ``_action`` line to the Glances configuration file:
     critical_action=python /path/to/foo.py
 
 All the stats are available in the command line through the use of the
-`{{mustache}}`_ syntax. Another example would be to create a log file
+`{{mustache}}`_ syntax. `Pystache`_ is required to render the mustache's template syntax.
+
+Another example would be to create a log file
 containing used vs total disk space if a space trigger warning is
 reached:
 
@@ -72,3 +74,4 @@ use with caution:
     critical_action_repeat=/home/myhome/bin/bipper.sh
 
 .. _{{mustache}}: https://mustache.github.io/
+.. _Pystache: https://github.com/defunkt/pystache
