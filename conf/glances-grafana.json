@@ -141,8 +141,8 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.load",
-          "query": "SELECT mean(\"cpucore\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval)",
+          "measurement": "$host.load",
+          "query": "SELECT mean(\"cpucore\") FROM \"$host.load\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -246,10 +246,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.load",
+          "measurement": "$host.load",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min1\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"min1\") FROM \"$host.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -289,10 +289,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.load",
+          "measurement": "$host.load",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min5\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"min5\") FROM \"$host.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -332,10 +332,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.load",
+          "measurement": "$host.load",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"min15\") FROM \"localhost.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"min15\") FROM \"$host.load\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -467,10 +467,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.processcount",
+          "measurement": "$host.processcount",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"total\") FROM \"localhost.processcount\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "SELECT mean(\"total\") FROM \"$host.processcount\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -563,10 +563,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"user\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -605,10 +605,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"system\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -648,10 +648,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"iowait\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -761,10 +761,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.mem",
+          "measurement": "$host.mem",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"used\") FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"used\") FROM \"$host.mem\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -798,10 +798,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.mem",
+          "measurement": "$host.mem",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"total\") FROM \"localhost.mem\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"total\") FROM \"$host.mem\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -922,10 +922,10 @@
             }
           ],
           "interval": "",
-          "measurement": "localhost.network",
+          "measurement": "$host.network",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$interface.rx\")/mean(\"$interface.time_since_update\")*8 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
+          "query": "SELECT mean(\"$interface.rx\")/mean(\"$interface.time_since_update\")*8 FROM \"$host.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -965,10 +965,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.network",
+          "measurement": "$host.network",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$interface.tx\")/mean(\"$interface.time_since_update\")*8*-1 FROM \"localhost.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
+          "query": "SELECT mean(\"$interface.tx\")/mean(\"$interface.time_since_update\")*8*-1 FROM \"$host.network\" WHERE $timeFilter GROUP BY time($interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1080,10 +1080,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.memswap",
+          "measurement": "$host.memswap",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"used\") FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"used\") FROM \"$host.memswap\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1117,10 +1117,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.memswap",
+          "measurement": "$host.memswap",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"total\") FROM \"localhost.memswap\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"total\") FROM \"$host.memswap\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1240,10 +1240,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.diskio",
+          "measurement": "$host.diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$disk.read_bytes\")/mean(\"$disk.time_since_update\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$disk.read_bytes\")/mean(\"$disk.time_since_update\") FROM \"$host.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1283,10 +1283,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.diskio",
+          "measurement": "$host.diskio",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$disk.write_bytes\")/mean(\"$disk.time_since_update\") FROM \"localhost.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$disk.write_bytes\")/mean(\"$disk.time_since_update\") FROM \"$host.diskio\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1408,10 +1408,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.fs",
+          "measurement": "$host.fs",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.used\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"/.used\") FROM \"$host.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1450,10 +1450,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.fs",
+          "measurement": "$host.fs",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/.size\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
+          "query": "SELECT mean(\"/.size\") FROM \"$host.fs\" WHERE $timeFilter GROUP BY time($interval) fill(null)",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1583,8 +1583,8 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.fs",
-          "query": "SELECT mean(\"/.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+          "measurement": "$host.fs",
+          "query": "SELECT mean(\"/.percent\") FROM \"$host.fs\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1692,10 +1692,10 @@
               "type": "time"
             }
           ],
-          "measurement": "localhost.fs",
+          "measurement": "$host.fs",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"/boot/efi.percent\") FROM \"localhost.fs\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "SELECT mean(\"/boot/efi.percent\") FROM \"$host.fs\" WHERE $timeFilter GROUP BY time($interval)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1750,7 +1750,7 @@
       "aliasColors": {
         "CPU%": "#cca300",
         "MEM": "#2f575e",
-        "localhost.docker.mean": "#ba43a9"
+        "$host.docker.mean": "#ba43a9"
       },
       "bars": false,
       "dashLength": 10,
@@ -1785,7 +1785,7 @@
       "repeatDirection": "v",
       "seriesOverrides": [
         {
-          "alias": "localhost.docker.mean",
+          "alias": "$host.docker.mean",
           "fill": 0
         },
         {
@@ -1820,10 +1820,10 @@
             }
           ],
           "hide": false,
-          "measurement": "localhost.docker",
+          "measurement": "$host.docker",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$container.cpu_percent\") FROM \"localhost.docker\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$container.cpu_percent\") FROM \"$host.docker\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1861,7 +1861,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"$container.memory_usage\") FROM \"localhost.docker\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"$container.memory_usage\") FROM \"$host.docker\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -2011,10 +2011,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"user\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -2055,10 +2055,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT min(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT min(\"user\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -2100,10 +2100,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT max(\"user\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT max(\"user\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -2237,10 +2237,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"system\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -2281,10 +2281,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT min(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT min(\"system\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -2326,10 +2326,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT max(\"system\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT max(\"system\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -2465,10 +2465,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT mean(\"iowait\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -2509,10 +2509,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT min(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT min(\"iowait\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "B",
           "resultFormat": "time_series",
@@ -2554,10 +2554,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT max(\"iowait\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT max(\"iowait\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
@@ -2678,10 +2678,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "SELECT mean(\"ctx_switches\") / mean(\"time_since_update\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($interval)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -2801,10 +2801,10 @@
             }
           ],
           "interval": "60s",
-          "measurement": "localhost.cpu",
+          "measurement": "$host.cpu",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"interrupts\") / mean(\"time_since_update\") FROM \"localhost.cpu\" WHERE $timeFilter GROUP BY time($interval)",
+          "query": "SELECT mean(\"interrupts\") / mean(\"time_since_update\") FROM \"$host.cpu\" WHERE $timeFilter GROUP BY time($interval)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -2920,7 +2920,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.sensors",
+          "measurement": "$host.sensors",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -3010,7 +3010,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "localhost.sensors",
+          "measurement": "$host.sensors",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
