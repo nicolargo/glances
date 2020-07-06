@@ -44,6 +44,7 @@ class Export(GlancesExport):
         self.user = None
         self.password = None
         self.queue = None
+        self.protocol = 'amqp'
 
         # Optionals configuration keys
         # N/A
@@ -53,7 +54,7 @@ class Export(GlancesExport):
                                             mandatories=['host', 'port',
                                                          'user', 'password',
                                                          'queue'],
-                                            options=[])
+                                            options=['protocol'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -69,7 +70,8 @@ class Export(GlancesExport):
             return None
         try:
             parameters = pika.URLParameters(
-                'amqp://' + self.user +
+                self.protocol +
+                '://' + self.user +
                 ':' + self.password +
                 '@' + self.host +
                 ':' + self.port + '/')
