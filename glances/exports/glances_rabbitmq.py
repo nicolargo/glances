@@ -44,7 +44,7 @@ class Export(GlancesExport):
         self.user = None
         self.password = None
         self.queue = None
-        self.protocol = 'amqp'
+        self.protocol = None
 
         # Optionals configuration keys
         # N/A
@@ -68,6 +68,14 @@ class Export(GlancesExport):
         """Init the connection to the rabbitmq server."""
         if not self.export_enable:
             return None
+
+        # Needed for when protocol is not specified and when protocol is upper case
+        # only amqp and amqps supported
+        if self.protocol is not None and (self.protocol.lower() == 'amqps'):
+            self.protocol = 'amqps'
+        else:
+            self.protocol = 'amqp'
+
         try:
             parameters = pika.URLParameters(
                 self.protocol +
