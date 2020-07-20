@@ -70,7 +70,7 @@ class Plugin(GlancesPlugin):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
-        'command': '{}',
+        'command': '{} {}',
     }
 
     # Define the stat layout of the processes list columns
@@ -183,7 +183,8 @@ class Plugin(GlancesPlugin):
         # When a process is selected:
         # * display a special caracter at the beginning of the line
         # * underline the command name
-        ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
+        if args.is_standalone:
+            ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
             cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
@@ -328,7 +329,7 @@ class Plugin(GlancesPlugin):
         else:
             cmdline = '?'
         try:
-            process_decoration = 'PROCESS_SELECTED' if selected else 'PROCESS'
+            process_decoration = 'PROCESS_SELECTED' if (selected and args.is_standalone) else 'PROCESS'
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
@@ -490,7 +491,8 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = self.layout_header['iow'].format('W/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = self.layout_header['command'].format('Command')
+        msg = self.layout_header['command'].format('Command',
+                                                   "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):
