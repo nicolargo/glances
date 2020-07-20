@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -14,8 +14,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Lesser General Public License
 
 """Quicklook plugin."""
 
@@ -92,7 +92,11 @@ class Plugin(GlancesPlugin):
             cpu_info = cpuinfo.get_cpu_info()
             #  Check cpu_info (issue #881)
             if cpu_info is not None:
-                stats['cpu_name'] = cpu_info.get('brand', 'CPU')
+                # Use brand_raw if the key exist (issue #1685)
+                if cpu_info.get('brand_raw') is not None:
+                    stats['cpu_name'] = cpu_info.get('brand_raw', 'CPU')
+                else:
+                    stats['cpu_name'] = cpu_info.get('brand', 'CPU')
                 if 'hz_actual_raw' in cpu_info:
                     stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
                 if 'hz_advertised_raw' in cpu_info:
