@@ -128,6 +128,9 @@ The extended stats feature can be enabled using the
 ``--enable-process-extended`` option (command line) or the ``e`` key
 (curses interface).
 
+In curses/standalone mode, you can select a process using ``UP`` and ``DOWN`` and press:
+- ``k`` to kill the selected process 
+
 .. note::
     Limit for CPU and MEM percent values can be overwritten in the
     configuration file under the ``[processlist]`` section. It is also

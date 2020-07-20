@@ -76,8 +76,8 @@ class _GlancesCurses(object):
         'h': {'switch': 'help_tag'},
         'i': {'sort_key': 'io_counters'},
         'I': {'switch': 'disable_ip'},
-        'k': {'switch': 'disable_connections'},
-        # 'K' > Kill selected process
+        # 'k' > Kill selected process
+        'K': {'switch': 'disable_connections'},
         'l': {'switch': 'disable_alert'},
         'm': {'sort_key': 'memory_percent'},
         'M': {'switch': 'reset_minmax_tag'},
@@ -388,8 +388,8 @@ class _GlancesCurses(object):
             # 'f' > Show/hide fs / folder stats
             self.args.disable_fs = not self.args.disable_fs
             self.args.disable_folders = not self.args.disable_folders
-        elif self.pressedkey == ord('K'):
-            # 'K' > Kill selected process (after confirmation)
+        elif self.pressedkey == ord('k'):
+            # 'k' > Kill selected process (after confirmation)
             self.kill_process = not self.kill_process
         elif self.pressedkey == ord('w'):
             # 'w' > Delete finished warning logs
