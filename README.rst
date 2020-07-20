@@ -282,7 +282,7 @@ Start Termux on your device and enter:
 
     $ apt update
     $ apt upgrade
-    $ apt install clang python python-dev
+    $ apt install clang python
     $ pip install bottle
     $ pip install glances
 
