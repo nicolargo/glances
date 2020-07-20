@@ -177,6 +177,11 @@ class GlancesProcesses(object):
             return None
 
     @property
+    def processes_count(self):
+        """Get the current number of processes showed in the UI."""
+        return min(self._max_processes - 2, glances_processes.processcount['total'] - 1)
+
+    @property
     def max_processes(self):
         """Get the maximum number of processes showed in the UI."""
         return self._max_processes

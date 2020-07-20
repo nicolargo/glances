@@ -418,7 +418,8 @@ class _GlancesCurses(object):
                 self.args.cursor_position -= 1
         elif self.pressedkey == curses.KEY_DOWN or self.pressedkey == 66:
             # 'DOWN' > Down in the server list
-            if self.args.cursor_position < glances_processes.max_processes - 2:
+            # if self.args.cursor_position < glances_processes.max_processes - 2:
+            if self.args.cursor_position < glances_processes.processes_count:
                 self.args.cursor_position += 1
         elif self.pressedkey == ord('\x1b') or self.pressedkey == ord('q'):
             # 'ESC'|'q' > Quit
