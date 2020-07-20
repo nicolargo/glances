@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "May 12, 2020" "3.1.5_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Jul 20, 2020" "3.1.5_DEVELOP" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -395,6 +395,9 @@ Sort processes by I/O rate
 Show/hide IP module
 .TP
 .B \fBk\fP
+Kill selected process (only in curses/standalone mode)
+.TP
+.B \fBK\fP
 Show/hide TCP connections
 .TP
 .B \fBl\fP
@@ -479,6 +482,12 @@ Enable/disable mean GPU mode
 .TP
 .B \fB/\fP
 Switch between process command line or command name
+.TP
+.B \fBUP\fP
+Up in the processes list
+.TP
+.B \fBDOWN\fP
+Down in the processes list
 .UNINDENT
 .sp
 In the Glances client browser (accessible through the \fB\-\-browser\fP
