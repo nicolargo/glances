@@ -5,7 +5,7 @@
 #
 
 # Pull base image.
-FROM ubuntu
+FROM ubuntu:20.04
 
 # Install Glances (develop branch)
 RUN apt-get update && apt-get -y install curl iputils-ping && rm -rf /var/lib/apt/lists/*
