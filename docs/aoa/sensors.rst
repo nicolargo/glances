@@ -7,7 +7,7 @@ Sensors
 
 .. image:: ../_static/sensors.png
 
-Glances can displays the sensors information using ``psutil`` and/or
+Glances can display the sensors information using ``psutil`` and/or
 ``hddtemp``.
 
 There is no alert on this information.
