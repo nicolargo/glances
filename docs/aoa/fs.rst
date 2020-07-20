@@ -8,18 +8,18 @@ File System
 Glances displays the used and total file system disk space. The unit is
 adapted dynamically.
 
-Alerts are set for used disk space.
+Alerts are set for `user disk space usage <https://psutil.readthedocs.io/en/latest/index.html?highlight=disk%20usage#psutil.disk_usage>`_.
 
 Legend:
 
-=========== ============
-Disk usage  Status
-=========== ============
-``<50%``    ``OK``
-``>50%``    ``CAREFUL``
-``>70%``    ``WARNING``
-``>90%``    ``CRITICAL``
-=========== ============
+===================== ============
+User disk space usage Status
+===================== ============
+``<50%``              ``OK``
+``>50%``              ``CAREFUL``
+``>70%``              ``WARNING``
+``>90%``              ``CRITICAL``
+===================== ============
 
 .. note::
     Limit values can be overwritten in the configuration file under
