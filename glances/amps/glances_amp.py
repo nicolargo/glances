@@ -99,12 +99,11 @@ class GlancesAmp(object):
             logger.debug("AMP - {}: Can not find section {} in the configuration file".format(self.NAME, self.amp_name))
             return False
 
-        # enable, regex and refresh are mandatories
-        # if not configured then AMP is disabled
         if self.enable():
-            for k in ['regex', 'refresh']:
+            # Refresh option is mandatory
+            for k in ['refresh']:
                 if k not in self.configs:
-                    logger.warning("AMP - {}: Can not find configuration key {} in section {}".format(self.NAME, k, self.amp_name))
+                    logger.warning("AMP - {}: Can not find configuration key {} in section {} (the AMP will be disabled)".format(self.NAME, k, self.amp_name))
                     self.configs['enable'] = 'false'
         else:
             logger.debug("AMP - {} is disabled".format(self.NAME))

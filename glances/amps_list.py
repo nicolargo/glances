@@ -112,6 +112,14 @@ class AmpsList(object):
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
+            
+            if v.regex() is None:
+                # If there is no regex, execute anyway (see issue #1690)
+                v.set_count(0)
+                # Call the AMP update method
+                thread = threading.Thread(target=v.update_wrapper, args=[[]])
+                thread.start()
+                continue
 
             amps_list = self._build_amps_list(v, processlist)
 
