@@ -319,9 +319,8 @@ class Plugin(GlancesPlugin):
         ret = {}
         # Read the stats
         try:
-            # Do not exist anymore with Docker 1.11 (issue #848)
-            # ret['rss'] = all_stats['memory_stats']['stats']['rss']
-            # ret['cache'] = all_stats['memory_stats']['stats']['cache']
+            ret['rss'] = all_stats['memory_stats']['stats']['rss']
+            ret['cache'] = all_stats['memory_stats']['stats']['cache']
             ret['usage'] = all_stats['memory_stats']['usage']
             ret['limit'] = all_stats['memory_stats']['limit']
             ret['max_usage'] = all_stats['memory_stats']['max_usage']
