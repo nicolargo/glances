@@ -7,6 +7,7 @@
             <div class="table-cell">Status</div>
             <div class="table-cell">CPU%</div>
             <div class="table-cell">MEM</div>
+            <div class="table-cell">RSS</div>
             <div class="table-cell">IOR/s</div>
             <div class="table-cell">IOW/s</div>
             <div class="table-cell">RX/s</div>
@@ -19,6 +20,7 @@
             </div>
             <div class="table-cell">{{ container.cpu | number:1 }}</div>
             <div class="table-cell">{{ container.memory | bytes }}</div>
+            <div class="table-cell">{{ container.rss | bytes }}</div>
             <div class="table-cell">{{ container.ior / container.io_time_since_update | bits }}</div>
             <div class="table-cell">{{ container.iow / container.io_time_since_update | bits }}</div>
             <div class="table-cell">{{ container.rx / container.net_time_since_update | bits }}</div>

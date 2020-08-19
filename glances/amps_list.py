@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -112,6 +112,14 @@ class AmpsList(object):
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
+            
+            if v.regex() is None:
+                # If there is no regex, execute anyway (see issue #1690)
+                v.set_count(0)
+                # Call the AMP update method
+                thread = threading.Thread(target=v.update_wrapper, args=[[]])
+                thread.start()
+                continue
 
             amps_list = self._build_amps_list(v, processlist)
 
@@ -145,6 +153,9 @@ class AmpsList(object):
                 if (re.search(amp_value.regex(), p['name']) is not None):
                     add_it = True
                 else:
+                    if p['cmdline'] is None:
+                        # See issue #1689 (thanks to @darylkell)
+                        continue
                     for c in p['cmdline']:
                         if (re.search(amp_value.regex(), c) is not None):
                             add_it = True

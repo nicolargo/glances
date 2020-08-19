@@ -961,12 +961,16 @@ class _GlancesCurses(object):
         y = display_y
         for m in plugin_stats['msgdict']:
             # New line
-            if m['msg'].startswith('\n'):
-                # Go to the next line
-                y += 1
-                # Return to the first column
-                x = display_x
-                continue
+            try:
+                if m['msg'].startswith('\n'):
+                    # Go to the next line
+                    y += 1
+                    # Return to the first column
+                    x = display_x
+                    continue
+            except:
+                # Avoid exception (see issue #1692)
+                pass
             # Do not display outside the screen
             if x < 0:
                 continue

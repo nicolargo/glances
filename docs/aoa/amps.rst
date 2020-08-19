@@ -49,6 +49,20 @@ less than countmin):
 
 .. image:: ../_static/amp-python-warning.png
 
+If the regex option is not defined, the AMP will be executed every refresh
+time and the process count will not be displayed (countmin and countmax will 
+be ignored).
+
+For example:
+
+.. code-block:: ini
+
+    [amp_conntrack]
+    enable=false
+    refresh=30
+    one_line=false
+    command=sysctl net.netfilter.nf_conntrack_count;sysctl net.netfilter.nf_conntrack_max
+
 User defined AMP
 ----------------
 
