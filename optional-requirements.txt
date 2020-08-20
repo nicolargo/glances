@@ -12,7 +12,7 @@ paho-mqtt
 pika
 potsdb
 prometheus_client
-py-cpuinfo==0.2.3
+py-cpuinfo<=4.0.0
 pygal
 pymdstat
 pysnmp
