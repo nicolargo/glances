@@ -3,25 +3,25 @@
 #
 # https://github.com/nicolargo/glances
 #
+# Thanks to @Overbryd for the Dockerfile
+# Source: https://github.com/nicolargo/glances/issues/1419#issuecomment-677644194
+#
 
-# Pull base image.
-FROM python:2.7-alpine
+FROM python:3.8-slim-buster
 
-# Install Glances (develop branch)
-RUN apk add --no-cache --virtual .build_deps \
-	gcc \
-	musl-dev \
-	linux-headers \
-	git \
-	&& git clone -b develop https://github.com/nicolargo/glances.git \
-	&& pip install --no-cache-dir -r glances/requirements.txt bottle \
-	&& apk del .build_deps
+RUN apt-get update \
+  && apt-get install -y \
+    gcc \
+    python3-dev 
 
-# Define working directory.
+ARG GLANCES_VERSION=3.1.5
+
+RUN pip install \
+      glances[web,ip,folders,docker,cpuinfo,action]==${GLANCES_VERSION}
+
 WORKDIR /glances
 
-# EXPOSE PORT (For Web UI & XMLRPC)
-EXPOSE 61208 61209
+# expose xmlrpc & webui
+EXPOSE 61209 61208
 
-# Define default command.
 CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
