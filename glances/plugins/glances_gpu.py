@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2018 Kirby Banman <kirby.banman@gmail.com>
+# Copyright (C) 2020 Kirby Banman <kirby.banman@gmail.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -226,11 +226,11 @@ class Plugin(GlancesPlugin):
                 id_msg = '{}'.format(gpu_stats['gpu_id'])
                 try:
                     proc_msg = '{:>3.0f}%'.format(gpu_stats['proc'])
-                except ValueError:
+                except (ValueError, TypeError):
                     proc_msg = '{:>4}'.format('N/A')
                 try:
                     mem_msg = '{:>3.0f}%'.format(gpu_stats['mem'])
-                except ValueError:
+                except (ValueError, TypeError):
                     mem_msg = '{:>4}'.format('N/A')
                 msg = '{}: {} mem: {}'.format(id_msg,
                                               proc_msg,
