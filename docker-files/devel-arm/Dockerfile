@@ -14,10 +14,8 @@ RUN apt-get update \
     gcc \
     python3-dev 
 
-ARG GLANCES_VERSION=3.1.5
-
 RUN pip install \
-      glances[web,ip,folders,docker,cpuinfo,action]==${GLANCES_VERSION}
+      glances[web,ip,folders,docker,cpuinfo,action]
 
 WORKDIR /glances
 
