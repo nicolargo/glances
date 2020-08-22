@@ -99,8 +99,12 @@ class Plugin(GlancesPlugin):
                     stats['cpu_name'] = cpu_info.get('brand', 'CPU')
                 if 'hz_actual_raw' in cpu_info:
                     stats['cpu_hz_current'] = cpu_info['hz_actual_raw'][0]
+                elif 'hz_actual' in cpu_info:
+                    stats['cpu_hz_current'] = cpu_info['hz_actual'][0]
                 if 'hz_advertised_raw' in cpu_info:
                     stats['cpu_hz'] = cpu_info['hz_advertised_raw'][0]
+                elif 'hz_advertised' in cpu_info:
+                    stats['cpu_hz'] = cpu_info['hz_advertised'][0]
 
         # Update the stats
         self.stats = stats
