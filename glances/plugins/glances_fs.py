@@ -103,8 +103,6 @@ class Plugin(GlancesPlugin):
                 return self.stats
 
             # Optionnal hack to allow logicals mounts points (issue #448)
-            # Ex: Had to put 'allow=zfs' in the [fs] section of the conf file
-            #     to allow zfs monitoring
             for fstype in self.get_conf_value('allow'):
                 try:
                     fs_stat += [f for f in psutil.disk_partitions(all=True) if f.fstype.find(fstype) >= 0]
