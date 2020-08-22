@@ -32,7 +32,7 @@ deploy:
       branch: master
       distributions: sdist bdist_wheel
       repo: nicolargo/glances
-  - provider: testpypi
+  - provider: pypi
     server: https://test.pypi.org/legacy/
     user: nicolargo
     password:
