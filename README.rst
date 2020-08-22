@@ -161,6 +161,13 @@ If you need to install Glances in a specific user location, use:
     export PYTHONUSERBASE=~/mylocalpath
     pip install --user glances
 
+The current develop branch is also published to the test.pypi.org package index.
+If you want to test the develop version, enter:
+
+.. code-block:: console
+
+    pip install -i https://test.pypi.org/simple/ Glances
+
 Docker: the funny way
 ---------------------
 

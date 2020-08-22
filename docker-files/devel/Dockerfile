@@ -1,5 +1,5 @@
 #
-# Glances Dockerfile based on Ubuntu OS
+# Glances Dockerfile (based on Ubuntu)
 #
 # https://github.com/nicolargo/glances
 #
@@ -7,10 +7,28 @@
 # Pull base image.
 FROM ubuntu:20.04
 
-# Install Glances (develop branch)
-RUN apt-get update && apt-get -y install curl iputils-ping && rm -rf /var/lib/apt/lists/*
-RUN curl -L https://raw.githubusercontent.com/nicolargo/glancesautoinstall/master/install-develop.sh | /bin/bash && rm -rf /var/lib/apt/lists/*
 
+# Install package
+# Must used calibre package to be able to run external module
+ENV DEBIAN_FRONTEND noninteractive
+RUN \
+  apt-get update           && \
+  apt-get install -y          \
+            curl              \
+            gcc               \
+            lm-sensors        \
+            wireless-tools    \
+            iputils-ping      \
+            python3-pip       \
+            python3-dev    && \
+  rm -rf /var/lib/apt/lists/*
+
+## Instal glances
+RUN \
+  pip3 install --upgrade pip                                                                                 && \
+  pip3 install setuptools                                                                                    && \
+  pip3 install glances[action,batinfo,browser,cpuinfo,docker,export,folders,gpu,graph,ip,raid,snmp,web,wifi] && \
+  pip3 install --upgrade -i https://test.pypi.org/simple/ Glances
 
 # Define working directory.
 WORKDIR /glances
@@ -22,4 +40,4 @@ EXPOSE 61209
 EXPOSE 61208
 
 # Define default command.
-CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
