@@ -8,8 +8,7 @@
 FROM alpine
 
 # Install Glances (develop branch)
-RUN apk add python py3-psutil py3-bottle
-RUN apk add git
+RUN apk add python3 py3-psutil py3-bottle git
 RUN git clone -b develop https://github.com/nicolargo/glances.git
 
 # Define working directory.
