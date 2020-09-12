@@ -20,6 +20,9 @@ under the ``[docker]`` section:
 .. code-block:: ini
 
     [docker]
+    disable=False
+    # Define the maximum docker size name (default is 20 chars)
+    max_name_size=20
     # Global containers' thresholds for CPU and MEM (in %)
     cpu_careful=50
     cpu_warning=70
