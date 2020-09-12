@@ -77,7 +77,7 @@ angular-hotkeys@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/angular-hotkeys/-/angular-hotkeys-1.7.0.tgz#052e6b6f44dfcd824427798b7f10e1917e8700a1"
 
-angular@^1.7.9:
+angular@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/angular/-/angular-1.8.0.tgz#b1ec179887869215cab6dfd0df2e42caa65b1b51"
 
