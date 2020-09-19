@@ -22,7 +22,7 @@
 import time
 
 from glances.logger import logger
-from glances.compat import printandflush
+from glances.compat import printandflush, get_stat_from_path
 
 
 class GlancesStdout(object):
@@ -36,48 +36,21 @@ class GlancesStdout(object):
         self.config = config
         self.args = args
 
-        # Build the list of plugin and/or plugin.attribute to display
-        self.plugins_list = self.build_list()
-
-    def build_list(self):
-        """Return a list of tuples taken from self.args.stdout
-        [(plugin, attribute), ... ]"""
-        ret = []
-        for p in self.args.stdout.split(','):
-            if '.' in p:
-                p, a = p.split('.')
-            else:
-                a = None
-            ret.append((p, a))
-        return ret
-
     def end(self):
         pass
 
-    def update(self,
-               stats,
-               duration=3):
-        """Display stats to stdout.
-        Refresh every duration second.
-        """
-        for plugin, attribute in self.plugins_list:
-            # Check if the plugin exist and is enable
+    def update(self, stats, duration=3):
+        for stat_name in self.args.stdout.split(','):
+            stat_path = stat_name.split('.')
+            plugin = stat_path[0]
+            stat_path = stat_path[1:]
             if plugin in stats.getPluginsList() and \
                stats.get_plugin(plugin).is_enable():
-                stat = stats.get_plugin(plugin).get_export()
+                printandflush("{}: {}".format(stat_name,
+                                              get_stat_from_path(stats.get_plugin(plugin).get_export(),
+                                                                 stat_path)))
             else:
                 continue
-            # Display stats
-            if attribute is not None:
-                # With attribute
-                try:
-                    printandflush("{}.{}: {}".format(plugin, attribute,
-                                                     stat[attribute]))
-                except KeyError as err:
-                    logger.error("Can not display stat {}.{} ({})".format(plugin, attribute, err))
-            else:
-                # Without attribute
-                printandflush("{}: {}".format(plugin, stat))
 
         # Wait until next refresh
         if duration > 0:

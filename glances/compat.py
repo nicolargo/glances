@@ -264,3 +264,38 @@ def is_admin():
     else:
         # Check for root on Posix
         return os.getuid() == 0
+
+
+def get_stat_from_path(stats, stat_path):
+    """
+    For a path ['cpu, 'user'] or ['processlist', 'pid:534', 'name]
+    Get the value in the stats.
+    """
+    ret = None
+    if len(stat_path) == 0:
+        ret = stats
+    elif len(stat_path) == 1 and stats:
+        try:
+            ret = stats[stat_path[0]]
+        except KeyError:
+            logger.error(
+                'Key {} does not exist. Should be one of: {}'.format(stat_path[0],
+                                                                     ', '.join(stats.keys())))
+    elif stats:
+        if '=' in stat_path[0]:
+            stat, match = stat_path[0].split('=')
+            try:
+                match_dict = next(
+                    (sub for sub in stats if str(sub[stat]) == str(match)), None)
+            except KeyError:
+                if len(stats) > 0:
+                    logger.error(
+                        'Key {} does not exist. Should be one of: {}'.format(stat,
+                                                                             ', '.join(stats[0].keys())))
+                else:
+                    logger.error('Key {} does not exist'.format(stat))
+            else:
+                ret = get_stat_from_path(match_dict, stat_path[1:])
+        else:
+            ret = get_stat_from_path(stats[stat_path[0]], stat_path[1:])
+    return ret
