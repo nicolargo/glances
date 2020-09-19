@@ -50,6 +50,7 @@ class GlancesStdout(object):
                                               get_stat_from_path(stats.get_plugin(plugin).get_export(),
                                                                  stat_path)))
             else:
+                logger.error('Plugin {} does not exist or is disabled'.format(plugin))
                 continue
 
         # Wait until next refresh

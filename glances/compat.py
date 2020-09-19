@@ -297,5 +297,9 @@ def get_stat_from_path(stats, stat_path):
             else:
                 ret = get_stat_from_path(match_dict, stat_path[1:])
         else:
-            ret = get_stat_from_path(stats[stat_path[0]], stat_path[1:])
+            try:
+                ret = get_stat_from_path(stats[stat_path[0]], stat_path[1:])
+            except TypeError:
+                logger.error(
+                    'Multiple {}, please select one using {}=<foo>'.format(stat_path[0], stat_path[0]))
     return ret
