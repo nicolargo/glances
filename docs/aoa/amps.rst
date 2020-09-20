@@ -96,6 +96,14 @@ Embedded AMP
 Glances provides some specific AMP scripts (replacing the ``command``
 line). You can write your own AMP script to fill your needs. AMP scripts
 are located in the ``amps`` folder and should be named ``glances_*.py``.
+
+You can also overwrite this default location by adding the following 
+configuration key to your AMP configuration section (it should be a 
+folder):
+
+    [amp_foo]
+    plugin_path=/home/foo
+
 An AMP script define an Amp class (``GlancesAmp``) with a mandatory
 update method. The update method call the ``set_result`` method to set
 the AMP return string. The return string is a string with one or more
