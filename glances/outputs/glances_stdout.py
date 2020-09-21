@@ -48,21 +48,3 @@ class GlancesStdout(object):
         # Wait until next refresh
         if duration > 0:
             time.sleep(duration)
-
-    def update_old(self, stats, duration=3):
-        for stat_name in self.args.stdout.split(','):
-            stat_path = stat_name.split('.')
-            plugin = stat_path[0]
-            stat_path = stat_path[1:]
-            if plugin in stats.getPluginsList() and \
-               stats.get_plugin(plugin).is_enable():
-                printandflush("{}: {}".format(stat_name,
-                                              get_stat_from_path(stats.get_plugin(plugin).get_export(),
-                                                                 stat_path)))
-            else:
-                logger.error('Plugin {} does not exist or is disabled'.format(plugin))
-                continue
-
-        # Wait until next refresh
-        if duration > 0:
-            time.sleep(duration)

@@ -22,7 +22,7 @@
 import time
 
 from glances.logger import logger
-from glances.compat import printandflush
+from glances.compat import printandflush, get_stat_from_path, iteritems
 
 
 class GlancesStdoutCsv(object):
@@ -42,69 +42,8 @@ class GlancesStdoutCsv(object):
         # Display the header only on the first line
         self.header = True
 
-        # Build the list of plugin and/or plugin.attribute to display
-        self.plugins_list = self.build_list()
-
-    def build_list(self):
-        """Return a list of tuples taken from self.args.stdout
-        [(plugin, attribute), ... ]"""
-        ret = []
-        for p in self.args.stdout_csv.split(','):
-            if '.' in p:
-                p, a = p.split('.')
-            else:
-                a = None
-            ret.append((p, a))
-        return ret
-
     def end(self):
         pass
-
-    def build_header(self, plugin, attribute, stat):
-        """Build and return the header line"""
-        line = ''
-
-        if attribute is not None:
-            line += '{}.{}{}'.format(plugin, attribute, self.separator)
-        else:
-            if isinstance(stat, dict):
-                for k in stat.keys():
-                    line += '{}.{}{}'.format(plugin,
-                                             str(k),
-                                             self.separator)
-            elif isinstance(stat, list):
-                for i in stat:
-                    if isinstance(i, dict) and 'key' in i:
-                        for k in i.keys():
-                            line += '{}.{}.{}{}'.format(plugin,
-                                                        str(i['key']),
-                                                        str(k),
-                                                        self.separator)
-            else:
-                line += '{}{}'.format(plugin, self.separator)
-
-        return line
-
-    def build_data(self, plugin, attribute, stat):
-        """Build and return the data line"""
-        line = ''
-
-        if attribute is not None:
-            line += '{}{}'.format(str(stat.get(attribute, self.na)),
-                                  self.separator)
-        else:
-            if isinstance(stat, dict):
-                for v in stat.values():
-                    line += '{}{}'.format(str(v), self.separator)
-            elif isinstance(stat, list):
-                for i in stat:
-                    if isinstance(i, dict) and 'key' in i:
-                        for v in i.values():
-                            line += '{}{}'.format(str(v), self.separator)
-            else:
-                line += '{}{}'.format(str(stat), self.separator)
-
-        return line
 
     def update(self,
                stats,
@@ -113,26 +52,17 @@ class GlancesStdoutCsv(object):
         Refresh every duration second.
         """
         # Build the stats list
-        line = ''
-        for plugin, attribute in self.plugins_list:
-            # Check if the plugin exist and is enable
-            if plugin in stats.getPluginsList() and \
-               stats.get_plugin(plugin).is_enable():
-                stat = stats.get_plugin(plugin).get_export()
-            else:
-                continue
+        stat_flatten = dict()
+        for stat_name in self.args.stdout_csv.split(','):
+            stat_path = stat_name.split('.')
+            stat_flatten.update(get_stat_from_path(stats, stat_path))
 
-            # Build the line to display (header or data)
-            if self.header:
-                line += self.build_header(plugin, attribute, stat)
-            else:
-                line += self.build_data(plugin, attribute, stat)
+        if self.header:
+            # Display header one time
+            printandflush(self.separator.join(stat_flatten.keys()))
+            self.header = False
 
-        # Display the line (without the last 'separator')
-        printandflush(line[:-1])
-
-        # Display header one time
-        self.header = False
+        printandflush(self.separator.join([str(i) for i in stat_flatten.values()]))
 
         # Wait until next refresh
         if duration > 0:

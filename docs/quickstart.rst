@@ -31,6 +31,9 @@ It is also possible to display RAW JSON stats directly to stdout using:
     $ glances --stdout load,cpu.user,mem.used,network:lo,processlist:456.cpu_percent
 
 Syntax (comma separated stats):
+
+.. code-block:: console
+
     - <plugin>
     - <plugin>.<attribute>
     - <plugin>:<key value>
