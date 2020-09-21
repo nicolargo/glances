@@ -22,7 +22,7 @@
 import time
 
 from glances.logger import logger
-from glances.compat import printandflush, get_stat_from_path
+from glances.compat import printandflush, get_stat_from_path, iteritems
 
 
 class GlancesStdout(object):
@@ -40,6 +40,16 @@ class GlancesStdout(object):
         pass
 
     def update(self, stats, duration=3):
+        for stat_name in self.args.stdout.split(','):
+            stat_path = stat_name.split('.')
+            stat_flatten = get_stat_from_path(stats, stat_path)
+            for k, v in iteritems(stat_flatten):
+                printandflush("{}: {}".format(k, v))
+        # Wait until next refresh
+        if duration > 0:
+            time.sleep(duration)
+
+    def update_old(self, stats, duration=3):
         for stat_name in self.args.stdout.split(','):
             stat_path = stat_name.split('.')
             plugin = stat_path[0]

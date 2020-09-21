@@ -28,18 +28,13 @@ It is also possible to display RAW JSON stats directly to stdout using:
 
 .. code-block:: console
 
-    $ glances --stdout cpu.user,mem.used,load,processlist.pid=456.name,processlist.pid=456.cpu_percent
-    cpu.user: 30.7
-    mem.used: 3278204928
-    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
-    processlist.pid=456.name: terminator
-    processlist.pid=456.cpu_percent: 2.2
-    cpu.user: 3.4
-    mem.used: 3275251712
-    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
-    processlist.pid=456.name: terminator
-    processlist.pid=456.cpu_percent: 2.6
-    ...
+    $ glances --stdout load,cpu.user,mem.used,network:lo,processlist:456.cpu_percent
+
+Syntax (comma separated stats):
+    - <plugin>
+    - <plugin>.<attribute>
+    - <plugin>:<key value>
+    - <plugin>:<key value>.attribute
 
 or in a CSV format thanks to the stdout-csv option:
 

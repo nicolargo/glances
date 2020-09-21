@@ -268,7 +268,47 @@ def is_admin():
 
 def get_stat_from_path(stats, stat_path):
     """
-    For a path ['cpu, 'user'] or ['processlist', 'pid:534', 'name]
+    For a path ['cpu, 'user'] or ['network'] or ['processlist:6174', 'name']
+    Get the value in the stats.
+    """
+    ret = dict()
+    if ':' in stat_path[0]:
+        plugin, match = stat_path[0].split(':')
+    else:
+        plugin = stat_path[0]
+        match = None
+    attributes = stat_path[1:]
+
+    if plugin in stats.getPluginsList() and \
+        stats.get_plugin(plugin).is_enable():
+        # Get the stat
+        stat_export = stats.get_plugin(plugin).get_export()
+        if isinstance(stat_export, dict):
+            if len(attributes) > 0 and attributes[0] in stat_export:
+                ret['{}.{}'.format(plugin, attributes[0])] = stat_export[attributes[0]]
+            else:
+                for k, v in iteritems(stat_export):
+                    ret['{}.{}'.format(plugin, k)] = v
+        elif isinstance(stat_export, list):
+            for i in stat_export:
+                if isinstance(i, dict) and 'key' in i and (not match or (match and str(i[i['key']]) == match)):
+                    if len(attributes) > 0 and attributes[0] in i:
+                        ret['{}.{}.{}'.format(plugin, i[i['key']], attributes[0])] = i[attributes[0]]
+                    else:
+                        for k, v in iteritems(i):
+                            ret['{}.{}.{}'.format(plugin, i[i['key']], k)] = v
+        else:
+            ret[plugin] = stat_export
+    else:
+        logger.error('Plugin {} does not exist or is disabled'.format(plugin))
+
+    return ret
+    
+
+
+def get_stat_from_path_old(stats, stat_path):
+    """
+    For a path ['cpu, 'user'] or ['processlist', 'pid=534', 'name']
     Get the value in the stats.
     """
     ret = None
