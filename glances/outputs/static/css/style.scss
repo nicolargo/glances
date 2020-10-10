@@ -148,7 +148,7 @@ body {
     }
 }
 
-#amps-plugin .process-result {
+#amps .process-result {
     max-width: 300px;
     overflow: hidden;
     white-space: pre-wrap;
@@ -156,7 +156,7 @@ body {
     text-overflow: ellipsis;
 }
 
-#gpu-plugin .gpu-name {
+#gpu .gpu-name {
     white-space: nowrap;
     overflow: hidden;
     width: 100%;
