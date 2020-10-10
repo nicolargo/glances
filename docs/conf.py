@@ -54,7 +54,10 @@ master_doc = 'index'
 # General information about the project.
 project = 'Glances'
 author = 'Nicolas Hennion'
-year = datetime.now().year
+try:
+    year = datetime.utcfromtimestamp(int(os.environ['SOURCE_DATE_EPOCH'])).year
+except (KeyError, ValueError):
+    year = datetime.now().year
 copyright = '%d, %s' % (year, author)
 
 # The version info for the project you're documenting, acts as replacement for
