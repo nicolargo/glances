@@ -21,4 +21,4 @@ EXPOSE 61209
 EXPOSE 61208
 
 # Define default command.
-CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+CMD /usr/bin/python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
