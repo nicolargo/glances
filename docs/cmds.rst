@@ -375,6 +375,8 @@ The following commands (key pressed) are supported while in Glances:
     Enable/disable mean GPU mode
 ``/``
     Switch between process command line or command name
+``F5``
+    Refresh stats in curses user interface
 
 In the Glances client browser (accessible through the ``--browser``
 command line argument):
