@@ -9,9 +9,13 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
+.. image:: https://img.shields.io/docker/pulls/nicolargo/glances
+    :target: https://hub.docker.com/r/nicolargo/glances/
+    :alt: Docker pull
+
 .. image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
-    :alt: Downloads
+    :alt: Pypi downloads
 
 .. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
