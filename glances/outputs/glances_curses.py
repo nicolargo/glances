@@ -387,6 +387,9 @@ class _GlancesCurses(object):
             # ">" (right arrow) navigation through process sort
             next_sort = (self.loop_position() + 1) % len(self._sort_loop)
             glances_processes.set_sort_key(self._sort_loop[next_sort], False)
+        elif self.pressedkey == curses.KEY_F5:
+            # "F5" manual refresh requested
+            pass
 
         # Return the key code
         return self.pressedkey
@@ -981,6 +984,9 @@ class _GlancesCurses(object):
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
             # Is it an exit key ?
             exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+            if pressedkey == curses.KEY_F5:
+                # were asked to refresh
+                return exitkey
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
