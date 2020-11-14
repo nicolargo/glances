@@ -15,6 +15,7 @@ following:
     user=glances
     password=glances
     queue=glances_queue
+    #protocol=amqps
 
 and run Glances with:
 
