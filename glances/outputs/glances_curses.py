@@ -428,7 +428,9 @@ class _GlancesCurses(object):
             else:
                 logger.info(
                     "Stop Glances (keypressed: {})".format(self.pressedkey))
-
+        elif self.pressedkey == curses.KEY_F5:
+            # "F5" manual refresh requested
+            pass
 
         # Return the key code
         return self.pressedkey
@@ -1073,6 +1075,9 @@ class _GlancesCurses(object):
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
             # Is it an exit key ?
             exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+            if pressedkey == curses.KEY_F5:
+                # were asked to refresh
+                return exitkey
             if not exitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)

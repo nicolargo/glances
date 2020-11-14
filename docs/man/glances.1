@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "Jul 21, 2020" "3.1.5_DEVELOP" "Glances"
+.TH "GLANCES" "1" "Nov 07, 2020" "3.1.6_b1" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -488,6 +488,9 @@ Up in the processes list
 .TP
 .B \fBDOWN\fP
 Down in the processes list
+.TP
+.B \fBF5\fP
+Refresh stats in curses user interface
 .UNINDENT
 .sp
 In the Glances client browser (accessible through the \fB\-\-browser\fP
@@ -529,25 +532,25 @@ _
 T{
 \fBLinux\fP, \fBSunOS\fP
 T}	T{
-~/.config/glances, /etc/glances
+~/.config/glances/glances.conf, /etc/glances/glances.conf
 T}
 _
 T{
 \fB*BSD\fP
 T}	T{
-~/.config/glances, /usr/local/etc/glances
+~/.config/glances/glances.conf, /usr/local/etc/glances/glances.conf
 T}
 _
 T{
 \fBmacOS\fP
 T}	T{
-~/Library/Application Support/glances, /usr/local/etc/glances
+~/Library/Application Support/glances/glances.conf, /usr/local/etc/glances/glances.conf
 T}
 _
 T{
 \fBWindows\fP
 T}	T{
-%APPDATA%\eglances
+%APPDATA%\eglancesglances.conf
 T}
 _
 .TE

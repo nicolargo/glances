@@ -27,13 +27,13 @@ User disk space usage Status
 
 By default, the plugin only displays physical devices (hard disks, USB
 keys). To allow other file system types, you have to enable them in the
-configuration file. For example, if you want to allow the ``zfs`` file
+configuration file. For example, if you want to allow the ``shm`` file
 system:
 
 .. code-block:: ini
 
     [fs]
-    allow=zfs
+    allow=shm
 
 Also, you can hide mount points as well (in the following ``/boot``):
 
