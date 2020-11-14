@@ -70,12 +70,13 @@ class Plugin(GlancesPlugin):
         'status': '{:>1} ',
         'ior': '{:>4} ',
         'iow': '{:<4} ',
-        'command': '{}',
+        'command': '{} {}',
     }
 
     # Define the stat layout of the processes list columns
     layout_stat = {
-        'cpu': '{:<6.1f} ',
+        'cpu': '{:<6.1f}',
+        'cpu_no_digit': '{:<6.0f}',
         'mem': '{:<5.1f} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -172,19 +173,26 @@ class Plugin(GlancesPlugin):
             pass
         return 'DEFAULT'
 
-    def get_process_curses_data(self, p, first, args):
+    def get_process_curses_data(self, p, selected, args):
         """Get curses data to display for a process.
 
         - p is the process to display
-        - first is a tag=True if the process is the first on the list
+        - selected is a tag=True if the selected process
         """
         ret = [self.curse_new_line()]
+        # When a process is selected:
+        # * display a special caracter at the beginning of the line
+        # * underline the command name
+        if args.is_standalone:
+            ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
         # CPU
         if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
+            cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
             if args.disable_irix and self.nb_log_core != 0:
-                msg = self.layout_stat['cpu'].format(p['cpu_percent'] / float(self.nb_log_core))
+                msg = cpu_layout.format(
+                    p['cpu_percent'] / float(self.nb_log_core))
             else:
-                msg = self.layout_stat['cpu'].format(p['cpu_percent'])
+                msg = cpu_layout.format(p['cpu_percent'])
             alert = self.get_alert(p['cpu_percent'],
                                    highlight_zero=False,
                                    is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
@@ -321,28 +329,31 @@ class Plugin(GlancesPlugin):
         else:
             cmdline = '?'
         try:
+            process_decoration = 'PROCESS_SELECTED' if (selected and args.is_standalone) else 'PROCESS'
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
-                    ret.append(self.curse_add_line(cmd, decoration='PROCESS', splittable=True))
+                    ret.append(self.curse_add_line(
+                        cmd, decoration=process_decoration, splittable=True))
                 else:
                     msg = self.layout_stat['command'].format(cmd)
-                    ret.append(self.curse_add_line(msg, decoration='PROCESS', splittable=True))
+                    ret.append(self.curse_add_line(
+                        msg, decoration=process_decoration, splittable=True))
                 if arguments:
                     msg = ' ' + self.layout_stat['command'].format(arguments)
                     ret.append(self.curse_add_line(msg, splittable=True))
             else:
                 msg = self.layout_stat['name'].format(p['name'])
-                ret.append(self.curse_add_line(msg, splittable=True))
+                ret.append(self.curse_add_line(msg, decoration=process_decoration, splittable=True))
         except (TypeError, UnicodeEncodeError) as e:
             # Avoid crach after running fine for several hours #1335
             logger.debug("Can not decode command line '{}' ({})".format(cmdline, e))
             ret.append(self.curse_add_line('', splittable=True))
 
         # Add extended stats but only for the top processes
-        if first and 'extended_stats' in p and args.enable_process_extended:
+        if args.cursor_position == 0 and 'extended_stats' in p and args.enable_process_extended:
             # Left padding
             xpad = ' ' * 13
             # First line is CPU affinity
@@ -429,11 +440,13 @@ class Plugin(GlancesPlugin):
 
         # Process list
         # Loop over processes (sorted by the sort key previously compute)
-        first = True
+        i = 0
         for p in self.__sort_stats(process_sort_key):
-            ret.extend(self.get_process_curses_data(p, first, args))
-            # End of extended stats
-            first = False
+            ret.extend(self.get_process_curses_data(
+                p, i == args.cursor_position, args))
+            i += 1
+        
+        # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
             if args.reset_minmax_tag:
                 args.reset_minmax_tag = not args.reset_minmax_tag
@@ -478,7 +491,8 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
         msg = self.layout_header['iow'].format('W/s')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
-        msg = self.layout_header['command'].format('Command')
+        msg = self.layout_header['command'].format('Command',
+                                                   "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
 
     def __msg_curse_sum(self, ret, sep_char='_', mmm=None, args=None):

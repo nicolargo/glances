@@ -419,6 +419,13 @@ Examples of use:
             disable(args, 'hddtemp')
             logger.debug("Sensors and HDDTemp are disabled")
 
+        # Let the plugins known the Glances mode
+        self.args.is_standalone = self.is_standalone()
+        self.args.is_client = self.is_client()
+        self.args.is_client_browser = self.is_client_browser()
+        self.args.is_server = self.is_server()
+        self.args.is_webserver = self.is_webserver()
+
         return args
 
     def is_standalone(self):
