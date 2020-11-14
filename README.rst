@@ -9,9 +9,13 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
+.. image:: https://img.shields.io/docker/pulls/nicolargo/glances
+    :target: https://hub.docker.com/r/nicolargo/glances/
+    :alt: Docker pull
+
 .. image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
-    :alt: Downloads
+    :alt: Pypi downloads
 
 .. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
@@ -161,6 +165,13 @@ If you need to install Glances in a specific user location, use:
     export PYTHONUSERBASE=~/mylocalpath
     pip install --user glances
 
+The current develop branch is also published to the test.pypi.org package index.
+If you want to test the develop version, enter:
+
+.. code-block:: console
+
+    pip install -i https://test.pypi.org/simple/ Glances
+
 Docker: the funny way
 ---------------------
 
@@ -168,24 +179,30 @@ A Glances container is available. It includes the latest development
 HEAD version. You can use it to monitor your server and all your other
 containers!
 
-Get the Glances container:
+Get the Glances container (latest develop branch):
 
 .. code-block:: console
 
-    docker pull nicolargo/glances
+    docker pull nicolargo/glances:dev
+
+Note, you can choose another branch with :
+
+- nicolargo/glances:latest for the last master branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:dev for the last develop branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:<version> for the specific <version> (included multiple architectures 386, amd64, arm/v7 and arm64)
 
 Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it docker.io/nicolargo/glances
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:dev
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 
 .. code-block:: console
 
-    FROM nicolargo/glances
+    FROM nicolargo/glances:dev
     COPY glances.conf /glances/conf/glances.conf
     CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
@@ -194,7 +211,7 @@ docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:dev
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -203,7 +220,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:dev
 
 GNU/Linux
 ---------

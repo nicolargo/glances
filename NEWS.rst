@@ -2,10 +2,40 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.1.6
+=============
+
+Under development.
+See milestone here ==> https://github.com/nicolargo/glances/milestone/46
+
 Version 3.1.5
 =============
 
-Under development...
+Enhancements and new features:
+
+    * Enhancement: RSS for containers enhancement #1694
+    * exports: support rabbitmq amqps enhancement #1687
+    * Quick Look missing CPU Infos enhancement #1685
+    * Add amqps protocol suppport for rabbitmq export #1688
+    * Select host in Grafana json #1684
+    * Value for free disk space is counterintuative on ext file systems enhancement #644
+
+Bugs corrected:
+
+    * Can't start server: unexpected keyword argument 'address' bug enhancement #1693
+    * class AmpsList method _build_amps_list() Windows fail (glances/amps_list.py) bug #1689 
+    * Fix grammar in sensors documentation #1681
+    * Reflect "used percent" user disk space for [fs] alert #1680
+    * Bug: [fs] plugin needs to reflect user disk space usage needs test #1658
+    * Fixed formatting on FS example #1673
+    * Missing temperature documentation #1664
+    * Wiki page for starting as a service documentation #1661
+    * How to start glances with --username option on syetemd? documentation #1657
+    * tests using /etc/glances/glances.conf from already installed version bug #1654
+    * Unittests: Use sys.executable instead of hardcoding the python interpreter #1655
+    * Glances should not phone home install #1646
+    * Add lighttpd reverse proxy config to the wiki documentation #1643
+    * Undefined name 'i' in plugins/glances_gpu.py bug #1635
 
 Version 3.1.4
 =============
