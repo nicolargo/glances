@@ -893,7 +893,7 @@ class _GlancesCurses(object):
             # Create the textbox inside the subwindows
             self.set_cursor(2)
             self.term_window.keypad(1)
-            textbox = GlancesTextbox(subpop, insert_mode=False)
+            textbox = GlancesTextbox(subpop, insert_mode=True)
             textbox.edit()
             self.set_cursor(0)
             # self.term_window.keypad(0)
