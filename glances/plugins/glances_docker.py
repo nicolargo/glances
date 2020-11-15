@@ -210,6 +210,14 @@ class Plugin(GlancesPlugin):
             # Get stats for all containers
             stats['containers'] = []
             for container in containers:
+                # Only show specific containers
+                if not self.is_show(nativestr(container.name)):
+                    continue
+
+                # Do not take hiden container into account
+                if self.is_hide(nativestr(container.name)):
+                    continue
+
                 # Init the stats for the current container
                 container_stats = {}
                 # The key is the container name and not the Id
