@@ -752,6 +752,21 @@ class GlancesPlugin(object):
         except KeyError:
             return default
 
+    def is_show(self, value, header=""):
+        """Return True if the value is in the show configuration list.
+        If the show value is empty, return True (show by default)
+
+        The show configuration list is defined in the glances.conf file.
+        It is a comma separed list of regexp.
+        Example for diskio:
+        show=sda.*
+        """
+        # @TODO: possible optimisation: create a re.compile list
+        if self.get_conf_value('show', header=header) == []:
+            return True
+        else:
+            return any(j for j in [re.match(i, value) for i in self.get_conf_value('show', header=header)])
+
     def is_hide(self, value, header=""):
         """Return True if the value is in the hide configuration list.
 
@@ -760,9 +775,7 @@ class GlancesPlugin(object):
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
-        # TODO: possible optimisation: create a re.compile list
-        # Old version (see issue #1691)
-        #return not all(j is None for j in [re.match(i, value.lower()) for i in self.get_conf_value('hide', header=header)])
+        # @TODO: possible optimisation: create a re.compile list
         return any(j for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
