@@ -28,8 +28,8 @@ Glances - An eye on your system
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
 
-.. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
-    :target: https://www.paypal.me/nicolargo
+.. image:: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/nicolargo
+    :target: https://github.com/sponsors/nicolargo
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
