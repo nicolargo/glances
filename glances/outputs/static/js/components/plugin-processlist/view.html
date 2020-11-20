@@ -32,8 +32,8 @@
             <div class="table-cell text-left hidden-xs hidden-sm">{{ process.num_threads == -1 ? '?' : process.num_threads }}</div>
             <div class="table-cell" ng-class="{nice: process.isNice}">{{process.nice | exclamation}}</div>
             <div class="table-cell" ng-class="{status: process.status == 'R'}">{{process.status}}</div>
-            <div class="table-cell hidden-xs hidden-sm" ng-show="vm.ioReadWritePresent">{{process.ioRead}}</div>
-            <div class="table-cell text-left hidden-xs hidden-sm" ng-show="vm.ioReadWritePresent">{{process.ioWrite}}</div>
+            <div class="table-cell hidden-xs hidden-sm" ng-show="vm.ioReadWritePresent">{{process.io_read | bytes}}</div>
+            <div class="table-cell text-left hidden-xs hidden-sm" ng-show="vm.ioReadWritePresent">{{process.io_write | bytes}}</div>
             <div class="table-cell text-left" ng-show="vm.arguments.process_short_name">{{process.name}}</div>
             <div class="table-cell text-left" ng-show="!vm.arguments.process_short_name">{{process.cmdline}}</div>
         </div>
