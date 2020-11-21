@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+  glances:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "61208:61208"
+      # - "61209:61209"
+    environment:
+      # - GLANCES_OPT="-w"
+      GLANCES_OPT: "-w"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./glances.conf:/glances/conf/glances.conf"
+    pid: "host"
