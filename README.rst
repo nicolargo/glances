@@ -433,8 +433,7 @@ Donation
 
 If this project help you, you can give me a tip ;)
 
-.. image:: https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
-        :target: https://www.paypal.me/nicolargo
+See the sponsors_ page.
 
 Author
 ======
@@ -457,3 +456,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/metapackage/glances/packages
+.. _sponsors: https://github.com/sponsors/nicolargo
