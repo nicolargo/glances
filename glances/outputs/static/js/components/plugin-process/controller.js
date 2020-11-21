@@ -10,7 +10,7 @@ export default function GlancesPluginProcessController(ARGUMENTS, hotkeys) {
             return !(column === 'username' || column === 'name');
         },
         getColumnLabel: function (column) {
-            if (_.isEqual(column, ['io_read', 'io_write'])) {
+            if (column === 'io_read' || column === 'io_write') {
                 return 'io_counters';
             } else {
                 return column;

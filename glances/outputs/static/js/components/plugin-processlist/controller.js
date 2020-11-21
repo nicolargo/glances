@@ -37,35 +37,26 @@ export default function GlancesPluginProcesslistController($scope, GlancesStats,
             }
 
             if (process.num_threads === null) {
-              process.num_threads = -1;
+                process.num_threads = -1;
             }
 
             if (process.cpu_percent === null) {
-              process.cpu_percent = -1;
+                process.cpu_percent = -1;
             }
 
-            if (process.memory_percent  === null) {
-              process.memory_percent = -1;
+            if (process.memory_percent === null) {
+                process.memory_percent = -1;
             }
 
 
-            process.ioRead = null;
-            process.ioWrite = null;
+            process.io_read = null;
+            process.io_write = null;
 
             if (process.io_counters) {
                 vm.ioReadWritePresent = true;
 
-                process.ioRead = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update;
-
-                if (process.ioRead != 0) {
-                    process.ioRead = $filter('bytes')(process.ioRead);
-                }
-
-                process.ioWrite = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update;
-
-                if (process.ioWrite != 0) {
-                    process.ioWrite = $filter('bytes')(process.ioWrite);
-                }
+                process.io_read = (process.io_counters[0] - process.io_counters[2]) / process.time_since_update;
+                process.io_write = (process.io_counters[1] - process.io_counters[3]) / process.time_since_update;
             }
 
             process.isNice = process.nice !== undefined && ((data.stats.isWindows && process.nice != 32) || (!data.stats.isWindows && process.nice != 0));
@@ -81,7 +72,7 @@ export default function GlancesPluginProcesslistController($scope, GlancesStats,
             if (data.isWindows && process.username !== null) {
                 process.username = _.last(process.username.split('\\'));
             }
- 
+
             vm.processes.push(process);
         }
     }
