@@ -26,7 +26,36 @@ ARG VERSION
 RUN if [  "$VERSION" = "dev" ] ; then \
     echo Installing dev branch of glances from git; \
     apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/* ; \
-    pip3 install psutil bottle ; \
+    pip3 install \
+            psutil \
+            bottle \
+            bernhard \
+            bottle \
+            cassandra-driver \
+            couchdb \
+            docker \
+            elasticsearch \
+            influxdb \
+            kafka-python \
+            netifaces \
+            py3nvml \
+            paho-mqtt \
+            pika \
+            potsdb \
+            prometheus_client \
+            py-cpuinfo==4.0.0 \
+            pygal \
+            pymdstat \
+            pysnmp \
+            pySMART.smartx \
+            pystache \
+            pyzmq \
+            requests \
+            scandir \
+            sparklines \
+            statsd \
+            wifi \
+            zeroconf ; \
     git clone -b develop https://github.com/nicolargo/glances.git ; \
   else \
     echo Installing glances from pip; \
