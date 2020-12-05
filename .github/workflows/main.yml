@@ -19,7 +19,7 @@ jobs:
         id: prepare
         env:
           DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE }}
-          DOCKER_PLATFORMS: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386
+          DOCKER_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64,linux/386
         run: |
           VERSION=latest
           
