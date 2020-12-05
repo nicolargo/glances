@@ -187,9 +187,9 @@ Get the Glances container (latest develop branch):
 
 Note, you can choose another branch with :
 
-- nicolargo/glances:latest for the last master branch (included multiple architectures 386, amd64, arm/v6, arm/v7 and arm64)
-- nicolargo/glances:dev for the last develop branch (included multiple architectures 386, amd64, arm/v6, arm/v7 and arm64)
-- nicolargo/glances:<version> for the specific <version> (included multiple architectures 386, amd64, arm/v6, arm/v7 and arm64)
+- nicolargo/glances:latest for the last master branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:dev for the last develop branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:<version> for the specific <version> (included multiple architectures 386, amd64, arm/v7 and arm64)
 
 Run the container in *console mode*:
 
