@@ -17,6 +17,7 @@ RUN \
             gcc               \
             lm-sensors        \
             wireless-tools    \
+            libzmq3-dev       \
             iputils-ping && \
   rm -rf /var/lib/apt/lists/*
 
