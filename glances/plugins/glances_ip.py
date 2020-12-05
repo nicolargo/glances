@@ -150,6 +150,9 @@ class Plugin(GlancesPlugin):
         """
         # Thanks to @Atticfire
         # See https://github.com/nicolargo/glances/issues/1417#issuecomment-469894399
+        if ip is None:
+            # Correct issue #1528
+            return 0
         return sum(bin(int(x)).count('1') for x in ip.split('.'))
 
 
