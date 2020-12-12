@@ -81,7 +81,11 @@ class Plugin(GlancesPlugin):
             stats['percpu'] = cpu_percent.get(percpu=True)
             # Use the psutil lib for the memory (virtual and swap)
             stats['mem'] = psutil.virtual_memory().percent
-            stats['swap'] = psutil.swap_memory().percent
+            try:
+                stats['swap'] = psutil.swap_memory().percent
+            except RuntimeError:
+                # Correct issue in Illumos OS (see #1767)
+                stats['swap'] = None
         elif self.input_method == 'snmp':
             # Not available
             pass
