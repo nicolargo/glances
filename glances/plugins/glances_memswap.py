@@ -66,20 +66,24 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab SWAP using the psutil swap_memory method
-            sm_stats = psutil.swap_memory()
-
-            # Get all the swap stats (copy/paste of the psutil documentation)
-            # total: total swap memory in bytes
-            # used: used swap memory in bytes
-            # free: free swap memory in bytes
-            # percent: the percentage usage
-            # sin: the number of bytes the system has swapped in from disk (cumulative)
-            # sout: the number of bytes the system has swapped out from disk
-            # (cumulative)
-            for swap in ['total', 'used', 'free', 'percent',
-                         'sin', 'sout']:
-                if hasattr(sm_stats, swap):
-                    stats[swap] = getattr(sm_stats, swap)
+            try:
+                sm_stats = psutil.swap_memory()
+            except RuntimeError:
+                # Crash on startup on Illumos when no swap is configured #1767
+                pass
+            else:
+                # Get all the swap stats (copy/paste of the psutil documentation)
+                # total: total swap memory in bytes
+                # used: used swap memory in bytes
+                # free: free swap memory in bytes
+                # percent: the percentage usage
+                # sin: the number of bytes the system has swapped in from disk (cumulative)
+                # sout: the number of bytes the system has swapped out from disk
+                # (cumulative)
+                for swap in ['total', 'used', 'free', 'percent',
+                            'sin', 'sout']:
+                    if hasattr(sm_stats, swap):
+                        stats[swap] = getattr(sm_stats, swap)
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name == 'windows':
