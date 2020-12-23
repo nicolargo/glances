@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -17,15 +17,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""InfluxDB (up to InfluxDB 1.7.x) interface class."""
+"""InfluxDB (from to InfluxDB 1.8+) interface class."""
 
 import sys
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
-from influxdb import InfluxDBClient
-from influxdb.client import InfluxDBClientError
+from influxdb_client import InfluxDBClient, WriteOptions
 
 
 class Export(GlancesExport):
@@ -36,9 +35,9 @@ class Export(GlancesExport):
         super(Export, self).__init__(config=config, args=args)
 
         # Mandatories configuration keys (additional to host and port)
-        self.user = None
-        self.password = None
-        self.db = None
+        self.org = None
+        self.bucket = None
+        self.token = None
 
         # Optionals configuration keys
         self.protocol = 'http'
@@ -46,10 +45,10 @@ class Export(GlancesExport):
         self.tags = None
 
         # Load the InfluxDB configuration file
-        self.export_enable = self.load_conf('influxdb',
+        self.export_enable = self.load_conf('influxdb2',
                                             mandatories=['host', 'port',
                                                          'user', 'password',
-                                                         'db'],
+                                                         'org', 'bucket', 'token'],
                                             options=['protocol',
                                                      'prefix',
                                                      'tags'])
@@ -64,40 +63,35 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        # Correct issue #1530
-        if self.protocol is not None and (self.protocol.lower() == 'https'):
-            ssl = True
-        else:
-            ssl = False
-
+        url = '{}://{}:{}'.format(self.protocol, self.host, self.port)
         try:
-            db = InfluxDBClient(host=self.host,
-                                port=self.port,
-                                ssl=ssl,
-                                verify_ssl=False,
-                                username=self.user,
-                                password=self.password,
-                                database=self.db)
-            get_all_db = [i['name'] for i in db.get_list_database()]
-        except InfluxDBClientError as e:
-            logger.critical("Cannot connect to InfluxDB database '%s' (%s)" % (self.db, e))
+            client = InfluxDBClient(url=url,
+                                    enable_gzip=False,
+                                    org=self.org, 
+                                    token=self.token)
+        except Exception as e:
+            logger.critical("Cannot connect to InfluxDB server '%s' (%s)" % (url, e))
             sys.exit(2)
-
-        if self.db in get_all_db:
-            logger.info(
-                "Stats will be exported to InfluxDB server: {}".format(db._baseurl))
         else:
-            logger.critical("InfluxDB database '%s' did not exist. Please create it" % self.db)
-            sys.exit(2)
+            logger.info("Connected to InfluxDB server ({})".format(client.health()))
 
-        return db
+
+        # Create the write client
+        write_client = client.write_api(write_options=WriteOptions(batch_size=500,
+                                                                   flush_interval=10_000,
+                                                                   jitter_interval=2_000,
+                                                                   retry_interval=5_000,
+                                                                   max_retries=5,
+                                                                   max_retry_delay=30_000,
+                                                                   exponential_base=2))
+        return write_client
 
     def _normalize(self, name, columns, points):
         """Normalize data for the InfluxDB's data model."""
 
         for i, _ in enumerate(points):
             # Supported type:
-            # https://docs.influxdata.com/influxdb/v1.5/write_protocols/line_protocol_reference/
+            # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
             if points[i] is None:
                 # Ignore points with None value
                 del(points[i])
@@ -130,7 +124,10 @@ class Export(GlancesExport):
             logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
             try:
-                self.client.write_points(self._normalize(name, columns, points), time_precision="s")
+                self.client.write(self.bucket,
+                                  self.org,
+                                  self._normalize(name, columns, points), 
+                                  time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
                 logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))
