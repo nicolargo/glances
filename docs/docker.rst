@@ -73,3 +73,72 @@ You can also include Glances container in you own `docker-compose.yml`. Here's a
         labels:
           - "traefik.port=61208"
           - "traefik.frontend.rule=Host:glances.docker.localhost"
+
+How to protect your Dockerized server (or Web server) with a login/password ?
+------------------------------------------------------------------
+
+Below are two methods for setting up a login/password to protect Glances running inside a Docker container.
+
+Option 1
+^^^^^^^^
+
+You can enter the running container by entering this command (replacing ``glances_docker`` with the name of your container):
+
+.. code-block:: console
+
+    docker exec -it glances_docker sh
+
+and generate the password file (the default login is ``glances``, add the ``--username`` flag if you would like to change it):
+
+.. code-block:: console
+
+    glances -s --password
+    
+which will prompt you to answer the following questions:
+
+.. code-block:: console
+    Define the Glances server password (glances username): 
+    Password (confirm): 
+    Do you want to save the password? [Yes/No]: Yes
+
+after which you will need to kill the process by entering ``CTRL+C`` (potentially twice), before leaving the container:
+
+.. code-block:: console
+    ^C^C
+    exit
+
+You will then need to copy the password file to your host machine:
+
+.. code-block:: console
+    docker cp glances_docker:/root/.config/glances/glances.pwd ./secrets/glances_password
+
+and make it visible to your container by adding it to ``docker-compose.yml`` as a ``secret``:
+
+.. code-block:: yaml
+    services:
+      glances:
+        image: nicolargo/glances:latest
+        secrets:
+          - source: glances_password
+            target: /root/.config/glances/glances.pwd
+            mode: '0440'
+    
+    secrets:
+      glances_password:
+        file: ./secrets/glances_password
+
+Option 2
+^^^^^^^^
+
+You can add a ``[passwords]`` block to the Glances configuration file as mentioned elsewhere in the documentation:
+
+.. code-block:: ini
+
+    [passwords]
+    # Define the passwords list
+    # Syntax: host=password
+    # Where: host is the hostname
+    #        password is the clear password
+    # Additionally (and optionally) a default password could be defined
+    localhost=mylocalhostpassword
+    default=mydefaultpassword
