@@ -115,13 +115,20 @@ You will then need to copy the password file to your host machine:
 and make it visible to your container by adding it to ``docker-compose.yml`` as a ``secret``:
 
 .. code-block:: yaml
+    version: '3'
+    
     services:
       glances:
         image: nicolargo/glances:latest
+        restart: always
+        environment:
+          - GLANCES_OPT="-w --password"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+        pid: host
         secrets:
           - source: glances_password
             target: /root/.config/glances/glances.pwd
-            mode: '0440'
     
     secrets:
       glances_password:
