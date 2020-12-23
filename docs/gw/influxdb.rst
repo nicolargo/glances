@@ -4,6 +4,10 @@ InfluxDB
 ========
 
 You can export statistics to an ``InfluxDB`` server (time series server).
+
+InfluxDB (up to version 1.7.x)
+------------------------------
+
 The connection should be defined in the Glances configuration file as
 following:
 
@@ -16,6 +20,13 @@ following:
     user=root
     password=root
     db=glances
+    # Prefix will be added for all measurement name
+    # Ex: prefix=foo
+    #     => foo.cpu
+    #     => foo.mem
+    # You can also use dynamic values
+    #prefix=`hostname`
+    prefix=localhost
     # Tags will be added for all measurements
     #tags=foo:bar,spam:eggs
     # You can also use dynamic values
@@ -30,6 +41,42 @@ and run Glances with:
 Glances generates a lot of columns, e.g., if you have many running
 Docker containers, so you should use the ``tsm1`` engine in the InfluxDB
 configuration file (no limit on columns number).
+
+Note: if you want to use SSL, please set 'protocol=https'.
+
+
+InfluxDB v2 (from InfluxDB v1.8.x/Flux and InfluxDB v2.x)
+---------------------------------------------------------
+
+The connection should be defined in the Glances configuration file as
+following:
+
+.. code-block:: ini
+
+    [influxdb]
+    host=localhost
+    port=8086
+    protocol=http
+    org=nicolargo
+    bucket=glances
+    token=EjFUTWe8U-MIseEAkaVIgVnej_TrnbdvEcRkaB1imstW7gapSqy6_6-8XD-yd51V0zUUpDy-kAdVD1purDLuxA==
+    # Prefix will be added for all measurement name
+    # Ex: prefix=foo
+    #     => foo.cpu
+    #     => foo.mem
+    # You can also use dynamic values
+    #prefix=`hostname`
+    prefix=localhost
+    # Tags will be added for all measurements
+    #tags=foo:bar,spam:eggs
+    # You can also use dynamic values
+    #tags=system:`uname -s`
+
+and run Glances with:
+
+.. code-block:: console
+
+    $ glances --export influxdb2
 
 Note: if you want to use SSL, please set 'protocol=https'.
 
