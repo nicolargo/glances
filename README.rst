@@ -69,7 +69,8 @@ Optional dependencies:
 - ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
-- ``influxdb`` (for the InfluxDB export module)
+- ``influxdb`` (for the InfluxDB version 1 export module)
+- ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
 - ``nvidia-ml-py3`` (for the GPU plugin)
