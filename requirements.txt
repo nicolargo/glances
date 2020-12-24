@@ -1,2 +1,2 @@
-psutil==5.7.2
+psutil==5.8.0
 future
