@@ -73,16 +73,17 @@ class Export(GlancesExport):
             logger.critical("Cannot connect to InfluxDB server '%s' (%s)" % (url, e))
             sys.exit(2)
         else:
-            logger.info("Connected to InfluxDB server ({})".format(client.health()))
+            logger.info("Connected to InfluxDB server version {} ({})".format(client.health().version,
+                                                                              client.health().message))
 
 
         # Create the write client
         write_client = client.write_api(write_options=WriteOptions(batch_size=500,
-                                                                   flush_interval=10_000,
-                                                                   jitter_interval=2_000,
-                                                                   retry_interval=5_000,
+                                                                   flush_interval=10000,
+                                                                   jitter_interval=2000,
+                                                                   retry_interval=5000,
                                                                    max_retries=5,
-                                                                   max_retry_delay=30_000,
+                                                                   max_retry_delay=30000,
                                                                    exponential_base=2))
         return write_client
 
