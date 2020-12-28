@@ -2,6 +2,8 @@ name: CI
 
 env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances
+  NODE_ENV: ${{ (contains('refs/heads/master', github.ref) || startsWith(github.ref, 'refs/tags/v')) && 'prod' || 'dev' }}
+  DOCKER_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64,linux/386
 
 on:
   pull_request:
@@ -22,32 +24,25 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
 
-      - name: Set envs
+      - name: Configure ENVs
         env:
           DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE || env.DEFAULT_DOCKER_IMAGE }}
-          DOCKER_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64,linux/386
+          DOCKERFILE: ${{ env.NODE_ENV == 'prod' && './docker-files/Dockerfile' || './docker-files/dev.Dockerfile' }}
+          PUSH_IMAGE: ${{ env.NODE_ENV == 'prod' && 'true' || 'false' }}
         run: |
-          DOCKERFILE=./docker-files/dev.Dockerfile
-          PUSH_IMAGE=false
+          ls -la /tmp/.buildx-cache || true
           VERSION=latest
-
-          if [[ $GITHUB_REF == refs/heads/master ]]; then
-            PUSH_IMAGE=true
-          fi
 
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
-            PUSH_IMAGE=true
-            DOCKERFILE=./docker-files/Dockerfile
           fi
 
           if [[ $GITHUB_REF == refs/heads/develop ]]; then
             VERSION=dev
-            PUSH_IMAGE=true
           fi
 
           echo "DOCKERFILE=${DOCKERFILE}" >> $GITHUB_ENV
@@ -56,7 +51,6 @@ jobs:
           echo "TAGS=${DOCKER_IMAGE}:${VERSION}" >> $GITHUB_ENV
           echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
           echo "VCS_REF=${GITHUB_SHA::8}" >> $GITHUB_ENV
-          echo "PLATFORMS=${DOCKER_PLATFORMS}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -71,7 +65,7 @@ jobs:
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{env.PUSH_IMAGE == true}}
+        if: ${{env.PUSH_IMAGE == 'true'}}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -79,7 +73,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          push: ${{env.PUSH_IMAGE == true}}
+          push: ${{env.PUSH_IMAGE == 'true'}}
           tags: ${{env.TAGS}}
           build-args: |
             VERSION=${{env.VERSION}}
@@ -87,6 +81,6 @@ jobs:
             VCS_REF=${{env.VCS_REF}}
           context: .
           file: ${{env.DOCKERFILE}}
-          platforms: ${{env.PLATFORMS}}
+          platforms: ${{env.DOCKER_PLATFORMS}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
