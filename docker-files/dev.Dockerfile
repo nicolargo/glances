@@ -23,12 +23,14 @@ RUN \
 
 RUN pip install psutil bottle
 
-COPY . /glances
-
 # Define working directory
 WORKDIR /glances
 
+COPY *requirements.txt .
+
 RUN CASS_DRIVER_NO_CYTHON=1 pip install -r optional-requirements.txt
+
+COPY . /glances
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
