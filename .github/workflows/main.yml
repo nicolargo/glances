@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  DEFAULT_DOCKER_IMAGE: nicolargo/glances
+
 on:
   pull_request:
     branches: [ develop ]
@@ -15,33 +18,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Prepare
-        id: prepare
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Set envs
         env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE }}
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE || env.DEFAULT_DOCKER_IMAGE }}
           DOCKER_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64,linux/386
         run: |
+          DOCKERFILE=./docker-files/dev.Dockerfile
+          PUSH_IMAGE=false
           VERSION=latest
-          
+
+          if [[ $GITHUB_REF == refs/heads/master ]]; then
+            PUSH_IMAGE=true
+          fi
+
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
+            PUSH_IMAGE=true
+            DOCKERFILE=./docker-files/Dockerfile
           fi
+
           if [[ $GITHUB_REF == refs/heads/develop ]]; then
             VERSION=dev
+            PUSH_IMAGE=true
           fi
 
-          TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
-          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            TAGS="$TAGS --tag ${DOCKER_IMAGE}:latest"
-          fi
-
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
-            --build-arg VERSION=${VERSION} \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg VCS_REF=${GITHUB_SHA::8} \
-            ${TAGS} --file ./docker-files/Dockerfile ./docker-files/
+          echo "DOCKERFILE=${DOCKERFILE}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "PUSH_IMAGE=${PUSH_IMAGE}" >> $GITHUB_ENV
+          echo "TAGS=${DOCKER_IMAGE}:${VERSION}" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+          echo "VCS_REF=${GITHUB_SHA::8}" >> $GITHUB_ENV
+          echo "PLATFORMS=${DOCKER_PLATFORMS}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -54,23 +69,24 @@ jobs:
         with:
           version: latest
 
-      - name: Docker Buildx (build)
-        run: |
-          docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
-
       - name: Login to DockerHub
-        if: success() && github.event_name != 'pull_request'
         uses: docker/login-action@v1
+        if: ${{env.PUSH_IMAGE == true}}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Docker Buildx (push)
-        if: success() && github.event_name != 'pull_request'
-        run: |
-          docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
-
-      - name: Inspect image
-        if: always() && github.event_name != 'pull_request'
-        run: |
-          docker buildx imagetools inspect ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{env.PUSH_IMAGE == true}}
+          tags: ${{env.TAGS}}
+          build-args: |
+            VERSION=${{env.VERSION}}
+            BUILD_DATE=${{env.BUILD_DATE}}
+            VCS_REF=${{env.VCS_REF}}
+          context: .
+          file: ${{env.DOCKERFILE}}
+          platforms: ${{env.PLATFORMS}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
