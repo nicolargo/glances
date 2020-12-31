@@ -5,7 +5,7 @@
 #
 
 ARG ARCH=
-FROM ${ARCH}python:3-slim-buster
+FROM ${ARCH}python:3-buster
 
 # Install package
 # Must used calibre package to be able to run external module
@@ -15,17 +15,20 @@ RUN \
   apt-get install -y          \
   curl              \
   gcc               \
+  git \
   lm-sensors        \
   wireless-tools    \
   iputils-ping && \
   rm -rf /var/lib/apt/lists/*
 
-# Force rebuild otherwise it could be cached without rerun
-ARG VCS_REF
-RUN pip install glances[all]
+RUN pip install psutil bottle
 
-# Define working directory.
+COPY . /glances
+
+# Define working directory
 WORKDIR /glances
+
+RUN CASS_DRIVER_NO_CYTHON=1 pip install -r optional-requirements.txt
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
