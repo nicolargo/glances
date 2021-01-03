@@ -107,7 +107,7 @@ class Config(object):
         # Re patern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
 
-        self.parser = ConfigParser()
+        self.parser = ConfigParser(interpolation=None)
         self.read()
 
     def config_file_paths(self):
@@ -223,6 +223,11 @@ class Config(object):
             self.parser.add_section('processlist')
         self.set_default_cwc('processlist', 'cpu')
         self.set_default_cwc('processlist', 'mem')
+
+        # Now
+        if not self.parser.has_section('strftime'):
+            self.parser.add_section('strftime')
+        self.set_default('strftime', 'format', '')
 
     @property
     def loaded_config_file(self):
