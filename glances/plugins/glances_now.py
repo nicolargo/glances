@@ -41,6 +41,10 @@ class Plugin(GlancesPlugin):
         # Set the message position
         self.align = 'bottom'
 
+        if config is not None:
+            if 'strftime' in config.as_dict():
+                self.strftime = config.as_dict()['strftime']['format']
+
     def reset(self):
         """Reset/init the stats."""
         self.stats = ''
@@ -49,10 +53,14 @@ class Plugin(GlancesPlugin):
         """Update current date/time."""
         # Had to convert it to string because datetime is not JSON serializable
         # Add the time zone (issue #1249 / #1337 / #1598)
-        if (len(tzname[1]) > 6):
-            self.stats = strftime('%Y-%m-%d %H:%M:%S %z')
+
+        if self.strftime:
+            self.stats = strftime(self.strftime)
         else:
-            self.stats = strftime('%Y-%m-%d %H:%M:%S %Z')
+            if (len(tzname[1]) > 6):
+                self.stats = strftime('%Y-%m-%d %H:%M:%S %z')
+            else:
+                self.stats = strftime('%Y-%m-%d %H:%M:%S %Z')
 
         return self.stats
 
