@@ -153,6 +153,16 @@ class Config(object):
                 self._loaded_config_file = config_file
                 break
 
+        # Globals
+        if not self.parser.has_section('global'):
+            self.parser.add_section('global')
+        self.set_default('global', 'strftime_format', '')
+
+        # check_update
+        if not self.parser.has_section('global'):
+            self.parser.add_section('global')
+        self.set_default('global', 'check_update', 'false')
+
         # Quicklook
         if not self.parser.has_section('quicklook'):
             self.parser.add_section('quicklook')
@@ -223,11 +233,6 @@ class Config(object):
             self.parser.add_section('processlist')
         self.set_default_cwc('processlist', 'cpu')
         self.set_default_cwc('processlist', 'mem')
-
-        # Now
-        if not self.parser.has_section('strftime'):
-            self.parser.add_section('strftime')
-        self.set_default('strftime', 'format', '')
 
     @property
     def loaded_config_file(self):
