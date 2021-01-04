@@ -41,9 +41,11 @@ class Plugin(GlancesPlugin):
         # Set the message position
         self.align = 'bottom'
 
-        if config is not None:
-            if 'strftime' in config.as_dict():
-                self.strftime = config.as_dict()['strftime']['format']
+        if args.strftime_format:
+            self.strftime = args.strftime_format
+        elif config is not None:
+            if 'global' in config.as_dict():
+                self.strftime = config.as_dict()['global']['strftime_format']
 
     def reset(self):
         """Reset/init the stats."""
