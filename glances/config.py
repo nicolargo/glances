@@ -107,7 +107,11 @@ class Config(object):
         # Re patern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
 
-        self.parser = ConfigParser(interpolation=None)
+        try:
+            self.parser = ConfigParser(interpolation=None)
+        except TypeError:
+            self.parser = ConfigParser()
+            
         self.read()
 
     def config_file_paths(self):
