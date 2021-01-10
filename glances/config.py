@@ -107,7 +107,7 @@ class Config(object):
         # Re patern for optimize research of `foo`
         self.re_pattern = re.compile(r'(\`.+?\`)')
 
-        self.parser = ConfigParser()
+        self.parser = ConfigParser(interpolation=None)
         self.read()
 
     def config_file_paths(self):
@@ -152,6 +152,16 @@ class Config(object):
                 # Save the loaded configuration file path (issue #374)
                 self._loaded_config_file = config_file
                 break
+
+        # Globals
+        if not self.parser.has_section('global'):
+            self.parser.add_section('global')
+        self.set_default('global', 'strftime_format', '')
+
+        # check_update
+        if not self.parser.has_section('global'):
+            self.parser.add_section('global')
+        self.set_default('global', 'check_update', 'false')
 
         # Quicklook
         if not self.parser.has_section('quicklook'):
