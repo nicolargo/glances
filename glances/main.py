@@ -254,6 +254,9 @@ Examples of use:
         # Globals options
         parser.add_argument('--disable-check-update', action='store_true', default=False,
                             dest='disable_check_update', help='disable online Glances version ckeck')
+        parser.add_argument('--strftime', dest='strftime_format', default='',
+                            help='strftime format string for displaying current date in standalone mode')
+
         return parser
 
     def parse_args(self):
