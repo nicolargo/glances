@@ -227,9 +227,21 @@ class Plugin(GlancesPlugin):
         # Alert
         for i in self.stats:
             ifrealname = i['interface_name'].split(':')[0]
-            # Convert rate in bps ( to be able to compare to interface speed)
+            # Convert rate in bps (to be able to compare to interface speed)
             bps_rx = int(i['rx'] // i['time_since_update'] * 8)
             bps_tx = int(i['tx'] // i['time_since_update'] * 8)
+
+            # Check if the stats should be hidden
+            if bps_rx != 0 or bps_tx != 0:
+                self.views[i[self.get_key(
+                )]]['rx']['_zero'] = self.views[i[self.get_key()]]['rx']['hidden']
+                self.views[i[self.get_key(
+                )]]['tx']['_zero'] = self.views[i[self.get_key()]]['rx']['hidden']
+            self.views[i[self.get_key(
+            )]]['rx']['hidden'] = self.views[i[self.get_key()]]['rx']['_zero'] and bps_rx == 0
+            self.views[i[self.get_key(
+            )]]['tx']['hidden'] = self.views[i[self.get_key()]]['tx']['_zero'] and bps_tx == 0
+
             # Decorate the bitrate with the configuration file thresolds
             alert_rx = self.get_alert(bps_rx, header=ifrealname + '_rx')
             alert_tx = self.get_alert(bps_tx, header=ifrealname + '_tx')
@@ -289,6 +301,10 @@ class Plugin(GlancesPlugin):
         for i in self.sorted_stats():
             # Do not display interface in down state (issue #765)
             if ('is_up' in i) and (i['is_up'] is False):
+                continue
+            # Hide 0 value (issue #1787)
+            if self.get_views(item=i[self.get_key()], key='rx', option='hidden') and \
+               self.get_views(item=i[self.get_key()], key='tx', option='hidden'):
                 continue
             # Format stats
             # Is there an alias for the interface name ?
