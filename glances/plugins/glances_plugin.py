@@ -428,10 +428,12 @@ class GlancesPlugin(object):
         The V of MVC
         A dict of dict with the needed information to display the stats.
         Example for the stat xxx:
-        'xxx': {'decoration': 'DEFAULT',
-                'optional': False,
-                'additional': False,
-                'splittable': False}
+        'xxx': {'decoration': 'DEFAULT',  >>> The decoration of the stats
+                'optional': False,        >>> Is the stat optional
+                'additional': False,      >>> Is the stat provide additional information
+                'splittable': False,      >>> Is the stat can be cut (like process lon name)
+                'hidden': False,          >>> Is the stats should be hidden in the UI 
+                '_zero': True}            >>> For internal purpose only
         """
         ret = {}
 
@@ -440,12 +442,15 @@ class GlancesPlugin(object):
                 self.get_key() is not None):
             # Stats are stored in a list of dict (ex: NETWORK, FS...)
             for i in self.get_raw():
+                # i[self.get_key()] is the interface name (example for NETWORK)
                 ret[i[self.get_key()]] = {}
                 for key in listkeys(i):
                     value = {'decoration': 'DEFAULT',
                              'optional': False,
                              'additional': False,
-                             'splittable': False}
+                             'splittable': False,
+                             'hidden': False,
+                             '_zero': self.views[i[self.get_key()]][key]['_zero'] if i[self.get_key()] in self.views and key in self.views[i[self.get_key()]] else True}
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
@@ -453,7 +458,9 @@ class GlancesPlugin(object):
                 value = {'decoration': 'DEFAULT',
                          'optional': False,
                          'additional': False,
-                         'splittable': False}
+                         'splittable': False,
+                         'hidden': False,
+                         '_zero': self.views[key]['_zero'] if key in self.views and '_zero' in self.views[key] else True}
                 ret[key] = value
 
         self.views = ret
