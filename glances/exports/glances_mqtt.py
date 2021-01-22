@@ -21,6 +21,7 @@
 
 import socket
 import string
+import json
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
@@ -47,7 +48,7 @@ class Export(GlancesExport):
         # Load the MQTT configuration file
         self.export_enable = self.load_conf('mqtt',
                                             mandatories=['host', 'password'],
-                                            options=['port', 'user', 'topic', 'tls'])
+                                            options=['port', 'user', 'topic', 'tls', 'format'])
         if not self.export_enable:
             exit('Missing MQTT config')
 
@@ -58,6 +59,11 @@ class Export(GlancesExport):
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
         self.tls = (self.tls and self.tls.lower() == 'true')
+
+        self.format = self.format.lower() or 'simple'
+        if self.format not in ['simple', 'json']:
+            logger.critical("Format must be either 'simple' or 'json'.")
+            return None
 
         # Init the MQTT client
         self.client = self.init()
@@ -92,13 +98,23 @@ class Export(GlancesExport):
                         substitute=SUBSTITUTE):
             return ''.join(c if c in whitelist else substitute for c in s)
 
-        for sensor, value in zip(columns, points):
-            try:
-                sensor = [whitelisted(name) for name in sensor.split('.')]
-                tobeexport = [self.topic, self.hostname, name]
-                tobeexport.extend(sensor)
-                topic = '/'.join(tobeexport)
+        if self.format == 'simple':
+            for sensor, value in zip(columns, points):
+                try:
+                    sensor = [whitelisted(name) for name in sensor.split('.')]
+                    tobeexport = [self.topic, self.hostname, name]
+                    tobeexport.extend(sensor)
+                    topic = '/'.join(tobeexport)
 
-                self.client.publish(topic, value)
+                    self.client.publish(topic, value)
+                except Exception as e:
+                    logger.error("Can not export stats to MQTT server (%s)" % e)
+        elif self.format == 'json':
+            try:
+                topic = '/'.join([self.topic, self.hostname, name])
+                sensor_values = dict(zip(columns, points))
+                json_values = json.dumps(sensor_values)
+                self.client.publish(topic, json_values)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
+            
