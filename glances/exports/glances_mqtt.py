@@ -113,8 +113,24 @@ class Export(GlancesExport):
             try:
                 topic = '/'.join([self.topic, self.hostname, name])
                 sensor_values = dict(zip(columns, points))
-                json_values = json.dumps(sensor_values)
-                self.client.publish(topic, json_values)
+
+                # Build the value to output
+                output_value = dict()
+                for key in sensor_values:
+                    split_key = key.split('.')
+                    
+                    # Add the parent keys if they don't exist
+                    current_level = output_value
+                    for depth in range(len(split_key) - 1):
+                        if split_key[depth] not in current_level:
+                            current_level[split_key[depth]] = dict()
+                        current_level = current_level[split_key[depth]]
+                        
+                    # Add the value
+                    current_level[split_key[len(split_key) - 1]] = sensor_values[key]
+
+                json_value = json.dumps(output_value)
+                self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
             
