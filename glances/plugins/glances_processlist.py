@@ -332,6 +332,9 @@ class Plugin(GlancesPlugin):
             process_decoration = 'PROCESS_SELECTED' if (selected and args.is_standalone) else 'PROCESS'
             if cmdline:
                 path, cmd, arguments = split_cmdline(cmdline)
+                # Manage end of line in arguments (see #1692)
+                arguments.replace('\r\n', ' ')
+                arguments.replace('\n', ' ')
                 if os.path.isdir(path) and not args.process_short_name:
                     msg = self.layout_stat['command'].format(path) + os.sep
                     ret.append(self.curse_add_line(msg, splittable=True))
