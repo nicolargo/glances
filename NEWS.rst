@@ -2,6 +2,13 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.1.7
+=============
+
+This version is under development.
+
+Please have a look on the roadmap: https://github.com/nicolargo/glances/milestone/47
+
 Version 3.1.6
 =============
 
