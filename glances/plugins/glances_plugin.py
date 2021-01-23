@@ -99,6 +99,11 @@ class GlancesPlugin(object):
         # Init the views
         self.views = dict()
 
+        # Hide stats if all the hide_zero_fields has never been != 0
+        # Default is False, always display stats
+        self.hide_zero = False
+        self.hide_zero_fields = []
+
         # Init the stats
         self.stats_init_value = stats_init_value
         self.stats = None
@@ -421,6 +426,49 @@ class GlancesPlugin(object):
                 logger.error(
                     "Cannot get item({})=value({}) ({})".format(item, value, e))
                 return None
+
+    def update_views_hidden(self):
+        """If the self.hide_zero is set then update the hidden field of the view
+        It will check if all fields values are already be different from 0
+        In this case, the hidden field is set to True
+
+        Note: This function should be called by plugin (in the update_views method)
+
+        Example (for network plugin):
+        __Init__
+            self.hide_zero_fields = ['rx', 'tx']
+        Update views
+            ...
+            self.update_views_hidden()
+        """
+        if not self.hide_zero:
+            return False
+        if (isinstance(self.get_raw(), list) and
+                self.get_raw() is not None and
+                self.get_key() is not None):
+            # Stats are stored in a list of dict (ex: NETWORK, FS...)
+            for i in self.get_raw():
+                if any([i[f] for f in self.hide_zero_fields]):
+                    for f in self.hide_zero_fields:
+                        self.views[i[self.get_key(
+                        )]][f]['_zero'] = self.views[i[self.get_key()]][f]['hidden']
+                for f in self.hide_zero_fields:
+                    self.views[i[self.get_key(
+                    )]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
+        elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
+            # 
+            # Warning: This code has never been tested because 
+            # no plugin with dict instance use the hidden function...
+            #                       vvvv
+            # 
+            # Stats are stored in a dict (ex: CPU, LOAD...)
+            for key in listkeys(self.get_raw()):
+                if any([self.get_raw()[f] for f in self.hide_zero_fields]):
+                    for f in self.hide_zero_fields:
+                        self.views[f]['_zero'] = self.views[f]['hidden']
+                for f in self.hide_zero_fields:
+                    self.views[f]['hidden'] = self.views['_zero'] and self.views[f] == 0
+        return True
 
     def update_views(self):
         """Update the stats views.
