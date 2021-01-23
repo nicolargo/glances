@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 from glances.compat import nativestr, n
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
+from glances.logger import logger
 
 import psutil
 
@@ -51,6 +52,9 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+        # Hide stats if it has never been != 0
+        self.hide_zero = True
+        self.hide_zero_fields = ['read_bytes', 'write_bytes']
 
     def get_key(self):
         """Return the key of the list."""
@@ -143,9 +147,12 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
+        # Check if the stats should be hidden
+        self.update_views_hidden()
+
         # Add specifics informations
         # Alert
-        for i in self.stats:
+        for i in self.get_raw():
             disk_real_name = i['disk_name']
             self.views[i[self.get_key()]]['read_bytes']['decoration'] = self.get_alert(int(i['read_bytes'] // i['time_since_update']),
                                                                                        header=disk_real_name + '_rx')
@@ -179,6 +186,9 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
         # Disk list (sorted by name)
         for i in self.sorted_stats():
+            # Hide stats if never be different from 0 (issue #1787)
+            if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
+                continue
             # Is there an alias for the disk name ?
             disk_real_name = i['disk_name']
             disk_name = self.has_alias(i['disk_name'])
