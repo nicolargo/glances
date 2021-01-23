@@ -81,6 +81,9 @@ class Plugin(GlancesPlugin):
         # The plgin can be disable using: args.disable_docker
         self.args = args
 
+        # Default config keys
+        self.config = config
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -207,6 +210,14 @@ class Plugin(GlancesPlugin):
             # Get stats for all containers
             stats['containers'] = []
             for container in containers:
+                # Only show specific containers
+                if not self.is_show(nativestr(container.name)):
+                    continue
+
+                # Do not take hiden container into account
+                if self.is_hide(nativestr(container.name)):
+                    continue
+
                 # Init the stats for the current container
                 container_stats = {}
                 # The key is the container name and not the Id
@@ -524,8 +535,11 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Header
         ret.append(self.curse_new_line())
-        # Get the maximum containers name (cutted to 20 char max)
-        name_max_width = min(20, len(max(self.stats['containers'], key=lambda x: len(x['name']))['name']))
+        # Get the maximum containers name
+        # Max size is configurable. See feature request #1723.
+        name_max_width = min(self.config.get_int_value('docker', 'max_name_size', default=20),
+                             len(max(self.stats['containers'], 
+                                 key=lambda x: len(x['name']))['name']))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg))
         msg = '{:>10}'.format('Status')

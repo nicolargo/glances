@@ -8,8 +8,7 @@
 FROM alpine
 
 # Install Glances (develop branch)
-RUN apk add python py2-psutil py2-bottle
-RUN apk add git
+RUN apk add python3 py3-psutil py3-bottle docker-py git
 RUN git clone -b develop https://github.com/nicolargo/glances.git
 
 # Define working directory.
@@ -22,4 +21,4 @@ EXPOSE 61209
 EXPOSE 61208
 
 # Define default command.
-CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+CMD /usr/bin/python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT

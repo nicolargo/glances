@@ -66,20 +66,24 @@ class Plugin(GlancesPlugin):
         if self.input_method == 'local':
             # Update stats using the standard system lib
             # Grab SWAP using the psutil swap_memory method
-            sm_stats = psutil.swap_memory()
-
-            # Get all the swap stats (copy/paste of the psutil documentation)
-            # total: total swap memory in bytes
-            # used: used swap memory in bytes
-            # free: free swap memory in bytes
-            # percent: the percentage usage
-            # sin: the number of bytes the system has swapped in from disk (cumulative)
-            # sout: the number of bytes the system has swapped out from disk
-            # (cumulative)
-            for swap in ['total', 'used', 'free', 'percent',
-                         'sin', 'sout']:
-                if hasattr(sm_stats, swap):
-                    stats[swap] = getattr(sm_stats, swap)
+            try:
+                sm_stats = psutil.swap_memory()
+            except RuntimeError:
+                # Crash on startup on Illumos when no swap is configured #1767
+                pass
+            else:
+                # Get all the swap stats (copy/paste of the psutil documentation)
+                # total: total swap memory in bytes
+                # used: used swap memory in bytes
+                # free: free swap memory in bytes
+                # percent: the percentage usage
+                # sin: the number of bytes the system has swapped in from disk (cumulative)
+                # sout: the number of bytes the system has swapped out from disk
+                # (cumulative)
+                for swap in ['total', 'used', 'free', 'percent',
+                            'sin', 'sout']:
+                    if hasattr(sm_stats, swap):
+                        stats[swap] = getattr(sm_stats, swap)
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name == 'windows':
@@ -135,7 +139,8 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+        if 'used' in self.stats and 'total' in self.stats:
+            self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
