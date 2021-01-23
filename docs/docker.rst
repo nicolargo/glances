@@ -104,7 +104,6 @@ which will prompt you to answer the following questions:
 after which you will need to kill the process by entering ``CTRL+C`` (potentially twice), before leaving the container:
 
 .. code-block:: console
-    ^C^C
     exit
 
 You will then need to copy the password file to your host machine:

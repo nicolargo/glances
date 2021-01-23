@@ -177,6 +177,11 @@ class GlancesProcesses(object):
             return None
 
     @property
+    def processes_count(self):
+        """Get the current number of processes showed in the UI."""
+        return min(self._max_processes - 2, glances_processes.processcount['total'] - 1)
+
+    @property
     def max_processes(self):
         """Get the maximum number of processes showed in the UI."""
         return self._max_processes
@@ -398,6 +403,14 @@ class GlancesProcesses(object):
         else:
             self.auto_sort = auto
             self._sort_key = key
+    
+    def kill(self, pid, timeout=3):
+        """Kill process with pid"""
+        assert pid != os.getpid(), "Glances can kill itself..."
+        p = psutil.Process(pid)
+        logger.debug('Send kill signal to process: {}'.format(p))
+        p.kill()
+        return p.wait(timeout)
 
 
 def weighted(value):

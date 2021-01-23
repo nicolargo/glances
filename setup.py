@@ -55,7 +55,7 @@ def get_install_extras_require():
         # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
         'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        'cpuinfo': ['py-cpuinfo'],
+        'cpuinfo': ['py-cpuinfo<=4.0.0'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'influxdb>=1.0.0', 'kafka-python', 'pika', 'paho-mqtt', 'potsdb',
@@ -135,6 +135,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: System :: Monitoring'
     ]
 )

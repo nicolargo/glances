@@ -2,6 +2,54 @@
 Glances Version 3
 ==============================================================================
 
+Version 3.1.6
+=============
+
+Enhancements and new features:
+
+    * Kill a process from the Curses interface #1444
+    * Manual refresh on F5 in the Curses interface #1753
+    * Hide function in sensors section #1590
+    * Enhancement Request: .conf parameter for AMP #1690
+    * Password for Web/Browser mode  #1674
+    * Unable to connect to Influxdb 2.0 #1776
+    * ci: fix release process and improve build speeds #1782
+    * Cache cpuinfo output #1700
+    * sort by clicking improvements and bug #1578
+    * Allow embedded AMP python script to be placed in a configurable location #1734
+    * Add attributes to stdout/stdout-csv plugins #1733
+    * Do not shorten container names #1723
+
+Bugs corrected:
+
+    * Version tag for docker image packaging #1754 
+    * Unusual characters in cmdline cause lines to disappear and corrupt the display #1692 
+    * UnicodeDecodeError on any command with a utf8 character in its name #1676
+    * Docker image is not up to date install #1662
+    * Add option to set the strftime format #1785
+    * fix: docker dev build contains all optional requirements #1779
+    * GPU information is incomplete via web #1697
+    * [WebUI] Fix display of null values for GPU plugin #1773
+    * crash on startup on Illumos when no swap is configured #1767
+    * Glances crashes with 2 GPUS bug #1683
+    * [Feature Request] Filter Docker containers#1748
+    * Error with IP Plugin : object has no attribute #1528
+    * docker-compose #1760
+    * [WebUI] Fix sort by disk io #1759
+    * Connection to MQTT server failst #1705
+    * Misleading image tag latest-arm needs contributor packaging #1419
+    * Docker nicolargo/glances:latest missing arm builds? #1746
+    * Alpine image is broken packaging #1744
+    * RIP Alpine? needs contributor packaging #1741
+    * Manpage improvement documentation #1743
+    * Make build reproducible packaging #1740
+    * Automated multiarch builds for docker #1716
+    * web ui of glances is not coming #1721
+    * fixing command in json.rst #1724
+    * Fix container rss value #1722
+    * Alpine Image is broken needs test packaging #1720
+    * Fix gpu plugin to handle multiple gpus with different reporting capabilities bug #1634
+
 Version 3.1.5
 =============
 

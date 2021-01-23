@@ -9,9 +9,13 @@ Glances - An eye on your system
     :target: https://github.com/nicolargo/glances/
     :alt: Github stars
 
+.. image:: https://img.shields.io/docker/pulls/nicolargo/glances
+    :target: https://hub.docker.com/r/nicolargo/glances/
+    :alt: Docker pull
+
 .. image:: https://pepy.tech/badge/glances/month
     :target: https://pepy.tech/project/glances
-    :alt: Downloads
+    :alt: Pypi downloads
 
 .. image:: https://img.shields.io/travis/nicolargo/glances/master.svg?maxAge=3600&label=Linux%20/%20BSD%20/%20macOS
     :target: https://travis-ci.org/nicolargo/glances
@@ -24,8 +28,8 @@ Glances - An eye on your system
 .. image:: https://scrutinizer-ci.com/g/nicolargo/glances/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/nicolargo/glances/?branch=develop
 
-.. image:: https://img.shields.io/badge/Donate-PayPal-green.svg
-    :target: https://www.paypal.me/nicolargo
+.. image:: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/nicolargo
+    :target: https://github.com/sponsors/nicolargo
 
 .. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
     :target: https://twitter.com/nicolargo
@@ -65,7 +69,8 @@ Optional dependencies:
 - ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
 - ``elasticsearch`` (for the Elastic Search export module)
 - ``hddtemp`` (for HDD temperature monitoring support) [Linux-only]
-- ``influxdb`` (for the InfluxDB export module)
+- ``influxdb`` (for the InfluxDB version 1 export module)
+- ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
 - ``nvidia-ml-py3`` (for the GPU plugin)
@@ -161,6 +166,13 @@ If you need to install Glances in a specific user location, use:
     export PYTHONUSERBASE=~/mylocalpath
     pip install --user glances
 
+The current develop branch is also published to the test.pypi.org package index.
+If you want to test the develop version, enter:
+
+.. code-block:: console
+
+    pip install -i https://test.pypi.org/simple/ Glances
+
 Docker: the funny way
 ---------------------
 
@@ -168,24 +180,30 @@ A Glances container is available. It includes the latest development
 HEAD version. You can use it to monitor your server and all your other
 containers!
 
-Get the Glances container:
+Get the Glances container (latest develop branch):
 
 .. code-block:: console
 
-    docker pull nicolargo/glances
+    docker pull nicolargo/glances:dev
+
+Note, you can choose another branch with :
+
+- nicolargo/glances:latest for the last master branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:dev for the last develop branch (included multiple architectures 386, amd64, arm/v7 and arm64)
+- nicolargo/glances:<version> for the specific <version> (included multiple architectures 386, amd64, arm/v7 and arm64)
 
 Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it docker.io/nicolargo/glances
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:dev
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
 
 .. code-block:: console
 
-    FROM nicolargo/glances
+    FROM nicolargo/glances:dev
     COPY glances.conf /glances/conf/glances.conf
     CMD python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
@@ -194,7 +212,7 @@ docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it docker.io/nicolargo/glances
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:dev
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -203,7 +221,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host docker.io/nicolargo/glances
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:dev
 
 GNU/Linux
 ---------
@@ -416,8 +434,7 @@ Donation
 
 If this project help you, you can give me a tip ;)
 
-.. image:: https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif
-        :target: https://www.paypal.me/nicolargo
+See the sponsors_ page.
 
 Author
 ======
@@ -440,3 +457,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _forum: https://groups.google.com/forum/?hl=en#!forum/glances-users
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
 .. _package: https://repology.org/metapackage/glances/packages
+.. _sponsors: https://github.com/sponsors/nicolargo

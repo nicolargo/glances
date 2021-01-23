@@ -17,10 +17,10 @@ Location
 You can put your own ``glances.conf`` file in the following locations:
 
 ==================== =============================================================
-``Linux``, ``SunOS`` ~/.config/glances, /etc/glances
-``*BSD``             ~/.config/glances, /usr/local/etc/glances
-``macOS``            ~/Library/Application Support/glances, /usr/local/etc/glances
-``Windows``          %APPDATA%\\glances
+``Linux``, ``SunOS`` ~/.config/glances/glances.conf, /etc/glances/glances.conf
+``*BSD``             ~/.config/glances/glances.conf, /usr/local/etc/glances/glances.conf
+``macOS``            ~/Library/Application Support/glances/glances.conf, /usr/local/etc/glances/glances.conf
+``Windows``          %APPDATA%\\glances\glances.conf
 ==================== =============================================================
 
 - On Windows XP, ``%APPDATA%`` is: ``C:\Documents and Settings\<USERNAME>\Application Data``.

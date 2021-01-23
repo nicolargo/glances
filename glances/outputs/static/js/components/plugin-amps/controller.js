@@ -22,7 +22,7 @@ export default function GlancesPluginAmpsController($scope, GlancesStats, favico
         }, this);
     };
 
-    vm.getDescriptionDecoration = function (process) {
+    vm.getNameDecoration = function (process) {
         var count = process.count;
         var countMin = process.countmin;
         var countMax = process.countmax;

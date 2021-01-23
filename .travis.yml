@@ -23,12 +23,22 @@ after_success:
   - coveralls
 
 deploy:
-  provider: pypi
-  user: nicolargo
-  password:
-    secure: Fms23jiiKKq6qJMsZYrmBz5mC753VGrjCxzVrsioENfH3KaFf6kUc9fTYntaLvjLPTNBkU3R2IORfVOikJKmNWqWVZOdJ/nq8zPl6o9MgdNcX7qWTvY8Fi9MW7tIZHrehhm0LvWFVq8ZSc8iYzw3/741lvBh8vpJZSQs3sq/1QI=
-  on:
-    tags: true
-    branch: master
-    distributions: sdist bdist_wheel
-    repo: nicolargo/glances
+  - provider: pypi
+    user: nicolargo
+    password:
+      secure: Fms23jiiKKq6qJMsZYrmBz5mC753VGrjCxzVrsioENfH3KaFf6kUc9fTYntaLvjLPTNBkU3R2IORfVOikJKmNWqWVZOdJ/nq8zPl6o9MgdNcX7qWTvY8Fi9MW7tIZHrehhm0LvWFVq8ZSc8iYzw3/741lvBh8vpJZSQs3sq/1QI=
+    on:
+      tags: true
+      branch: master
+      distributions: sdist bdist_wheel
+      repo: nicolargo/glances
+  - provider: pypi
+    server: https://test.pypi.org/legacy/
+    user: nicolargo
+    password:
+      secure: kxchYP3VJWe74jun0rJjuEFFpnO2sF3WHsK5Axlz4flJ6dtX0OPeZd9SlqgMX7cv9FHcXxyukVKrw4PHVqUNcWoaKM8TNeddKkGeSjcVY5C7NIExXh5es4SguozdT4cckoJUyN2xXc7cUAM68CHWfxijR6NiDMXIuMJrZumye6c=
+    on:
+      tags: false
+      branch: develop
+      distributions: sdist bdist_wheel
+      repo: nicolargo/glances
