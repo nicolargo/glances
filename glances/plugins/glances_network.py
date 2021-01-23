@@ -61,6 +61,9 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+        # Hide stats if it has never been != 0
+        self.hide_zero = True
+        self.hide_zero_fields = ['rx', 'tx']
 
     def get_key(self):
         """Return the key of the list."""
@@ -223,13 +226,17 @@ class Plugin(GlancesPlugin):
         # Call the father's method
         super(Plugin, self).update_views()
 
+        # Check if the stats should be hidden
+        self.update_views_hidden()
+
         # Add specifics informations
         # Alert
-        for i in self.stats:
+        for i in self.get_raw():
             ifrealname = i['interface_name'].split(':')[0]
-            # Convert rate in bps ( to be able to compare to interface speed)
+            # Convert rate in bps (to be able to compare to interface speed)
             bps_rx = int(i['rx'] // i['time_since_update'] * 8)
             bps_tx = int(i['tx'] // i['time_since_update'] * 8)
+
             # Decorate the bitrate with the configuration file thresolds
             alert_rx = self.get_alert(bps_rx, header=ifrealname + '_rx')
             alert_tx = self.get_alert(bps_tx, header=ifrealname + '_tx')
@@ -289,6 +296,9 @@ class Plugin(GlancesPlugin):
         for i in self.sorted_stats():
             # Do not display interface in down state (issue #765)
             if ('is_up' in i) and (i['is_up'] is False):
+                continue
+            # Hide stats if never be different from 0 (issue #1787)
+            if all([self.get_views(item=i[self.get_key()], key=f, option='hidden') for f in self.hide_zero_fields]):
                 continue
             # Format stats
             # Is there an alias for the interface name ?
