@@ -2,12 +2,12 @@
 Glances Version 3
 ==============================================================================
 
-Version 3.1.7
-=============
+Version 3.1.6.1
+===============
 
-This version is under development.
+Bugs corrected:
 
-Please have a look on the roadmap: https://github.com/nicolargo/glances/milestone/47
+    * Glances crash after installing module for shown GPU informations on Windows 10 #1800 
 
 Version 3.1.6
 =============

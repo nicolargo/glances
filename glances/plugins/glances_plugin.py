@@ -498,7 +498,7 @@ class GlancesPlugin(object):
                              'additional': False,
                              'splittable': False,
                              'hidden': False,
-                             '_zero': self.views[i[self.get_key()]][key]['_zero'] if i[self.get_key()] in self.views and key in self.views[i[self.get_key()]] else True}
+                             '_zero': self.views[i[self.get_key()]][key]['_zero'] if i[self.get_key()] in self.views and key in self.views[i[self.get_key()]] and 'zero' in self.views[i[self.get_key()]][key] else True}
                     ret[i[self.get_key()]][key] = value
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
             # Stats are stored in a dict (ex: CPU, LOAD...)
