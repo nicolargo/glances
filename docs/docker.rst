@@ -97,7 +97,6 @@ and generate the password file (the default login is ``glances``, add the ``--us
 which will prompt you to answer the following questions:
 
 .. code-block:: console
-
     Define the Glances server password (glances username): 
     Password (confirm): 
     Do you want to save the password? [Yes/No]: Yes
@@ -105,20 +104,16 @@ which will prompt you to answer the following questions:
 after which you will need to kill the process by entering ``CTRL+C`` (potentially twice), before leaving the container:
 
 .. code-block:: console
-
-    ^C^C
     exit
 
 You will then need to copy the password file to your host machine:
 
 .. code-block:: console
-
     docker cp glances_docker:/root/.config/glances/glances.pwd ./secrets/glances_password
 
 and make it visible to your container by adding it to ``docker-compose.yml`` as a ``secret``:
 
 .. code-block:: yaml
-
     version: '3'
     
     services:

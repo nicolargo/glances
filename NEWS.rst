@@ -9,6 +9,13 @@ This version is under development.
 
 Please have a look on the roadmap: https://github.com/nicolargo/glances/milestone/47
 
+Version 3.1.6.1
+===============
+
+Bugs corrected:
+
+    * Glances crash after installing module for shown GPU informations on Windows 10 #1800
+
 Version 3.1.6
 =============
 
