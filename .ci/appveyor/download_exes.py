@@ -25,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 BASE_URL = 'https://ci.appveyor.com/api'
-PY_VERSIONS = ['2.7', '3.4', '3.5', '3.6', '3.7', '3.8']
+PY_VERSIONS = ['2.7', '3.4', '3.5', '3.6', '3.7', '3.8', '3.9']
 
 
 def term_supports_colors(file=sys.stdout):
