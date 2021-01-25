@@ -48,7 +48,7 @@ class Export(GlancesExport):
         # Load the MQTT configuration file
         self.export_enable = self.load_conf('mqtt',
                                             mandatories=['host', 'password'],
-                                            options=['port', 'user', 'topic', 'tls', 'format'])
+                                            options=['port', 'user', 'topic', 'tls', 'topic_structure'])
         if not self.export_enable:
             exit('Missing MQTT config')
 
@@ -60,9 +60,9 @@ class Export(GlancesExport):
         self.user = self.user or 'glances'
         self.tls = (self.tls and self.tls.lower() == 'true')
 
-        self.format = self.format.lower() or 'simple'
-        if self.format not in ['simple', 'json']:
-            logger.critical("Format must be either 'simple' or 'json'.")
+        self.topic_structure = self.topic_structure.lower() or 'per-metric'
+        if self.topic_structure not in ['per-metric', 'per-plugin']:
+            logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
             return None
 
         # Init the MQTT client
@@ -98,7 +98,7 @@ class Export(GlancesExport):
                         substitute=SUBSTITUTE):
             return ''.join(c if c in whitelist else substitute for c in s)
 
-        if self.format == 'simple':
+        if self.topic_structure == 'per-metric':
             for sensor, value in zip(columns, points):
                 try:
                     sensor = [whitelisted(name) for name in sensor.split('.')]
@@ -109,7 +109,7 @@ class Export(GlancesExport):
                     self.client.publish(topic, value)
                 except Exception as e:
                     logger.error("Can not export stats to MQTT server (%s)" % e)
-        elif self.format == 'json':
+        elif self.topic_structure == 'per-plugin':
             try:
                 topic = '/'.join([self.topic, self.hostname, name])
                 sensor_values = dict(zip(columns, points))
