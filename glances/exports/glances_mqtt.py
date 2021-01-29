@@ -60,7 +60,7 @@ class Export(GlancesExport):
         self.user = self.user or 'glances'
         self.tls = (self.tls and self.tls.lower() == 'true')
 
-        self.topic_structure = self.topic_structure.lower() or 'per-metric'
+        self.topic_structure = (self.topic_structure or 'per-metric').lower()
         if self.topic_structure not in ['per-metric', 'per-plugin']:
             logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
             return None
