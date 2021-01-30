@@ -7,7 +7,7 @@ RAID
 
 *Dependency: this plugin uses the optional pymdstat Python lib*
 
-This plugin is disable by default, please use the --enable raid option
+This plugin is disable by default, please use the --enable-plugin raid option
 to enable it.
 
 In the terminal interface, click on ``R`` to enable/disable it.
