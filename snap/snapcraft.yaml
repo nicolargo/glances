@@ -7,7 +7,7 @@ description: |
   Web based interface. It can adapt dynamically the displayed information
   depending on the user interface size.
 
-base: core
+base: core20
 grade: stable
 confinement: strict
 
@@ -60,11 +60,19 @@ parts:
     source: https://github.com/bottlepy/bottle.git
     source-branch: release-0.12
     source-depth: 1
+    override-build: |
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
+    organize:
+      bottle-dist: bottle/dist
   docker:
     plugin: python
     source: https://github.com/docker/docker-py.git
     source-tag: '3.7.3'
     source-depth: 1
+    override-build: |
+      cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
+    organize:
+      bottle-dist: docker/dist
   launchers:
     source: snap/local/launchers
     plugin: dump
