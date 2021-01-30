@@ -15,6 +15,7 @@ following:
     user=glances
     password=glances
     topic=glances
+    topic_structure=per-metric
 
 and run Glances with:
 
