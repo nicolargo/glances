@@ -7,7 +7,7 @@ SMART
 
 *Dependency: this plugin uses the optional pySMART Python lib*
 
-This plugin is disable by default, please use the --enable smart option
+This plugin is disable by default, please use the --enable-plugin smart option
 to enable it.
 
 .. image:: ../_static/smart.png
