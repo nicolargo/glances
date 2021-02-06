@@ -55,11 +55,6 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        # if self.version != elk_version[0]:
-        #     logger.critical(
-        #         "ElasticSearch Python client {} is mandatory, you have version {}".format(self.version, elk_version[0]))
-        #     sys.exit(2)
-
         try:
             es = Elasticsearch(hosts=['{}:{}'.format(self.host, self.port)])
         except Exception as e:
