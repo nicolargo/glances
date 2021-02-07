@@ -9,6 +9,13 @@ This version is under development.
 
 Please have a look on the roadmap: https://github.com/nicolargo/glances/milestone/47
 
+Version 3.1.6.2
+===============
+
+Bugs corrected:
+
+    * Remove bad merge for a non tested feature(see https://github.com/nicolargo/glances/issues/1787#issuecomment-774682954)
+
 Version 3.1.6.1
 ===============
 
