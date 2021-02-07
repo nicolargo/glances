@@ -26,6 +26,7 @@ from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
 from elasticsearch import Elasticsearch, helpers
+from elasticsearch import __version__ as elk_version
 
 
 class Export(GlancesExport):
@@ -38,9 +39,6 @@ class Export(GlancesExport):
 
         # Mandatories configuration keys (additional to host and port)
         self.index = None
-
-        # Optionals configuration keys
-        # N/A
 
         # Load the ES configuration file
         self.export_enable = self.load_conf('elasticsearch',
@@ -57,38 +55,6 @@ class Export(GlancesExport):
         if not self.export_enable:
             return None
 
-        self.index='{}-{}'.format(self.index, datetime.utcnow().strftime("%Y.%m.%d"))
-        template_body =  {
-          "mappings": {
-            "glances": {
-              "dynamic_templates": [
-                {
-                  "integers": {
-                    "match_mapping_type": "long",
-                    "mapping": {
-                      "type": "integer"
-                    }
-                  }
-                },
-                {
-                  "strings": {
-                    "match_mapping_type": "string",
-                    "mapping": {
-                      "type": "text",
-                      "fields": {
-                        "raw": {
-                          "type":  "keyword",
-                          "ignore_above": 256
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-
         try:
             es = Elasticsearch(hosts=['{}:{}'.format(self.host, self.port)])
         except Exception as e:
@@ -97,39 +63,34 @@ class Export(GlancesExport):
         else:
             logger.info("Connected to the ElasticSearch server %s:%s" % (self.host, self.port))
 
-        try:
-            index_count = es.count(index=self.index)['count']
-        except Exception as e:
-            # Index did not exist, it will be created at the first write
-            # Create it...
-            es.indices.create(index=self.index,body=template_body)
-        else:
-            logger.info("The index %s exists and holds %s entries." % (self.index, index_count))
-
         return es
 
     def export(self, name, columns, points):
         """Write the points to the ES server."""
         logger.debug("Export {} stats to ElasticSearch".format(name))
 
+        # Generate index name with the index field + current day
+        index = '{}-{}'.format(self.index,
+                               datetime.utcnow().strftime("%Y.%m.%d"))
+
         # Create DB input
         # https://elasticsearch-py.readthedocs.io/en/master/helpers.html
         actions = []
-        for c, p in zip(columns, points):
-            dtnow = datetime.utcnow()
-            action = {
-                "_index": self.index,
-                "_id": '{}.{}'.format(name,c),
-                "_type": "glances",
-                "_source": {
-                    "plugin": name,
-                    "metric": c,
-                    "value": str(p),
-                    "timestamp": dtnow.isoformat('T')
-                }
+        dtnow = datetime.utcnow().isoformat('T')
+        action = {
+            "_index": index,
+            "_id": '{}.{}'.format(name, dtnow),
+            "_type": 'glances-{}'.format(name),
+            "_source": {
+                "plugin": name,
+                "timestamp": dtnow
             }
-            logger.debug("Exporting the following object to elasticsearch: {}".format(action))
-            actions.append(action)
+        }
+        action['_source'].update(zip(columns, [str(p) for p in points]))
+        actions.append(action)
+
+        logger.debug(
+            "Exporting the following object to elasticsearch: {}".format(action))
 
         # Write input to the ES index
         try:
