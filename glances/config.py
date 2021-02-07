@@ -25,7 +25,7 @@ import multiprocessing
 from io import open
 import re
 
-from glances.compat import ConfigParser, NoOptionError, system_exec
+from glances.compat import ConfigParser, NoOptionError, NoSectionError, system_exec
 from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS
 from glances.logger import logger
 
@@ -295,7 +295,7 @@ class Config(object):
         ret = default
         try:
             ret = self.parser.get(section, option)
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             pass
 
         # Search a substring `foo` and replace it by the result of its exec
@@ -312,19 +312,19 @@ class Config(object):
         """Get the int value of an option, if it exists."""
         try:
             return self.parser.getint(section, option)
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             return int(default)
 
     def get_float_value(self, section, option, default=0.0):
         """Get the float value of an option, if it exists."""
         try:
             return self.parser.getfloat(section, option)
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             return float(default)
 
     def get_bool_value(self, section, option, default=True):
         """Get the bool value of an option, if it exists."""
         try:
             return self.parser.getboolean(section, option)
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             return bool(default)
