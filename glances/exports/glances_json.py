@@ -23,8 +23,10 @@ class Export(GlancesExport):
         try:
             if PY3:
                 self.json_file = open(self.json_filename, 'w')
+                self.json_file.close()
             else:
                 self.json_file = open(self.json_filename, 'wb')
+                self.json_file.close()
         except IOError as e:
             logger.critical("Cannot create the JSON file: {}".format(e))
             sys.exit(2)
@@ -54,8 +56,12 @@ class Export(GlancesExport):
             )
 
             # Export stats to JSON file
-            data_json = json.dumps(self.buffer)
-            self.json_file.write("{}\n".format(data_json))
+            if PY3:
+                with open(self.json_filename, "w") as self.json_file:
+                    self.json_file.write("{}\n".format(json.dumps(self.buffer)))
+            else:
+                with open(self.json_filename, "wb") as self.json_file:
+                    self.json_file.write("{}\n".format(json.dumps(self.buffer)))
 
             # Reset buffer
             self.buffer = {}
