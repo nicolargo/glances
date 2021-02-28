@@ -87,7 +87,7 @@ install:
   - "powershell .ci\\appveyor\\install.ps1"
   # - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:/get-pip.py')
   - "%WITH_COMPILER% %PYTHON%/python.exe -m pip --version"
-  - "%WITH_COMPILER% %PYTHON%/python.exe -m pip install --upgrade --user psutil bottle requests netifaces pystache py-cpuinfo scandir"
+  - "%WITH_COMPILER% %PYTHON%/python.exe -m pip install --upgrade --user psutil bottle requests netifaces chevron py-cpuinfo scandir"
   - "%WITH_COMPILER% %PYTHON%/python.exe -m pip freeze"
   - "%WITH_COMPILER% %PYTHON%/python.exe setup.py install"
 
