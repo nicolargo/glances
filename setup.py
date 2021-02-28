@@ -51,7 +51,7 @@ def get_install_requires():
 
 def get_install_extras_require():
     extras_require = {
-        'action': ['pystache'],
+        'action': ['chevron'],
         # Zeroconf 0.19.1 is the latest one compatible with Python 2 (issue #1293)
         'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
