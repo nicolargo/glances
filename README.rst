@@ -65,6 +65,7 @@ Optional dependencies:
 - ``bernhard`` (for the Riemann export module)
 - ``bottle`` (for Web server mode)
 - ``cassandra-driver`` (for the Cassandra export module)
+- ``chevron`` (for the action script feature)
 - ``couchdb`` (for the CouchDB export module)
 - ``docker`` (for the Docker monitoring support) [Linux/macOS-only]
 - ``elasticsearch`` (for the Elastic Search export module)
@@ -82,7 +83,6 @@ Optional dependencies:
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
-- ``pystache`` (for the action script feature)
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
