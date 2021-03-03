@@ -25,12 +25,12 @@ from glances.logger import logger
 from glances.timer import Timer
 
 try:
-    import pystache
+    import chevron
 except ImportError:
-    logger.debug("Pystache library not found (action scripts won't work)")
-    pystache_tag = False
+    logger.debug("Chevron library not found (action scripts won't work)")
+    chevron_tag = False
 else:
-    pystache_tag = True
+    chevron_tag = True
 
 
 class GlancesActions(object):
@@ -86,8 +86,8 @@ class GlancesActions(object):
         # Run all actions in background
         for cmd in commands:
             # Replace {{arg}} by the dict one (Thk to {Mustache})
-            if pystache_tag:
-                cmd_full = pystache.render(cmd, mustache_dict)
+            if chevron_tag:
+                cmd_full = chevron.render(cmd, mustache_dict)
             else:
                 cmd_full = cmd
             # Execute the action

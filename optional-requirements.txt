@@ -21,7 +21,7 @@ pygal
 pymdstat
 pysnmp
 pySMART.smartx
-pystache
+chevron
 pyzmq
 requests
 scandir; python_version < "3.5"
