@@ -95,7 +95,15 @@ def get_smart_data():
     """
     stats = []
     # get all devices
-    devlist = DeviceList()
+    try:
+        devlist = DeviceList()
+    except TypeError as e:
+        # Catch error  (see #1806)
+        logger.debug(
+            'Smart plugin error - Can not grab device list ({})'.format(e))
+        global import_error_tag
+        import_error_tag = True
+        return stats
 
     for dev in devlist.devices:
         stats.append({
@@ -113,6 +121,7 @@ def get_smart_data():
                     assert num is not None
                 except Exception as e:
                     # we should never get here, but if we do, continue to next iteration and skip this attribute
+                    logger.debug('Smart plugin error - Skip the attribute {} ({})'.format(attribute, e))
                     continue
 
                 stats[-1][num] = attribdict
@@ -171,7 +180,7 @@ class Plugin(GlancesPlugin):
         ret = []
 
         # Only process if stats exist...
-        if not self.stats or self.is_disable():
+        if import_error_tag or not self.stats or self.is_disable():
             return ret
 
         # Max size for the interface name
