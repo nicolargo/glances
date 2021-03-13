@@ -28,11 +28,11 @@ Command-Line Options
 
 .. option:: --disable-plugin PLUGIN
 
-    disable PLUGIN (comma separed list)
+    disable PLUGIN (comma separated list)
 
 .. option:: --enable-plugin PLUGIN
 
-    enable PLUGIN (comma separed list)
+    enable PLUGIN (comma separated list)
 
 .. option:: --stdout PLUGINS_STATS
 
@@ -40,7 +40,7 @@ Command-Line Options
 
 .. option:: --export EXPORT
 
-    enable EXPORT module (comma separed list)
+    enable EXPORT module (comma separated list)
 
 .. option:: --export-csv-file EXPORT_CSV_FILE
 
