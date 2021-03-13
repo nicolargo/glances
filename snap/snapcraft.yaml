@@ -14,7 +14,7 @@ confinement: strict
 apps:
   glances:
     command: >
-      bin/glances-launch $SNAP/bin/glances
+      $SNAP/bin/glances
     plugs:
       - network
       - system-observe
