@@ -15,9 +15,3 @@ There is no alert on this information.
 .. note::
     Limit values and sensors alias names can be defined in the
     configuration file under the ``[sensors]`` section.
-
-.. note::
-    This plugin is disabled by default in the configuration file.
-    To enable it just use the following option:
-
-    # glances --enable-plugin sensors

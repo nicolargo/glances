@@ -37,6 +37,7 @@ Legend:
    raid
    smart
    sensors
+   hddtemp
    ps
    monitor
    amps
