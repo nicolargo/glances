@@ -61,8 +61,7 @@ parts:
     source-branch: release-0.12
     source-depth: 1
     override-build: |
-      make venv
-      make docs
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
       cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/bottle-dist
     organize:
       bottle-dist: bottle/dist
@@ -72,6 +71,7 @@ parts:
     source-tag: '3.7.3'
     source-depth: 1
     override-build: |
+      mkdir -p $SNAPCRAFT_PART_BUILD/dist
       cp -r $SNAPCRAFT_PART_BUILD/dist $SNAPCRAFT_PART_INSTALL/docker-dist
     organize:
       bottle-dist: docker/dist
