@@ -53,8 +53,11 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
         # Hide stats if it has never been != 0
-        self.hide_zero = config.get_bool_value(
-            self.plugin_name + 'XXX', 'hide_zero', default=False)
+        if config is not None:
+            self.hide_zero = config.get_bool_value(
+                self.plugin_name, 'hide_zero', default=False)
+        else:
+            self.hide_zero = False
         self.hide_zero_fields = ['read_bytes', 'write_bytes']
 
     def get_key(self):
