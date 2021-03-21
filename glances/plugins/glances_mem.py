@@ -19,6 +19,7 @@
 
 """Virtual memory plugin."""
 
+from glances.logger import logger
 from glances.compat import iterkeys
 from glances.plugins.glances_plugin import GlancesPlugin
 
@@ -161,7 +162,7 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+        self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
         # Optional
         for key in ['active', 'inactive', 'buffers', 'cached']:
             if key in self.stats:
@@ -184,7 +185,8 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>7.1%}'.format(self.stats['percent'] / 100)
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(
+            msg, self.get_views(key='percent', option='decoration')))
         # Active memory usage
         if 'active' in self.stats:
             msg = '  {:9}'.format('active:')

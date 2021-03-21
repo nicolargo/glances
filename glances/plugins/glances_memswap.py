@@ -139,8 +139,8 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        if 'used' in self.stats and 'total' in self.stats:
-            self.views['used']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
+        if 'used' in self.stats and 'total' in self.stats and 'percent' in self.stats:
+            self.views['percent']['decoration'] = self.get_alert_log(self.stats['used'], maximum=self.stats['total'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -159,7 +159,8 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Percent memory usage
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
-        ret.append(self.curse_add_line(msg))
+        ret.append(self.curse_add_line(
+            msg, self.get_views(key='percent', option='decoration')))
         # New line
         ret.append(self.curse_new_line())
         # Total memory usage
