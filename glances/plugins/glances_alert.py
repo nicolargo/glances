@@ -64,6 +64,101 @@ tree = [{'msg': 'No warning or critical alert detected',
          'thresholds_min': 2},
         ]
 
+# @TODO: change the algo to use the following decision tree
+# Source: Inspire by https://scoutapm.com/blog/slow_server_flow_chart
+# _yes means threshold >= 2
+# _no  means threshold < 2
+# With threshold:
+# - 0: OK
+# - 1: CAREFUL
+# - 2: WARNING
+# - 3: CRITICAL
+tree_new = {
+    'cpu_iowait':  {
+        '_yes': {
+            'memswap': {
+                '_yes': {
+                    'mem': {
+                        '_yes': {
+                            # Once you've identified the offenders, the resolution will again depend on whether their memory usage seems
+                            # business-as-usual or not. For example, a memory leak can be satisfactorily addressed by a one-time or periodic
+                            # restart of the process.
+                            # - if memory usage seems anomalous: kill the offending processes.
+                            # - if memory usage seems business-as-usual: add RAM to the server, or split high-memory using services to other servers.
+                            '_msg': "Memory issue"
+                        },
+                        '_no': {
+                            # ???
+                            '_msg': "Swap issue"
+                        }
+                    }
+                },
+                '_no': {
+                    # Low swap means you have a "real" IO wait problem. The next step is to see what's hogging your IO.
+                    # iotop is an awesome tool for identifying io offenders. Two things to note:
+                    # unless you've already installed iotop, it's probably not already on your system. 
+                    # Recommendation: install it before you need it - - it's no fun trying to install a troubleshooting 
+                    # tool on an overloaded machine (iotop requies a Linux of 2.62 or above)
+                    '_msg': "I/O issue"
+                }
+            }
+        },
+        '_no': {
+            'cpu_total': {
+                '_yes': {
+                    'cpu_user': {
+                        '_yes': {
+                            # We expect the usertime percentage to be high.
+                            # There's most likely a program or service you've configured on you server that's hogging CPU. 
+                            # Checking the % user time just confirms this. When you see that the % usertime is high, 
+                            # it's time to see what executable is monopolizing the CPU
+                            # Once you've confirmed that the % usertime is high, check the process list(also provided by top). 
+                            # Be default, top sorts the process list by % CPU, so you can just look at the top process or processes.
+                            # If there's a single process hogging the CPU in a way that seems abnormal, it's an anomalous situation 
+                            # that a service restart can fix. If there are are multiple processes taking up CPU resources, or it 
+                            # there's one process that takes lots of resources while otherwise functioning normally, than your setup 
+                            # may just be underpowered. You'll need to upgrade your server(add more cores), or split services out onto 
+                            # other boxes. In either case, you have a resolution:
+                            # - if situation seems anomalous: kill the offending processes.
+                            # - if situation seems typical given history: upgrade server or add more servers.
+                            '_msg': "CPU issue with user process(es)"
+                        },
+                        '_no': {
+                            'cpu_steal': {
+                                '_yes': {
+                                    '_msg': "CPU issue with stolen time. System running the hypervisor may be too busy."
+                                },
+                                '_no': {
+                                    '_msg': "CPU issue with system process(es)"
+                                }
+                            }
+                        }
+                    }
+                },
+                '_no': {
+                    '_yes': {
+                        # ???
+                        '_msg': "Memory issue"
+                    },
+                    '_no': {
+                        # Your slowness isn't due to CPU or IO problems, so it's likely an application-specific issue.
+                        # It's also possible that the slowness is being caused by another server in your cluster, or
+                        # by an external service you rely on.
+                        # start by checking important applications for uncharacteristic slowness(the DB is a good place to start),
+                        # think through which parts of your infrastructure could be slowed down externally. For example, do you
+                        # use an externally hosted email service that could slow down critical parts of your application?
+                        # If you suspect another server in your cluster, strace and lsof can provide information on what the
+                        # process is doing or waiting on. Strace will show you which file descriptors are being read or written
+                        # to(or being attempted to be read from) and lsof can give you a mapping of those file descriptors to
+                        # network connections.
+                        '_msg': "External issue"
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 def global_message():
     """Parse the decision tree and return the message.
