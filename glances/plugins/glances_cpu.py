@@ -19,6 +19,7 @@
 
 """CPU plugin."""
 
+from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.compat import iterkeys
 from glances.cpu_percent import cpu_percent
@@ -196,11 +197,11 @@ class Plugin(GlancesPlugin):
 
         # Add specifics informations
         # Alert and log
-        for key in ['user', 'system', 'iowait']:
+        for key in ['user', 'system', 'iowait', 'total']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert_log(self.stats[key], header=key)
         # Alert only
-        for key in ['steal', 'total']:
+        for key in ['steal']:
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], header=key)
         # Alert only but depend on Core number
@@ -208,7 +209,7 @@ class Plugin(GlancesPlugin):
             if key in self.stats:
                 self.views[key]['decoration'] = self.get_alert(self.stats[key], maximum=100 * self.stats['cpucore'], header=key)
         # Optional
-        for key in ['nice', 'irq', 'iowait', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
+        for key in ['nice', 'irq', 'idle', 'steal', 'ctx_switches', 'interrupts', 'soft_interrupts', 'syscalls']:
             if key in self.stats:
                 self.views[key]['optional'] = True
 
@@ -239,17 +240,19 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg))
         # Total CPU usage
         msg = '{:5.1f}%'.format(self.stats['total'])
-        if idle_tag:
-            ret.append(self.curse_add_line(
-                msg, self.get_views(key='total', option='decoration')))
-        else:
+        ret.append(self.curse_add_line(
+            msg, self.get_views(key='total', option='decoration')))
+        # if idle_tag:
+        #     ret.append(self.curse_add_line(
+        #         msg, self.get_views(key='total', option='decoration')))
+        # else:
+        #     ret.append(self.curse_add_line(msg))
+        # Idle CPU
+        if 'idle' in self.stats and not idle_tag:
+            msg = '  {:8}'.format('idle:')
             ret.append(self.curse_add_line(msg))
-        # Nice CPU
-        if 'nice' in self.stats:
-            msg = '  {:8}'.format('nice:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['nice'])
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='nice', option='optional')))
+            msg = '{:5.1f}%'.format(self.stats['idle'])
+            ret.append(self.curse_add_line(msg))
         # ctx_switches
         if 'ctx_switches' in self.stats:
             msg = '  {:8}'.format('ctx_sw:')
@@ -301,14 +304,14 @@ class Plugin(GlancesPlugin):
             ret.append(self.curse_add_line(msg))
             msg = '{:>6}'.format(self.stats['nb_log_core'])
             ret.append(self.curse_add_line(msg))
-        # IOWait CPU
-        if 'iowait' in self.stats:
-            msg = '  {:8}'.format('iowait:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='iowait', option='optional')))
-            msg = '{:5.1f}%'.format(self.stats['iowait'])
+        # Nice CPU
+        if 'nice' in self.stats:
+            msg = '  {:8}'.format('nice:')
             ret.append(self.curse_add_line(
-                msg, self.get_views(key='iowait', option='decoration'),
-                optional=self.get_views(key='iowait', option='optional')))
+                msg, optional=self.get_views(key='nice', option='optional')))
+            msg = '{:5.1f}%'.format(self.stats['nice'])
+            ret.append(self.curse_add_line(
+                msg, optional=self.get_views(key='nice', option='optional')))
         # soft_interrupts
         if 'soft_interrupts' in self.stats:
             msg = '  {:8}'.format('sw_int:')
@@ -318,12 +321,15 @@ class Plugin(GlancesPlugin):
 
         # New line
         ret.append(self.curse_new_line())
-        # Idle CPU
-        if 'idle' in self.stats and not idle_tag:
-            msg = '{:8}'.format('idle:')
-            ret.append(self.curse_add_line(msg))
-            msg = '{:5.1f}%'.format(self.stats['idle'])
-            ret.append(self.curse_add_line(msg))
+        # IOWait CPU
+        if 'iowait' in self.stats:
+            msg = '{:8}'.format('iowait:')
+            ret.append(self.curse_add_line(
+                msg, optional=self.get_views(key='iowait', option='optional')))
+            msg = '{:5.1f}%'.format(self.stats['iowait'])
+            ret.append(self.curse_add_line(
+                msg, self.get_views(key='iowait', option='decoration'),
+                optional=self.get_views(key='iowait', option='optional')))
         # Steal CPU usage
         if 'steal' in self.stats:
             msg = '  {:8}'.format('steal:')
