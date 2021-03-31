@@ -80,10 +80,10 @@ Examples of use:
   Monitor local machine and export stats to a InfluxDB server with 5s refresh time (standalone mode):
     $ glances -t 5 --export influxdb
 
-  Start a Glances XML/RCP server (server mode):
+  Start a Glances XML-RPC server (server mode):
     $ glances -s
 
-  Connect Glances to a Glances XML/RCP server (client mode):
+  Connect Glances to a Glances XML-RPC server (client mode):
     $ glances -c <ip_server>
 
   Connect Glances to a Glances server and export stats to a StatsD server (client mode):
