@@ -380,6 +380,7 @@ class GlancesBottle(object):
             statval = self.stats.get_plugin(plugin).get_stats()
         except Exception as e:
             abort(404, "Cannot get plugin %s (%s)" % (plugin, str(e)))
+
         return statval
 
     @compress
@@ -455,7 +456,8 @@ class GlancesBottle(object):
             abort(404, "Cannot get views for plugin %s (%s)" % (plugin, str(e)))
         return ret
 
-    @compress
+    # No compression see issue #1228
+    # @compress
     def _api_itemvalue(self, plugin, item, value=None, history=False, nb=0):
         """Father method for _api_item and _api_value."""
         response.content_type = 'application/json; charset=utf-8'
