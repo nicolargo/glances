@@ -13,4 +13,7 @@ docs-server: docs
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
 	cd docs/_build/html/ && python -m SimpleHTTPServer $(PORT)
 
+webui:
+	cd glances/outputs/static/ && npm install && npm audit fix && npm run build
+
 .PHONY: test docs docs-server
