@@ -29,6 +29,7 @@ from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
+from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -82,6 +83,10 @@ class GlancesStandalone(object):
             logger.info("Quiet mode is ON, nothing will be displayed")
             # In quiet mode, nothing is displayed
             glances_processes.max_processes = 0
+        elif args.stdout_issue:
+            logger.info("Issue mode is ON")
+            # Init screen
+            self.screen = GlancesStdoutIssue(config=config, args=args)
         elif args.stdout:
             logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
             # Init screen

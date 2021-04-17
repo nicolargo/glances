@@ -234,6 +234,8 @@ Examples of use:
                             dest='stdout', help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)')
         parser.add_argument('--stdout-csv', default=None,
                             dest='stdout_csv', help='display stats to stdout, csv format (comma separated list of plugins/plugins.attribute)')
+        parser.add_argument('--issue', default=None, action='store_true',
+                            dest='stdout_issue', help='test all plugins and exit (please copy/paste the output if you open an issue)')
         if not WINDOWS:
             parser.add_argument('--hide-kernel-threads', action='store_true', default=False,
                                 dest='no_kernel_threads', help='hide kernel threads in process list (not available on Windows)')
