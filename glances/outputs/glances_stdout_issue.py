@@ -25,11 +25,13 @@ import shutil
 
 from glances.logger import logger
 from glances.compat import printandflush
+from glances.timer import Counter
 
 try:
     TERMINAL_WIDTH = shutil.get_terminal_size(fallback=(79, 24)).columns
 except:
     TERMINAL_WIDTH = 79
+
 
 class colors:
     RED = '\033[91m'
@@ -44,6 +46,7 @@ class colors:
         self.BLUE = ''
         self.ORANGE = ''
         self.NO = ''
+
 
 class GlancesStdoutIssue(object):
 
@@ -60,7 +63,8 @@ class GlancesStdoutIssue(object):
         pass
 
     def print_issue(self, plugin, result, message):
-        sys.stdout.write('{}{}{}'.format(colors.BLUE + plugin, result, message))
+        sys.stdout.write('{}{}{}'.format(
+            colors.BLUE + plugin, result, message))
         sys.stdout.write(colors.NO + '\n')
         sys.stdout.flush()
 
@@ -69,20 +73,38 @@ class GlancesStdoutIssue(object):
                duration=3):
         """Display issue
         """
-        # printandflush(sorted(stats.getPluginsList()))
-        for plugin in sorted(stats.getPluginsList()):
+        for plugin in stats._plugins:
+            if stats._plugins[plugin].is_disable():
+                # If current plugin is disable
+                # then continue to next plugin
+                result = colors.ORANGE + '[N/A]'.rjust(19 - len(plugin))
+                message = colors.NO
+                self.print_issue(plugin, result, message)
+                continue
+            # Start the counter
+            counter = Counter()
+            counter.reset()
             stat = None
             stat_error = None
             try:
+                # Update the stats
+                stats._plugins[plugin].update()
+                # Get the stats
                 stat = stats.get_plugin(plugin).get_export()
             except Exception as e:
                 stat_error = e
             if stat_error is None:
-                result = colors.GREEN + '[OK] '.rjust(25 - len(plugin))
-                message = colors.NO + str(stat)[0:TERMINAL_WIDTH-25]
+                result = (colors.GREEN +
+                          '[OK]   ' +
+                          colors.BLUE +
+                          ' {:.4f}s '.format(counter.get())).rjust(40 - len(plugin))
+                message = colors.NO + str(stat)[0:TERMINAL_WIDTH-40]
             else:
-                result = colors.RED + '[ERROR] '.rjust(25 - len(plugin))
-                message = colors.NO + str(stat_error)[0:TERMINAL_WIDTH-25]
+                result = (colors.RED +
+                          '[ERROR]' +
+                          colors.BLUE +
+                          ' {:.4f}s '.format(counter.get())).rjust(40 - len(plugin))
+                message = colors.NO + str(stat_error)[0:TERMINAL_WIDTH-40]
             self.print_issue(plugin, result, message)
 
         # Return True to exit directly (no refresh)

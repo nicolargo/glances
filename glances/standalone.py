@@ -116,7 +116,15 @@ class GlancesStandalone(object):
         print("Exporters list: {}".format(
             ', '.join(sorted(self.stats.getExportsList(enable=False)))))
 
-    def __serve_forever(self):
+    def serve_issue(self):
+        """Special mode for the --issue option
+        Update is done in the sceen.update function
+        """
+        ret = not self.screen.update(self.stats)
+        self.end()
+        return ret
+
+    def __serve_once(self):
         """Main loop for the CLI.
 
         return True if we should continue (no exit key has been pressed)
@@ -156,7 +164,7 @@ class GlancesStandalone(object):
         """Wrapper to the serve_forever function."""
         loop = True
         while loop:
-            loop = self.__serve_forever()
+            loop = self.__serve_once()
         self.end()
 
     def end(self):
