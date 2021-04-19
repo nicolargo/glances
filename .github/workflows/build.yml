@@ -36,13 +36,13 @@ jobs:
         python-version: 3.9
 
     - name: Create wheels
-      run: pip wheel -w wheelhouse .
+      run: python3 setup.py sdist
 
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
         name: wheels
-        path: wheelhouse
+        path: dist
 
   linters:
     runs-on: ubuntu-latest
