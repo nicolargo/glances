@@ -29,6 +29,7 @@ from glances.stats import GlancesStats
 from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
+from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -82,6 +83,10 @@ class GlancesStandalone(object):
             logger.info("Quiet mode is ON, nothing will be displayed")
             # In quiet mode, nothing is displayed
             glances_processes.max_processes = 0
+        elif args.stdout_issue:
+            logger.info("Issue mode is ON")
+            # Init screen
+            self.screen = GlancesStdoutIssue(config=config, args=args)
         elif args.stdout:
             logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
             # Init screen
@@ -111,7 +116,15 @@ class GlancesStandalone(object):
         print("Exporters list: {}".format(
             ', '.join(sorted(self.stats.getExportsList(enable=False)))))
 
-    def __serve_forever(self):
+    def serve_issue(self):
+        """Special mode for the --issue option
+        Update is done in the sceen.update function
+        """
+        ret = not self.screen.update(self.stats)
+        self.end()
+        return ret
+
+    def __serve_once(self):
         """Main loop for the CLI.
 
         return True if we should continue (no exit key has been pressed)
@@ -151,7 +164,7 @@ class GlancesStandalone(object):
         """Wrapper to the serve_forever function."""
         loop = True
         while loop:
-            loop = self.__serve_forever()
+            loop = self.__serve_once()
         self.end()
 
     def end(self):
