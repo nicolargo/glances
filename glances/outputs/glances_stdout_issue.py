@@ -26,6 +26,7 @@ import shutil
 from glances.logger import logger
 from glances.compat import printandflush
 from glances.timer import Counter
+from glances import __version__, psutil_version
 
 try:
     TERMINAL_WIDTH = shutil.get_terminal_size(fallback=(79, 24)).columns
@@ -62,6 +63,16 @@ class GlancesStdoutIssue(object):
     def end(self):
         pass
 
+    def print_version(self):
+        msg = 'Glances version {} with PsUtil {}'.format(
+            colors.BLUE + __version__ + colors.NO, 
+            colors.BLUE + psutil_version + colors.NO)
+        sys.stdout.write('='*len(msg) + '\n')
+        sys.stdout.write(msg)
+        sys.stdout.write(colors.NO + '\n')
+        sys.stdout.write('='*len(msg) + '\n')
+        sys.stdout.flush()
+
     def print_issue(self, plugin, result, message):
         sys.stdout.write('{}{}{}'.format(
             colors.BLUE + plugin, result, message))
@@ -73,7 +84,8 @@ class GlancesStdoutIssue(object):
                duration=3):
         """Display issue
         """
-        for plugin in stats._plugins:
+        self.print_version()
+        for plugin in sorted(stats._plugins):
             if stats._plugins[plugin].is_disable():
                 # If current plugin is disable
                 # then continue to next plugin
