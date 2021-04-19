@@ -44,13 +44,13 @@ jobs:
         name: wheels
         path: dist
 
-  linters:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-    - name: 'Run linters'
-      run: |
-        python3 -m pip install flake8
-        python3 -m flake8 .
-        echo "Flake8 linting OK"
+  # linters:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: actions/setup-python@v2
+  #   - name: 'Run linters'
+  #     run: |
+  #       python3 -m pip install flake8
+  #       python3 -m flake8 .
+  #       echo "Flake8 linting OK"
