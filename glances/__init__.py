@@ -111,7 +111,12 @@ def start(config, args):
 
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
-    mode.serve_forever()
+    if args.stdout_issue:
+        # Serve once for issue/test mode 
+        mode.serve_issue()
+    else:
+        # Serve forever
+        mode.serve_forever()
 
     # Shutdown
     mode.end()
