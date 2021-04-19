@@ -35,11 +35,8 @@ jobs:
       with:
         python-version: 3.9
 
-    - name: Install cibuildwheel
-      run: pip install cibuildwheel
-
     - name: Create wheels
-      run: python -m cibuildwheel --output-dir wheelhouse
+      run: pip wheel -w wheelhouse .
 
     - name: Upload wheels
       uses: actions/upload-artifact@v2
