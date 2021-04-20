@@ -1,0 +1,2 @@
+[bandit]
+exclude: ./docs,./glances/outputs/static/node_modules

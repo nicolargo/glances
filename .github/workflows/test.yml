@@ -5,7 +5,7 @@ name: test
 on: [push]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -30,10 +30,16 @@ jobs:
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,./glances/outputs/static
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,./docs,./glances/outputs/static
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./glances/outputs/static
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.git,./docs,./glances/outputs/static
 
     - name: Unitary tests
       run: |
         python ./unitest.py
+
+    - name: Security issues with Bandit
+      uses: jpetrucciani/bandit-check@master
+      with:
+        #path: '-r --exit-zero --skip B104 ./glances/'
+        path: '-r --exit-zero --skip B104 ./glances/'
