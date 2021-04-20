@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.6.0
         with:
@@ -38,7 +38,7 @@ jobs:
         with:
           python-versions: 'cp36-cp36m cp37-cp37m'
           # build-requirements: 'cython'
-          system-packages: 'python-dev'
+          system-packages: 'python-devel'
           # pre-build-command: 'sh pre-build-script.sh'
           pip-wheel-args: '-w ./dist --no-deps'
 
