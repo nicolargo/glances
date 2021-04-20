@@ -111,7 +111,7 @@ class Config(object):
             self.parser = ConfigParser(interpolation=None)
         except TypeError:
             self.parser = ConfigParser()
-            
+
         self.read()
 
     def config_file_paths(self):
@@ -157,6 +157,10 @@ class Config(object):
                 self._loaded_config_file = config_file
                 break
 
+        # Set the default values for section not configured
+        self.sections_set_default()
+
+    def sections_set_default(self):
         # Globals
         if not self.parser.has_section('global'):
             self.parser.add_section('global')
