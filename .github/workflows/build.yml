@@ -1,49 +1,125 @@
-# Executed on every push by GitHub Actions. 
-# This runs CI tests
+# This pipeline aims at building Glances for the following targets:
+# - Docker Hub
+# - Pypi
 
-name: wheels
+name: CI
 
-on: [push]
+env:
+  DEFAULT_DOCKER_IMAGE: nicolargo/glances
+  NODE_ENV: ${{ (contains('refs/heads/master', github.ref) || startsWith(github.ref, 'refs/tags/v')) && 'prod' || 'dev' }}
+  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || 'refs/heads/master' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
+  DOCKER_PLATFORMS: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386
+
+on:
+  pull_request:
+    branches: [ develop ]
+  push:
+    branches: [ master, develop ]
+    tags:
+      - v*
 
 jobs:
-  build:
+  buildx:
     runs-on: ubuntu-latest
-
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.6.0
+      - name: Cache Docker layers
+        uses: actions/cache@v2
         with:
-          access_token: ${{ github.token }}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
+
+      - name: Configure ENVs
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE || env.DEFAULT_DOCKER_IMAGE }}
+          DOCKERFILE: ${{ env.NODE_ENV == 'prod' && './docker-files/Dockerfile' || './docker-files/dev.Dockerfile' }}
+        run: |
+          ls -la /tmp/.buildx-cache || true
+          VERSION=latest
+
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+
+          if [[ $GITHUB_REF == refs/heads/develop ]]; then
+            VERSION=dev
+          fi
+
+          echo "DOCKERFILE=${DOCKERFILE}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "TAGS=${DOCKER_IMAGE}:${VERSION}" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+          echo "VCS_REF=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ env.PUSH_BRANCH == 'true' }}
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{ env.PUSH_BRANCH == 'true' }}
+          tags: ${{env.TAGS}}
+          build-args: |
+            VERSION=${{env.VERSION}}
+            BUILD_DATE=${{env.BUILD_DATE}}
+            VCS_REF=${{env.VCS_REF}}
+          context: .
+          file: ${{env.DOCKERFILE}}
+          platforms: ${{env.DOCKER_PLATFORMS}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+  pypi:
+    runs-on: ubuntu-latest
+    steps:
 
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
+      - name: Install pip install build tools
+        run: >-
+          python -m
+          pip install
+          build
+          --user
+  
+      - name: Build a binary wheel and a source tarball
+        run: >-
+          python -m
+          build
+          --sdist
+          --wheel
+          --outdir dist/
+
+      - name: Publish distribution package to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
         with:
-          python-version: 3.9
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Lint with flake8
-        run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,./glances/outputs/static
-
-      - name: Build manylinux Python wheels
-        uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux2010_x86_64
+      - name: Publish distribution package to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
         with:
-          python-versions: 'cp36-cp36m cp37-cp37m'
-          # build-requirements: 'cython'
-          system-packages: 'python-devel'
-          # pre-build-command: 'sh pre-build-script.sh'
-          pip-wheel-args: '-w ./dist --no-deps'
-
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
