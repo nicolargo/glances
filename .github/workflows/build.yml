@@ -6,24 +6,10 @@ name: wheels
 on: [push]
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-  linux-macos-win:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    # env:
-    #   CIBW_TEST_COMMAND:
-    #     PYTHONWARNINGS=always PYTHONUNBUFFERED=1 PSUTIL_TESTING=1 PSUTIL_DEBUG=1 python {project}/unitest.py &&
-    #     PYTHONWARNINGS=always PYTHONUNBUFFERED=1 PSUTIL_TESTING=1 PSUTIL_DEBUG=1 python {project}/unitest-restful.py &&
-    #     PYTHONWARNINGS=always PYTHONUNBUFFERED=1 PSUTIL_TESTING=1 PSUTIL_DEBUG=1 python {project}/unitest-xmlrpc.py
-    #   CIBW_TEST_EXTRAS: test
-    #   CIBW_SKIP: cp35-* pp*
-
-    steps:
+  steps:
     - name: Cancel previous runs
       uses: styfle/cancel-workflow-action@0.6.0
       with:
@@ -35,22 +21,28 @@ jobs:
       with:
         python-version: 3.9
 
-    - name: Create wheels
-      run: python3 setup.py sdist
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,./glances/outputs/static
+
+    - name: Build manylinux Python wheels
+      uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux2010_x86_64
+      with:
+        python-versions: 'cp36-cp36m cp37-cp37m'
+        # build-requirements: 'cython'
+        system-packages: 'python-dev'
+        # pre-build-command: 'sh pre-build-script.sh'
+        pip-wheel-args: '-w ./dist --no-deps'
 
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
         name: wheels
         path: dist
-
-  # linters:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - uses: actions/setup-python@v2
-  #   - name: 'Run linters'
-  #     run: |
-  #       python3 -m pip install flake8
-  #       python3 -m flake8 .
-  #       echo "Flake8 linting OK"
