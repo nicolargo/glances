@@ -139,6 +139,8 @@ else:
     bool_type = types.BooleanType
     long = long
 
+    PermissionError = OSError
+
     viewkeys = operator.methodcaller('viewkeys')
     viewvalues = operator.methodcaller('viewvalues')
     viewitems = operator.methodcaller('viewitems')
