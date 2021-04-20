@@ -53,6 +53,8 @@ if PY3:
     bool_type = bool
     long = int
 
+    PermissionError = OSError
+
     viewkeys = operator.methodcaller('keys')
     viewvalues = operator.methodcaller('values')
     viewitems = operator.methodcaller('items')
