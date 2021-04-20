@@ -245,14 +245,14 @@ class TestGlances(unittest.TestCase):
     def test_015_subsample(self):
         """Test subsampling function."""
         print('INFO: [TEST_015] Subsampling')
-        for l in [([1, 2, 3], 4),
-                  ([1, 2, 3, 4], 4),
-                  ([1, 2, 3, 4, 5, 6, 7], 4),
-                  ([1, 2, 3, 4, 5, 6, 7, 8], 4),
-                  (list(range(1, 800)), 4),
-                  (list(range(1, 8000)), 800)]:
-            l_subsample = subsample(l[0], l[1])
-            self.assertLessEqual(len(l_subsample), l[1])
+        for l_test in [([1, 2, 3], 4),
+                       ([1, 2, 3, 4], 4),
+                       ([1, 2, 3, 4, 5, 6, 7], 4),
+                       ([1, 2, 3, 4, 5, 6, 7, 8], 4),
+                       (list(range(1, 800)), 4),
+                       (list(range(1, 8000)), 800)]:
+            l_subsample = subsample(l_test[0], l_test[1])
+            self.assertLessEqual(len(l_subsample), l_test[1])
 
     def test_016_hddsmart(self):
         """Check hard disk SMART data plugin."""
@@ -309,7 +309,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_096] Test views')
         plugins_list = stats.getPluginsList()
         for plugin in plugins_list:
-            stats_grab = stats.get_plugin(plugin).get_raw()
+            stats.get_plugin(plugin).get_raw()
             views_grab = stats.get_plugin(plugin).get_views()
             self.assertTrue(type(views_grab) is dict,
                             msg='{} view is not a dict'.format(plugin))
