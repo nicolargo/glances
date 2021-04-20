@@ -89,6 +89,7 @@ jobs:
     steps:
 
       - name: Install pypa/build
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: >-
           python -m
           pip install
@@ -96,6 +97,7 @@ jobs:
           --user
   
       - name: Build a binary wheel and a source tarball
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: >-
           python -m
           build
@@ -104,6 +106,7 @@ jobs:
           --outdir dist/
 
       - name: Publish distribution package to Test PyPI
+        if: github.event_name == 'push'
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: ${{ secrets.PYPI_USERNAME }}
@@ -111,7 +114,7 @@ jobs:
           repository_url: https://test.pypi.org/legacy/
 
       - name: Publish distribution package to PyPI
-        if: startsWith(github.ref, 'refs/tags')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: ${{ secrets.PYPI_USERNAME }}

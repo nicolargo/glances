@@ -1,9 +1,9 @@
 # Executed on every push by GitHub Actions. 
 # This runs CI tests
 
-on: [push]
+name: wheels
 
-name: build
+on: [push]
 
 jobs:
 
