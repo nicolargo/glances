@@ -88,8 +88,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Install pip
-        if: github.event_name == 'push'
+      - uses: actions/checkout@v2
+
+      - name: Install pip install build tools
         run: >-
           python -m
           pip install
@@ -97,7 +98,6 @@ jobs:
           --user
   
       - name: Build a binary wheel and a source tarball
-        if: github.event_name == 'push'
         run: >-
           python -m
           build
@@ -106,7 +106,6 @@ jobs:
           --outdir dist/
 
       - name: Publish distribution package to Test PyPI
-        if: github.event_name == 'push'
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: ${{ secrets.PYPI_USERNAME }}
