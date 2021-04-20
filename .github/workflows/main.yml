@@ -88,8 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Install pypa/build
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      - name: Install pip
+        if: github.event_name == 'push'
         run: >-
           python -m
           pip install
@@ -97,7 +97,7 @@ jobs:
           --user
   
       - name: Build a binary wheel and a source tarball
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        if: github.event_name == 'push'
         run: >-
           python -m
           build
