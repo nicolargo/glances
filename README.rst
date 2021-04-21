@@ -74,18 +74,19 @@ Optional dependencies:
 - ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
-- ``nvidia-ml-py3`` (for the GPU plugin)
+- ``py3nvml`` (for the GPU plugin) [Only for Python 3]
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
 - ``py-cpuinfo`` (for the Quicklook CPU info module)
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
-- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pysnmp`` (for SNMP support)
+- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)
 - ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+- ``sparklines`` (for the Quick Plugin sparklines option)
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
 - ``zeroconf`` (for the autodiscover mode)
