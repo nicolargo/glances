@@ -4,9 +4,11 @@
 bernhard
 bottle
 cassandra-driver
+chevron
 couchdb
 docker>=2.0.0
 elasticsearch
+hddtemp
 influxdb
 influxdb-client; python_version >= "3.6"
 kafka-python
@@ -21,7 +23,6 @@ pygal
 pymdstat
 pysnmp
 pySMART.smartx
-chevron
 pyzmq
 requests
 scandir; python_version < "3.5"
