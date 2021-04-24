@@ -88,6 +88,38 @@ class Plugin(GlancesPlugin):
         stats = self.get_init_value()
 
         if not self.nvml_ready:
+            # !!! 
+            # Uncomment to test on computer without GPU 
+            # One GPU sample:
+            # self.stats = [
+            #     {
+            #         "key": "gpu_id",
+            #         "gpu_id": 0,
+            #         "name": "Fake GeForce GTX",
+            #         "mem": 5.792331695556641,
+            #         "proc": 4,
+            #         "temperature": 26
+            #     }
+            # ]
+            # Two GPU sample:
+            # self.stats = [
+            #     {
+            #         "key": "gpu_id",
+            #         "gpu_id": 0,
+            #         "name": "Fake GeForce GTX1",
+            #         "mem": 5.792331695556641,
+            #         "proc": 4,
+            #         "temperature": 26
+            #     },
+            #     {
+            #         "key": "gpu_id",
+            #         "gpu_id": 1,
+            #         "name": "Fake GeForce GTX2",
+            #         "mem": 15,
+            #         "proc": 8,
+            #         "temperature": 65
+            #     }
+            # ]
             return self.stats
 
         if self.input_method == 'local':
