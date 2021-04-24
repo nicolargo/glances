@@ -26,6 +26,7 @@ import tempfile
 from io import open
 import webbrowser
 import zlib
+import socket
 
 from glances.compat import b
 from glances.timer import Timer
@@ -213,9 +214,12 @@ class GlancesBottle(object):
                             new=2,
                             autoraise=1)
 
-        self._app.run(host=self.args.bind_address,
-                      port=self.args.port,
-                      quiet=not self.args.debug)
+        try:
+            self._app.run(host=self.args.bind_address,
+                          port=self.args.port,
+                          quiet=not self.args.debug)
+        except socket.error as e:
+            logger.critical('Error: Can not ran Glances Web server ({})'.format(e))
 
     def end(self):
         """End the bottle."""
