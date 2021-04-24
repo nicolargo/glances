@@ -17,6 +17,14 @@
             </div>
             <div class="table-cell" ng-if="vm.mean.mem == null">N/A</div>
         </div>
+        <div class="table-row" ng-if="arguments.meangpu || vm.gpus.length === 1">
+            <div class="table-cell text-left">temperature::</div>
+            <div class="table-cell" ng-class="vm.getMeanDecoration('temperature')" ng-if="vm.mean.temperature != null">{{ vm.mean.temperature | number
+                :
+                0 }}%
+            </div>
+            <div class="table-cell" ng-if="vm.mean.temperature == null">N/A</div>
+        </div>
         <div class="table-row" ng-if="!arguments.meangpu && vm.gpus.length > 1" ng-repeat="gpu in vm.gpus">
             <div class="table-cell text-left">
                 {{ gpu.gpu_id }}:
@@ -25,6 +33,9 @@
                 mem:
                 <span ng-class="vm.getDecoration(gpu.gpu_id, 'mem')" ng-if="gpu.mem != null">{{ gpu.mem | number : 0 }}%</span>
                 <span ng-if="gpu.mem == null">N/A</span>
+                temp:
+                <span ng-class="vm.getDecoration(gpu.gpu_id, 'temperature')" ng-if="gpu.temperature != null">{{ gpu.temperature | number : 0 }}C</span>
+                <span ng-if="gpu.temperature == null">N/A</span>
             </div>
         </div>
     </div>

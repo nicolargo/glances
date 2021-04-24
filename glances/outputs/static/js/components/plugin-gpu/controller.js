@@ -27,7 +27,8 @@ export default function GlancesPluginGpuController($scope, GlancesStats, ARGUMEN
         vm.name = "GPU";
         vm.mean = {
             proc: null,
-            mem: null
+            mem: null,
+            temperature: null
         };
         var sameName = true;
 
@@ -38,6 +39,7 @@ export default function GlancesPluginGpuController($scope, GlancesStats, ARGUMEN
 
             vm.mean.proc += gpu.proc;
             vm.mean.mem += gpu.mem;
+            vm.mean.temperature += gpu.temperature;
 
             vm.gpus.push(gpu);
         }
@@ -50,6 +52,7 @@ export default function GlancesPluginGpuController($scope, GlancesStats, ARGUMEN
 
         vm.mean.proc = vm.mean.proc / stats.length;
         vm.mean.mem = vm.mean.mem / stats.length;
+        vm.mean.temperature = vm.mean.temperature / stats.length;
     }
 
     vm.getDecoration = function (gpuId, value) {

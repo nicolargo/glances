@@ -58457,7 +58457,8 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
         vm.name = "GPU";
         vm.mean = {
             proc: null,
-            mem: null
+            mem: null,
+            temperature: null
         };
         var sameName = true;
 
@@ -58468,6 +58469,7 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 
             vm.mean.proc += gpu.proc;
             vm.mean.mem += gpu.mem;
+            vm.mean.temperature += gpu.temperature;
 
             vm.gpus.push(gpu);
         }
@@ -58480,6 +58482,7 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 
         vm.mean.proc = vm.mean.proc / stats.length;
         vm.mean.mem = vm.mean.mem / stats.length;
+        vm.mean.temperature = vm.mean.temperature / stats.length;
     }
 
     vm.getDecoration = function (gpuId, value) {
@@ -58501,7 +58504,7 @@ function GlancesPluginGpuController($scope, GlancesStats, ARGUMENTS) {
 /***/ (function(module, exports) {
 
 var path = '/home/nicolargo/dev/glances/glances/outputs/static/js/components/plugin-gpu/view.html';
-var html = "<section id=\"gpu\" class=\"plugin\">\n    <div class=\"gpu-name title\">\n        {{ vm.name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">proc:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('proc')\" ng-if=\"vm.mean.proc != null\">{{ vm.mean.proc |\n                number : 0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.proc == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">mem:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('mem')\" ng-if=\"vm.mean.mem != null\">{{ vm.mean.mem | number :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.mem == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"!arguments.meangpu && vm.gpus.length > 1\" ng-repeat=\"gpu in vm.gpus\">\n            <div class=\"table-cell text-left\">\n                {{ gpu.gpu_id }}:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'proc')\" ng-if=\"gpu.proc != null\">{{ gpu.proc | number : 0 }}%</span>\n                <span ng-if=\"gpu.proc == null\">N/A</span>\n                mem:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'mem')\" ng-if=\"gpu.mem != null\">{{ gpu.mem | number : 0 }}%</span>\n                <span ng-if=\"gpu.mem == null\">N/A</span>\n            </div>\n        </div>\n    </div>\n</section>\n";
+var html = "<section id=\"gpu\" class=\"plugin\">\n    <div class=\"gpu-name title\">\n        {{ vm.name }}\n    </div>\n    <div class=\"table\">\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">proc:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('proc')\" ng-if=\"vm.mean.proc != null\">{{ vm.mean.proc |\n                number : 0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.proc == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">mem:</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('mem')\" ng-if=\"vm.mean.mem != null\">{{ vm.mean.mem | number :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.mem == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"arguments.meangpu || vm.gpus.length === 1\">\n            <div class=\"table-cell text-left\">temperature::</div>\n            <div class=\"table-cell\" ng-class=\"vm.getMeanDecoration('temperature')\" ng-if=\"vm.mean.temperature != null\">{{ vm.mean.temperature | number\n                :\n                0 }}%\n            </div>\n            <div class=\"table-cell\" ng-if=\"vm.mean.temperature == null\">N/A</div>\n        </div>\n        <div class=\"table-row\" ng-if=\"!arguments.meangpu && vm.gpus.length > 1\" ng-repeat=\"gpu in vm.gpus\">\n            <div class=\"table-cell text-left\">\n                {{ gpu.gpu_id }}:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'proc')\" ng-if=\"gpu.proc != null\">{{ gpu.proc | number : 0 }}%</span>\n                <span ng-if=\"gpu.proc == null\">N/A</span>\n                mem:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'mem')\" ng-if=\"gpu.mem != null\">{{ gpu.mem | number : 0 }}%</span>\n                <span ng-if=\"gpu.mem == null\">N/A</span>\n                temp:\n                <span ng-class=\"vm.getDecoration(gpu.gpu_id, 'temperature')\" ng-if=\"gpu.temperature != null\">{{ gpu.temperature | number : 0 }}C</span>\n                <span ng-if=\"gpu.temperature == null\">N/A</span>\n            </div>\n        </div>\n    </div>\n</section>\n";
 window.angular.module('ng').run(['$templateCache', function(c) { c.put(path, html) }]);
 module.exports = path;
 
