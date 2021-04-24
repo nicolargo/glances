@@ -293,7 +293,7 @@ class Config(object):
         If it did not exist, then return the default value.
 
         It allows user to define dynamic configuration key (see issue#1204)
-        Dynamic vlaue should starts and end with the ` char
+        Dynamic value should starts and end with the ` char
         Example: prefix=`hostname`
         """
         ret = default

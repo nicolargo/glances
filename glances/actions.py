@@ -19,10 +19,9 @@
 
 """Manage on alert actions."""
 
-from subprocess import Popen
-
 from glances.logger import logger
 from glances.timer import Timer
+from glances.secure import secure_popen
 
 try:
     import chevron
@@ -94,12 +93,16 @@ class GlancesActions(object):
             logger.info("Action triggered for {} ({}): {}".format(stat_name,
                                                                   criticity,
                                                                   cmd_full))
-            logger.debug("Action will be executed with the following command: \
-                subprocess.Popen({}, shell=False)".format(cmd_full.split(' ')))
             try:
-                Popen(cmd_full.split(' '), shell=False)
+                ret = secure_popen(cmd_full)
             except OSError as e:
-                logger.error("Can't execute the action ({})".format(e))
+                logger.error("Action error for {} ({}): {}".format(stat_name,
+                                                                   criticity,
+                                                                   e))
+            else:
+                logger.debug("Action result for {} ({}): {}".format(stat_name,
+                                                                    criticity, 
+                                                                    ret))
 
         self.set(stat_name, criticity)
 
