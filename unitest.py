@@ -35,10 +35,10 @@ from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.compat import subsample, range
+from glances.secure import secure_popen
 
 # Global variables
 # =================
-
 
 # Init Glances core
 core = GlancesMain()
@@ -375,6 +375,12 @@ class TestGlances(unittest.TestCase):
         self.assertLessEqual(bar.percent, bar.min_value)
         bar.percent = 101
         self.assertGreaterEqual(bar.percent, bar.max_value)
+
+    def test_100_secure(self):
+        """Test secure functions"""
+        print('INFO: [TEST_100] Secure functions')
+        self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
+        self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
     def test_999_the_end(self):
         """Free all the stats"""
