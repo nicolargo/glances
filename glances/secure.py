@@ -24,11 +24,25 @@ from subprocess import Popen, PIPE
 
 
 def secure_popen(cmd):
-    """A more or less secure way to execute system command
+    """A more or less secure way to execute system commands
+    Multiple command should be seprated with a &&
 
-    Return: the result of the command OR an error message
+    Return: the result of the commands
     """
-    ret = None
+    ret = ''
+
+    # Split by multiple commands '&&'
+    for c in cmd.split('&&'):
+        ret += __secure_popen(c)
+
+    return ret
+
+
+def __secure_popen(cmd):
+    """A more or less secure way to execute system command
+    Manage redirection (>) and pipes (|)
+    """
+    ret = ''
 
     # Split by redirection '>'
     cmd_split_redirect = cmd.split('>')

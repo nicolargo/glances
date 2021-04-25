@@ -23,7 +23,7 @@ User disk space usage Status
 
 .. note::
     Limit values can be overwritten in the configuration file under
-    the ``[filesystem]`` section.
+    the ``[fs]`` section.
 
 By default, the plugin only displays physical devices (hard disks, USB
 keys). To allow other file system types, you have to enable them in the
@@ -35,29 +35,20 @@ system:
     [fs]
     allow=shm
 
-Also, you can hide mount points as well (in the following ``/boot``):
+Also, you can hide mount points using regular expressions.
 
+To hide all mount points starting with /boot and /snap:
 
 .. code-block:: ini
 
     [fs]
-    hide=/boot.*
+    hide=/boot.*,/snap.*
 
-Filtering can also be done on device name (Glances 3.1.4 or higher):
+Filtering are also applied on device name (Glances 3.1.4 or higher).
+
+Example to hide all /dev/sdb mount points:
 
 .. code-block:: ini
 
      [fs]
-     hide=/dev/sdb2
-
-RAID
-----
-
-*Availability: Linux*
-
-Thanks to the `pymdstat`_ library, if a ``RAID`` controller is detected
-on your system, its status will be displayed as well:
-
-.. image:: ../_static/raid.png
-
-.. _pymdstat: https://github.com/nicolargo/pymdstat
+     hide=/dev/sdb.*
