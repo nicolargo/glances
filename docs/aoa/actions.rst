@@ -28,16 +28,21 @@ reached:
     warning=70
     warning_action=echo {{mnt_point}} {{used}}/{{size}} > /tmp/fs.alert
     
-A last example would be to create a log file
-containing the total user disk space usage for a device and notify by email each time a space trigger critical is
-reached:
+A last example would be to create a log file containing the total user disk 
+space usage for a device and notify by email each time a space trigger 
+critical is reached:
     
 .. code-block:: ini
 
     [fs]
     critical=90
     critical_action_repeat=echo {{device_name}} {{percent}} > /tmp/fs.alert && python /etc/glances/actions.d/fs-critical.py
-    
+
+
+.. note::
+    Use && as seprator for multiple commands
+
+
 Within ``/etc/glances/actions.d/fs-critical.py``:
 
 .. code-block:: python
@@ -54,9 +59,6 @@ Within ``/etc/glances/actions.d/fs-critical.py``:
     body = 'Used user disk space for ' + device + ' is at ' + percent + '%.\nPlease cleanup the filesystem to clear the alert.\nServer: ' + str(system)+ '.\nIP address: ' + ip
     ps = subprocess.Popen(('echo', '-e', body), stdout=subprocess.PIPE)
     subprocess.call(['mail', '-s', 'CRITICAL: disk usage above 90%', '-r', 'postmaster@example.com', 'glances@example.com'], stdin=ps.stdout)
-
-
-
 
 .. note::
     You can use all the stats for the current plugin. See

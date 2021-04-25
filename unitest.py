@@ -381,6 +381,7 @@ class TestGlances(unittest.TestCase):
         print('INFO: [TEST_100] Secure functions')
         self.assertEqual(secure_popen('echo -n TEST'), 'TEST')
         self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
+        self.assertEqual(secure_popen('echo -n TEST1 && echo -n TEST2'), 'TEST1TEST2')
 
     def test_999_the_end(self):
         """Free all the stats"""
