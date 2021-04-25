@@ -228,8 +228,10 @@ Examples of use:
                             dest='quiet', help='do not display the curses interface')
         parser.add_argument('-f', '--process-filter', default=None, type=str,
                             dest='process_filter', help='set the process filter pattern (regular expression)')
-        parser.add_argument('--process-short-name', action='store_true', default=False,
+        parser.add_argument('--process-short-name', action='store_true', default=True,
                             dest='process_short_name', help='force short name for processes name')
+        parser.add_argument('--process-long-name', action='store_false', default=False,
+                            dest='process_short_name', help='force long name for processes name')
         parser.add_argument('--stdout', default=None,
                             dest='stdout', help='display stats to stdout, one stat per line (comma separated list of plugins/plugins.attribute)')
         parser.add_argument('--stdout-csv', default=None,
