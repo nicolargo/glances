@@ -2,31 +2,36 @@
 Glances Version 3
 ==============================================================================
 
+===============
 Version 3.1.7
-=============
+===============
 
-* Security audit - B411 #1025 (by nicolargo)
-* GPU temperature not shown in webview #1849 (by nicolargo)
-* Remove shell=True for actions (following Bandit issue report) #1851 (by nicolargo)
-* Replace Travis by Github action #1850 (by nicolargo)
-* '/api/3/processlist/pid/3936'use this api can't get right info,all messy code #1828 (by nicolargo)
-* Refactor the way importants stats are displayed #1826 (by nicolargo)
-* Reaplly the Add hide option to sensors plugin #1596 PR (by nicolargo)
-* Smart plugin error while start glances as root #1806 (by nicolargo)
-* Plugin quicklook takes more than one seconds to update #1820 (by nicolargo)
-* Replace Pystache by Chevron 2/2  See #1817 (by nicolargo)
-* Doc. No SMART screenshot. #1799 (by nicolargo)
-* Update docs following PR #1798 (by nicolargo)
+Enhancements and bug corrected:
+
+    * Security audit - B411 #1025 (by nicolargo)
+    * GPU temperature not shown in webview #1849 (by nicolargo)
+    * Remove shell=True for actions (following Bandit issue report) #1851 (by nicolargo)
+    * Replace Travis by Github action #1850 (by nicolargo)
+    * '/api/3/processlist/pid/3936'use this api can't get right info,all messy code #1828 (by nicolargo)
+    * Refactor the way importants stats are displayed #1826 (by nicolargo)
+    * Re-apply the Add hide option to sensors plugin #1596 PR (by nicolargo)
+    * Smart plugin error while start glances as root #1806 (by nicolargo)
+    * Plugin quicklook takes more than one seconds to update #1820 (by nicolargo)
+    * Replace Pystache by Chevron 2/2  See #1817 (by nicolargo)
+    * Doc. No SMART screenshot. #1799 (by nicolargo)
+    * Update docs following PR #1798 (by nicolargo)
 
 Contributors for this version:
-- Nicolargo
-- Deosrc
-- dependabot[bot]
-- Michael J. Cohen
-- Rui Chen
-- Stefan Eßer
-- Tuux
 
+    - Nicolargo
+    - Deosrc
+    - dependabot[bot]
+    - Michael J. Cohen
+    - Rui Chen
+    - Stefan Eßer
+    - Tuux
+
+===============
 Version 3.1.6.2
 ===============
 
