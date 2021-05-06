@@ -56,7 +56,7 @@ following:
 
 .. code-block:: ini
 
-    [influxdb]
+    [influxdb2]
     host=localhost
     port=8086
     protocol=http
