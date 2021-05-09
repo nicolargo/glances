@@ -43,7 +43,7 @@ class Export(GlancesExport):
         # Optionals configuration keys
         self.prefix = None
 
-        # Load the InfluxDB configuration file
+        # Load the configuration file
         self.export_enable = self.load_conf('statsd',
                                             mandatories=['host', 'port'],
                                             options=['prefix'])
