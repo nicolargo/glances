@@ -76,16 +76,38 @@ class Export(GlancesExport):
         """Init the connection to the Graphite server."""
         if not self.export_enable:
             return None
+
+        client = graphyte.Sender(self.host,
+                                 port=self.port,
+                                 prefix=self.prefix,
+                                 protocol=self.protocol,
+                                 batch_size=self.batch_size)
+
+        # !!! Except is never reached...
+        # !!! Have to find  away to test the connection with the Graphite server
+        # !!! Waiting that, have to set the logger to debug in the export function
+        # try:
+        #     client.send("check", 1)
+        # except Exception as e:
+        #     logger.error("Can not write data to Graphite server: {}:{}/{} ({})".format(self.host,
+        #                                                                                self.port,
+        #                                                                                self.protocol,
+        #                                                                                e))
+        #     return None
+        # else:
+        #     logger.info(
+        #         "Stats will be exported to Graphite server: {}:{}/{}".format(self.host,
+        #                                                                     self.port,
+        #                                                                     self.protocol))
+
+        #     return client
+
         logger.info(
             "Stats will be exported to Graphite server: {}:{}/{}".format(self.host,
                                                                          self.port,
                                                                          self.protocol))
 
-        return graphyte.Sender(self.host,
-                               port=self.port,
-                               prefix=self.prefix,
-                               protocol=self.protocol,
-                               batch_size=self.batch_size)
+        return client
 
     def export(self, name, columns, points):
         """Export the stats to the Graphite server."""
@@ -99,7 +121,9 @@ class Export(GlancesExport):
                 self.client.send(normalize(stat_name),
                                  stat_value)
             except Exception as e:
-                logger.error("Can not export stats to Graphite (%s)" % e)
+                # !! Set to error when the connection test is ok
+                # logger.error("Can not export stats to Graphite (%s)" % e)
+                logger.debug("Can not export stats to Graphite (%s)" % e)
         logger.debug("Export {} stats to Graphite".format(name))
 
 
