@@ -29,5 +29,9 @@ and run Glances with:
 
     $ glances --export graphite
 
+Note 1: the port defines the TCP or UDP port where the Graphite listen plain-text requests
 
-Note: Only integer and float are supported in the Graphite datamodel.
+Note 2: As many time-series database, only integer and float are supported in the Graphite datamodel.
+
+Note 3: Under the wood, Glances uses Graphyte Python lib (https://pypi.org/project/graphyte/)
+ 
