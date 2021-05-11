@@ -26,7 +26,7 @@ from glances.compat import range
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 
-import graphyte
+from graphitesend import GraphiteClient
 
 
 class Export(GlancesExport):
@@ -41,17 +41,16 @@ class Export(GlancesExport):
         # N/A
 
         # Optionals configuration keys
+        self.debug = False
         self.prefix = None
-        self.protocol = None
-        self.batch_size = None
+        self.system_name = None
 
         # Load the configuration file
         self.export_enable = self.load_conf('graphite',
-                                            mandatories=['host', 
+                                            mandatories=['host',
                                                          'port'],
                                             options=['prefix',
-                                                     'protocol',
-                                                     'batch_size'])
+                                                     'system_name'])
         if not self.export_enable:
             sys.exit(2)
 
@@ -59,72 +58,63 @@ class Export(GlancesExport):
         if self.prefix is None:
             self.prefix = 'glances'
 
-        if self.protocol is None:
-            self.protocol = 'tcp'
-
-        if self.batch_size is None:
-            self.batch_size = 1000
-
         # Convert config option type
         self.port = int(self.port)
-        self.batch_size = int(self.batch_size)
 
         # Init the Graphite client
         self.client = self.init()
 
     def init(self):
         """Init the connection to the Graphite server."""
+        client = None
+
         if not self.export_enable:
-            return None
+            return client
 
-        client = graphyte.Sender(self.host,
-                                 port=self.port,
-                                 prefix=self.prefix,
-                                 protocol=self.protocol,
-                                 batch_size=self.batch_size)
-
-        # !!! Except is never reached...
-        # !!! Have to find  away to test the connection with the Graphite server
-        # !!! Waiting that, have to set the logger to debug in the export function
-        # try:
-        #     client.send("check", 1)
-        # except Exception as e:
-        #     logger.error("Can not write data to Graphite server: {}:{}/{} ({})".format(self.host,
-        #                                                                                self.port,
-        #                                                                                self.protocol,
-        #                                                                                e))
-        #     return None
-        # else:
-        #     logger.info(
-        #         "Stats will be exported to Graphite server: {}:{}/{}".format(self.host,
-        #                                                                     self.port,
-        #                                                                     self.protocol))
-
-        #     return client
-
-        logger.info(
-            "Stats will be exported to Graphite server: {}:{}/{}".format(self.host,
-                                                                         self.port,
-                                                                         self.protocol))
+        try:
+            if self.system_name is None:
+                client = GraphiteClient(graphite_server=self.host,
+                                        graphite_port=self.port,
+                                        prefix=self.prefix,
+                                        lowercase_metric_names=True,
+                                        debug=self.debug)
+            else:
+                client = GraphiteClient(graphite_server=self.host,
+                                        graphite_port=self.port,
+                                        prefix=self.prefix,
+                                        system_name=self.system_name,
+                                        lowercase_metric_names=True,
+                                        debug=self.debug)
+        except Exception as e:
+            logger.error("Can not write data to Graphite server: {}:{} ({})".format(self.host,
+                                                                                    self.port,
+                                                                                    e))
+            client = None
+        else:
+            logger.info(
+                "Stats will be exported to Graphite server: {}:{}".format(self.host,
+                                                                          self.port))
 
         return client
 
     def export(self, name, columns, points):
         """Export the stats to the Graphite server."""
-        for i in range(len(columns)):
-            if not isinstance(points[i], Number):
-                # Only Int and Float are supported in the Graphite datamodel
-                continue
-            stat_name = '{}.{}'.format(name, columns[i])
-            stat_value = points[i]
-            try:
-                self.client.send(normalize(stat_name),
-                                 stat_value)
-            except Exception as e:
-                # !! Set to error when the connection test is ok
-                # logger.error("Can not export stats to Graphite (%s)" % e)
-                logger.debug("Can not export stats to Graphite (%s)" % e)
-        logger.debug("Export {} stats to Graphite".format(name))
+        if self.client is None:
+            return False
+        before_filtering_dict = dict(zip(
+            [normalize('{}.{}'.format(name, i)) for i in columns],
+            points))
+        after_filtering_dict = dict(
+            filter(lambda i: isinstance(i[1], Number),
+                   before_filtering_dict.items()))
+        try:
+            self.client.send_dict(after_filtering_dict)
+        except Exception as e:
+            logger.error("Can not export stats to Graphite (%s)" % e)
+            return False
+        else:
+            logger.debug("Export {} stats to Graphite".format(name))
+        return True
 
 
 def normalize(name):

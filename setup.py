@@ -57,7 +57,7 @@ def get_install_extras_require():
         'cpuinfo': ['py-cpuinfo<=4.0.0'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
-                   'graphyte', 'influxdb>=1.0.0', 'kafka-python', 'pika',
+                   'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pika',
                    'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
                    'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"

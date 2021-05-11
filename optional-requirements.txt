@@ -8,7 +8,7 @@ chevron
 couchdb
 docker>=2.0.0
 elasticsearch
-graphyte
+graphitesender
 hddtemp
 influxdb
 influxdb-client; python_version >= "3.6"

@@ -13,8 +13,6 @@ following:
     [graphite]
     host=localhost
     port=2003
-    protocol=udp
-    batch_size=1000
     # Prefix will be added for all measurement name
     # Ex: prefix=foo
     #     => foo.cpu
@@ -29,9 +27,8 @@ and run Glances with:
 
     $ glances --export graphite
 
-Note 1: the port defines the TCP or UDP port where the Graphite listen plain-text requests
+Note 1: the port defines the TCP port where the Graphite listen plain-text requests.
 
 Note 2: As many time-series database, only integer and float are supported in the Graphite datamodel.
 
-Note 3: Under the wood, Glances uses Graphyte Python lib (https://pypi.org/project/graphyte/)
- 
+Note 3: Under the wood, Glances uses GraphiteSender Python lib (https://github.com/NicoAdrian/graphitesender).
