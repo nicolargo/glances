@@ -44,7 +44,7 @@ class Export(GlancesExport):
         self.prefix = None
         self.tags = None
 
-        # Load the InfluxDB configuration file
+        # Load the configuration file
         self.export_enable = self.load_conf('opentsdb',
                                             mandatories=['host', 'port'],
                                             options=['prefix', 'tags'])
