@@ -243,7 +243,7 @@ class Plugin(GlancesPlugin):
                     # MEM
                     container_stats['memory'] = self.get_docker_memory(container.id, self.thread_list[container.id].stats)
                     container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
-                    if container_stats['memory'].get('usage', None) is not None:
+                    if container_stats['memory'].get('cache', None) is not None:
                         container_stats['memory_usage'] -= container_stats['memory']['cache']
                     # IO
                     container_stats['io'] = self.get_docker_io(container.id, self.thread_list[container.id].stats)
