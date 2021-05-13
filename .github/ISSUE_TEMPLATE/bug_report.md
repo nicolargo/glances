@@ -26,6 +26,7 @@ If applicable, add screenshots to help explain your problem.
  - OS: [e.g. GNU/Linux Ubuntu 20.04]
  - Glances Version [output of glances -V]
  - Glances logs file [output of tail -10 <glances logs file>]
+ - Glances test [output of glances --issue] (only available with Glances 3.1.7 or higher)
 
 **Additional context**
 Add any other context about the problem here.
