@@ -234,14 +234,22 @@ class Plugin(GlancesPlugin):
                 container_stats['Status'] = container.attrs['State']['Status']
                 container_stats['Command'] = container.attrs['Config']['Entrypoint']
                 # Standards stats
+                # See https://docs.docker.com/engine/api/v1.41/#operation/ContainerStats
+                # Be aware that the API can change... (example see issue #1857)
                 if container_stats['Status'] in ('running', 'paused'):
+                    # CPU
                     container_stats['cpu'] = self.get_docker_cpu(container.id, self.thread_list[container.id].stats)
                     container_stats['cpu_percent'] = container_stats['cpu'].get('total', None)
+                    # MEM
                     container_stats['memory'] = self.get_docker_memory(container.id, self.thread_list[container.id].stats)
                     container_stats['memory_usage'] = container_stats['memory'].get('usage', None)
+                    if container_stats['memory'].get('usage', None) is not None:
+                        container_stats['memory_usage'] -= container_stats['memory']['cache']
+                    # IO
                     container_stats['io'] = self.get_docker_io(container.id, self.thread_list[container.id].stats)
                     container_stats['io_r'] = container_stats['io'].get('ior', None)
                     container_stats['io_w'] = container_stats['io'].get('iow', None)
+                    # NET
                     container_stats['network'] = self.get_docker_network(container.id, self.thread_list[container.id].stats)
                     container_stats['network_rx'] = container_stats['network'].get('rx', None)
                     container_stats['network_tx'] = container_stats['network'].get('tx', None)
@@ -276,7 +284,6 @@ class Plugin(GlancesPlugin):
                all_stats is the output of the stats method of the Docker API
         Output: a dict {'total': 1.49}
         """
-        cpu_new = {}
         ret = {'total': 0.0}
 
         # Read the stats
@@ -284,38 +291,41 @@ class Plugin(GlancesPlugin):
         # containing the CPU usage accumulated by the processes of the container.
         # Those times are expressed in ticks of 1/USER_HZ of a second.
         # On x86 systems, USER_HZ is 100.
+        cpu_new = {}
+        precpu_new = {}
         try:
-            cpu_new['total'] = all_stats['cpu_stats']['cpu_usage']['total_usage']
-            cpu_new['system'] = all_stats['cpu_stats']['system_cpu_usage']
-            cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
+            cpu_new['total'] = all_stats['cpu_stats']['cpu_usage'].get(
+                'total_usage', None)
+            precpu_new['total'] = all_stats['precpu_stats']['cpu_usage'].get(
+                'total_usage', None)
+            cpu_new['system'] = all_stats['cpu_stats'].get(
+                'system_cpu_usage', None)
+            precpu_new['system'] = all_stats['precpu_stats'].get(
+                'system_cpu_usage', None)
+            # Issue #1857
+            # If either precpu_stats.online_cpus or cpu_stats.online_cpus is nil 
+            # then for compatibility with older daemons the length of 
+            # the corresponding cpu_usage.percpu_usage array should be used.
+            if 'online_cpus' in all_stats['cpu_stats'] and \
+               all_stats['cpu_stats']['online_cpus'] is not None:
+                cpu_new['nb_core'] = all_stats['cpu_stats']['online_cpus']
+            else:
+                cpu_new['nb_core'] = len(all_stats['cpu_stats']['cpu_usage']['percpu_usage'] or [])
         except KeyError as e:
-            # all_stats do not have CPU information
-            logger.debug("docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
+            logger.debug(
+                "docker plugin - Cannot grab CPU usage for container {} ({})".format(container_id, e))
             logger.debug(all_stats)
         else:
-            # Previous CPU stats stored in the cpu_old variable
-            if not hasattr(self, 'cpu_old'):
-                # First call, we init the cpu_old variable
-                self.cpu_old = {}
-                try:
-                    self.cpu_old[container_id] = cpu_new
-                except (IOError, UnboundLocalError):
-                    pass
-
-            if container_id not in self.cpu_old:
-                try:
-                    self.cpu_old[container_id] = cpu_new
-                except (IOError, UnboundLocalError):
-                    pass
-            else:
-                #
-                cpu_delta = float(cpu_new['total'] - self.cpu_old[container_id]['total'])
-                system_delta = float(cpu_new['system'] - self.cpu_old[container_id]['system'])
-                if cpu_delta > 0.0 and system_delta > 0.0:
-                    ret['total'] = (cpu_delta / system_delta) * float(cpu_new['nb_core']) * 100
-
-                # Save stats to compute next stats
-                self.cpu_old[container_id] = cpu_new
+            try:
+                cpu_delta = cpu_new['total'] - precpu_new['total']
+                system_cpu_delta = cpu_new['system'] - precpu_new['system']
+                # CPU usage % = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
+                ret['total'] = (cpu_delta / system_cpu_delta) * \
+                    cpu_new['nb_core'] * 100.0
+            except TypeError as e:
+                logger.debug(
+                    "docker plugin - Cannot compute CPU usage for container {} ({})".format(container_id, e))
+                logger.debug(all_stats)
 
         # Return the stats
         return ret
@@ -330,11 +340,21 @@ class Plugin(GlancesPlugin):
         ret = {}
         # Read the stats
         try:
-            ret['rss'] = all_stats['memory_stats']['stats']['rss']
-            ret['cache'] = all_stats['memory_stats']['stats']['cache']
+            # Issue #1857
+            # Some stats are not always available in ['memory_stats']['stats']
+            if 'rss' in all_stats['memory_stats']['stats']:
+                ret['rss'] = all_stats['memory_stats']['stats']['rss']
+            elif 'total_rss' in all_stats['memory_stats']['stats']:
+                ret['rss'] = all_stats['memory_stats']['stats']['total_rss']
+            else:
+                ret['rss'] = None
+            ret['cache'] = all_stats['memory_stats']['stats'].get(
+                'cache', None)
+            ret['max_usage'] = all_stats['memory_stats'].get(
+                'max_usage', None)
+            # Mandatory fields
             ret['usage'] = all_stats['memory_stats']['usage']
             ret['limit'] = all_stats['memory_stats']['limit']
-            ret['max_usage'] = all_stats['memory_stats']['max_usage']
         except (KeyError, TypeError) as e:
             # all_stats do not have MEM information
             logger.debug("docker plugin - Cannot grab MEM usage for container {} ({})".format(container_id, e))
