@@ -18,9 +18,12 @@ RUN apt-get update && \
   iputils-ping && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
+
+FROM build as remoteInstall
 # Force rebuild otherwise it could be cached without rerun
 ARG VCS_REF
 RUN pip3 install --no-cache-dir --user glances[all]
+
 
 FROM build as additional-packages
 
@@ -29,7 +32,19 @@ COPY *requirements.txt .
 RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requirements.txt
 
 
-#Create running image without any building dependency
+FROM build as dev
+
+COPY . /glances
+COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/lib/python3.9/site-packages/
+
+# EXPOSE PORT (XMLRPC / WebUI)
+EXPOSE 61209 61208
+
+# Define default command.
+CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+
+
+#Create running images without any building dependency
 FROM ${ARCH}python:3.9-slim-buster as minimal
 
 RUN apt-get update && \
@@ -40,8 +55,8 @@ RUN apt-get update && \
   iputils-ping && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /root/.local/bin /usr/local/bin/
-COPY --from=build /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
+COPY --from=remoteInstall /root/.local/bin /usr/local/bin/
+COPY --from=remoteInstall /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
@@ -53,4 +68,3 @@ CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 FROM minimal as full
 
 COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
-
