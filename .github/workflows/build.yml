@@ -33,27 +33,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
 
-      - name: Configure ENVs
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE || env.DEFAULT_DOCKER_IMAGE }}
-          DOCKERFILE: ${{ env.NODE_ENV == 'prod' && './docker-files/Dockerfile' || './docker-files/dev.Dockerfile' }}
+      - name: Configure
+        id: config
         run: |
           ls -la /tmp/.buildx-cache || true
-          VERSION=latest
+          DEFAULT_TAGET='minimal'
 
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
-          fi
+            DEFAULT_TAG="${VERSION}"s
+            FULL_TAG="${VERSION}-full"
 
-          if [[ $GITHUB_REF == refs/heads/develop ]]; then
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             VERSION=dev
+            DEFAULT_TAG="${VERSION}"
+            DEFAULT_TAGET='dev'
+
+          else
+            VERSION=latest
+            DEFAULT_TAG="${VERSION}"
           fi
 
-          echo "DOCKERFILE=${DOCKERFILE}" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "TAGS=${DOCKER_IMAGE}:${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
-          echo "VCS_REF=${GITHUB_SHA::8}" >> $GITHUB_ENV
+          echo "::set-output name=defaultTag::$DEFAULT_TAG"
+          echo "::set-output name=fullTag::$FULL_TAG"
+          echo "::set-output name=defaultTarget::$DEFAULT_TAGET"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -73,17 +76,31 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push minimal image
         uses: docker/build-push-action@v2
         with:
           push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: ${{env.TAGS}}
+          tags: ${{ steps.config.outputs.defaultTag }}
           build-args: |
-            VERSION=${{env.VERSION}}
-            BUILD_DATE=${{env.BUILD_DATE}}
-            VCS_REF=${{env.VCS_REF}}
+            ACTION_ID=${{env.GITHUB_ACTION}}
           context: .
-          file: ${{env.DOCKERFILE}}
+          file: docker-files/debian.Dockerfile
+          platforms: ${{env.DOCKER_PLATFORMS}}
+          target: ${{ steps.config.outputs.defaultTarget }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+      - name: Build and push full image
+        if: ${{ steps.config.outputs.fullTag != '' }}
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{ env.PUSH_BRANCH == 'true' }}
+          tags: ${{ steps.config.outputs.fullTag }}
+          build-args: |
+            ACTION_ID=${{env.GITHUB_ACTION}}
+          context: .
+          file: docker-files/debian.Dockerfile
+          target: full
           platforms: ${{env.DOCKER_PLATFORMS}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
