@@ -283,3 +283,15 @@ def key_exist_value_not_none_not_v(k, d, v=''):
     # - d[k] is not None
     # - d[k] != v
     return k in d and d[k] is not None and d[k] != v
+
+
+def disable(class_name, var):
+    """Set disable_<var> to True in the class class_name."""
+    setattr(class_name, 'enable_' + var, False)
+    setattr(class_name, 'disable_' + var, True)
+
+
+def enable(class_name, var):
+    """Set disable_<var> to False in the class class_name."""
+    setattr(class_name, 'enable_' + var, True)
+    setattr(class_name, 'disable_' + var, False)

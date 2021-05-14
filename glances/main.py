@@ -24,20 +24,10 @@ import sys
 import tempfile
 
 from glances import __version__, psutil_version
-from glances.compat import input
+from glances.compat import input, disable, enable
 from glances.config import Config
 from glances.globals import WINDOWS
 from glances.logger import logger, LOG_FILENAME
-
-
-def disable(class_name, var):
-    """Set disable_<var> to True in the class class_name."""
-    setattr(class_name, 'disable_' + var, True)
-
-
-def enable(class_name, var):
-    """Set disable_<var> to False in the class class_name."""
-    setattr(class_name, 'disable_' + var, False)
 
 
 class GlancesMain(object):

@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import re
 import sys
 
-from glances.compat import to_ascii, nativestr, b, u, itervalues
+from glances.compat import to_ascii, nativestr, b, u, itervalues, enable, disable
 from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
 from glances.events import glances_events
@@ -36,9 +36,11 @@ try:
     import curses.panel
     from curses.textpad import Textbox
 except ImportError:
-    logger.critical("Curses module not found. Glances cannot start in standalone mode.")
+    logger.critical(
+        "Curses module not found. Glances cannot start in standalone mode.")
     if WINDOWS:
-	    logger.critical("For Windows you can try installing windows-curses with pip install.")
+        logger.critical(
+            "For Windows you can try installing windows-curses with pip install.")
     sys.exit(1)
 
 
@@ -348,10 +350,25 @@ class _GlancesCurses(object):
         # Actions (available in the global hotkey dict)...
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
-                setattr(self.args,
-                        self._hotkeys[hotkey]['switch'],
-                        not getattr(self.args,
-                                    self._hotkeys[hotkey]['switch']))
+                if self._hotkeys[hotkey]['switch'].startswith('enable_') or \
+                   self._hotkeys[hotkey]['switch'].startswith('disable_'):
+                    # Enable / Disable switch
+                    # Get the option name
+                    # Ex: disable_foo return foo
+                    #     enable_foo_bar return foo_bar
+                    option = '_'.join(
+                        self._hotkeys[hotkey]['switch'].split('_')[1:])
+                    if getattr(self.args,
+                               self._hotkeys[hotkey]['switch']):
+                        disable(self.args, option)
+                    else:
+                        enable(self.args, option)
+                else:
+                    # Others switchs options (with no enable_ or disable_)
+                    setattr(self.args,
+                            self._hotkeys[hotkey]['switch'],
+                            not getattr(self.args,
+                                        self._hotkeys[hotkey]['switch']))
             if self.pressedkey == ord(hotkey) and 'sort_key' in self._hotkeys[hotkey]:
                 glances_processes.set_sort_key(self._hotkeys[hotkey]['sort_key'],
                                                self._hotkeys[hotkey]['sort_key'] == 'auto')
