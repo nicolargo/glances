@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -26,6 +26,7 @@ from datetime import timedelta
 
 from glances.logger import logger
 from glances.globals import WINDOWS
+from glances.compat import key_exist_value_not_none_not_v
 from glances.processes import glances_processes, sort_stats
 from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
@@ -173,6 +174,199 @@ class Plugin(GlancesPlugin):
             pass
         return 'DEFAULT'
 
+    def _get_process_curses_cpu(self, p, selected, args):
+        """Return process CPU curses"""
+        ret = ''
+        if key_exist_value_not_none_not_v('cpu_percent', p, ''):
+            cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
+            if args.disable_irix and self.nb_log_core != 0:
+                msg = cpu_layout.format(
+                    p['cpu_percent'] / float(self.nb_log_core))
+            else:
+                msg = cpu_layout.format(p['cpu_percent'])
+            alert = self.get_alert(p['cpu_percent'],
+                                   highlight_zero=False,
+                                   is_max=(p['cpu_percent'] ==
+                                           self.max_values['cpu_percent']),
+                                   header="cpu")
+            ret = self.curse_add_line(msg, alert)
+        else:
+            msg = self.layout_header['cpu'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_mem(self, p, selected, args):
+        """Return process MEM curses"""
+        ret = ''
+        if key_exist_value_not_none_not_v('memory_percent', p, ''):
+            msg = self.layout_stat['mem'].format(p['memory_percent'])
+            alert = self.get_alert(p['memory_percent'],
+                                   highlight_zero=False,
+                                   is_max=(p['memory_percent'] ==
+                                           self.max_values['memory_percent']),
+                                   header="mem")
+            ret = self.curse_add_line(msg, alert)
+        else:
+            msg = self.layout_header['mem'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_vms(self, p, selected, args):
+        """Return process VMS curses"""
+        ret = ''
+        if key_exist_value_not_none_not_v('memory_info', p, ''):
+            msg = self.layout_stat['virt'].format(
+                self.auto_unit(p['memory_info'][1], low_precision=False))
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            msg = self.layout_header['virt'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_rss(self, p, selected, args):
+        """Return process RSS curses"""
+        ret = ''
+        if key_exist_value_not_none_not_v('memory_info', p, ''):
+            msg = self.layout_stat['res'].format(
+                self.auto_unit(p['memory_info'][0], low_precision=False))
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            msg = self.layout_header['res'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_username(self, p, selected, args):
+        """Return process username curses"""
+        ret = ''
+        if 'username' in p:
+            # docker internal users are displayed as ints only, therefore str()
+            # Correct issue #886 on Windows OS
+            msg = self.layout_stat['user'].format(str(p['username'])[:9])
+            ret = self.curse_add_line(msg)
+        else:
+            msg = self.layout_header['user'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_time(self, p, selected, args):
+        """Return process time curses"""
+        ret = ''
+        try:
+            # Sum user and system time
+            user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
+        except (OverflowError, TypeError) as e:
+            # Catch OverflowError on some Amazon EC2 server
+            # See https://github.com/nicolargo/glances/issues/87
+            # Also catch TypeError on macOS
+            # See: https://github.com/nicolargo/glances/issues/622
+            # logger.debug("Cannot get TIME+ ({})".format(e))
+            msg = self.layout_header['time'].format('?')
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            hours, minutes, seconds = seconds_to_hms(user_system_time)
+            if hours > 99:
+                msg = '{:<7}h'.format(hours)
+            elif 0 < hours < 100:
+                msg = '{}h{}:{}'.format(hours, minutes, seconds)
+            else:
+                msg = '{}:{}'.format(minutes, seconds)
+            msg = self.layout_stat['time'].format(msg)
+            if hours > 0:
+                ret = self.curse_add_line(msg,
+                                          decoration='CPU_TIME',
+                                          optional=True)
+            else:
+                ret = self.curse_add_line(msg, optional=True)
+        return ret
+
+    def _get_process_curses_thread(self, p, selected, args):
+        """Return process thread curses"""
+        ret = ''
+        if 'num_threads' in p:
+            num_threads = p['num_threads']
+            if num_threads is None:
+                num_threads = '?'
+            msg = self.layout_stat['thread'].format(num_threads)
+            ret = self.curse_add_line(msg)
+        else:
+            msg = self.layout_header['thread'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_nice(self, p, selected, args):
+        """Return process nice curses"""
+        ret = ''
+        if 'nice' in p:
+            nice = p['nice']
+            if nice is None:
+                nice = '?'
+            msg = self.layout_stat['nice'].format(nice)
+            ret = self.curse_add_line(msg,
+                                      decoration=self.get_nice_alert(nice))
+        else:
+            msg = self.layout_header['nice'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_status(self, p, selected, args):
+        """Return process status curses"""
+        ret = ''
+        if 'status' in p:
+            status = p['status']
+            msg = self.layout_stat['status'].format(status)
+            if status == 'R':
+                ret = self.curse_add_line(msg, decoration='STATUS')
+            else:
+                ret = self.curse_add_line(msg)
+        else:
+            msg = self.layout_header['status'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_io_read(self, p, selected, args):
+        """Return process IO Read curses"""
+        ret = ''
+        if 'io_counters' in p and \
+           p['io_counters'][4] == 1 and \
+           p['time_since_update'] != 0:
+            # Display rate if stats is available and io_tag ([4]) == 1
+            # IO read
+            io_rs = int((p['io_counters'][0] - p['io_counters']
+                         [2]) / p['time_since_update'])
+            if io_rs == 0:
+                msg = self.layout_stat['ior'].format("0")
+            else:
+                msg = self.layout_stat['ior'].format(
+                    self.auto_unit(io_rs,
+                                   low_precision=True))
+            ret = self.curse_add_line(msg, optional=True, additional=True)
+        else:
+            msg = self.layout_header['ior'].format("?")
+            ret = self.curse_add_line(msg, optional=True, additional=True)
+        return ret
+
+    def _get_process_curses_io_write(self, p, selected, args):
+        """Return process IO Write curses"""
+        ret = ''
+        if 'io_counters' in p and \
+           p['io_counters'][4] == 1 and \
+           p['time_since_update'] != 0:
+            # Display rate if stats is available and io_tag ([4]) == 1
+            # IO read
+            io_ws = int((p['io_counters'][0] - p['io_counters']
+                         [2]) / p['time_since_update'])
+            if io_ws == 0:
+                msg = self.layout_stat['iow'].format("0")
+            else:
+                msg = self.layout_stat['iow'].format(
+                    self.auto_unit(io_ws,
+                                   low_precision=True))
+            ret = self.curse_add_line(msg, optional=True, additional=True)
+        else:
+            msg = self.layout_header['iow'].format("?")
+            ret = self.curse_add_line(msg, optional=True, additional=True)
+        return ret
+
     def get_process_curses_data(self, p, selected, args):
         """Get curses data to display for a process.
 
@@ -185,141 +379,37 @@ class Plugin(GlancesPlugin):
         # * underline the command name
         if args.is_standalone:
             ret.append(self.curse_add_line('>' if selected else ' ', 'SELECTED'))
+
         # CPU
-        if 'cpu_percent' in p and p['cpu_percent'] is not None and p['cpu_percent'] != '':
-            cpu_layout = self.layout_stat['cpu'] if p['cpu_percent'] < 100 else self.layout_stat['cpu_no_digit']
-            if args.disable_irix and self.nb_log_core != 0:
-                msg = cpu_layout.format(
-                    p['cpu_percent'] / float(self.nb_log_core))
-            else:
-                msg = cpu_layout.format(p['cpu_percent'])
-            alert = self.get_alert(p['cpu_percent'],
-                                   highlight_zero=False,
-                                   is_max=(p['cpu_percent'] == self.max_values['cpu_percent']),
-                                   header="cpu")
-            ret.append(self.curse_add_line(msg, alert))
-        else:
-            msg = self.layout_header['cpu'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_cpu(p, selected, args))
+
         # MEM
-        if 'memory_percent' in p and p['memory_percent'] is not None and p['memory_percent'] != '':
-            msg = self.layout_stat['mem'].format(p['memory_percent'])
-            alert = self.get_alert(p['memory_percent'],
-                                   highlight_zero=False,
-                                   is_max=(p['memory_percent'] == self.max_values['memory_percent']),
-                                   header="mem")
-            ret.append(self.curse_add_line(msg, alert))
-        else:
-            msg = self.layout_header['mem'].format('?')
-            ret.append(self.curse_add_line(msg))
-        # VMS/RSS
-        if 'memory_info' in p and p['memory_info'] is not None and p['memory_info'] != '':
-            # VMS
-            msg = self.layout_stat['virt'].format(self.auto_unit(p['memory_info'][1], low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
-            # RSS
-            msg = self.layout_stat['res'].format(self.auto_unit(p['memory_info'][0], low_precision=False))
-            ret.append(self.curse_add_line(msg, optional=True))
-        else:
-            msg = self.layout_header['virt'].format('?')
-            ret.append(self.curse_add_line(msg))
-            msg = self.layout_header['res'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_mem(p, selected, args))
+        ret.append(self._get_process_curses_vms(p, selected, args))
+        ret.append(self._get_process_curses_rss(p, selected, args))
+
         # PID
         msg = self.layout_stat['pid'].format(p['pid'], width=self.__max_pid_size())
         ret.append(self.curse_add_line(msg))
+
         # USER
-        if 'username' in p:
-            # docker internal users are displayed as ints only, therefore str()
-            # Correct issue #886 on Windows OS
-            msg = self.layout_stat['user'].format(str(p['username'])[:9])
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = self.layout_header['user'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_username(p, selected, args))
+
         # TIME+
-        try:
-            # Sum user and system time
-            user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
-        except (OverflowError, TypeError) as e:
-            # Catch OverflowError on some Amazon EC2 server
-            # See https://github.com/nicolargo/glances/issues/87
-            # Also catch TypeError on macOS
-            # See: https://github.com/nicolargo/glances/issues/622
-            # logger.debug("Cannot get TIME+ ({})".format(e))
-            msg = self.layout_header['time'].format('?')
-            ret.append(self.curse_add_line(msg, optional=True))
-        else:
-            hours, minutes, seconds = seconds_to_hms(user_system_time)
-            if hours > 99:
-                msg = '{:<7}h'.format(hours)
-            elif 0 < hours < 100:
-                msg = '{}h{}:{}'.format(hours, minutes, seconds)
-            else:
-                msg = '{}:{}'.format(minutes, seconds)
-            msg = self.layout_stat['time'].format(msg)
-            if hours > 0:
-                ret.append(self.curse_add_line(msg,
-                                               decoration='CPU_TIME',
-                                               optional=True))
-            else:
-                ret.append(self.curse_add_line(msg, optional=True))
+        ret.append(self._get_process_curses_time(p, selected, args))
+
         # THREAD
-        if 'num_threads' in p:
-            num_threads = p['num_threads']
-            if num_threads is None:
-                num_threads = '?'
-            msg = self.layout_stat['thread'].format(num_threads)
-            ret.append(self.curse_add_line(msg))
-        else:
-            msg = self.layout_header['thread'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_thread(p, selected, args))
+
         # NICE
-        if 'nice' in p:
-            nice = p['nice']
-            if nice is None:
-                nice = '?'
-            msg = self.layout_stat['nice'].format(nice)
-            ret.append(self.curse_add_line(msg,
-                                           decoration=self.get_nice_alert(nice)))
-        else:
-            msg = self.layout_header['nice'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_nice(p, selected, args))
+
         # STATUS
-        if 'status' in p:
-            status = p['status']
-            msg = self.layout_stat['status'].format(status)
-            if status == 'R':
-                ret.append(self.curse_add_line(msg, decoration='STATUS'))
-            else:
-                ret.append(self.curse_add_line(msg))
-        else:
-            msg = self.layout_header['status'].format('?')
-            ret.append(self.curse_add_line(msg))
+        ret.append(self._get_process_curses_status(p, selected, args))
+
         # IO read/write
-        if 'io_counters' in p and p['io_counters'][4] == 1 and p['time_since_update'] != 0:
-            # Display rate if stats is available and io_tag ([4]) == 1
-            # IO read
-            io_rs = int((p['io_counters'][0] - p['io_counters'][2]) / p['time_since_update'])
-            if io_rs == 0:
-                msg = self.layout_stat['ior'].format("0")
-            else:
-                msg = self.layout_stat['ior'].format(self.auto_unit(io_rs,
-                                                                    low_precision=True))
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
-            # IO write
-            io_ws = int((p['io_counters'][1] - p['io_counters'][3]) / p['time_since_update'])
-            if io_ws == 0:
-                msg = self.layout_stat['iow'].format("0")
-            else:
-                msg = self.layout_stat['iow'].format(self.auto_unit(io_ws,
-                                                                    low_precision=True))
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
-        else:
-            msg = self.layout_header['ior'].format("?")
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
-            msg = self.layout_header['iow'].format("?")
-            ret.append(self.curse_add_line(msg, optional=True, additional=True))
+        ret.append(self._get_process_curses_io_read(p, selected, args))
+        ret.append(self._get_process_curses_io_write(p, selected, args))
 
         # Command line
         # If no command line for the process is available, fallback to
@@ -448,7 +538,7 @@ class Plugin(GlancesPlugin):
             ret.extend(self.get_process_curses_data(
                 p, i == args.cursor_position, args))
             i += 1
-        
+
         # A filter is set Display the stats summaries
         if glances_processes.process_filter is not None:
             if args.reset_minmax_tag:
