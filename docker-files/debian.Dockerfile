@@ -4,8 +4,7 @@
 # https://github.com/nicolargo/glances
 #
 
-ARG ARCH
-FROM ${ARCH}python:3.9-slim-buster as build
+FROM python:3.9-slim-buster as build
 
 # Install package
 RUN apt-get update && \
@@ -21,7 +20,7 @@ RUN apt-get update && \
 
 FROM build as remoteInstall
 # Force rebuild otherwise it could be cached without rerun
-ARG VCS_REF
+ARG ACTION_ID
 RUN pip3 install --no-cache-dir --user glances[all]
 
 
@@ -45,7 +44,7 @@ CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
 
 #Create running images without any building dependency
-FROM ${ARCH}python:3.9-slim-buster as minimal
+FROM python:3.9-slim-buster as minimal
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
