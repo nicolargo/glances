@@ -268,3 +268,18 @@ def is_admin():
     else:
         # Check for root on Posix
         return os.getuid() == 0
+
+
+def key_exist_value_not_none(k, d):
+    # Return True if:
+    # - key k exists
+    # - d[k] is not None
+    return k in d and d[k] is not None
+
+
+def key_exist_value_not_none_not_v(k, d, v=''):
+    # Return True if:
+    # - key k exists
+    # - d[k] is not None
+    # - d[k] != v
+    return k in d and d[k] is not None and d[k] != v
