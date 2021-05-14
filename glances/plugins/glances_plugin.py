@@ -143,9 +143,8 @@ class GlancesPlugin(object):
         try:
             d = getattr(self.args, 'disable_' + plugin_name)
         except AttributeError:
-            return True
-        else:
-            return d is False
+            d = getattr(self.args, 'enable_' + plugin_name, True)
+        return d is False
 
     def is_disable(self, plugin_name=None):
         """Return true if plugin is disabled."""
