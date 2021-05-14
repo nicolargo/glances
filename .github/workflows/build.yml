@@ -58,6 +58,14 @@ jobs:
           echo "::set-output name=fullTag::$FULL_TAG"
           echo "::set-output name=defaultTarget::$DEFAULT_TAGET"
 
+      - name: Retrieve Repository Docker metadata
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v2.5.0
+        with:
+          images: ${{ env.DEFAULT_DOCKER_IMAGE }}
+          labels: |
+            org.opencontainers.image.url=https://nicolargo.github.io/glances/
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -87,6 +95,7 @@ jobs:
           file: docker-files/debian.Dockerfile
           platforms: ${{env.DOCKER_PLATFORMS}}
           target: ${{ steps.config.outputs.defaultTarget }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
@@ -102,6 +111,7 @@ jobs:
           file: docker-files/debian.Dockerfile
           target: full
           platforms: ${{env.DOCKER_PLATFORMS}}
+          labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
