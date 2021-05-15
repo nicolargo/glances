@@ -19,74 +19,6 @@ on:
       - v*
 
 jobs:
-  buildx:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
-
-      - name: Configure ENVs
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE || env.DEFAULT_DOCKER_IMAGE }}
-          DOCKERFILE: ${{ env.NODE_ENV == 'prod' && './docker-files/Dockerfile' || './docker-files/dev.Dockerfile' }}
-        run: |
-          ls -la /tmp/.buildx-cache || true
-          VERSION=latest
-
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-
-          if [[ $GITHUB_REF == refs/heads/develop ]]; then
-            VERSION=dev
-          fi
-
-          echo "DOCKERFILE=${DOCKERFILE}" >> $GITHUB_ENV
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "TAGS=${DOCKER_IMAGE}:${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
-          echo "VCS_REF=${GITHUB_SHA::8}" >> $GITHUB_ENV
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          version: latest
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        if: ${{ env.PUSH_BRANCH == 'true' }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: ${{env.TAGS}}
-          build-args: |
-            VERSION=${{env.VERSION}}
-            BUILD_DATE=${{env.BUILD_DATE}}
-            VCS_REF=${{env.VCS_REF}}
-          context: .
-          file: ${{env.DOCKERFILE}}
-          platforms: ${{env.DOCKER_PLATFORMS}}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
   pypi:
     runs-on: ubuntu-latest
@@ -100,7 +32,7 @@ jobs:
           pip install
           build
           --user
-  
+
       - name: Build a binary wheel and a source tarball
         run: >-
           python -m
@@ -123,3 +55,96 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+
+  create_Docker_builds:
+    runs-on: ubuntu-latest
+    # Make sure we release the python package first. So we are sure to get the latest.
+    needs:
+      - pypi
+    outputs:
+      tags: ${{ steps.config.outputs.tags }}
+    steps:
+      - name: Determine image tags
+        id: config
+        shell: bash
+        run: |
+          TAG_ARRAY='['
+
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
+
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"dev\", \"tag\": \"dev\" },"
+
+          else
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" },"
+          fi
+
+          TAG_ARRAY="${TAG_ARRAY::-1} ]"
+
+          echo "Tags to build: $TAG_ARRAY"
+          echo "::set-output name=tags::$TAG_ARRAY"
+
+  build_Docker_image:
+    runs-on: ubuntu-latest
+    needs:
+      - create_Docker_builds
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['debian', 'alpine']
+        tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Retrieve Repository Docker metadata
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v2.5.0
+        with:
+          images: ${{ env.DEFAULT_DOCKER_IMAGE }}
+          labels: |
+            org.opencontainers.image.url=https://nicolargo.github.io/glances/
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}-${{ matrix.tag.tag }}
+          restore-keys: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ env.PUSH_BRANCH == 'true' }}
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{ env.PUSH_BRANCH == 'true' }}
+          tags: "${{ matrix.os != 'debian' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
+          build-args: |
+            CHANGING_ARG=${{ github.sha }}
+          context: .
+          file: "docker-files/${{ matrix.os }}.Dockerfile"
+          platforms: ${{env.DOCKER_PLATFORMS}}
+          target: ${{ matrix.tag.target }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
