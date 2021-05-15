@@ -200,7 +200,7 @@ class Plugin(GlancesPlugin):
             for smart_stat in sorted([i for i in device_stat.keys() if i != 'DeviceName'], key=int):
                 ret.append(self.curse_new_line())
                 msg = ' {:{width}}'.format(device_stat[smart_stat]['name'][:name_max_width-1].replace('_', ' '),
-                                          width=name_max_width-1)
+                                           width=name_max_width-1)
                 ret.append(self.curse_add_line(msg))
                 msg = '{:>8}'.format(device_stat[smart_stat]['raw'])
                 ret.append(self.curse_add_line(msg))

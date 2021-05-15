@@ -145,7 +145,7 @@ class Plugin(GlancesPlugin):
                 ret = 'WARNING'
             elif value <= self.get_limit('careful', stat_name=self.plugin_name):
                 ret = 'CAREFUL'
-        except (TypeError, KeyError) as e:
+        except (TypeError, KeyError):
             # Catch TypeError for issue1373
             ret = 'DEFAULT'
 
@@ -200,7 +200,8 @@ class Plugin(GlancesPlugin):
             msg = '{:{width}}'.format(nativestr(hotspotname),
                                       width=ifname_max_width)
             ret.append(self.curse_add_line(msg))
-            msg = '{:>7}'.format(i['signal'], width=ifname_max_width)
+            msg = '{:>7}'.format(i['signal'],
+                                 width=ifname_max_width)
             ret.append(self.curse_add_line(msg,
                                            self.get_views(item=i[self.get_key()],
                                                           key='signal',

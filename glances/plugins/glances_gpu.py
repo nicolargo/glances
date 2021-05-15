@@ -88,8 +88,8 @@ class Plugin(GlancesPlugin):
         stats = self.get_init_value()
 
         if not self.nvml_ready:
-            # !!! 
-            # Uncomment to test on computer without GPU 
+            # !!!
+            # Uncomment to test on computer without GPU
             # One GPU sample:
             # self.stats = [
             #     {

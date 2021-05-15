@@ -170,9 +170,11 @@ class Plugin(GlancesPlugin):
             if not i['value']:
                 continue
             if i['type'] == 'battery':
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'], header=i['type'])
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'],
+                                                                                      header=i['type'])
             else:
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(i['value'], header=i['type'])
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(i['value'],
+                                                                                      header=i['type'])
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
