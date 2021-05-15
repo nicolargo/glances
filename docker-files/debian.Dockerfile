@@ -11,7 +11,7 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   python3-dev \
   curl \
-  gcc \
+  build-essential \
   lm-sensors \
   wireless-tools \
   iputils-ping && \
