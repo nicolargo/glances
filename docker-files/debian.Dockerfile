@@ -19,7 +19,11 @@ RUN apt-get update && \
 
 
 FROM build as remoteInstall
-# Force rebuild otherwise it could be cached without rerun
+# Install the dependencies beforehand to make them cacheable
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --user -r requirements.txt
+
+# Force install otherwise it could be cached without rerun
 ARG CHANGING_ARG
 RUN pip3 install --no-cache-dir --user glances[all]
 
