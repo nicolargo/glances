@@ -19,8 +19,48 @@ on:
       - v*
 
 jobs:
-  buildx:
+
+  pypi:
     runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Install pip install build tools
+        run: >-
+          python -m
+          pip install
+          build
+          --user
+
+      - name: Build a binary wheel and a source tarball
+        run: >-
+          python -m
+          build
+          --sdist
+          --wheel
+          --outdir dist/
+
+      - name: Publish distribution package to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
+
+      - name: Publish distribution package to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  docker-images:
+    runs-on: ubuntu-latest
+    # Make sure we release the python package first. So we are sure to get the latest.
+    needs:
+      - pypi
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -106,7 +146,7 @@ jobs:
           push: ${{ env.PUSH_BRANCH == 'true' }}
           tags: ${{ steps.config.outputs.fullTag }}
           build-args: |
-            ACTION_ID=${{env.GITHUB_ACTION}}
+            CHANGING_ARG=${{env.GITHUB_SHA}}
           context: .
           file: docker-files/debian.Dockerfile
           target: full
@@ -114,39 +154,3 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-
-  pypi:
-    runs-on: ubuntu-latest
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - name: Install pip install build tools
-        run: >-
-          python -m
-          pip install
-          build
-          --user
-  
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-
-      - name: Publish distribution package to Test PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
-
-      - name: Publish distribution package to PyPI
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}

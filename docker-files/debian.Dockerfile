@@ -20,7 +20,7 @@ RUN apt-get update && \
 
 FROM build as remoteInstall
 # Force rebuild otherwise it could be cached without rerun
-ARG ACTION_ID
+ARG CHANGING_ARG
 RUN pip3 install --no-cache-dir --user glances[all]
 
 
