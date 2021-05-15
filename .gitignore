@@ -60,3 +60,7 @@ bower_components/
 
 /*.snap
 /*_source.tar.bz2
+
+# Virtual env
+/venv/
+
