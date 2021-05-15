@@ -21,11 +21,10 @@
 from __future__ import unicode_literals
 
 import base64
-import operator
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.compat import n, u, b, nativestr
+from glances.compat import n
 from glances.logger import logger
 
 import psutil

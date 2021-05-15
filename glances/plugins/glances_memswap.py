@@ -81,7 +81,7 @@ class Plugin(GlancesPlugin):
                 # sout: the number of bytes the system has swapped out from disk
                 # (cumulative)
                 for swap in ['total', 'used', 'free', 'percent',
-                            'sin', 'sout']:
+                             'sin', 'sout']:
                     if hasattr(sm_stats, swap):
                         stats[swap] = getattr(sm_stats, swap)
         elif self.input_method == 'snmp':

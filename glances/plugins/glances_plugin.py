@@ -191,10 +191,10 @@ class GlancesPlugin(object):
                     # Stats is a list of data
                     # Iter throught it (for exemple, iter throught network
                     # interface)
-                    for l in self.get_export():
+                    for l_export in self.get_export():
                         self.stats_history.add(
-                            nativestr(l[item_name]) + '_' + nativestr(i['name']),
-                            l[i['name']],
+                            nativestr(l_export[item_name]) + '_' + nativestr(i['name']),
+                            l_export[i['name']],
                             description=i['description'],
                             history_max_size=self._limits['history_size'])
                 else:
@@ -455,11 +455,11 @@ class GlancesPlugin(object):
                     self.views[i[self.get_key(
                     )]][f]['hidden'] = self.views[i[self.get_key()]][f]['_zero'] and i[f] == 0
         elif isinstance(self.get_raw(), dict) and self.get_raw() is not None:
-            # 
-            # Warning: This code has never been tested because 
+            #
+            # Warning: This code has never been tested because
             # no plugin with dict instance use the hidden function...
             #                       vvvv
-            # 
+            #
             # Stats are stored in a dict (ex: CPU, LOAD...)
             for key in listkeys(self.get_raw()):
                 if any([self.get_raw()[f] for f in self.hide_zero_fields]):
@@ -479,7 +479,7 @@ class GlancesPlugin(object):
                 'optional': False,        >>> Is the stat optional
                 'additional': False,      >>> Is the stat provide additional information
                 'splittable': False,      >>> Is the stat can be cut (like process lon name)
-                'hidden': False,          >>> Is the stats should be hidden in the UI 
+                'hidden': False,          >>> Is the stats should be hidden in the UI
                 '_zero': True}            >>> For internal purpose only
         """
         ret = {}
@@ -900,7 +900,11 @@ class GlancesPlugin(object):
             additional: True if the stat is additional (display only if space is available after optional)
             spittable: Line can be splitted to fit on the screen (default is not)
         """
-        return {'msg': msg, 'decoration': decoration, 'optional': optional, 'additional': additional, 'splittable': splittable}
+        return {'msg': msg,
+                'decoration': decoration,
+                'optional': optional,
+                'additional': additional,
+                'splittable': splittable}
 
     def curse_new_line(self):
         """Go to a new line."""

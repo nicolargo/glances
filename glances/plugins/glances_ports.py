@@ -57,7 +57,8 @@ class Plugin(GlancesPlugin):
         self.display_curse = True
 
         # Init stats
-        self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + GlancesWebList(config=config, args=args).get_web_list()
+        self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + \
+            GlancesWebList(config=config, args=args).get_web_list()
 
         # Init global Timer
         self.timer_ports = Timer(0)
@@ -333,7 +334,7 @@ class ThreadScanner(threading.Thread):
                 port['status'] = counter.get()
             else:
                 port['status'] = False
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             # Correct issue #1084: No Offline status for timeouted ports
             port['status'] = False
         except Exception as e:
@@ -350,7 +351,7 @@ class ThreadScanner(threading.Thread):
             socket.setdefaulttimeout(port['timeout'])
             _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
-            logger.debug("{}: Error while creating scanning socket".format(self.plugin_name))
+            logger.debug("{}: Error while creating scanning socket ({})".format(self.plugin_name, e))
 
         # Scan port
         ip = self._resolv_name(port['host'])

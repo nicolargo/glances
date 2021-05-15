@@ -126,9 +126,11 @@ class Plugin(GlancesPlugin):
         # Add specifics informations
         try:
             # Alert and log
-            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'], maximum=100 * self.stats['cpucore'])
+            self.views['min15']['decoration'] = self.get_alert_log(self.stats['min15'],
+                                                                   maximum=100 * self.stats['cpucore'])
             # Alert only
-            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'], maximum=100 * self.stats['cpucore'])
+            self.views['min5']['decoration'] = self.get_alert(self.stats['min5'],
+                                                              maximum=100 * self.stats['cpucore'])
         except KeyError:
             # try/except mandatory for Windows compatibility (no load stats)
             pass

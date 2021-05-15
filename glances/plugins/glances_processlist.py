@@ -20,9 +20,7 @@
 """Process list plugin."""
 
 import os
-import shlex
 import copy
-from datetime import timedelta
 
 from glances.logger import logger
 from glances.globals import WINDOWS
@@ -121,7 +119,9 @@ class Plugin(GlancesPlugin):
         # Set the default sort key if it is defined in the configuration file
         if config is not None:
             if 'processlist' in config.as_dict() and 'sort_key' in config.as_dict()['processlist']:
-                logger.debug('Configuration overwrites processes sort key by {}'.format(config.as_dict()['processlist']['sort_key']))
+                logger.debug(
+                    'Configuration overwrites processes sort key by {}'.format(
+                        config.as_dict()['processlist']['sort_key']))
                 glances_processes.set_sort_key(config.as_dict()['processlist']['sort_key'], False)
 
         # Note: 'glances_processes' is already init in the processes.py script
@@ -254,7 +254,7 @@ class Plugin(GlancesPlugin):
         try:
             # Sum user and system time
             user_system_time = p['cpu_times'][0] + p['cpu_times'][1]
-        except (OverflowError, TypeError) as e:
+        except (OverflowError, TypeError):
             # Catch OverflowError on some Amazon EC2 server
             # See https://github.com/nicolargo/glances/issues/87
             # Also catch TypeError on macOS
@@ -573,7 +573,9 @@ class Plugin(GlancesPlugin):
         msg = self.layout_header['user'].format('USER')
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'username' else 'DEFAULT'))
         msg = self.layout_header['time'].format('TIME+')
-        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'cpu_times' else 'DEFAULT', optional=True))
+        ret.append(self.curse_add_line(msg,
+                                       sort_style if process_sort_key == 'cpu_times' else 'DEFAULT',
+                                       optional=True))
         msg = self.layout_header['thread'].format('THR')
         ret.append(self.curse_add_line(msg))
         msg = self.layout_header['nice'].format('NI')
@@ -581,9 +583,15 @@ class Plugin(GlancesPlugin):
         msg = self.layout_header['status'].format('S')
         ret.append(self.curse_add_line(msg))
         msg = self.layout_header['ior'].format('R/s')
-        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
+        ret.append(self.curse_add_line(msg,
+                                       sort_style if process_sort_key == 'io_counters' else 'DEFAULT',
+                                       optional=True,
+                                       additional=True))
         msg = self.layout_header['iow'].format('W/s')
-        ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'io_counters' else 'DEFAULT', optional=True, additional=True))
+        ret.append(self.curse_add_line(msg,
+                                       sort_style if process_sort_key == 'io_counters' else 'DEFAULT',
+                                       optional=True,
+                                       additional=True))
         msg = self.layout_header['command'].format('Command',
                                                    "('k' to kill)" if args.is_standalone else "")
         ret.append(self.curse_add_line(msg, sort_style if process_sort_key == 'name' else 'DEFAULT'))
@@ -610,14 +618,17 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(msg,
                                        decoration=self.__mmm_deco(mmm)))
         # VIRT and RES memory sum
-        if 'memory_info' in self.stats[0] and self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
+        if 'memory_info' in self.stats[0] and \
+           self.stats[0]['memory_info'] is not None and self.stats[0]['memory_info'] != '':
             # VMS
-            msg = self.layout_stat['virt'].format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm), low_precision=False))
+            msg = self.layout_stat['virt'].format(self.auto_unit(self.__sum_stats('memory_info', indice=1, mmm=mmm),
+                                                                 low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))
             # RSS
-            msg = self.layout_stat['res'].format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm), low_precision=False))
+            msg = self.layout_stat['res'].format(self.auto_unit(self.__sum_stats('memory_info', indice=0, mmm=mmm),
+                                                                low_precision=False))
             ret.append(self.curse_add_line(msg,
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True))

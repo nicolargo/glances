@@ -19,7 +19,6 @@
 
 """Per-CPU plugin."""
 
-from glances.logger import logger
 from glances.cpu_percent import cpu_percent
 from glances.plugins.glances_plugin import GlancesPlugin
 

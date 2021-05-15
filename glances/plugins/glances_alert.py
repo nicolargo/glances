@@ -96,8 +96,8 @@ tree_new = {
                 '_no': {
                     # Low swap means you have a "real" IO wait problem. The next step is to see what's hogging your IO.
                     # iotop is an awesome tool for identifying io offenders. Two things to note:
-                    # unless you've already installed iotop, it's probably not already on your system. 
-                    # Recommendation: install it before you need it - - it's no fun trying to install a troubleshooting 
+                    # unless you've already installed iotop, it's probably not already on your system.
+                    # Recommendation: install it before you need it - - it's no fun trying to install a troubleshooting
                     # tool on an overloaded machine (iotop requies a Linux of 2.62 or above)
                     '_msg': "I/O issue"
                 }
@@ -109,15 +109,15 @@ tree_new = {
                     'cpu_user': {
                         '_yes': {
                             # We expect the usertime percentage to be high.
-                            # There's most likely a program or service you've configured on you server that's hogging CPU. 
-                            # Checking the % user time just confirms this. When you see that the % usertime is high, 
+                            # There's most likely a program or service you've configured on you server that's hogging CPU.
+                            # Checking the % user time just confirms this. When you see that the % usertime is high,
                             # it's time to see what executable is monopolizing the CPU
-                            # Once you've confirmed that the % usertime is high, check the process list(also provided by top). 
+                            # Once you've confirmed that the % usertime is high, check the process list(also provided by top).
                             # Be default, top sorts the process list by % CPU, so you can just look at the top process or processes.
-                            # If there's a single process hogging the CPU in a way that seems abnormal, it's an anomalous situation 
-                            # that a service restart can fix. If there are are multiple processes taking up CPU resources, or it 
-                            # there's one process that takes lots of resources while otherwise functioning normally, than your setup 
-                            # may just be underpowered. You'll need to upgrade your server(add more cores), or split services out onto 
+                            # If there's a single process hogging the CPU in a way that seems abnormal, it's an anomalous situation
+                            # that a service restart can fix. If there are are multiple processes taking up CPU resources, or it
+                            # there's one process that takes lots of resources while otherwise functioning normally, than your setup
+                            # may just be underpowered. You'll need to upgrade your server(add more cores), or split services out onto
                             # other boxes. In either case, you have a resolution:
                             # - if situation seems anomalous: kill the offending processes.
                             # - if situation seems typical given history: upgrade server or add more servers.
