@@ -138,7 +138,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: "${{ matrix.os != 'debian' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
+          tags: "${{ env.DEFAULT_DOCKER_IMAGE }}:${{ matrix.os != 'debian' && format('{0}-', matrix.os) || '' }}${{ matrix.tag.tag }}"
           build-args: |
             CHANGING_ARG=${{ github.sha }}
           context: .
