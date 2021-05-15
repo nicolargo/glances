@@ -113,9 +113,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
+          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}-${{ matrix.tag.tag }}
+          restore-keys: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ matrix.os }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
