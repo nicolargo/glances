@@ -56,47 +56,50 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-  docker-images:
+  create_Docker_builds:
     runs-on: ubuntu-latest
     # Make sure we release the python package first. So we are sure to get the latest.
     needs:
       - pypi
+    outputs:
+      tags: ${{ steps.config.outputs.tags }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
-
-      - name: Configure
+      - name: Determine image tags
         id: config
+        shell: bash
         run: |
-          ls -la /tmp/.buildx-cache || true
-          DEFAULT_TAGET='minimal'
+          TAG_ARRAY='['
 
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
-            DEFAULT_TAG="${VERSION}"s
-            FULL_TAG="${VERSION}-full"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
 
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
-            VERSION=dev
-            DEFAULT_TAG="${VERSION}"
-            DEFAULT_TAGET='dev'
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"dev\", \"tag\": \"dev\" },"
 
           else
-            VERSION=latest
-            DEFAULT_TAG="${VERSION}"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" },"
           fi
 
-          echo "::set-output name=defaultTag::$DEFAULT_TAG"
-          echo "::set-output name=fullTag::$FULL_TAG"
-          echo "::set-output name=defaultTarget::$DEFAULT_TAGET"
+          TAG_ARRAY="${TAG_ARRAY::-1} ]"
+
+          echo "Tags to build: $TAG_ARRAY"
+          echo "::set-output name=tags::$TAG_ARRAY"
+
+  build_Docker_image:
+    runs-on: ubuntu-latest
+    needs:
+      - create_Docker_builds
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['debian']
+        tag: ${{ fromJson(needs.create_Docker_builds.outputs.tags) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Retrieve Repository Docker metadata
         id: docker_meta
@@ -105,6 +108,14 @@ jobs:
           images: ${{ env.DEFAULT_DOCKER_IMAGE }}
           labels: |
             org.opencontainers.image.url=https://nicolargo.github.io/glances/
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ env.NODE_ENV }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ env.NODE_ENV }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -124,33 +135,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push minimal image
+      - name: Build and push image
         uses: docker/build-push-action@v2
         with:
           push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: ${{ steps.config.outputs.defaultTag }}
+          tags: ${{ matrix.tag.tag }}
           build-args: |
-            ACTION_ID=${{env.GITHUB_ACTION}}
+            CHANGING_ARG=${{ github.sha }}
           context: .
-          file: docker-files/debian.Dockerfile
+          file: "docker-files/${{ matrix.os }}.Dockerfile"
           platforms: ${{env.DOCKER_PLATFORMS}}
-          target: ${{ steps.config.outputs.defaultTarget }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-
-      - name: Build and push full image
-        if: ${{ steps.config.outputs.fullTag != '' }}
-        uses: docker/build-push-action@v2
-        with:
-          push: ${{ env.PUSH_BRANCH == 'true' }}
-          tags: ${{ steps.config.outputs.fullTag }}
-          build-args: |
-            CHANGING_ARG=${{env.GITHUB_SHA}}
-          context: .
-          file: docker-files/debian.Dockerfile
-          target: full
-          platforms: ${{env.DOCKER_PLATFORMS}}
+          target: ${{ matrix.tag.target }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
