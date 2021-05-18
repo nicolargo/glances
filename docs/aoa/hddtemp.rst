@@ -14,23 +14,15 @@ On your Linux system, you will need to have:
 
 For example on a CentOS/Redhat Linux operating system, you have to:
 
-```
-sudo yum install hddtemp
-
-sudo systemctl enable hddtemp
-
-sudo systemctl enable hddtemp
-```
+    $ sudo yum install hddtemp
+    $ sudo systemctl enable hddtemp
+    $ sudo systemctl enable hddtemp
 
 Test it in the console:
 
-```
-$ hddtemp
-
-/dev/sda: TOSHIBA MQ01ACF050: 41°C
-
-/dev/sdb: ST1000LM044 HN-M101SAD: 38°C
-```
+    $ hddtemp
+    /dev/sda: TOSHIBA MQ01ACF050: 41°C
+    /dev/sdb: ST1000LM044 HN-M101SAD: 38°C
 
 It should appears in the sensors plugin.
 
