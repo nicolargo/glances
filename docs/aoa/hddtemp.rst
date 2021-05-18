@@ -30,6 +30,8 @@ Test it in the console:
 
 It should appears in the sensors plugin.
 
+.. image:: ../_static/hddtemp.png
+
 There is no alert on this information.
 
 .. note::
