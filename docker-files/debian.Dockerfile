@@ -37,7 +37,7 @@ RUN CASS_DRIVER_NO_CYTHON=1 pip3 install --no-cache-dir --user -r optional-requi
 
 FROM build as dev
 
-COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/lib/python3.9/site-packages/
+COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
 COPY . /glances
 
 # EXPOSE PORT (XMLRPC / WebUI)
