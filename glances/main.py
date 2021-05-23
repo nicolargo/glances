@@ -33,8 +33,8 @@ from glances.logger import logger, LOG_FILENAME
 class GlancesMain(object):
     """Main class to manage Glances instance."""
 
-    # Default stats' refresh time is 3 seconds
-    refresh_time = 3
+    # Default stats' minimum refresh time is 2 seconds
+    DEFAULT_REFRESH_TIME = 2
     # Set the default cache lifetime to 1 second (only for server)
     cached_time = 1
     # By default, Glances is ran in standalone mode (no client/server)
@@ -205,8 +205,8 @@ Examples of use:
                             help='SNMP authentication key (only for SNMPv3)')
         parser.add_argument('--snmp-force', action='store_true', default=False,
                             dest='snmp_force', help='force SNMP mode')
-        parser.add_argument('-t', '--time', default=self.refresh_time, type=float,
-                            dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.refresh_time))
+        parser.add_argument('-t', '--time', default=self.DEFAULT_REFRESH_TIME, type=float,
+                            dest='time', help='set refresh time in seconds [default: {} sec]'.format(self.DEFAULT_REFRESH_TIME))
         parser.add_argument('-w', '--webserver', action='store_true', default=False,
                             dest='webserver', help='run Glances in web server mode (bottle needed)')
         parser.add_argument('--cached-time', default=self.cached_time, type=int,
@@ -258,6 +258,8 @@ Examples of use:
         args = self.init_args().parse_args()
 
         # Load the configuration file, if it exists
+        # This function should be called after the parse_args
+        # because the configration file path can be defined
         self.config = Config(args.conf_file)
 
         # Debug mode
@@ -267,6 +269,15 @@ Examples of use:
         else:
             from warnings import simplefilter
             simplefilter("ignore")
+
+        # Plugins refresh rate
+        if self.config.has_section('global'):
+            global_refresh = self.config.get_float_value('global',
+                                                         'refresh',
+                                                         default=self.DEFAULT_REFRESH_TIME)
+        if args.time == self.DEFAULT_REFRESH_TIME:
+            args.time = global_refresh
+        logger.debug('Global refresh rate is set to {} seconds'.format(args.time))
 
         # Plugins disable/enable
         # Allow users to disable plugins from the glances.conf (issue #1378)

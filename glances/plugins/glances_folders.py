@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import numbers
 
-from glances.compat import nativestr, n
+from glances.compat import nativestr
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger

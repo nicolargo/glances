@@ -229,29 +229,24 @@ class GlancesStats(object):
                 # If current plugin is disable
                 # then continue to next plugin
                 continue
-            start_duration = Counter()
             # Update the stats...
             self._plugins[p].update()
             # ... the history
             self._plugins[p].update_stats_history()
             # ... and the views
             self._plugins[p].update_views()
-            # logger.debug("Plugin {} update duration: {} seconds".format(p,
-            #                                                             start_duration.get()))
 
     def export(self, input_stats=None):
         """Export all the stats.
 
         Each export module is ran in a dedicated thread.
         """
-        # threads = []
         input_stats = input_stats or {}
 
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
             thread = threading.Thread(target=self._exports[e].update,
                                       args=(input_stats,))
-            # threads.append(thread)
             thread.start()
 
     def getAll(self):

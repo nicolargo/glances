@@ -39,8 +39,15 @@ A first section (called global) is available:
 .. code-block:: ini
 
     [global]
-    # Does Glances should check if a newer version is available on PyPI?
-    check_update=true
+    # Refresh rate (default is a minimum of 3 seconds)
+    # Can be overwrite by the -t <sec> option
+    # It is also possible to overwrite it in each plugin sections
+    refresh=3
+    # Does Glances should check if a newer version is available on PyPI ?
+    check_update=false
+    # History size (maximum number of values)
+    # Default is 28800: 1 day with 1 point every 3 seconds
+    history_size=28800
 
 Each plugin, export module and application monitoring process (AMP) can
 have a section. Below an example for the CPU plugin:

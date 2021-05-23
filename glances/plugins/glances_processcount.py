@@ -62,6 +62,7 @@ class Plugin(GlancesPlugin):
 
         # Note: 'glances_processes' is already init in the glances_processes.py script
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update processes stats using the input method."""
