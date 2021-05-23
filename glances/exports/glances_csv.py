@@ -107,6 +107,9 @@ class Export(GlancesExport):
                 # Others lines: stats
                 csv_data += itervalues(all_stats[plugin])
 
+        logger.info(len(csv_data))
+        logger.info(csv_data)
+
         # Export to CSV
         # Manage header
         if self.first_line:

@@ -60,6 +60,7 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+
         # Hide stats if it has never been != 0
         if config is not None:
             self.hide_zero = config.get_bool_value(
@@ -68,11 +69,15 @@ class Plugin(GlancesPlugin):
             self.hide_zero = False
         self.hide_zero_fields = ['rx', 'tx']
 
+        # Force a first update because we need two update to have the first stat
+        self.update()
+        self.refresh_timer.set(0)
+
     def get_key(self):
         """Return the key of the list."""
         return 'interface_name'
 
-    @GlancesPlugin._check_decorator
+    # @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update network stats using the input method.
