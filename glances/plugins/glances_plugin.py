@@ -1013,7 +1013,7 @@ class GlancesPlugin(object):
         - if the refresh_timer is finished
         """
         def wrapper(self, *args, **kw):
-            if self.is_enable() and self.refresh_timer.finished():
+            if self.is_enable() and (self.refresh_timer.finished() or self.stats == {} or self.stats == []):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer
