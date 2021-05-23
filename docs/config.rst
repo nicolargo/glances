@@ -39,10 +39,10 @@ A first section (called global) is available:
 .. code-block:: ini
 
     [global]
-    # Refresh rate (default is a minimum of 3 seconds)
+    # Refresh rate (default is a minimum of 2 seconds)
     # Can be overwrite by the -t <sec> option
     # It is also possible to overwrite it in each plugin sections
-    refresh=3
+    refresh=2
     # Does Glances should check if a newer version is available on PyPI ?
     check_update=false
     # History size (maximum number of values)
@@ -56,6 +56,7 @@ have a section. Below an example for the CPU plugin:
 
     [cpu]
     disable=False
+    refresh=3
     user_careful=50
     user_warning=70
     user_critical=90
