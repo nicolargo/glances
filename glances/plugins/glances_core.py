@@ -40,6 +40,8 @@ class Plugin(GlancesPlugin):
         # The core number is displayed by the load plugin
         self.display_curse = False
 
+    @GlancesPlugin._check_decorator
+    @GlancesPlugin._log_result_decorator
     def update(self):
         """Update core stats.
 

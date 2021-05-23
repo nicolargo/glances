@@ -141,9 +141,9 @@ def main():
     global core
 
     # Create the Glances main instance
+    # Glances options from the command line are readed first (in __init__)
+    # then the options from the config file (in parse_args)
     core = GlancesMain()
-    config = core.get_config()
-    args = core.get_args()
 
     # Glances can be ran in standalone, client or server mode
-    start(config=config, args=args)
+    start(config=core.get_config(), args= core.get_args())

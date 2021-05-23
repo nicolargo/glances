@@ -150,7 +150,8 @@ class GlancesStandalone(object):
         if not self.quiet:
             # The update function return True if an exit key 'q' or 'ESC'
             # has been pressed.
-            ret = not self.screen.update(self.stats, duration=adapted_refresh)
+            ret = not self.screen.update(self.stats,
+                                         duration=adapted_refresh)
         else:
             # Nothing is displayed
             # Break should be done via a signal (CTRL-C)

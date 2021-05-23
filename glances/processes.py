@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -17,11 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import operator
 import os
 
-from glances.compat import iteritems, itervalues, listitems, iterkeys
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, WSL
+from glances.compat import iterkeys
+from glances.globals import BSD, LINUX, MACOS, WINDOWS
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
 from glances.logger import logger
@@ -403,7 +402,7 @@ class GlancesProcesses(object):
         else:
             self.auto_sort = auto
             self._sort_key = key
-    
+
     def kill(self, pid, timeout=3):
         """Kill process with pid"""
         assert pid != os.getpid(), "Glances can kill itself..."
