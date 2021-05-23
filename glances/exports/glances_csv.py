@@ -90,6 +90,7 @@ class Export(GlancesExport):
 
         # Loop over plugins to export
         for plugin in self.plugins_to_export():
+            csv_data += [plugin]
             if isinstance(all_stats[plugin], list):
                 for stat in all_stats[plugin]:
                     # First line: header
