@@ -92,7 +92,7 @@ class GlancesStandalone(object):
             # Init screen
             self.screen = GlancesStdout(config=config, args=args)
         elif args.stdout_csv:
-            logger.info("Stdout CSV mode is ON, following stats will be displayed: {}".format(args.stdout))
+            logger.info("Stdout CSV mode is ON, following stats will be displayed: {}".format(args.stdout_csv))
             # Init screen
             self.screen = GlancesStdoutCsv(config=config, args=args)
         else:

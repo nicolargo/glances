@@ -239,7 +239,7 @@ class GlancesStats(object):
         Each export module is ran in a dedicated thread.
         """
         if self.first_export:
-            logger.info("Do not export on first iteration because some stats missing")
+            logger.debug("Do not export stats during the first iteration because some information are missing")
             self.first_export = False
             return False
 

@@ -86,7 +86,7 @@ class Plugin(GlancesPlugin):
             # read_time: time spent reading from disk (in milliseconds)
             # write_time: time spent writing to disk (in milliseconds)
             try:
-                diskiocounters = psutil.disk_io_counters(perdisk=True)
+                diskio = psutil.disk_io_counters(perdisk=True)
             except Exception:
                 return stats
 
@@ -94,7 +94,7 @@ class Plugin(GlancesPlugin):
             if not hasattr(self, 'diskio_old'):
                 # First call, we init the diskio_old var
                 try:
-                    self.diskio_old = diskiocounters
+                    self.diskio_old = diskio
                 except (IOError, UnboundLocalError):
                     pass
             else:
@@ -103,7 +103,7 @@ class Plugin(GlancesPlugin):
                 # for users of the API
                 time_since_update = getTimeSinceLastUpdate('disk')
 
-                diskio_new = diskiocounters
+                diskio_new = diskio
                 for disk in diskio_new:
                     # By default, RamFS is not displayed (issue #714)
                     if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
@@ -130,13 +130,17 @@ class Plugin(GlancesPlugin):
                             'write_count': write_count,
                             'read_bytes': read_bytes,
                             'write_bytes': write_bytes}
-                        # Add alias if exist (define in the configuration file)
-                        if self.has_alias(disk) is not None:
-                            diskstat['alias'] = self.has_alias(disk)
                     except KeyError:
                         continue
                     else:
+                        # Add alias if exist (define in the configuration file)
+                        if self.has_alias(disk) is not None:
+                            diskstat['alias'] = self.has_alias(disk)
+
+                        # Add the dict key
                         diskstat['key'] = self.get_key()
+
+                        # Ad dthe current disk stat to the list
                         stats.append(diskstat)
 
                 # Save stats to compute next bitrate
