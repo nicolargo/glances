@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -29,12 +29,14 @@ class CpuPercent(object):
     """Get and store the CPU percent."""
 
     def __init__(self, cached_time=1):
+        self.cpu_info = {}
         self.cpu_percent = 0
         self.percpu_percent = []
 
         # cached_time is the minimum time interval between stats updates
         # since last update is passed (will retrieve old cached info instead)
         self.cached_time = 0
+        self.timer_cpu_info = Timer(0)
         self.timer_cpu = Timer(0)
         self.timer_percpu = Timer(0)
 
@@ -49,6 +51,23 @@ class CpuPercent(object):
             return self.__get_percpu()
         else:
             return self.__get_cpu()
+
+    def get_info(self):
+        """Get additional informations about the CPU"""
+        # Never update more than 1 time per cached_time
+        if self.timer_cpu_info.finished():
+            # Get the CPU name from the /proc/cpuinfo file
+            # @TODO: Multisystem...
+            try:
+                self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1][1:-2]
+            except:
+                self.cpu_info['cpu_name'] = 'CPU'
+            # Get the CPU freq current/max
+            self.cpu_info['cpu_hz_current'] = psutil.cpu_freq().current
+            self.cpu_info['cpu_hz'] = psutil.cpu_freq().max
+            # Reset timer for cache
+            self.timer_cpu_info = Timer(self.cached_time)
+        return self.cpu_info
 
     def __get_cpu(self):
         """Update and/or return the CPU using the psutil library."""
