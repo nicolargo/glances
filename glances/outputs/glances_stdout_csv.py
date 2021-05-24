@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -77,7 +77,7 @@ class GlancesStdoutCsv(object):
                     if isinstance(i, dict) and 'key' in i:
                         for k in i.keys():
                             line += '{}.{}.{}{}'.format(plugin,
-                                                        str(i['key']),
+                                                        str(i[i['key']]),
                                                         str(k),
                                                         self.separator)
             else:
