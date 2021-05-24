@@ -90,7 +90,6 @@ class Export(GlancesExport):
 
         # Loop over plugins to export
         for plugin in self.plugins_to_export():
-            csv_data += [plugin]
             if isinstance(all_stats[plugin], list):
                 for stat in all_stats[plugin]:
                     # First line: header
@@ -107,9 +106,6 @@ class Export(GlancesExport):
                                    for fieldname in fieldnames)
                 # Others lines: stats
                 csv_data += itervalues(all_stats[plugin])
-
-        logger.info(len(csv_data))
-        logger.info(csv_data)
 
         # Export to CSV
         # Manage header

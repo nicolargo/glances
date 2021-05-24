@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -45,11 +45,8 @@ class GlancesStats(object):
         self.args = args
 
         # Load plugins and exports modules
+        self.first_export = True
         self.load_modules(self.args)
-
-        # Load the limits (for plugins)
-        # Not necessary anymore, configuration file is loaded on init
-        # self.load_limits(self.config)
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -241,6 +238,11 @@ class GlancesStats(object):
 
         Each export module is ran in a dedicated thread.
         """
+        if self.first_export:
+            logger.info("Do not export on first iteration because some stats missing")
+            self.first_export = False
+            return False
+
         input_stats = input_stats or {}
 
         for e in self._exports:
@@ -248,6 +250,8 @@ class GlancesStats(object):
             thread = threading.Thread(target=self._exports[e].update,
                                       args=(input_stats,))
             thread.start()
+
+        return True
 
     def getAll(self):
         """Return all the stats (list)."""
