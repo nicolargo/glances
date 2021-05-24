@@ -54,7 +54,6 @@ def get_install_extras_require():
         'action': ['chevron'],
         'browser': ['zeroconf==0.19.1' if PY2 else 'zeroconf>=0.19.1'],
         'cloud': ['requests'],
-        'cpuinfo': ['py-cpuinfo<=4.0.0'],
         'docker': ['docker>=2.0.0'],
         'export': ['bernhard', 'cassandra-driver', 'couchdb', 'elasticsearch',
                    'graphitesender', 'influxdb>=1.0.0', 'kafka-python', 'pika',
