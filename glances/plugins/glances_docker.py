@@ -95,6 +95,10 @@ class Plugin(GlancesPlugin):
         # value: instance of ThreadDockerGrabber
         self.thread_list = {}
 
+        # Force a first update because we need two update to have the first stat
+        self.update()
+        self.refresh_timer.set(0)
+
     def exit(self):
         """Overwrite the exit method to close threads."""
         for t in itervalues(self.thread_list):
@@ -303,8 +307,8 @@ class Plugin(GlancesPlugin):
             precpu_new['system'] = all_stats['precpu_stats'].get(
                 'system_cpu_usage', None)
             # Issue #1857
-            # If either precpu_stats.online_cpus or cpu_stats.online_cpus is nil 
-            # then for compatibility with older daemons the length of 
+            # If either precpu_stats.online_cpus or cpu_stats.online_cpus is nil
+            # then for compatibility with older daemons the length of
             # the corresponding cpu_usage.percpu_usage array should be used.
             if 'online_cpus' in all_stats['cpu_stats'] and \
                all_stats['cpu_stats']['online_cpus'] is not None:
@@ -558,7 +562,7 @@ class Plugin(GlancesPlugin):
         # Get the maximum containers name
         # Max size is configurable. See feature request #1723.
         name_max_width = min(self.config.get_int_value('docker', 'max_name_size', default=20),
-                             len(max(self.stats['containers'], 
+                             len(max(self.stats['containers'],
                                  key=lambda x: len(x['name']))['name']))
         msg = ' {:{width}}'.format('Name', width=name_max_width)
         ret.append(self.curse_add_line(msg))

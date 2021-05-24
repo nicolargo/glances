@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "GLANCES" "1" "May 06, 2021" "3.1.8b1" "Glances"
+.TH "GLANCES" "1" "May 23, 2021" "3.1.8b3" "Glances"
 .SH NAME
 glances \- An eye on your system
 .
@@ -565,8 +565,15 @@ A first section (called global) is available:
 .nf
 .ft C
 [global]
-# Does Glances should check if a newer version is available on PyPI?
-check_update=true
+# Refresh rate (default is a minimum of 2 seconds)
+# Can be overwrite by the \-t <sec> option
+# It is also possible to overwrite it in each plugin sections
+refresh=2
+# Does Glances should check if a newer version is available on PyPI ?
+check_update=false
+# History size (maximum number of values)
+# Default is 28800: 1 day with 1 point every 3 seconds
+history_size=28800
 .ft P
 .fi
 .UNINDENT
@@ -581,6 +588,7 @@ have a section. Below an example for the CPU plugin:
 .ft C
 [cpu]
 disable=False
+refresh=3
 user_careful=50
 user_warning=70
 user_critical=90

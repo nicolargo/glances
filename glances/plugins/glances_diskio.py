@@ -52,6 +52,7 @@ class Plugin(GlancesPlugin):
 
         # We want to display the stat in the curse interface
         self.display_curse = True
+
         # Hide stats if it has never been != 0
         if config is not None:
             self.hide_zero = config.get_bool_value(
@@ -59,6 +60,10 @@ class Plugin(GlancesPlugin):
         else:
             self.hide_zero = False
         self.hide_zero_fields = ['read_bytes', 'write_bytes']
+
+        # Force a first update because we need two update to have the first stat
+        self.update()
+        self.refresh_timer.set(0)
 
     def get_key(self):
         """Return the key of the list."""
@@ -81,61 +86,64 @@ class Plugin(GlancesPlugin):
             # read_time: time spent reading from disk (in milliseconds)
             # write_time: time spent writing to disk (in milliseconds)
             try:
-                diskiocounters = psutil.disk_io_counters(perdisk=True)
+                diskio = psutil.disk_io_counters(perdisk=True)
             except Exception:
                 return stats
 
             # Previous disk IO stats are stored in the diskio_old variable
-            if not hasattr(self, 'diskio_old'):
-                # First call, we init the diskio_old var
+            # By storing time data we enable Rx/s and Tx/s calculations in the
+            # XML/RPC API, which would otherwise be overly difficult work
+            # for users of the API
+            time_since_update = getTimeSinceLastUpdate('disk')
+
+            diskio = diskio
+            for disk in diskio:
+                # By default, RamFS is not displayed (issue #714)
+                if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
+                    continue
+
+                # Do not take hide disk into account
+                if self.is_hide(disk):
+                    continue
+
+                # Compute count and bit rate
                 try:
-                    self.diskio_old = diskiocounters
-                except (IOError, UnboundLocalError):
-                    pass
-            else:
-                # By storing time data we enable Rx/s and Tx/s calculations in the
-                # XML/RPC API, which would otherwise be overly difficult work
-                # for users of the API
-                time_since_update = getTimeSinceLastUpdate('disk')
+                    diskstat = {
+                        'time_since_update': time_since_update,
+                        'disk_name': n(disk),
+                        'read_count': diskio[disk].read_count - \
+                                      self.diskio_old[disk].read_count,
+                        'write_count': diskio[disk].write_count - \
+                                       self.diskio_old[disk].write_count,
+                        'read_bytes': diskio[disk].read_bytes - \
+                                      self.diskio_old[disk].read_bytes,
+                        'write_bytes': diskio[disk].write_bytes - \
+                                       self.diskio_old[disk].write_bytes
+                    }
+                except (KeyError, AttributeError):
+                    diskstat = {
+                        'time_since_update': time_since_update,
+                        'disk_name': n(disk),
+                        'read_count': 0,
+                        'write_count': 0,
+                        'read_bytes': 0,
+                        'write_bytes': 0}
 
-                diskio_new = diskiocounters
-                for disk in diskio_new:
-                    # By default, RamFS is not displayed (issue #714)
-                    if self.args is not None and not self.args.diskio_show_ramfs and disk.startswith('ram'):
-                        continue
+                # Add alias if exist (define in the configuration file)
+                if self.has_alias(disk) is not None:
+                    diskstat['alias'] = self.has_alias(disk)
 
-                    # Do not take hide disk into account
-                    if self.is_hide(disk):
-                        continue
+                # Add the dict key
+                diskstat['key'] = self.get_key()
 
-                    # Compute count and bit rate
-                    try:
-                        read_count = (diskio_new[disk].read_count -
-                                      self.diskio_old[disk].read_count)
-                        write_count = (diskio_new[disk].write_count -
-                                       self.diskio_old[disk].write_count)
-                        read_bytes = (diskio_new[disk].read_bytes -
-                                      self.diskio_old[disk].read_bytes)
-                        write_bytes = (diskio_new[disk].write_bytes -
-                                       self.diskio_old[disk].write_bytes)
-                        diskstat = {
-                            'time_since_update': time_since_update,
-                            'disk_name': n(disk),
-                            'read_count': read_count,
-                            'write_count': write_count,
-                            'read_bytes': read_bytes,
-                            'write_bytes': write_bytes}
-                        # Add alias if exist (define in the configuration file)
-                        if self.has_alias(disk) is not None:
-                            diskstat['alias'] = self.has_alias(disk)
-                    except KeyError:
-                        continue
-                    else:
-                        diskstat['key'] = self.get_key()
-                        stats.append(diskstat)
+                # Ad dthe current disk stat to the list
+                stats.append(diskstat)
 
-                # Save stats to compute next bitrate
-                self.diskio_old = diskio_new
+            # Save stats to compute next bitrate
+            try:
+                self.diskio_old = diskio
+            except (IOError, UnboundLocalError):
+                pass
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             # No standard way for the moment...

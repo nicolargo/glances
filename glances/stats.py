@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -45,11 +45,8 @@ class GlancesStats(object):
         self.args = args
 
         # Load plugins and exports modules
+        self.first_export = True
         self.load_modules(self.args)
-
-        # Load the limits (for plugins)
-        # Not necessary anymore, configuration file is loaded on init
-        # self.load_limits(self.config)
 
     def __getattr__(self, item):
         """Overwrite the getattr method in case of attribute is not found.
@@ -229,30 +226,32 @@ class GlancesStats(object):
                 # If current plugin is disable
                 # then continue to next plugin
                 continue
-            start_duration = Counter()
             # Update the stats...
             self._plugins[p].update()
             # ... the history
             self._plugins[p].update_stats_history()
             # ... and the views
             self._plugins[p].update_views()
-            # logger.debug("Plugin {} update duration: {} seconds".format(p,
-            #                                                             start_duration.get()))
 
     def export(self, input_stats=None):
         """Export all the stats.
 
         Each export module is ran in a dedicated thread.
         """
-        # threads = []
+        if self.first_export:
+            logger.debug("Do not export stats during the first iteration because some information are missing")
+            self.first_export = False
+            return False
+
         input_stats = input_stats or {}
 
         for e in self._exports:
             logger.debug("Export stats using the %s module" % e)
             thread = threading.Thread(target=self._exports[e].update,
                                       args=(input_stats,))
-            # threads.append(thread)
             thread.start()
+
+        return True
 
     def getAll(self):
         """Return all the stats (list)."""

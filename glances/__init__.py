@@ -44,7 +44,6 @@ except ImportError:
 # Note: others Glances libs will be imported optionally
 from glances.logger import logger
 from glances.main import GlancesMain
-from glances.globals import WINDOWS
 from glances.timer import Counter
 # Check locale
 try:
@@ -112,7 +111,7 @@ def start(config, args):
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
     if args.stdout_issue:
-        # Serve once for issue/test mode 
+        # Serve once for issue/test mode
         mode.serve_issue()
     else:
         # Serve forever
@@ -142,9 +141,9 @@ def main():
     global core
 
     # Create the Glances main instance
+    # Glances options from the command line are readed first (in __init__)
+    # then the options from the config file (in parse_args)
     core = GlancesMain()
-    config = core.get_config()
-    args = core.get_args()
 
     # Glances can be ran in standalone, client or server mode
-    start(config=config, args=args)
+    start(config=core.get_config(), args= core.get_args())
