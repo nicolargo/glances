@@ -20,10 +20,9 @@
 """Curses interface class."""
 from __future__ import unicode_literals
 
-import re
 import sys
 
-from glances.compat import to_ascii, nativestr, b, u, itervalues, enable, disable
+from glances.compat import nativestr, u, itervalues, enable, disable
 from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
 from glances.events import glances_events
@@ -104,7 +103,7 @@ class _GlancesCurses(object):
         # "<" (left arrow) navigation through process sort
         # ">" (right arrow) navigation through process sort
         # 'UP' > Up in the server list
-        # 'DOWN' > Down in the server list    
+        # 'DOWN' > Down in the server list
     }
 
     _sort_loop = ['cpu_percent', 'memory_percent', 'username',
@@ -666,9 +665,9 @@ class _GlancesCurses(object):
                 self.args.cursor_position]
             confirm = self.display_popup(
                 'Kill process: {} (pid: {}) ?\n\nConfirm ([y]es/[n]o): '.format(
-                    selected_process_raw['name'], 
-                    selected_process_raw['pid']), 
-                    popup_type='yesno')
+                    selected_process_raw['name'],
+                    selected_process_raw['pid']),
+                popup_type='yesno')
             if confirm.lower().startswith('y'):
                 try:
                     ret_kill = glances_processes.kill(selected_process_raw['pid'])
@@ -683,7 +682,6 @@ class _GlancesCurses(object):
             self.display_popup(
                 'Kill process only available in standalone mode')
         self.kill_process = False
-
 
         # Display graph generation popup
         if self.args.generate_graph:

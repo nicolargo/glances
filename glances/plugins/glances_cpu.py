@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -79,7 +79,6 @@ class Plugin(GlancesPlugin):
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update CPU stats using the input method."""
-
         # Grab stats into self.stats
         if self.input_method == 'local':
             stats = self.update_local()
@@ -105,39 +104,41 @@ class Plugin(GlancesPlugin):
         stats = self.get_init_value()
 
         stats['total'] = cpu_percent.get()
+        # Grab: 'user', 'system', 'idle', 'nice', 'iowait',
+        #       'irq', 'softirq', 'steal', 'guest', 'guest_nice'
         cpu_times_percent = psutil.cpu_times_percent(interval=0.0)
-        for stat in ['user', 'system', 'idle', 'nice', 'iowait',
-                     'irq', 'softirq', 'steal', 'guest', 'guest_nice']:
-            if hasattr(cpu_times_percent, stat):
-                stats[stat] = getattr(cpu_times_percent, stat)
+        for stat in cpu_times_percent._fields:
+            stats[stat] = getattr(cpu_times_percent, stat)
 
         # Additional CPU stats (number of events not as a %; psutil>=4.1.0)
-        # ctx_switches: number of context switches (voluntary + involuntary) per second
-        # interrupts: number of interrupts per second
-        # soft_interrupts: number of software interrupts per second. Always set to 0 on Windows and SunOS.
-        # syscalls: number of system calls since boot. Always set to 0 on Linux.
+        # - ctx_switches: number of context switches (voluntary + involuntary) since boot.
+        # - interrupts: number of interrupts since boot.
+        # - soft_interrupts: number of software interrupts since boot. Always set to 0 on Windows and SunOS.
+        # - syscalls: number of system calls since boot. Always set to 0 on Linux.
         cpu_stats = psutil.cpu_stats()
+
         # By storing time data we enable Rx/s and Tx/s calculations in the
         # XML/RPC API, which would otherwise be overly difficult work
         # for users of the API
-        time_since_update = getTimeSinceLastUpdate('cpu')
+        stats['time_since_update'] = getTimeSinceLastUpdate('cpu')
+
+        # Core number is needed to compute the CTX switch limit
+        stats['cpucore'] = self.nb_log_core
 
         # Previous CPU stats are stored in the cpu_stats_old variable
         if not hasattr(self, 'cpu_stats_old'):
-            # First call, we init the cpu_stats_old var
-            self.cpu_stats_old = cpu_stats
+            # Init the stats (needed to have the key name for export)
+            for stat in cpu_stats._fields:
+                # @TODO: better to set it to None but should refactor views and UI...
+                stats[stat] = 0
         else:
+            # Others calls...
             for stat in cpu_stats._fields:
                 if getattr(cpu_stats, stat) is not None:
                     stats[stat] = getattr(cpu_stats, stat) - getattr(self.cpu_stats_old, stat)
 
-            stats['time_since_update'] = time_since_update
-
-            # Core number is needed to compute the CTX switch limit
-            stats['cpucore'] = self.nb_log_core
-
-            # Save stats to compute next step
-            self.cpu_stats_old = cpu_stats
+        # Save stats to compute next step
+        self.cpu_stats_old = cpu_stats
 
         return stats
 
@@ -242,11 +243,6 @@ class Plugin(GlancesPlugin):
         msg = '{:5.1f}%'.format(self.stats['total'])
         ret.append(self.curse_add_line(
             msg, self.get_views(key='total', option='decoration')))
-        # if idle_tag:
-        #     ret.append(self.curse_add_line(
-        #         msg, self.get_views(key='total', option='decoration')))
-        # else:
-        #     ret.append(self.curse_add_line(msg))
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
             msg = '  {:8}'.format('idle:')

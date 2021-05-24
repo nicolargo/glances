@@ -34,7 +34,7 @@ from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
-from glances.timer import Counter
+from glances.timer import Counter, Timer
 
 
 class GlancesPlugin(object):
@@ -103,6 +103,9 @@ class GlancesPlugin(object):
         # Default is False, always display stats
         self.hide_zero = False
         self.hide_zero_fields = []
+
+        # Set the initial refresh time to display stats the first time
+        self.refresh_timer = Timer(0)
 
         # Init the stats
         self.stats_init_value = stats_init_value
@@ -584,6 +587,13 @@ class GlancesPlugin(object):
         """Set the limits to input_limits."""
         self._limits = input_limits
 
+    def get_limits(self, item=None):
+        """Return the limits object."""
+        if item is None:
+            return self._limits
+        else:
+            return self._limits.get('{}_{}'.format(self.plugin_name, item), None)
+
     def get_stats_action(self):
         """Return stats for the action.
 
@@ -989,12 +999,29 @@ class GlancesPlugin(object):
             ret = '\\'
         return ret
 
+    def get_refresh_time(self):
+        """Return the plugin refresh time"""
+        ret = self.get_limits(item='refresh')
+        if ret is None:
+            ret = self.args.time
+        return ret
+
     def _check_decorator(fct):
-        """Check if the plugin is enabled."""
+        """Check decorator for update method.
+        It checks:
+        - if the plugin is enabled.
+        - if the refresh_timer is finished
+        """
         def wrapper(self, *args, **kw):
-            if self.is_enable():
+            if self.is_enable() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
+                # Run the method
                 ret = fct(self, *args, **kw)
+                # Reset the timer
+                self.refresh_timer.set(self.get_refresh_time())
+                self.refresh_timer.reset()
             else:
+                # No need to call the method
+                # Return the last result available
                 ret = self.stats
             return ret
         return wrapper

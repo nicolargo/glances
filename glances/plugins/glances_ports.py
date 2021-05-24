@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -60,9 +60,6 @@ class Plugin(GlancesPlugin):
         self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + \
             GlancesWebList(config=config, args=args).get_web_list()
 
-        # Init global Timer
-        self.timer_ports = Timer(0)
-
         # Global Thread running all the scans
         self._thread = None
 
@@ -73,6 +70,7 @@ class Plugin(GlancesPlugin):
         # Call the father class
         super(Plugin, self).exit()
 
+    @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update the ports list."""
@@ -84,15 +82,15 @@ class Plugin(GlancesPlugin):
                 thread_is_running = False
             else:
                 thread_is_running = self._thread.is_alive()
-            if self.timer_ports.finished() and not thread_is_running:
+            if not thread_is_running:
                 # Run ports scanner
                 self._thread = ThreadScanner(self.stats)
                 self._thread.start()
-                # Restart timer
-                if len(self.stats) > 0:
-                    self.timer_ports = Timer(self.stats[0]['refresh'])
-                else:
-                    self.timer_ports = Timer(0)
+                # # Restart timer
+                # if len(self.stats) > 0:
+                #     self.timer_ports = Timer(self.stats[0]['refresh'])
+                # else:
+                #     self.timer_ports = Timer(0)
         else:
             # Not available in SNMP mode
             pass
