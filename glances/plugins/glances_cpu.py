@@ -75,10 +75,6 @@ class Plugin(GlancesPlugin):
         except Exception:
             self.nb_log_core = 1
 
-        # Force a first update because we need two update to have the first stat
-        self.update()
-        self.refresh_timer.set(0)
-
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
