@@ -22,6 +22,7 @@
 import os
 import threading
 import time
+from copy import deepcopy
 
 from glances.logger import logger
 from glances.compat import iterkeys, itervalues, nativestr
@@ -64,6 +65,10 @@ else:
 items_history_list = [{'name': 'cpu_percent',
                        'description': 'Container CPU consumption in %',
                        'y_unit': '%'}]
+
+
+# List of key to remove before export
+export_exclude_list = ['cpu', 'io', 'memory', 'network']
 
 
 class Plugin(GlancesPlugin):
@@ -116,11 +121,17 @@ class Plugin(GlancesPlugin):
         - Only exports containers
         - The key is the first container name
         """
-        ret = []
         try:
-            ret = self.stats['containers']
+            ret = deepcopy(self.stats['containers'])
         except KeyError as e:
             logger.debug("docker plugin - Docker export error {}".format(e))
+            ret = []
+
+        # Remove fields uses to compute rate
+        for container in ret:
+            for i in export_exclude_list:
+                container.pop(i)
+
         return ret
 
     def connect(self):
