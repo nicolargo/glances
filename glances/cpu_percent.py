@@ -35,7 +35,7 @@ class CpuPercent(object):
 
         # cached_time is the minimum time interval between stats updates
         # since last update is passed (will retrieve old cached info instead)
-        self.cached_time = 0
+        self.cached_time = 1
         self.timer_cpu_info = Timer(0)
         self.timer_cpu = Timer(0)
         self.timer_percpu = Timer(0)
