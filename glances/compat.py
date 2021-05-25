@@ -113,7 +113,7 @@ if PY3:
             return s.decode('utf-8', errors=errors)
 
     def system_exec(command):
-        """Execute a system command and return the resul as a str"""
+        """Execute a system command and return the result as a str"""
         try:
             res = subprocess.run(command.split(' '),
                                  stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -229,7 +229,7 @@ def time_serie_subsample(data, sampling):
 
     Data should be a list of set (time, value)
 
-    Return a subsampled list of sampling lenght
+    Return a subsampled list of sampling length
     """
     if len(data) <= sampling:
         return data
