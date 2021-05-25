@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" width="1200" height="486" onload="init(evt)" viewBox="0 0 1200 486" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg version="1.1" width="1200" height="470" onload="init(evt)" viewBox="0 0 1200 470" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
 <!-- NOTES:  -->
 <defs>
@@ -364,649 +364,1217 @@
 	}
 ]]>
 </script>
-<rect x="0.0" y="0" width="1200.0" height="486.0" fill="url(#background)"  />
+<rect x="0.0" y="0" width="1200.0" height="470.0" fill="url(#background)"  />
 <text id="title" x="600.00" y="24" >Flame Graph</text>
-<text id="details" x="10.00" y="469" > </text>
+<text id="details" x="10.00" y="453" > </text>
 <text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
 <text id="search" x="1090.00" y="24" >Search</text>
 <text id="ignorecase" x="1174.00" y="24" >ic</text>
-<text id="matched" x="1090.00" y="469" > </text>
+<text id="matched" x="1090.00" y="453" > </text>
 <g id="frames">
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:dmesg_a:121 (3 samples, 0.59%)</title><rect x="116.6" y="213" width="7.0" height="15.0" fill="rgb(244,198,45)" rx="2" ry="2" />
-<text  x="119.64" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:439 (1 samples, 0.41%)</title><rect x="1151.2" y="213" width="4.8" height="15.0" fill="rgb(253,26,23)" rx="2" ry="2" />
+<text  x="1154.15" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:username:695 (3 samples, 0.59%)</title><rect x="61.0" y="181" width="7.0" height="15.0" fill="rgb(221,12,11)" rx="2" ry="2" />
-<text  x="64.00" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:flush:1050 (56 samples, 23.05%)</title><rect x="913.2" y="277" width="271.9" height="15.0" fill="rgb(215,213,15)" rx="2" ry="2" />
+<text  x="916.21" y="287.5" >/home/nhe/dev/glances/glances/output..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (1 samples, 0.20%)</title><rect x="47.1" y="165" width="2.3" height="15.0" fill="rgb(224,55,32)" rx="2" ry="2" />
-<text  x="50.09" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:username:697 (48 samples, 19.75%)</title><rect x="383.9" y="165" width="233.1" height="15.0" fill="rgb(216,85,16)" rx="2" ry="2" />
+<text  x="386.91" y="175.5" >/home/nhe/dev/glances/venv/lib..</text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1554 (2 samples, 0.39%)</title><rect x="102.7" y="165" width="4.7" height="15.0" fill="rgb(251,12,1)" rx="2" ry="2" />
-<text  x="105.73" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:create_time:710 (7 samples, 2.88%)</title><rect x="78.0" y="133" width="34.0" height="15.0" fill="rgb(231,179,19)" rx="2" ry="2" />
+<text  x="80.98" y="143.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:__init__:338 (1 samples, 0.20%)</title><rect x="51.7" y="149" width="2.3" height="15.0" fill="rgb(249,139,46)" rx="2" ry="2" />
-<text  x="54.73" y="159.5" ></text>
+<title>/home/nhe/dev/glances/glances/processes.py:sort_stats:480 (1 samples, 0.41%)</title><rect x="918.1" y="197" width="4.8" height="15.0" fill="rgb(248,40,29)" rx="2" ry="2" />
+<text  x="921.07" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:405 (1 samples, 0.20%)</title><rect x="193.1" y="229" width="2.4" height="15.0" fill="rgb(226,198,52)" rx="2" ry="2" />
-<text  x="196.14" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cat:293 (1 samples, 0.41%)</title><rect x="694.7" y="181" width="4.8" height="15.0" fill="rgb(206,182,1)" rx="2" ry="2" />
+<text  x="697.69" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:uids:733 (2 samples, 0.39%)</title><rect x="63.3" y="149" width="4.7" height="15.0" fill="rgb(248,220,30)" rx="2" ry="2" />
-<text  x="66.32" y="159.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:_init:354 (8 samples, 3.29%)</title><rect x="73.1" y="149" width="38.9" height="15.0" fill="rgb(237,182,10)" rx="2" ry="2" />
+<text  x="76.13" y="159.5" >/ho..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:_get_cpu_info_from_dmesg:1314 (3 samples, 0.59%)</title><rect x="116.6" y="229" width="7.0" height="15.0" fill="rgb(214,129,34)" rx="2" ry="2" />
-<text  x="119.64" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:disk_io_counters:1166 (1 samples, 0.41%)</title><rect x="48.8" y="213" width="4.9" height="15.0" fill="rgb(251,183,16)" rx="2" ry="2" />
+<text  x="51.85" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.39%)</title><rect x="56.4" y="165" width="4.6" height="15.0" fill="rgb(205,19,42)" rx="2" ry="2" />
-<text  x="59.37" y="175.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_key:131 (1 samples, 0.41%)</title><rect x="854.9" y="261" width="4.9" height="15.0" fill="rgb(249,95,8)" rx="2" ry="2" />
+<text  x="857.94" y="271.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/http/client.py:getresponse:1346 (3 samples, 0.59%)</title><rect x="10.0" y="85" width="7.0" height="15.0" fill="rgb(244,74,17)" rx="2" ry="2" />
-<text  x="13.00" y="95.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:uids:2146 (5 samples, 2.06%)</title><rect x="349.9" y="101" width="24.3" height="15.0" fill="rgb(247,23,6)" rx="2" ry="2" />
+<text  x="352.92" y="111.5" >/..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:update:1075 (6 samples, 1.18%)</title><rect x="186.2" y="309" width="13.9" height="15.0" fill="rgb(234,35,4)" rx="2" ry="2" />
-<text  x="189.19" y="319.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:timer:983 (1 samples, 0.41%)</title><rect x="218.8" y="149" width="4.9" height="15.0" fill="rgb(232,31,18)" rx="2" ry="2" />
+<text  x="221.81" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:_init:334 (1 samples, 0.20%)</title><rect x="19.3" y="165" width="2.3" height="15.0" fill="rgb(213,192,19)" rx="2" ry="2" />
-<text  x="22.27" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:sensors_temperatures:2240 (2 samples, 0.82%)</title><rect x="714.1" y="181" width="9.7" height="15.0" fill="rgb(216,72,46)" rx="2" ry="2" />
+<text  x="717.12" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:635 (2 samples, 0.39%)</title><rect x="195.5" y="277" width="4.6" height="15.0" fill="rgb(231,220,3)" rx="2" ry="2" />
-<text  x="198.46" y="287.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:num_threads:860 (3 samples, 1.23%)</title><rect x="330.5" y="165" width="14.6" height="15.0" fill="rgb(225,47,19)" rx="2" ry="2" />
+<text  x="333.49" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/standalone.py:__serve_once:135 (76 samples, 14.93%)</title><rect x="10.0" y="325" width="176.2" height="15.0" fill="rgb(240,198,23)" rx="2" ry="2" />
-<text  x="13.00" y="335.5" >/home/nhe/dev/glances/..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:virtual_memory:435 (1 samples, 0.41%)</title><rect x="689.8" y="213" width="4.9" height="15.0" fill="rgb(235,173,45)" rx="2" ry="2" />
+<text  x="692.84" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/standalone.py:__serve_once:154 (433 samples, 85.07%)</title><rect x="186.2" y="325" width="1003.8" height="15.0" fill="rgb(252,163,12)" rx="2" ry="2" />
-<text  x="189.19" y="335.5" >/home/nhe/dev/glances/glances/standalone.py:__serve_once:154</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:memory_info:1054 (8 samples, 3.29%)</title><rect x="621.9" y="149" width="38.8" height="15.0" fill="rgb(233,228,31)" rx="2" ry="2" />
+<text  x="624.85" y="159.5" >/ho..</text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1557 (2 samples, 0.39%)</title><rect x="98.1" y="165" width="4.6" height="15.0" fill="rgb(244,38,41)" rx="2" ry="2" />
-<text  x="101.09" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:gids:739 (2 samples, 0.82%)</title><rect x="257.7" y="165" width="9.7" height="15.0" fill="rgb(244,95,13)" rx="2" ry="2" />
+<text  x="260.65" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:memory_info:1054 (1 samples, 0.20%)</title><rect x="88.8" y="165" width="2.3" height="15.0" fill="rgb(234,77,10)" rx="2" ry="2" />
-<text  x="91.82" y="175.5" ></text>
+<title>/usr/lib64/python3.6/posixpath.py:_get_sep:42 (1 samples, 0.41%)</title><rect x="699.5" y="165" width="4.9" height="15.0" fill="rgb(224,55,11)" rx="2" ry="2" />
+<text  x="702.55" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_ip.py:update:86 (1 samples, 0.20%)</title><rect x="17.0" y="261" width="2.3" height="15.0" fill="rgb(242,116,48)" rx="2" ry="2" />
-<text  x="19.95" y="271.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.82%)</title><rect x="257.7" y="149" width="9.7" height="15.0" fill="rgb(215,185,2)" rx="2" ry="2" />
+<text  x="260.65" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.20%)</title><rect x="63.3" y="53" width="2.3" height="15.0" fill="rgb(230,13,32)" rx="2" ry="2" />
-<text  x="66.32" y="63.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_nice_alert:161 (2 samples, 0.82%)</title><rect x="1083.2" y="181" width="9.7" height="15.0" fill="rgb(210,155,36)" rx="2" ry="2" />
+<text  x="1086.17" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:run_and_get_stdout:207 (21 samples, 4.13%)</title><rect x="123.6" y="213" width="48.7" height="15.0" fill="rgb(225,193,47)" rx="2" ry="2" />
-<text  x="126.60" y="223.5" >/hom..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:build_sensors_list:300 (2 samples, 0.82%)</title><rect x="714.1" y="197" width="9.7" height="15.0" fill="rgb(212,186,54)" rx="2" ry="2" />
+<text  x="717.12" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/requests/sessions.py:get:555 (3 samples, 0.59%)</title><rect x="10.0" y="181" width="7.0" height="15.0" fill="rgb(240,60,8)" rx="2" ry="2" />
-<text  x="13.00" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_times:1769 (4 samples, 1.65%)</title><rect x="223.7" y="133" width="19.4" height="15.0" fill="rgb(231,127,29)" rx="2" ry="2" />
+<text  x="226.66" y="143.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/socket.py:readinto:586 (3 samples, 0.59%)</title><rect x="10.0" y="37" width="7.0" height="15.0" fill="rgb(242,114,13)" rx="2" ry="2" />
-<text  x="13.00" y="47.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:_init:348 (1 samples, 0.41%)</title><rect x="63.4" y="149" width="4.9" height="15.0" fill="rgb(214,1,21)" rx="2" ry="2" />
+<text  x="66.42" y="159.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/selectors.py:unregister:248 (1 samples, 0.20%)</title><rect x="95.8" y="133" width="2.3" height="15.0" fill="rgb(228,199,42)" rx="2" ry="2" />
-<text  x="98.78" y="143.5" ></text>
+<title>/usr/lib64/python3.6/codecs.py:__init__:309 (2 samples, 0.82%)</title><rect x="180.0" y="101" width="9.7" height="15.0" fill="rgb(250,52,23)" rx="2" ry="2" />
+<text  x="182.96" y="111.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:oneshot:487 (1 samples, 0.20%)</title><rect x="91.1" y="165" width="2.4" height="15.0" fill="rgb(244,146,17)" rx="2" ry="2" />
-<text  x="94.14" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:process_iter:1443 (10 samples, 4.12%)</title><rect x="63.4" y="197" width="48.6" height="15.0" fill="rgb(233,210,7)" rx="2" ry="2" />
+<text  x="66.42" y="207.5" >/hom..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.39%)</title><rect x="56.4" y="133" width="4.6" height="15.0" fill="rgb(207,50,21)" rx="2" ry="2" />
-<text  x="59.37" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:virtual_memory:440 (1 samples, 0.41%)</title><rect x="53.7" y="213" width="4.9" height="15.0" fill="rgb(217,27,22)" rx="2" ry="2" />
+<text  x="56.70" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:603 (4 samples, 0.79%)</title><rect x="186.2" y="277" width="9.3" height="15.0" fill="rgb(239,66,25)" rx="2" ry="2" />
-<text  x="189.19" y="287.5" ></text>
+<title>/usr/lib64/python3.6/contextlib.py:__exit__:88 (3 samples, 1.23%)</title><rect x="670.4" y="165" width="14.6" height="15.0" fill="rgb(238,217,0)" rx="2" ry="2" />
+<text  x="673.41" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:388 (1 samples, 0.20%)</title><rect x="186.2" y="229" width="2.3" height="15.0" fill="rgb(237,44,27)" rx="2" ry="2" />
-<text  x="189.19" y="239.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:402 (1 samples, 0.41%)</title><rect x="1078.3" y="213" width="4.9" height="15.0" fill="rgb(212,187,34)" rx="2" ry="2" />
+<text  x="1081.31" y="223.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:863 (3 samples, 0.59%)</title><rect x="95.8" y="181" width="6.9" height="15.0" fill="rgb(210,179,37)" rx="2" ry="2" />
-<text  x="98.78" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:oneshot_exit:1667 (1 samples, 0.41%)</title><rect x="680.1" y="133" width="4.9" height="15.0" fill="rgb(206,176,52)" rx="2" ry="2" />
+<text  x="683.12" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1033 (1 samples, 0.20%)</title><rect x="179.2" y="293" width="2.4" height="15.0" fill="rgb(209,148,36)" rx="2" ry="2" />
-<text  x="182.23" y="303.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:524 (1 samples, 0.41%)</title><rect x="126.5" y="181" width="4.9" height="15.0" fill="rgb(208,98,25)" rx="2" ry="2" />
+<text  x="129.54" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:535 (2 samples, 0.39%)</title><rect x="91.1" y="197" width="4.7" height="15.0" fill="rgb(232,10,2)" rx="2" ry="2" />
-<text  x="94.14" y="207.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit:756 (1 samples, 0.41%)</title><rect x="1102.6" y="165" width="4.8" height="15.0" fill="rgb(217,183,8)" rx="2" ry="2" />
+<text  x="1105.59" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_system.py:update:107 (3 samples, 0.59%)</title><rect x="172.3" y="261" width="6.9" height="15.0" fill="rgb(243,1,21)" rx="2" ry="2" />
-<text  x="175.28" y="271.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:status:682 (1 samples, 0.41%)</title><rect x="345.1" y="165" width="4.8" height="15.0" fill="rgb(249,217,0)" rx="2" ry="2" />
+<text  x="348.06" y="175.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1560 (3 samples, 0.59%)</title><rect x="109.7" y="165" width="6.9" height="15.0" fill="rgb(224,174,21)" rx="2" ry="2" />
-<text  x="112.69" y="175.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:985 (4 samples, 1.65%)</title><rect x="1039.5" y="181" width="19.4" height="15.0" fill="rgb(252,19,42)" rx="2" ry="2" />
+<text  x="1042.47" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:process_iter:1446 (28 samples, 5.50%)</title><rect x="30.9" y="213" width="64.9" height="15.0" fill="rgb(228,180,14)" rx="2" ry="2" />
-<text  x="33.86" y="223.5" >/home/n..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (1 samples, 0.41%)</title><rect x="660.7" y="133" width="4.9" height="15.0" fill="rgb(254,162,33)" rx="2" ry="2" />
+<text  x="663.70" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__catch_key:347 (427 samples, 83.89%)</title><rect x="200.1" y="293" width="989.9" height="15.0" fill="rgb(230,194,42)" rx="2" ry="2" />
-<text  x="203.10" y="303.5" >/home/nhe/dev/glances/glances/outputs/glances_curses.py:__catch_key:347</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_network.py:update_views:245 (1 samples, 0.41%)</title><rect x="796.7" y="277" width="4.8" height="15.0" fill="rgb(243,176,47)" rx="2" ry="2" />
+<text  x="799.67" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/__main__.py:&lt;module&gt;:29 (509 samples, 100.00%)</title><rect x="10.0" y="389" width="1180.0" height="15.0" fill="rgb(239,169,22)" rx="2" ry="2" />
-<text  x="13.00" y="399.5" >/home/nhe/dev/glances/glances/__main__.py:&lt;module&gt;:29</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:388 (8 samples, 3.29%)</title><rect x="990.9" y="213" width="38.9" height="15.0" fill="rgb(210,92,41)" rx="2" ry="2" />
+<text  x="993.91" y="223.5" >/ho..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cmdline:677 (4 samples, 0.79%)</title><rect x="35.5" y="181" width="9.3" height="15.0" fill="rgb(218,139,33)" rx="2" ry="2" />
-<text  x="38.50" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/stats.py:update:230 (161 samples, 66.26%)</title><rect x="14.9" y="293" width="781.8" height="15.0" fill="rgb(239,223,35)" rx="2" ry="2" />
+<text  x="17.86" y="303.5" >/home/nhe/dev/glances/glances/stats.py:update:230</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/__init__.py:start:118 (509 samples, 100.00%)</title><rect x="10.0" y="357" width="1180.0" height="15.0" fill="rgb(222,221,28)" rx="2" ry="2" />
-<text  x="13.00" y="367.5" >/home/nhe/dev/glances/glances/__init__.py:start:118</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_username:244 (1 samples, 0.41%)</title><rect x="1068.6" y="197" width="4.9" height="15.0" fill="rgb(217,56,38)" rx="2" ry="2" />
+<text  x="1071.60" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:sysctl_machdep_cpu_hw_cpufrequency:129 (3 samples, 0.59%)</title><rect x="109.7" y="213" width="6.9" height="15.0" fill="rgb(238,0,32)" rx="2" ry="2" />
-<text  x="112.69" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:441 (1 samples, 0.41%)</title><rect x="1156.0" y="213" width="4.9" height="15.0" fill="rgb(248,104,31)" rx="2" ry="2" />
+<text  x="1159.01" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (1 samples, 0.20%)</title><rect x="88.8" y="181" width="2.3" height="15.0" fill="rgb(229,120,17)" rx="2" ry="2" />
-<text  x="91.82" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_refresh_time:1006 (1 samples, 0.41%)</title><rect x="762.7" y="261" width="4.8" height="15.0" fill="rgb(235,16,19)" rx="2" ry="2" />
+<text  x="765.67" y="271.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.39%)</title><rect x="63.3" y="101" width="4.7" height="15.0" fill="rgb(243,93,27)" rx="2" ry="2" />
-<text  x="66.32" y="111.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:virtual_memory:1963 (1 samples, 0.41%)</title><rect x="53.7" y="229" width="4.9" height="15.0" fill="rgb(247,202,29)" rx="2" ry="2" />
+<text  x="56.70" y="239.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (4 samples, 0.79%)</title><rect x="21.6" y="133" width="9.3" height="15.0" fill="rgb(239,68,38)" rx="2" ry="2" />
-<text  x="24.59" y="143.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit_action:775 (1 samples, 0.41%)</title><rect x="986.0" y="149" width="4.9" height="15.0" fill="rgb(232,59,18)" rx="2" ry="2" />
+<text  x="989.05" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1033 (73 samples, 14.34%)</title><rect x="10.0" y="277" width="169.2" height="15.0" fill="rgb(231,196,27)" rx="2" ry="2" />
-<text  x="13.00" y="287.5" >/home/nhe/dev/glances..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:384 (5 samples, 2.06%)</title><rect x="927.8" y="213" width="24.3" height="15.0" fill="rgb(234,111,43)" rx="2" ry="2" />
+<text  x="930.78" y="223.5" >/..</text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:850 (3 samples, 0.59%)</title><rect x="172.3" y="213" width="6.9" height="15.0" fill="rgb(205,24,47)" rx="2" ry="2" />
-<text  x="175.28" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:986 (1 samples, 0.41%)</title><rect x="1020.0" y="181" width="4.9" height="15.0" fill="rgb(226,204,38)" rx="2" ry="2" />
+<text  x="1023.04" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:_get_cpu_info_from_sysctl:1472 (3 samples, 0.59%)</title><rect x="109.7" y="229" width="6.9" height="15.0" fill="rgb(232,64,54)" rx="2" ry="2" />
-<text  x="112.69" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:io_counters:1746 (3 samples, 1.23%)</title><rect x="272.2" y="133" width="14.6" height="15.0" fill="rgb(219,221,41)" rx="2" ry="2" />
+<text  x="275.22" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1619 (1 samples, 0.20%)</title><rect x="58.7" y="101" width="2.3" height="15.0" fill="rgb(252,142,43)" rx="2" ry="2" />
-<text  x="61.68" y="111.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:decode:755 (2 samples, 0.82%)</title><rect x="306.2" y="117" width="9.7" height="15.0" fill="rgb(215,86,6)" rx="2" ry="2" />
+<text  x="309.21" y="127.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit:756 (1 samples, 0.20%)</title><rect x="193.1" y="181" width="2.4" height="15.0" fill="rgb(251,179,34)" rx="2" ry="2" />
-<text  x="196.14" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:virtual_memory:1963 (1 samples, 0.41%)</title><rect x="689.8" y="229" width="4.9" height="15.0" fill="rgb(243,209,44)" rx="2" ry="2" />
+<text  x="692.84" y="239.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_text:723 (1 samples, 0.20%)</title><rect x="35.5" y="133" width="2.3" height="15.0" fill="rgb(208,8,28)" rx="2" ry="2" />
-<text  x="38.50" y="143.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit_log:789 (1 samples, 0.41%)</title><rect x="966.6" y="165" width="4.9" height="15.0" fill="rgb(205,223,36)" rx="2" ry="2" />
+<text  x="969.63" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1578 (2 samples, 0.39%)</title><rect x="49.4" y="165" width="4.6" height="15.0" fill="rgb(228,143,45)" rx="2" ry="2" />
-<text  x="52.41" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:nice:720 (2 samples, 0.82%)</title><rect x="320.8" y="165" width="9.7" height="15.0" fill="rgb(213,110,42)" rx="2" ry="2" />
+<text  x="323.78" y="175.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/http/client.py:begin:307 (3 samples, 0.59%)</title><rect x="10.0" y="69" width="7.0" height="15.0" fill="rgb(250,153,25)" rx="2" ry="2" />
-<text  x="13.00" y="79.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:is_running:581 (10 samples, 4.12%)</title><rect x="63.4" y="181" width="48.6" height="15.0" fill="rgb(251,53,22)" rx="2" ry="2" />
+<text  x="66.42" y="191.5" >/hom..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:io_counters:763 (3 samples, 0.59%)</title><rect x="47.1" y="181" width="6.9" height="15.0" fill="rgb(253,16,8)" rx="2" ry="2" />
-<text  x="50.09" y="191.5" ></text>
+<title>/usr/lib64/python3.6/codecs.py:decode:321 (1 samples, 0.41%)</title><rect x="777.2" y="213" width="4.9" height="15.0" fill="rgb(221,223,50)" rx="2" ry="2" />
+<text  x="780.24" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:io_counters:1740 (1 samples, 0.20%)</title><rect x="47.1" y="149" width="2.3" height="15.0" fill="rgb(206,218,19)" rx="2" ry="2" />
-<text  x="50.09" y="159.5" ></text>
+<title>/usr/lib64/python3.6/subprocess.py:&lt;genexpr&gt;:1285 (1 samples, 0.41%)</title><rect x="728.7" y="165" width="4.8" height="15.0" fill="rgb(228,28,13)" rx="2" ry="2" />
+<text  x="731.68" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (4 samples, 0.79%)</title><rect x="35.5" y="165" width="9.3" height="15.0" fill="rgb(214,130,51)" rx="2" ry="2" />
-<text  x="38.50" y="175.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_quicklook.py:update:75 (1 samples, 0.41%)</title><rect x="689.8" y="245" width="4.9" height="15.0" fill="rgb(245,17,26)" rx="2" ry="2" />
+<text  x="692.84" y="255.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:447 (1 samples, 0.20%)</title><rect x="61.0" y="165" width="2.3" height="15.0" fill="rgb(241,167,15)" rx="2" ry="2" />
-<text  x="64.00" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:sensors_temperatures:1284 (1 samples, 0.41%)</title><rect x="723.8" y="165" width="4.9" height="15.0" fill="rgb(250,163,34)" rx="2" ry="2" />
+<text  x="726.83" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/requests/sessions.py:request:542 (3 samples, 0.59%)</title><rect x="10.0" y="165" width="7.0" height="15.0" fill="rgb(212,221,26)" rx="2" ry="2" />
-<text  x="13.00" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_percent:995 (7 samples, 2.88%)</title><rect x="223.7" y="165" width="34.0" height="15.0" fill="rgb(240,80,21)" rx="2" ry="2" />
+<text  x="226.66" y="175.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_nice_alert:161 (1 samples, 0.20%)</title><rect x="193.1" y="197" width="2.4" height="15.0" fill="rgb(233,97,10)" rx="2" ry="2" />
-<text  x="196.14" y="207.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:manage_action:705 (3 samples, 1.23%)</title><rect x="976.3" y="165" width="14.6" height="15.0" fill="rgb(238,117,42)" rx="2" ry="2" />
+<text  x="979.34" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/requests/adapters.py:send:449 (3 samples, 0.59%)</title><rect x="10.0" y="133" width="7.0" height="15.0" fill="rgb(241,117,38)" rx="2" ry="2" />
-<text  x="13.00" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:sensors_temperatures:2240 (1 samples, 0.41%)</title><rect x="723.8" y="181" width="4.9" height="15.0" fill="rgb(210,155,16)" rx="2" ry="2" />
+<text  x="726.83" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_vms:219 (1 samples, 0.20%)</title><rect x="186.2" y="213" width="2.3" height="15.0" fill="rgb(227,48,7)" rx="2" ry="2" />
-<text  x="189.19" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_system.py:update:107 (6 samples, 2.47%)</title><rect x="728.7" y="245" width="29.1" height="15.0" fill="rgb(233,158,4)" rx="2" ry="2" />
+<text  x="731.68" y="255.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (1 samples, 0.20%)</title><rect x="88.8" y="149" width="2.3" height="15.0" fill="rgb(242,35,52)" rx="2" ry="2" />
-<text  x="91.82" y="159.5" ></text>
+<title>/home/nhe/dev/glances/glances/timer.py:reset:55 (1 samples, 0.41%)</title><rect x="767.5" y="261" width="4.9" height="15.0" fill="rgb(223,38,36)" rx="2" ry="2" />
+<text  x="770.53" y="271.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1557 (1 samples, 0.20%)</title><rect x="107.4" y="165" width="2.3" height="15.0" fill="rgb(243,36,34)" rx="2" ry="2" />
-<text  x="110.37" y="175.5" ></text>
+<title>/usr/lib64/python3.6/platform.py:architecture:868 (6 samples, 2.47%)</title><rect x="728.7" y="229" width="29.1" height="15.0" fill="rgb(223,156,45)" rx="2" ry="2" />
+<text  x="731.68" y="239.5" >/u..</text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/platform.py:architecture:868 (3 samples, 0.59%)</title><rect x="172.3" y="245" width="6.9" height="15.0" fill="rgb(253,89,41)" rx="2" ry="2" />
-<text  x="175.28" y="255.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:985 (3 samples, 1.23%)</title><rect x="1005.5" y="181" width="14.5" height="15.0" fill="rgb(216,122,52)" rx="2" ry="2" />
+<text  x="1008.47" y="191.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:863 (3 samples, 0.59%)</title><rect x="109.7" y="181" width="6.9" height="15.0" fill="rgb(230,19,32)" rx="2" ry="2" />
-<text  x="112.69" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:update:97 (1 samples, 0.41%)</title><rect x="723.8" y="245" width="4.9" height="15.0" fill="rgb(228,131,31)" rx="2" ry="2" />
+<text  x="726.83" y="255.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:cat_proc_cpuinfo:105 (3 samples, 0.59%)</title><rect x="95.8" y="213" width="6.9" height="15.0" fill="rgb(210,177,10)" rx="2" ry="2" />
-<text  x="98.78" y="223.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:sensors_temperatures:1270 (1 samples, 0.41%)</title><rect x="714.1" y="165" width="4.9" height="15.0" fill="rgb(243,116,6)" rx="2" ry="2" />
+<text  x="717.12" y="175.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1557 (3 samples, 0.59%)</title><rect x="116.6" y="165" width="7.0" height="15.0" fill="rgb(214,46,43)" rx="2" ry="2" />
-<text  x="119.64" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:run:648 (1 samples, 0.41%)</title><rect x="782.1" y="213" width="4.9" height="15.0" fill="rgb(236,2,46)" rx="2" ry="2" />
+<text  x="785.10" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1618 (1 samples, 0.20%)</title><rect x="56.4" y="101" width="2.3" height="15.0" fill="rgb(238,4,47)" rx="2" ry="2" />
-<text  x="59.37" y="111.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_core.py:update:62 (1 samples, 0.41%)</title><rect x="29.4" y="245" width="4.9" height="15.0" fill="rgb(231,145,40)" rx="2" ry="2" />
+<text  x="32.42" y="255.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/runpy.py:_run_code:85 (509 samples, 100.00%)</title><rect x="10.0" y="405" width="1180.0" height="15.0" fill="rgb(225,34,32)" rx="2" ry="2" />
-<text  x="13.00" y="415.5" >/usr/lib64/python3.6/runpy.py:_run_code:85</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:net_io_counters:2109 (1 samples, 0.41%)</title><rect x="777.2" y="245" width="4.9" height="15.0" fill="rgb(252,1,18)" rx="2" ry="2" />
+<text  x="780.24" y="255.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:net_if_stats:1076 (1 samples, 0.20%)</title><rect x="179.2" y="245" width="2.4" height="15.0" fill="rgb(253,121,10)" rx="2" ry="2" />
-<text  x="182.23" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:518 (1 samples, 0.41%)</title><rect x="121.7" y="181" width="4.8" height="15.0" fill="rgb(207,21,6)" rx="2" ry="2" />
+<text  x="124.69" y="191.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/http/client.py:_read_status:268 (3 samples, 0.59%)</title><rect x="10.0" y="53" width="7.0" height="15.0" fill="rgb(249,103,28)" rx="2" ry="2" />
-<text  x="13.00" y="63.5" ></text>
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:620 (1 samples, 0.41%)</title><rect x="1170.6" y="261" width="4.8" height="15.0" fill="rgb(238,45,20)" rx="2" ry="2" />
+<text  x="1173.58" y="271.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/requests/sessions.py:send:655 (3 samples, 0.59%)</title><rect x="10.0" y="149" width="7.0" height="15.0" fill="rgb(252,85,6)" rx="2" ry="2" />
-<text  x="13.00" y="159.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (4 samples, 1.65%)</title><rect x="267.4" y="149" width="19.4" height="15.0" fill="rgb(242,49,3)" rx="2" ry="2" />
+<text  x="270.37" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (4 samples, 0.79%)</title><rect x="21.6" y="101" width="9.3" height="15.0" fill="rgb(230,194,23)" rx="2" ry="2" />
-<text  x="24.59" y="111.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_cpu:186 (2 samples, 0.82%)</title><rect x="927.8" y="197" width="9.7" height="15.0" fill="rgb(254,185,5)" rx="2" ry="2" />
+<text  x="930.78" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:_get_cpu_info_from_proc_cpuinfo:1140 (3 samples, 0.59%)</title><rect x="95.8" y="229" width="6.9" height="15.0" fill="rgb(254,33,35)" rx="2" ry="2" />
-<text  x="98.78" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_freq:751 (2 samples, 0.82%)</title><rect x="694.7" y="197" width="9.7" height="15.0" fill="rgb(222,28,12)" rx="2" ry="2" />
+<text  x="697.69" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:run_and_get_stdout:207 (3 samples, 0.59%)</title><rect x="109.7" y="197" width="6.9" height="15.0" fill="rgb(212,206,18)" rx="2" ry="2" />
-<text  x="112.69" y="207.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:memory_info:1813 (1 samples, 0.41%)</title><rect x="655.8" y="117" width="4.9" height="15.0" fill="rgb(220,144,50)" rx="2" ry="2" />
+<text  x="658.84" y="127.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:863 (3 samples, 0.59%)</title><rect x="116.6" y="181" width="7.0" height="15.0" fill="rgb(242,20,3)" rx="2" ry="2" />
-<text  x="119.64" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:curse_add_line:917 (1 samples, 0.41%)</title><rect x="1078.3" y="181" width="4.9" height="15.0" fill="rgb(229,120,4)" rx="2" ry="2" />
+<text  x="1081.31" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:net_if_stats:2216 (1 samples, 0.20%)</title><rect x="179.2" y="261" width="2.4" height="15.0" fill="rgb(243,80,18)" rx="2" ry="2" />
-<text  x="182.23" y="271.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:396 (1 samples, 0.41%)</title><rect x="1068.6" y="213" width="4.9" height="15.0" fill="rgb(221,59,18)" rx="2" ry="2" />
+<text  x="1071.60" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/processes.py:&lt;listcomp&gt;:272 (33 samples, 6.48%)</title><rect x="19.3" y="229" width="76.5" height="15.0" fill="rgb(239,216,43)" rx="2" ry="2" />
-<text  x="22.27" y="239.5" >/home/nh..</text>
+<title>/usr/lib64/python3.6/subprocess.py:_execute_child:1295 (1 samples, 0.41%)</title><rect x="733.5" y="181" width="4.9" height="15.0" fill="rgb(234,223,48)" rx="2" ry="2" />
+<text  x="736.54" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.39%)</title><rect x="63.3" y="133" width="4.7" height="15.0" fill="rgb(227,4,46)" rx="2" ry="2" />
-<text  x="66.32" y="143.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:399 (1 samples, 0.41%)</title><rect x="1073.5" y="213" width="4.8" height="15.0" fill="rgb(215,84,23)" rx="2" ry="2" />
+<text  x="1076.46" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (2 samples, 0.39%)</title><rect x="56.4" y="117" width="4.6" height="15.0" fill="rgb(247,46,47)" rx="2" ry="2" />
-<text  x="59.37" y="127.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_mem.py:update:82 (2 samples, 0.82%)</title><rect x="53.7" y="245" width="9.7" height="15.0" fill="rgb(220,173,10)" rx="2" ry="2" />
+<text  x="56.70" y="255.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:_get_cpu_info_from_cpuid:1124 (21 samples, 4.13%)</title><rect x="123.6" y="229" width="48.7" height="15.0" fill="rgb(238,189,20)" rx="2" ry="2" />
-<text  x="126.60" y="239.5" >/hom..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:408 (2 samples, 0.82%)</title><rect x="1107.4" y="213" width="9.8" height="15.0" fill="rgb(235,0,22)" rx="2" ry="2" />
+<text  x="1110.45" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/urllib3/connectionpool.py:_make_request:440 (3 samples, 0.59%)</title><rect x="10.0" y="101" width="7.0" height="15.0" fill="rgb(250,170,12)" rx="2" ry="2" />
-<text  x="13.00" y="111.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:__update__:283 (1 samples, 0.41%)</title><rect x="723.8" y="213" width="4.9" height="15.0" fill="rgb(215,185,46)" rx="2" ry="2" />
+<text  x="726.83" y="223.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/platform.py:_syscmd_file:817 (3 samples, 0.59%)</title><rect x="172.3" y="229" width="6.9" height="15.0" fill="rgb(239,10,16)" rx="2" ry="2" />
-<text  x="175.28" y="239.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:389 (6 samples, 2.47%)</title><rect x="1029.8" y="213" width="29.1" height="15.0" fill="rgb(246,217,10)" rx="2" ry="2" />
+<text  x="1032.75" y="223.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display_plugin:994 (1 samples, 0.20%)</title><rect x="197.8" y="245" width="2.3" height="15.0" fill="rgb(233,101,3)" rx="2" ry="2" />
-<text  x="200.78" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:io_counters:763 (6 samples, 2.47%)</title><rect x="267.4" y="165" width="29.1" height="15.0" fill="rgb(214,68,49)" rx="2" ry="2" />
+<text  x="270.37" y="175.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:get_cpu_info:1763 (3 samples, 0.59%)</title><rect x="95.8" y="245" width="6.9" height="15.0" fill="rgb(219,216,19)" rx="2" ry="2" />
-<text  x="98.78" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (5 samples, 2.06%)</title><rect x="87.7" y="85" width="24.3" height="15.0" fill="rgb(238,4,6)" rx="2" ry="2" />
+<text  x="90.70" y="95.5" >/..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:msg_curse:539 (4 samples, 0.79%)</title><rect x="186.2" y="245" width="9.3" height="15.0" fill="rgb(205,91,8)" rx="2" ry="2" />
-<text  x="189.19" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (5 samples, 2.06%)</title><rect x="87.7" y="117" width="24.3" height="15.0" fill="rgb(231,71,50)" rx="2" ry="2" />
+<text  x="90.70" y="127.5" >/..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:524 (1 samples, 0.20%)</title><rect x="30.9" y="197" width="2.3" height="15.0" fill="rgb(227,16,26)" rx="2" ry="2" />
-<text  x="33.86" y="207.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_stats_display:880 (52 samples, 21.40%)</title><rect x="918.1" y="245" width="252.5" height="15.0" fill="rgb(230,55,8)" rx="2" ry="2" />
+<text  x="921.07" y="255.5" >/home/nhe/dev/glances/glances/plu..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_read_status_file:1650 (1 samples, 0.20%)</title><rect x="65.6" y="69" width="2.4" height="15.0" fill="rgb(243,88,15)" rx="2" ry="2" />
-<text  x="68.64" y="79.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:per_cpu_times:622 (1 samples, 0.41%)</title><rect x="685.0" y="165" width="4.8" height="15.0" fill="rgb(206,124,8)" rx="2" ry="2" />
+<text  x="687.98" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:_get_cpu_info_from_lscpu:1252 (3 samples, 0.59%)</title><rect x="102.7" y="229" width="7.0" height="15.0" fill="rgb(253,206,34)" rx="2" ry="2" />
-<text  x="105.73" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1578 (2 samples, 0.82%)</title><rect x="286.8" y="149" width="9.7" height="15.0" fill="rgb(210,73,26)" rx="2" ry="2" />
+<text  x="289.79" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (2 samples, 0.39%)</title><rect x="63.3" y="85" width="4.7" height="15.0" fill="rgb(237,34,50)" rx="2" ry="2" />
-<text  x="66.32" y="95.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_alert:686 (1 samples, 0.41%)</title><rect x="908.4" y="261" width="4.8" height="15.0" fill="rgb(237,135,12)" rx="2" ry="2" />
+<text  x="911.35" y="271.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_percent:982 (1 samples, 0.20%)</title><rect x="44.8" y="181" width="2.3" height="15.0" fill="rgb(226,96,20)" rx="2" ry="2" />
-<text  x="47.77" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/__init__.py:main:149 (243 samples, 100.00%)</title><rect x="10.0" y="357" width="1180.0" height="15.0" fill="rgb(221,51,0)" rx="2" ry="2" />
+<text  x="13.00" y="367.5" >/home/nhe/dev/glances/glances/__init__.py:main:149</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:update:1090 (427 samples, 83.89%)</title><rect x="200.1" y="309" width="989.9" height="15.0" fill="rgb(215,114,36)" rx="2" ry="2" />
-<text  x="203.10" y="319.5" >/home/nhe/dev/glances/glances/outputs/glances_curses.py:update:1090</text>
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display_plugin:1011 (1 samples, 0.41%)</title><rect x="1175.4" y="229" width="4.9" height="15.0" fill="rgb(218,18,10)" rx="2" ry="2" />
+<text  x="1178.43" y="239.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:lscpu:145 (3 samples, 0.59%)</title><rect x="102.7" y="213" width="7.0" height="15.0" fill="rgb(212,5,46)" rx="2" ry="2" />
-<text  x="105.73" y="223.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (4 samples, 1.65%)</title><rect x="223.7" y="117" width="19.4" height="15.0" fill="rgb(242,172,30)" rx="2" ry="2" />
+<text  x="226.66" y="127.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:get_key:341 (427 samples, 83.89%)</title><rect x="200.1" y="277" width="989.9" height="15.0" fill="rgb(225,83,31)" rx="2" ry="2" />
-<text  x="203.10" y="287.5" >/home/nhe/dev/glances/glances/outputs/glances_curses.py:get_key:341</text>
+<title>/home/nhe/dev/glances/glances/processes.py:&lt;listcomp&gt;:272 (128 samples, 52.67%)</title><rect x="63.4" y="213" width="621.6" height="15.0" fill="rgb(208,157,21)" rx="2" ry="2" />
+<text  x="66.42" y="223.5" >/home/nhe/dev/glances/glances/processes.py:&lt;listcomp&gt;:272</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:392 (1 samples, 0.20%)</title><rect x="190.8" y="229" width="2.3" height="15.0" fill="rgb(217,182,8)" rx="2" ry="2" />
-<text  x="193.83" y="239.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_io_read:334 (1 samples, 0.41%)</title><rect x="1117.2" y="197" width="4.8" height="15.0" fill="rgb(210,118,27)" rx="2" ry="2" />
+<text  x="1120.16" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:memory_percent:1086 (1 samples, 0.20%)</title><rect x="54.0" y="181" width="2.4" height="15.0" fill="rgb(205,133,17)" rx="2" ry="2" />
-<text  x="57.05" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_times:1770 (2 samples, 0.82%)</title><rect x="243.1" y="133" width="9.7" height="15.0" fill="rgb(252,177,19)" rx="2" ry="2" />
+<text  x="246.09" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:status:2080 (2 samples, 0.39%)</title><rect x="56.4" y="149" width="4.6" height="15.0" fill="rgb(214,144,52)" rx="2" ry="2" />
-<text  x="59.37" y="159.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:oneshot:492 (1 samples, 0.41%)</title><rect x="680.1" y="149" width="4.9" height="15.0" fill="rgb(229,8,29)" rx="2" ry="2" />
+<text  x="683.12" y="159.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/selectors.py:unregister:361 (1 samples, 0.20%)</title><rect x="95.8" y="149" width="2.3" height="15.0" fill="rgb(205,156,7)" rx="2" ry="2" />
-<text  x="98.78" y="159.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:435 (1 samples, 0.41%)</title><rect x="1141.4" y="213" width="4.9" height="15.0" fill="rgb(221,136,12)" rx="2" ry="2" />
+<text  x="1144.44" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/docker/client.py:version:207 (3 samples, 0.59%)</title><rect x="10.0" y="245" width="7.0" height="15.0" fill="rgb(228,222,52)" rx="2" ry="2" />
-<text  x="13.00" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:num_threads:1951 (3 samples, 1.23%)</title><rect x="330.5" y="133" width="14.6" height="15.0" fill="rgb(233,199,1)" rx="2" ry="2" />
+<text  x="333.49" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:525 (25 samples, 4.91%)</title><rect x="33.2" y="197" width="57.9" height="15.0" fill="rgb(206,77,22)" rx="2" ry="2" />
-<text  x="36.18" y="207.5" >/home/..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (1 samples, 0.41%)</title><rect x="345.1" y="149" width="4.8" height="15.0" fill="rgb(205,31,18)" rx="2" ry="2" />
+<text  x="348.06" y="159.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1534 (21 samples, 4.13%)</title><rect x="123.6" y="181" width="48.7" height="15.0" fill="rgb(220,64,20)" rx="2" ry="2" />
-<text  x="126.60" y="191.5" >/usr..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1020 (1 samples, 0.41%)</title><rect x="762.7" y="277" width="4.8" height="15.0" fill="rgb(240,127,5)" rx="2" ry="2" />
+<text  x="765.67" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:run_and_get_stdout:207 (3 samples, 0.59%)</title><rect x="116.6" y="197" width="7.0" height="15.0" fill="rgb(245,88,1)" rx="2" ry="2" />
-<text  x="119.64" y="207.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_time:266 (1 samples, 0.41%)</title><rect x="1073.5" y="197" width="4.8" height="15.0" fill="rgb(241,111,17)" rx="2" ry="2" />
+<text  x="1076.46" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:503 (1 samples, 0.20%)</title><rect x="181.6" y="293" width="2.3" height="15.0" fill="rgb(229,155,4)" rx="2" ry="2" />
-<text  x="184.55" y="303.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_alert:683 (1 samples, 0.41%)</title><rect x="971.5" y="181" width="4.8" height="15.0" fill="rgb(225,141,34)" rx="2" ry="2" />
+<text  x="974.48" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:process_iter:1443 (5 samples, 0.98%)</title><rect x="19.3" y="213" width="11.6" height="15.0" fill="rgb(222,70,9)" rx="2" ry="2" />
-<text  x="22.27" y="223.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1625 (2 samples, 0.82%)</title><rect x="233.4" y="85" width="9.7" height="15.0" fill="rgb(210,90,52)" rx="2" ry="2" />
+<text  x="236.37" y="95.5" ></text>
 </g>
 <g >
-<title>all (509 samples, 100%)</title><rect x="10.0" y="437" width="1180.0" height="15.0" fill="rgb(243,65,53)" rx="2" ry="2" />
-<text  x="13.00" y="447.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:name:1673 (2 samples, 0.82%)</title><rect x="306.2" y="133" width="9.7" height="15.0" fill="rgb(212,226,9)" rx="2" ry="2" />
+<text  x="309.21" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:is_running:581 (5 samples, 0.98%)</title><rect x="19.3" y="197" width="11.6" height="15.0" fill="rgb(245,47,42)" rx="2" ry="2" />
-<text  x="22.27" y="207.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_read_status_file:1650 (2 samples, 0.82%)</title><rect x="364.5" y="53" width="9.7" height="15.0" fill="rgb(246,49,28)" rx="2" ry="2" />
+<text  x="367.49" y="63.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.20%)</title><rect x="56.4" y="85" width="2.3" height="15.0" fill="rgb(230,172,20)" rx="2" ry="2" />
-<text  x="59.37" y="95.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:memory_info:1810 (2 samples, 0.82%)</title><rect x="626.7" y="117" width="9.7" height="15.0" fill="rgb(248,104,19)" rx="2" ry="2" />
+<text  x="629.71" y="127.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1018 (73 samples, 14.34%)</title><rect x="10.0" y="293" width="169.2" height="15.0" fill="rgb(253,129,16)" rx="2" ry="2" />
-<text  x="13.00" y="303.5" >/home/nhe/dev/glances..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:509 (1 samples, 0.41%)</title><rect x="116.8" y="181" width="4.9" height="15.0" fill="rgb(227,45,40)" rx="2" ry="2" />
+<text  x="119.83" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:957 (1 samples, 0.20%)</title><rect x="188.5" y="197" width="2.3" height="15.0" fill="rgb(208,48,37)" rx="2" ry="2" />
-<text  x="191.51" y="207.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:ppid:605 (1 samples, 0.41%)</title><rect x="660.7" y="149" width="4.9" height="15.0" fill="rgb(205,26,1)" rx="2" ry="2" />
+<text  x="663.70" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/processes.py:update:273 (33 samples, 6.48%)</title><rect x="19.3" y="245" width="76.5" height="15.0" fill="rgb(214,111,39)" rx="2" ry="2" />
-<text  x="22.27" y="255.5" >/home/nh..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:392 (2 samples, 0.82%)</title><rect x="1058.9" y="213" width="9.7" height="15.0" fill="rgb(245,211,35)" rx="2" ry="2" />
+<text  x="1061.89" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:450 (2 samples, 0.39%)</title><rect x="26.2" y="85" width="4.7" height="15.0" fill="rgb(215,161,24)" rx="2" ry="2" />
-<text  x="29.23" y="95.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:manage_action:705 (1 samples, 0.41%)</title><rect x="908.4" y="245" width="4.8" height="15.0" fill="rgb(244,53,46)" rx="2" ry="2" />
+<text  x="911.35" y="255.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:389 (1 samples, 0.20%)</title><rect x="188.5" y="229" width="2.3" height="15.0" fill="rgb(239,37,47)" rx="2" ry="2" />
-<text  x="191.51" y="239.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:uids:733 (7 samples, 2.88%)</title><rect x="349.9" y="133" width="34.0" height="15.0" fill="rgb(212,20,30)" rx="2" ry="2" />
+<text  x="352.92" y="143.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1619 (2 samples, 0.39%)</title><rect x="26.2" y="69" width="4.7" height="15.0" fill="rgb(222,63,26)" rx="2" ry="2" />
-<text  x="29.23" y="79.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:447 (1 samples, 0.41%)</title><rect x="345.1" y="101" width="4.8" height="15.0" fill="rgb(213,210,18)" rx="2" ry="2" />
+<text  x="348.06" y="111.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:get_cpu_info:1790 (21 samples, 4.13%)</title><rect x="123.6" y="245" width="48.7" height="15.0" fill="rgb(236,204,39)" rx="2" ry="2" />
-<text  x="126.60" y="255.5" >/hom..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.41%)</title><rect x="87.7" y="37" width="4.9" height="15.0" fill="rgb(241,169,46)" rx="2" ry="2" />
+<text  x="90.70" y="47.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/docker/utils/decorators.py:inner:46 (3 samples, 0.59%)</title><rect x="10.0" y="213" width="7.0" height="15.0" fill="rgb(236,38,4)" rx="2" ry="2" />
-<text  x="13.00" y="223.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cmdline:677 (14 samples, 5.76%)</title><rect x="141.1" y="165" width="68.0" height="15.0" fill="rgb(219,106,29)" rx="2" ry="2" />
+<text  x="144.11" y="175.5" >/home/n..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:run_and_get_stdout:207 (3 samples, 0.59%)</title><rect x="102.7" y="197" width="7.0" height="15.0" fill="rgb(222,1,49)" rx="2" ry="2" />
-<text  x="105.73" y="207.5" ></text>
+<title>/usr/lib64/python3.6/codecs.py:decode:321 (1 samples, 0.41%)</title><rect x="199.4" y="117" width="4.8" height="15.0" fill="rgb(228,36,4)" rx="2" ry="2" />
+<text  x="202.38" y="127.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_nice:305 (1 samples, 0.20%)</title><rect x="193.1" y="213" width="2.4" height="15.0" fill="rgb(232,188,21)" rx="2" ry="2" />
-<text  x="196.14" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_cpu:192 (2 samples, 0.82%)</title><rect x="942.3" y="197" width="9.8" height="15.0" fill="rgb(209,125,38)" rx="2" ry="2" />
+<text  x="945.35" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/standalone.py:serve_forever:168 (509 samples, 100.00%)</title><rect x="10.0" y="341" width="1180.0" height="15.0" fill="rgb(239,74,9)" rx="2" ry="2" />
-<text  x="13.00" y="351.5" >/home/nhe/dev/glances/glances/standalone.py:serve_forever:168</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:376 (1 samples, 0.41%)</title><rect x="922.9" y="213" width="4.9" height="15.0" fill="rgb(205,63,6)" rx="2" ry="2" />
+<text  x="925.92" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:447 (1 samples, 0.20%)</title><rect x="21.6" y="85" width="2.3" height="15.0" fill="rgb(242,63,33)" rx="2" ry="2" />
-<text  x="24.59" y="95.5" ></text>
+<title>/usr/lib64/python3.6/platform.py:_syscmd_file:813 (2 samples, 0.82%)</title><rect x="728.7" y="213" width="9.7" height="15.0" fill="rgb(218,1,33)" rx="2" ry="2" />
+<text  x="731.68" y="223.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:wait:1477 (3 samples, 0.59%)</title><rect x="109.7" y="149" width="6.9" height="15.0" fill="rgb(215,5,46)" rx="2" ry="2" />
-<text  x="112.69" y="159.5" ></text>
+<title>/usr/lib64/python3.6/os.py:fsencode:801 (1 samples, 0.41%)</title><rect x="728.7" y="149" width="4.8" height="15.0" fill="rgb(212,152,14)" rx="2" ry="2" />
+<text  x="731.68" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:username:697 (9 samples, 1.77%)</title><rect x="68.0" y="181" width="20.8" height="15.0" fill="rgb(208,167,18)" rx="2" ry="2" />
-<text  x="70.96" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:_init:350 (1 samples, 0.41%)</title><rect x="68.3" y="149" width="4.8" height="15.0" fill="rgb(253,113,8)" rx="2" ry="2" />
+<text  x="71.27" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/docker/api/client.py:_get:237 (3 samples, 0.59%)</title><rect x="10.0" y="197" width="7.0" height="15.0" fill="rgb(206,206,20)" rx="2" ry="2" />
-<text  x="13.00" y="207.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:ppid:2142 (1 samples, 0.41%)</title><rect x="660.7" y="117" width="4.9" height="15.0" fill="rgb(231,86,35)" rx="2" ry="2" />
+<text  x="663.70" y="127.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_network.py:update:104 (1 samples, 0.20%)</title><rect x="179.2" y="277" width="2.4" height="15.0" fill="rgb(228,93,46)" rx="2" ry="2" />
-<text  x="182.23" y="287.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_times:1609 (1 samples, 0.41%)</title><rect x="685.0" y="181" width="4.8" height="15.0" fill="rgb(248,183,43)" rx="2" ry="2" />
+<text  x="687.98" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/docker/api/daemon.py:version:181 (3 samples, 0.59%)</title><rect x="10.0" y="229" width="7.0" height="15.0" fill="rgb(250,189,32)" rx="2" ry="2" />
-<text  x="13.00" y="239.5" ></text>
+<title>/usr/lib64/python3.6/posixpath.py:join:81 (1 samples, 0.41%)</title><rect x="699.5" y="181" width="4.9" height="15.0" fill="rgb(246,154,24)" rx="2" ry="2" />
+<text  x="702.55" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:__init__:326 (5 samples, 0.98%)</title><rect x="19.3" y="181" width="11.6" height="15.0" fill="rgb(245,229,8)" rx="2" ry="2" />
-<text  x="22.27" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_alert:675 (1 samples, 0.41%)</title><rect x="966.6" y="181" width="4.9" height="15.0" fill="rgb(251,99,7)" rx="2" ry="2" />
+<text  x="969.63" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/stats.py:update:234 (2 samples, 0.39%)</title><rect x="181.6" y="309" width="4.6" height="15.0" fill="rgb(223,101,53)" rx="2" ry="2" />
-<text  x="184.55" y="319.5" ></text>
+<title>/usr/lib64/python3.6/runpy.py:_run_code:85 (243 samples, 100.00%)</title><rect x="10.0" y="389" width="1180.0" height="15.0" fill="rgb(219,178,33)" rx="2" ry="2" />
+<text  x="13.00" y="399.5" >/usr/lib64/python3.6/runpy.py:_run_code:85</text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/selectors.py:select:376 (21 samples, 4.13%)</title><rect x="123.6" y="165" width="48.7" height="15.0" fill="rgb(254,59,20)" rx="2" ry="2" />
-<text  x="126.60" y="175.5" >/usr..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit:753 (1 samples, 0.41%)</title><rect x="1097.7" y="165" width="4.9" height="15.0" fill="rgb(249,202,7)" rx="2" ry="2" />
+<text  x="1100.74" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cmdline:1697 (1 samples, 0.20%)</title><rect x="42.5" y="149" width="2.3" height="15.0" fill="rgb(235,139,22)" rx="2" ry="2" />
-<text  x="45.46" y="159.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_vms:219 (5 samples, 2.06%)</title><rect x="1000.6" y="197" width="24.3" height="15.0" fill="rgb(207,84,12)" rx="2" ry="2" />
+<text  x="1003.62" y="207.5" >/..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/stats.py:update:230 (74 samples, 14.54%)</title><rect x="10.0" y="309" width="171.6" height="15.0" fill="rgb(218,43,15)" rx="2" ry="2" />
-<text  x="13.00" y="319.5" >/home/nhe/dev/glances/..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_alert:686 (3 samples, 1.23%)</title><rect x="976.3" y="181" width="14.6" height="15.0" fill="rgb(242,210,9)" rx="2" ry="2" />
+<text  x="979.34" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_rss:231 (1 samples, 0.20%)</title><rect x="188.5" y="213" width="2.3" height="15.0" fill="rgb(250,154,20)" rx="2" ry="2" />
-<text  x="191.51" y="223.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_nice_alert:164 (1 samples, 0.41%)</title><rect x="1092.9" y="181" width="4.8" height="15.0" fill="rgb(217,97,24)" rx="2" ry="2" />
+<text  x="1095.88" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:create_time:710 (4 samples, 0.79%)</title><rect x="21.6" y="149" width="9.3" height="15.0" fill="rgb(228,203,24)" rx="2" ry="2" />
-<text  x="24.59" y="159.5" ></text>
+<title>/usr/lib64/python3.6/subprocess.py:communicate:851 (4 samples, 1.65%)</title><rect x="738.4" y="197" width="19.4" height="15.0" fill="rgb(210,179,15)" rx="2" ry="2" />
+<text  x="741.40" y="207.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:run_and_get_stdout:207 (3 samples, 0.59%)</title><rect x="95.8" y="197" width="6.9" height="15.0" fill="rgb(210,87,45)" rx="2" ry="2" />
-<text  x="98.78" y="207.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:memory_percent:1086 (1 samples, 0.41%)</title><rect x="296.5" y="165" width="4.9" height="15.0" fill="rgb(241,226,50)" rx="2" ry="2" />
+<text  x="299.50" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_processcount.py:update:75 (33 samples, 6.48%)</title><rect x="19.3" y="261" width="76.5" height="15.0" fill="rgb(253,53,1)" rx="2" ry="2" />
-<text  x="22.27" y="271.5" >/home/nh..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:&lt;listcomp&gt;:1812 (1 samples, 0.41%)</title><rect x="651.0" y="101" width="4.8" height="15.0" fill="rgb(220,167,50)" rx="2" ry="2" />
+<text  x="653.99" y="111.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:get_cpu_info:1769 (3 samples, 0.59%)</title><rect x="102.7" y="245" width="7.0" height="15.0" fill="rgb(243,149,46)" rx="2" ry="2" />
-<text  x="105.73" y="255.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:971 (1 samples, 0.41%)</title><rect x="1034.6" y="181" width="4.9" height="15.0" fill="rgb(241,22,50)" rx="2" ry="2" />
+<text  x="1037.61" y="191.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:863 (21 samples, 4.13%)</title><rect x="123.6" y="197" width="48.7" height="15.0" fill="rgb(239,180,19)" rx="2" ry="2" />
-<text  x="126.60" y="207.5" >/usr..</text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:update:149 (2 samples, 0.82%)</title><rect x="787.0" y="277" width="9.7" height="15.0" fill="rgb(241,163,37)" rx="2" ry="2" />
+<text  x="789.95" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display_plugin:1011 (1 samples, 0.20%)</title><rect x="195.5" y="245" width="2.3" height="15.0" fill="rgb(223,200,7)" rx="2" ry="2" />
-<text  x="198.46" y="255.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1033 (150 samples, 61.73%)</title><rect x="29.4" y="261" width="728.4" height="15.0" fill="rgb(219,122,29)" rx="2" ry="2" />
+<text  x="32.42" y="271.5" >/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1033</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cmdline:1696 (3 samples, 0.59%)</title><rect x="35.5" y="149" width="7.0" height="15.0" fill="rgb(242,100,46)" rx="2" ry="2" />
-<text  x="38.50" y="159.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_rss:231 (6 samples, 2.47%)</title><rect x="1029.8" y="197" width="29.1" height="15.0" fill="rgb(209,35,14)" rx="2" ry="2" />
+<text  x="1032.75" y="207.5" >/h..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:448 (1 samples, 0.20%)</title><rect x="23.9" y="85" width="2.3" height="15.0" fill="rgb(241,208,16)" rx="2" ry="2" />
-<text  x="26.91" y="95.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (3 samples, 1.23%)</title><rect x="330.5" y="149" width="14.6" height="15.0" fill="rgb(224,132,44)" rx="2" ry="2" />
+<text  x="333.49" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_text:725 (2 samples, 0.39%)</title><rect x="37.8" y="133" width="4.7" height="15.0" fill="rgb(234,67,43)" rx="2" ry="2" />
-<text  x="40.82" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cat:292 (1 samples, 0.41%)</title><rect x="723.8" y="149" width="4.9" height="15.0" fill="rgb(247,47,20)" rx="2" ry="2" />
+<text  x="726.83" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:get_cpu_info:1772 (3 samples, 0.59%)</title><rect x="109.7" y="245" width="6.9" height="15.0" fill="rgb(224,119,43)" rx="2" ry="2" />
-<text  x="112.69" y="255.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_count_physical:672 (1 samples, 0.41%)</title><rect x="29.4" y="213" width="4.9" height="15.0" fill="rgb(254,165,48)" rx="2" ry="2" />
+<text  x="32.42" y="223.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/runpy.py:_run_module_as_main:193 (509 samples, 100.00%)</title><rect x="10.0" y="421" width="1180.0" height="15.0" fill="rgb(206,52,52)" rx="2" ry="2" />
-<text  x="13.00" y="431.5" >/usr/lib64/python3.6/runpy.py:_run_module_as_main:193</text>
+<title>/usr/lib64/python3.6/runpy.py:_run_module_as_main:193 (243 samples, 100.00%)</title><rect x="10.0" y="405" width="1180.0" height="15.0" fill="rgb(207,8,4)" rx="2" ry="2" />
+<text  x="13.00" y="415.5" >/usr/lib64/python3.6/runpy.py:_run_module_as_main:193</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/urllib3/connectionpool.py:urlopen:706 (3 samples, 0.59%)</title><rect x="10.0" y="117" width="7.0" height="15.0" fill="rgb(235,72,44)" rx="2" ry="2" />
-<text  x="13.00" y="127.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cmdline:1711 (1 samples, 0.41%)</title><rect x="204.2" y="133" width="4.9" height="15.0" fill="rgb(222,52,29)" rx="2" ry="2" />
+<text  x="207.24" y="143.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (2 samples, 0.39%)</title><rect x="63.3" y="165" width="4.7" height="15.0" fill="rgb(213,1,51)" rx="2" ry="2" />
-<text  x="66.32" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1619 (1 samples, 0.41%)</title><rect x="223.7" y="85" width="4.8" height="15.0" fill="rgb(241,68,45)" rx="2" ry="2" />
+<text  x="226.66" y="95.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_communicate:1556 (1 samples, 0.20%)</title><rect x="95.8" y="165" width="2.3" height="15.0" fill="rgb(227,97,15)" rx="2" ry="2" />
-<text  x="98.78" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_percent:1032 (2 samples, 0.82%)</title><rect x="209.1" y="165" width="9.7" height="15.0" fill="rgb(251,159,40)" rx="2" ry="2" />
+<text  x="212.09" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib/python3.6/site-packages/cpuinfo/cpuinfo.py:get_cpu_info:1778 (3 samples, 0.59%)</title><rect x="116.6" y="245" width="7.0" height="15.0" fill="rgb(221,44,37)" rx="2" ry="2" />
-<text  x="119.64" y="255.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:497 (1 samples, 0.41%)</title><rect x="806.4" y="277" width="4.8" height="15.0" fill="rgb(220,135,29)" rx="2" ry="2" />
+<text  x="809.38" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_docker.py:update:174 (3 samples, 0.59%)</title><rect x="10.0" y="261" width="7.0" height="15.0" fill="rgb(241,213,44)" rx="2" ry="2" />
-<text  x="13.00" y="271.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:970 (1 samples, 0.41%)</title><rect x="1000.6" y="181" width="4.9" height="15.0" fill="rgb(223,45,3)" rx="2" ry="2" />
+<text  x="1003.62" y="191.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/contextlib.py:__exit__:88 (2 samples, 0.39%)</title><rect x="91.1" y="181" width="4.7" height="15.0" fill="rgb(220,86,35)" rx="2" ry="2" />
-<text  x="94.14" y="191.5" ></text>
+<title>/home/nhe/dev/glances/glances/processes.py:update:273 (128 samples, 52.67%)</title><rect x="63.4" y="229" width="621.6" height="15.0" fill="rgb(226,164,1)" rx="2" ry="2" />
+<text  x="66.42" y="239.5" >/home/nhe/dev/glances/glances/processes.py:update:273</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:flush:1050 (6 samples, 1.18%)</title><rect x="186.2" y="293" width="13.9" height="15.0" fill="rgb(238,96,23)" rx="2" ry="2" />
-<text  x="189.19" y="303.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:502 (1 samples, 0.41%)</title><rect x="811.2" y="277" width="4.9" height="15.0" fill="rgb(249,165,29)" rx="2" ry="2" />
+<text  x="814.23" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:504 (1 samples, 0.20%)</title><rect x="183.9" y="293" width="2.3" height="15.0" fill="rgb(226,195,27)" rx="2" ry="2" />
-<text  x="186.87" y="303.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:gids:2153 (1 samples, 0.41%)</title><rect x="262.5" y="133" width="4.9" height="15.0" fill="rgb(244,170,24)" rx="2" ry="2" />
+<text  x="265.51" y="143.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:communicate:863 (3 samples, 0.59%)</title><rect x="102.7" y="181" width="7.0" height="15.0" fill="rgb(228,5,42)" rx="2" ry="2" />
-<text  x="105.73" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:447 (1 samples, 0.41%)</title><rect x="617.0" y="165" width="4.9" height="15.0" fill="rgb(217,61,5)" rx="2" ry="2" />
+<text  x="620.00" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/__init__.py:main:149 (509 samples, 100.00%)</title><rect x="10.0" y="373" width="1180.0" height="15.0" fill="rgb(250,21,1)" rx="2" ry="2" />
-<text  x="13.00" y="383.5" >/home/nhe/dev/glances/glances/__init__.py:main:149</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1625 (1 samples, 0.41%)</title><rect x="102.3" y="53" width="4.8" height="15.0" fill="rgb(206,43,7)" rx="2" ry="2" />
+<text  x="105.26" y="63.5" ></text>
 </g>
 <g >
-<title>/usr/lib64/python3.6/subprocess.py:_try_wait:1424 (3 samples, 0.59%)</title><rect x="109.7" y="133" width="6.9" height="15.0" fill="rgb(213,146,22)" rx="2" ry="2" />
-<text  x="112.69" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1638 (1 samples, 0.41%)</title><rect x="107.1" y="53" width="4.9" height="15.0" fill="rgb(246,224,1)" rx="2" ry="2" />
+<text  x="110.12" y="63.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:uids:2146 (2 samples, 0.39%)</title><rect x="63.3" y="117" width="4.7" height="15.0" fill="rgb(210,8,40)" rx="2" ry="2" />
-<text  x="66.32" y="127.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1021 (1 samples, 0.41%)</title><rect x="767.5" y="277" width="4.9" height="15.0" fill="rgb(250,76,21)" rx="2" ry="2" />
+<text  x="770.53" y="287.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_stats_display:880 (4 samples, 0.79%)</title><rect x="186.2" y="261" width="9.3" height="15.0" fill="rgb(243,5,16)" rx="2" ry="2" />
-<text  x="189.19" y="271.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:name:618 (1 samples, 0.41%)</title><rect x="315.9" y="165" width="4.9" height="15.0" fill="rgb(210,223,9)" rx="2" ry="2" />
+<text  x="318.93" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:memory_info:1812 (1 samples, 0.20%)</title><rect x="88.8" y="133" width="2.3" height="15.0" fill="rgb(248,108,41)" rx="2" ry="2" />
-<text  x="91.82" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_count:1578 (1 samples, 0.41%)</title><rect x="29.4" y="229" width="4.9" height="15.0" fill="rgb(205,78,47)" rx="2" ry="2" />
+<text  x="32.42" y="239.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:oneshot:488 (1 samples, 0.20%)</title><rect x="93.5" y="165" width="2.3" height="15.0" fill="rgb(216,36,37)" rx="2" ry="2" />
-<text  x="96.46" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_read_status_file:1649 (2 samples, 0.82%)</title><rect x="354.8" y="53" width="9.7" height="15.0" fill="rgb(245,13,42)" rx="2" ry="2" />
+<text  x="357.77" y="63.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.20%)</title><rect x="47.1" y="133" width="2.3" height="15.0" fill="rgb(250,38,41)" rx="2" ry="2" />
-<text  x="50.09" y="143.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:sensors_temperatures:1272 (1 samples, 0.41%)</title><rect x="719.0" y="165" width="4.8" height="15.0" fill="rgb(215,160,46)" rx="2" ry="2" />
+<text  x="721.97" y="175.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__display_right:834 (2 samples, 0.39%)</title><rect x="195.5" y="261" width="4.6" height="15.0" fill="rgb(251,26,11)" rx="2" ry="2" />
-<text  x="198.46" y="271.5" ></text>
+<title>/usr/lib64/python3.6/platform.py:_syscmd_file:817 (4 samples, 1.65%)</title><rect x="738.4" y="213" width="19.4" height="15.0" fill="rgb(239,131,21)" rx="2" ry="2" />
+<text  x="741.40" y="223.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:status:682 (2 samples, 0.39%)</title><rect x="56.4" y="181" width="4.6" height="15.0" fill="rgb(228,49,39)" rx="2" ry="2" />
-<text  x="59.37" y="191.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:450 (5 samples, 2.06%)</title><rect x="87.7" y="69" width="24.3" height="15.0" fill="rgb(205,223,3)" rx="2" ry="2" />
+<text  x="90.70" y="79.5" >/..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/glances/plugins/glances_quicklook.py:update:96 (33 samples, 6.48%)</title><rect x="95.8" y="261" width="76.5" height="15.0" fill="rgb(234,191,28)" rx="2" ry="2" />
-<text  x="98.78" y="271.5" >/home/nh..</text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (8 samples, 3.29%)</title><rect x="621.9" y="133" width="38.8" height="15.0" fill="rgb(225,224,16)" rx="2" ry="2" />
+<text  x="624.85" y="143.5" >/ho..</text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:_init:354 (4 samples, 0.79%)</title><rect x="21.6" y="165" width="9.3" height="15.0" fill="rgb(231,202,6)" rx="2" ry="2" />
-<text  x="24.59" y="175.5" ></text>
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cat:293 (1 samples, 0.41%)</title><rect x="719.0" y="149" width="4.8" height="15.0" fill="rgb(238,147,48)" rx="2" ry="2" />
+<text  x="721.97" y="159.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:create_time:1788 (4 samples, 0.79%)</title><rect x="21.6" y="117" width="9.3" height="15.0" fill="rgb(241,222,16)" rx="2" ry="2" />
-<text  x="24.59" y="127.5" ></text>
+<title>/usr/lib64/python3.6/codecs.py:decode:323 (1 samples, 0.41%)</title><rect x="48.8" y="181" width="4.9" height="15.0" fill="rgb(238,72,44)" rx="2" ry="2" />
+<text  x="51.85" y="191.5" ></text>
 </g>
 <g >
-<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_read_status_file:1649 (1 samples, 0.20%)</title><rect x="63.3" y="69" width="2.3" height="15.0" fill="rgb(216,72,40)" rx="2" ry="2" />
-<text  x="66.32" y="79.5" ></text>
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1018 (153 samples, 62.96%)</title><rect x="19.7" y="277" width="743.0" height="15.0" fill="rgb(252,204,50)" rx="2" ry="2" />
+<text  x="22.71" y="287.5" >/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1018</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_diskio.py:update:89 (1 samples, 0.41%)</title><rect x="48.8" y="245" width="4.9" height="15.0" fill="rgb(242,134,15)" rx="2" ry="2" />
+<text  x="51.85" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/__main__.py:&lt;module&gt;:29 (243 samples, 100.00%)</title><rect x="10.0" y="373" width="1180.0" height="15.0" fill="rgb(206,143,44)" rx="2" ry="2" />
+<text  x="13.00" y="383.5" >/home/nhe/dev/glances/glances/__main__.py:&lt;module&gt;:29</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__display_right:834 (2 samples, 0.82%)</title><rect x="1175.4" y="245" width="9.7" height="15.0" fill="rgb(220,158,21)" rx="2" ry="2" />
+<text  x="1178.43" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (1 samples, 0.41%)</title><rect x="345.1" y="117" width="4.8" height="15.0" fill="rgb(240,229,12)" rx="2" ry="2" />
+<text  x="348.06" y="127.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:seconds_to_hms:35 (1 samples, 0.41%)</title><rect x="1073.5" y="181" width="4.8" height="15.0" fill="rgb(225,155,12)" rx="2" ry="2" />
+<text  x="1076.46" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_network.py:update:95 (2 samples, 0.82%)</title><rect x="777.2" y="261" width="9.8" height="15.0" fill="rgb(225,183,34)" rx="2" ry="2" />
+<text  x="780.24" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_freq:753 (1 samples, 0.41%)</title><rect x="709.3" y="197" width="4.8" height="15.0" fill="rgb(232,157,54)" rx="2" ry="2" />
+<text  x="712.26" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_times:1771 (1 samples, 0.41%)</title><rect x="252.8" y="133" width="4.9" height="15.0" fill="rgb(229,68,35)" rx="2" ry="2" />
+<text  x="255.80" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:curse_add_line:917 (1 samples, 0.41%)</title><rect x="1112.3" y="181" width="4.9" height="15.0" fill="rgb(223,203,13)" rx="2" ry="2" />
+<text  x="1115.30" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:437 (1 samples, 0.41%)</title><rect x="1146.3" y="213" width="4.9" height="15.0" fill="rgb(206,204,52)" rx="2" ry="2" />
+<text  x="1149.30" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (5 samples, 2.06%)</title><rect x="349.9" y="85" width="24.3" height="15.0" fill="rgb(241,133,39)" rx="2" ry="2" />
+<text  x="352.92" y="95.5" >/..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit_action:772 (1 samples, 0.41%)</title><rect x="976.3" y="149" width="4.9" height="15.0" fill="rgb(231,171,35)" rx="2" ry="2" />
+<text  x="979.34" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:405 (5 samples, 2.06%)</title><rect x="1083.2" y="213" width="24.2" height="15.0" fill="rgb(250,19,14)" rx="2" ry="2" />
+<text  x="1086.17" y="223.5" >/..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:msg_curse:539 (51 samples, 20.99%)</title><rect x="922.9" y="229" width="247.7" height="15.0" fill="rgb(252,95,31)" rx="2" ry="2" />
+<text  x="925.92" y="239.5" >/home/nhe/dev/glances/glances/pl..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.41%)</title><rect x="631.6" y="101" width="4.8" height="15.0" fill="rgb(246,8,21)" rx="2" ry="2" />
+<text  x="634.56" y="111.5" ></text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/statistics.py:_sum:159 (1 samples, 0.41%)</title><rect x="913.2" y="165" width="4.9" height="15.0" fill="rgb(215,186,20)" rx="2" ry="2" />
+<text  x="916.21" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:get:325 (1 samples, 0.41%)</title><rect x="723.8" y="229" width="4.9" height="15.0" fill="rgb(232,133,37)" rx="2" ry="2" />
+<text  x="726.83" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit:752 (1 samples, 0.41%)</title><rect x="961.8" y="165" width="4.8" height="15.0" fill="rgb(220,100,14)" rx="2" ry="2" />
+<text  x="964.77" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (4 samples, 1.65%)</title><rect x="223.7" y="101" width="19.4" height="15.0" fill="rgb(233,207,8)" rx="2" ry="2" />
+<text  x="226.66" y="111.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:635 (2 samples, 0.82%)</title><rect x="1175.4" y="261" width="9.7" height="15.0" fill="rgb(231,46,6)" rx="2" ry="2" />
+<text  x="1178.43" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:net_io_counters:1035 (1 samples, 0.41%)</title><rect x="777.2" y="229" width="4.9" height="15.0" fill="rgb(213,46,34)" rx="2" ry="2" />
+<text  x="780.24" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1624 (1 samples, 0.41%)</title><rect x="228.5" y="85" width="4.9" height="15.0" fill="rgb(215,127,18)" rx="2" ry="2" />
+<text  x="231.52" y="95.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_stats_display:880 (1 samples, 0.41%)</title><rect x="913.2" y="229" width="4.9" height="15.0" fill="rgb(232,180,23)" rx="2" ry="2" />
+<text  x="916.21" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:name:617 (2 samples, 0.82%)</title><rect x="306.2" y="165" width="9.7" height="15.0" fill="rgb(230,64,14)" rx="2" ry="2" />
+<text  x="309.21" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:get_key:341 (1 samples, 0.41%)</title><rect x="1185.1" y="261" width="4.9" height="15.0" fill="rgb(237,24,38)" rx="2" ry="2" />
+<text  x="1188.14" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_times_percent:1838 (1 samples, 0.41%)</title><rect x="685.0" y="197" width="4.8" height="15.0" fill="rgb(221,103,41)" rx="2" ry="2" />
+<text  x="687.98" y="207.5" ></text>
+</g>
+<g >
+<title>&lt;string&gt;:__new__:14 (1 samples, 0.41%)</title><rect x="709.3" y="181" width="4.8" height="15.0" fill="rgb(247,45,17)" rx="2" ry="2" />
+<text  x="712.26" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:__sort_stats:758 (1 samples, 0.41%)</title><rect x="918.1" y="213" width="4.8" height="15.0" fill="rgb(207,191,42)" rx="2" ry="2" />
+<text  x="921.07" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_io_read:344 (1 samples, 0.41%)</title><rect x="1122.0" y="197" width="4.9" height="15.0" fill="rgb(219,201,5)" rx="2" ry="2" />
+<text  x="1125.02" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_status:320 (1 samples, 0.41%)</title><rect x="1112.3" y="197" width="4.9" height="15.0" fill="rgb(211,226,42)" rx="2" ry="2" />
+<text  x="1115.30" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1033 (3 samples, 1.23%)</title><rect x="772.4" y="277" width="14.6" height="15.0" fill="rgb(227,171,13)" rx="2" ry="2" />
+<text  x="775.39" y="287.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/timer.py:start:52 (1 samples, 0.41%)</title><rect x="767.5" y="245" width="4.9" height="15.0" fill="rgb(223,115,18)" rx="2" ry="2" />
+<text  x="770.53" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_text:725 (8 samples, 3.29%)</title><rect x="150.8" y="117" width="38.9" height="15.0" fill="rgb(232,168,35)" rx="2" ry="2" />
+<text  x="153.82" y="127.5" >/ho..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_count:1576 (1 samples, 0.41%)</title><rect x="34.3" y="229" width="4.8" height="15.0" fill="rgb(206,198,43)" rx="2" ry="2" />
+<text  x="37.28" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:msg_curse:537 (1 samples, 0.41%)</title><rect x="918.1" y="229" width="4.8" height="15.0" fill="rgb(233,109,47)" rx="2" ry="2" />
+<text  x="921.07" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:__init__:1596 (1 samples, 0.41%)</title><rect x="63.4" y="133" width="4.9" height="15.0" fill="rgb(241,183,4)" rx="2" ry="2" />
+<text  x="66.42" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:memory_percent:1103 (1 samples, 0.41%)</title><rect x="301.4" y="165" width="4.8" height="15.0" fill="rgb(220,146,13)" rx="2" ry="2" />
+<text  x="304.36" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (7 samples, 2.88%)</title><rect x="223.7" y="149" width="34.0" height="15.0" fill="rgb(233,192,39)" rx="2" ry="2" />
+<text  x="226.66" y="159.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrap_numbers:702 (1 samples, 0.41%)</title><rect x="782.1" y="229" width="4.9" height="15.0" fill="rgb(251,205,20)" rx="2" ry="2" />
+<text  x="785.10" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_vms:217 (2 samples, 0.82%)</title><rect x="990.9" y="197" width="9.7" height="15.0" fill="rgb(243,225,32)" rx="2" ry="2" />
+<text  x="993.91" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/stats.py:update:225 (1 samples, 0.41%)</title><rect x="10.0" y="293" width="4.9" height="15.0" fill="rgb(212,137,40)" rx="2" ry="2" />
+<text  x="13.00" y="303.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:update:1075 (56 samples, 23.05%)</title><rect x="913.2" y="293" width="271.9" height="15.0" fill="rgb(233,44,47)" rx="2" ry="2" />
+<text  x="916.21" y="303.5" >/home/nhe/dev/glances/glances/output..</text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/subprocess.py:__init__:729 (2 samples, 0.82%)</title><rect x="728.7" y="197" width="9.7" height="15.0" fill="rgb(232,201,16)" rx="2" ry="2" />
+<text  x="731.68" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (7 samples, 2.88%)</title><rect x="349.9" y="117" width="34.0" height="15.0" fill="rgb(232,68,14)" rx="2" ry="2" />
+<text  x="352.92" y="127.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:504 (6 samples, 2.47%)</title><rect x="859.8" y="277" width="29.1" height="15.0" fill="rgb(238,57,27)" rx="2" ry="2" />
+<text  x="862.79" y="287.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:status:2080 (1 samples, 0.41%)</title><rect x="345.1" y="133" width="4.8" height="15.0" fill="rgb(205,70,8)" rx="2" ry="2" />
+<text  x="348.06" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:update_views:177 (1 samples, 0.41%)</title><rect x="908.4" y="277" width="4.8" height="15.0" fill="rgb(211,29,36)" rx="2" ry="2" />
+<text  x="911.35" y="287.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:disk_io_counters:2059 (1 samples, 0.41%)</title><rect x="48.8" y="229" width="4.9" height="15.0" fill="rgb(239,213,36)" rx="2" ry="2" />
+<text  x="51.85" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:535 (4 samples, 1.65%)</title><rect x="665.6" y="181" width="19.4" height="15.0" fill="rgb(226,188,34)" rx="2" ry="2" />
+<text  x="668.56" y="191.5" ></text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/genericpath.py:isdir:45 (1 samples, 0.41%)</title><rect x="1136.6" y="197" width="4.8" height="15.0" fill="rgb(239,4,35)" rx="2" ry="2" />
+<text  x="1139.58" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:memory_info:1812 (4 samples, 1.65%)</title><rect x="636.4" y="117" width="19.4" height="15.0" fill="rgb(244,201,15)" rx="2" ry="2" />
+<text  x="639.42" y="127.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:503 (9 samples, 3.70%)</title><rect x="816.1" y="277" width="43.7" height="15.0" fill="rgb(230,189,0)" rx="2" ry="2" />
+<text  x="819.09" y="287.5" >/hom..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_percent:994 (1 samples, 0.41%)</title><rect x="218.8" y="165" width="4.9" height="15.0" fill="rgb(233,227,25)" rx="2" ry="2" />
+<text  x="221.81" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_mem:201 (1 samples, 0.41%)</title><rect x="952.1" y="197" width="4.8" height="15.0" fill="rgb(243,75,1)" rx="2" ry="2" />
+<text  x="955.06" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:__init__:344 (2 samples, 0.82%)</title><rect x="286.8" y="133" width="9.7" height="15.0" fill="rgb(208,170,25)" rx="2" ry="2" />
+<text  x="289.79" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_core.py:update:75 (1 samples, 0.41%)</title><rect x="39.1" y="245" width="4.9" height="15.0" fill="rgb(206,180,13)" rx="2" ry="2" />
+<text  x="42.14" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cmdline:1696 (10 samples, 4.12%)</title><rect x="141.1" y="133" width="48.6" height="15.0" fill="rgb(221,90,26)" rx="2" ry="2" />
+<text  x="144.11" y="143.5" >/hom..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processcount.py:update:75 (128 samples, 52.67%)</title><rect x="63.4" y="245" width="621.6" height="15.0" fill="rgb(242,67,7)" rx="2" ry="2" />
+<text  x="66.42" y="255.5" >/home/nhe/dev/glances/glances/plugins/glances_processcount.py:update:75</text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/subprocess.py:_execute_child:1285 (1 samples, 0.41%)</title><rect x="728.7" y="181" width="4.8" height="15.0" fill="rgb(227,213,52)" rx="2" ry="2" />
+<text  x="731.68" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:virtual_memory:1965 (1 samples, 0.41%)</title><rect x="58.6" y="229" width="4.8" height="15.0" fill="rgb(252,74,20)" rx="2" ry="2" />
+<text  x="61.56" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_diskio.py:update:102 (1 samples, 0.41%)</title><rect x="44.0" y="245" width="4.8" height="15.0" fill="rgb(236,195,20)" rx="2" ry="2" />
+<text  x="46.99" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:_remove_dead_reminders:633 (1 samples, 0.41%)</title><rect x="782.1" y="197" width="4.9" height="15.0" fill="rgb(227,17,21)" rx="2" ry="2" />
+<text  x="785.10" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (9 samples, 3.70%)</title><rect x="621.9" y="165" width="43.7" height="15.0" fill="rgb(209,179,23)" rx="2" ry="2" />
+<text  x="624.85" y="175.5" >/hom..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_nice_alert:171 (1 samples, 0.41%)</title><rect x="1102.6" y="181" width="4.8" height="15.0" fill="rgb(208,226,46)" rx="2" ry="2" />
+<text  x="1105.59" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (4 samples, 1.65%)</title><rect x="354.8" y="69" width="19.4" height="15.0" fill="rgb(252,139,33)" rx="2" ry="2" />
+<text  x="357.77" y="79.5" ></text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/contextlib.py:__enter__:81 (1 samples, 0.41%)</title><rect x="121.7" y="165" width="4.8" height="15.0" fill="rgb(228,213,17)" rx="2" ry="2" />
+<text  x="124.69" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:net_io_counters:2113 (1 samples, 0.41%)</title><rect x="782.1" y="245" width="4.9" height="15.0" fill="rgb(240,99,7)" rx="2" ry="2" />
+<text  x="785.10" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_nice_alert:166 (1 samples, 0.41%)</title><rect x="1097.7" y="181" width="4.9" height="15.0" fill="rgb(254,35,15)" rx="2" ry="2" />
+<text  x="1100.74" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:read_procfs:1118 (1 samples, 0.41%)</title><rect x="48.8" y="197" width="4.9" height="15.0" fill="rgb(233,18,17)" rx="2" ry="2" />
+<text  x="51.85" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:428 (2 samples, 0.82%)</title><rect x="1131.7" y="213" width="9.7" height="15.0" fill="rgb(243,188,32)" rx="2" ry="2" />
+<text  x="1134.73" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:wrapper:454 (7 samples, 2.88%)</title><rect x="349.9" y="149" width="34.0" height="15.0" fill="rgb(233,60,16)" rx="2" ry="2" />
+<text  x="352.92" y="159.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/stats.py:update:234 (24 samples, 9.88%)</title><rect x="796.7" y="293" width="116.5" height="15.0" fill="rgb(212,221,49)" rx="2" ry="2" />
+<text  x="799.67" y="303.5" >/home/nhe/dev/..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/compat.py:key_exist_value_not_none_not_v:285 (1 samples, 0.41%)</title><rect x="995.8" y="181" width="4.8" height="15.0" fill="rgb(231,8,8)" rx="2" ry="2" />
+<text  x="998.76" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_io_read:345 (1 samples, 0.41%)</title><rect x="1126.9" y="197" width="4.8" height="15.0" fill="rgb(227,110,24)" rx="2" ry="2" />
+<text  x="1129.87" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:get:325 (2 samples, 0.82%)</title><rect x="714.1" y="229" width="9.7" height="15.0" fill="rgb(223,109,47)" rx="2" ry="2" />
+<text  x="717.12" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/__init__.py:start:118 (243 samples, 100.00%)</title><rect x="10.0" y="341" width="1180.0" height="15.0" fill="rgb(243,187,22)" rx="2" ry="2" />
+<text  x="13.00" y="351.5" >/home/nhe/dev/glances/glances/__init__.py:start:118</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:496 (1 samples, 0.41%)</title><rect x="801.5" y="277" width="4.9" height="15.0" fill="rgb(211,18,48)" rx="2" ry="2" />
+<text  x="804.52" y="287.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:build_sensors_list:300 (1 samples, 0.41%)</title><rect x="723.8" y="197" width="4.9" height="15.0" fill="rgb(240,8,32)" rx="2" ry="2" />
+<text  x="726.83" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_network.py:update:104 (1 samples, 0.41%)</title><rect x="772.4" y="261" width="4.8" height="15.0" fill="rgb(210,212,42)" rx="2" ry="2" />
+<text  x="775.39" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_status:317 (1 samples, 0.41%)</title><rect x="1107.4" y="197" width="4.9" height="15.0" fill="rgb(229,192,19)" rx="2" ry="2" />
+<text  x="1110.45" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:as_dict:525 (110 samples, 45.27%)</title><rect x="131.4" y="181" width="534.2" height="15.0" fill="rgb(208,205,21)" rx="2" ry="2" />
+<text  x="134.40" y="191.5" >/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__...</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:get_stats_display_width:1118 (1 samples, 0.41%)</title><rect x="1170.6" y="229" width="4.8" height="15.0" fill="rgb(245,66,39)" rx="2" ry="2" />
+<text  x="1173.58" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:387 (8 samples, 3.29%)</title><rect x="952.1" y="213" width="38.8" height="15.0" fill="rgb(223,0,50)" rx="2" ry="2" />
+<text  x="955.06" y="223.5" >/ho..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/standalone.py:serve_forever:168 (243 samples, 100.00%)</title><rect x="10.0" y="325" width="1180.0" height="15.0" fill="rgb(221,43,34)" rx="2" ry="2" />
+<text  x="13.00" y="335.5" >/home/nhe/dev/glances/glances/standalone.py:serve_forever:168</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:net_if_stats:2216 (1 samples, 0.41%)</title><rect x="772.4" y="245" width="4.8" height="15.0" fill="rgb(253,168,53)" rx="2" ry="2" />
+<text  x="775.39" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:curse_add_line:917 (1 samples, 0.41%)</title><rect x="947.2" y="181" width="4.9" height="15.0" fill="rgb(207,176,39)" rx="2" ry="2" />
+<text  x="950.20" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:575 (1 samples, 0.41%)</title><rect x="913.2" y="261" width="4.9" height="15.0" fill="rgb(251,214,28)" rx="2" ry="2" />
+<text  x="916.21" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:username:695 (7 samples, 2.88%)</title><rect x="349.9" y="165" width="34.0" height="15.0" fill="rgb(234,106,34)" rx="2" ry="2" />
+<text  x="352.92" y="175.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_vms:220 (1 samples, 0.41%)</title><rect x="1024.9" y="197" width="4.9" height="15.0" fill="rgb(251,112,33)" rx="2" ry="2" />
+<text  x="1027.90" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:442 (1 samples, 0.41%)</title><rect x="1160.9" y="213" width="4.8" height="15.0" fill="rgb(242,89,49)" rx="2" ry="2" />
+<text  x="1163.86" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_core.py:update:63 (1 samples, 0.41%)</title><rect x="34.3" y="245" width="4.8" height="15.0" fill="rgb(217,197,7)" rx="2" ry="2" />
+<text  x="37.28" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_nice:305 (5 samples, 2.06%)</title><rect x="1083.2" y="197" width="24.2" height="15.0" fill="rgb(226,60,39)" rx="2" ry="2" />
+<text  x="1086.17" y="207.5" >/..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/cpu_percent.py:get:51 (1 samples, 0.41%)</title><rect x="685.0" y="229" width="4.8" height="15.0" fill="rgb(216,119,39)" rx="2" ry="2" />
+<text  x="687.98" y="239.5" ></text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/genericpath.py:isdir:42 (1 samples, 0.41%)</title><rect x="1131.7" y="197" width="4.9" height="15.0" fill="rgb(212,4,17)" rx="2" ry="2" />
+<text  x="1134.73" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:curse_add_line:917 (1 samples, 0.41%)</title><rect x="1126.9" y="181" width="4.8" height="15.0" fill="rgb(218,39,45)" rx="2" ry="2" />
+<text  x="1129.87" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/cpu_percent.py:get_info:67 (4 samples, 1.65%)</title><rect x="694.7" y="229" width="19.4" height="15.0" fill="rgb(216,191,12)" rx="2" ry="2" />
+<text  x="697.69" y="239.5" ></text>
+</g>
+<g >
+<title>/usr/lib64/python3.6/statistics.py:mean:312 (1 samples, 0.41%)</title><rect x="913.2" y="181" width="4.9" height="15.0" fill="rgb(250,229,32)" rx="2" ry="2" />
+<text  x="916.21" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:update_views:516 (4 samples, 1.65%)</title><rect x="888.9" y="277" width="19.5" height="15.0" fill="rgb(215,112,13)" rx="2" ry="2" />
+<text  x="891.93" y="287.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:wrapper:1034 (1 samples, 0.41%)</title><rect x="757.8" y="261" width="4.9" height="15.0" fill="rgb(225,95,15)" rx="2" ry="2" />
+<text  x="760.82" y="271.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:create_time:1788 (5 samples, 2.06%)</title><rect x="87.7" y="101" width="24.3" height="15.0" fill="rgb(245,194,9)" rx="2" ry="2" />
+<text  x="90.70" y="111.5" >/..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_cpu:187 (1 samples, 0.41%)</title><rect x="937.5" y="197" width="4.8" height="15.0" fill="rgb(213,106,27)" rx="2" ry="2" />
+<text  x="940.49" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1618 (1 samples, 0.41%)</title><rect x="87.7" y="53" width="4.9" height="15.0" fill="rgb(228,136,25)" rx="2" ry="2" />
+<text  x="90.70" y="63.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit:756 (1 samples, 0.41%)</title><rect x="1088.0" y="165" width="4.9" height="15.0" fill="rgb(250,105,3)" rx="2" ry="2" />
+<text  x="1091.02" y="175.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display_plugin:979 (1 samples, 0.41%)</title><rect x="1180.3" y="229" width="4.8" height="15.0" fill="rgb(227,11,7)" rx="2" ry="2" />
+<text  x="1183.29" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:update:88 (2 samples, 0.82%)</title><rect x="714.1" y="245" width="9.7" height="15.0" fill="rgb(230,87,19)" rx="2" ry="2" />
+<text  x="717.12" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__get_stat_display:549 (1 samples, 0.41%)</title><rect x="913.2" y="245" width="4.9" height="15.0" fill="rgb(226,127,24)" rx="2" ry="2" />
+<text  x="916.21" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_alert:664 (1 samples, 0.41%)</title><rect x="961.8" y="181" width="4.8" height="15.0" fill="rgb(222,148,27)" rx="2" ry="2" />
+<text  x="964.77" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_limit_action:774 (1 samples, 0.41%)</title><rect x="981.2" y="149" width="4.8" height="15.0" fill="rgb(209,200,51)" rx="2" ry="2" />
+<text  x="984.19" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (14 samples, 5.76%)</title><rect x="141.1" y="149" width="68.0" height="15.0" fill="rgb(207,223,8)" rx="2" ry="2" />
+<text  x="144.11" y="159.5" >/home/n..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:449 (1 samples, 0.41%)</title><rect x="1165.7" y="213" width="4.9" height="15.0" fill="rgb(241,217,10)" rx="2" ry="2" />
+<text  x="1168.72" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:oneshot:454 (1 samples, 0.41%)</title><rect x="121.7" y="149" width="4.8" height="15.0" fill="rgb(222,107,35)" rx="2" ry="2" />
+<text  x="124.69" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:__init__:326 (10 samples, 4.12%)</title><rect x="63.4" y="165" width="48.6" height="15.0" fill="rgb(219,83,41)" rx="2" ry="2" />
+<text  x="66.42" y="175.5" >/hom..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__display_header:704 (1 samples, 0.41%)</title><rect x="1170.6" y="245" width="4.8" height="15.0" fill="rgb(245,107,24)" rx="2" ry="2" />
+<text  x="1173.58" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/cpu_percent.py:__get_percpu:86 (1 samples, 0.41%)</title><rect x="685.0" y="213" width="4.8" height="15.0" fill="rgb(227,22,36)" rx="2" ry="2" />
+<text  x="687.98" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:_parse_stat_file:1619 (2 samples, 0.82%)</title><rect x="92.6" y="53" width="9.7" height="15.0" fill="rgb(241,195,33)" rx="2" ry="2" />
+<text  x="95.55" y="63.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:net_if_stats:1078 (1 samples, 0.41%)</title><rect x="772.4" y="229" width="4.8" height="15.0" fill="rgb(242,154,16)" rx="2" ry="2" />
+<text  x="775.39" y="239.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:get_process_curses_data:411 (3 samples, 1.23%)</title><rect x="1117.2" y="213" width="14.5" height="15.0" fill="rgb(235,228,31)" rx="2" ry="2" />
+<text  x="1120.16" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_cpu.py:msg_curse:235 (1 samples, 0.41%)</title><rect x="913.2" y="213" width="4.9" height="15.0" fill="rgb(209,139,19)" rx="2" ry="2" />
+<text  x="916.21" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:update:1090 (1 samples, 0.41%)</title><rect x="1185.1" y="293" width="4.9" height="15.0" fill="rgb(215,25,51)" rx="2" ry="2" />
+<text  x="1188.14" y="303.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:get_trend:286 (1 samples, 0.41%)</title><rect x="913.2" y="197" width="4.9" height="15.0" fill="rgb(234,186,1)" rx="2" ry="2" />
+<text  x="916.21" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cmdline:1697 (3 samples, 1.23%)</title><rect x="189.7" y="133" width="14.5" height="15.0" fill="rgb(210,107,18)" rx="2" ry="2" />
+<text  x="192.67" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:cpu_freq:1859 (4 samples, 1.65%)</title><rect x="694.7" y="213" width="19.4" height="15.0" fill="rgb(241,217,51)" rx="2" ry="2" />
+<text  x="697.69" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/standalone.py:__serve_once:154 (57 samples, 23.46%)</title><rect x="913.2" y="309" width="276.8" height="15.0" fill="rgb(234,124,45)" rx="2" ry="2" />
+<text  x="916.21" y="319.5" >/home/nhe/dev/glances/glances/standal..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:oneshot:489 (1 samples, 0.41%)</title><rect x="675.3" y="149" width="4.8" height="15.0" fill="rgb(207,73,20)" rx="2" ry="2" />
+<text  x="678.27" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_quicklook.py:update:83 (4 samples, 1.65%)</title><rect x="694.7" y="245" width="19.4" height="15.0" fill="rgb(247,145,30)" rx="2" ry="2" />
+<text  x="697.69" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_common.py:open_binary:711 (1 samples, 0.41%)</title><rect x="723.8" y="133" width="4.9" height="15.0" fill="rgb(213,119,25)" rx="2" ry="2" />
+<text  x="726.83" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:nice_get:1988 (2 samples, 0.82%)</title><rect x="320.8" y="133" width="9.7" height="15.0" fill="rgb(224,153,35)" rx="2" ry="2" />
+<text  x="323.78" y="143.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/standalone.py:__serve_once:135 (186 samples, 76.54%)</title><rect x="10.0" y="309" width="903.2" height="15.0" fill="rgb(217,79,26)" rx="2" ry="2" />
+<text  x="13.00" y="319.5" >/home/nhe/dev/glances/glances/standalone.py:__serve_once:135</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.82%)</title><rect x="320.8" y="149" width="9.7" height="15.0" fill="rgb(236,24,9)" rx="2" ry="2" />
+<text  x="323.78" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/timer.py:get:81 (1 samples, 0.41%)</title><rect x="757.8" y="245" width="4.9" height="15.0" fill="rgb(247,40,11)" rx="2" ry="2" />
+<text  x="760.82" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_sensors.py:__update__:283 (2 samples, 0.82%)</title><rect x="714.1" y="213" width="9.7" height="15.0" fill="rgb(220,157,45)" rx="2" ry="2" />
+<text  x="717.12" y="223.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_quicklook.py:update:72 (1 samples, 0.41%)</title><rect x="685.0" y="245" width="4.8" height="15.0" fill="rgb(251,219,42)" rx="2" ry="2" />
+<text  x="687.98" y="255.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:wrapper:1576 (2 samples, 0.82%)</title><rect x="306.2" y="149" width="9.7" height="15.0" fill="rgb(253,71,10)" rx="2" ry="2" />
+<text  x="309.21" y="159.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_mem:207 (7 samples, 2.88%)</title><rect x="956.9" y="197" width="34.0" height="15.0" fill="rgb(217,203,21)" rx="2" ry="2" />
+<text  x="959.91" y="207.5" >/h..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:cpu_freq:752 (1 samples, 0.41%)</title><rect x="704.4" y="197" width="4.9" height="15.0" fill="rgb(234,44,24)" rx="2" ry="2" />
+<text  x="707.40" y="207.5" ></text>
+</g>
+<g >
+<title>all (243 samples, 100%)</title><rect x="10.0" y="421" width="1180.0" height="15.0" fill="rgb(207,70,51)" rx="2" ry="2" />
+<text  x="13.00" y="431.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/_pslinux.py:uids:2147 (2 samples, 0.82%)</title><rect x="374.2" y="101" width="9.7" height="15.0" fill="rgb(208,124,8)" rx="2" ry="2" />
+<text  x="377.20" y="111.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_processlist.py:_get_process_curses_thread:290 (1 samples, 0.41%)</title><rect x="1078.3" y="197" width="4.9" height="15.0" fill="rgb(210,11,4)" rx="2" ry="2" />
+<text  x="1081.31" y="207.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:__catch_key:347 (1 samples, 0.41%)</title><rect x="1185.1" y="277" width="4.9" height="15.0" fill="rgb(253,187,10)" rx="2" ry="2" />
+<text  x="1188.14" y="287.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/plugins/glances_plugin.py:auto_unit:970 (1 samples, 0.41%)</title><rect x="1029.8" y="181" width="4.8" height="15.0" fill="rgb(238,182,54)" rx="2" ry="2" />
+<text  x="1032.75" y="191.5" ></text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/glances/outputs/glances_curses.py:display:603 (52 samples, 21.40%)</title><rect x="918.1" y="261" width="252.5" height="15.0" fill="rgb(215,45,34)" rx="2" ry="2" />
+<text  x="921.07" y="271.5" >/home/nhe/dev/glances/glances/out..</text>
+</g>
+<g >
+<title>/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:process_iter:1446 (118 samples, 48.56%)</title><rect x="112.0" y="197" width="573.0" height="15.0" fill="rgb(221,93,36)" rx="2" ry="2" />
+<text  x="114.98" y="207.5" >/home/nhe/dev/glances/venv/lib64/python3.6/site-packages/psutil/__init__.py:pr..</text>
 </g>
 </g>
 </svg>
