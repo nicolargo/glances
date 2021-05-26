@@ -40,7 +40,8 @@ class GlancesProcesses(object):
 
         # The internals caches will be cleaned each 'cache_timeout' seconds
         self.cache_timeout = cache_timeout
-        self.cache_timer = Timer(self.cache_timeout)
+        # First iteration, no cache
+        self.cache_timer = Timer(0)
 
         # Init the io dict
         # key = pid
@@ -55,6 +56,9 @@ class GlancesProcesses(object):
         self.set_sort_key('auto', auto=True)
         self.processlist = []
         self.reset_processcount()
+
+        # Cache is a dict with key=pid and value = dict of cached value
+        self.processlist_cache = {}
 
         # Tag to enable/disable the processes stats (to reduce the Glances CPU consumption)
         # Default is to enable the processes stats
@@ -260,17 +264,28 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
-        standard_attrs = ['cmdline', 'cpu_percent', 'cpu_times', 'memory_info',
+        cached_attrs = ['cmdline', 'username']
+
+        standard_attrs = ['cpu_percent', 'cpu_times', 'memory_info',
                           'memory_percent', 'name', 'nice', 'pid', 'ppid',
-                          'status', 'username', 'status', 'num_threads']
+                          'status', 'status', 'num_threads']
+        if self.cache_timer.finished():
+            standard_attrs += cached_attrs
+            self.cache_timer.set(self.cache_timeout)
+            self.cache_timer.reset()
+            is_cached = False
+        else:
+            is_cached = True
+
         if not self.disable_io_counters:
             standard_attrs += ['io_counters']
         if not self.disable_gids:
             standard_attrs += ['gids']
 
         # and build the processes stats list (psutil>=5.3.0)
-        self.processlist = [p.info for p in psutil.process_iter(attrs=standard_attrs,
-                                                                ad_value=None)
+        self.processlist = [p.info
+                            for p in psutil.process_iter(attrs=standard_attrs,
+                                                         ad_value=None)
                             # OS-related processes filter
                             if not (BSD and p.info['name'] == 'idle') and
                             not (WINDOWS and p.info['name'] == 'System Idle Process') and
@@ -373,6 +388,19 @@ class GlancesProcesses(object):
                 io_tag = 0
             # Append the IO tag (for display)
             proc['io_counters'] += [io_tag]
+
+            # Manage cached information
+            if is_cached:
+                # Add cached values
+                if proc['pid'] not in self.processlist_cache:
+                    self.processlist_cache[proc['pid']]= psutil.Process(pid=proc['pid']).as_dict(attrs=cached_attrs,
+                                                                                                 ad_value=None)
+                for cached in cached_attrs:
+                    proc[cached] = self.processlist_cache[proc['pid']][cached]
+            else:
+                # Save values to cache
+                self.processlist_cache[proc['pid']] = { cached: proc[cached] for cached in cached_attrs }
+
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Usefull to highlight the processes with maximum values
