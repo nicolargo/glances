@@ -3,11 +3,11 @@ Building the docs
 
 First install Sphinx and the RTD theme:
 
-    pip install sphinx sphinx_rtd_theme
+    make venv
 
 or update it if already installed:
 
-    pip install --upgrade sphinx sphinx_rtd_theme
+    make venv-upgrade
 
 Go to the docs folder:
 
