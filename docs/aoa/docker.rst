@@ -21,6 +21,8 @@ under the ``[docker]`` section:
 
     [docker]
     disable=False
+    # Timeout for API calls (in seconds, default is 1)
+    timeout=1
     # Only show specific containers (comma separeted list of container name or regular expression)
     show=thiscontainer,andthisone,andthoseones.*
     # Hide some containers (comma separeted list of container name or regular expression)
