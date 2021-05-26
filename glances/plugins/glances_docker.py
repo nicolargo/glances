@@ -137,7 +137,7 @@ class Plugin(GlancesPlugin):
     def connect(self):
         """Connect to the Docker server."""
         try:
-            ret = docker.from_env()
+            ret = docker.from_env(timeout=int(self.get_conf_value('timeout', '1')))
         except Exception as e:
             logger.error("docker plugin - Can not connect to Docker ({})".format(e))
             ret = None
