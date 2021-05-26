@@ -143,7 +143,7 @@ class Config(object):
     def read(self):
         """Read the config file, if it exists. Using defaults otherwise."""
         for config_file in self.config_file_paths():
-            logger.info('Search glances.conf file in {}'.format(config_file))
+            logger.debug('Search glances.conf file in {}'.format(config_file))
             if os.path.exists(config_file):
                 try:
                     with open(config_file, encoding='utf-8') as f:

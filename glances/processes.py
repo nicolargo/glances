@@ -391,16 +391,21 @@ class GlancesProcesses(object):
 
             # Manage cached information
             if is_cached:
-                # Add cached values
+                # Grab cached values (in case of a new incoming process)
                 if proc['pid'] not in self.processlist_cache:
-                    self.processlist_cache[proc['pid']]= psutil.Process(pid=proc['pid']).as_dict(attrs=cached_attrs,
-                                                                                                 ad_value=None)
-                for cached in cached_attrs:
-                    proc[cached] = self.processlist_cache[proc['pid']][cached]
+                    try:
+                        self.processlist_cache[proc['pid']]= psutil.Process(pid=proc['pid']).as_dict(attrs=cached_attrs,
+                                                                                                    ad_value=None)
+                    except psutil.NoSuchProcess:
+                        pass
+                # Add cached value to current stat
+                try:
+                    proc.update(self.processlist_cache[proc['pid']])
+                except KeyError:
+                    pass
             else:
                 # Save values to cache
                 self.processlist_cache[proc['pid']] = { cached: proc[cached] for cached in cached_attrs }
-
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Usefull to highlight the processes with maximum values
