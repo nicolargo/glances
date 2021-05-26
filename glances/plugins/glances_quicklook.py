@@ -80,7 +80,6 @@ class Plugin(GlancesPlugin):
                 stats['swap'] = None
 
             # Get additional information
-            logger.info(cpu_percent.get_info())
             stats['cpu_name'] = cpu_percent.get_info()['cpu_name']
             stats['cpu_hz_current'] = self._mhz_to_hz(cpu_percent.get_info()['cpu_hz_current'])
             stats['cpu_hz'] = self._mhz_to_hz(cpu_percent.get_info()['cpu_hz'])
