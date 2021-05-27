@@ -5,6 +5,10 @@ InfluxDB
 
 You can export statistics to an ``InfluxDB`` server (time series server).
 
+In Glances version 3.1.8 and higher, the value of the key field will be
+converted as a tag. For example, in the Docker plugin, the key = name,
+so the container name will be tag and not a field.
+
 InfluxDB (up to version 1.7.x)
 ------------------------------
 
@@ -48,7 +52,7 @@ Note: if you want to use SSL, please set 'protocol=https'.
 InfluxDB v2 (from InfluxDB v1.8.x/Flux and InfluxDB v2.x)
 ---------------------------------------------------------
 
-Note: The InfluxDB v2 client (https://pypi.org/project/influxdb-client/) 
+Note: The InfluxDB v2 client (https://pypi.org/project/influxdb-client/)
 is only available for Python 3.6 or higher.
 
 The connection should be defined in the Glances configuration file as

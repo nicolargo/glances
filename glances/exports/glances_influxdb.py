@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -93,32 +93,55 @@ class Export(GlancesExport):
         return db
 
     def _normalize(self, name, columns, points):
-        """Normalize data for the InfluxDB's data model."""
+        """Normalize data for the InfluxDB's data model.
+        Output is a list of measurements."""
+        ret = []
 
-        for i, _ in enumerate(points):
-            # Supported type:
+        # Build initial dict by crossing columns and point
+        data_dict = dict(zip(columns, points))
+
+        # issue1871 - Check if a key exist. If a key exist, the value of
+        # the key should be used as a tag to identify the measurement.
+        keys_list = [k.split('.')[0] for k in columns if k.endswith('.key')]
+        if len(keys_list) == 0:
+            keys_list = [None]
+
+        for measurement in keys_list:
+            # Manage field
+            if measurement is not None:
+                fields = {k.replace('{}.'.format(measurement), ''): data_dict[k]
+                          for k in data_dict
+                          if k.startswith('{}.'.format(measurement))}
+            else:
+                fields = data_dict
+            # Transform to InfluxDB datamodel
             # https://docs.influxdata.com/influxdb/v1.5/write_protocols/line_protocol_reference/
-            if points[i] is None:
-                # Ignore points with None value
-                del(points[i])
-                del(columns[i])
-                continue
-            try:
-                points[i] = float(points[i])
-            except (TypeError, ValueError):
-                pass
-            else:
-                continue
-            try:
-                points[i] = str(points[i])
-            except (TypeError, ValueError):
-                pass
-            else:
-                continue
-
-        return [{'measurement': name,
-                 'tags': self.parse_tags(self.tags),
-                 'fields': dict(zip(columns, points))}]
+            for k in fields:
+                #  Do not export empty (None) value
+                if fields[k] is None:
+                    fields.pop(k)
+                # Convert numerical to float
+                try:
+                    fields[k] = float(fields[k])
+                except (TypeError, ValueError):
+                    # Convert others to string
+                    try:
+                        fields[k] = str(fields[k])
+                    except (TypeError, ValueError):
+                        pass
+            # Manage tags
+            tags = self.parse_tags(self.tags)
+            if 'key' in fields and fields['key'] in fields:
+                # Create a tag from the key
+                # Tag should be an string (see InfluxDB data model)
+                tags[fields['key']] = str(fields[fields['key']])
+                # Remove it from the field list (can not be a field and a tag)
+                fields.pop(fields['key'])
+            # Add the measurement to the list
+            ret.append({'measurement': name,
+                        'tags': tags,
+                        'fields': fields})
+        return ret
 
     def export(self, name, columns, points):
         """Write the points to the InfluxDB server."""
