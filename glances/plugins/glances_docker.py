@@ -137,7 +137,8 @@ class Plugin(GlancesPlugin):
     def connect(self):
         """Connect to the Docker server."""
         try:
-            ret = docker.from_env(timeout=int(self.get_conf_value('timeout', '1')))
+            ret = docker.from_env(timeout=int(self.get_conf_value('timeout',
+                                                                  default='1')))
         except Exception as e:
             logger.error("docker plugin - Can not connect to Docker ({})".format(e))
             ret = None
@@ -164,8 +165,8 @@ class Plugin(GlancesPlugin):
         # Init new stats
         stats = self.get_init_value()
 
-        # The Docker-py lib is mandatory
-        if import_error_tag:
+        # The Docker-py lib is mandatory and connection should be ok
+        if import_error_tag or self.docker_client is None:
             return self.stats
 
         if self.input_method == 'local':
