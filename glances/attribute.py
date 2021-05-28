@@ -105,10 +105,10 @@ class GlancesAttribute(object):
     def history_add(self, value):
         """Add a value in the history
         """
-        if self._history_max_size is None or self.history_len() < self._history_max_size:
-            self._history.append(value)
-        else:
-            self._history = self._history[1:] + [value]
+        if not (self._history_max_size is None or self.history_len() < self._history_max_size):
+            #self._history = self._history[1:] + [value]
+            self._history.pop(0)
+        self._history.append(value)
 
     def history_size(self):
         """Return the history size (maximum nuber of value in the history)
