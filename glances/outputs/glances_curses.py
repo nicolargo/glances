@@ -339,14 +339,16 @@ class _GlancesCurses(object):
     def get_key(self, window):
         # @TODO: Check issue #163
         ret = window.getch()
-        logger.debug("Keypressed (code: %s)" % ret)
         return ret
 
     def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
         self.pressedkey = self.get_key(self.term_window)
+        if self.pressedkey == -1:
+            return -1
 
         # Actions (available in the global hotkey dict)...
+        logger.debug("Keypressed (code: {})".format(self.pressedkey))
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
                 if self._hotkeys[hotkey]['switch'].startswith('enable_') or \
