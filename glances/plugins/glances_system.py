@@ -90,6 +90,10 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Set default rate to 60 seconds
+        if self.get_limits('refresh') is None:
+            self.set_limits('refresh', 60)
+
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
