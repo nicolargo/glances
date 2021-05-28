@@ -1083,8 +1083,8 @@ class _GlancesCurses(object):
         # Wait duration (in s) time
         exitkey = False
         countdown = Timer(duration)
-        # Set the default timeout (in ms) for the getch method
-        self.term_window.timeout(int(duration * 1000))
+        # Set the default timeout (in ms) between two getch
+        self.term_window.timeout(100)
         while not countdown.finished() and not exitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
@@ -1097,7 +1097,7 @@ class _GlancesCurses(object):
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
                 # Overwrite the timeout with the countdown
-                self.term_window.timeout(int(countdown.get() * 1000))
+                self.wait(delay=int(countdown.get() * 1000))
 
         return exitkey
 
