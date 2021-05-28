@@ -587,6 +587,10 @@ class GlancesPlugin(object):
         """Set the limits to input_limits."""
         self._limits = input_limits
 
+    def set_limits(self, item, value):
+        """Return the limits object."""
+        self._limits[item] = value
+
     def get_limits(self, item=None):
         """Return the limits object."""
         if item is None:
