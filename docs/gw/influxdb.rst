@@ -7,6 +7,7 @@ You can export statistics to an ``InfluxDB`` server (time series server).
 
 In Glances version 3.1.8 and higher, the way Glances exports stats to
 InfluxDB changes. The following fields will be added as tags:
+
 - key stats (for example *interface_name* for network, container *name* for docker...)
 - hostname (shortname)
 - tags
