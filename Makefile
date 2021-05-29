@@ -3,35 +3,48 @@ PORT?=8008
 install:
 	sensible-browser "https://github.com/nicolargo/glances#installation"
 
+venv-python:
+	virtualenv -p /usr/bin/python3 venv
+
+venv-dev:
+	./venv/bin/pip install -r dev-requirements.txt
+	./venv/bin/pip install -r doc-requirements.txt
+
+venv-dev-upgrade:
+	./venv/bin/pip install --upgrade -r dev-requirements.txt
+	./venv/bin/pip install --upgrade -r doc-requirements.txt
+
+venv:
+	./venv/bin/pip install -r requirements.txt
+	./venv/bin/pip install -r optional-requirements.txt
+
+venv-upgrade:
+	./venv/bin/pip install --upgrade -r dev-requirements.txt
+	./venv/bin/pip install --upgrade -r requirements.txt
+	./venv/bin/pip install --upgrade -r optional-requirements.txt
+
 test:
 	./unitest-all.sh
 
-docs:
+docs: venv-dev
 	cd docs && ./build.sh
 
 docs-server: docs
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
 	cd docs/_build/html/ && ./venv/bin/python -m SimpleHTTPServer $(PORT)
 
-webui:
+webui: venv-dev
 	cd glances/outputs/static/ && npm install && npm audit fix && npm run build
-
-venv:
-	virtualenv -p /usr/bin/python3 venv
-	./venv/bin/pip install -r ./docs/doc-requirements.txt
-	./venv/bin/pip install -r requirements.txt
-	./venv/bin/pip install -r optional-requirements.txt
-
-venv-upgrade:
-	./venv/bin/pip install --upgrade -r ./docs/doc-requirements.txt
-	./venv/bin/pip install --upgrade -r requirements.txt
-	./venv/bin/pip install --upgrade -r optional-requirements.txt
 
 run: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf
 
 run-debug: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -d
+
+run-profiling: venv venv-dev
+	@echo "Please complete and run: sudo ./venv/bin/py-spy record --pid <GLANCES PID> -o /tmp/glances.svg -d 60 -s "
+
 
 run-webserver: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
