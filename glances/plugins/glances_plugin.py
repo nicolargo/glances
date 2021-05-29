@@ -587,9 +587,17 @@ class GlancesPlugin(object):
         """Set the limits to input_limits."""
         self._limits = input_limits
 
+    def set_refresh(self, value):
+        """Set the plugin refresh rate"""
+        self.set_limits('refresh', value)
+
+    def get_refresh(self):
+        """Get the plugin refresh rate"""
+        return self.get_limits('refresh')
+
     def set_limits(self, item, value):
         """Return the limits object."""
-        self._limits[item] = value
+        self._limits['{}_{}'.format(self.plugin_name, item)] = value
 
     def get_limits(self, item=None):
         """Return the limits object."""
