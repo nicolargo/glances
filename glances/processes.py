@@ -291,9 +291,7 @@ class GlancesProcesses(object):
                             not (WINDOWS and p.info['name'] == 'System Idle Process') and
                             not (MACOS and p.info['name'] == 'kernel_task') and
                             # Kernel threads filter
-                            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0) and
-                            # User filter
-                            not (self._filter.is_filtered(p.info))]
+                            not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)]
 
         # Sort the processes list by the current sort_key
         self.processlist = sort_stats(self.processlist,
@@ -406,6 +404,9 @@ class GlancesProcesses(object):
             else:
                 # Save values to cache
                 self.processlist_cache[proc['pid']] = { cached: proc[cached] for cached in cached_attrs }
+
+        # Apply filter
+        self.processlist = [p for p in self.processlist if not (self._filter.is_filtered(p))]
 
         # Compute the maximum value for keys in self._max_values_list: CPU, MEM
         # Usefull to highlight the processes with maximum values

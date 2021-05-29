@@ -64,7 +64,7 @@ class Plugin(GlancesPlugin):
         try:
             self.nb_log_core = CorePlugin(args=self.args).update()["log"]
         except Exception as e:
-            logger.debug('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
+            logger.warning('Error: Can not retrieve the CPU core number (set it to 1) ({})'.format(e))
             self.nb_log_core = 1
 
     def _getloadavg(self):

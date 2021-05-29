@@ -339,14 +339,16 @@ class _GlancesCurses(object):
     def get_key(self, window):
         # @TODO: Check issue #163
         ret = window.getch()
-        logger.debug("Keypressed (code: %s)" % ret)
         return ret
 
     def __catch_key(self, return_to_browser=False):
         # Catch the pressed key
         self.pressedkey = self.get_key(self.term_window)
+        if self.pressedkey == -1:
+            return -1
 
         # Actions (available in the global hotkey dict)...
+        logger.debug("Keypressed (code: {})".format(self.pressedkey))
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
                 if self._hotkeys[hotkey]['switch'].startswith('enable_') or \
@@ -1083,8 +1085,8 @@ class _GlancesCurses(object):
         # Wait duration (in s) time
         exitkey = False
         countdown = Timer(duration)
-        # Set the default timeout (in ms) for the getch method
-        self.term_window.timeout(int(duration * 1000))
+        # Set the default timeout (in ms) between two getch
+        self.term_window.timeout(100)
         while not countdown.finished() and not exitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
@@ -1097,7 +1099,7 @@ class _GlancesCurses(object):
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
                 # Overwrite the timeout with the countdown
-                self.term_window.timeout(int(countdown.get() * 1000))
+                self.wait(delay=int(countdown.get() * 1000))
 
         return exitkey
 
