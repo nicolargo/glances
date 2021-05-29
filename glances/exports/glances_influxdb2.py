@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2020 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -67,7 +67,7 @@ class Export(GlancesExport):
         try:
             client = InfluxDBClient(url=url,
                                     enable_gzip=False,
-                                    org=self.org, 
+                                    org=self.org,
                                     token=self.token)
         except Exception as e:
             logger.critical("Cannot connect to InfluxDB server '%s' (%s)" % (url, e))
@@ -75,7 +75,6 @@ class Export(GlancesExport):
         else:
             logger.info("Connected to InfluxDB server version {} ({})".format(client.health().version,
                                                                               client.health().message))
-
 
         # Create the write client
         write_client = client.write_api(write_options=WriteOptions(batch_size=500,
@@ -89,31 +88,55 @@ class Export(GlancesExport):
 
     def _normalize(self, name, columns, points):
         """Normalize data for the InfluxDB's data model."""
+        ret = []
 
-        for i, _ in enumerate(points):
-            # Supported type:
+        # Build initial dict by crossing columns and point
+        data_dict = dict(zip(columns, points))
+
+        # issue1871 - Check if a key exist. If a key exist, the value of
+        # the key should be used as a tag to identify the measurement.
+        keys_list = [k.split('.')[0] for k in columns if k.endswith('.key')]
+        if len(keys_list) == 0:
+            keys_list = [None]
+
+        for measurement in keys_list:
+            # Manage field
+            if measurement is not None:
+                fields = {k.replace('{}.'.format(measurement), ''): data_dict[k]
+                          for k in data_dict
+                          if k.startswith('{}.'.format(measurement))}
+            else:
+                fields = data_dict
+            # Transform to InfluxDB datamodel
             # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
-            if points[i] is None:
-                # Ignore points with None value
-                del(points[i])
-                del(columns[i])
-                continue
-            try:
-                points[i] = float(points[i])
-            except (TypeError, ValueError):
-                pass
-            else:
-                continue
-            try:
-                points[i] = str(points[i])
-            except (TypeError, ValueError):
-                pass
-            else:
-                continue
-
-        return [{'measurement': name,
-                 'tags': self.parse_tags(self.tags),
-                 'fields': dict(zip(columns, points))}]
+            for k in fields:
+                #  Do not export empty (None) value
+                if fields[k] is None:
+                    fields.pop(k)
+                # Convert numerical to float
+                try:
+                    fields[k] = float(fields[k])
+                except (TypeError, ValueError):
+                    # Convert others to string
+                    try:
+                        fields[k] = str(fields[k])
+                    except (TypeError, ValueError):
+                        pass
+            # Manage tags
+            tags = self.parse_tags(self.tags)
+            if 'key' in fields and fields['key'] in fields:
+                # Create a tag from the key
+                # Tag should be an string (see InfluxDB data model)
+                tags[fields['key']] = str(fields[fields['key']])
+                # Remove it from the field list (can not be a field and a tag)
+                fields.pop(fields['key'])
+            # Add the hostname as a tag
+            tags['hostname'] = self.hostname
+            # Add the measurement to the list
+            ret.append({'measurement': name,
+                        'tags': tags,
+                        'fields': fields})
+        return ret
 
     def export(self, name, columns, points):
         """Write the points to the InfluxDB server."""
@@ -127,7 +150,7 @@ class Export(GlancesExport):
             try:
                 self.client.write(self.bucket,
                                   self.org,
-                                  self._normalize(name, columns, points), 
+                                  self._normalize(name, columns, points),
                                   time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)

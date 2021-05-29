@@ -20,6 +20,7 @@
 """InfluxDB (up to InfluxDB 1.7.x) interface class."""
 
 import sys
+from platform import node
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
@@ -55,6 +56,9 @@ class Export(GlancesExport):
                                                      'tags'])
         if not self.export_enable:
             sys.exit(2)
+
+        # The hostname is always add as a tag
+        self.hostname = node().split('.')[0]
 
         # Init the InfluxDB client
         self.client = self.init()
@@ -115,7 +119,7 @@ class Export(GlancesExport):
             else:
                 fields = data_dict
             # Transform to InfluxDB datamodel
-            # https://docs.influxdata.com/influxdb/v1.5/write_protocols/line_protocol_reference/
+            # https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/
             for k in fields:
                 #  Do not export empty (None) value
                 if fields[k] is None:
@@ -137,6 +141,8 @@ class Export(GlancesExport):
                 tags[fields['key']] = str(fields[fields['key']])
                 # Remove it from the field list (can not be a field and a tag)
                 fields.pop(fields['key'])
+            # Add the hostname as a tag
+            tags['hostname'] = self.hostname
             # Add the measurement to the list
             ret.append({'measurement': name,
                         'tags': tags,
@@ -153,7 +159,8 @@ class Export(GlancesExport):
             logger.debug("Cannot export empty {} stats to InfluxDB".format(name))
         else:
             try:
-                self.client.write_points(self._normalize(name, columns, points), time_precision="s")
+                self.client.write_points(self._normalize(name, columns, points),
+                                         time_precision="s")
             except Exception as e:
                 # Log level set to debug instead of error (see: issue #1561)
                 logger.debug("Cannot export {} stats to InfluxDB ({})".format(name, e))
