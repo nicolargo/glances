@@ -5,9 +5,29 @@ InfluxDB
 
 You can export statistics to an ``InfluxDB`` server (time series server).
 
-In Glances version 3.1.8 and higher, the value of the key field will be
-converted as a tag. For example, in the Docker plugin, the key = name,
-so the container name will be tag and not a field.
+In Glances version 3.1.8 and higher, the way Glances exports stats to
+InfluxDB changes. The following fields will be added as tags:
+- key stats (for example *interface_name* for network, container *name* for docker...)
+- hostname (shortname)
+- tags
+
+Glances InfluxDB data model:
+
++---------------+-----------------------+-----------------------+
+| Measurement   | Fields                | Tags                  |
++===============+=======================+=======================+
+| cpu           | user                  | hostname              |
+|               | system                |                       |
+|               | iowait...             |                       |
++---------------+-----------------------+-----------------------+
+| network       | rx                    |                       |
+|               | tx                    |                       |
+|               | time_since_update...  | hostname              |
+|               |                       | interface_name        |
++---------------+-----------------------+-----------------------+
+| docker        | cpu_percent           | hostname              |
+|               | memory_usage...       | name                  |
++---------------+-----------------------+-----------------------+
 
 InfluxDB (up to version 1.7.x)
 ------------------------------
@@ -29,12 +49,11 @@ following:
     #     => foo.cpu
     #     => foo.mem
     # You can also use dynamic values
-    #prefix=`hostname`
-    prefix=localhost
-    # Tags will be added for all measurements
-    #tags=foo:bar,spam:eggs
-    # You can also use dynamic values
-    #tags=system:`uname -s`
+    #prefix=foo
+    # Followings tags will be added for all measurements
+    # You can also use dynamic values.
+    # Note: hostname is always added as a tag
+    #tags=foo:bar,spam:eggs,domain:`domainname`
 
 and run Glances with:
 
@@ -72,12 +91,11 @@ following:
     #     => foo.cpu
     #     => foo.mem
     # You can also use dynamic values
-    #prefix=`hostname`
-    prefix=localhost
-    # Tags will be added for all measurements
-    #tags=foo:bar,spam:eggs
-    # You can also use dynamic values
-    #tags=system:`uname -s`
+    #prefix=foo
+    # Followings tags will be added for all measurements
+    # You can also use dynamic values.
+    # Note: hostname is always added as a tag
+    #tags=foo:bar,spam:eggs,domain:`domainname`
 
 and run Glances with:
 
