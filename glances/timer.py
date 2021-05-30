@@ -51,7 +51,9 @@ class Timer(object):
     def start(self):
         self.target = time() + self.duration
 
-    def reset(self):
+    def reset(self, duration=None):
+        if duration is not None:
+            self.set(duration)
         self.start()
 
     def get(self):

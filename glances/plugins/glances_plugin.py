@@ -592,8 +592,15 @@ class GlancesPlugin(object):
         self.set_limits('refresh', value)
 
     def get_refresh(self):
-        """Get the plugin refresh rate"""
-        return self.get_limits('refresh')
+        """Return the plugin refresh time"""
+        ret = self.get_limits(item='refresh')
+        if ret is None:
+            ret = self.args.time
+        return ret
+
+    def get_refresh_time(self):
+        """Return the plugin refresh time"""
+        return self.get_refresh()
 
     def set_limits(self, item, value):
         """Return the limits object."""
@@ -1011,13 +1018,6 @@ class GlancesPlugin(object):
             ret = '\\'
         return ret
 
-    def get_refresh_time(self):
-        """Return the plugin refresh time"""
-        ret = self.get_limits(item='refresh')
-        if ret is None:
-            ret = self.args.time
-        return ret
-
     def _check_decorator(fct):
         """Check decorator for update method.
         It checks:
@@ -1029,7 +1029,7 @@ class GlancesPlugin(object):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer
-                self.refresh_timer.set(self.get_refresh_time())
+                self.refresh_timer.set(self.get_refresh())
                 self.refresh_timer.reset()
             else:
                 # No need to call the method
