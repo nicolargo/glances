@@ -42,10 +42,6 @@ run: venv
 run-debug: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -d
 
-run-profiling: venv venv-dev
-	@echo "Please complete and run: sudo ./venv/bin/py-spy record --pid <GLANCES PID> -o /tmp/glances.svg -d 60 -s "
-
-
 run-webserver: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
@@ -54,5 +50,8 @@ run-server: venv
 
 run-client: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -c localhost
+
+profiling: venv venv-dev
+	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o /tmp/glances.svg -d 60 -s --pid <GLANCES PID>"
 
 .PHONY: test docs docs-server

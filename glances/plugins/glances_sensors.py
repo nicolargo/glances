@@ -69,6 +69,11 @@ class Plugin(GlancesPlugin):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # Not necessary to refresh every refresh time
+        # By default set to refresh * 2
+        if self.get_refresh() == args.time:
+            self.set_refresh(self.get_refresh() * 2)
+
     def get_key(self):
         """Return the key of the list."""
         return 'label'
@@ -257,12 +262,6 @@ class GlancesGrabSensors(object):
             logger.debug("Cannot grab fans speed. Platform not supported.")
         else:
             self.init_fan = True
-
-        # !!! Disable Fan: High CPU consumption with psutil 5.2.0 or higher
-        # Delete the two followings lines when corrected (https://github.com/giampaolo/psutil/issues/1199)
-        # Correct and tested with PsUtil 5.6.1 (Ubuntu 18.04)
-        # self.init_fan = False
-        # logger.debug("Fan speed sensors disable (see https://github.com/giampaolo/psutil/issues/1199)")
 
         # Init the stats
         self.reset()
