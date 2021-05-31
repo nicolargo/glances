@@ -166,6 +166,9 @@ class Plugin(GlancesPlugin):
 
     def update_views(self):
         """Update stats views."""
+        # @TODO: manage limits coming from system here for temperature_core
+        # ...
+
         # Call the father's method
         super(Plugin, self).update_views()
 
@@ -175,10 +178,10 @@ class Plugin(GlancesPlugin):
             if not i['value']:
                 continue
             if i['type'] == 'battery':
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(100 - i['value'],
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(current=100 - i['value'],
                                                                                       header=i['type'])
             else:
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(i['value'],
+                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(current=i['value'],
                                                                                       header=i['type'])
 
     def msg_curse(self, args=None, max_width=None):
@@ -311,8 +314,10 @@ class GlancesGrabSensors(object):
                     sensors_current['label'] = chipname + ' ' + str(i)
                 else:
                     sensors_current['label'] = feature.label
-                # Fan speed and unit
-                sensors_current['value'] = int(feature.current)
+                # Sensors value, limit and unit
+                sensors_current['value'] = int(getattr(feature, 'current', 0))
+                sensors_current['warning'] = int(getattr(feature, 'high', 0))
+                sensors_current['critical'] = int(getattr(feature, 'critical', 0))
                 sensors_current['unit'] = type
                 # Add sensor to the list
                 ret.append(sensors_current)
