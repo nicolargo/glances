@@ -264,27 +264,33 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
+        sorted_attrs = ['cpu_percent', 'cpu_times', 
+                          'memory_percent', 'name', 
+                          'status', 'status', 'num_threads']
+        displayed_attr = ['memory_info', 'nice', 'pid', 'ppid']
         cached_attrs = ['cmdline', 'username']
 
-        standard_attrs = ['cpu_percent', 'cpu_times', 'memory_info',
-                          'memory_percent', 'name', 'nice', 'pid', 'ppid',
-                          'status', 'status', 'num_threads']
+        # Some stats are optionals
+        if not self.disable_io_counters:
+            sorted_attrs.append('io_counters')
+        if not self.disable_gids:
+            displayed_attr.append('gids')
+        # Some stats are not sort key
+        # An optimisation can be done be only grabed displayed_attr
+        # for displayed processes (but only in standalone mode...)
+        sorted_attrs.extend(displayed_attr)
+        # Some stats are cached (not necessary to be refreshed every time)
         if self.cache_timer.finished():
-            standard_attrs += cached_attrs
+            sorted_attrs += cached_attrs
             self.cache_timer.set(self.cache_timeout)
             self.cache_timer.reset()
             is_cached = False
         else:
             is_cached = True
 
-        if not self.disable_io_counters:
-            standard_attrs += ['io_counters']
-        if not self.disable_gids:
-            standard_attrs += ['gids']
-
-        # and build the processes stats list (psutil>=5.3.0)
+        # Build the processes stats list (it is why we need psutil>=5.3.0)
         self.processlist = [p.info
-                            for p in psutil.process_iter(attrs=standard_attrs,
+                            for p in psutil.process_iter(attrs=sorted_attrs,
                                                          ad_value=None)
                             # OS-related processes filter
                             if not (BSD and p.info['name'] == 'idle') and
