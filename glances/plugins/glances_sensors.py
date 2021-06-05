@@ -166,9 +166,6 @@ class Plugin(GlancesPlugin):
 
     def update_views(self):
         """Update stats views."""
-        # @TODO: manage limits coming from system here for temperature_core
-        # ...
-
         # Call the father's method
         super(Plugin, self).update_views()
 
@@ -177,12 +174,26 @@ class Plugin(GlancesPlugin):
         for i in self.stats:
             if not i['value']:
                 continue
-            if i['type'] == 'battery':
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(current=100 - i['value'],
-                                                                                      header=i['type'])
+            # Alert processing
+            if i['type'] == 'temperature_core' and not self.is_limit('critical', stat_name=i['type']):
+                if i['critical'] is None:
+                    alert = 'DEFAULT'
+                elif i['value'] >= i['critical']:
+                    alert = 'CRITICAL'
+                elif i['warning'] is None:
+                    alert = 'DEFAULT'
+                elif i['value'] >= i['warning']:
+                    alert = 'WARNING'
+                else:
+                    alert = 'OK'
+            elif i['type'] == 'battery':
+                alert = self.get_alert(current=100 - i['value'],
+                                       header=i['type'])
             else:
-                self.views[i[self.get_key()]]['value']['decoration'] = self.get_alert(current=i['value'],
-                                                                                      header=i['type'])
+                alert = self.get_alert(current=i['value'],
+                                       header=i['type'])
+            # Set the alert in the view
+            self.views[i[self.get_key()]]['value']['decoration'] = alert
 
     def msg_curse(self, args=None, max_width=None):
         """Return the dict to display in the curse interface."""
@@ -316,8 +327,10 @@ class GlancesGrabSensors(object):
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit
                 sensors_current['value'] = int(getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
-                sensors_current['warning'] = int(getattr(feature, 'high', 0) if getattr(feature, 'high', 0) else 0)
-                sensors_current['critical'] = int(getattr(feature, 'critical', 0) if getattr(feature, 'critical', 0) else 0)
+                warning = getattr(feature, 'high', None)
+                sensors_current['warning'] = int(warning) if warning is not None else None
+                critical = getattr(feature, 'critical', None)
+                sensors_current['critical'] = int(critical) if critical is not None else None
                 sensors_current['unit'] = type
                 # Add sensor to the list
                 ret.append(sensors_current)
