@@ -62,8 +62,8 @@ class CpuPercent(object):
 
     def get_info(self):
         """Get additional informations about the CPU"""
-        # Never update more than 1 time per cached_timer_cpu
-        if self.timer_cpu_info.finished():
+        # Never update more than 1 time per cached_timer_cpu_info
+        if self.timer_cpu_info.finished() and hasattr(psutil, 'cpu_freq'):
             # Get the CPU freq current/max
             cpu_freq = psutil.cpu_freq()
             self.cpu_info['cpu_hz_current'] = cpu_freq.current
@@ -95,7 +95,8 @@ class CpuPercent(object):
         # Never update more than 1 time per cached_timer_cpu
         if self.timer_percpu.finished():
             self.percpu_percent = []
-            for cpu_number, cputimes in enumerate(psutil.cpu_times_percent(interval=0.0, percpu=True)):
+            for cpu_number, cputimes in enumerate(psutil.cpu_times_percent(interval=0.0,
+                                                                           percpu=True)):
                 cpu = {'key': self.get_key(),
                        'cpu_number': cpu_number,
                        'total': round(100 - cputimes.idle, 1),
