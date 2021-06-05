@@ -603,7 +603,7 @@ class GlancesPlugin(object):
         return self.get_refresh()
 
     def set_limits(self, item, value):
-        """Return the limits object."""
+        """Set the limits object."""
         self._limits['{}_{}'.format(self.plugin_name, item)] = value
 
     def get_limits(self, item=None):
@@ -762,6 +762,13 @@ class GlancesPlugin(object):
                               header=header,
                               action_key=action_key,
                               log=True)
+
+    def is_limit(self, criticity, stat_name=""):
+        """Return true if the criticity limit exist for the given stat_name"""
+        if stat_name == "":
+            return self.plugin_name + '_' + criticity in self._limits
+        else:
+            return stat_name + '_' + criticity in self._limits
 
     def get_limit(self, criticity, stat_name=""):
         """Return the limit value for the alert."""
