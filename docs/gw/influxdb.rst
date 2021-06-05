@@ -5,7 +5,7 @@ InfluxDB
 
 You can export statistics to an ``InfluxDB`` server (time series server).
 
-In Glances version 3.1.8 and higher, the way Glances exports stats to
+In Glances version 3.2.0 and higher, the way Glances exports stats to
 InfluxDB changes. The following fields will be added as tags:
 
 - key stats (for example *interface_name* for network, container *name* for docker...)
@@ -21,10 +21,15 @@ Glances InfluxDB data model:
 |               | system                |                       |
 |               | iowait...             |                       |
 +---------------+-----------------------+-----------------------+
-| network       | rx                    |                       |
-|               | tx                    |                       |
-|               | time_since_update...  | hostname              |
-|               |                       | interface_name        |
+| network       | read_bytes            | hostname              |
+|               | write_bytes           | disk_name             |
+|               | time_since_update...  |                       |
+|               |                       |                       |
++---------------+-----------------------+-----------------------+
+| diskio        | rx                    | hostname              |
+|               | tx                    | interface_name        |
+|               | time_since_update...  |                       |
+|               |                       |                       |
 +---------------+-----------------------+-----------------------+
 | docker        | cpu_percent           | hostname              |
 |               | memory_usage...       | name                  |

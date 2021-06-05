@@ -65,7 +65,7 @@ class GlancesStdoutIssue(object):
 
     def print_version(self):
         msg = 'Glances version {} with PsUtil {}'.format(
-            colors.BLUE + __version__ + colors.NO, 
+            colors.BLUE + __version__ + colors.NO,
             colors.BLUE + psutil_version + colors.NO)
         sys.stdout.write('='*len(msg) + '\n')
         sys.stdout.write(msg)
@@ -89,7 +89,7 @@ class GlancesStdoutIssue(object):
             if stats._plugins[plugin].is_disable():
                 # If current plugin is disable
                 # then continue to next plugin
-                result = colors.ORANGE + '[N/A]'.rjust(19 - len(plugin))
+                result = colors.NO + '[N/A]'.rjust(19 - len(plugin))
                 message = colors.NO
                 self.print_issue(plugin, result, message)
                 continue
@@ -109,14 +109,18 @@ class GlancesStdoutIssue(object):
                 result = (colors.GREEN +
                           '[OK]   ' +
                           colors.BLUE +
-                          ' {:.4f}s '.format(counter.get())).rjust(40 - len(plugin))
-                message = colors.NO + str(stat)[0:TERMINAL_WIDTH-40]
+                          ' {:.5f}s '.format(counter.get())).rjust(41 - len(plugin))
+                if isinstance(stat, list) and len(stat) > 0 and 'key' in stat[0]:
+                    key = 'key={} '.format(stat[0]['key'])
+                    message = colors.ORANGE + key + colors.NO + str(stat)[0:TERMINAL_WIDTH-41-len(key)]
+                else:
+                    message = colors.NO + str(stat)[0:TERMINAL_WIDTH-41]
             else:
                 result = (colors.RED +
                           '[ERROR]' +
                           colors.BLUE +
-                          ' {:.4f}s '.format(counter.get())).rjust(40 - len(plugin))
-                message = colors.NO + str(stat_error)[0:TERMINAL_WIDTH-40]
+                          ' {:.5f}s '.format(counter.get())).rjust(41 - len(plugin))
+                message = colors.NO + str(stat_error)[0:TERMINAL_WIDTH-41]
             self.print_issue(plugin, result, message)
 
         # Return True to exit directly (no refresh)
