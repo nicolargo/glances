@@ -315,9 +315,9 @@ class GlancesGrabSensors(object):
                 else:
                     sensors_current['label'] = feature.label
                 # Sensors value, limit and unit
-                sensors_current['value'] = int(getattr(feature, 'current', 0))
-                sensors_current['warning'] = int(getattr(feature, 'high', 0))
-                sensors_current['critical'] = int(getattr(feature, 'critical', 0))
+                sensors_current['value'] = int(getattr(feature, 'current', 0) if getattr(feature, 'current', 0) else 0)
+                sensors_current['warning'] = int(getattr(feature, 'high', 0) if getattr(feature, 'high', 0) else 0)
+                sensors_current['critical'] = int(getattr(feature, 'critical', 0) if getattr(feature, 'critical', 0) else 0)
                 sensors_current['unit'] = type
                 # Add sensor to the list
                 ret.append(sensors_current)
