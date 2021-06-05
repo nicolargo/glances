@@ -52,7 +52,7 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-    @GlancesPlugin._check_decorator
+    # @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
         """Update HDD stats using the input method."""
