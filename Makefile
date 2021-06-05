@@ -52,6 +52,6 @@ run-client: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -c localhost
 
 profiling: venv venv-dev
-	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o /tmp/glances.svg -d 60 -s --pid <GLANCES PID>"
+	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
 
 .PHONY: test docs docs-server
