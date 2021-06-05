@@ -41,6 +41,10 @@ class Plugin(GlancesPlugin):
         # Init the list of AMP (classe define in the glances/amps_list.py script)
         self.glances_amps = glancesAmpsList(self.args, self.config)
 
+    def get_key(self):
+        """Return the key of the list."""
+        return 'name'
+
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
     def update(self):
@@ -50,7 +54,7 @@ class Plugin(GlancesPlugin):
 
         if self.input_method == 'local':
             for k, v in iteritems(self.glances_amps.update()):
-                stats.append({'key': k,
+                stats.append({'key': self.get_key(),
                               'name': v.NAME,
                               'result': v.result(),
                               'refresh': v.refresh(),
