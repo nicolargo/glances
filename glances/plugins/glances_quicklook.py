@@ -80,9 +80,10 @@ class Plugin(GlancesPlugin):
                 stats['swap'] = None
 
             # Get additional information
-            stats['cpu_name'] = cpu_percent.get_info()['cpu_name']
-            stats['cpu_hz_current'] = self._mhz_to_hz(cpu_percent.get_info()['cpu_hz_current'])
-            stats['cpu_hz'] = self._mhz_to_hz(cpu_percent.get_info()['cpu_hz'])
+            cpu_info = cpu_percent.get_info()
+            stats['cpu_name'] = cpu_info['cpu_name']
+            stats['cpu_hz_current'] = self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
+            stats['cpu_hz'] = self._mhz_to_hz(cpu_info['cpu_hz']) if cpu_info['cpu_hz'] is not None else None
 
         elif self.input_method == 'snmp':
             # Not available
@@ -126,9 +127,12 @@ class Plugin(GlancesPlugin):
 
         # Build the string message
         if 'cpu_name' in self.stats and 'cpu_hz_current' in self.stats and 'cpu_hz' in self.stats:
-            msg_name = '{} - '.format(self.stats['cpu_name'])
-            msg_freq = '{:.2f}/{:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
-                                                 self._hz_to_ghz(self.stats['cpu_hz']))
+            msg_name = self.stats['cpu_name']
+            if self.stats['cpu_hz_current'] and self.stats['cpu_hz']:
+                msg_freq = ' - {:.2f}/{:.2f}GHz'.format(self._hz_to_ghz(self.stats['cpu_hz_current']),
+                                                        self._hz_to_ghz(self.stats['cpu_hz']))
+            else:
+                msg_freq = ''
             if len(msg_name + msg_freq) - 6 <= max_width:
                 ret.append(self.curse_add_line(msg_name))
             ret.append(self.curse_add_line(msg_freq))
