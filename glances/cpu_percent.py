@@ -66,8 +66,10 @@ class CpuPercent(object):
         if self.timer_cpu_info.finished() and hasattr(psutil, 'cpu_freq'):
             # Get the CPU freq current/max
             cpu_freq = psutil.cpu_freq()
-            self.cpu_info['cpu_hz_current'] = cpu_freq.current
-            self.cpu_info['cpu_hz'] = cpu_freq.max
+            if hasattr(cpu_freq, 'current'):
+                self.cpu_info['cpu_hz_current'] = cpu_freq.current
+            if hasattr(cpu_freq, 'cpu_hz'):
+                self.cpu_info['cpu_hz'] = cpu_freq.max
             # Reset timer for cache
             self.timer_cpu_info.reset(duration=self.cached_timer_cpu_info)
         return self.cpu_info
