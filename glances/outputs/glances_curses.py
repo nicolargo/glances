@@ -1083,25 +1083,32 @@ class _GlancesCurses(object):
             duration = 0.1
 
         # Wait duration (in s) time
-        exitkey = False
+        isexitkey = False
         countdown = Timer(duration)
         # Set the default timeout (in ms) between two getch
         self.term_window.timeout(100)
-        while not countdown.finished() and not exitkey:
+        while not countdown.finished() and not isexitkey:
             # Getkey
             pressedkey = self.__catch_key(return_to_browser=return_to_browser)
-            # Is it an exit key ?
-            exitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+            isexitkey = (pressedkey == ord('\x1b') or pressedkey == ord('q'))
+
             if pressedkey == curses.KEY_F5:
-                # were asked to refresh
-                return exitkey
-            if not exitkey and pressedkey > -1:
+                # Were asked to refresh
+                return isexitkey
+
+            if isexitkey and self.args.help_tag:
+                # Quit from help should return to main screen, not exit #1874
+                self.args.help_tag = not self.args.help_tag
+                isexitkey = False
+                return isexitkey
+
+            if not isexitkey and pressedkey > -1:
                 # Redraw display
                 self.flush(stats, cs_status=cs_status)
                 # Overwrite the timeout with the countdown
                 self.wait(delay=int(countdown.get() * 1000))
 
-        return exitkey
+        return isexitkey
 
     def wait(self, delay=100):
         """Wait delay in ms"""
