@@ -1,4 +1,5 @@
 PORT?=8008
+LASTTAG = $(shell git describe --tags --abbrev=0)
 
 install:
 	sensible-browser "https://github.com/nicolargo/glances#installation"
@@ -23,8 +24,10 @@ venv-upgrade:
 	./venv/bin/pip install --upgrade -r requirements.txt
 	./venv/bin/pip install --upgrade -r optional-requirements.txt
 
-test:
-	./unitest-all.sh
+test: venv
+	./venv/bin/python ./unitest.py
+	./venv/bin/python ./unitest-restful.py
+	./venv/bin/python ./unitest-xmlrpc.py
 
 docs: venv-dev
 	cd docs && ./build.sh
@@ -53,5 +56,8 @@ run-client: venv
 
 profiling: venv venv-dev
 	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
+
+release-note:
+	git log $(LASTTAG)..HEAD --pretty=format:"%s (%an)"
 
 .PHONY: test docs docs-server
