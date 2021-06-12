@@ -58,6 +58,6 @@ profiling: venv venv-dev
 	@echo "Please complete and run: sudo ./venv/bin/py-spy record -o ./docs/_static/glances-flame.svg -d 60 -s --pid <GLANCES PID>"
 
 release-note:
-	git log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s (by %an)"
+	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s (by %an)"
 
 .PHONY: test docs docs-server
