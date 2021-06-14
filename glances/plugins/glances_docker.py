@@ -137,8 +137,10 @@ class Plugin(GlancesPlugin):
     def connect(self):
         """Connect to the Docker server."""
         try:
-            ret = docker.from_env(timeout=int(self.get_conf_value('timeout',
-                                                                  default='1')))
+            # If the following line replace the next one, the issue #1878
+            # is reproduced (Docker containers information missing with Docker 20.10.x)
+            # So, for the moment disable the timeout option
+            ret = docker.from_env()
         except Exception as e:
             logger.error("docker plugin - Can not connect to Docker ({})".format(e))
             ret = None
