@@ -575,7 +575,10 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_new_line())
         # Get the maximum containers name
         # Max size is configurable. See feature request #1723.
-        name_max_width = min(self.config.get_int_value('docker', 'max_name_size', default=20),
+        name_max_width = min(self.config.get_int_value('docker',
+                                                       'max_name_size',
+                                                       default=20)
+                             if self.config is not None else 20,
                              len(max(self.stats['containers'],
                                  key=lambda x: len(x['name']))['name']))
         msg = ' {:{width}}'.format('Name', width=name_max_width)

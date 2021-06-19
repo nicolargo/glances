@@ -164,7 +164,9 @@ class GlancesPlugin(object):
             return json.dumps(d, ensure_ascii=False)
 
     def history_enable(self):
-        return self.args is not None and not self.args.disable_history and self.get_items_history_list() is not None
+        return self.args is not None and \
+               not self.args.disable_history and \
+               self.get_items_history_list() is not None
 
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
