@@ -116,7 +116,7 @@ class Plugin(GlancesPlugin):
 
         # Define the data: Bar (default behavor) or Sparkline
         sparkline_tag = False
-        if self.args.sparkline and self.history_enable():
+        if self.args.sparkline and self.history_enable() and not self.args.client:
             data = Sparkline(max_width)
             sparkline_tag = data.available
         if not sparkline_tag:

@@ -17,8 +17,9 @@ If the per CPU mode is on (by clicking the ``1`` key):
 In the Curses/terminal interface, it is also possible to switch from bar to
 sparkline using 'S' hot key or --sparkline command line option (need the
 sparklines Python lib on your system). Please be aware that sparklines use
-the Glances history and will not be available if the history is disabled from
-the command line.
+the Glances history and will not be available if the history is disabled
+from the command line. For the moment sparkline is not available in
+client/server mode.
 
 .. image:: ../_static/sparkline.png
 
