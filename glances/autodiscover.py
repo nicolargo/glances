@@ -226,9 +226,9 @@ class GlancesAutoDiscoverClient(object):
                 # address (only one address) is replaced by addresses (list of addresses)
                 self.info = ServiceInfo(
                     zeroconf_type,
-                    '{}:{}.{}'.format(hostname,
-                                      args.port,
-                                      zeroconf_type),
+                    name = '{}:{}.{}'.format(hostname,
+                                             args.port,
+                                             zeroconf_type),
                     addresses=[socket.inet_pton(address_family, zeroconf_bind_address)],
                     port=args.port,
                     weight=0,
@@ -237,7 +237,7 @@ class GlancesAutoDiscoverClient(object):
                     server=hostname)
             try:
                 self.zeroconf.register_service(self.info)
-            except socket.error as e:
+            except Exception as e:
                 logger.error("Error while announcing Glances server: {}".format(e))
             else:
                 print("Announce the Glances server on the LAN (using {} IP address)".format(zeroconf_bind_address))
