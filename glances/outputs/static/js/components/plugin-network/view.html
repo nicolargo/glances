@@ -13,7 +13,7 @@
     <div class="table-cell" ng-show="vm.arguments.network_cumul && vm.arguments.network_sum">Rx+Tx</div>
 </div>
 <div class="table-row" ng-repeat="network in vm.networks track by network.interfaceName">
-    <div class="table-cell text-left">{{ network.interfaceName | min_size }}</div>
+    <div class="table-cell text-left">{{ (network.alias ? network.alias : network.interfaceName) | min_size }}</div>
     <div class="table-cell" ng-show="!vm.arguments.network_cumul && !vm.arguments.network_sum">{{ vm.arguments.byte ?
         (network.rx / network.time_since_update | bytes) : (network.rx / network.time_since_update | bits) }}
     </div>
