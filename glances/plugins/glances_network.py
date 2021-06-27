@@ -135,6 +135,7 @@ class Plugin(GlancesPlugin):
                     tx = cumulative_tx - self.network_old[net].bytes_sent
                     cx = rx + tx
                     netstat = {'interface_name': n(net),
+                               'alias': self.has_alias(n(net)),
                                'time_since_update': time_since_update,
                                'cumulative_rx': cumulative_rx,
                                'rx': rx,
@@ -208,6 +209,7 @@ class Plugin(GlancesPlugin):
                         cx = rx + tx
                         netstat = {
                             'interface_name': interface_name,
+                            'alias': self.has_alias(interface_name),
                             'time_since_update': time_since_update,
                             'cumulative_rx': cumulative_rx,
                             'rx': rx,
@@ -310,10 +312,10 @@ class Plugin(GlancesPlugin):
                 continue
             # Format stats
             # Is there an alias for the interface name ?
-            ifrealname = i['interface_name'].split(':')[0]
-            ifname = self.has_alias(i['interface_name'])
-            if ifname is None:
-                ifname = ifrealname
+            if i['alias'] is None:
+                ifname = i['interface_name'].split(':')[0]
+            else:
+                ifname = i['alias']
             if len(ifname) > name_max_width:
                 # Cut interface name if it is too long
                 ifname = '_' + ifname[-name_max_width + 1:]

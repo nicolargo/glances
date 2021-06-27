@@ -27,7 +27,8 @@ export default function GlancesPluginNetworkController($scope, $filter, GlancesS
                 'time_since_update': networkData['time_since_update'],
                 'cumulativeRx': networkData['cumulative_rx'],
                 'cumulativeTx': networkData['cumulative_tx'],
-                'cumulativeCx': networkData['cumulative_cx']
+                'cumulativeCx': networkData['cumulative_cx'],
+                'alias': networkData['alias'] !== undefined ? networkData['alias'] : null
             };
 
             vm.networks.push(network);
