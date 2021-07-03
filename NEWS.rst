@@ -12,7 +12,7 @@ See roadmap here ==> https://github.com/nicolargo/glances/milestone/49
 
 This release is a major version (but minor number because the API did not change). It focus on
 *CPU consumption*. I use `Flame profiling https://github.com/nicolargo/glances/wiki/Glances-FlameGraph`_
-and code optimization to reduce CPU consumption from 20% to 50% depending on your system.
+and code optimization to *reduce CPU consumption from 20% to 50%* depending on your system.
 
 Enhancement and development requests:
 
@@ -47,6 +47,11 @@ Bugs corrected:
     * Correct filter
     * Correct Flake8 issue in plugins
     * Pressing Q to get rid of irq not working #1792
+    * Spelling correction in docs #1886
+    * Starting an alias with a number causes a crash #1885
+    * Network interfaces not applying in web UI #1884
+    * Docker containers information missing with Docker 20.10.x #1878
+    * Get system sensors temperatures thresholds #1864
 
 Contibutors for this version:
 
