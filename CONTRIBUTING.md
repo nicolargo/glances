@@ -132,11 +132,12 @@ included in the project:
    Please respect the following coding convention: [Elements of Python Style](https://github.com/amontalenti/elements-of-python-style)
 
 5. Test you code using the Makefile:
-   make run ==> Run Glances
-   make run-webserver ==> Run a Glances Web Server
-   make test ==> Run unit tests
-   make docs ==> Update docs
-   make webui ==> Compile a new Web UI
+
+   * make run ==> Run Glances
+   * make run-webserver ==> Run a Glances Web Server
+   * make test ==> Run unit tests
+   * make docs ==> Update docs
+   * make webui ==> Compile a new Web UI
 
 6. Commit your changes in logical chunks. Please adhere to these [git commit
    message guidelines](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
