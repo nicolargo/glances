@@ -91,6 +91,24 @@ def system_config_dir():
     return path
 
 
+def default_config_dir():
+    r"""Return the system-wide config dir (full path).
+
+    - Linux, SunOS, *BSD, macOS: /usr/share/doc (as defined in the setup.py files)
+    - Windows: %APPDATA%\glances
+    """
+    if LINUX or SUNOS or BDS or MACOS:
+        path = '/usr/share/doc'
+    else:
+        path = os.environ.get('APPDATA')
+    if path is None:
+        path = ''
+    else:
+        path = os.path.join(path, 'glances')
+
+    return path
+
+
 class Config(object):
 
     """This class is used to access/read config file, if it exists.
@@ -129,6 +147,7 @@ class Config(object):
             * /path/to/file (via -C flag)
             * user's home directory (per-user settings)
             * system-wide directory (system-wide settings)
+            * default pip directory (as defined in the setup.py file)
         """
         paths = []
 
@@ -137,6 +156,7 @@ class Config(object):
 
         paths.append(os.path.join(user_config_dir(), self.config_filename))
         paths.append(os.path.join(system_config_dir(), self.config_filename))
+        paths.append(os.path.join(default_config_dir(), self.config_filename))
 
         return paths
 
