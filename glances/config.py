@@ -97,7 +97,7 @@ def default_config_dir():
     - Linux, SunOS, *BSD, macOS: /usr/share/doc (as defined in the setup.py files)
     - Windows: %APPDATA%\glances
     """
-    if LINUX or SUNOS or BDS or MACOS:
+    if LINUX or SUNOS or BSD or MACOS:
         path = '/usr/share/doc'
     else:
         path = os.environ.get('APPDATA')
