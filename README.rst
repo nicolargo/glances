@@ -115,8 +115,8 @@ To install Glances, simply use ``pip``:
 
     pip install --user glances
 
-*Note*: Python headers are required to install `psutil`_, a Glances 
-dependencie. For example, on Debian/Ubuntu you need to install first 
+*Note*: Python headers are required to install `psutil`_, a Glances
+dependencie. For example, on Debian/Ubuntu you need to install first
 the *python-dev* package (*python-devel* on Fedora/CentOS/RHEL).
 For Windows, just install psutil from the binary installation file.
 
@@ -180,26 +180,27 @@ If you want to support other distributions, please contribute to `glancesautoins
 Docker: the funny way
 ---------------------
 
-Glances containers are availables. You can use it to monitor your 
+Glances containers are availables. You can use it to monitor your
 server and all your other containers!
 
 Get the Glances container:
 
 .. code-block:: console
 
-    docker pull nicolargo/glances:latest
+    docker pull nicolargo/glances:<version>
 
-Note, you can choose another branch with :
+Example:
 
-- nicolargo/glances:latest for the last master branch (included multiple architectures 386, amd64, arm/v7 and arm64)
-- nicolargo/glances:dev for the last develop branch (included multiple architectures 386, amd64, arm/v7 and arm64)
-- nicolargo/glances:<version> for the specific <version> (included multiple architectures 386, amd64, arm/v7 and arm64)
+- *nicolargo/glances:3.2.0* (or *nicolargo/glances:alpine-3.2.0*) for version 3.2.0 with minimal dependencies
+- *nicolargo/glances:3.2.0-full* for version 3.2.0 with full dependencies
+
+For a complete images list:
 
 Run the container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:3.2.0-full
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -215,7 +216,7 @@ docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:3.2.0-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -224,7 +225,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:3.2.0-full
 
 GNU/Linux
 ---------
