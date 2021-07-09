@@ -10,7 +10,7 @@ docker>=2.0.0
 elasticsearch
 graphitesender
 hddtemp
-influxdb
+influxdb>=1.0.0
 influxdb-client; python_version >= "3.6"
 kafka-python
 netifaces

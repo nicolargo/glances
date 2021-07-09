@@ -41,7 +41,7 @@ def get_data_files():
 
 
 def get_install_requires():
-    requires = ['psutil>=5.3.0', 'future']
+    requires = ['psutil>=5.3.0', 'defusedxml', 'future']
     if sys.platform.startswith('win'):
         requires.append('bottle')
         requires.append('requests')
@@ -60,7 +60,6 @@ def get_install_extras_require():
                    'paho-mqtt', 'potsdb', 'prometheus_client', 'pyzmq',
                    'statsd'],
         'folders': ['scandir'],  # python_version<"3.5"
-        'gpu': ['py3nvml'],
         'graph': ['pygal'],
         'ip': ['netifaces'],
         'raid': ['pymdstat'],
@@ -70,6 +69,10 @@ def get_install_extras_require():
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
     }
+    if PY3:
+        extras_require['export'].append('influxdb-client')
+        extras_require['gpu'] = ['py3nvml']
+
     # Add automatically the 'all' target
     extras_require.update({'all': [i[0] for i in extras_require.values()]})
 

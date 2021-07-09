@@ -44,6 +44,10 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlparse
 
+    # Correct issue #1025 by monkey path the xmlrpc lib
+    from defusedxml.xmlrpc import monkey_patch
+    monkey_patch()
+
     input = input
     range = range
     map = map
@@ -131,6 +135,10 @@ else:
     from xmlrpclib import Fault, ProtocolError, ServerProxy, Transport, Server
     from urllib2 import urlopen, HTTPError, URLError
     from urlparse import urlparse
+
+    # Correct issue #1025 by monkey path the xmlrpc lib
+    from defusedxml.xmlrpc import monkey_patch
+    monkey_patch()
 
     input = raw_input
     range = xrange
