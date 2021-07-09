@@ -59,12 +59,18 @@ Requirements
 
 - ``python>=2.7`` or ``python>=3.4``
 - ``psutil>=5.3.0`` (better with latest version)
+- ``defusedxml`` (in order to monkey path xmlrpc)
+- ``future`` (for Python 2 support)
 
 *Note for Python 2.6 users*
 
 Glances no longer supports Python 2.6. Please upgrade
 to a minimum Python version of 2.7/3.4+ or downgrade to Glances 2.6.2 (last version
 with Python 2.6 support).
+
+*Deprecation warning note for Python 2.x users*
+
+Glances version 4.0 will no longer supports Python 2.x.
 
 Optional dependencies:
 
