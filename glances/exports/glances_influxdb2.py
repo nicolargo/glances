@@ -112,7 +112,7 @@ class Export(GlancesExport):
             for k in fields:
                 #  Do not export empty (None) value
                 if fields[k] is None:
-                    fields.pop(k)
+                    continue
                 # Convert numerical to float
                 try:
                     fields[k] = float(fields[k])
