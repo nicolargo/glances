@@ -27,10 +27,6 @@ Enhancement requests:
 Version 3.2.0
 ===============
 
-Under Development.
-
-See roadmap here ==> https://github.com/nicolargo/glances/milestone/49
-
 This release is a major version (but minor number because the API did not change). It focus on
 *CPU consumption*. I use `Flame profiling https://github.com/nicolargo/glances/wiki/Glances-FlameGraph`_
 and code optimization to *reduce CPU consumption from 20% to 50%* depending on your system.
