@@ -6,7 +6,14 @@
 Version 3.2.1
 ===============
 
-Version under development, please have a look on the roadmap here ==> https://github.com/nicolargo/glances/milestone/50
+Bugs corrected:
+
+    * Glances 3.2.0 and influxdb export - Missing network data bug #1893
+
+Enhancement requests:
+
+    * Security audit - B411 enhancement (Monkey patch XML RPC Lib) #1025
+    * Also search glances.conf file in /usr/share/doc/glances/glances.conf #1862
 
 ===============
 Version 3.2.0
