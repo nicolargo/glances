@@ -23,12 +23,12 @@ The process view consists of 3 parts:
 
 The processes summary line displays:
 
-- Tasks number (total number of processes)
-- Threads number
-- Running tasks number
-- Sleeping tasks number
-- Other tasks number (not running or sleeping)
-- Sort key
+- Total number of tasks/processes (aliases as total in the Glances API)
+- Number of threads
+- Number of running tasks/processes
+- Number of sleeping tasks/processes
+- Other number of tasks/processes (not in running or sleeping states)
+- Sort key for the process list
 
 By default, or if you hit the ``a`` key, the processes list is
 automatically sorted by:
@@ -129,7 +129,7 @@ The extended stats feature can be enabled using the
 (curses interface).
 
 In curses/standalone mode, you can select a process using ``UP`` and ``DOWN`` and press:
-- ``k`` to kill the selected process 
+- ``k`` to kill the selected process
 
 .. note::
     Limit for CPU and MEM percent values can be overwritten in the

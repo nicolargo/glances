@@ -264,8 +264,8 @@ class GlancesProcesses(object):
 
         # Grab standard stats
         #####################
-        sorted_attrs = ['cpu_percent', 'cpu_times', 
-                          'memory_percent', 'name', 
+        sorted_attrs = ['cpu_percent', 'cpu_times',
+                          'memory_percent', 'name',
                           'status', 'status', 'num_threads']
         displayed_attr = ['memory_info', 'nice', 'pid', 'ppid']
         cached_attrs = ['cmdline', 'username']
