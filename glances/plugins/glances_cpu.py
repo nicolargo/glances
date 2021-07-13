@@ -29,6 +29,47 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
+# Fields description
+# {'total': 19.7, 'user': 3.4, 'nice': 0.0, 'system': 2.6, 'idle': 93.0, 'iowait': 0.1, 'irq': 0.0, 'softirq': 0.8, 'steal': 0.0, 'guest': 0.0, 'guest_nice': 0.0, 'time_since_update': 2.1306779384613037, 'cpucore': 4, 'ctx_switches': 11636, 'interrupts': 4463, 'soft_interrupts': 3227, 'syscalls': 0}
+fields_description = {
+    'total': {'description': 'Sum of all CPU percentages (except idle).',
+              'unit': 'percent'},
+    'system': {'description': 'percent time spent in kernel space. System CPU time is the \
+time spent running code in the Operating System kernel.',
+               'unit': 'percent'},
+    'user': {'description': 'CPU percent time spent in user space. \
+User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
+             'unit': 'percent'},
+    'iowait': {'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
+operations to complete.',
+               'unit': 'percent'},
+    'idle': {'description': 'percent of CPU used by any program. Every program or task \
+that runs on a computer system occupies a certain amount of processing \
+time on the CPU. If the CPU has completed all tasks it is idle.',
+             'unit': 'percent'},
+    'irq': {'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+hardware/software interrupts. Time servicing interrupts (hardware + \
+software).',
+            'unit': 'percent'},
+    'nice': {'description': '*(Unix)*: percent time occupied by user level processes with \
+a positive nice value. The time the CPU has spent running users\' \
+processes that have been *niced*.',
+             'unit': 'percent'},
+    'steal': {'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
+CPU while the hypervisor is servicing another virtual processor.',
+              'unit': 'percent'},
+    'ctx_sw': {'description': 'number of context switches (voluntary + involuntary) per \
+second. A context switch is a procedure that a computer\'s CPU (central \
+processing unit) follows to change from one task (or process) to \
+another while ensuring that the tasks do not conflict.',
+               'unit': 'percent'},
+    'inter': {'description': 'number of interrupts per second.',
+              'unit': 'percent'},
+    'sw_int': {'description': 'number of software interrupts per second. Always set to \
+0 on Windows and SunOS.',
+               'unit': 'percent'},
+}
+
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
@@ -64,7 +105,8 @@ class Plugin(GlancesPlugin):
         """Init the CPU plugin."""
         super(Plugin, self).__init__(args=args,
                                      config=config,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

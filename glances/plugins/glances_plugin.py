@@ -44,7 +44,8 @@ class GlancesPlugin(object):
                  args=None,
                  config=None,
                  items_history_list=None,
-                 stats_init_value={}):
+                 stats_init_value={},
+                 fields_description=None):
         """Init the plugin of plugins class.
 
         All Glances' plugins should inherit from this class. Most of the
@@ -106,6 +107,9 @@ class GlancesPlugin(object):
 
         # Set the initial refresh time to display stats the first time
         self.refresh_timer = Timer(0)
+
+        # Init stats description
+        self.fields_description = fields_description
 
         # Init the stats
         self.stats_init_value = stats_init_value
