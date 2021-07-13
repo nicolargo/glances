@@ -61,7 +61,7 @@ class CpuPercent(object):
             return self.__get_cpu()
 
     def get_info(self):
-        """Get additional informations about the CPU"""
+        """Get additional informations about the CPU, using the average frequency of all cores as the current frequency"""
         # Never update more than 1 time per cached_timer_cpu_info
         if self.timer_cpu_info.finished() and hasattr(psutil, 'cpu_freq'):
             # Get the CPU freq current/max
@@ -72,6 +72,28 @@ class CpuPercent(object):
                 self.cpu_info['cpu_hz_current'] = None
             if hasattr(cpu_freq, 'max'):
                 self.cpu_info['cpu_hz'] = cpu_freq.max
+            else:
+                self.cpu_info['cpu_hz'] = None
+            # Reset timer for cache
+            self.timer_cpu_info.reset(duration=self.cached_timer_cpu_info)
+        return self.cpu_info
+
+    def get_info_max(self):
+        """Get additional informations about the CPU, using the current highest core frequency as the current frequency"""
+        # Never update more than 1 time per cached_timer_cpu_info
+        if self.timer_cpu_info.finished() and hasattr(psutil, 'cpu_freq'):
+            # Get the CPU freq current/max
+            cpu_freq = psutil.cpu_freq(percpu=True)
+            if hasattr(cpu_freq[0], 'current'):
+                cpu_freq_cur = 0
+                for c in cpu_freq:
+                    if cpu_freq_cur < c.current:
+                        cpu_freq_cur = c.current
+                self.cpu_info['cpu_hz_current'] = cpu_freq_cur
+            else:
+                self.cpu_info['cpu_hz_current'] = None
+            if hasattr(cpu_freq[0], 'max'):
+                self.cpu_info['cpu_hz'] = cpu_freq[0].max
             else:
                 self.cpu_info['cpu_hz'] = None
             # Reset timer for cache

@@ -57,6 +57,7 @@ class Plugin(GlancesPlugin):
                                      items_history_list=items_history_list)
         # We want to display the stat in the curse interface
         self.display_curse = True
+        self.config = config
 
     @GlancesPlugin._check_decorator
     @GlancesPlugin._log_result_decorator
@@ -80,7 +81,11 @@ class Plugin(GlancesPlugin):
                 stats['swap'] = None
 
             # Get additional information
-            cpu_info = cpu_percent.get_info()
+            if self.config.get_bool_value(self.plugin_name, 'cpu_max', default=False) == True:
+                cpu_info = cpu_percent.get_info_max()
+            else:
+                cpu_info = cpu_percent.get_info()
+
             stats['cpu_name'] = cpu_info['cpu_name']
             stats['cpu_hz_current'] = self._mhz_to_hz(cpu_info['cpu_hz_current']) if cpu_info['cpu_hz_current'] is not None else None
             stats['cpu_hz'] = self._mhz_to_hz(cpu_info['cpu_hz']) if cpu_info['cpu_hz'] is not None else None
