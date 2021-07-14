@@ -30,7 +30,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 import psutil
 
 # Fields description
-# {'total': 19.7, 'user': 3.4, 'nice': 0.0, 'system': 2.6, 'idle': 93.0, 'iowait': 0.1, 'irq': 0.0, 'softirq': 0.8, 'steal': 0.0, 'guest': 0.0, 'guest_nice': 0.0, 'time_since_update': 2.1306779384613037, 'cpucore': 4, 'ctx_switches': 11636, 'interrupts': 4463, 'soft_interrupts': 3227, 'syscalls': 0}
 fields_description = {
     'total': {'description': 'Sum of all CPU percentages (except idle).',
               'unit': 'percent'},
@@ -58,16 +57,20 @@ processes that have been *niced*.',
     'steal': {'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
 CPU while the hypervisor is servicing another virtual processor.',
               'unit': 'percent'},
-    'ctx_sw': {'description': 'number of context switches (voluntary + involuntary) per \
+    'ctx_switches': {'description': 'number of context switches (voluntary + involuntary) per \
 second. A context switch is a procedure that a computer\'s CPU (central \
 processing unit) follows to change from one task (or process) to \
 another while ensuring that the tasks do not conflict.',
-               'unit': 'percent'},
-    'inter': {'description': 'number of interrupts per second.',
-              'unit': 'percent'},
-    'sw_int': {'description': 'number of software interrupts per second. Always set to \
+                     'unit': 'percent'},
+    'interrupts': {'description': 'number of interrupts per second.',
+                   'unit': 'percent'},
+    'soft_interrupts': {'description': 'number of software interrupts per second. Always set to \
 0 on Windows and SunOS.',
-               'unit': 'percent'},
+                        'unit': 'percent'},
+    'cpucore': {'description': 'Total number of CPU core.',
+                'unit': 'count'},
+    'time_since_update': {'description': 'Number of seconds since last update.',
+                          'unit': 'seconds'},
 }
 
 # SNMP OID
