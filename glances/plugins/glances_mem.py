@@ -25,6 +25,37 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
+# Fields description
+fields_description = {
+    'total': {'description': 'Total physical memory available.',
+              'unit': 'bytes'},
+    'available': {'description': 'The actual amount of available memory that can be given instantly \
+to processes that request more memory in bytes; this is calculated by summing \
+different memory values depending on the platform (e.g. free + buffers + cached on Linux) \
+and it is supposed to be used to monitor actual memory usage in a cross platform fashion.',
+                  'unit': 'bytes'},
+    'percent': {'description': 'The percentage usage calculated as (total - available) / total * 100.',
+                'unit': 'percent'},
+    'used': {'description': 'Memory used, calculated differently depending on the platform and \
+designed for informational purposes only.',
+             'unit': 'bytes'},
+    'free': {'description': 'Memory not being used at all (zeroed) that is readily available; \
+note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
+             'unit': 'bytes'},
+    'active': {'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
+               'unit': 'bytes'},
+    'inactive': {'description': '*(UNIX)*: memory that is marked as not used.',
+                 'unit': 'bytes'},
+    'buffers': {'description': '*(Linux, BSD)*: cache for things like file system metadata.',
+                'unit': 'bytes'},
+    'cached': {'description': '*(Linux, BSD)*: cache for various things.',
+               'unit': 'bytes'},
+    'wired': {'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
+              'unit': 'bytes'},
+    'shared': {'description': '*(BSD)*: memory that may be simultaneously accessed by multiple processes.',
+               'unit': 'bytes'},
+}
+
 # SNMP OID
 # Total RAM in machine: .1.3.6.1.4.1.2021.4.5.0
 # Total RAM used: .1.3.6.1.4.1.2021.4.6.0
@@ -64,7 +95,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
                                      config=config,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

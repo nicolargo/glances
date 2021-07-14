@@ -84,7 +84,7 @@ snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
             'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
             'netapp': {'system': '1.3.6.1.4.1.789.1.2.1.3.0',
                        'idle': '1.3.6.1.4.1.789.1.2.1.5.0',
-                       'nb_log_core': '1.3.6.1.4.1.789.1.2.1.6.0'}}
+                       'cpucore': '1.3.6.1.4.1.789.1.2.1.6.0'}}
 
 # Define the history items list
 # - 'name' define the stat identifier
