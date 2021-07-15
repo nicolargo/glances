@@ -49,7 +49,7 @@ class GlancesStdoutFieldsDescription(object):
         print('Restfull/API plugins documentation')
         print('==================================')
         print('')
-        print('The Glanes Restfull/API server could be ran using the following command line:')
+        print('The Glances Restfull/API server could be ran using the following command line:')
         print('')
         print('.. code-block:: bash')
         print('')
@@ -70,7 +70,12 @@ class GlancesStdoutFieldsDescription(object):
                 print('.. code-block:: json')
                 print('')
                 print('    # curl http://localhost:61208/api/3/{}'.format(plugin))
-                print('    ' + pformat(stats._plugins[plugin].get_export()).replace('\n', '\n    '))
+                stat = stats._plugins[plugin].get_export()
+                if isinstance(stat, list) and len(stat) > 1:
+                    # Only display two first items
+                    print('    ' + pformat(stat[0:2]).replace('\n', '\n    '))
+                else:
+                    print('    ' + pformat(stat).replace('\n', '\n    '))
                 print('')
             else:
                 logger.error('No fields_description variable defined for plugin {}'.format(plugin))

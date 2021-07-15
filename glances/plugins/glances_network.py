@@ -29,6 +29,36 @@ from glances.logger import logger
 
 import psutil
 
+# {'interface_name': 'mpqemubr0-dummy',
+# 'alias': None,
+# 'time_since_update': 2.081636428833008,
+# 'cumulative_rx': 0,
+# 'rx': 0, 'cumulative_tx': 0, 'tx': 0, 'cumulative_cx': 0, 'cx': 0,
+# 'is_up': False,
+# 'speed': 0,
+# 'key': 'interface_name'}
+# Fields description
+fields_description = {
+    'interface_name': {'description': 'Interface name.',
+                       'unit': 'string'},
+    'alias': {'description': 'Interface alias name (optional).',
+              'unit': 'string'},
+    'rx': {'description': 'The received/input rate (in bit per second).',
+           'unit': 'bps'},
+    'tx': {'description': 'The sent/output rate (in bit per second).',
+           'unit': 'bps'},
+    'cumulative_rx': {'description': 'The number of bytes received through the interface (cumulative).',
+                      'unit': 'bytes'},
+    'cumulative_tx': {'description': 'The number of bytes sent through the interface (cumulative).',
+                      'unit': 'bytes'},
+    'speed': {'description': 'Maximum interface speed (in bit per second). Can return 0 on some operating-system.',
+              'unit': 'bps'},
+    'is_up': {'description': 'Is the interface up ?',
+              'unit': 'bool'},
+    'time_since_update': {'description': 'Number of seconds since last update.',
+                          'unit': 'seconds'},
+}
+
 # SNMP OID
 # http://www.net-snmp.org/docs/mibs/interfaces.html
 # Dict key = interface_name
@@ -56,6 +86,7 @@ class Plugin(GlancesPlugin):
         super(Plugin, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list,
+                                     fields_description=fields_description,
                                      stats_init_value=[])
 
         # We want to display the stat in the curse interface
