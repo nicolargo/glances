@@ -46,20 +46,26 @@ class GlancesStdoutFieldsDescription(object):
         """
         print('.. _apidoc:')
         print('')
-        print('API documentation')
-        print('=================')
+        print('Restfull/API plugins documentation')
+        print('==================================')
+        print('')
+        print('The Glanes Restfull/API server could be ran using the following command line:')
+        print('')
+        print('.. code-block:: bash')
+        print('')
+        print('    # glances -w --disable-webui')
         print('')
         for plugin in sorted(stats._plugins):
-            print('{}'.format(plugin))
-            print('-' * len(plugin))
             if stats._plugins[plugin].fields_description:
+                print('{}'.format(plugin))
+                print('-' * len(plugin))
                 print('')
                 for field, description in iteritems(stats._plugins[plugin].fields_description):
                     print('* **{}**: {} (unit is *{}*)'.format(field,
                             description['description'][:-1] if description['description'].endswith('.') else description['description'],
                             description['unit']))
                 print('')
-                print('Output example:')
+                print('GET {} plugin stats:'.format(plugin))
                 print('')
                 print('.. code-block:: json')
                 print('')

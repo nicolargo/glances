@@ -68,7 +68,7 @@ another while ensuring that the tasks do not conflict.',
 0 on Windows and SunOS.',
                         'unit': 'percent'},
     'cpucore': {'description': 'Total number of CPU core.',
-                'unit': 'count'},
+                'unit': 'number'},
     'time_since_update': {'description': 'Number of seconds since last update.',
                           'unit': 'seconds'},
 }
