@@ -434,7 +434,7 @@ class GlancesPlugin(object):
         if not isinstance(self.stats, list):
             return None
         else:
-            if value.isdigit():
+            if not isinstance(value, int) and value.isdigit():
                 value = int(value)
             try:
                 return self._json_dumps({value: [i for i in self.stats if i[item] == value]})
