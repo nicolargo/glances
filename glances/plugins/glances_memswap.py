@@ -26,12 +26,6 @@ from glances.plugins.glances_plugin import GlancesPlugin
 import psutil
 
 # Fields description
-                # total: total swap memory in bytes
-                # used: used swap memory in bytes
-                # free: free swap memory in bytes
-                # percent: the percentage usage
-                # sin: the number of bytes the system has swapped in from disk (cumulative)
-                # sout: the number of bytes the system has swapped out from disk (cumulative)
 fields_description = {
     'total': {'description': 'Total swap memory.',
               'unit': 'bytes'},

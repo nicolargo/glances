@@ -48,6 +48,9 @@ run-debug: venv
 run-webserver: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -w
 
+run-restapiserver: venv
+	./venv/bin/python -m glances -C ./conf/glances.conf -w --disable-webui
+
 run-server: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -s
 

@@ -363,6 +363,9 @@ class GlancesProcesses(object):
             first = False
             # /End of extended stats
 
+            # PID is the key
+            proc['key'] = 'pid'
+
             # Time since last update (for disk_io rate computation)
             proc['time_since_update'] = time_since_update
 
