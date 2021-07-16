@@ -164,7 +164,7 @@ class GlancesStdoutApiDoc(object):
         print('.. code-block:: json')
         print('')
         print('    # curl {}/all'.format(API_URL))
-        print(indent_stat(json.loads(stat.getAllViewsAsDict())))
+        print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
         print('')
 
         # Return True to exit directly (no refresh)
