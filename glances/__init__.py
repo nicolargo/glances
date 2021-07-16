@@ -110,7 +110,7 @@ def start(config, args):
 
     # Start the main loop
     logger.debug("Glances started in {} seconds".format(start_duration.get()))
-    if args.stdout_issue or args.stdout_fields:
+    if args.stdout_issue or args.stdout_apidoc:
         # Serve once for issue/test mode
         mode.serve_issue()
     else:
