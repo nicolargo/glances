@@ -21,6 +21,7 @@
 
 from pprint import pformat
 import json
+import time
 
 from glances.logger import logger
 from glances.compat import iteritems
@@ -82,7 +83,7 @@ class GlancesStdoutApiDoc(object):
 
     def update(self,
                stats,
-               duration=3):
+               duration=1):
         """Display issue
         """
 
@@ -160,11 +161,48 @@ class GlancesStdoutApiDoc(object):
         print(sub_title)
         print('-' * len(sub_title))
         print('')
-
         print('.. code-block:: json')
         print('')
         print('    # curl {}/all'.format(API_URL))
         print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
+        print('')
+
+        # Get all stats
+        time.sleep(1)
+        stats.update()
+        time.sleep(1)
+        stats.update()
+        sub_title = 'GET stats history'
+        print(sub_title)
+        print('-' * len(sub_title))
+        print('')
+        print('History of a plugin:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/cpu/history'.format(API_URL))
+        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=3))))
+        print('')
+        print('Limit history to last 2 values:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/cpu/history/2'.format(API_URL))
+        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=2))))
+        print('')
+        print('History for a specific field:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/cpu/system/history'.format(API_URL))
+        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system'))))
+        print('')
+        print('Limit history for a specific field to last 2 values:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/cpu/system/history'.format(API_URL))
+        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system', nb=2))))
         print('')
 
         # Return True to exit directly (no refresh)
