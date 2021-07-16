@@ -155,5 +155,17 @@ class GlancesStdoutApiDoc(object):
                 print(indent_stat(json.loads(stat.get_stats_value(item, value))))
                 print('')
 
+        # Get all stats
+        sub_title = 'GET all stats'
+        print(sub_title)
+        print('-' * len(sub_title))
+        print('')
+
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/all'.format(API_URL))
+        print(indent_stat(json.loads(stat.getAllViewsAsDict())))
+        print('')
+
         # Return True to exit directly (no refresh)
         return True
