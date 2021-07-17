@@ -14,7 +14,7 @@ Note: Change request URL api/3 by api/2 if you use Glances 2.x.
 GET Plugins list
 ----------------
 
-.. code-block:: json
+Example::
 
     # curl http://localhost:61208/api/3/pluginslist
     ['alert',
