@@ -27,6 +27,24 @@ from glances.plugins.glances_core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 
+# Fields description
+fields_description = {
+    'min1': {'description': 'Average sum of the number of processes \
+waiting in the run-queue plus the number currently executing \
+over 1 minute.',
+             'unit': 'number'},
+    'min5': {'description': 'Average sum of the number of processes \
+waiting in the run-queue plus the number currently executing \
+over 5 minutes.',
+             'unit': 'number'},
+    'min15': {'description': 'Average sum of the number of processes \
+waiting in the run-queue plus the number currently executing \
+over 15 minutes.',
+              'unit': 'number'},
+    'cpucore': {'description': 'Total number of CPU core.',
+                'unit': 'number'},
+}
+
 # SNMP OID
 # 1 minute Load: .1.3.6.1.4.1.2021.10.1.3.1
 # 5 minute Load: .1.3.6.1.4.1.2021.10.1.3.2
@@ -55,7 +73,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
                                      config=config,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

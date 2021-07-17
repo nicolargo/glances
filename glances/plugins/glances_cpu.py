@@ -29,6 +29,50 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
+# Fields description
+fields_description = {
+    'total': {'description': 'Sum of all CPU percentages (except idle).',
+              'unit': 'percent'},
+    'system': {'description': 'percent time spent in kernel space. System CPU time is the \
+time spent running code in the Operating System kernel.',
+               'unit': 'percent'},
+    'user': {'description': 'CPU percent time spent in user space. \
+User CPU time is the time spent on the processor running your program\'s code (or code in libraries).',
+             'unit': 'percent'},
+    'iowait': {'description': '*(Linux)*: percent time spent by the CPU waiting for I/O \
+operations to complete.',
+               'unit': 'percent'},
+    'idle': {'description': 'percent of CPU used by any program. Every program or task \
+that runs on a computer system occupies a certain amount of processing \
+time on the CPU. If the CPU has completed all tasks it is idle.',
+             'unit': 'percent'},
+    'irq': {'description': '*(Linux and BSD)*: percent time spent servicing/handling \
+hardware/software interrupts. Time servicing interrupts (hardware + \
+software).',
+            'unit': 'percent'},
+    'nice': {'description': '*(Unix)*: percent time occupied by user level processes with \
+a positive nice value. The time the CPU has spent running users\' \
+processes that have been *niced*.',
+             'unit': 'percent'},
+    'steal': {'description': '*(Linux)*: percentage of time a virtual CPU waits for a real \
+CPU while the hypervisor is servicing another virtual processor.',
+              'unit': 'percent'},
+    'ctx_switches': {'description': 'number of context switches (voluntary + involuntary) per \
+second. A context switch is a procedure that a computer\'s CPU (central \
+processing unit) follows to change from one task (or process) to \
+another while ensuring that the tasks do not conflict.',
+                     'unit': 'percent'},
+    'interrupts': {'description': 'number of interrupts per second.',
+                   'unit': 'percent'},
+    'soft_interrupts': {'description': 'number of software interrupts per second. Always set to \
+0 on Windows and SunOS.',
+                        'unit': 'percent'},
+    'cpucore': {'description': 'Total number of CPU core.',
+                'unit': 'number'},
+    'time_since_update': {'description': 'Number of seconds since last update.',
+                          'unit': 'seconds'},
+}
+
 # SNMP OID
 # percentage of user CPU time: .1.3.6.1.4.1.2021.11.9.0
 # percentages of system CPU time: .1.3.6.1.4.1.2021.11.10.0
@@ -40,7 +84,7 @@ snmp_oid = {'default': {'user': '1.3.6.1.4.1.2021.11.9.0',
             'esxi': {'percent': '1.3.6.1.2.1.25.3.3.1.2'},
             'netapp': {'system': '1.3.6.1.4.1.789.1.2.1.3.0',
                        'idle': '1.3.6.1.4.1.789.1.2.1.5.0',
-                       'nb_log_core': '1.3.6.1.4.1.789.1.2.1.6.0'}}
+                       'cpucore': '1.3.6.1.4.1.789.1.2.1.6.0'}}
 
 # Define the history items list
 # - 'name' define the stat identifier
@@ -64,7 +108,8 @@ class Plugin(GlancesPlugin):
         """Init the CPU plugin."""
         super(Plugin, self).__init__(args=args,
                                      config=config,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

@@ -44,7 +44,8 @@ class GlancesPlugin(object):
                  args=None,
                  config=None,
                  items_history_list=None,
-                 stats_init_value={}):
+                 stats_init_value={},
+                 fields_description=None):
         """Init the plugin of plugins class.
 
         All Glances' plugins should inherit from this class. Most of the
@@ -106,6 +107,9 @@ class GlancesPlugin(object):
 
         # Set the initial refresh time to display stats the first time
         self.refresh_timer = Timer(0)
+
+        # Init stats description
+        self.fields_description = fields_description
 
         # Init the stats
         self.stats_init_value = stats_init_value
@@ -430,7 +434,7 @@ class GlancesPlugin(object):
         if not isinstance(self.stats, list):
             return None
         else:
-            if value.isdigit():
+            if not isinstance(value, int) and value.isdigit():
                 value = int(value)
             try:
                 return self._json_dumps({value: [i for i in self.stats if i[item] == value]})

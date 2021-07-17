@@ -20,9 +20,28 @@
 """Swap memory plugin."""
 
 from glances.compat import iterkeys
+from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
+
+# Fields description
+fields_description = {
+    'total': {'description': 'Total swap memory.',
+              'unit': 'bytes'},
+    'used': {'description': 'Used swap memory.',
+             'unit': 'bytes'},
+    'free': {'description': 'Free swap memory.',
+             'unit': 'bytes'},
+    'percent': {'description': 'Used swap memory in percentage.',
+                'unit': 'percent'},
+    'sin': {'description': 'The number of bytes the system has swapped in from disk (cumulative).',
+            'unit': 'bytes'},
+    'sout': {'description': 'The number of bytes the system has swapped out from disk (cumulative).',
+             'unit': 'bytes'},
+    'time_since_update': {'description': 'Number of seconds since last update.',
+                          'unit': 'seconds'},
+}
 
 # SNMP OID
 # Total Swap Size: .1.3.6.1.4.1.2021.4.3.0
@@ -51,7 +70,8 @@ class Plugin(GlancesPlugin):
         """Init the plugin."""
         super(Plugin, self).__init__(args=args,
                                      config=config,
-                                     items_history_list=items_history_list)
+                                     items_history_list=items_history_list,
+                                     fields_description=fields_description)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -78,12 +98,16 @@ class Plugin(GlancesPlugin):
                 # free: free swap memory in bytes
                 # percent: the percentage usage
                 # sin: the number of bytes the system has swapped in from disk (cumulative)
-                # sout: the number of bytes the system has swapped out from disk
-                # (cumulative)
+                # sout: the number of bytes the system has swapped out from disk (cumulative)
                 for swap in ['total', 'used', 'free', 'percent',
                              'sin', 'sout']:
                     if hasattr(sm_stats, swap):
                         stats[swap] = getattr(sm_stats, swap)
+
+                # By storing time data we enable sin/s and sout/s calculations in the
+                # XML/RPC API, which would otherwise be overly difficult work
+                # for users of the API
+                stats['time_since_update'] = getTimeSinceLastUpdate('memswap')
         elif self.input_method == 'snmp':
             # Update stats using SNMP
             if self.short_system_name == 'windows':
