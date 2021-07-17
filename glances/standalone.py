@@ -30,6 +30,7 @@ from glances.outputs.glances_curses import GlancesCursesStandalone
 from glances.outputs.glances_stdout import GlancesStdout
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 from glances.outputs.glances_stdout_issue import GlancesStdoutIssue
+from glances.outputs.glances_stdout_apidoc import GlancesStdoutApiDoc
 from glances.outdated import Outdated
 from glances.timer import Counter
 
@@ -87,6 +88,10 @@ class GlancesStandalone(object):
             logger.info("Issue mode is ON")
             # Init screen
             self.screen = GlancesStdoutIssue(config=config, args=args)
+        elif args.stdout_apidoc:
+            logger.info("Fields descriptions mode is ON")
+            # Init screen
+            self.screen = GlancesStdoutApiDoc(config=config, args=args)
         elif args.stdout:
             logger.info("Stdout mode is ON, following stats will be displayed: {}".format(args.stdout))
             # Init screen

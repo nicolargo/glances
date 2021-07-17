@@ -23,6 +23,17 @@ from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
 
+# Fields description
+
+            # - phys: physical cores only (hyper thread CPUs are excluded)
+            # - log: logical CPUs in the system
+fields_description = {
+    'phys': {'description': 'Number of physical cores (hyper thread CPUs are excluded).',
+             'unit': 'number'},
+    'log': {'description': 'Number of logical CPUs. A logical CPU is the number of \
+physical cores multiplied by the number of threads that can run on each core.',
+            'unit': 'number'},
+}
 
 class Plugin(GlancesPlugin):
     """Glances CPU core plugin.
@@ -34,7 +45,9 @@ class Plugin(GlancesPlugin):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(Plugin, self).__init__(args=args,
+                                     config=config,
+                                     fields_description=fields_description)
 
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin
