@@ -30,7 +30,8 @@ test: venv
 	./venv/bin/python ./unitest-xmlrpc.py
 
 docs: venv-dev
-	cd docs && ./build.sh
+	./venv/bin/python -m glances -C ./conf/glances.conf --api-doc > ./docs/api.rst
+	cd docs && ./build.sh && cd ..
 
 docs-server: docs
 	(sleep 2 && sensible-browser "http://localhost:$(PORT)") &
