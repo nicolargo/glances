@@ -14,7 +14,7 @@ Note: Change request URL api/3 by api/2 if you use Glances 2.x.
 GET Plugins list
 ----------------
 
-Example::
+.. code-block:: json
 
     # curl http://localhost:61208/api/3/pluginslist
     ['alert',
@@ -53,17 +53,17 @@ Example::
 GET alert
 ---------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/alert
-    [[1626506953.0,
+    [[1626507830.0,
       -1,
       'WARNING',
       'MEM',
-      73.75089692241458,
-      73.75089692241458,
-      73.75089692241458,
-      73.75089692241458,
+      75.6720721190852,
+      75.6720721190852,
+      75.6720721190852,
+      75.6720721190852,
       1,
       [],
       '',
@@ -72,7 +72,7 @@ GET alert
 GET amps
 --------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/amps
     [{'count': 0,
@@ -83,7 +83,7 @@ GET amps
       'refresh': 3.0,
       'regex': True,
       'result': None,
-      'timer': 0.11381411552429199},
+      'timer': 0.11265683174133301},
      {'count': 0,
       'countmax': 20.0,
       'countmin': None,
@@ -92,19 +92,13 @@ GET amps
       'refresh': 3.0,
       'regex': True,
       'result': None,
-      'timer': 0.11371397972106934}]
+      'timer': 0.11254549026489258}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/amps/name
     {'name': ['Dropbox', 'Python', 'Conntrack', 'Nginx', 'Systemd', 'SystemV']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/amps/name/Dropbox
     {'Dropbox': [{'count': 0,
                   'countmax': None,
@@ -114,12 +108,12 @@ Get a specific item when field matchs the given value:
                   'refresh': 3.0,
                   'regex': True,
                   'result': None,
-                  'timer': 0.11381411552429199}]}
+                  'timer': 0.11265683174133301}]}
 
 GET core
 --------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/core
     {'log': 4, 'phys': 2}
@@ -129,36 +123,33 @@ Fields descriptions:
 * **phys**: Number of physical cores (hyper thread CPUs are excluded) (unit is *number*)
 * **log**: Number of logical CPUs. A logical CPU is the number of physical cores multiplied by the number of threads that can run on each core (unit is *number*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/core/phys
     {'phys': 2}
 
 GET cpu
 -------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/cpu
     {'cpucore': 4,
      'ctx_switches': 0,
      'guest': 0.0,
      'guest_nice': 0.0,
-     'idle': 67.7,
+     'idle': 68.6,
      'interrupts': 0,
      'iowait': 0.0,
      'irq': 0.0,
      'nice': 0.0,
      'soft_interrupts': 0,
-     'softirq': 8.9,
+     'softirq': 5.0,
      'steal': 0.0,
      'syscalls': 0,
-     'system': 7.0,
+     'system': 5.0,
      'time_since_update': 1,
-     'total': 32.7,
-     'user': 16.5}
+     'total': 31.4,
+     'user': 21.4}
 
 Fields descriptions:
 
@@ -176,17 +167,14 @@ Fields descriptions:
 * **cpucore**: Total number of CPU core (unit is *number*)
 * **time_since_update**: Number of seconds since last update (unit is *seconds*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/cpu/total
-    {'total': 32.7}
+    {'total': 31.4}
 
 GET diskio
 ----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/diskio
     [{'disk_name': 'sda',
@@ -204,17 +192,11 @@ GET diskio
       'write_bytes': 0,
       'write_count': 0}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/diskio/disk_name
     {'disk_name': ['sda', 'sda1', 'sda2', 'sda5', 'dm-0', 'dm-1', 'sdc', 'sdc1']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/diskio/disk_name/sda
     {'sda': [{'disk_name': 'sda',
               'key': 'disk_name',
@@ -227,17 +209,17 @@ Get a specific item when field matchs the given value:
 GET fs
 ------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/fs
     [{'device_name': '/dev/mapper/ubuntu--gnome--vg-root',
-      'free': 36254167040,
+      'free': 36253220864,
       'fs_type': 'ext4',
       'key': 'mnt_point',
       'mnt_point': '/',
       'percent': 84.3,
       'size': 243396149248,
-      'used': 194754527232},
+      'used': 194755473408},
      {'device_name': '/dev/sdc1',
       'free': 3814915088384,
       'fs_type': 'fuseblk',
@@ -247,31 +229,25 @@ GET fs
       'size': 4000750497792,
       'used': 185835409408}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/fs/mnt_point
     {'mnt_point': ['/', '/media/nicolargo/Elements']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/fs/mnt_point//
     {'/': [{'device_name': '/dev/mapper/ubuntu--gnome--vg-root',
-            'free': 36254167040,
+            'free': 36253220864,
             'fs_type': 'ext4',
             'key': 'mnt_point',
             'mnt_point': '/',
             'percent': 84.3,
             'size': 243396149248,
-            'used': 194754527232}]}
+            'used': 194755473408}]}
 
 GET ip
 ------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/ip
     {'address': '192.168.43.139',
@@ -279,20 +255,17 @@ GET ip
      'mask': '255.255.255.0',
      'mask_cidr': 24}
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/ip/address
     {'address': '192.168.43.139'}
 
 GET load
 --------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/load
-    {'cpucore': 4, 'min1': 0.44, 'min15': 1.1, 'min5': 0.83}
+    {'cpucore': 4, 'min1': 1.29, 'min15': 1.01, 'min5': 1.08}
 
 Fields descriptions:
 
@@ -301,29 +274,26 @@ Fields descriptions:
 * **min15**: Average sum of the number of processes waiting in the run-queue plus the number currently executing over 15 minutes (unit is *number*)
 * **cpucore**: Total number of CPU core (unit is *number*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/load/min1
-    {'min1': 0.44}
+    {'min1': 1.29}
 
 GET mem
 -------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/mem
-    {'active': 4698603520,
-     'available': 2060308480,
-     'buffers': 686833664,
-     'cached': 1725063168,
-     'free': 2060308480,
-     'inactive': 1597227008,
-     'percent': 73.8,
-     'shared': 700612608,
+    {'active': 4897742848,
+     'available': 1909514240,
+     'buffers': 694054912,
+     'cached': 1825673216,
+     'free': 1909514240,
+     'inactive': 1632006144,
+     'percent': 75.7,
+     'shared': 692854784,
      'total': 7849062400,
-     'used': 5788753920}
+     'used': 5939548160}
 
 Fields descriptions:
 
@@ -339,22 +309,19 @@ Fields descriptions:
 * **wired**: *(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk (unit is *bytes*)
 * **shared**: *(BSD)*: memory that may be simultaneously accessed by multiple processes (unit is *bytes*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/mem/total
     {'total': 7849062400}
 
 GET memswap
 -----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/memswap
     {'free': 6102118400,
      'percent': 24.5,
-     'sin': 8697491456,
+     'sin': 8697958400,
      'sout': 13157560320,
      'time_since_update': 1,
      'total': 8082419712,
@@ -370,17 +337,14 @@ Fields descriptions:
 * **sout**: The number of bytes the system has swapped out from disk (cumulative) (unit is *bytes*)
 * **time_since_update**: Number of seconds since last update (unit is *seconds*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/memswap/total
     {'total': 8082419712}
 
 GET network
 -----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/network
     [{'alias': None,
@@ -396,9 +360,9 @@ GET network
       'time_since_update': 1,
       'tx': 0},
      {'alias': None,
-      'cumulative_cx': 3715365760,
-      'cumulative_rx': 1857682880,
-      'cumulative_tx': 1857682880,
+      'cumulative_cx': 3716936768,
+      'cumulative_rx': 1858468384,
+      'cumulative_tx': 1858468384,
       'cx': 200,
       'interface_name': 'lo',
       'is_up': True,
@@ -420,10 +384,7 @@ Fields descriptions:
 * **is_up**: Is the interface up ? (unit is *bool*)
 * **time_since_update**: Number of seconds since last update (unit is *seconds*)
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/network/interface_name
     {'interface_name': ['mpqemubr0-dummy',
                         'lo',
@@ -435,10 +396,7 @@ Get a specific field:
                         'vboxnet0',
                         'br-87386b77b676']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/network/interface_name/mpqemubr0-dummy
     {'mpqemubr0-dummy': [{'alias': None,
                           'cumulative_cx': 0,
@@ -456,55 +414,52 @@ Get a specific item when field matchs the given value:
 GET now
 -------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/now
-    '2021-07-17 09:29:13 CEST'
+    '2021-07-17 09:43:50 CEST'
 
 GET percpu
 ----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/percpu
     [{'cpu_number': 0,
       'guest': 0.0,
       'guest_nice': 0.0,
-      'idle': 21.0,
+      'idle': 7.0,
       'iowait': 0.0,
       'irq': 0.0,
       'key': 'cpu_number',
       'nice': 0.0,
-      'softirq': 10.0,
+      'softirq': 0.0,
       'steal': 0.0,
-      'system': 0.0,
-      'total': 79.0,
-      'user': 0.0},
+      'system': 2.0,
+      'total': 93.0,
+      'user': 16.0},
      {'cpu_number': 1,
       'guest': 0.0,
       'guest_nice': 0.0,
-      'idle': 22.0,
+      'idle': 20.0,
       'iowait': 0.0,
       'irq': 0.0,
       'key': 'cpu_number',
       'nice': 0.0,
       'softirq': 1.0,
       'steal': 0.0,
-      'system': 1.0,
-      'total': 78.0,
-      'user': 1.0}]
+      'system': 0.0,
+      'total': 80.0,
+      'user': 3.0}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/percpu/cpu_number
     {'cpu_number': [0, 1, 2, 3]}
 
 GET ports
 ---------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/ports
     [{'description': 'DefaultGateway',
@@ -513,20 +468,14 @@ GET ports
       'port': 0,
       'refresh': 30,
       'rtt_warning': None,
-      'status': 0.006171,
+      'status': 0.00617,
       'timeout': 3}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/ports/host
     {'host': ['192.168.43.136']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/ports/host/192.168.43.136
     {'192.168.43.136': [{'description': 'DefaultGateway',
                          'host': '192.168.43.136',
@@ -534,39 +483,36 @@ Get a specific item when field matchs the given value:
                          'port': 0,
                          'refresh': 30,
                          'rtt_warning': None,
-                         'status': 0.006171,
+                         'status': 0.00617,
                          'timeout': 3}]}
 
 GET processcount
 ----------------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/processcount
-    {'pid_max': 0, 'running': 1, 'sleeping': 285, 'thread': 1427, 'total': 347}
+    {'pid_max': 0, 'running': 1, 'sleeping': 287, 'thread': 1495, 'total': 348}
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/processcount/total
-    {'total': 347}
+    {'total': 348}
 
 GET processlist
 ---------------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/processlist
     [{'cmdline': ['/home/nicolargo/dev/glances/venv/bin/python3.8',
                   '/home/nicolargo/.vscode/extensions/ms-python.python-2021.5.926500501/pythonFiles/run-jedi-language-server.py'],
       'cpu_percent': 0.0,
-      'cpu_times': pcputimes(user=5793.51, system=343.17, children_user=0.0, children_system=0.0, iowait=15.24),
+      'cpu_times': pcputimes(user=5838.15, system=345.85, children_user=0.0, children_system=0.0, iowait=15.24),
       'gids': pgids(real=1000, effective=1000, saved=1000),
       'io_counters': [678944768, 109338624, 0, 0, 0],
       'key': 'pid',
-      'memory_info': pmem(rss=668692480, vms=912785408, shared=3633152, text=2846720, lib=0, data=692174848, dirty=0),
-      'memory_percent': 8.519393093371255,
+      'memory_info': pmem(rss=665624576, vms=909639680, shared=3633152, text=2846720, lib=0, data=689029120, dirty=0),
+      'memory_percent': 8.480306845311867,
       'name': 'python3.8',
       'nice': 0,
       'num_threads': 4,
@@ -575,75 +521,49 @@ GET processlist
       'status': 'S',
       'time_since_update': 1,
       'username': 'nicolargo'},
-     {'cmdline': ['/usr/share/code/code',
-                  '--type=renderer',
-                  '--disable-color-correct-rendering',
-                  '--no-sandbox',
-                  '--field-trial-handle=12394583116449707336,2893691487865030553,131072',
-                  '--enable-features=WebComponentsV0Enabled',
-                  '--disable-features=CertVerifierService,CookiesWithoutSameSiteMustBeSecure,SameSiteByDefaultCookies,SpareRendererForSitePerProcess',
-                  '--lang=en-US',
-                  '--enable-crash-reporter=7c06f526-63e8-47aa-8c08-b95f6ad2ec2d,no_channel',
-                  '--global-crash-keys=7c06f526-63e8-47aa-8c08-b95f6ad2ec2d,no_channel,_companyName=Microsoft,_productName=VSCode,_version=1.56.2',
-                  '--standard-schemes=vscode-webview,vscode-file',
-                  '--secure-schemes=vscode-webview,vscode-file',
-                  '--bypasscsp-schemes',
-                  '--cors-schemes=vscode-webview,vscode-file',
-                  '--fetch-schemes=vscode-webview,vscode-file',
-                  '--service-worker-schemes=vscode-webview',
-                  '--streaming-schemes',
-                  '--app-path=/usr/share/code/resources/app',
-                  '--no-sandbox',
-                  '--no-zygote',
-                  '--num-raster-threads=2',
-                  '--enable-main-frame-before-activation',
-                  '--renderer-client-id=5',
-                  '--no-v8-untrusted-code-mitigations',
-                  '--shared-files=v8_context_snapshot_data:100',
-                  '--vscode-window-config=vscode:9f2589e5-1786-4a6a-98fc-d85b382d2411'],
+     {'cmdline': ['/usr/lib/firefox/firefox', '-new-window'],
       'cpu_percent': 0.0,
-      'cpu_times': pcputimes(user=6616.73, system=540.33, children_user=17.21, children_system=3.63, iowait=6.73),
+      'cpu_times': pcputimes(user=2104.27, system=824.75, children_user=3425.17, children_system=514.13, iowait=2.37),
       'gids': pgids(real=1000, effective=1000, saved=1000),
-      'io_counters': [1004748800, 48324608, 0, 0, 0],
+      'io_counters': [1527762944, 2602557440, 0, 0, 0],
       'key': 'pid',
-      'memory_info': pmem(rss=437821440, vms=54421401600, shared=50536448, text=123428864, lib=0, data=862879744, dirty=0),
-      'memory_percent': 5.578009419316121,
-      'name': 'code',
+      'memory_info': pmem(rss=452657152, vms=4601450496, shared=113090560, text=622592, lib=0, data=1007812608, dirty=0),
+      'memory_percent': 5.767021956660709,
+      'name': 'firefox',
       'nice': 0,
-      'num_threads': 20,
-      'pid': 2702582,
-      'ppid': 2702525,
+      'num_threads': 114,
+      'pid': 2993020,
+      'ppid': 8496,
       'status': 'S',
       'time_since_update': 1,
       'username': 'nicolargo'}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/processlist/pid
     {'pid': [2702806,
+             2993020,
              2702582,
              2993144,
-             2993020,
              2993283,
              9122,
              3079121,
              42230,
              2993375,
              2702621,
-             3078543,
-             3075417,
              2993148,
+             3078543,
+             3125399,
+             3125732,
+             3075417,
+             3125352,
              3090242,
              2938292,
              2702525,
              744165,
-             2702553,
              3056321,
-             2702636,
+             2702553,
              2993158,
-             3107593,
+             2702636,
              8654,
              2702653,
              2791638,
@@ -651,7 +571,7 @@ Get a specific field:
              3244,
              3103852,
              8639,
-             3124708,
+             3126511,
              2741015,
              2791637,
              2702565,
@@ -659,25 +579,25 @@ Get a specific field:
              8540,
              3419,
              3120308,
-             2702789,
              2817004,
-             3076986,
+             2702789,
              2625397,
+             3076986,
              2598927,
              2994159,
              4497,
              9696,
-             3120307,
              28036,
              8538,
+             3120307,
              9412,
              1,
              3120328,
              1101,
              9880,
              2739211,
-             2702662,
              9520,
+             2702662,
              9915,
              2791760,
              10076,
@@ -768,10 +688,10 @@ Get a specific field:
              9016,
              9969,
              8995,
-             3124696,
              298444,
              1110,
              8664,
+             3126498,
              43938,
              8575,
              8614,
@@ -798,7 +718,7 @@ Get a specific field:
              2620923,
              9512,
              1086,
-             3124707,
+             3126510,
              3953,
              3229,
              3103980,
@@ -955,41 +875,37 @@ Get a specific field:
              3076588,
              3106441,
              3115093,
-             3115308,
-             3119366,
              3120203,
-             3120204,
              3120205,
-             3122021,
              3122327,
              3122446,
-             3122549,
-             3122955,
              3123701,
-             3123728,
              3124311,
-             3124426]}
+             3124426,
+             3125017,
+             3125269,
+             3125272,
+             3125705,
+             3125716,
+             3126114]}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/processlist/pid/2702806
     {'2702806': [{'cmdline': ['/home/nicolargo/dev/glances/venv/bin/python3.8',
                               '/home/nicolargo/.vscode/extensions/ms-python.python-2021.5.926500501/pythonFiles/run-jedi-language-server.py'],
                   'cpu_percent': 0.0,
-                  'cpu_times': [5793.51, 343.17, 0.0, 0.0, 15.24],
+                  'cpu_times': [5838.15, 345.85, 0.0, 0.0, 15.24],
                   'gids': [1000, 1000, 1000],
                   'io_counters': [678944768, 109338624, 0, 0, 0],
                   'key': 'pid',
-                  'memory_info': [668692480,
-                                  912785408,
+                  'memory_info': [665624576,
+                                  909639680,
                                   3633152,
                                   2846720,
                                   0,
-                                  692174848,
+                                  689029120,
                                   0],
-                  'memory_percent': 8.519393093371255,
+                  'memory_percent': 8.480306845311867,
                   'name': 'python3.8',
                   'nice': 0,
                   'num_threads': 4,
@@ -1002,7 +918,7 @@ Get a specific item when field matchs the given value:
 GET psutilversion
 -----------------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/psutilversion
     (5, 8, 0)
@@ -1010,54 +926,15 @@ GET psutilversion
 GET quicklook
 -------------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/quicklook
-    {'cpu': 32.7,
+    {'cpu': 31.4,
      'cpu_hz': 3000000000.0,
-     'cpu_hz_current': 2674333250.0,
+     'cpu_hz_current': 2484555500.0,
      'cpu_name': 'Intel(R) Core(TM) i7-4500U CPU @ 1.80GH',
-     'mem': 73.8,
+     'mem': 75.7,
      'percpu': [{'cpu_number': 0,
-                 'guest': 0.0,
-                 'guest_nice': 0.0,
-                 'idle': 21.0,
-                 'iowait': 0.0,
-                 'irq': 0.0,
-                 'key': 'cpu_number',
-                 'nice': 0.0,
-                 'softirq': 10.0,
-                 'steal': 0.0,
-                 'system': 0.0,
-                 'total': 79.0,
-                 'user': 0.0},
-                {'cpu_number': 1,
-                 'guest': 0.0,
-                 'guest_nice': 0.0,
-                 'idle': 22.0,
-                 'iowait': 0.0,
-                 'irq': 0.0,
-                 'key': 'cpu_number',
-                 'nice': 0.0,
-                 'softirq': 1.0,
-                 'steal': 0.0,
-                 'system': 1.0,
-                 'total': 78.0,
-                 'user': 1.0},
-                {'cpu_number': 2,
-                 'guest': 0.0,
-                 'guest_nice': 0.0,
-                 'idle': 20.0,
-                 'iowait': 0.0,
-                 'irq': 0.0,
-                 'key': 'cpu_number',
-                 'nice': 0.0,
-                 'softirq': 0.0,
-                 'steal': 0.0,
-                 'system': 1.0,
-                 'total': 80.0,
-                 'user': 1.0},
-                {'cpu_number': 3,
                  'guest': 0.0,
                  'guest_nice': 0.0,
                  'idle': 7.0,
@@ -1069,20 +946,56 @@ GET quicklook
                  'steal': 0.0,
                  'system': 2.0,
                  'total': 93.0,
-                 'user': 15.0}],
+                 'user': 16.0},
+                {'cpu_number': 1,
+                 'guest': 0.0,
+                 'guest_nice': 0.0,
+                 'idle': 20.0,
+                 'iowait': 0.0,
+                 'irq': 0.0,
+                 'key': 'cpu_number',
+                 'nice': 0.0,
+                 'softirq': 1.0,
+                 'steal': 0.0,
+                 'system': 0.0,
+                 'total': 80.0,
+                 'user': 3.0},
+                {'cpu_number': 2,
+                 'guest': 0.0,
+                 'guest_nice': 0.0,
+                 'idle': 23.0,
+                 'iowait': 0.0,
+                 'irq': 0.0,
+                 'key': 'cpu_number',
+                 'nice': 0.0,
+                 'softirq': 1.0,
+                 'steal': 0.0,
+                 'system': 1.0,
+                 'total': 77.0,
+                 'user': 1.0},
+                {'cpu_number': 3,
+                 'guest': 0.0,
+                 'guest_nice': 0.0,
+                 'idle': 19.0,
+                 'iowait': 0.0,
+                 'irq': 0.0,
+                 'key': 'cpu_number',
+                 'nice': 0.0,
+                 'softirq': 4.0,
+                 'steal': 0.0,
+                 'system': 1.0,
+                 'total': 81.0,
+                 'user': 5.0}],
      'swap': 24.5}
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/quicklook/cpu
-    {'cpu': 32.7}
+    {'cpu': 31.4}
 
 GET sensors
 -----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/sensors
     [{'critical': 105,
@@ -1100,10 +1013,7 @@ GET sensors
       'value': 29,
       'warning': 105}]
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/sensors/label
     {'label': ['acpitz 1',
                'acpitz 2',
@@ -1115,10 +1025,7 @@ Get a specific field:
                'Core 1',
                'Battery']}
 
-Get a specific item when field matchs the given value:
-
-.. code-block:: json
-
+Get a specific item when field matchs the given value::
     # curl http://localhost:61208/api/3/sensors/label/acpitz 1
     {'acpitz 1': [{'critical': 105,
                    'key': 'label',
@@ -1131,7 +1038,7 @@ Get a specific item when field matchs the given value:
 GET system
 ----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/system
     {'hostname': 'XPS13-9333',
@@ -1141,78 +1048,59 @@ GET system
      'os_version': '5.4.0-66-generic',
      'platform': '64bit'}
 
-Get a specific field:
-
-.. code-block:: json
-
+Get a specific field::
     # curl http://localhost:61208/api/3/system/os_name
     {'os_name': 'Linux'}
 
 GET uptime
 ----------
 
-.. code-block:: json
+Get the plugins list::
 
     # curl http://localhost:61208/api/3/uptime
-    {'seconds': 7859840}
+    {'seconds': 7860717}
 
 GET all stats
 -------------
 
-.. code-block:: json
-
+Get all Glances stats::
     # curl http://localhost:61208/api/3/all
     Return a very big dictionnary (avoid using this request, performances will be poor)...
 
 GET stats history
 -----------------
 
-History of a plugin:
-
-.. code-block:: json
-
+History of a plugin::
     # curl http://localhost:61208/api/3/cpu/history
-    {'system': [['2021-07-17T09:29:13.323534', 7.0],
-                ['2021-07-17T09:29:14.367310', 7.0],
-                ['2021-07-17T09:29:15.463434', 1.8]],
-     'user': [['2021-07-17T09:29:13.323529', 16.5],
-              ['2021-07-17T09:29:14.367307', 16.5],
-              ['2021-07-17T09:29:15.463430', 2.5]]}
+    {'system': [['2021-07-17T09:43:50.760441', 5.0],
+                ['2021-07-17T09:43:51.798650', 5.0],
+                ['2021-07-17T09:43:52.893517', 1.3]],
+     'user': [['2021-07-17T09:43:50.760434', 21.4],
+              ['2021-07-17T09:43:51.798646', 21.4],
+              ['2021-07-17T09:43:52.893513', 3.0]]}
 
-Limit history to last 2 values:
-
-.. code-block:: json
-
+Limit history to last 2 values::
     # curl http://localhost:61208/api/3/cpu/history/2
-    {'system': [['2021-07-17T09:29:14.367310', 7.0],
-                ['2021-07-17T09:29:15.463434', 1.8]],
-     'user': [['2021-07-17T09:29:14.367307', 16.5],
-              ['2021-07-17T09:29:15.463430', 2.5]]}
+    {'system': [['2021-07-17T09:43:51.798650', 5.0],
+                ['2021-07-17T09:43:52.893517', 1.3]],
+     'user': [['2021-07-17T09:43:51.798646', 21.4],
+              ['2021-07-17T09:43:52.893513', 3.0]]}
 
-History for a specific field:
-
-.. code-block:: json
-
+History for a specific field::
     # curl http://localhost:61208/api/3/cpu/system/history
-    {'system': [['2021-07-17T09:29:13.323534', 7.0],
-                ['2021-07-17T09:29:14.367310', 7.0],
-                ['2021-07-17T09:29:15.463434', 1.8]]}
+    {'system': [['2021-07-17T09:43:50.760441', 5.0],
+                ['2021-07-17T09:43:51.798650', 5.0],
+                ['2021-07-17T09:43:52.893517', 1.3]]}
 
-Limit history for a specific field to last 2 values:
-
-.. code-block:: json
-
+Limit history for a specific field to last 2 values::
     # curl http://localhost:61208/api/3/cpu/system/history
-    {'system': [['2021-07-17T09:29:14.367310', 7.0],
-                ['2021-07-17T09:29:15.463434', 1.8]]}
+    {'system': [['2021-07-17T09:43:51.798650', 5.0],
+                ['2021-07-17T09:43:52.893517', 1.3]]}
 
 GET limits (used for thresholds)
 --------------------------------
 
-All limits/thresholds:
-
-.. code-block:: json
-
+All limits/thresholds::
     # curl http://localhost:61208/api/3/all/limits
     {'alert': {'history_size': 3600.0},
      'amps': {'amps_disable': ['False'], 'history_size': 3600.0},
@@ -1397,10 +1285,7 @@ All limits/thresholds:
               'wifi_hide': ['lo', 'docker.*'],
               'wifi_warning': -75.0}}
 
-Limits/thresholds for the cpu plugin:
-
-.. code-block:: json
-
+Limits/thresholds for the cpu plugin::
     # curl http://localhost:61208/api/3/cpu/limits
     {'cpu_ctx_switches_careful': 160000.0,
      'cpu_ctx_switches_critical': 200000.0,
