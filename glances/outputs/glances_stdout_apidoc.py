@@ -53,8 +53,8 @@ def indent_stat(stat, indent='    '):
         return indent + pformat(stat).replace('\n', '\n' + indent)
 
 
-def get_plugins_list(stat):
-    return """\
+def print_plugins_list(stat):
+    print("""\
 GET Plugins list
 ----------------
 
@@ -64,7 +64,140 @@ GET Plugins list
 {}
 
 """.format(API_URL,
-           indent_stat(stat))
+           indent_stat(stat)))
+
+
+def print_plugin_export(plugin, stat_export):
+    sub_title = 'GET {}'.format(plugin)
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/{}'.format(API_URL, plugin))
+    print(indent_stat(stat_export))
+    print('')
+
+
+def print_plugin_description(plugin, stat):
+    if stat.fields_description:
+        # For each plugins with a description
+        print('Fields descriptions:')
+        print('')
+        for field, description in iteritems(stat.fields_description):
+            print('* **{}**: {} (unit is *{}*)'.format(field,
+                    description['description'][:-1] if description['description'].endswith('.') else description['description'],
+                    description['unit']))
+        print('')
+    else:
+        logger.error('No fields_description variable defined for plugin {}'.format(plugin))
+
+
+def print_plugin_item_value(plugin, stat, stat_export):
+    item = None
+    value = None
+    if isinstance(stat_export, dict):
+        item = list(stat_export.keys())[0]
+        value = None
+    elif isinstance(stat_export, list) and len(stat_export) > 0 and isinstance(stat_export[0], dict):
+        if 'key' in stat_export[0]:
+            item = stat_export[0]['key']
+        else:
+            item = list(stat_export[0].keys())[0]
+    if item and stat.get_stats_item(item):
+        stat_item = json.loads(stat.get_stats_item(item))
+        if isinstance(stat_item[item], list):
+            value = stat_item[item][0]
+        else:
+            value = stat_item[item]
+        print('Get a specific field:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/{}/{}'.format(API_URL, plugin, item))
+        print(indent_stat(stat_item))
+        print('')
+    if item and value and stat.get_stats_value(item, value):
+        print('Get a specific item when field matchs the given value:')
+        print('')
+        print('.. code-block:: json')
+        print('')
+        print('    # curl {}/{}/{}/{}'.format(API_URL, plugin, item, value))
+        print(indent_stat(json.loads(stat.get_stats_value(item, value))))
+        print('')
+
+
+def print_all():
+    sub_title = 'GET all stats'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/all'.format(API_URL))
+    print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
+    print('')
+
+
+def print_history(stats):
+    time.sleep(1)
+    stats.update()
+    time.sleep(1)
+    stats.update()
+    sub_title = 'GET stats history'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('History of a plugin:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/cpu/history'.format(API_URL))
+    print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=3))))
+    print('')
+    print('Limit history to last 2 values:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/cpu/history/2'.format(API_URL))
+    print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=2))))
+    print('')
+    print('History for a specific field:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/cpu/system/history'.format(API_URL))
+    print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system'))))
+    print('')
+    print('Limit history for a specific field to last 2 values:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/cpu/system/history'.format(API_URL))
+    print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system', nb=2))))
+    print('')
+
+
+def print_limits(stats):
+    sub_title = 'GET limits (used for thresholds)'
+    print(sub_title)
+    print('-' * len(sub_title))
+    print('')
+    print('All limits/thresholds:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/all/limits'.format(API_URL))
+    print(indent_stat(stats.getAllLimitsAsDict()))
+    print('')
+    print('Limits/thresholds for the cpu plugin:')
+    print('')
+    print('.. code-block:: json')
+    print('')
+    print('    # curl {}/cpu/limits'.format(API_URL))
+    print(indent_stat(stats.get_plugin('cpu').limits))
+    print('')
 
 
 class GlancesStdoutApiDoc(object):
@@ -91,119 +224,26 @@ class GlancesStdoutApiDoc(object):
         print(APIDOC_HEADER)
 
         # Display plugins list
-        print(get_plugins_list(sorted(stats._plugins)))
+        print_plugins_list(sorted(stats._plugins))
 
         # Loop over plugins
         for plugin in sorted(stats._plugins):
             stat = stats.get_plugin(plugin)
             stat_export = stat.get_export()
-
             if stat_export is None or stat_export == [] or stat_export == {}:
                 continue
-
-            sub_title = 'GET {}'.format(plugin)
-            print(sub_title)
-            print('-' * len(sub_title))
-            print('')
-
-            print('.. code-block:: json')
-            print('')
-            print('    # curl {}/{}'.format(API_URL, plugin))
-            print(indent_stat(stat_export))
-            print('')
-
-            if stat.fields_description:
-                # For each plugins with a description
-                print('Fields descriptions:')
-                print('')
-                for field, description in iteritems(stat.fields_description):
-                    print('* **{}**: {} (unit is *{}*)'.format(field,
-                            description['description'][:-1] if description['description'].endswith('.') else description['description'],
-                            description['unit']))
-                print('')
-            else:
-                logger.error('No fields_description variable defined for plugin {}'.format(plugin))
-
-            item = None
-            value = None
-            if isinstance(stat_export, dict):
-                item = list(stat_export.keys())[0]
-                value = None
-            elif isinstance(stat_export, list) and len(stat_export) > 0 and isinstance(stat_export[0], dict):
-                if 'key' in stat_export[0]:
-                    item = stat_export[0]['key']
-                else:
-                    item = list(stat_export[0].keys())[0]
-            if item and stat.get_stats_item(item):
-                stat_item = json.loads(stat.get_stats_item(item))
-                if isinstance(stat_item[item], list):
-                    value = stat_item[item][0]
-                else:
-                    value = stat_item[item]
-                print('Get a specific field:')
-                print('')
-                print('.. code-block:: json')
-                print('')
-                print('    # curl {}/{}/{}'.format(API_URL, plugin, item))
-                print(indent_stat(stat_item))
-                print('')
-            if item and value and stat.get_stats_value(item, value):
-                print('Get a specific item when field matchs the given value:')
-                print('')
-                print('.. code-block:: json')
-                print('')
-                print('    # curl {}/{}/{}/{}'.format(API_URL, plugin, item, value))
-                print(indent_stat(json.loads(stat.get_stats_value(item, value))))
-                print('')
+            print_plugin_export(plugin, stat_export)
+            print_plugin_description(plugin, stat)
+            print_plugin_item_value(plugin, stat, stat_export)
 
         # Get all stats
-        sub_title = 'GET all stats'
-        print(sub_title)
-        print('-' * len(sub_title))
-        print('')
-        print('.. code-block:: json')
-        print('')
-        print('    # curl {}/all'.format(API_URL))
-        print('    Return a very big dictionnary (avoid using this request, performances will be poor)...')
-        print('')
+        print_all()
 
-        # Get all stats
-        time.sleep(1)
-        stats.update()
-        time.sleep(1)
-        stats.update()
-        sub_title = 'GET stats history'
-        print(sub_title)
-        print('-' * len(sub_title))
-        print('')
-        print('History of a plugin:')
-        print('')
-        print('.. code-block:: json')
-        print('')
-        print('    # curl {}/cpu/history'.format(API_URL))
-        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=3))))
-        print('')
-        print('Limit history to last 2 values:')
-        print('')
-        print('.. code-block:: json')
-        print('')
-        print('    # curl {}/cpu/history/2'.format(API_URL))
-        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history(nb=2))))
-        print('')
-        print('History for a specific field:')
-        print('')
-        print('.. code-block:: json')
-        print('')
-        print('    # curl {}/cpu/system/history'.format(API_URL))
-        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system'))))
-        print('')
-        print('Limit history for a specific field to last 2 values:')
-        print('')
-        print('.. code-block:: json')
-        print('')
-        print('    # curl {}/cpu/system/history'.format(API_URL))
-        print(indent_stat(json.loads(stats.get_plugin('cpu').get_stats_history('system', nb=2))))
-        print('')
+        # History
+        print_history(stats)
+
+        # Limits
+        print_limits(stats)
 
         # Return True to exit directly (no refresh)
         return True
