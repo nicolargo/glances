@@ -45,6 +45,7 @@ class Export(GlancesExport):
         self.protocol = 'http'
         self.prefix = None
         self.tags = None
+        self.hostname = None
 
         # Load the InfluxDB configuration file
         self.export_enable = self.load_conf('influxdb',
