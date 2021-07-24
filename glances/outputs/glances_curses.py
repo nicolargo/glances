@@ -351,14 +351,19 @@ class _GlancesCurses(object):
         logger.debug("Keypressed (code: {})".format(self.pressedkey))
         for hotkey in self._hotkeys:
             if self.pressedkey == ord(hotkey) and 'switch' in self._hotkeys[hotkey]:
-                if self._hotkeys[hotkey]['switch'].startswith('enable_') or \
-                   self._hotkeys[hotkey]['switch'].startswith('disable_'):
-                    # Enable / Disable switch
-                    # Get the option name
-                    # Ex: disable_foo return foo
-                    #     enable_foo_bar return foo_bar
-                    option = '_'.join(
-                        self._hotkeys[hotkey]['switch'].split('_')[1:])
+                # Get the option name
+                # Ex: disable_foo return foo
+                #     enable_foo_bar return foo_bar
+                option = '_'.join(self._hotkeys[hotkey]['switch'].split('_')[1:])
+                if self._hotkeys[hotkey]['switch'].startswith('disable_'):
+                    # disable_ switch
+                    if getattr(self.args,
+                               self._hotkeys[hotkey]['switch']):
+                        enable(self.args, option)
+                    else:
+                        disable(self.args, option)
+                elif self._hotkeys[hotkey]['switch'].startswith('enable_'):
+                    # enable_ switch
                     if getattr(self.args,
                                self._hotkeys[hotkey]['switch']):
                         disable(self.args, option)
