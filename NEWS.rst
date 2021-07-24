@@ -6,9 +6,12 @@
 Version 3.2.2
 ===============
 
-Under development, see roadmap here:
+Bugs corrected:
 
-    https://github.com/nicolargo/glances/milestone/51
+    * [3.2.0/3.2.1] keybinding not working anymore #1904
+    * InfluxDB/InfluxDB2 Export object has no attribute hostname #1899
+
+Documentation: The "make docs" generate RestFull/API documentation file.
 
 ===============
 Version 3.2.1
