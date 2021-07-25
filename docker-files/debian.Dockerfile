@@ -61,7 +61,7 @@ RUN apt-get update && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=remoteInstall /root/.local/bin /usr/local/bin/
-COPY --from=remoteInstall /root/.local/lib/python3.9/site-packages /usr/lib/python3.9/site-packages/
+COPY --from=remoteInstall /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
 
 # EXPOSE PORT (XMLRPC / WebUI)
 EXPOSE 61209 61208
@@ -72,4 +72,4 @@ CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
 FROM minimal as full
 
-COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/lib/python3.9/site-packages/
+COPY --from=additional-packages /root/.local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages/
