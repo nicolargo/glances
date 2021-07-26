@@ -75,4 +75,4 @@ CMD python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
 FROM minimal as full
 
-COPY --from=additional-packages /root/.local/lib/python3.8/site-packages /usr/local/python3.8/site-packages/
+COPY --from=additional-packages /root/.local/lib/python3.8/site-packages /usr/lib/python3.8/site-packages/
