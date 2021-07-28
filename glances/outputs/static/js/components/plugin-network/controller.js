@@ -18,9 +18,11 @@ export default function GlancesPluginNetworkController($scope, $filter, GlancesS
         vm.networks = [];
         for (var i = 0; i < networkStats.length; i++) {
             var networkData = networkStats[i];
+            var alias = networkData['alias'] !== undefined ? networkData['alias'] : null
 
             var network = {
                 'interfaceName': networkData['interface_name'],
+                'ifname': alias ? alias : networkData['interface_name'],
                 'rx': networkData['rx'],
                 'tx': networkData['tx'],
                 'cx': networkData['cx'],
@@ -28,7 +30,6 @@ export default function GlancesPluginNetworkController($scope, $filter, GlancesS
                 'cumulativeRx': networkData['cumulative_rx'],
                 'cumulativeTx': networkData['cumulative_tx'],
                 'cumulativeCx': networkData['cumulative_cx'],
-                'alias': networkData['alias'] !== undefined ? networkData['alias'] : null
             };
 
             vm.networks.push(network);
