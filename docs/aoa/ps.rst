@@ -43,19 +43,49 @@ You can also set the sort key in the UI:
 - by clicking on left and right arrows
 - by clicking on the following shortcuts or command line option:
 
-===== ==================== ===============================
-``a`` Automatic sort
-``c`` Sort by CPU          --sort-processes cpu_percent
-``i`` Sort by DISK I/O     --sort-processes io_counters
-``m`` Sort by MEM          --sort-processes memory_percent
-``p`` Sort by process name --sort-processes name
-``t`` Sort by CPU times    --sort-processes cpu_times
-``u`` Sort by username     --sort-processes username
+.. list-table:: Title
+   :widths: 10 30 30
+   :header-rows: 1
+
+   * - Shortcut
+     - Command line option
+     - Description
+   * - a
+     - Automatic sort
+     - Default sort
+   * - c
+     - --sort-processes cpu_percent
+     - Sort by CPU
+   * - i
+     - --sort-processes io_counters
+     - Sort by DISK I/O
+   * - m
+     - --sort-processes memory_percent
+     - Sort by MEM
+   * - p
+     - --sort-processes name
+     - Sort by process name
+   * - t
+     - --sort-processes cpu_times
+     - Sort by CPU times
+   * - u
+     - --sort-processes username
+     - Sort by process username
 
 The number of processes in the list is adapted to the screen size.
 
 Columns display
 ---------------
+
+.. list-table:: Title
+   :widths: 10 60
+   :header-rows: 0
+
+   * - ``CPU%``
+     - Command line option
+     - % of CPU used by the process
+       If Irix/Solaris mode is off ('0' key), the value
+       is divided by logical core number
 
 ========================= ==============================================
 ``CPU%``                  % of CPU used by the process
