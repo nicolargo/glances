@@ -39,6 +39,7 @@ automatically sorted by:
 - ``DISK I/O``: if a CPU iowait alert is detected
 
 You can also set the sort key in the UI:
+
 - by clicking on left and right arrows
 - by clicking on the following shortcuts or command line option:
 
