@@ -26,7 +26,7 @@ from glances.compat import nativestr, u, itervalues, enable, disable
 from glances.globals import MACOS, WINDOWS
 from glances.logger import logger
 from glances.events import glances_events
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_processes_key_list
 from glances.timer import Timer
 
 # Import curses library for "normal" operating system
@@ -106,8 +106,7 @@ class _GlancesCurses(object):
         # 'DOWN' > Down in the server list
     }
 
-    _sort_loop = ['cpu_percent', 'memory_percent', 'username',
-                  'cpu_times', 'io_counters', 'name']
+    _sort_loop = sort_processes_key_list
 
     # Define top menu
     _top = ['quicklook', 'cpu', 'percpu', 'gpu', 'mem', 'memswap', 'load']

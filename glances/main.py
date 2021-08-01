@@ -27,6 +27,7 @@ from glances import __version__, psutil_version
 from glances.compat import input, disable, enable
 from glances.config import Config
 from glances.globals import WINDOWS
+from glances.processes import sort_processes_key_list
 from glances.logger import logger, LOG_FILENAME
 
 
@@ -157,6 +158,10 @@ Examples of use:
                             dest='enable_irq', help='enable IRQ module'),
         parser.add_argument('--enable-process-extended', action='store_true', default=False,
                             dest='enable_process_extended', help='enable extended stats on top process')
+        # Sort processes list
+        parser.add_argument('--sort-processes', dest='sort_processes_key',
+                            choices=sort_processes_key_list,
+                            help='Sort processes by: {}'.format(', '.join(sort_processes_key_list)))
         # Export modules feature
         parser.add_argument('--export', dest='export',
                             help='enable export module (comma separed list)')
