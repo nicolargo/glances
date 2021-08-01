@@ -12,6 +12,7 @@ venv-dev:
 	./venv/bin/pip install -r doc-requirements.txt
 
 venv-dev-upgrade:
+	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install --upgrade -r dev-requirements.txt
 	./venv/bin/pip install --upgrade -r doc-requirements.txt
 
