@@ -59,7 +59,7 @@ Requirements
 
 - ``python>=2.7`` or ``python>=3.4``
 - ``psutil>=5.3.0`` (better with latest version)
-- ``defusedxml`` (in order to monkey path xmlrpc)
+- ``defusedxml`` (in order to monkey patch xmlrpc)
 - ``future`` (for Python 2 support)
 
 *Note for Python 2.6 users*
