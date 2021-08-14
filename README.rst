@@ -109,8 +109,8 @@ Installation
 
 There are several methods to test/install Glances on your system. Choose your weapon!
 
-PyPI: The simple way
---------------------
+PyPI: The standard way
+----------------------
 
 Glances is on ``PyPI``. By using PyPI, you will be using the latest
 stable version.
@@ -164,8 +164,8 @@ If you want to test the develop version, enter:
     pip install --user -i https://test.pypi.org/simple/ Glances
 
 
-Glances Auto Install script: the total way
-------------------------------------------
+Glances Auto Install script: the easy way
+-----------------------------------------
 
 To install both dependencies and the latest Glances production ready version
 (aka *master* branch), just enter the following command line:
@@ -183,8 +183,8 @@ or
 *Note*: This is only supported on some GNU/Linux distributions and Mac OS X.
 If you want to support other distributions, please contribute to `glancesautoinstall`_.
 
-Docker: the funny way
----------------------
+Docker: the fun way
+-------------------
 
 Glances containers are availables. You can use it to monitor your
 server and all your other containers!
@@ -195,12 +195,12 @@ Get the Glances container:
 
     docker pull nicolargo/glances:<version>
 
-Example:
+Available versions on the Docker Hub repository:
 
-- *nicolargo/glances:3.2.0* (or *nicolargo/glances:alpine-3.2.0*) for version 3.2.0 with minimal dependencies
-- *nicolargo/glances:3.2.0-full* for version 3.2.0 with full dependencies
-
-For a complete images list:
+- *nicolargo/glances:3.2.3* for a basic Debian Glances 3.2.3 image version with minimal dependencies
+- *nicolargo/glances:alpine-3.2.3* for a basic Alpine Glances 3.2.3 image version with minimal dependencies
+- *nicolargo/glances:3.2.3-full* for a full Debian Glances 3.2.3 image version with all dependencies
+- *nicolargo/glances:alpine-3.2.3-full* for a full Alpine Glances 3.2.3 image version with all dependencies
 
 Run the container in *console mode*:
 
