@@ -73,7 +73,7 @@ profiling: venv venv-dev
 
 release-note:
 	git --no-pager log $(LASTTAG)..HEAD --first-parent --pretty=format:"* %s"
-	echo ""
+	@echo "\n"
 	git --no-pager shortlog -s -n $(LASTTAG)..HEAD
 
 .PHONY: test docs docs-server
