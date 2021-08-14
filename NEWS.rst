@@ -6,9 +6,19 @@
 Version 3.2.3
 ===============
 
-Under development, see roadmap here:
+Bugs corrected:
 
-    https://github.com/nicolargo/glances/milestone/52
+    * Docker container monitoring only show half command? #1912
+    * Processor name getting cut off #1917
+    * batinfo not in docker image (and in requirements files...) ? #1915
+    * Glances don't send hostname (tag) to influxdb2 #1913
+    * Public IP address doesn't display anymore #1910
+    * Debian Docker images broken with version 3.2.2 #1905
+
+Enhancement requests:
+
+    * Make the process sort list configurable through the command line #1903
+    * [WebUI] truncates network name #1699
 
 ===============
 Version 3.2.2
