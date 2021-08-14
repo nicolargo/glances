@@ -197,16 +197,18 @@ Get the Glances container:
 
 Available versions on the Docker Hub repository:
 
-- *nicolargo/glances:3.2.3* for a basic Debian Glances 3.2.3 image version with minimal dependencies
-- *nicolargo/glances:alpine-3.2.3* for a basic Alpine Glances 3.2.3 image version with minimal dependencies
-- *nicolargo/glances:3.2.3-full* for a full Debian Glances 3.2.3 image version with all dependencies
-- *nicolargo/glances:alpine-3.2.3-full* for a full Alpine Glances 3.2.3 image version with all dependencies
+- *nicolargo/glances:latest* for a basic Debian Glances image version with minimal dependencies
+- *nicolargo/glances:alpine-latest* for a basic Alpine Glances image version with minimal dependencies
+- *nicolargo/glances:latest-full* for a full Debian Glances image version with all dependencies
+- *nicolargo/glances:alpine-latest-full* for a full Alpine Glances image version with all dependencies
 
-Run the container in *console mode*:
+You can also specify a version by replacing latest by 3.2.3 (for example).
+
+Run last version of Glances container in *console mode*:
 
 .. code-block:: console
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:3.2.0-full
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -222,7 +224,7 @@ docker run options:
 
 .. code-block:: console
 
-    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:3.2.0-full
+    docker run -v `pwd`/glances.conf:/glances/conf/glances.conf -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host -it nicolargo/glances:latest-full
 
 Where \`pwd\`/glances.conf is a local directory containing your glances.conf file.
 
@@ -231,7 +233,7 @@ variable setting parameters for the glances startup command):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:3.2.0-full
+    docker run -d --restart="always" -p 61208-61209:61208-61209 -e GLANCES_OPT="-w" -v /var/run/docker.sock:/var/run/docker.sock:ro --pid host nicolargo/glances:latest-full
 
 GNU/Linux
 ---------
