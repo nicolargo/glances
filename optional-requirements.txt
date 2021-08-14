@@ -1,6 +1,7 @@
 # install with base requirements file
 -r requirements.txt
 
+batinfo
 bernhard
 bottle
 cassandra-driver

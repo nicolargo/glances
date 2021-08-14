@@ -68,10 +68,13 @@ def get_install_extras_require():
         'sparklines': ['sparklines'],
         'web': ['bottle', 'requests'],
         'wifi': ['wifi']
+        #'gpu' and 'sensors' ==> See bellow
     }
     if PY3:
         extras_require['export'].append('influxdb-client')
         extras_require['gpu'] = ['py3nvml']
+    if sys.platform.startswith('linux'):
+        extras_require['sensors'] = ['batinfo']
 
     # Add automatically the 'all' target
     extras_require.update({'all': [i[0] for i in extras_require.values()]})
