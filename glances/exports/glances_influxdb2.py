@@ -20,6 +20,7 @@
 """InfluxDB (from to InfluxDB 1.8+) interface class."""
 
 import sys
+from platform import node
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
@@ -55,6 +56,9 @@ class Export(GlancesExport):
                                                      'tags'])
         if not self.export_enable:
             sys.exit(2)
+
+        # The hostname is always add as a tag
+        self.hostname = node().split('.')[0]
 
         # Init the InfluxDB client
         self.client = self.init()
