@@ -82,7 +82,7 @@ class CpuPercent(object):
         # Get the CPU name once from the /proc/cpuinfo file
         # @TODO: Multisystem...
         try:
-            self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1][1:-2]
+            self.cpu_info['cpu_name'] = open('/proc/cpuinfo', 'r').readlines()[4].split(':')[1].strip()
         except:
             self.cpu_info['cpu_name'] = 'CPU'
         return self.cpu_info['cpu_name']
