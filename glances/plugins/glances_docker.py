@@ -249,8 +249,16 @@ class Plugin(GlancesPlugin):
                 # Container Image
                 container_stats['Image'] = container.image.tags
                 # Global stats (from attrs)
+                # Container Status
                 container_stats['Status'] = container.attrs['State']['Status']
-                container_stats['Command'] = container.attrs['Config']['Entrypoint']
+                # Container Command (see #1912)
+                container_stats['Command'] = []
+                if container.attrs['Config'].get('Entrypoint', None):
+                    container_stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
+                if container.attrs['Config'].get('Cmd', None):
+                    container_stats['Command'].extend(container.attrs['Config'].get('Cmd', []))
+                if container_stats['Command'] == []:
+                    container_stats['Command'] = None
                 # Standards stats
                 # See https://docs.docker.com/engine/api/v1.41/#operation/ContainerStats
                 # Be aware that the API can change... (example see issue #1857)
