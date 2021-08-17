@@ -56,7 +56,14 @@ class Plugin(GlancesPlugin):
                                      stats_init_value=[])
 
         # Init the sensor class
-        self.glancesgrabbat = GlancesGrabBat()
+        try:
+            self.glancesgrabbat = GlancesGrabBat()
+        except Exception as e:
+            logger.error("Can not init battery class ({})".format(e))
+            global batinfo_tag
+            global psutil_tag
+            batinfo_tag = False
+            psutil_tag = False
 
         # We do not want to display the stat in a dedicated area
         # The HDD temp is displayed within the sensors plugin
