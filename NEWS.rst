@@ -3,12 +3,13 @@
 ==============================================================================
 
 ===============
-Version 3.2.4
+Version 3.2.3.1
 ===============
 
-Version under development. Please consult the roadmap here:
+Patch to correct issue (regression) #1922:
 
-    https://github.com/nicolargo/glances/milestone/53
+    * Incorrect processes disk IO stats #1922
+    * DSM 6 docker error crash /sys/class/power_supply #1921
 
 ===============
 Version 3.2.3
