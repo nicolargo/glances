@@ -327,49 +327,35 @@ class Plugin(GlancesPlugin):
             ret = self.curse_add_line(msg)
         return ret
 
-    def _get_process_curses_io_read(self, p, selected, args):
-        """Return process IO Read curses"""
+    def _get_process_curses_io(self, p, selected, args, rorw='ior'):
+        """Return process IO Read or Write curses"""
         ret = ''
         if 'io_counters' in p and \
            p['io_counters'][4] == 1 and \
            p['time_since_update'] != 0:
             # Display rate if stats is available and io_tag ([4]) == 1
-            # IO read
-            io_rs = int((p['io_counters'][0] - p['io_counters']
-                         [2]) / p['time_since_update'])
-            if io_rs == 0:
-                msg = self.layout_stat['ior'].format("0")
+            # IO
+            io = int((p['io_counters'][0 if rorw == 'ior' else 1] - p['io_counters']
+                      [2 if rorw == 'ior' else 3]) / p['time_since_update'])
+            if io == 0:
+                msg = self.layout_stat[rorw].format("0")
             else:
-                msg = self.layout_stat['ior'].format(
-                    self.auto_unit(io_rs,
+                msg = self.layout_stat[rorw].format(
+                    self.auto_unit(io,
                                    low_precision=True))
             ret = self.curse_add_line(msg, optional=True, additional=True)
         else:
-            msg = self.layout_header['ior'].format("?")
+            msg = self.layout_header[rorw].format("?")
             ret = self.curse_add_line(msg, optional=True, additional=True)
         return ret
 
+    def _get_process_curses_io_read(self, p, selected, args):
+        """Return process IO Read curses"""
+        return self._get_process_curses_io(p, selected, args, rorw='ior')
+
     def _get_process_curses_io_write(self, p, selected, args):
         """Return process IO Write curses"""
-        ret = ''
-        if 'io_counters' in p and \
-           p['io_counters'][4] == 1 and \
-           p['time_since_update'] != 0:
-            # Display rate if stats is available and io_tag ([4]) == 1
-            # IO read
-            io_ws = int((p['io_counters'][0] - p['io_counters']
-                         [2]) / p['time_since_update'])
-            if io_ws == 0:
-                msg = self.layout_stat['iow'].format("0")
-            else:
-                msg = self.layout_stat['iow'].format(
-                    self.auto_unit(io_ws,
-                                   low_precision=True))
-            ret = self.curse_add_line(msg, optional=True, additional=True)
-        else:
-            msg = self.layout_header['iow'].format("?")
-            ret = self.curse_add_line(msg, optional=True, additional=True)
-        return ret
+        return self._get_process_curses_io(p, selected, args, rorw='iow')
 
     def get_process_curses_data(self, p, selected, args):
         """Get curses data to display for a process.
@@ -662,7 +648,8 @@ class Plugin(GlancesPlugin):
         # IO read/write
         if 'io_counters' in self.stats[0] and mmm is None:
             # IO read
-            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters', indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
+            io_rs = int((self.__sum_stats('io_counters', 0) - self.__sum_stats('io_counters',
+                        indice=2, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_rs == 0:
                 msg = self.layout_stat['ior'].format('0')
             else:
@@ -671,7 +658,8 @@ class Plugin(GlancesPlugin):
                                            decoration=self.__mmm_deco(mmm),
                                            optional=True, additional=True))
             # IO write
-            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters', indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
+            io_ws = int((self.__sum_stats('io_counters', 1) - self.__sum_stats('io_counters',
+                        indice=3, mmm=mmm)) / self.stats[0]['time_since_update'])
             if io_ws == 0:
                 msg = self.layout_stat['iow'].format('0')
             else:
