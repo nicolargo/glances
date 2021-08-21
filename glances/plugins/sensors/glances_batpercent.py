@@ -108,14 +108,23 @@ class GlancesGrabBat(object):
 
     def update(self):
         """Update the stats."""
+        self.bat_list = []
         if batinfo_tag:
             # Use the batinfo lib to grab the stats
             # Compatible with multiple batteries
             self.bat.update()
-            self.bat_list = [{
-                'label': 'Battery',
-                'value': self.battery_percent,
-                'unit': '%'}]
+            # Batinfo support multiple batteries
+            # ... so take it into account (see #1920)
+            # self.bat_list = [{
+            #     'label': 'Battery',
+            #     'value': self.battery_percent,
+            #     'unit': '%'}]
+            for b in self.bat.stat:
+                self.bat_list.append({
+                    'label': 'BAT {}'.format(b.path.split('/')[-1]),
+                    'value': b.capacity,
+                    'unit': '%'
+                })
         elif psutil_tag and hasattr(self.bat.sensors_battery(), 'percent'):
             # Use psutil to grab the stats
             # Give directly the battery percent
@@ -123,9 +132,6 @@ class GlancesGrabBat(object):
                 'label': 'Battery',
                 'value': int(self.bat.sensors_battery().percent),
                 'unit': '%'}]
-        else:
-            # No stats...
-            self.bat_list = []
 
     def get(self):
         """Get the stats."""
