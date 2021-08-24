@@ -336,7 +336,7 @@ class _GlancesCurses(object):
                 pass
 
     def get_key(self, window):
-        # @TODO: Check issue #163
+        # TODO: Check issue #163
         ret = window.getch()
         return ret
 

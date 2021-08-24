@@ -24,6 +24,7 @@ import os
 import sys
 import threading
 import traceback
+from importlib import import_module
 
 from glances.logger import logger
 from glances.globals import exports_path, plugins_path, sys_path
@@ -102,6 +103,7 @@ class GlancesStats(object):
         # Restoring system path
         sys.path = sys_path
 
+    # TODO: To be removed and replace by the _load_plugin_v4
     def _load_plugin(self, plugin_script, args=None, config=None):
         """Load the plugin (script), init it and add to the _plugin dict."""
         # The key is the plugin name
@@ -112,7 +114,38 @@ class GlancesStats(object):
         # Loaf the plugin class
         try:
             # Import the plugin
-            plugin = __import__(plugin_script[:-3])
+            plugin = import_module(plugin_script[:-3])
+            # Init and add the plugin to the dictionary
+            self._plugins[name] = plugin.Plugin(args=args, config=config)
+        except Exception as e:
+            # If a plugin can not be loaded, display a critical message
+            # on the console but do not crash
+            logger.critical("Error while initializing the {} plugin ({})".format(name, e))
+            logger.error(traceback.format_exc())
+            # Disable the plugin
+            if args is not None:
+                setattr(args,
+                        'disable_' + name,
+                        False)
+        else:
+            # Set the disable_<name> to False by default
+            if args is not None:
+                setattr(args,
+                        'disable_' + name,
+                        getattr(args, 'disable_' + name, False))
+
+    # TODO: To be rename to _load_plugin
+    def _load_plugin_v4(self, plugin_path, args=None, config=None):
+        """Load the plugin, init it and add to the _plugin dict."""
+        # The key is the plugin name = plugin_path
+        # for example, the path ./glances/plugins/xxx
+        # generate self._plugins_list["xxx"] = ...
+        name = plugin_path.lower()
+
+        # Load the plugin class
+        try:
+            # Import the plugin
+            plugin = import_module(name)
             # Init and add the plugin to the dictionary
             self._plugins[name] = plugin.Plugin(args=args, config=config)
         except Exception as e:
@@ -145,6 +178,17 @@ class GlancesStats(object):
                                   args=args, config=self.config)
                 logger.debug("Plugin {} started in {} seconds".format(item,
                                                                       start_duration.get()))
+        for item in os.listdir(plugins_path):
+            if os.path.isdir(os.path.join(plugins_path, item)) and  \
+               not item.startswith('__') and \
+               not item.startswith('sensors') and \
+               item != "plugin":
+                # Load the plugin
+                start_duration.reset()
+                self._load_plugin_v4(os.path.basename(item),
+                                     args=args, config=self.config)
+                logger.debug("Plugin {} started in {} seconds".format(item,
+                                                                    start_duration.get()))
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))

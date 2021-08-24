@@ -3,6 +3,9 @@
 Wi-Fi
 =====
 
+* WARNING: The Wifi Python lib (https://pypi.python.org/pypi/wifi) is note
+compatible with Python 3. So the plugin is disable in Glances 4.0 or higher*
+
 *Availability: Linux*
 
 .. image:: ../_static/wifi.png
