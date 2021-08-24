@@ -64,7 +64,7 @@ tree = [{'msg': 'No warning or critical alert detected',
          'thresholds_min': 2},
         ]
 
-# @TODO: change the algo to use the following decision tree
+# TODO: change the algo to use the following decision tree
 # Source: Inspire by https://scoutapm.com/blog/slow_server_flow_chart
 # _yes means threshold >= 2
 # _no  means threshold < 2

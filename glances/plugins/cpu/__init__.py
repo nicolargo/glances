@@ -24,7 +24,7 @@ from glances.timer import getTimeSinceLastUpdate
 from glances.compat import iterkeys
 from glances.cpu_percent import cpu_percent
 from glances.globals import LINUX
-from glances.plugins.glances_core import Plugin as CorePlugin
+from glances.plugins.core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil
@@ -174,7 +174,7 @@ class Plugin(GlancesPlugin):
         if not hasattr(self, 'cpu_stats_old'):
             # Init the stats (needed to have the key name for export)
             for stat in cpu_stats._fields:
-                # @TODO: better to set it to None but should refactor views and UI...
+                # TODO: better to set it to None but should refactor views and UI...
                 stats[stat] = 0
         else:
             # Others calls...

@@ -34,8 +34,8 @@ class GlancesExport(object):
     """Main class for Glances export IF."""
 
     # For the moment, only thoses plugins can be exported
-    # @TODO: remove this part and make all plugins exportable (see issue #1556)
-    # @TODO: also make this list configurable by the user (see issue #1443)
+    # TODO: remove this part and make all plugins exportable (see issue #1556)
+    # TODO: also make this list configurable by the user (see issue #1443)
     exportable_plugins = ['cpu',
                           'percpu',
                           'load',

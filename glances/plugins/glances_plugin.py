@@ -69,9 +69,14 @@ class GlancesPlugin(object):
         :stats_init_value: Default value for a stats item
         """
         # Plugin name (= module name without glances_)
-        pos = self.__class__.__module__.find('glances_') + len('glances') + 1
-        self.plugin_name = self.__class__.__module__[pos:]
-        # logger.debug("Init plugin %s" % self.plugin_name)
+        # pos = self.__class__.__module__.find('glances_') + len('glances') + 1
+        # self.plugin_name = self.__class__.__module__[pos:]
+        # TODO: For Glances 4 => 3 next line to be removed when all plugins are migrated
+        if self.__class__.__module__.startswith('glances_'):
+            self.plugin_name = self.__class__.__module__.split('glances_')[1]
+        else:
+            self.plugin_name = self.__class__.__module__
+        logger.debug("Init {} plugin".format(self.plugin_name))
 
         # Init the args
         self.args = args
@@ -573,7 +578,7 @@ class GlancesPlugin(object):
             return False
 
         # Read the global section
-        # @TODO: not optimized because this section is loaded for each plugin...
+        # TODO: not optimized because this section is loaded for each plugin...
         if config.has_section('global'):
             self._limits['history_size'] = config.get_float_value('global', 'history_size', default=28800)
             logger.debug("Load configuration key: {} = {}".format('history_size', self._limits['history_size']))
@@ -865,7 +870,7 @@ class GlancesPlugin(object):
         Example for diskio:
         show=sda.*
         """
-        # @TODO: possible optimisation: create a re.compile list
+        # TODO: possible optimisation: create a re.compile list
         if self.get_conf_value('show', header=header) == []:
             return True
         else:
@@ -879,7 +884,7 @@ class GlancesPlugin(object):
         Example for diskio:
         hide=sda2,sda5,loop.*
         """
-        # @TODO: possible optimisation: create a re.compile list
+        # TODO: possible optimisation: create a re.compile list
         return any(j for j in [re.match(i, value) for i in self.get_conf_value('hide', header=header)])
 
     def has_alias(self, header):
