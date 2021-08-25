@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 """Glances unitary tests suite for the RESTful API."""
 
+import os
 import shlex
 import subprocess
 import time
@@ -64,7 +65,11 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        cmdline = "python -m glances -w -p %s" % SERVER_PORT
+        if os.path.isfile('./venv/bin/python'):
+            cmdline = "./venv/bin/python"
+        else:
+            cmdline = "python"
+        cmdline += " -m glances -w -p %s" % SERVER_PORT
         print("Run the Glances Web Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)

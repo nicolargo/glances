@@ -3,7 +3,7 @@
 #
 # Glances - An eye on your system
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by

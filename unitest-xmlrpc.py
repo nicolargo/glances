@@ -20,6 +20,7 @@
 
 """Glances unitary tests suite for the XML-RPC API."""
 
+import os
 import json
 import shlex
 import subprocess
@@ -53,7 +54,11 @@ class TestGlances(unittest.TestCase):
         global pid
 
         print('INFO: [TEST_000] Start the Glances Web Server')
-        cmdline = "python -m glances -s -p %s" % SERVER_PORT
+        if os.path.isfile('./venv/bin/python'):
+            cmdline = "./venv/bin/python"
+        else:
+            cmdline = "python"
+        cmdline += " -m glances -s -p %s" % SERVER_PORT
         print("Run the Glances Server on port %s" % SERVER_PORT)
         args = shlex.split(cmdline)
         pid = subprocess.Popen(args)
