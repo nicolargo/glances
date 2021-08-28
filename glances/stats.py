@@ -140,12 +140,17 @@ class GlancesStats(object):
         # The key is the plugin name = plugin_path
         # for example, the path ./glances/plugins/xxx
         # generate self._plugins_list["xxx"] = ...
-        name = plugin_path.lower()
+        if plugin_path.startswith('glances_'):
+            # Avoid circular loop when Glances plugin uses lib with same name
+            # Example: docker should be rename to glances_docker
+            name = plugin_path.split('glances_')[1]
+        else:
+            name = plugin_path
 
         # Load the plugin class
         try:
             # Import the plugin
-            plugin = import_module(name)
+            plugin = import_module(plugin_path)
             # Init and add the plugin to the dictionary
             self._plugins[name] = plugin.Plugin(args=args, config=config)
         except Exception as e:
