@@ -57,20 +57,14 @@ add new plugins or exports modules.
 Requirements
 ============
 
-- ``python>=2.7`` or ``python>=3.4``
+- ``python>=3.4``
 - ``psutil>=5.3.0`` (better with latest version)
 - ``defusedxml`` (in order to monkey patch xmlrpc)
-- ``future`` (for Python 2 support)
 
-*Note for Python 2.6 users*
+*Note for Python 2 users*
 
-Glances no longer supports Python 2.6. Please upgrade
-to a minimum Python version of 2.7/3.4+ or downgrade to Glances 2.6.2 (last version
-with Python 2.6 support).
-
-*Deprecation warning note for Python 2.x users*
-
-Glances version 4.0 will no longer supports Python 2.x.
+Glances version 4 or higher do not support Python 2.
+Please uses Glances version 3 if you need Python 2 support.
 
 Optional dependencies:
 
@@ -87,7 +81,7 @@ Optional dependencies:
 - ``influxdb-client``  (for the InfluxDB version 2 export module) [Only for Python >= 3.6]
 - ``kafka-python`` (for the Kafka export module)
 - ``netifaces`` (for the IP plugin)
-- ``py3nvml`` (for the GPU plugin) [Only for Python 3]
+- ``py3nvml`` (for the GPU plugin)
 - ``pika`` (for the RabbitMQ/ActiveMQ export module)
 - ``potsdb`` (for the OpenTSDB export module)
 - ``prometheus_client`` (for the Prometheus export module)
@@ -98,7 +92,7 @@ Optional dependencies:
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``requests`` (for the Ports, Cloud plugins and RESTful export module)
-- ``scandir`` (for the Folders plugin) [Only for Python < 3.5]
+- ``scandir`` (for the Folders plugin) [Only for Python 3.4]
 - ``sparklines`` (for the Quick Plugin sparklines option)
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
@@ -283,7 +277,7 @@ MacPorts
 Windows
 -------
 
-Install `Python`_ for Windows (Python 2.7.9+ and 3.4+ ship with pip) and
+Install `Python`_ for Windows (Python 3.4+ ship with pip) and
 then run the following command:
 
 .. code-block:: console
