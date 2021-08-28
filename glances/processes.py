@@ -19,8 +19,7 @@
 
 import os
 
-from glances.compat import iterkeys
-from glances.globals import BSD, LINUX, MACOS, WINDOWS
+from glances.globals import BSD, LINUX, MACOS, WINDOWS, iterkeys
 from glances.timer import Timer, getTimeSinceLastUpdate
 from glances.filter import GlancesFilter
 from glances.logger import logger

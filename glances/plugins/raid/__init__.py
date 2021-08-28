@@ -19,7 +19,7 @@
 
 """RAID plugin."""
 
-from glances.compat import iterkeys
+from glances.globals import iterkeys
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 

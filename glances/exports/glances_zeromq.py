@@ -22,7 +22,7 @@
 import sys
 import json
 
-from glances.compat import b
+from glances.globals import b
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 

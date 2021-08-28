@@ -28,7 +28,7 @@ import time
 import unittest
 
 from glances import __version__
-from glances.compat import ServerProxy
+from glances.globals import ServerProxy
 
 SERVER_PORT = 61234
 URL = "http://localhost:%s" % SERVER_PORT

@@ -26,7 +26,7 @@ import unittest
 from glances.main import GlancesMain
 from glances.stats import GlancesStats
 from glances import __version__
-from glances.globals import WINDOWS, LINUX
+from glances.globals import WINDOWS, LINUX, subsample
 from glances.outputs.glances_bars import Bar
 from glances.thresholds import GlancesThresholdOk
 from glances.thresholds import GlancesThresholdCareful
@@ -34,7 +34,6 @@ from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.compat import subsample, range
 from glances.secure import secure_popen
 
 # Global variables
@@ -257,7 +256,7 @@ class TestGlances(unittest.TestCase):
     def test_016_hddsmart(self):
         """Check hard disk SMART data plugin."""
         try:
-            from glances.compat import is_admin
+            from glances.globals import is_admin
         except ImportError:
             print("INFO: [TEST_016] pySMART not found, not running SMART plugin test")
             return

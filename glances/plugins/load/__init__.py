@@ -22,7 +22,7 @@
 import os
 import psutil
 
-from glances.compat import iteritems
+from glances.globals import iteritems
 from glances.plugins.core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger

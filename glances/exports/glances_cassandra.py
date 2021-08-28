@@ -25,7 +25,7 @@ from numbers import Number
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
-from glances.compat import iteritems
+from glances.globals import iteritems
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster

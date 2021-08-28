@@ -22,7 +22,7 @@
 import time
 
 from glances.logger import logger
-from glances.compat import printandflush
+from glances.globals import printandflush
 
 
 class GlancesStdout(object):

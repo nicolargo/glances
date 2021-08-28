@@ -24,9 +24,8 @@ import sys
 import tempfile
 
 from glances import __version__, psutil_version
-from glances.compat import input, disable, enable
+from glances.globals import WINDOWS, disable, enable
 from glances.config import Config
-from glances.globals import WINDOWS
 from glances.processes import sort_processes_key_list
 from glances.logger import logger, LOG_FILENAME
 

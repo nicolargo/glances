@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import numbers
 
-from glances.compat import nativestr
+from glances.globals import nativestr
 from glances.folder_list import FolderList as glancesFolderList
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger

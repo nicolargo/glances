@@ -8,7 +8,6 @@ https://glances.readthedocs.io/en/stable/
 __init__.py                 Global module init
 __main__.py                 Entry point for Glances module
 config.py                   Manage the configuration file
-compat.py                   Python2/3 compatibility shims module
 globals.py                  Share variables upon modules
 main.py                     Main script to rule them up...
 client.py                   Glances client

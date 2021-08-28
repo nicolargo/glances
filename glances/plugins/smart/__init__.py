@@ -47,7 +47,7 @@ If smartmontools is not installed, we should catch the error upstream in plugin 
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
 from glances.main import disable
-from glances.compat import is_admin
+from glances.globals import is_admin
 
 # Import plugin specific dependency
 try:

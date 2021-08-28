@@ -28,7 +28,7 @@ import numbers
 import unittest
 
 from glances import __version__
-from glances.compat import text_type
+from glances.globals import text_type
 
 import requests
 

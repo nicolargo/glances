@@ -26,9 +26,8 @@ import sys
 import uuid
 from io import open
 
-from glances.compat import b, input
+from glances.globals import b, safe_makedirs
 from glances.config import user_config_dir
-from glances.globals import safe_makedirs
 from glances.logger import logger
 
 

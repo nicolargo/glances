@@ -23,8 +23,7 @@ import os
 import copy
 
 from glances.logger import logger
-from glances.globals import WINDOWS
-from glances.compat import key_exist_value_not_none_not_v
+from glances.globals import WINDOWS, key_exist_value_not_none_not_v
 from glances.processes import glances_processes, sort_stats
 from glances.plugins.core import Plugin as CorePlugin
 from glances.plugins.glances_plugin import GlancesPlugin

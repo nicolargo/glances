@@ -25,7 +25,7 @@ import re
 from io import open
 
 from glances.logger import logger
-from glances.compat import iteritems
+from glances.globals import iteritems
 from glances.plugins.glances_plugin import GlancesPlugin
 
 # SNMP OID

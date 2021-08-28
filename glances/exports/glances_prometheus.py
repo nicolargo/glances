@@ -24,7 +24,7 @@ from numbers import Number
 
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
-from glances.compat import iteritems, listkeys
+from glances.globals import iteritems, listkeys
 
 from prometheus_client import start_http_server, Gauge
 
