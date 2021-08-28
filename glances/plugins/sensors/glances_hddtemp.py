@@ -22,7 +22,7 @@
 import os
 import socket
 
-from glances.compat import nativestr, range
+from glances.globals import nativestr
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 

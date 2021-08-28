@@ -24,7 +24,7 @@ import sys
 import shutil
 
 from glances.logger import logger
-from glances.compat import printandflush
+from glances.globals import printandflush
 from glances.timer import Counter
 from glances import __version__, psutil_version
 

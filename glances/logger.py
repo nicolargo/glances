@@ -27,8 +27,7 @@ import tempfile
 import logging
 import logging.config
 
-from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, WSL
-from glances.globals import safe_makedirs
+from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, WSL, safe_makedirs
 
 # Choose the good place for the log file (see issue #1575)
 # Default root path

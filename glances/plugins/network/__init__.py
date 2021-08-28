@@ -24,7 +24,7 @@ import base64
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.compat import n
+from glances.globals import n
 from glances.logger import logger
 
 import psutil

@@ -19,7 +19,7 @@
 
 """Manage the Glances web/url list (Ports plugin)."""
 
-from glances.compat import range, urlparse
+from glances.globals import urlparse
 from glances.logger import logger
 
 
@@ -97,17 +97,17 @@ class GlancesWebList(object):
 
                 # Indice
                 new_web['indice'] = 'web_' + str(i)
-                
+
                 # ssl_verify
-                new_web['ssl_verify'] = config.get_value(self._section, 
+                new_web['ssl_verify'] = config.get_value(self._section,
                                                         '%sssl_verify' % postfix,
                                                          default=True)
                 # Proxy
-                http_proxy = config.get_value(self._section, 
+                http_proxy = config.get_value(self._section,
                                                 '%shttp_proxy' % postfix,
                                                 default=None)
-                
-                https_proxy = config.get_value(self._section, 
+
+                https_proxy = config.get_value(self._section,
                                                 '%shttps_proxy' % postfix,
                                                 default=None)
 

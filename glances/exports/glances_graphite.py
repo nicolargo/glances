@@ -22,7 +22,6 @@
 import sys
 from numbers import Number
 
-from glances.compat import range
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 

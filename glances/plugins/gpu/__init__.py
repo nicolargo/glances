@@ -19,7 +19,7 @@
 
 """GPU plugin (limited to NVIDIA chipsets)."""
 
-from glances.compat import nativestr, to_fahrenheit
+from glances.globals import nativestr, to_fahrenheit
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 

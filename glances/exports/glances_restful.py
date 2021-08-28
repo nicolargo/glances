@@ -21,7 +21,7 @@
 
 import sys
 
-from glances.compat import listkeys
+from glances.globals import listkeys
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 

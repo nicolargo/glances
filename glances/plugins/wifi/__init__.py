@@ -21,7 +21,7 @@
 
 import operator
 
-from glances.compat import nativestr
+from glances.globals import nativestr
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 

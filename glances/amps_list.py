@@ -23,9 +23,8 @@ import os
 import re
 import threading
 
-from glances.compat import listkeys, iteritems
+from glances.globals import listkeys, iteritems, amps_path
 from glances.logger import logger
-from glances.globals import amps_path
 from glances.processes import glances_processes
 
 
@@ -112,7 +111,7 @@ class AmpsList(object):
             if not v.enable():
                 # Do not update if the enable tag is set
                 continue
-            
+
             if v.regex() is None:
                 # If there is no regex, execute anyway (see issue #1690)
                 v.set_count(0)

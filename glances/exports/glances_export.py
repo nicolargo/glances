@@ -25,7 +25,7 @@ I am your father...
 
 import json
 
-from glances.compat import NoOptionError, NoSectionError, iteritems, iterkeys
+from glances.globals import NoOptionError, NoSectionError, iteritems, iterkeys
 from glances.logger import logger
 
 

@@ -3,7 +3,7 @@
 import sys
 import json
 
-from glances.compat import PY3, listkeys
+from glances.globals import PY3, listkeys
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 

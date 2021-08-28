@@ -24,7 +24,7 @@ import csv
 import sys
 import time
 
-from glances.compat import PY3, iterkeys, itervalues
+from glances.globals import PY3, iterkeys, itervalues
 from glances.logger import logger
 from glances.exports.glances_export import GlancesExport
 

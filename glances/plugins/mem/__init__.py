@@ -20,7 +20,7 @@
 """Virtual memory plugin."""
 
 from glances.logger import logger
-from glances.compat import iterkeys
+from glances.globals import iterkeys
 from glances.plugins.glances_plugin import GlancesPlugin
 
 import psutil

@@ -26,11 +26,10 @@ import socket
 import time
 import numbers
 
-from glances.globals import WINDOWS, MACOS, BSD
+from glances.globals import WINDOWS, MACOS, BSD, bool_type
 from glances.ports_list import GlancesPortsList
 from glances.web_list import GlancesWebList
 from glances.timer import Timer, Counter
-from glances.compat import bool_type
 from glances.logger import logger
 from glances.plugins.glances_plugin import GlancesPlugin
 

@@ -28,7 +28,7 @@ import webbrowser
 import zlib
 import socket
 
-from glances.compat import b
+from glances.globals import b
 from glances.timer import Timer
 from glances.logger import logger
 

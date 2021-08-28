@@ -28,7 +28,7 @@ import json
 import copy
 from operator import itemgetter
 
-from glances.compat import iterkeys, itervalues, listkeys, map, mean, nativestr
+from glances.globals import iterkeys, itervalues, listkeys, mean, nativestr
 from glances.actions import GlancesActions
 from glances.history import GlancesHistory
 from glances.logger import logger
