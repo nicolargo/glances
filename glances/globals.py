@@ -137,13 +137,6 @@ def b(s, errors='replace'):
     return s.encode('utf-8', errors=errors)
 
 
-def n(s):
-    '''Only in Python 2...
-    from future.utils import bytes_to_native_str as n
-    '''
-    return s
-
-
 def nativestr(s, errors='replace'):
     if isinstance(s, text_type):
         return s

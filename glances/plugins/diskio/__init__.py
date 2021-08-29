@@ -20,7 +20,7 @@
 """Disk I/O plugin."""
 from __future__ import unicode_literals
 
-from glances.globals import nativestr, n
+from glances.globals import nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
 from glances.logger import logger
@@ -110,7 +110,7 @@ class Plugin(GlancesPlugin):
                 try:
                     diskstat = {
                         'time_since_update': time_since_update,
-                        'disk_name': n(disk),
+                        'disk_name': disk,
                         'read_count': diskio[disk].read_count - \
                                       self.diskio_old[disk].read_count,
                         'write_count': diskio[disk].write_count - \
@@ -123,7 +123,7 @@ class Plugin(GlancesPlugin):
                 except (KeyError, AttributeError):
                     diskstat = {
                         'time_since_update': time_since_update,
-                        'disk_name': n(disk),
+                        'disk_name': disk,
                         'read_count': 0,
                         'write_count': 0,
                         'read_bytes': 0,
