@@ -20,7 +20,7 @@
 """Manage Glances update."""
 
 from datetime import datetime, timedelta
-from distutils.version import LooseVersion
+from packaging.version import Version
 import threading
 import json
 import pickle
@@ -112,7 +112,7 @@ class Outdated(object):
             return False
 
         logger.debug("Check Glances version (installed: {} / latest: {})".format(self.installed_version(), self.latest_version()))
-        return LooseVersion(self.latest_version()) > LooseVersion(self.installed_version())
+        return Version(self.latest_version()) > Version(self.installed_version())
 
     def _load_cache(self):
         """Load cache file and return cached data"""
