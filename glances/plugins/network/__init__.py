@@ -24,7 +24,6 @@ import base64
 
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.globals import n
 from glances.logger import logger
 
 import psutil
@@ -165,8 +164,8 @@ class Plugin(GlancesPlugin):
                     rx = cumulative_rx - self.network_old[net].bytes_recv
                     tx = cumulative_tx - self.network_old[net].bytes_sent
                     cx = rx + tx
-                    netstat = {'interface_name': n(net),
-                               'alias': self.has_alias(n(net)),
+                    netstat = {'interface_name': net,
+                               'alias': self.has_alias(net),
                                'time_since_update': time_since_update,
                                'cumulative_rx': cumulative_rx,
                                'rx': rx,
