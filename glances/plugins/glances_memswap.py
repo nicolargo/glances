@@ -28,17 +28,22 @@ import psutil
 # Fields description
 fields_description = {
     'total': {'description': 'Total swap memory.',
-              'unit': 'bytes'},
+              'unit': 'bytes',
+              'min_symbol': 'K'},
     'used': {'description': 'Used swap memory.',
-             'unit': 'bytes'},
+             'unit': 'bytes',
+             'min_symbol': 'K'},
     'free': {'description': 'Free swap memory.',
-             'unit': 'bytes'},
+             'unit': 'bytes',
+             'min_symbol': 'K'},
     'percent': {'description': 'Used swap memory in percentage.',
                 'unit': 'percent'},
     'sin': {'description': 'The number of bytes the system has swapped in from disk (cumulative).',
-            'unit': 'bytes'},
+            'unit': 'bytes',
+            'min_symbol': 'K'},
     'sout': {'description': 'The number of bytes the system has swapped out from disk (cumulative).',
-             'unit': 'bytes'},
+             'unit': 'bytes',
+             'min_symbol': 'K'},
     'time_since_update': {'description': 'Number of seconds since last update.',
                           'unit': 'seconds'},
 }
@@ -175,8 +180,8 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Build the string message
-        # Header
+        # First line
+        # total%
         msg = '{}'.format('SWAP')
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = ' {:3}'.format(self.trend_msg(self.get_trend('percent')))
@@ -185,27 +190,23 @@ class Plugin(GlancesPlugin):
         msg = '{:>6.1%}'.format(self.stats['percent'] / 100)
         ret.append(self.curse_add_line(
             msg, self.get_views(key='percent', option='decoration')))
-        # New line
+
+        # Second line
+        # total
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = '{:8}'.format('total:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6}'.format(self.auto_unit(self.stats['total']))
-        ret.append(self.curse_add_line(msg))
-        # New line
+        ret.extend(self.curse_add_stat('total', width=16))
+
+        # Third line
+        # used
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = '{:8}'.format('used:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6}'.format(self.auto_unit(self.stats['used']))
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='used', option='decoration')))
-        # New line
+        ret.extend(self.curse_add_stat('used', width=16))
+
+        # Fourth line
+        # free
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = '{:8}'.format('free:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>6}'.format(self.auto_unit(self.stats['free']))
-        ret.append(self.curse_add_line(msg))
+        ret.extend(self.curse_add_stat('free', width=16))
 
         return ret

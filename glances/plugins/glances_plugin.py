@@ -43,8 +43,17 @@ fields_unit_short = {
 
 fields_unit_type = {
     'percent': 'float',
+    'percents': 'float',
     'number': 'int',
-    'seconds': 'int'
+    'numbers': 'int',
+    'int': 'int',
+    'ints': 'int',
+    'float': 'float',
+    'floats': 'float',
+    'second': 'int',
+    'seconds': 'int',
+    'byte': 'int',
+    'bytes': 'int'
 }
 
 
@@ -992,6 +1001,9 @@ class GlancesPlugin(object):
             ret.extend(self.curse_add_stat('idle', width=15, header='  '))
 
         """
+        if key not in self.stats:
+            return []
+
         # Check if a shortname is defined
         if 'short_name' in self.fields_description[key]:
             key_name = self.fields_description[key]['short_name']

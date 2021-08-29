@@ -282,12 +282,12 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.args.percpu or self.is_disable():
             return ret
 
-        # Build the string message
         # If user stat is not here, display only idle / total CPU usage (for
         # exemple on Windows OS)
         idle_tag = 'user' not in self.stats
 
-        # Header
+        # First line
+        # Total + (idle) + ctx_sw
         msg = '{}'.format('CPU')
         ret.append(self.curse_add_line(msg, "TITLE"))
         trend_user = self.get_trend('user')
@@ -303,50 +303,46 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(
             msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
-        if 'idle' in self.stats and not idle_tag:
+        if not idle_tag:
             ret.extend(self.curse_add_stat('idle', width=15, header='  '))
-            # ctx_switches
-            if 'ctx_switches' in self.stats:
-                ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
+        # ctx_switches
+        ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
-        # New line
+        # Second line
+        # user|idle + irq + interrupts
         ret.append(self.curse_new_line())
         # User CPU
-        if 'user' in self.stats:
+        if not idle_tag:
             ret.extend(self.curse_add_stat('user', width=15))
         elif 'idle' in self.stats:
             ret.extend(self.curse_add_stat('idle', width=15))
         # IRQ CPU
-        if 'irq' in self.stats:
-            ret.extend(self.curse_add_stat('irq', width=15, header='  '))
-            # interrupts
-            if 'interrupts' in self.stats:
-                ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
+        ret.extend(self.curse_add_stat('irq', width=15, header='  '))
+        # interrupts
+        ret.extend(self.curse_add_stat('interrupts', width=15, header='  '))
 
-        # New line
+        # Third line
+        # system|core + nice + sw_int
         ret.append(self.curse_new_line())
         # System CPU
-        if 'system' in self.stats and not idle_tag:
+        if not idle_tag:
             ret.extend(self.curse_add_stat('system', width=15))
         else:
             ret.extend(self.curse_add_stat('core', width=15))
         # Nice CPU
-        if 'nice' in self.stats:
-            ret.extend(self.curse_add_stat('nice', width=15, header='  '))
-            # soft_interrupts
-            if 'soft_interrupts' in self.stats:
-                ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
+        ret.extend(self.curse_add_stat('nice', width=15, header='  '))
+        # soft_interrupts
+        ret.extend(self.curse_add_stat('soft_interrupts', width=15, header='  '))
 
-        # New line
+        # Fourth line
+        # iowat + steal + syscalls
         ret.append(self.curse_new_line())
         # IOWait CPU
-        if 'iowait' in self.stats:
-            ret.extend(self.curse_add_stat('iowait', width=15))
-            # Steal CPU usage
-            if 'steal' in self.stats:
-                ret.extend(self.curse_add_stat('steal', width=15, header='  '))
+        ret.extend(self.curse_add_stat('iowait', width=15))
+        # Steal CPU usage
+        ret.extend(self.curse_add_stat('steal', width=15, header='  '))
         # syscalls: number of system calls since boot. Always set to 0 on Linux. (do not display)
-        if 'syscalls' in self.stats and not LINUX:
+        if not LINUX:
             ret.extend(self.curse_add_stat('syscalls', width=15, header='  '))
 
         # Return the message with decoration

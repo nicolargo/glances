@@ -32,15 +32,15 @@ fields_description = {
     'min1': {'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 1 minute.',
-             'unit': 'number'},
+             'unit': 'float'},
     'min5': {'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 5 minutes.',
-             'unit': 'number'},
+             'unit': 'float'},
     'min15': {'description': 'Average sum of the number of processes \
 waiting in the run-queue plus the number currently executing \
 over 15 minutes.',
-              'unit': 'number'},
+              'unit': 'float'},
     'cpucore': {'description': 'Total number of CPU core.',
                 'unit': 'number'},
 }
