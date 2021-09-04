@@ -142,7 +142,7 @@ class GlancesStats(object):
         # generate self._plugins_list["xxx"] = ...
         if plugin_path.startswith('glances_'):
             # Avoid circular loop when Glances plugin uses lib with same name
-            # Example: docker should be rename to glances_docker
+            # Example: docker should be named to glances_docker
             name = plugin_path.split('glances_')[1]
         else:
             name = plugin_path
@@ -186,7 +186,6 @@ class GlancesStats(object):
         for item in os.listdir(plugins_path):
             if os.path.isdir(os.path.join(plugins_path, item)) and  \
                not item.startswith('__') and \
-               not item.startswith('sensors') and \
                item != "plugin":
                 # Load the plugin
                 start_duration.reset()

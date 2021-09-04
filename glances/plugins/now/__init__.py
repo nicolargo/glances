@@ -20,7 +20,7 @@
 """Now (current date) plugin."""
 
 from time import tzname, strftime
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

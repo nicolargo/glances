@@ -26,7 +26,7 @@ Supported Cloud API:
 import threading
 
 from glances.globals import iteritems, to_ascii
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.logger import logger
 
 # Import plugin specific dependency

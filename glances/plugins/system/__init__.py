@@ -26,7 +26,7 @@ from io import open
 
 from glances.logger import logger
 from glances.globals import iteritems
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 # SNMP OID
 snmp_oid = {'default': {'hostname': '1.3.6.1.2.1.1.5.0',

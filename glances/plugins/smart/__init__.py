@@ -44,7 +44,7 @@ Check for admin access.  If no admin access, disable SMART plugin.
 If smartmontools is not installed, we should catch the error upstream in plugin initialization.
 """
 
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.logger import logger
 from glances.main import disable
 from glances.globals import is_admin

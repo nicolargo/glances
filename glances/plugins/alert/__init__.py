@@ -25,7 +25,7 @@ from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 # from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 # Static decision tree for the global alert message
 # - msg: Message to be displayed (result of the decision tree)

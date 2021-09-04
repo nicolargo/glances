@@ -21,7 +21,7 @@
 from __future__ import unicode_literals
 
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.globals import nativestr
 
 import psutil

@@ -20,7 +20,7 @@
 """Process count plugin."""
 
 from glances.processes import glances_processes
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 # Define the history items list
 items_history_list = [{'name': 'total',

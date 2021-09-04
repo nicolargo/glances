@@ -21,7 +21,7 @@
 
 from glances.globals import iteritems
 from glances.amps_list import AmpsList as glancesAmpsList
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

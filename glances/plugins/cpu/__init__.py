@@ -24,7 +24,7 @@ from glances.timer import getTimeSinceLastUpdate
 from glances.globals import LINUX, iterkeys
 from glances.cpu_percent import cpu_percent
 from glances.plugins.core import Plugin as CorePlugin
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 

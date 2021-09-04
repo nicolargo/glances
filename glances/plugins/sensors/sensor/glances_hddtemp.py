@@ -24,7 +24,7 @@ import socket
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

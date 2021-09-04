@@ -21,7 +21,7 @@
 
 from datetime import datetime, timedelta
 
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 
