@@ -28,32 +28,42 @@ import psutil
 # Fields description
 fields_description = {
     'total': {'description': 'Total physical memory available.',
-              'unit': 'bytes'},
+              'unit': 'bytes',
+              'min_symbol': 'K'},
     'available': {'description': 'The actual amount of available memory that can be given instantly \
 to processes that request more memory in bytes; this is calculated by summing \
 different memory values depending on the platform (e.g. free + buffers + cached on Linux) \
 and it is supposed to be used to monitor actual memory usage in a cross platform fashion.',
-                  'unit': 'bytes'},
+                  'unit': 'bytes',
+                  'min_symbol': 'K'},
     'percent': {'description': 'The percentage usage calculated as (total - available) / total * 100.',
                 'unit': 'percent'},
     'used': {'description': 'Memory used, calculated differently depending on the platform and \
 designed for informational purposes only.',
-             'unit': 'bytes'},
+             'unit': 'bytes',
+             'min_symbol': 'K'},
     'free': {'description': 'Memory not being used at all (zeroed) that is readily available; \
 note that this doesn\'t reflect the actual memory available (use \'available\' instead).',
-             'unit': 'bytes'},
+             'unit': 'bytes',
+             'min_symbol': 'K'},
     'active': {'description': '*(UNIX)*: memory currently in use or very recently used, and so it is in RAM.',
-               'unit': 'bytes'},
+               'unit': 'bytes',
+               'min_symbol': 'K'},
     'inactive': {'description': '*(UNIX)*: memory that is marked as not used.',
-                 'unit': 'bytes'},
+                 'unit': 'bytes',
+                 'min_symbol': 'K'},
     'buffers': {'description': '*(Linux, BSD)*: cache for things like file system metadata.',
-                'unit': 'bytes'},
+                'unit': 'bytes',
+                'min_symbol': 'K'},
     'cached': {'description': '*(Linux, BSD)*: cache for various things.',
-               'unit': 'bytes'},
+               'unit': 'bytes',
+               'min_symbol': 'K'},
     'wired': {'description': '*(BSD, macOS)*: memory that is marked to always stay in RAM. It is never moved to disk.',
-              'unit': 'bytes'},
+              'unit': 'bytes',
+              'min_symbol': 'K'},
     'shared': {'description': '*(BSD)*: memory that may be simultaneously accessed by multiple processes.',
-               'unit': 'bytes'},
+               'unit': 'bytes',
+               'min_symbol': 'K'},
 }
 
 # SNMP OID
@@ -214,8 +224,8 @@ class Plugin(GlancesPlugin):
         if not self.stats or self.is_disable():
             return ret
 
-        # Build the string message
-        # Header
+        # First line
+        # total% + active
         msg = '{}'.format('MEM')
         ret.append(self.curse_add_line(msg, "TITLE"))
         msg = ' {:2}'.format(self.trend_msg(self.get_trend('percent')))
@@ -225,50 +235,30 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(
             msg, self.get_views(key='percent', option='decoration')))
         # Active memory usage
-        if 'active' in self.stats:
-            msg = '  {:9}'.format('active:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
-            msg = '{:>7}'.format(self.auto_unit(self.stats['active']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='active', option='optional')))
-        # New line
+        ret.extend(self.curse_add_stat('active', width=18, header='  '))
+
+        # Second line
+        # total + inactive
         ret.append(self.curse_new_line())
         # Total memory usage
-        msg = '{:6}'.format('total:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format(self.auto_unit(self.stats['total']))
-        ret.append(self.curse_add_line(msg))
+        ret.extend(self.curse_add_stat('total', width=15))
         # Inactive memory usage
-        if 'inactive' in self.stats:
-            msg = '  {:9}'.format('inactive:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
-            msg = '{:>7}'.format(self.auto_unit(self.stats['inactive']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='inactive', option='optional')))
-        # New line
+        ret.extend(self.curse_add_stat('inactive', width=18, header='  '))
+
+        # Third line
+        # used + buffers
         ret.append(self.curse_new_line())
         # Used memory usage
-        msg = '{:6}'.format('used:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format(self.auto_unit(self.stats['used']))
-        ret.append(self.curse_add_line(
-            msg, self.get_views(key='used', option='decoration')))
+        ret.extend(self.curse_add_stat('used', width=15))
         # Buffers memory usage
-        if 'buffers' in self.stats:
-            msg = '  {:9}'.format('buffers:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
-            msg = '{:>7}'.format(self.auto_unit(self.stats['buffers']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='buffers', option='optional')))
-        # New line
+        ret.extend(self.curse_add_stat('buffers', width=18, header='  '))
+
+        # Fourth line
+        # free + cached
         ret.append(self.curse_new_line())
         # Free memory usage
-        msg = '{:6}'.format('free:')
-        ret.append(self.curse_add_line(msg))
-        msg = '{:>7}'.format(self.auto_unit(self.stats['free']))
-        ret.append(self.curse_add_line(msg))
-        # Cached memory usage
-        if 'cached' in self.stats:
-            msg = '  {:9}'.format('cached:')
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))
-            msg = '{:>7}'.format(self.auto_unit(self.stats['cached']))
-            ret.append(self.curse_add_line(msg, optional=self.get_views(key='cached', option='optional')))
+        ret.extend(self.curse_add_stat('free', width=15))
+         # Cached memory usage
+        ret.extend(self.curse_add_stat('cached', width=18, header='  '))
 
         return ret
