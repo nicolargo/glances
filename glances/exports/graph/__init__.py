@@ -29,7 +29,7 @@ import errno
 from glances.logger import logger
 from glances.timer import Timer
 from glances.globals import iteritems, time_serie_subsample
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 
 class Export(GlancesExport):

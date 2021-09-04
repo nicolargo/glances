@@ -23,7 +23,7 @@ import sys
 
 from glances.globals import listkeys
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 from requests import post
 

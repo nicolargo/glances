@@ -24,7 +24,7 @@ import json
 
 from glances.globals import b
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 import zmq
 from zmq.utils.strtypes import asbytes

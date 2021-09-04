@@ -23,7 +23,7 @@ import sys
 from platform import node
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 from influxdb_client import InfluxDBClient, WriteOptions
 

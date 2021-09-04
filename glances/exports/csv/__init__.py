@@ -26,7 +26,7 @@ import time
 
 from glances.globals import PY3, iterkeys, itervalues
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 
 class Export(GlancesExport):
