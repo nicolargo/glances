@@ -24,7 +24,7 @@ from datetime import datetime
 from numbers import Number
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 from glances.globals import iteritems
 
 from cassandra.auth import PlainTextAuthProvider

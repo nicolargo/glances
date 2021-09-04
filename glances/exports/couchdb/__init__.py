@@ -23,7 +23,7 @@ import sys
 from datetime import datetime
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 import couchdb
 import couchdb.mapping

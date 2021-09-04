@@ -23,7 +23,7 @@ import sys
 
 from glances.logger import logger
 from glances.globals import iteritems
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 from kafka import KafkaProducer
 import json

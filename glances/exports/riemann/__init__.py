@@ -24,7 +24,7 @@ import sys
 from numbers import Number
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 # Import bernhard for Riemann
 import bernhard

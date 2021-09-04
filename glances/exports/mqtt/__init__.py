@@ -24,7 +24,7 @@ import string
 import json
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 
 # Import paho for MQTT
 from requests import certs
@@ -118,14 +118,14 @@ class Export(GlancesExport):
                 output_value = dict()
                 for key in sensor_values:
                     split_key = key.split('.')
-                    
+
                     # Add the parent keys if they don't exist
                     current_level = output_value
                     for depth in range(len(split_key) - 1):
                         if split_key[depth] not in current_level:
                             current_level[split_key[depth]] = dict()
                         current_level = current_level[split_key[depth]]
-                        
+
                     # Add the value
                     current_level[split_key[len(split_key) - 1]] = sensor_values[key]
 
@@ -133,4 +133,4 @@ class Export(GlancesExport):
                 self.client.publish(topic, json_value)
             except Exception as e:
                 logger.error("Can not export stats to MQTT server (%s)" % e)
-            
+

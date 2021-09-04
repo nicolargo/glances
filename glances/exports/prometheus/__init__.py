@@ -23,7 +23,7 @@ import sys
 from numbers import Number
 
 from glances.logger import logger
-from glances.exports.glances_export import GlancesExport
+from glances.exports.export import GlancesExport
 from glances.globals import iteritems, listkeys
 
 from prometheus_client import start_http_server, Gauge

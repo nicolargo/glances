@@ -103,39 +103,7 @@ class GlancesStats(object):
         # Restoring system path
         sys.path = sys_path
 
-    # TODO: To be removed and replace by the _load_plugin_v4
-    def _load_plugin(self, plugin_script, args=None, config=None):
-        """Load the plugin (script), init it and add to the _plugin dict."""
-        # The key is the plugin name
-        # for example, the file glances_xxx.py
-        # generate self._plugins_list["xxx"] = ...
-        name = plugin_script[len(self.header):-3].lower()
-
-        # Loaf the plugin class
-        try:
-            # Import the plugin
-            plugin = import_module(plugin_script[:-3])
-            # Init and add the plugin to the dictionary
-            self._plugins[name] = plugin.Plugin(args=args, config=config)
-        except Exception as e:
-            # If a plugin can not be loaded, display a critical message
-            # on the console but do not crash
-            logger.critical("Error while initializing the {} plugin ({})".format(name, e))
-            logger.error(traceback.format_exc())
-            # Disable the plugin
-            if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        False)
-        else:
-            # Set the disable_<name> to False by default
-            if args is not None:
-                setattr(args,
-                        'disable_' + name,
-                        getattr(args, 'disable_' + name, False))
-
-    # TODO: To be rename to _load_plugin
-    def _load_plugin_v4(self, plugin_path, args=None, config=None):
+    def _load_plugin(self, plugin_path, args=None, config=None):
         """Load the plugin, init it and add to the _plugin dict."""
         # The key is the plugin name = plugin_path
         # for example, the path ./glances/plugins/xxx
@@ -173,24 +141,14 @@ class GlancesStats(object):
     def load_plugins(self, args=None):
         """Load all plugins in the 'plugins' folder."""
         start_duration = Counter()
+
         for item in os.listdir(plugins_path):
-            if (item.startswith(self.header) and
-                    item.endswith(".py") and
-                    item != (self.header + "plugin.py")):
+            if os.path.isdir(os.path.join(plugins_path, item)) and  \
+               not item.startswith('__'):
                 # Load the plugin
                 start_duration.reset()
                 self._load_plugin(os.path.basename(item),
                                   args=args, config=self.config)
-                logger.debug("Plugin {} started in {} seconds".format(item,
-                                                                      start_duration.get()))
-        for item in os.listdir(plugins_path):
-            if os.path.isdir(os.path.join(plugins_path, item)) and  \
-               not item.startswith('__') and \
-               item != "plugin":
-                # Load the plugin
-                start_duration.reset()
-                self._load_plugin_v4(os.path.basename(item),
-                                     args=args, config=self.config)
                 logger.debug("Plugin {} started in {} seconds".format(item,
                                                                     start_duration.get()))
 
@@ -198,36 +156,40 @@ class GlancesStats(object):
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
 
     def load_exports(self, args=None):
-        """Load all export modules in the 'exports' folder."""
-        if args is None:
-            return False
-        header = "glances_"
-        # Build the export module available list
-        args_var = vars(locals()['args'])
+        """Load all exporters in the 'exports' folder."""
+        start_duration = Counter()
+
+        if args is None: return False
+
         for item in os.listdir(exports_path):
-            export_name = os.path.basename(item)[len(header):-3].lower()
-            if (item.startswith(header) and
-                    item.endswith(".py") and
-                    item != (header + "export.py") and
-                    item != (header + "history.py")):
-                self._exports_all[export_name] = os.path.basename(item)[:-3]
+            if os.path.isdir(os.path.join(exports_path, item)) and  \
+               not item.startswith('__'):
+                # Load the exporter
+                start_duration.reset()
+                if item.startswith('glances_'):
+                    # Avoid circular loop when Glances exporter uses lib with same name
+                    # Example: influxdb should be named to glances_influxdb
+                    exporter_name = os.path.basename(item).split('glances_')[1]
+                else:
+                    exporter_name = os.path.basename(item)
                 # Set the disable_<name> to False by default
                 setattr(self.args,
-                        'export_' + export_name,
-                        getattr(self.args, 'export_' + export_name, False))
-
-        # Aim is to check if the export module should be loaded
-        for export_name in self._exports_all:
-            if getattr(self.args, 'export_' + export_name, False):
-                # Import the export module
-                export_module = __import__(self._exports_all[export_name])
-                # Add the export to the dictionary
-                # The key is the module name
-                # for example, the file glances_xxx.py
-                # generate self._exports_list["xxx"] = ...
-                self._exports[export_name] = export_module.Export(args=args,
-                                                                  config=self.config)
-                self._exports_all[export_name] = self._exports[export_name]
+                        'export_' + exporter_name,
+                        getattr(self.args, 'export_' + exporter_name, False))
+                # We should import the module
+                if getattr(self.args, 'export_' + exporter_name, False):
+                    # Import the export module
+                    export_module = import_module(item)
+                    # Add the exporter instance to the active exporters dictionary
+                    self._exports[exporter_name] = export_module.Export(args=args,
+                                                                        config=self.config)
+                    # Add the exporter instance to the available exporters dictionary
+                    self._exports_all[exporter_name] = self._exports[exporter_name]
+                else:
+                    # Add the exporter name to the available exporters dictionary
+                    self._exports_all[exporter_name] = exporter_name
+                logger.debug("Exporter {} started in {} seconds".format(exporter_name,
+                                                                        start_duration.get()))
 
         # Log plugins list
         logger.debug("Active exports modules list: {}".format(self.getExportsList()))

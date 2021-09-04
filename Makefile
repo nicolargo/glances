@@ -62,6 +62,9 @@ run-client: venv
 run-browser: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf --browser
 
+run-export-influxdb: venv
+	./venv/bin/python -m glances -C ./conf/glances.conf --export influxdb
+
 show-version: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf -V
 
