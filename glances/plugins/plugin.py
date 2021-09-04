@@ -37,6 +37,26 @@ from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer
 
 
+fields_unit_short = {
+    'percent': '%'
+}
+
+fields_unit_type = {
+    'percent': 'float',
+    'percents': 'float',
+    'number': 'int',
+    'numbers': 'int',
+    'int': 'int',
+    'ints': 'int',
+    'float': 'float',
+    'floats': 'float',
+    'second': 'int',
+    'seconds': 'int',
+    'byte': 'int',
+    'bytes': 'int'
+}
+
+
 class GlancesPlugin(object):
     """Main class for Glances plugin."""
 
@@ -174,8 +194,8 @@ class GlancesPlugin(object):
 
     def history_enable(self):
         return self.args is not None and \
-               not self.args.disable_history and \
-               self.get_items_history_list() is not None
+            not self.args.disable_history and \
+            self.get_items_history_list() is not None
 
     def init_stats_history(self):
         """Init the stats history (dict of GlancesAttribute)."""
@@ -330,7 +350,6 @@ class GlancesPlugin(object):
                 lambda part: part.lower(),
                 re.split(r"(\d+|\D+)", self.has_alias(stat[key]) or stat[key])
             )))
-
 
     @short_system_name.setter
     def short_system_name(self, short_name):
@@ -965,6 +984,86 @@ class GlancesPlugin(object):
         """Go to a new line."""
         return self.curse_add_line('\n')
 
+    def curse_add_stat(self, key, width=None,
+                       header='', separator='', trailer=''):
+        """Return a list of dict messages with the 'key: value' result
+
+          <=== width ===>
+        __key     : 80.5%__
+        | |       | |    |_ trailer
+        | |       | |_ self.stats[key]
+        | |       |_ separator
+        | |_ key
+        |_ trailer
+
+        Instead of:
+            msg = '  {:8}'.format('idle:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
+            msg = '{:5.1f}%'.format(self.stats['idle'])
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle', option='optional')))
+
+        Use:
+            ret.extend(self.curse_add_stat('idle', width=15, header='  '))
+
+        """
+        if key not in self.stats:
+            return []
+
+        # Check if a shortname is defined
+        if 'short_name' in self.fields_description[key]:
+            key_name = self.fields_description[key]['short_name']
+        else:
+            key_name = key
+
+        # Check if unit is defined and get the short unit char in the unit_sort dict
+        if 'unit' in self.fields_description[key] and self.fields_description[key]['unit'] in fields_unit_short:
+            # Get the shortname
+            unit_short = fields_unit_short[self.fields_description[key]['unit']]
+        else:
+            unit_short = ''
+
+        # Check if unit is defined and get the unit type unit_type dict
+        if 'unit' in self.fields_description[key] and self.fields_description[key]['unit'] in fields_unit_type:
+            # Get the shortname
+            unit_type = fields_unit_type[self.fields_description[key]['unit']]
+        else:
+            unit_type = 'float'
+
+        # Is it a rate ? Yes, compute it thanks to the time_since_update key
+        if 'rate' in self.fields_description[key] and self.fields_description[key]['rate'] is True:
+            value = self.stats[key] // self.stats['time_since_update']
+        else:
+            value = self.stats[key]
+
+        if width is None:
+            msg_item = header + '{}'.format(key_name) + separator
+            if unit_type == 'float':
+                msg_value = '{:.1f}{}'.format(value, unit_short) + trailer
+            elif 'min_symbol' in self.fields_description[key]:
+                msg_value = '{}{}'.format(self.auto_unit(int(value),
+                                                         min_symbol=self.fields_description[key]['min_symbol']),
+                                          unit_short) + trailer
+            else:
+                msg_value = '{}{}'.format(int(value), unit_short) + trailer
+        else:
+            # Define the size of the message
+            # item will be on the left
+            # value will be on the right
+            msg_item = header + '{:{width}}'.format(key_name, width=width-7) + separator
+            if unit_type == 'float':
+                msg_value = '{:5.1f}{}'.format(value, unit_short) + trailer
+            elif 'min_symbol' in self.fields_description[key]:
+                msg_value = '{:>5}{}'.format(self.auto_unit(int(value),
+                                                            min_symbol=self.fields_description[key]['min_symbol']),
+                                             unit_short) + trailer
+            else:
+                msg_value = '{:>5}{}'.format(int(value), unit_short) + trailer
+        decoration = self.get_views(key=key, option='decoration')
+        optional = self.get_views(key=key, option='optional')
+
+        return [self.curse_add_line(msg_item, optional=optional),
+                self.curse_add_line(msg_value, decoration=decoration, optional=optional)]
+
     @property
     def align(self):
         """Get the curse align."""
@@ -1050,6 +1149,7 @@ class GlancesPlugin(object):
         - if the plugin is enabled.
         - if the refresh_timer is finished
         """
+
         def wrapper(self, *args, **kw):
             if self.is_enable() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
                 # Run the method
