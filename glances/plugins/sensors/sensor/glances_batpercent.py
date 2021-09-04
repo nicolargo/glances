@@ -22,7 +22,7 @@
 import psutil
 
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 # Batinfo library (optional; Linux-only)
 batinfo_tag = True

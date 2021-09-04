@@ -21,7 +21,7 @@
 
 from glances.globals import nativestr, to_fahrenheit
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 # In Glances 3.1.4 or higher, we use the py3nvml lib (see issue #1523)
 try:

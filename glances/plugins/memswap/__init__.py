@@ -21,7 +21,7 @@
 
 from glances.globals import iterkeys
 from glances.timer import getTimeSinceLastUpdate
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 

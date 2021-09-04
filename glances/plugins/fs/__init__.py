@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import operator
 
 from glances.globals import u, nativestr, PermissionError
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 

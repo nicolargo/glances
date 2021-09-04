@@ -24,7 +24,7 @@ Just a stupid plugin to display the help screen.
 """
 
 from glances import __version__, psutil_version
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

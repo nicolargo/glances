@@ -21,7 +21,7 @@
 
 from glances.logger import logger
 from glances.globals import iterkeys
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 

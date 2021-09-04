@@ -31,7 +31,7 @@ from glances.ports_list import GlancesPortsList
 from glances.web_list import GlancesWebList
 from glances.timer import Timer, Counter
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 try:
     import requests

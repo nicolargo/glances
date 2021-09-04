@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import base64
 
 from glances.timer import getTimeSinceLastUpdate
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.logger import logger
 
 import psutil

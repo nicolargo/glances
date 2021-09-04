@@ -24,7 +24,7 @@ import numbers
 
 from glances.globals import nativestr
 from glances.folder_list import FolderList as glancesFolderList
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.logger import logger
 
 

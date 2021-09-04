@@ -24,7 +24,7 @@ import psutil
 
 from glances.globals import iteritems
 from glances.plugins.core import Plugin as CorePlugin
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 from glances.logger import logger
 
 # Fields description

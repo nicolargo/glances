@@ -20,7 +20,7 @@
 """psutil plugin."""
 
 from glances import psutil_version_info
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):

@@ -23,7 +23,7 @@ import operator
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 import psutil
 # Use the Wifi Python lib (https://pypi.python.org/pypi/wifi)

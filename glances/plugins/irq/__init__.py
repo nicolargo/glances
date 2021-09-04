@@ -24,7 +24,7 @@ import operator
 
 from glances.globals import LINUX
 from glances.timer import getTimeSinceLastUpdate
-from glances.plugins.glances_plugin import GlancesPlugin
+from glances.plugins.plugin import GlancesPlugin
 
 
 class Plugin(GlancesPlugin):
