@@ -59,6 +59,8 @@ class AmpsList(object):
         if "monitor" in self.config.sections():
             logger.warning("A deprecated [monitor] section exists in the Glances configuration file. You should use the new Applications Monitoring Process module instead (http://glances.readthedocs.io/en/develop/aoa/amps.html).")
 
+        # TODO: Change the way AMP are loaded (use folder/module instead of glances_foo.py file)
+        # See https://github.com/nicolargo/glances/issues/1930
         header = "glances_"
         # For each AMP scrip, call the load_config method
         for s in self.config.sections():
