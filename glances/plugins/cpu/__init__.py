@@ -290,9 +290,11 @@ class Plugin(GlancesPlugin):
         # Idle CPU
         if 'idle' in self.stats and not idle_tag:
             msg = '  {:8}'.format('idle:')
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
+                                                                        option='optional')))
             msg = '{:5.1f}%'.format(self.stats['idle'])
-            ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
+                                                                        option='optional')))
         # ctx_switches
         if 'ctx_switches' in self.stats:
             msg = '  {:8}'.format('ctx_sw:')
