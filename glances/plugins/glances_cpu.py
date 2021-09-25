@@ -303,8 +303,13 @@ class Plugin(GlancesPlugin):
         ret.append(self.curse_add_line(
             msg, self.get_views(key='total', option='decoration')))
         # Idle CPU
-        if not idle_tag:
-            ret.extend(self.curse_add_stat('idle', width=15, header='  '))
+        if 'idle' in self.stats and not idle_tag:
+            msg = '  {:8}'.format('idle:')
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
+                                                                        option='optional')))
+            msg = '{:5.1f}%'.format(self.stats['idle'])
+            ret.append(self.curse_add_line(msg, optional=self.get_views(key='idle',
+                                                                        option='optional')))
         # ctx_switches
         ret.extend(self.curse_add_stat('ctx_switches', width=15, header='  '))
 
