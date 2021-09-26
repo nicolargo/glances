@@ -150,7 +150,7 @@ class GlancesStats(object):
                 self._load_plugin(os.path.basename(item),
                                   args=args, config=self.config)
                 logger.debug("Plugin {} started in {} seconds".format(item,
-                                                                    start_duration.get()))
+                                                                      start_duration.get()))
 
         # Log plugins list
         logger.debug("Active plugins list: {}".format(self.getPluginsList()))
