@@ -6,21 +6,14 @@ This is the Glances plugins folder.
 
 A Glances plugin is a Python module hosted in a folder.
 
-The name of the foo Glances plugin folder is foo (glances_foo).
+It should be based on thr MVC model.
+- model: datamodel
+- view: input for UI
+- controler: output from UI
 
-The plugin is a Python class named Plugin inherits the GlancesPlugin object:
-
-.. code-block:: python
-
-    class Plugin(GlancesPlugin):
-        """Glances foo plugin."""
-
-        def __init__(self, args=None, config=None):
-            super(Plugin, self).__init__(args=args,
-                                         config=config,
-                                         items_history_list=items_history_list,
-                                         fields_description=fields_description)
-            pass
+////
+TODO
+////
 
 A plugin should define the following global variables:
 

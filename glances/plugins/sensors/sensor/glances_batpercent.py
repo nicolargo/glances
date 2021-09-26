@@ -22,7 +22,7 @@
 import psutil
 
 from glances.logger import logger
-from glances.plugins.plugin import GlancesPlugin
+from glances.plugins.plugin.model import GlancesPluginModel
 
 # Batinfo library (optional; Linux-only)
 batinfo_tag = True
@@ -43,7 +43,7 @@ except Exception as e:
     psutil_tag = False
 
 
-class Plugin(GlancesPlugin):
+class Plugin(GlancesPluginModel):
     """Glances battery capacity plugin.
 
     stats is a list
@@ -69,8 +69,8 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-    # @GlancesPlugin._check_decorator
-    @GlancesPlugin._log_result_decorator
+    # @GlancesPluginModel._check_decorator
+    @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update battery capacity stats using the input method."""
         # Init new stats
