@@ -27,12 +27,12 @@ from glances import __version__, psutil_version
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances help plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # Set the config instance
         self.config = config

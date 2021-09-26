@@ -37,7 +37,7 @@ items_history_list = [{'name': 'total',
                        'y_unit': ''}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances process count plugin.
 
     stats is a list
@@ -53,7 +53,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list)
 

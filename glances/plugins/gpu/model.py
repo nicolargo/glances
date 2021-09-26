@@ -43,7 +43,7 @@ items_history_list = [{'name': 'proc',
                        'y_unit': '%'}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances GPU plugin (limited to NVIDIA chipsets).
 
     stats is a list of dictionaries with one entry per GPU
@@ -51,7 +51,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
 
@@ -136,7 +136,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Alert
@@ -302,7 +302,7 @@ class Plugin(GlancesPluginModel):
                 logger.debug("pynvml failed to shutdown correctly ({})".format(e))
 
         # Call the father exit method
-        super(Plugin, self).exit()
+        super(PluginModel, self).exit()
 
 
 def get_device_handles():

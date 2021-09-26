@@ -23,7 +23,7 @@ from glances import psutil_version_info
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Get the psutil version for client/server purposes.
 
     stats is a tuple
@@ -31,7 +31,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         self.reset()
 

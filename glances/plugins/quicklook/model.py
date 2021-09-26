@@ -44,7 +44,7 @@ items_history_list = [{'name': 'cpu',
                        'y_unit': '%'}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances quicklook plugin.
 
     'stats' is a dictionary.
@@ -52,7 +52,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the quicklook plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list)
         # We want to display the stat in the curse interface
@@ -97,7 +97,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Alert only

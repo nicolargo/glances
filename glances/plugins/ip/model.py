@@ -47,7 +47,7 @@ urls = [('https://ip.42.pl/raw', False, None),
         ('https://api.ipify.org/?format=json', True, 'ip')]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances IP Plugin.
 
     stats is a dict
@@ -55,7 +55,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -101,7 +101,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Optional

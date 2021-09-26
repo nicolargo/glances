@@ -29,7 +29,7 @@ import psutil
 snmp_oid = {'_uptime': '1.3.6.1.2.1.1.3.0'}
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances uptime plugin.
 
     stats is date (string)
@@ -37,7 +37,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

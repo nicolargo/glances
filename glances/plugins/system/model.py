@@ -77,7 +77,7 @@ def _linux_os_release():
     return pretty_name
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
 
     """Glances' host/system plugin.
 
@@ -86,7 +86,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

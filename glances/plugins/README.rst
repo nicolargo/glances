@@ -6,10 +6,10 @@ This is the Glances plugins folder.
 
 A Glances plugin is a Python module hosted in a folder.
 
-It should be based on thr MVC model.
-- model: datamodel
-- view: input for UI
-- controler: output from UI
+It should be based on the MVC model.
+- model: data model (where the stats will be updated)
+- view: input for UI (where the stats are displayed)
+- controler: output from UI (where the stats are controled)
 
 ////
 TODO

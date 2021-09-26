@@ -128,7 +128,7 @@ def get_smart_data():
     return stats
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """
     Glances' HDD SMART plugin.
 
@@ -145,7 +145,7 @@ class Plugin(GlancesPluginModel):
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

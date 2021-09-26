@@ -71,7 +71,7 @@ items_history_list = [{'name': 'cpu_percent',
 export_exclude_list = ['cpu', 'io', 'memory', 'network']
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances Docker plugin.
 
     stats is a dict: {'version': {...}, 'containers': [{}, {}]}
@@ -79,7 +79,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list)
 
@@ -109,7 +109,7 @@ class Plugin(GlancesPluginModel):
         for t in itervalues(self.thread_list):
             t.stop()
         # Call the father class
-        super(Plugin, self).exit()
+        super(PluginModel, self).exit()
 
     def get_key(self):
         """Return the key of the list."""
@@ -523,7 +523,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         if 'containers' not in self.stats:
             return False

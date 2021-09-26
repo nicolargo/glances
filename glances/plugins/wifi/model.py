@@ -42,7 +42,7 @@ import_error_tag = True
 logger.warning("Wifi lib is not compliant with Python 3, Wifi plugin is disabled")
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances Wifi plugin.
 
     Get stats of the current Wifi hotspots.
@@ -50,7 +50,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
 
@@ -153,7 +153,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Alert on signal thresholds
