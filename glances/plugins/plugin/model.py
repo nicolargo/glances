@@ -57,8 +57,8 @@ fields_unit_type = {
 }
 
 
-class GlancesPlugin(object):
-    """Main class for Glances plugin."""
+class GlancesPluginModel(object):
+    """Main class for Glances plugin model."""
 
     def __init__(self,
                  args=None,
@@ -88,14 +88,10 @@ class GlancesPlugin(object):
         :items_history_list: list of items to store in the history
         :stats_init_value: Default value for a stats item
         """
-        # Plugin name (= module name without glances_)
-        # pos = self.__class__.__module__.find('glances_') + len('glances') + 1
-        # self.plugin_name = self.__class__.__module__[pos:]
-        # TODO: For Glances 4 => 3 next line to be removed when all plugins are migrated
-        if self.__class__.__module__.startswith('glances_'):
-            self.plugin_name = self.__class__.__module__.split('glances_')[1]
-        else:
-            self.plugin_name = self.__class__.__module__
+        # Build the plugin name
+        self.plugin_name = self.__class__.__module__.split('.')[2]
+        if self.plugin_name.startswith('glances_'):
+            self.plugin_name = self.plugin_name.split('glances_')[1]
         logger.debug("Init {} plugin".format(self.plugin_name))
 
         # Init the args

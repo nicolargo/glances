@@ -24,10 +24,10 @@ import socket
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.plugin import GlancesPlugin
+from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class Plugin(GlancesPlugin):
+class Plugin(GlancesPluginModel):
     """Glances HDD temperature sensors plugin.
 
     stats is a list
@@ -52,8 +52,8 @@ class Plugin(GlancesPlugin):
         # The HDD temp is displayed within the sensors plugin
         self.display_curse = False
 
-    # @GlancesPlugin._check_decorator
-    @GlancesPlugin._log_result_decorator
+    # @GlancesPluginModel._check_decorator
+    @GlancesPluginModel._log_result_decorator
     def update(self):
         """Update HDD stats using the input method."""
         # Init new stats
