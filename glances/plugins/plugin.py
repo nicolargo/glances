@@ -1170,9 +1170,9 @@ class GlancesPlugin(object):
             counter = Counter()
             ret = fct(*args, **kw)
             duration = counter.get()
-            logger.debug("%s %s %s return %s in %s seconds" % (
+            logger.debug("{} {} {} return {} in {} seconds".format(
                 args[0].__class__.__name__,
-                args[0].__class__.__module__[len('glances_'):],
+                args[0].__class__.__module__,
                 fct.__name__, ret,
                 duration))
             return ret
