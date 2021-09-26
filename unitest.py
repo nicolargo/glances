@@ -39,7 +39,7 @@ from glances.thresholds import GlancesThresholdCareful
 from glances.thresholds import GlancesThresholdWarning
 from glances.thresholds import GlancesThresholdCritical
 from glances.thresholds import GlancesThresholds
-from glances.plugins.plugin import GlancesPlugin
+from glances.plugins.plugin.model import GlancesPluginModel
 from glances.secure import secure_popen
 
 # Global variables
