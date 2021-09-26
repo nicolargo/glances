@@ -35,7 +35,8 @@ physical cores multiplied by the number of threads that can run on each core.',
             'unit': 'number'},
 }
 
-class Plugin(GlancesPluginModel):
+
+class PluginModel(GlancesPluginModel):
     """Glances CPU core plugin.
 
     Get stats about CPU core number.
@@ -45,9 +46,9 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
-                                     config=config,
-                                     fields_description=fields_description)
+        super(PluginModel, self).__init__(args=args,
+                                          config=config,
+                                          fields_description=fields_description)
 
         # We dot not want to display the stat in the curse interface
         # The core number is displayed by the load plugin

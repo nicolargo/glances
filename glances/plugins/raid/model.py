@@ -33,7 +33,7 @@ else:
     import_error_tag = False
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances RAID plugin.
 
     stats is a dict (see pymdstat documentation)
@@ -41,7 +41,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

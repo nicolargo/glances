@@ -43,7 +43,7 @@ except Exception as e:
     psutil_tag = False
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances battery capacity plugin.
 
     stats is a list
@@ -51,7 +51,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
 

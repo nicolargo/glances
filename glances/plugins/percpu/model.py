@@ -31,7 +31,7 @@ items_history_list = [{'name': 'user',
                        'y_unit': '%'}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances per-CPU plugin.
 
     'stats' is a list of dictionaries that contain the utilization percentages
@@ -40,7 +40,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list,
                                      stats_init_value=[])

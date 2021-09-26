@@ -40,7 +40,7 @@ else:
     import_error_tag = False
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances' cloud plugin.
 
     The goal of this plugin is to retreive additional information
@@ -53,7 +53,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True
@@ -71,7 +71,7 @@ class Plugin(GlancesPluginModel):
         """Overwrite the exit method to close threads."""
         self.OPENSTACK.stop()
         # Call the father class
-        super(Plugin, self).exit()
+        super(PluginModel, self).exit()
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator

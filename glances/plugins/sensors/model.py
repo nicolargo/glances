@@ -25,15 +25,15 @@ import warnings
 from glances.logger import logger
 from glances.globals import iteritems, to_fahrenheit
 from glances.timer import Counter
-from glances.plugins.sensors.sensor.glances_batpercent import Plugin as BatPercentPlugin
-from glances.plugins.sensors.sensor.glances_hddtemp import Plugin as HddTempPlugin
+from glances.plugins.sensors.sensor.glances_batpercent import PluginModel as BatPercentPluginModel
+from glances.plugins.sensors.sensor.glances_hddtemp import PluginModel as HddTempPluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
 
 SENSOR_TEMP_UNIT = 'C'
 SENSOR_FAN_UNIT = 'R'
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances sensors plugin.
 
     The stats list includes both sensors and hard disks stats, if any.
@@ -43,7 +43,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
 
@@ -57,13 +57,13 @@ class Plugin(GlancesPluginModel):
         # Instance for the HDDTemp Plugin in order to display the hard disks
         # temperatures
         start_duration.reset()
-        self.hddtemp_plugin = HddTempPlugin(args=args, config=config)
+        self.hddtemp_plugin = HddTempPluginModel(args=args, config=config)
         logger.debug("HDDTemp sensor plugin init duration: {} seconds".format(start_duration.get()))
 
         # Instance for the BatPercent in order to display the batteries
         # capacities
         start_duration.reset()
-        self.batpercent_plugin = BatPercentPlugin(args=args, config=config)
+        self.batpercent_plugin = BatPercentPluginModel(args=args, config=config)
         logger.debug("Battery sensor plugin init duration: {} seconds".format(start_duration.get()))
 
         # We want to display the stat in the curse interface
@@ -167,7 +167,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Alert

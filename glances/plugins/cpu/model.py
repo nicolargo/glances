@@ -23,7 +23,7 @@ from glances.logger import logger
 from glances.timer import getTimeSinceLastUpdate
 from glances.globals import LINUX, iterkeys
 from glances.cpu_percent import cpu_percent
-from glances.plugins.core.model import Plugin as CorePlugin
+from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
 
 import psutil
@@ -96,7 +96,7 @@ items_history_list = [{'name': 'user',
                        'y_unit': '%'}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances CPU plugin.
 
     'stats' is a dictionary that contains the system-wide CPU utilization as a
@@ -105,7 +105,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the CPU plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list,
                                      fields_description=fields_description)
@@ -113,9 +113,9 @@ class Plugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        # Call CorePlugin in order to display the core number
+        # Call CorePluginModel in order to display the core number
         try:
-            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
+            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
         except Exception:
             self.nb_log_core = 1
 
@@ -238,7 +238,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Add specifics informations
         # Alert and log

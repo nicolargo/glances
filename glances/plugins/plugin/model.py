@@ -2,7 +2,7 @@
 #
 # This file is part of Glances.
 #
-# Copyright (C) 2019 Nicolargo <nicolas@nicolargo.com>
+# Copyright (C) 2021 Nicolargo <nicolas@nicolargo.com>
 #
 # Glances is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +20,7 @@
 """
 I am your father...
 
-...for all Glances plugins.
+...of all Glances model plugins.
 """
 
 import re
@@ -66,9 +66,9 @@ class GlancesPluginModel(object):
                  items_history_list=None,
                  stats_init_value={},
                  fields_description=None):
-        """Init the plugin of plugins class.
+        """Init the plugin of plugins model class.
 
-        All Glances' plugins should inherit from this class. Most of the
+        All Glances' plugins model should inherit from this class. Most of the
         methods are already implemented in the father classes.
 
         Your plugin should return a dict or a list of dicts (stored in the
@@ -76,15 +76,14 @@ class GlancesPluginModel(object):
         (for dict) or network (for list of dicts).
 
         A plugin should implement:
-        - the __init__ constructor: define the self.display_curse
         - the reset method: to set your self.stats variable to {} or []
         - the update method: where your self.stats variable is set
         and optionnaly:
         - the get_key method: set the key of the dict (only for list of dict)
-        - the update_view method: only if you need to trick your output
-        - the msg_curse: define the curse (UI) message (if display_curse is True)
+        - all others methods you want to overwrite
 
         :args: args parameters
+        :config: configuration parameters
         :items_history_list: list of items to store in the history
         :stats_init_value: Default value for a stats item
         """

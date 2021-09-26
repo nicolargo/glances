@@ -37,7 +37,7 @@ items_history_list = [{'name': 'read_bytes',
                        'y_unit': 'B/s'}]
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances disks I/O plugin.
 
     stats is a list
@@ -45,7 +45,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      items_history_list=items_history_list,
                                      stats_init_value=[])
@@ -157,7 +157,7 @@ class Plugin(GlancesPluginModel):
     def update_views(self):
         """Update stats views."""
         # Call the father's method
-        super(Plugin, self).update_views()
+        super(PluginModel, self).update_views()
 
         # Check if the stats should be hidden
         self.update_views_hidden()

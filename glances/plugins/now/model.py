@@ -23,7 +23,7 @@ from time import tzname, strftime
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Plugin to get the current date/time.
 
     stats is (string)
@@ -31,7 +31,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args, config=config)
+        super(PluginModel, self).__init__(args=args, config=config)
 
         # We want to display the stat in the curse interface
         self.display_curse = True

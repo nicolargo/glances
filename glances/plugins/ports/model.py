@@ -41,12 +41,12 @@ except ImportError as e:
     logger.warning("Missing Python Lib ({}), Ports plugin is limited to port scanning".format(e))
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances ports scanner plugin."""
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
         self.args = args
@@ -67,7 +67,7 @@ class Plugin(GlancesPluginModel):
         if self._thread is not None:
             self._thread.stop()
         # Call the father class
-        super(Plugin, self).exit()
+        super(PluginModel, self).exit()
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator

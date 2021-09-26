@@ -120,7 +120,7 @@ class GlancesStats(object):
             # Import the plugin
             plugin = import_module('glances.plugins.' + plugin_path + '.model')
             # Init and add the plugin to the dictionary
-            self._plugins[name] = plugin.Plugin(args=args, config=config)
+            self._plugins[name] = plugin.PluginModel(args=args, config=config)
         except Exception as e:
             # If a plugin can not be loaded, display a critical message
             # on the console but do not crash

@@ -25,7 +25,7 @@ import copy
 from glances.logger import logger
 from glances.globals import WINDOWS, key_exist_value_not_none_not_v
 from glances.processes import glances_processes, sort_stats
-from glances.plugins.core.model import Plugin as CorePlugin
+from glances.plugins.core.model import PluginModel as CorePluginModel
 from glances.plugins.plugin.model import GlancesPluginModel
 
 
@@ -48,7 +48,7 @@ def split_cmdline(cmdline):
     return path, cmd, arguments
 
 
-class Plugin(GlancesPluginModel):
+class PluginModel(GlancesPluginModel):
     """Glances' processes plugin.
 
     stats is a list
@@ -92,7 +92,7 @@ class Plugin(GlancesPluginModel):
 
     def __init__(self, args=None, config=None):
         """Init the plugin."""
-        super(Plugin, self).__init__(args=args,
+        super(PluginModel, self).__init__(args=args,
                                      config=config,
                                      stats_init_value=[])
 
@@ -102,9 +102,9 @@ class Plugin(GlancesPluginModel):
         # Trying to display proc time
         self.tag_proc_time = True
 
-        # Call CorePlugin to get the core number (needed when not in IRIX mode / Solaris mode)
+        # Call CorePluginModel to get the core number (needed when not in IRIX mode / Solaris mode)
         try:
-            self.nb_log_core = CorePlugin(args=self.args).update()["log"]
+            self.nb_log_core = CorePluginModel(args=self.args).update()["log"]
         except Exception:
             self.nb_log_core = 0
 
