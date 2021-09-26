@@ -105,9 +105,9 @@ class GlancesStats(object):
 
     def _load_plugin(self, plugin_path, args=None, config=None):
         """Load the plugin, init it and add to the _plugin dict."""
-        # The key is the plugin name = plugin_path
-        # for example, the path ./glances/plugins/xxx
-        # generate self._plugins_list["xxx"] = ...
+        # The key is the plugin_path
+        # except when it starts with glances_xxx
+        # generate self._plugins_list["xxx"] = <instance of xxx Plugin>
         if plugin_path.startswith('glances_'):
             # Avoid circular loop when Glances plugin uses lib with same name
             # Example: docker should be named to glances_docker
@@ -118,7 +118,7 @@ class GlancesStats(object):
         # Load the plugin class
         try:
             # Import the plugin
-            plugin = import_module(plugin_path)
+            plugin = import_module('glances.plugins.' + plugin_path + '.model')
             # Init and add the plugin to the dictionary
             self._plugins[name] = plugin.Plugin(args=args, config=config)
         except Exception as e:
@@ -144,7 +144,8 @@ class GlancesStats(object):
 
         for item in os.listdir(plugins_path):
             if os.path.isdir(os.path.join(plugins_path, item)) and  \
-               not item.startswith('__'):
+               not item.startswith('__') and \
+               item != 'plugin':
                 # Load the plugin
                 start_duration.reset()
                 self._load_plugin(os.path.basename(item),
