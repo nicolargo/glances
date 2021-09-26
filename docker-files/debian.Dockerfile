@@ -14,6 +14,7 @@ RUN apt-get update && \
   build-essential \
   lm-sensors \
   wireless-tools \
+  smartmontools \
   iputils-ping && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -57,6 +58,7 @@ RUN apt-get update && \
   curl              \
   lm-sensors        \
   wireless-tools    \
+  smartmontools     \
   iputils-ping && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
