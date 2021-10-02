@@ -849,7 +849,7 @@ Bugs corrected:
     * Fix RAID support in Python 3 (issue #793 by Alessio Sergi)
     * Use dict view objects to avoid issue (issue #758 by Alessio Sergi)
     * System exit if Cpu not supported by the Cpuinfo lib (issue #754 by nicolargo)
-    * KeyError: 'cpucore' when exporting data to InfluxDB (issue #729) by nicolargo)
+    * KeyError: 'cpucore' when exporting data to InfluxDB (issue #729 by nicolargo)
 
 Others:
     * A new Glances docker container to monitor your Docker infrastructure is available here (issue #728): https://hub.docker.com/r/nicolargo/glances/
