@@ -70,8 +70,10 @@ class Export(GlancesExport):
 
         url = '{}://{}:{}'.format(self.protocol, self.host, self.port)
         try:
+            # See docs: https://influxdb-client.readthedocs.io/en/stable/api.html#influxdbclient
             client = InfluxDBClient(url=url,
                                     enable_gzip=False,
+                                    verify_ssl=False,
                                     org=self.org,
                                     token=self.token)
         except Exception as e:
