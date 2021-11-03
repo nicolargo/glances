@@ -30,7 +30,11 @@ class CpuPercent(object):
     """Get and store the CPU percent."""
 
     def __init__(self, cached_timer_cpu=3):
-        self.cpu_info = {}
+        self.cpu_info = {
+            'cpu_name': None,
+            'cpu_hz_current': None,
+            'cpu_hz': None
+        }
         self.cpu_percent = 0
         self.percpu_percent = []
 
@@ -65,17 +69,21 @@ class CpuPercent(object):
         # Never update more than 1 time per cached_timer_cpu_info
         if self.timer_cpu_info.finished() and hasattr(psutil, 'cpu_freq'):
             # Get the CPU freq current/max
-            cpu_freq = psutil.cpu_freq()
-            if hasattr(cpu_freq, 'current'):
-                self.cpu_info['cpu_hz_current'] = cpu_freq.current
+            try:
+                cpu_freq = psutil.cpu_freq()
+            except Exception as e:
+                logger.debug('Can not grab CPU information ({})'.format(e))
             else:
-                self.cpu_info['cpu_hz_current'] = None
-            if hasattr(cpu_freq, 'max'):
-                self.cpu_info['cpu_hz'] = cpu_freq.max
-            else:
-                self.cpu_info['cpu_hz'] = None
-            # Reset timer for cache
-            self.timer_cpu_info.reset(duration=self.cached_timer_cpu_info)
+                if hasattr(cpu_freq, 'current'):
+                    self.cpu_info['cpu_hz_current'] = cpu_freq.current
+                else:
+                    self.cpu_info['cpu_hz_current'] = None
+                if hasattr(cpu_freq, 'max'):
+                    self.cpu_info['cpu_hz'] = cpu_freq.max
+                else:
+                    self.cpu_info['cpu_hz'] = None
+                # Reset timer for cache
+                self.timer_cpu_info.reset(duration=self.cached_timer_cpu_info)
         return self.cpu_info
 
     def __get_cpu_name(self):
