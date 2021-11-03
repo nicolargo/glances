@@ -212,14 +212,14 @@ class TestGlances(unittest.TestCase):
         print('INFO: IRQ stats: %s' % stats_grab)
 
     @unittest.skipIf(not LINUX, "GPU available only on Linux")
-    def test_013_gpu(self):
+    def test_014_gpu(self):
         """Check GPU plugin."""
         print('INFO: [TEST_014] Check GPU stats')
         stats_grab = stats.get_plugin('gpu').get_raw()
         self.assertTrue(type(stats_grab) is list, msg='GPU stats is not a list')
         print('INFO: GPU stats: %s' % stats_grab)
 
-    def test_014_sorted_stats(self):
+    def test_015_sorted_stats(self):
         """Check sorted stats method."""
         print('INFO: [TEST_015] Check sorted stats method')
         aliases = {
@@ -234,7 +234,7 @@ class TestGlances(unittest.TestCase):
             {"key": "key3"},
         ]
 
-        gp = GlancesPlugin()
+        gp = GlancesPluginModel()
         gp.get_key = lambda: "key"
         gp.has_alias = aliases.get
         gp.stats = unsorted_stats
@@ -247,9 +247,9 @@ class TestGlances(unittest.TestCase):
         self.assertEqual(sorted_stats[3]["key"], "key4")
         self.assertEqual(sorted_stats[4]["key"], "key21")
 
-    def test_015_subsample(self):
+    def test_016_subsample(self):
         """Test subsampling function."""
-        print('INFO: [TEST_015] Subsampling')
+        print('INFO: [TEST_016] Subsampling')
         for l_test in [([1, 2, 3], 4),
                        ([1, 2, 3, 4], 4),
                        ([1, 2, 3, 4, 5, 6, 7], 4),
@@ -259,16 +259,16 @@ class TestGlances(unittest.TestCase):
             l_subsample = subsample(l_test[0], l_test[1])
             self.assertLessEqual(len(l_subsample), l_test[1])
 
-    def test_016_hddsmart(self):
+    def test_017_hddsmart(self):
         """Check hard disk SMART data plugin."""
         try:
             from glances.globals import is_admin
         except ImportError:
-            print("INFO: [TEST_016] pySMART not found, not running SMART plugin test")
+            print("INFO: [TEST_017] pySMART not found, not running SMART plugin test")
             return
 
         stat = 'DeviceName'
-        print('INFO: [TEST_016] Check SMART stats: {}'.format(stat))
+        print('INFO: [TEST_017] Check SMART stats: {}'.format(stat))
         stats_grab = stats.get_plugin('smart').get_raw()
         if not is_admin():
             print("INFO: Not admin, SMART list should be empty")
