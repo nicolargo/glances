@@ -41,6 +41,9 @@ docs-server: docs
 webui: venv-dev
 	cd glances/outputs/static/ && npm install && npm audit fix && npm run build
 
+webui-force: venv-dev
+	cd glances/outputs/static/ && npm install && npm audit fix --force && npm run build
+
 run: venv
 	./venv/bin/python -m glances -C ./conf/glances.conf
 

@@ -12,9 +12,9 @@ module.exports = {
         filename: "glances.js",
         sourceMapFilename: "glances.map.js",
     },
-    devtool: "#source-map",
+    devtool: "source-map",
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.scss$/,
                 use: [{
@@ -37,29 +37,45 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                loader: "style-loader!css-loader",
+                // loader: "style-loader!css-loader",
+                use: [{
+                    loader: "style-loader",
+                }, {
+                    loader: "css-loader",
+                }]
             },
             {
                 test: /\.(png|jpg|gif|svg|ttf|woff|woff2|eot)$/,
-                loader: "url-loader",
-                options: {
-                    limit: 10000,
-                }
+                use: [{
+                    loader: "url-loader",
+                    options: {
+                        limit: 10000,
+                    }
+                }]
             },
             {
                 test: /\.html/,
-                loader: "ngtemplate-loader!html-loader"
+                // loader: "ngtemplate-loader!html-loader"
+                use: [{
+                    loader: "ngtemplate-loader",
+                }, {
+                    loader: "html-loader",
+                }]
             },
             {
                 test: require.resolve("angular"),
-                loader: "exports-loader?window.angular"
+                use: [{
+                    loader: "exports-loader?window.angular"
+                }]
             },
         ],
     },
     plugins: [
         new CleanWebpackPlugin("./public/*.*"),
-        new CopyWebpackPlugin([
-            { from: "./images/favicon.ico" }
-        ]),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "./images/favicon.ico" },
+            ],
+        }),
     ]
 };
