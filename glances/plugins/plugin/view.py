@@ -35,7 +35,7 @@ from glances.logger import logger
 from glances.events import glances_events
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer
-from glances.plugins.plugin.model import fields_unit_short
+from glances.plugins.plugin.model import fields_unit_short, fields_unit_short
 
 
 class GlancesPluginView(object):
