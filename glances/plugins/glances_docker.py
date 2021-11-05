@@ -257,7 +257,7 @@ class Plugin(GlancesPlugin):
                     container_stats['Command'].extend(container.attrs['Config'].get('Entrypoint', []))
                 if container.attrs['Config'].get('Cmd', None):
                     container_stats['Command'].extend(container.attrs['Config'].get('Cmd', []))
-                if container_stats['Command'] == []:
+                if not container_stats['Command']:
                     container_stats['Command'] = None
                 # Standards stats
                 # See https://docs.docker.com/engine/api/v1.41/#operation/ContainerStats
@@ -685,11 +685,11 @@ class Plugin(GlancesPlugin):
 
     def container_alert(self, status):
         """Analyse the container status."""
-        if status in ('running'):
+        if status == 'running':
             return 'OK'
-        elif status in ('exited'):
+        elif status == 'exited':
             return 'WARNING'
-        elif status in ('dead'):
+        elif status == 'dead':
             return 'CRITICAL'
         else:
             return 'CAREFUL'
@@ -754,12 +754,12 @@ class ThreadDockerGrabber(threading.Thread):
 
 def sort_stats(stats):
     # Sort Docker stats using the same function than processes
-    sortedby = 'cpu_percent'
-    sortedby_secondary = 'memory_usage'
+    sort_by = 'cpu_percent'
+    sort_by_secondary = 'memory_usage'
     if glances_processes.sort_key.startswith('memory'):
-        sortedby = 'memory_usage'
-        sortedby_secondary = 'cpu_percent'
+        sort_by = 'memory_usage'
+        sort_by_secondary = 'cpu_percent'
     sort_stats_processes(stats['containers'],
-                         sortedby=sortedby,
-                         sortedby_secondary=sortedby_secondary)
+                         sortedby=sort_by,
+                         sortedby_secondary=sort_by_secondary)
     return stats
