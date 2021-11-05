@@ -412,7 +412,7 @@ class Plugin(GlancesPlugin):
             return network_new
 
         # Previous network interface stats are stored in the network_old variable
-        if not hasattr(self, 'inetcounters_old'):
+        if not hasattr(self, 'netcounters_old'):
             # First call, we init the network_old var
             self.netcounters_old = {}
             try:
