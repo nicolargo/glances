@@ -36,7 +36,7 @@ try:
     import docker
 except Exception as e:
     import_error_tag = True
-    # Display debu message if import KeyError
+    # Display debug message if import KeyError
     logger.warning("Error loading Docker Python Lib. Docker plugin is disabled ({})".format(e))
 else:
     import_error_tag = False
@@ -83,7 +83,7 @@ class Plugin(GlancesPlugin):
                                      config=config,
                                      items_history_list=items_history_list)
 
-        # The plgin can be disable using: args.disable_docker
+        # The plugin can be disabled using: args.disable_docker
         self.args = args
 
         # Default config keys
@@ -95,7 +95,7 @@ class Plugin(GlancesPlugin):
         # Init the Docker API
         self.docker_client = self.connect()
 
-        # Dict of thread (to grab stats asynchroniously, one thread is created by container)
+        # Dict of thread (to grab stats asynchronously, one thread is created by container)
         # key: Container Id
         # value: instance of ThreadDockerGrabber
         self.thread_list = {}
@@ -175,7 +175,7 @@ class Plugin(GlancesPlugin):
             # Update stats
 
             # Docker version
-            # Exemple: {
+            # Example: {
             #     "KernelVersion": "3.16.4-tinycore64",
             #     "Arch": "amd64",
             #     "ApiVersion": "1.15",
@@ -232,7 +232,7 @@ class Plugin(GlancesPlugin):
                 if not self.is_show(nativestr(container.name)):
                     continue
 
-                # Do not take hiden container into account
+                # Do not take hidden container into account
                 if self.is_hide(nativestr(container.name)):
                     continue
 
@@ -395,8 +395,8 @@ class Plugin(GlancesPlugin):
         Output: a dict {'time_since_update': 3000, 'rx': 10, 'tx': 65}.
         with:
             time_since_update: number of seconds elapsed between the latest grab
-            rx: Number of byte received
-            tx: Number of byte transmited
+            rx: Number of bytes received
+            tx: Number of bytes transmitted
         """
         # Init the returned dict
         network_new = {}
@@ -453,8 +453,8 @@ class Plugin(GlancesPlugin):
         Output: a dict {'time_since_update': 3000, 'ior': 10, 'iow': 65}.
         with:
             time_since_update: number of seconds elapsed between the latest grab
-            ior: Number of byte readed
-            iow: Number of byte written
+            ior: Number of bytes read
+            iow: Number of bytes written
         """
         # Init the returned dict
         io_new = {}
@@ -528,30 +528,30 @@ class Plugin(GlancesPlugin):
         if 'containers' not in self.stats:
             return False
 
-        # Add specifics informations
+        # Add specifics information
         # Alert
         for i in self.stats['containers']:
             # Init the views for the current container (key = container name)
             self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
-                # Looking for specific CPU container threasold in the conf file
+                # Looking for specific CPU container threshold in the conf file
                 alert = self.get_alert(i['cpu']['total'],
                                        header=i['name'] + '_cpu',
                                        action_key=i['name'])
                 if alert == 'DEFAULT':
-                    # Not found ? Get back to default CPU threasold value
+                    # Not found ? Get back to default CPU threshold value
                     alert = self.get_alert(i['cpu']['total'], header='cpu')
                 self.views[i[self.get_key()]]['cpu']['decoration'] = alert
             # MEM alert
             if 'memory' in i and 'usage' in i['memory']:
-                # Looking for specific MEM container threasold in the conf file
+                # Looking for specific MEM container threshold in the conf file
                 alert = self.get_alert(i['memory']['usage'],
                                        maximum=i['memory']['limit'],
                                        header=i['name'] + '_mem',
                                        action_key=i['name'])
                 if alert == 'DEFAULT':
-                    # Not found ? Get back to default MEM threasold value
+                    # Not found ? Get back to default MEM threshold value
                     alert = self.get_alert(i['memory']['usage'],
                                            maximum=i['memory']['limit'],
                                            header='mem')
