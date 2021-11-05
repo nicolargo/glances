@@ -28,7 +28,7 @@ from glances.logger import logger
 from glances.compat import iterkeys, itervalues, nativestr
 from glances.timer import getTimeSinceLastUpdate
 from glances.plugins.glances_plugin import GlancesPlugin
-from glances.processes import sort_stats as sort_stats_processes, weighted, glances_processes
+from glances.processes import sort_stats as sort_stats_processes, glances_processes
 
 # Docker-py library (optional and Linux-only)
 # https://github.com/docker/docker-py
