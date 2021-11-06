@@ -60227,7 +60227,7 @@ function timedeltaFilter($filter) {
         var d = new Date(sum);
 
         return {
-            hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24)))
+            hours: d.getUTCHours(), // TODO : multiple days ( * (d.getDay() * 24))
             minutes: d.getUTCMinutes(),
             seconds: d.getUTCSeconds(),
             milliseconds: parseInt("" + d.getUTCMilliseconds() / 10)
